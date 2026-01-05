@@ -5,6 +5,34 @@ All notable changes to Jubilee Browser will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.0.6] - 2026-01-05
+
+### Changed
+- **Platform Migration**: Rebuilt from Electron to .NET 8 WPF for better Windows integration
+- **Self-Contained Deployment**: No .NET runtime installation required on target machines
+- **WebView2 Engine**: Uses Microsoft Edge WebView2 for modern web rendering
+- **Enterprise Ready**: MSI installer support for Group Policy deployment
+
+### Added
+- **Auto-Update System**: Background update checks with SHA512 verification
+- **Secure Credential Storage**: Windows Credential Manager integration
+- **Tab Groups**: Organize tabs into collapsible groups
+- **Session Persistence**: Restore tabs and state across restarts
+- **Zoom Settings**: Per-site zoom level memory
+- **Recently Closed Tabs**: Recover accidentally closed tabs
+
+### Technical
+- Built with .NET 8.0 and WPF
+- WebView2 runtime for Chromium-based rendering
+- Npgsql 8.0.5 for database connectivity
+- YamlDotNet 16.3.0 for blacklist parsing
+- Self-contained publish (~175 MB uncompressed, ~72 MB ZIP)
+
+### Security
+- Content filtering with 309,000+ blocked sites
+- Session isolation between Internet and Jubilee Bible modes
+- Secure token storage via Windows DPAPI
+
 ## [8.0.4] - 2026-01-01
 
 ### Fixed
@@ -209,8 +237,10 @@ We follow [Semantic Versioning](https://semver.org/):
 
 ## Download
 
-Current version: **8.0.4**
+Current version: **8.0.6**
 
-Download: [http://jubileebrowser.com/downloads/jubilee-Setup-8.0.4.exe](http://jubileebrowser.com/downloads/jubilee-Setup-8.0.4.exe)
+Download: [https://jubileebrowser.com/downloads/JubileeBrowser-8.0.6-win-x64.zip](https://jubileebrowser.com/downloads/JubileeBrowser-8.0.6-win-x64.zip)
 
-Auto-update manifest: [http://jubileebrowser.com/downloads/latest.yml](http://jubileebrowser.com/downloads/latest.yml)
+Auto-update manifest: [https://jubileebrowser.com/downloads/latest.yml](https://jubileebrowser.com/downloads/latest.yml)
+
+SHA256: `942C30E9A67405C475E1B1AA46A73355BAEC2169B4F08E91E2DA672E9717AEFE`

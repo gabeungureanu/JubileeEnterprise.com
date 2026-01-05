@@ -1,9 +1,20 @@
 version: 8.0.6
 files:
-  - url: JubileeBrowser-Setup-8.0.6.msi
-    sha512: +aD2dVsEdNdKb3qbBaWSZcJs/Q5DvA2WKeS/tSv6z+Dnrfr0DlGL0DPG/44acG3cutrhX+22o2r1wYv8XlZNrg==
-    size: 62937749
-path: JubileeBrowser-Setup-8.0.6.msi
-sha512: +aD2dVsEdNdKb3qbBaWSZcJs/Q5DvA2WKeS/tSv6z+Dnrfr0DlGL0DPG/44acG3cutrhX+22o2r1wYv8XlZNrg==
-releaseNotes: See https://jubileebrowser.com/releases for release notes.
-releaseDate: '2026-01-03T23:48:00.000Z'
+  - url: JubileeBrowser-8.0.6-win-x64.zip
+    sha512: rktWSHc9MlTUia72q3I1Wm8wpdKXfTilrQWcW40PsPS6reya7DxkFvg7GHoALbZ2Psn1nIUjyBhmI7JsFa61Iw==
+    size: 75216061
+path: JubileeBrowser-8.0.6-win-x64.zip
+sha512: rktWSHc9MlTUia72q3I1Wm8wpdKXfTilrQWcW40PsPS6reya7DxkFvg7GHoALbZ2Psn1nIUjyBhmI7JsFa61Iw==
+sha256: 942C30E9A67405C475E1B1AA46A73355BAEC2169B4F08E91E2DA672E9717AEFE
+releaseNotes: |
+  ## JubileeBrowser 8.0.6
+
+  ### What's New
+  - Latest stable release
+  - Self-contained deployment (no .NET installation required)
+  - Content filtering with 309,000+ blocked sites
+  - Dual-mode navigation (Internet/Jubilee Bible)
+
+  See https://jubileebrowser.com/releases for full release notes.
+releaseDate: '2026-01-05T09:48:00.000Z'
+minimumSystemVersion: '10.0.17763'
