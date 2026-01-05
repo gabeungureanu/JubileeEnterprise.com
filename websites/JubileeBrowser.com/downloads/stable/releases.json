@@ -1,0 +1,10 @@
+[
+  {
+    "Version": "8.0.6",
+    "ReleaseNotes": "## JubileeBrowser 8.0.6\n\n### What's New\n- Platform migration from Electron to .NET 8 WPF\n- Self-contained deployment (no .NET installation required)\n- WebView2 engine for modern web rendering\n- Enterprise-ready MSI installer support\n- Auto-update system with SHA512 verification\n- Secure credential storage via Windows Credential Manager\n- Tab groups and session persistence\n- Content filtering with 309,000+ blocked sites\n\nSee https://jubileebrowser.com/releases for full release notes.",
+    "ReleaseDate": "2026-01-05T09:48:00.000Z",
+    "DownloadUrl": "https://jubileebrowser.com/downloads/stable/JubileeBrowser-8.0.6-Setup.exe",
+    "FileSize": 75216061,
+    "Sha256": "942C30E9A67405C475E1B1AA46A73355BAEC2169B4F08E91E2DA672E9717AEFE"
+  }
+]
