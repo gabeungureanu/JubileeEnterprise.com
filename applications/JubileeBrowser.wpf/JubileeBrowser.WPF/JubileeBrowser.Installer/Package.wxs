@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
-     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Package Name="Jubilee Browser"
-           Manufacturer="Jubilee Browser Team"
+           Manufacturer="Jubilee Software, Inc."
            Version="8.0.7.0"
            UpgradeCode="A1B2C3D4-E5F6-7890-ABCD-EF1234567890"
            Compressed="yes"
            InstallerVersion="500"
            Scope="perMachine">
 
-    <SummaryInformation Description="Jubilee Browser - A secure, family-friendly web browser" />
+    <SummaryInformation Description="Jubilee Browser - A secure, family-friendly web browser by Jubilee Software, Inc." />
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of Jubilee Browser is already installed."
                   AllowSameVersionUpgrades="no"
@@ -22,6 +23,7 @@
     <Property Id="ARPPRODUCTICON" Value="ProductIcon" />
     <Property Id="ARPHELPLINK" Value="https://jubileebrowser.com/support" />
     <Property Id="ARPURLINFOABOUT" Value="https://jubileebrowser.com" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://jubileebrowser.com/download.html" />
 
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLFOLDER" Name="Jubilee Browser">
@@ -55,8 +57,22 @@
       <ComponentGroupRef Id="HarvestedFiles" />
     </Feature>
 
-    <!-- Standard UI with progress bar -->
+    <!-- License Agreement UI with custom sky blue banners -->
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="dialog.bmp" />
+
     <ui:WixUI Id="WixUI_Minimal" />
+
+    <!-- Auto-launch Jubilee Browser after installation -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Jubilee Browser" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <Property Id="WixShellExecTarget" Value="[#JubileeBrowser.exe]" />
+    <CustomAction Id="LaunchApplication" DllEntry="WixShellExec" Impersonate="yes" BinaryRef="Wix4UtilCA_X64" />
+
+    <InstallExecuteSequence>
+      <Custom Action="LaunchApplication" After="InstallFinalize" Condition="NOT Installed AND WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1" />
+    </InstallExecuteSequence>
 
   </Package>
 </Wix>
