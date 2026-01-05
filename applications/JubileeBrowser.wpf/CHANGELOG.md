@@ -5,6 +5,33 @@ All notable changes to Jubilee Browser will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.0.7] - 2026-01-05
+
+### Changed
+- **Professional MSI Installer**: Replaced ZIP distribution with Windows Installer (MSI) package
+- **Smaller Package Size**: Reduced from ~72 MB ZIP to ~57 MB MSI with high compression
+- **Improved Installation**: Double-click to install with desktop and Start Menu shortcuts
+
+### Added
+- **WiX Toolset v4 Integration**: Professional installer built with WiX Toolset 4.0.5
+- **Desktop Shortcut**: Automatic desktop icon creation during installation
+- **Start Menu Entry**: Jubilee Browser added to Windows Start Menu
+- **WebView2 Prerequisite Check**: Installer verifies WebView2 runtime before installation
+- **Upgrade Support**: Seamless upgrade from previous versions via Windows Installer
+
+### Technical
+- Built with WixToolset.Sdk 4.0.5 and WixToolset.Heat 4.0.5 for file harvesting
+- MSI package includes all 270+ application files automatically harvested
+- Registry-based shortcut management for clean uninstallation
+- MajorUpgrade element prevents downgrade and handles version upgrades
+- UpgradeCode: `A1B2C3D4-E5F6-7890-ABCD-EF1234567890`
+
+### Installer Details
+- **File**: `JubileeBrowser-Setup-8.0.7.msi`
+- **Size**: ~57 MB
+- **Scope**: Per-machine installation (Program Files)
+- **Target**: `C:\Program Files\Jubilee Browser\`
+
 ## [8.0.6] - 2026-01-05
 
 ### Changed
@@ -237,10 +264,10 @@ We follow [Semantic Versioning](https://semver.org/):
 
 ## Download
 
-Current version: **8.0.6**
+Current version: **8.0.7**
 
-Download: [https://jubileebrowser.com/downloads/JubileeBrowser-8.0.6-win-x64.zip](https://jubileebrowser.com/downloads/JubileeBrowser-8.0.6-win-x64.zip)
+Download: [https://jubileebrowser.com/downloads/JubileeBrowser-Setup-8.0.7.msi](https://jubileebrowser.com/downloads/JubileeBrowser-Setup-8.0.7.msi)
 
-Auto-update manifest: [https://jubileebrowser.com/downloads/latest.yml](https://jubileebrowser.com/downloads/latest.yml)
+Auto-update manifest: [https://jubileebrowser.com/downloads/stable/releases.json](https://jubileebrowser.com/downloads/stable/releases.json)
 
-SHA256: `942C30E9A67405C475E1B1AA46A73355BAEC2169B4F08E91E2DA672E9717AEFE`
+SHA256: `1887950EDCFB652EC0F1EE7D521CF06E4558DA496411DB16D2689EBDF5B82D23`

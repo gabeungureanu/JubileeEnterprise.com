@@ -48,7 +48,9 @@
       "Bash(wix heat:*)",
       "Bash(wix:*)",
       "Bash(dir:*)",
-      "Bash(dotnet restore:*)"
+      "Bash(dotnet restore:*)",
+      "Bash(ssh-keygen:*)",
+      "Bash(scp:*)"
     ]
   }
 }

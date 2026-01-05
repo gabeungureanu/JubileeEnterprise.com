@@ -1,6 +1,6 @@
 # Jubilee Browser
 
-**Version 8.0.6** - A dual-mode WPF browser for navigating both the public Internet and JubileeVerse, a Scripture-centered digital environment.
+**Version 8.0.7** - A dual-mode WPF browser for navigating both the public Internet and JubileeVerse, a Scripture-centered digital environment.
 
 ## Overview
 
@@ -21,10 +21,12 @@ Jubilee Browser is a safe, Scripture-centered browser designed for families, chu
 - **HTTPS Indicators**: Clear visual security indicators in address bar
 
 ### Enterprise Deployment
-- **MSI Installer**: Standard Windows Installer for Group Policy deployment
-- **Silent Installation**: `msiexec /i JubileeBrowser-Setup-8.0.6.msi /quiet`
+- **MSI Installer**: Professional Windows Installer built with WiX Toolset v4
+- **Silent Installation**: `msiexec /i JubileeBrowser-Setup-8.0.7.msi /quiet`
 - **Self-Contained**: Includes .NET 8 runtime, no prerequisites needed
 - **Per-Machine Install**: Installs to Program Files for all users
+- **Auto Shortcuts**: Desktop and Start Menu shortcuts created automatically
+- **Clean Upgrade**: Seamless upgrades from previous versions
 
 ### Professional Design
 - **Modern WPF Interface**: Fluent Design-inspired UI
@@ -92,7 +94,7 @@ Jubilee Browser requires the Microsoft Edge WebView2 Runtime. It is:
 Visit [https://jubileebrowser.com/download.html](https://jubileebrowser.com/download.html) to download the latest version.
 
 ### Standard Installation
-1. Download `JubileeBrowser-Setup-8.0.6.msi` (~60 MB)
+1. Download `JubileeBrowser-Setup-8.0.7.msi` (~57 MB)
 2. Double-click the installer
 3. Follow the installation wizard
 4. Launch Jubilee Browser from desktop or Start menu
@@ -100,12 +102,17 @@ Visit [https://jubileebrowser.com/download.html](https://jubileebrowser.com/down
 ### Silent Installation
 For automated deployments:
 ```cmd
-msiexec /i JubileeBrowser-Setup-8.0.6.msi /quiet
+msiexec /i JubileeBrowser-Setup-8.0.7.msi /quiet
 ```
 
 ### Silent Installation with Custom Directory
 ```cmd
-msiexec /i JubileeBrowser-Setup-8.0.6.msi /quiet INSTALLFOLDER="C:\Program Files\JubileeBrowser"
+msiexec /i JubileeBrowser-Setup-8.0.7.msi /quiet INSTALLFOLDER="C:\Program Files\JubileeBrowser"
+```
+
+### Silent Installation with Logging
+```cmd
+msiexec /i JubileeBrowser-Setup-8.0.7.msi /quiet /log install.log
 ```
 
 ## Development
@@ -144,20 +151,45 @@ dotnet publish JubileeBrowser.WPF/JubileeBrowser/JubileeBrowser.csproj `
 ```
 
 ### Building the Installer
+
+The installer is built using WiX Toolset v4 with automatic file harvesting:
+
 ```powershell
 # Install WiX toolset (if not installed)
 dotnet tool install --global wix
 
-# Build MSI installer
-wix build JubileeBrowser.WPF/JubileeBrowser.Installer/Package.wxs `
-    -d SourceDir="JubileeBrowser.WPF/publish/" `
-    -o JubileeBrowser.WPF/JubileeBrowser-Setup-8.0.6.msi
+# Publish the application first
+dotnet publish JubileeBrowser.WPF/JubileeBrowser/JubileeBrowser.csproj `
+    -c Release -r win-x64 --self-contained true `
+    -o JubileeBrowser.WPF/publish/JubileeBrowser-8.0.7
+
+# Copy icon to publish folder (required for shortcuts)
+mkdir -p JubileeBrowser.WPF/publish/JubileeBrowser-8.0.7/Resources/Icons
+cp JubileeBrowser.WPF/JubileeBrowser/Resources/Icons/icon.ico `
+   JubileeBrowser.WPF/publish/JubileeBrowser-8.0.7/Resources/Icons/
+
+# Build the MSI installer
+dotnet build JubileeBrowser.WPF/JubileeBrowser.Installer/JubileeBrowser.Installer.wixproj -c Release
 ```
 
+The WiX project uses:
+- **WixToolset.Sdk 4.0.5** - MSBuild SDK for WiX v4
+- **WixToolset.Heat 4.0.5** - Automatic file harvesting
+
 ### Build Outputs
-- **Installer**: `JubileeBrowser.WPF/JubileeBrowser-Setup-8.0.6.msi`
-- **Published App**: `JubileeBrowser.WPF/publish/`
+- **Installer**: `JubileeBrowser.WPF/JubileeBrowser.Installer/bin/x64/Release/JubileeBrowser-Setup-8.0.7.msi`
+- **Published App**: `JubileeBrowser.WPF/publish/JubileeBrowser-8.0.7/`
 - **Debug Build**: `JubileeBrowser.WPF/JubileeBrowser/bin/Debug/`
+
+### Installer Package Details
+| Property | Value |
+|----------|-------|
+| **Package Size** | ~57 MB |
+| **Compression** | High (CAB embedded) |
+| **Install Scope** | Per-machine (Program Files) |
+| **UpgradeCode** | A1B2C3D4-E5F6-7890-ABCD-EF1234567890 |
+| **Shortcuts** | Desktop + Start Menu |
+| **Prerequisites** | WebView2 Runtime |
 
 ## Keyboard Shortcuts
 
@@ -219,7 +251,7 @@ The browser integrates with a PostgreSQL database for private URL resolution:
 
 **Silent MSI Installation**:
 ```cmd
-msiexec /i JubileeBrowser-Setup-8.0.6.msi /quiet /log install.log
+msiexec /i JubileeBrowser-Setup-8.0.7.msi /quiet /log install.log
 ```
 
 **Group Policy Deployment**:
@@ -257,10 +289,13 @@ msiexec /i JubileeBrowser-Setup-8.0.6.msi /quiet /log install.log
 
 ## Version History
 
+- **8.0.7** - Professional MSI installer with WiX Toolset v4, desktop/Start Menu shortcuts
 - **8.0.6** - WPF-only release, removed Electron version
 - **8.0.5** - Documentation updates
 - **8.0.4** - WPF application with WebView2, profile management
 - **8.0.3** - Database integration, private URL resolution
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed release notes.
 
 ## Project Structure
 
