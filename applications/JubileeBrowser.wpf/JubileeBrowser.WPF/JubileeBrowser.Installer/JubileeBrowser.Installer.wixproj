@@ -2,10 +2,22 @@
   <PropertyGroup>
     <OutputType>Package</OutputType>
     <Platform>x64</Platform>
-    <SourceDir>..\JubileeBrowser\bin\Release\net8.0-windows\publish\</SourceDir>
+    <DefineConstants>SourceDir=..\..\publish\JubileeBrowser-8.0.7\</DefineConstants>
+    <OutputName>JubileeBrowser-Setup-8.0.7</OutputName>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\JubileeBrowser\JubileeBrowser.csproj" />
+    <PackageReference Include="WixToolset.Heat" Version="4.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <HarvestDirectory Include="..\..\publish\JubileeBrowser-8.0.7">
+      <ComponentGroupName>HarvestedFiles</ComponentGroupName>
+      <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
+      <SuppressRootDirectory>true</SuppressRootDirectory>
+      <SuppressRegistry>true</SuppressRegistry>
+      <PreprocessorVariable>var.SourceDir</PreprocessorVariable>
+    </HarvestDirectory>
+    <BindPath Include="..\..\publish\JubileeBrowser-8.0.7" />
   </ItemGroup>
 </Project>

@@ -177,7 +177,7 @@ public class UpdateManager
             Log($"Downloading update {_state.AvailableVersion}...");
 
             var channel = _state.Channel == UpdateChannel.Beta ? "beta" : "stable";
-            var fileName = $"JubileeBrowser-{_state.AvailableVersion}-win-x64.zip";
+            var fileName = $"JubileeBrowser-Setup-{_state.AvailableVersion}.msi";
             var downloadUrl = $"/{channel}/{fileName}";
 
             using var response = await _httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);

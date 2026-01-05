@@ -26,7 +26,29 @@
       "Bash(wmic process where \"name=''JubileeBrowser.exe''\" call terminate)",
       "Bash(cmd /c \"taskkill /F /PID 661752\")",
       "Bash(start \"\" \"bin\\\\Debug\\\\net8.0-windows\\\\JubileeBrowser.exe\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(gh repo create:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit - JubileeEnterprise.com platform\n\nComplete faith-based enterprise platform including:\n- 3 API services \\(Codex, Inspire, Continuum\\)\n- 8 website projects \\(JubileeVerse, JubileeInternet, etc.\\)\n- JubileeBrowser desktop application \\(.NET 8/WPF\\)\n- Shared packages \\(@jubilee/shared, database, config\\)\n- Infrastructure \\(Docker, migrations, nginx\\)\n- Comprehensive documentation\n\nThree-database architecture:\n- Codex: Identity, auth, RBAC\n- Inspire: Content, conversations\n- Continuum: User data, settings\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git config:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git mv:*)",
+      "Bash(dotnet publish:*)",
+      "Bash(certutil:*)",
+      "Bash(xxd:*)",
+      "Bash(ssh 20.245.111.91 \"cd /c/data/JubileeEnterprise.com && git pull origin main\")",
+      "Bash(ssh:*)",
+      "Bash(sshpass:*)",
+      "Bash(where:*)",
+      "Bash(dotnet tool list:*)",
+      "Bash(dotnet tool install:*)",
+      "Bash(wix --version:*)",
+      "Bash(wix heat:*)",
+      "Bash(wix:*)",
+      "Bash(dir:*)",
+      "Bash(dotnet restore:*)"
     ]
   }
 }
