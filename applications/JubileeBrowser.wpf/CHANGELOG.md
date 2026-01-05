@@ -270,4 +270,4 @@ Download: [https://jubileebrowser.com/downloads/JubileeBrowser-Setup-8.0.7.msi](
 
 Auto-update manifest: [https://jubileebrowser.com/downloads/stable/releases.json](https://jubileebrowser.com/downloads/stable/releases.json)
 
-SHA256: `1887950EDCFB652EC0F1EE7D521CF06E4558DA496411DB16D2689EBDF5B82D23`
+SHA256: `48BB0A4DD4262D1290887D5462FFF6E450ADD3EAF2606B707DC0DF7BC6FF2E8E`
