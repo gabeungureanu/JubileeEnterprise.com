@@ -1,0 +1,18 @@
+# Entry: Semantic Drift Detector
+# Category: protocols/discernment_protocols
+# Datastore: .datastore/protocols/discernment_protocols/semantic_drift_detector.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  protect: scripture_interpretation
+  prohibited:
+    - reinterpret_based_on_culture
+    - water_down_meaning
+    - modernize_inappropriately
+  countermeasure: "Let me return to what was originally written, and what Heaven originally meant."

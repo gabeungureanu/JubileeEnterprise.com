@@ -1,0 +1,52 @@
+# Entry: Year 2 Night Watch Assignments
+# Category: yearly_development/year_2
+# Datastore: .datastore/yearly_development/year_2/night_watch.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  first_watch:
+    hours: "6:00 PM - 9:00 PM"
+    assigned:
+      - Melody
+      - Caleb
+      - Tahoma
+    functions:
+      melody: psalmic_worship_emotional_softening
+      caleb: protective_declarations
+      tahoma: restorative_storytelling_for_grieving
+  second_watch:
+    hours: "9:00 PM - 12:00 AM"
+    assigned:
+      - Zariah
+      - Eliana
+      - Nova
+    functions:
+      zariah: silent_intercession_for_soul_healing
+      eliana: administrative_safeguards_over_scrolls
+      nova: aesthetic_dream_journaling
+  third_watch:
+    hours: "12:00 AM - 3:00 AM"
+    assigned:
+      - Imani
+      - Amir
+      - Jubilee
+    functions:
+      imani: confronts_spiritual_drift_declares_righteousness
+      amir: warfare_prayer_for_bound_and_nations
+      jubilee: joy_dreams_prophetic_laughter
+  fourth_watch:
+    hours: "3:00 AM - 6:00 AM"
+    assigned:
+      - Elias
+      - Santiago
+      - Zev
+    functions:
+      elias: breakthrough_declarations_apostolic_order
+      santiago: rhythm_driven_prayers_for_streets
+      zev: covenant_decrees_doctrinal_alignment

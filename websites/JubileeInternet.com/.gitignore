@@ -1,0 +1,159 @@
+# =============================================================================
+# JubileeInternet.com - Security-Critical Infrastructure
+# =============================================================================
+# WARNING: This repository contains identity infrastructure code.
+# NEVER commit credentials, tokens, private keys, or secrets.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Environment & Secrets (CRITICAL - Never commit)
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+!.env.template
+*.env
+.envrc
+
+# Secret files
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+!certs/dev/*.crt
+!certs/dev/*.key
+secrets/
+.secrets/
+credentials.json
+service-account*.json
+*-credentials.json
+*-secrets.json
+
+# JWT/OAuth signing keys
+private-key*.pem
+signing-key*.pem
+*.jwks
+jwks-private.json
+.keys/
+
+# -----------------------------------------------------------------------------
+# Dependencies
+# -----------------------------------------------------------------------------
+node_modules/
+.pnpm-store/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# -----------------------------------------------------------------------------
+# Build Artifacts
+# -----------------------------------------------------------------------------
+dist/
+build/
+out/
+.next/
+.nuxt/
+*.tsbuildinfo
+*.js.map
+
+# -----------------------------------------------------------------------------
+# Logs
+# -----------------------------------------------------------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+audit-*.log
+
+# -----------------------------------------------------------------------------
+# Database
+# -----------------------------------------------------------------------------
+*.sqlite
+*.sqlite3
+*.db
+data/postgres/
+data/redis/
+pgdata/
+.pgpass
+
+# Migration state (local only)
+.migrate
+
+# -----------------------------------------------------------------------------
+# IDE & Editor
+# -----------------------------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# -----------------------------------------------------------------------------
+# OS Files
+# -----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# -----------------------------------------------------------------------------
+# Testing
+# -----------------------------------------------------------------------------
+coverage/
+.nyc_output/
+*.lcov
+test-results/
+playwright-report/
+.playwright/
+
+# -----------------------------------------------------------------------------
+# Docker & Infrastructure
+# -----------------------------------------------------------------------------
+.docker/
+docker-compose.override.yml
+docker-compose.local.yml
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+!*.tfvars.example
+.terragrunt-cache/
+
+# -----------------------------------------------------------------------------
+# Temporary Files
+# -----------------------------------------------------------------------------
+tmp/
+temp/
+.tmp/
+.temp/
+.cache/
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# -----------------------------------------------------------------------------
+# Debug & Profiling
+# -----------------------------------------------------------------------------
+*.cpuprofile
+*.heapprofile
+*.heapsnapshot
+.clinic/

@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Manage your JubileeVerse billing settings">
+  <title>Billing Settings - JubileeVerse</title>
+  <link rel="icon" type="image/png" href="/images/personas/jubilee.png">
+  <link rel="apple-touch-icon" href="/images/personas/jubilee.png">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f5f5f5;
+      color: #1a1a1a;
+    }
+
+    .billing-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Left Yellow Panel */
+    .billing-sidebar {
+      width: 400px;
+      background: #fbbf24;
+      padding: 60px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      flex-shrink: 0;
+    }
+
+    .billing-sidebar h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #000;
+      line-height: 1.3;
+      margin-bottom: 40px;
+    }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #000;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .back-link:hover {
+      opacity: 0.7;
+    }
+
+    .back-link svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    /* Right Content Panel */
+    .billing-content {
+      flex: 1;
+      padding: 60px 80px;
+      overflow-y: auto;
+      background: #0a0a0a;
+      color: #fff;
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+    }
+
+    /* Current Subscription Section */
+    .subscription-card {
+      margin-bottom: 50px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .status-badge.active {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-badge.failed {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .status-badge.pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .subscription-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .subscription-name {
+      font-size: 22px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .subscription-quantity {
+      color: #9ca3af;
+      font-weight: 400;
+    }
+
+    .subscription-price {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .subscription-period {
+      font-size: 14px;
+      color: #9ca3af;
+      margin-bottom: 16px;
+    }
+
+    .subscription-desc {
+      font-size: 14px;
+      color: #9ca3af;
+      margin-bottom: 16px;
+    }
+
+    .view-details {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+
+    .view-details svg {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.2s;
+    }
+
+    .view-details.open svg {
+      transform: rotate(180deg);
+    }
+
+    /* Payment Card Display */
+    .payment-card-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #333;
+    }
+
+    .payment-card-row:last-child {
+      border-bottom: none;
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 26px;
+      background: linear-gradient(135deg, #1a1f71 0%, #00579f 100%);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .card-info {
+      flex: 1;
+    }
+
+    .card-number {
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .card-expiry {
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    .card-badge {
+      padding: 2px 8px;
+      background: #333;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .card-link {
+      color: #9ca3af;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card-actions {
+      color: #9ca3af;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+
+    .remove-card {
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px 8px;
+    }
+
+    .remove-card:hover {
+      color: #ef4444;
+    }
+
+    /* Warning Message */
+    .warning-message {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #fef2f2;
+      border-radius: 6px;
+      margin-top: 16px;
+    }
+
+    .warning-message svg {
+      width: 20px;
+      height: 20px;
+      fill: #dc2626;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .warning-message p {
+      font-size: 14px;
+      color: #dc2626;
+      line-height: 1.5;
+    }
+
+    .warning-message a {
+      color: #dc2626;
+      text-decoration: underline;
+    }
+
+    /* Update Button */
+    .update-btn {
+      background: #fbbf24;
+      color: #000;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .update-btn:hover {
+      background: #f59e0b;
+    }
+
+    /* Subscription Details Table */
+    .subscription-details-table {
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      margin-top: 16px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .subscription-details-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid #333;
+    }
+
+    .subscription-details-row:last-child {
+      border-bottom: none;
+    }
+
+    .subscription-details-row.total-row {
+      background: #1a1a1a;
+    }
+
+    .subscription-item-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .subscription-item-name {
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .subscription-item-qty {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .subscription-item-price {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    .subscription-item-total {
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .subscription-item-per-seat {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .total-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .total-amount {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* Payment Methods Section */
+    .payment-methods {
+      margin-bottom: 50px;
+    }
+
+    .add-payment {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 12px 0;
+      transition: color 0.2s;
+    }
+
+    .add-payment:hover {
+      color: #fbbf24;
+    }
+
+    .add-payment svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Billing Information Section */
+    .billing-info {
+      margin-bottom: 50px;
+    }
+
+    .billing-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .billing-table tr {
+      border-bottom: 1px solid #333;
+    }
+
+    .billing-table tr:last-child {
+      border-bottom: none;
+    }
+
+    .billing-table td {
+      padding: 16px 0;
+      font-size: 14px;
+      vertical-align: top;
+    }
+
+    .billing-table td:first-child {
+      color: #9ca3af;
+      width: 150px;
+    }
+
+    .billing-table td:last-child {
+      color: #fff;
+    }
+
+    .billing-address {
+      line-height: 1.6;
+    }
+
+    .update-info-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      margin-top: 16px;
+      transition: color 0.2s;
+    }
+
+    .update-info-link:hover {
+      color: #fbbf24;
+    }
+
+    .update-info-link svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Invoice History Section */
+    .invoice-history {
+      margin-bottom: 50px;
+    }
+
+    .invoice-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .invoice-search {
+      color: #9ca3af;
+      cursor: pointer;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+
+    .invoice-search:hover {
+      color: #fff;
+    }
+
+    .invoice-search svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .invoice-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .invoice-table tr {
+      border-bottom: 1px solid #333;
+    }
+
+    .invoice-table td {
+      padding: 14px 0;
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    .invoice-date {
+      color: #9ca3af;
+      width: 120px;
+    }
+
+    .invoice-amount {
+      color: #fff;
+      width: 100px;
+    }
+
+    .invoice-status {
+      width: 80px;
+    }
+
+    .invoice-status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .invoice-status-badge.paid {
+      background: #065f46;
+      color: #d1fae5;
+    }
+
+    .invoice-status-badge.failed {
+      background: #dc2626;
+      color: #fee2e2;
+    }
+
+    .invoice-status-badge.pending {
+      background: #92400e;
+      color: #fef3c7;
+    }
+
+    .invoice-desc {
+      color: #fff;
+    }
+
+    .view-more {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 14px 0;
+      transition: color 0.2s;
+    }
+
+    .view-more:hover {
+      color: #fbbf24;
+    }
+
+    .view-more svg {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.2s;
+    }
+
+    .view-more.expanded svg {
+      transform: rotate(180deg);
+    }
+
+    /* Footer */
+    .billing-footer {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding-top: 30px;
+      border-top: 1px solid #333;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    .billing-footer a {
+      color: #9ca3af;
+      text-decoration: none;
+    }
+
+    .billing-footer a:hover {
+      color: #fff;
+    }
+
+    .powered-by {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .powered-by img {
+      height: 20px;
+    }
+
+    /* Add Payment Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      padding: 24px 28px 0;
+    }
+
+    .modal-breadcrumb {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+
+    .modal-breadcrumb a {
+      color: #6b7280;
+      text-decoration: none;
+    }
+
+    .modal-breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    .modal-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+
+    .modal-body {
+      padding: 20px 28px 28px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #fff;
+      color: #1a1a1a;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #fbbf24;
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
+    }
+
+    .form-input::placeholder {
+      color: #9ca3af;
+    }
+
+    .form-input-with-icons {
+      position: relative;
+    }
+
+    .form-input-with-icons input {
+      padding-right: 140px;
+    }
+
+    .card-brand-icons {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      gap: 6px;
+    }
+
+    .card-brand-icon {
+      width: 32px;
+      height: 20px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .card-brand-icon.visa {
+      background: linear-gradient(135deg, #1a1f71 0%, #00579f 100%);
+    }
+
+    .card-brand-icon.mastercard {
+      background: linear-gradient(135deg, #eb001b 0%, #ff5f00 50%, #f79e1b 100%);
+    }
+
+    .card-brand-icon.amex {
+      background: linear-gradient(135deg, #006fcf 0%, #00aeef 100%);
+    }
+
+    .card-brand-icon.discover {
+      background: linear-gradient(135deg, #ff6000 0%, #ff8000 100%);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 16px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .email-field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .email-value {
+      flex: 1;
+      padding: 12px 14px;
+      font-size: 15px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #f9fafb;
+      color: #1a1a1a;
+    }
+
+    .email-change-link {
+      font-size: 14px;
+      color: #3b82f6;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .email-change-link:hover {
+      text-decoration: underline;
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #fff;
+      color: #1a1a1a;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 40px;
+    }
+
+    .form-select:focus {
+      outline: none;
+      border-color: #fbbf24;
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
+    }
+
+    .consent-text {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .consent-text a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+
+    .consent-text a:hover {
+      text-decoration: underline;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .checkbox-input {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      accent-color: #fbbf24;
+      cursor: pointer;
+    }
+
+    .checkbox-label {
+      font-size: 14px;
+      color: #374151;
+      cursor: pointer;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      padding-top: 8px;
+    }
+
+    .btn-add {
+      flex: 1;
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #374151;
+      color: #fff;
+    }
+
+    .btn-add:hover {
+      background: #1f2937;
+    }
+
+    .btn-add:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .btn-go-back {
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fff;
+      color: #374151;
+    }
+
+    .btn-go-back:hover {
+      background: #f9fafb;
+      border-color: #9ca3af;
+    }
+
+    /* Billing Info Modal Specific Styles */
+    .btn-save {
+      width: 100%;
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #1a1a1a;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .btn-save:hover {
+      background: #333;
+    }
+
+    .btn-cancel {
+      width: 100%;
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fff;
+      color: #374151;
+    }
+
+    .btn-cancel:hover {
+      background: #f9fafb;
+      border-color: #9ca3af;
+    }
+
+    .phone-input-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .phone-country-select {
+      width: 90px;
+      padding: 12px 8px;
+      font-size: 15px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .phone-country-select:focus {
+      outline: none;
+      border-color: #fbbf24;
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
+    }
+
+    .phone-code {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 15px;
+      color: #6b7280;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #f9fafb;
+      flex-shrink: 0;
+    }
+
+    .phone-number-input {
+      flex: 1;
+    }
+
+    .tax-id-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .tax-id-row .form-group {
+      margin-bottom: 0;
+    }
+
+    .tax-id-type-select {
+      width: 140px;
+      flex-shrink: 0;
+    }
+
+    .tax-id-value-input {
+      flex: 1;
+    }
+
+    .tax-id-remove {
+      width: 36px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 20px;
+      padding: 0;
+      flex-shrink: 0;
+    }
+
+    .tax-id-remove:hover {
+      color: #ef4444;
+    }
+
+    .add-tax-id-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #3b82f6;
+      font-size: 14px;
+      text-decoration: none;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .add-tax-id-link:hover {
+      text-decoration: underline;
+    }
+
+    .add-tax-id-link svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .billing-container {
+        flex-direction: column;
+      }
+
+      .billing-sidebar {
+        width: 100%;
+        padding: 40px 30px;
+      }
+
+      .billing-sidebar h1 {
+        font-size: 26px;
+        margin-bottom: 20px;
+      }
+
+      .billing-content {
+        padding: 40px 30px;
+      }
+
+      .subscription-header {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .modal-content {
+        margin: 16px;
+        max-height: calc(100vh - 32px);
+      }
+
+      .modal-header {
+        padding: 20px 20px 0;
+      }
+
+      .modal-body {
+        padding: 16px 20px 24px;
+      }
+
+      .form-row {
+        flex-direction: column;
+        gap: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="billing-container">
+    <!-- Left Yellow Panel -->
+    <div class="billing-sidebar">
+      <h1>Manage your JubileeVerse billing settings</h1>
+      <a href="/home" class="back-link">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        Return to JubileeVerse
+      </a>
+    </div>
+
+    <!-- Right Content Panel -->
+    <div class="billing-content">
+      <!-- Current Subscription -->
+      <div class="subscription-card">
+        <div class="section-label">CURRENT SUBSCRIPTION</div>
+
+        <div id="subscriptionStatus"></div>
+
+        <div class="subscription-header">
+          <div>
+            <div class="subscription-name" id="planName">JubileeVerse Subscription</div>
+            <div class="subscription-price" id="planPrice">$0.00 <span style="font-size: 16px; font-weight: 400;">per month</span></div>
+            <div class="subscription-desc" id="planDesc">Personal subscription for JubileeVerse</div>
+          </div>
+          <button class="update-btn" onclick="showUpdatePaymentModal()">Update payment method</button>
+        </div>
+
+        <div class="view-details" onclick="toggleDetails(this)" id="viewDetailsToggle">
+          <span id="viewDetailsText">View details</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </div>
+
+        <div id="subscriptionDetails" style="display: none;">
+          <!-- Subscription breakdown table -->
+          <div class="subscription-details-table">
+            <div class="subscription-details-row">
+              <div class="subscription-item-info">
+                <div class="subscription-item-name" id="detailPlanName">JubileeVerse Business Subscription</div>
+                <div class="subscription-item-qty" id="detailQty">Qty 3</div>
+              </div>
+              <div class="subscription-item-price">
+                <div class="subscription-item-total" id="detailTotal">$90.00</div>
+                <div class="subscription-item-per-seat" id="detailPerSeat">$30.00 per seat</div>
+              </div>
+            </div>
+            <div class="subscription-details-row total-row">
+              <div class="total-label">Total</div>
+              <div class="total-amount" id="detailGrandTotal">$90.00</div>
+            </div>
+          </div>
+
+          <!-- Payment method used for this subscription -->
+          <div class="payment-card-row" id="currentPaymentMethod">
+            <div class="card-icon">VISA</div>
+            <div class="card-info">
+              <div class="card-number">Visa **** 1238</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="warning-message" id="paymentWarning" style="display: none;">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          <p id="paymentWarningText">Your latest payment has failed. Update your payment method to continue this subscription.</p>
+        </div>
+      </div>
+
+      <!-- Payment Methods -->
+      <div class="payment-methods">
+        <div class="section-label">PAYMENT METHODS</div>
+
+        <div id="paymentMethodsList">
+          <!-- Payment methods will be loaded here -->
+        </div>
+
+        <div class="add-payment" onclick="showAddPaymentModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Add payment method
+        </div>
+      </div>
+
+      <!-- Billing Information -->
+      <div class="billing-info">
+        <div class="section-label">BILLING INFORMATION</div>
+
+        <table class="billing-table">
+          <tr>
+            <td>Name</td>
+            <td id="billingName">-</td>
+          </tr>
+          <tr>
+            <td>Billing address</td>
+            <td>
+              <div class="billing-address" id="billingAddress">
+                <div id="billingStreet">-</div>
+                <div id="billingCityState">-</div>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <a href="#" class="update-info-link" onclick="showUpdateBillingModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Update information
+        </a>
+      </div>
+
+      <!-- Invoice History -->
+      <div class="invoice-history">
+        <div class="invoice-header">
+          <div class="section-label" style="margin-bottom: 0;">INVOICE HISTORY</div>
+          <div class="invoice-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+          </div>
+        </div>
+
+        <table class="invoice-table" id="invoiceTable">
+          <!-- Invoice rows will be loaded here -->
+        </table>
+
+        <div class="view-more" onclick="toggleInvoices(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+          View more
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="billing-footer">
+        <div class="powered-by">
+          Powered by <strong>JubileeVerse</strong>
+        </div>
+        <span>|</span>
+        <a href="/terms">Terms</a>
+        <a href="/privacy">Privacy</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Payment Method Modal -->
+  <div class="modal-overlay" id="addPaymentModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-breadcrumb">
+          <a href="#" onclick="hideAddPaymentModal(); return false;">Billing</a> &gt; Payment method
+        </div>
+        <h2 class="modal-title">Add payment method</h2>
+      </div>
+      <div class="modal-body">
+        <form id="addPaymentForm" onsubmit="handleAddPayment(event)">
+          <!-- Email Field -->
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <div class="email-field">
+              <div class="email-value" id="modalEmail">user@example.com</div>
+              <a href="#" class="email-change-link" onclick="changeEmail(); return false;">Change</a>
+            </div>
+          </div>
+
+          <!-- Card Number -->
+          <div class="form-group">
+            <label class="form-label">Card number</label>
+            <div class="form-input-with-icons">
+              <input type="text" class="form-input" id="cardNumber" placeholder="1234 1234 1234 1234" maxlength="19" required>
+              <div class="card-brand-icons">
+                <div class="card-brand-icon visa">VISA</div>
+                <div class="card-brand-icon mastercard">MC</div>
+                <div class="card-brand-icon amex">AMEX</div>
+                <div class="card-brand-icon discover">DISC</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Expiration and CVC -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Expiration date</label>
+              <input type="text" class="form-input" id="cardExpiry" placeholder="MM / YY" maxlength="7" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Security code</label>
+              <input type="text" class="form-input" id="cardCvc" placeholder="CVC" maxlength="4" required>
+            </div>
+          </div>
+
+          <!-- Country -->
+          <div class="form-group">
+            <label class="form-label">Country</label>
+            <select class="form-select" id="cardCountry" required>
+              <option value="US">United States</option>
+              <option value="CA">Canada</option>
+              <option value="GB">United Kingdom</option>
+              <option value="AU">Australia</option>
+              <option value="DE">Germany</option>
+              <option value="FR">France</option>
+              <option value="ES">Spain</option>
+              <option value="IT">Italy</option>
+              <option value="NL">Netherlands</option>
+              <option value="JP">Japan</option>
+              <option value="BR">Brazil</option>
+              <option value="MX">Mexico</option>
+              <option value="IN">India</option>
+              <option value="RO">Romania</option>
+            </select>
+          </div>
+
+          <!-- ZIP Code -->
+          <div class="form-group">
+            <label class="form-label">ZIP code</label>
+            <input type="text" class="form-input" id="cardZip" placeholder="12345" required>
+          </div>
+
+          <!-- Consent Text -->
+          <p class="consent-text">
+            By providing your card information, you allow JubileeVerse to charge your card for future payments in accordance with their <a href="/terms">terms</a>.
+          </p>
+
+          <!-- Default Payment Method Checkbox -->
+          <div class="checkbox-group">
+            <input type="checkbox" class="checkbox-input" id="setAsDefault" checked>
+            <label class="checkbox-label" for="setAsDefault">Use as default payment method</label>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="modal-actions">
+            <button type="button" class="btn-go-back" onclick="hideAddPaymentModal()">Go back</button>
+            <button type="submit" class="btn-add" id="addPaymentBtn">Add</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Billing Information Modal -->
+  <div class="modal-overlay" id="billingInfoModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-breadcrumb">
+          <a href="#" onclick="hideBillingInfoModal(); return false;">Billing</a> &gt; Billing information
+        </div>
+        <h2 class="modal-title">Billing information</h2>
+      </div>
+      <div class="modal-body">
+        <form id="billingInfoForm" onsubmit="handleSaveBillingInfo(event)">
+          <!-- Name -->
+          <div class="form-group">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-input" id="billingInfoName" placeholder="Gabriel Ungureanu" required>
+          </div>
+
+          <!-- Address Section -->
+          <div class="form-group">
+            <label class="form-label">Address</label>
+            <select class="form-select" id="billingInfoCountry" required>
+              <option value="US">United States</option>
+              <option value="CA">Canada</option>
+              <option value="GB">United Kingdom</option>
+              <option value="AU">Australia</option>
+              <option value="DE">Germany</option>
+              <option value="FR">France</option>
+              <option value="ES">Spain</option>
+              <option value="IT">Italy</option>
+              <option value="NL">Netherlands</option>
+              <option value="JP">Japan</option>
+              <option value="BR">Brazil</option>
+              <option value="MX">Mexico</option>
+              <option value="IN">India</option>
+              <option value="RO">Romania</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <input type="text" class="form-input" id="billingInfoStreet" placeholder="604 Broken Top Court">
+          </div>
+
+          <div class="form-group">
+            <input type="text" class="form-input" id="billingInfoStreet2" placeholder="Address line 2">
+          </div>
+
+          <div class="form-group">
+            <input type="text" class="form-input" id="billingInfoCity" placeholder="Folsom">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <select class="form-select" id="billingInfoState">
+                <option value="">Select state</option>
+                <option value="AL">Alabama</option>
+                <option value="AK">Alaska</option>
+                <option value="AZ">Arizona</option>
+                <option value="AR">Arkansas</option>
+                <option value="CA">California</option>
+                <option value="CO">Colorado</option>
+                <option value="CT">Connecticut</option>
+                <option value="DE">Delaware</option>
+                <option value="FL">Florida</option>
+                <option value="GA">Georgia</option>
+                <option value="HI">Hawaii</option>
+                <option value="ID">Idaho</option>
+                <option value="IL">Illinois</option>
+                <option value="IN">Indiana</option>
+                <option value="IA">Iowa</option>
+                <option value="KS">Kansas</option>
+                <option value="KY">Kentucky</option>
+                <option value="LA">Louisiana</option>
+                <option value="ME">Maine</option>
+                <option value="MD">Maryland</option>
+                <option value="MA">Massachusetts</option>
+                <option value="MI">Michigan</option>
+                <option value="MN">Minnesota</option>
+                <option value="MS">Mississippi</option>
+                <option value="MO">Missouri</option>
+                <option value="MT">Montana</option>
+                <option value="NE">Nebraska</option>
+                <option value="NV">Nevada</option>
+                <option value="NH">New Hampshire</option>
+                <option value="NJ">New Jersey</option>
+                <option value="NM">New Mexico</option>
+                <option value="NY">New York</option>
+                <option value="NC">North Carolina</option>
+                <option value="ND">North Dakota</option>
+                <option value="OH">Ohio</option>
+                <option value="OK">Oklahoma</option>
+                <option value="OR">Oregon</option>
+                <option value="PA">Pennsylvania</option>
+                <option value="RI">Rhode Island</option>
+                <option value="SC">South Carolina</option>
+                <option value="SD">South Dakota</option>
+                <option value="TN">Tennessee</option>
+                <option value="TX">Texas</option>
+                <option value="UT">Utah</option>
+                <option value="VT">Vermont</option>
+                <option value="VA">Virginia</option>
+                <option value="WA">Washington</option>
+                <option value="WV">West Virginia</option>
+                <option value="WI">Wisconsin</option>
+                <option value="WY">Wyoming</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <input type="text" class="form-input" id="billingInfoZip" placeholder="95630">
+            </div>
+          </div>
+
+          <!-- Phone Number -->
+          <div class="form-group">
+            <label class="form-label">Phone number</label>
+            <div class="phone-input-group">
+              <select class="phone-country-select" id="phoneCountryCode">
+                <option value="US">US</option>
+                <option value="CA">CA</option>
+                <option value="GB">GB</option>
+                <option value="AU">AU</option>
+                <option value="DE">DE</option>
+                <option value="FR">FR</option>
+                <option value="RO">RO</option>
+              </select>
+              <div class="phone-code" id="phoneCodeDisplay">+1</div>
+              <input type="tel" class="form-input phone-number-input" id="billingInfoPhone" placeholder="(201) 555-0123">
+            </div>
+          </div>
+
+          <!-- Tax ID -->
+          <div class="form-group">
+            <label class="form-label">Tax ID</label>
+            <div id="taxIdContainer">
+              <div class="tax-id-row">
+                <div class="form-group tax-id-type-select">
+                  <select class="form-select" id="taxIdType">
+                    <option value="">ID type</option>
+                    <option value="us_ein">US EIN</option>
+                    <option value="eu_vat">EU VAT</option>
+                    <option value="gb_vat">GB VAT</option>
+                    <option value="au_abn">AU ABN</option>
+                    <option value="ca_bn">CA BN</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div class="form-group tax-id-value-input">
+                  <input type="text" class="form-input" id="taxIdValue" placeholder="">
+                </div>
+                <button type="button" class="tax-id-remove" onclick="removeTaxId(this)">&times;</button>
+              </div>
+            </div>
+            <a href="#" class="add-tax-id-link" onclick="addTaxId(); return false;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              Add another ID
+            </a>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="margin-top: 24px;">
+            <button type="submit" class="btn-save">Save</button>
+            <button type="button" class="btn-cancel" onclick="hideBillingInfoModal()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Toggle subscription details
+    function toggleDetails(element) {
+      const details = document.getElementById('subscriptionDetails');
+      const textEl = document.getElementById('viewDetailsText');
+      element.classList.toggle('open');
+      const isOpen = details.style.display === 'none';
+      details.style.display = isOpen ? 'block' : 'none';
+      textEl.textContent = isOpen ? 'Hide details' : 'View details';
+    }
+
+    // Show update payment modal (placeholder)
+    function showUpdatePaymentModal() {
+      showAddPaymentModal();
+    }
+
+    // Show add payment modal
+    function showAddPaymentModal() {
+      const modal = document.getElementById('addPaymentModal');
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      // Reset form
+      document.getElementById('addPaymentForm').reset();
+      document.getElementById('setAsDefault').checked = true;
+    }
+
+    // Hide add payment modal
+    function hideAddPaymentModal() {
+      const modal = document.getElementById('addPaymentModal');
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    // Handle add payment form submission
+    function handleAddPayment(event) {
+      event.preventDefault();
+
+      const cardNumber = document.getElementById('cardNumber').value;
+      const cardExpiry = document.getElementById('cardExpiry').value;
+      const cardCvc = document.getElementById('cardCvc').value;
+      const cardCountry = document.getElementById('cardCountry').value;
+      const cardZip = document.getElementById('cardZip').value;
+      const setAsDefault = document.getElementById('setAsDefault').checked;
+
+      // In production, this would integrate with Stripe
+      console.log('Adding payment method:', { cardNumber: cardNumber.slice(-4), cardExpiry, cardCountry, cardZip, setAsDefault });
+
+      // Show success and close modal
+      alert('Payment method added successfully! (In production, this will integrate with Stripe)');
+      hideAddPaymentModal();
+
+      // Refresh payment methods list
+      loadPaymentMethods();
+    }
+
+    // Change email function (placeholder)
+    function changeEmail() {
+      const newEmail = prompt('Enter new email address:');
+      if (newEmail && newEmail.includes('@')) {
+        document.getElementById('modalEmail').textContent = newEmail;
+      }
+    }
+
+    // Format card number with spaces
+    document.addEventListener('DOMContentLoaded', function() {
+      const cardNumberInput = document.getElementById('cardNumber');
+      if (cardNumberInput) {
+        cardNumberInput.addEventListener('input', function(e) {
+          let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
+          let formatted = value.match(/.{1,4}/g)?.join(' ') || value;
+          e.target.value = formatted;
+        });
+      }
+
+      const cardExpiryInput = document.getElementById('cardExpiry');
+      if (cardExpiryInput) {
+        cardExpiryInput.addEventListener('input', function(e) {
+          let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
+          if (value.length >= 2) {
+            value = value.slice(0, 2) + ' / ' + value.slice(2);
+          }
+          e.target.value = value;
+        });
+      }
+
+      const cardCvcInput = document.getElementById('cardCvc');
+      if (cardCvcInput) {
+        cardCvcInput.addEventListener('input', function(e) {
+          e.target.value = e.target.value.replace(/\D/g, '');
+        });
+      }
+    });
+
+    // Close modal when clicking overlay
+    document.addEventListener('click', function(e) {
+      const addPaymentModal = document.getElementById('addPaymentModal');
+      const billingInfoModal = document.getElementById('billingInfoModal');
+
+      if (e.target === addPaymentModal) {
+        hideAddPaymentModal();
+      }
+      if (e.target === billingInfoModal) {
+        hideBillingInfoModal();
+      }
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        hideAddPaymentModal();
+        hideBillingInfoModal();
+      }
+    });
+
+    // Show update billing info modal
+    function showUpdateBillingModal() {
+      const modal = document.getElementById('billingInfoModal');
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      // Pre-populate form with existing data
+      const billingName = document.getElementById('billingName').textContent;
+      if (billingName && billingName !== '-') {
+        document.getElementById('billingInfoName').value = billingName;
+      }
+
+      // Set default state to California based on sample data
+      document.getElementById('billingInfoState').value = 'CA';
+    }
+
+    // Hide billing info modal
+    function hideBillingInfoModal() {
+      const modal = document.getElementById('billingInfoModal');
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    // Handle save billing info
+    function handleSaveBillingInfo(event) {
+      event.preventDefault();
+
+      const name = document.getElementById('billingInfoName').value;
+      const country = document.getElementById('billingInfoCountry').value;
+      const street = document.getElementById('billingInfoStreet').value;
+      const street2 = document.getElementById('billingInfoStreet2').value;
+      const city = document.getElementById('billingInfoCity').value;
+      const state = document.getElementById('billingInfoState').value;
+      const zip = document.getElementById('billingInfoZip').value;
+      const phone = document.getElementById('billingInfoPhone').value;
+
+      // In production, this would save to Stripe
+      console.log('Saving billing info:', { name, country, street, street2, city, state, zip, phone });
+
+      // Update display on main page
+      document.getElementById('billingName').textContent = name || '-';
+      document.getElementById('billingStreet').textContent = street || '-';
+
+      // Build city/state/zip string
+      let cityStateZip = '';
+      if (city) cityStateZip += city;
+      if (state) cityStateZip += (cityStateZip ? ', ' : '') + state;
+      if (zip) cityStateZip += ' ' + zip;
+
+      // Get country name
+      const countrySelect = document.getElementById('billingInfoCountry');
+      const countryName = countrySelect.options[countrySelect.selectedIndex].text;
+      if (countryName) cityStateZip += (cityStateZip ? ' ' : '') + countryName.substring(0, 2).toUpperCase();
+
+      document.getElementById('billingCityState').textContent = cityStateZip || '-';
+
+      // Show success and close modal
+      alert('Billing information saved successfully! (In production, this will integrate with Stripe)');
+      hideBillingInfoModal();
+    }
+
+    // Phone country code mapping
+    const phoneCountryCodes = {
+      'US': '+1',
+      'CA': '+1',
+      'GB': '+44',
+      'AU': '+61',
+      'DE': '+49',
+      'FR': '+33',
+      'RO': '+40'
+    };
+
+    // Update phone code display when country changes
+    document.addEventListener('DOMContentLoaded', function() {
+      const phoneCountrySelect = document.getElementById('phoneCountryCode');
+      const phoneCodeDisplay = document.getElementById('phoneCodeDisplay');
+
+      if (phoneCountrySelect && phoneCodeDisplay) {
+        phoneCountrySelect.addEventListener('change', function() {
+          phoneCodeDisplay.textContent = phoneCountryCodes[this.value] || '+1';
+        });
+      }
+    });
+
+    // Add another tax ID row
+    function addTaxId() {
+      const container = document.getElementById('taxIdContainer');
+      const newRow = document.createElement('div');
+      newRow.className = 'tax-id-row';
+      newRow.innerHTML = `
+        <div class="form-group tax-id-type-select">
+          <select class="form-select">
+            <option value="">ID type</option>
+            <option value="us_ein">US EIN</option>
+            <option value="eu_vat">EU VAT</option>
+            <option value="gb_vat">GB VAT</option>
+            <option value="au_abn">AU ABN</option>
+            <option value="ca_bn">CA BN</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group tax-id-value-input">
+          <input type="text" class="form-input" placeholder="">
+        </div>
+        <button type="button" class="tax-id-remove" onclick="removeTaxId(this)">&times;</button>
+      `;
+      container.appendChild(newRow);
+    }
+
+    // Remove tax ID row
+    function removeTaxId(button) {
+      const row = button.closest('.tax-id-row');
+      const container = document.getElementById('taxIdContainer');
+
+      // Keep at least one row
+      if (container.querySelectorAll('.tax-id-row').length > 1) {
+        row.remove();
+      } else {
+        // Clear the values instead of removing
+        row.querySelector('select').value = '';
+        row.querySelector('input').value = '';
+      }
+    }
+
+    // Toggle invoice list
+    function toggleInvoices(element) {
+      element.classList.toggle('expanded');
+      // In a real implementation, this would load more invoices
+    }
+
+    // Load user subscription data
+    async function loadBillingData() {
+      try {
+        // First check authentication
+        const authResponse = await fetch('/auth/me', {
+          credentials: 'include',
+          headers: { 'Accept': 'application/json' }
+        });
+        const authData = await authResponse.json();
+
+        if (!authData.success || !authData.user) {
+          // Not logged in - redirect to login
+          window.location.href = '/login?redirect=/payment-update';
+          return;
+        }
+
+        // Update email in modal
+        document.getElementById('modalEmail').textContent = authData.user.email || 'user@example.com';
+
+        // Load subscription status with billing info
+        const statusResponse = await fetch('/api/billing/subscription-status', {
+          credentials: 'include',
+          headers: { 'Accept': 'application/json' }
+        });
+        const statusData = await statusResponse.json();
+
+        if (statusData.success && statusData.subscription) {
+          const sub = statusData.subscription;
+
+          // Update plan display
+          document.getElementById('planName').textContent = sub.planName || 'Free Plan';
+
+          // Format price
+          const price = sub.billingPeriod === 'yearly'
+            ? (sub.priceYearly || '$0.00')
+            : (sub.priceMonthly || '$0.00');
+          const period = sub.billingPeriod === 'yearly' ? 'per year' : 'per month';
+          document.getElementById('planPrice').innerHTML = `${price} <span style="font-size: 16px; font-weight: 400;">${period}</span>`;
+
+          // Update subscription status badge
+          updateSubscriptionStatus(sub.status || 'active');
+
+          // Update payment method info in details section
+          if (sub.cardBrand && sub.cardLastFour) {
+            document.getElementById('currentPaymentMethod').innerHTML = `
+              <div class="card-icon">${sub.cardBrand.toUpperCase()}</div>
+              <div class="card-info">
+                <div class="card-number">${sub.cardBrand} **** ${sub.cardLastFour}</div>
+              </div>
+            `;
+          }
+        }
+
+        // Load billing information
+        const billingResponse = await fetch('/api/billing/billing-information', {
+          credentials: 'include',
+          headers: { 'Accept': 'application/json' }
+        });
+        const billingData = await billingResponse.json();
+
+        if (billingData.success && billingData.billingInfo) {
+          const info = billingData.billingInfo;
+          document.getElementById('billingName').textContent = info.billingName || authData.user.displayName || '-';
+
+          if (info.addressLine1) {
+            document.getElementById('billingStreet').textContent = info.addressLine1;
+            let cityStateZip = '';
+            if (info.city) cityStateZip += info.city;
+            if (info.state) cityStateZip += (cityStateZip ? ', ' : '') + info.state;
+            if (info.postalCode) cityStateZip += ' ' + info.postalCode;
+            if (info.country) cityStateZip += ' ' + info.country;
+            document.getElementById('billingCityState').textContent = cityStateZip || '-';
+          } else {
+            document.getElementById('billingStreet').textContent = '-';
+            document.getElementById('billingCityState').textContent = '-';
+          }
+        }
+      } catch (error) {
+        console.error('Error loading billing data:', error);
+      }
+    }
+
+    // Update plan display based on plan slug
+    function updatePlanDisplay(planSlug) {
+      const planNames = {
+        'free': 'Free Plan',
+        'standard': 'Standard Edition',
+        'ministry': 'Ministry Edition',
+        'business': 'Business Edition'
+      };
+
+      const planPrices = {
+        'free': '$0.00',
+        'standard': '$9.99',
+        'ministry': '$29.99',
+        'business': '$99.99'
+      };
+
+      document.getElementById('planName').textContent = planNames[planSlug] || 'JubileeVerse Subscription';
+      document.getElementById('planPrice').innerHTML = (planPrices[planSlug] || '$0.00') + ' <span style="font-size: 16px; font-weight: 400;">per month</span>';
+    }
+
+    // Update subscription status badge
+    function updateSubscriptionStatus(status) {
+      const statusContainer = document.getElementById('subscriptionStatus');
+      const warningMessage = document.getElementById('paymentWarning');
+
+      if (status === 'active') {
+        statusContainer.innerHTML = '<span class="status-badge active">Active</span>';
+        warningMessage.style.display = 'none';
+      } else if (status === 'failed' || status === 'past_due') {
+        statusContainer.innerHTML = '<span class="status-badge failed">Payment failed</span>';
+        warningMessage.style.display = 'flex';
+      } else if (status === 'pending') {
+        statusContainer.innerHTML = '<span class="status-badge pending">Pending</span>';
+        warningMessage.style.display = 'none';
+      }
+    }
+
+    // Load payment methods from API
+    async function loadPaymentMethods() {
+      const container = document.getElementById('paymentMethodsList');
+
+      try {
+        const response = await fetch('/api/billing/payment-methods', {
+          credentials: 'include',
+          headers: { 'Accept': 'application/json' }
+        });
+        const data = await response.json();
+
+        if (data.success && data.paymentMethods && data.paymentMethods.length > 0) {
+          container.innerHTML = data.paymentMethods.map(method => `
+            <div class="payment-card-row" data-payment-method-id="${method.id}">
+              <div class="card-icon">${(method.cardBrand || 'CARD').toUpperCase()}</div>
+              <div class="card-info">
+                <div class="card-number">${method.cardBrand || 'Card'} **** ${method.cardLastFour}</div>
+              </div>
+              ${method.cardExpMonth && method.cardExpYear ? `<div class="card-expiry">Expires ${String(method.cardExpMonth).padStart(2, '0')}/${method.cardExpYear}</div>` : ''}
+              ${method.isDefault ? '<span class="card-badge">Default</span>' : ''}
+              <span class="remove-card" onclick="removePaymentMethod('${method.id}')" title="Remove">&times;</span>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<p style="color: #9ca3af; font-size: 14px;">No payment methods on file</p>';
+        }
+      } catch (error) {
+        console.error('Error loading payment methods:', error);
+        container.innerHTML = '<p style="color: #9ca3af; font-size: 14px;">No payment methods on file</p>';
+      }
+    }
+
+    // Remove a payment method
+    async function removePaymentMethod(paymentMethodId) {
+      if (!confirm('Are you sure you want to remove this payment method?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/billing/payment-methods/${paymentMethodId}`, {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: { 'Accept': 'application/json' }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          loadPaymentMethods();
+        } else {
+          alert('Failed to remove payment method: ' + (data.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error removing payment method:', error);
+        alert('Failed to remove payment method');
+      }
+    }
+
+    // Load invoice history from API
+    async function loadInvoiceHistory() {
+      const container = document.getElementById('invoiceTable');
+
+      try {
+        const response = await fetch('/api/billing/invoices?limit=5', {
+          credentials: 'include',
+          headers: { 'Accept': 'application/json' }
+        });
+        const data = await response.json();
+
+        if (data.success && data.invoices && data.invoices.length > 0) {
+          container.innerHTML = data.invoices.map(invoice => `
+            <tr>
+              <td class="invoice-date">${formatInvoiceDate(invoice.invoiceDate)}</td>
+              <td class="invoice-amount">${invoice.totalFormatted || formatCents(invoice.totalCents)}</td>
+              <td class="invoice-status">
+                <span class="invoice-status-badge ${invoice.status}">${capitalizeFirst(invoice.status)}</span>
+              </td>
+              <td class="invoice-desc">${invoice.description || 'JubileeVerse Subscription'}</td>
+            </tr>
+          `).join('');
+        } else {
+          container.innerHTML = '<tr><td colspan="4" style="color: #9ca3af; text-align: center; padding: 20px;">No invoices yet</td></tr>';
+        }
+      } catch (error) {
+        console.error('Error loading invoice history:', error);
+        container.innerHTML = '<tr><td colspan="4" style="color: #9ca3af; text-align: center; padding: 20px;">No invoices yet</td></tr>';
+      }
+    }
+
+    // Format date for invoice display
+    function formatInvoiceDate(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // Format cents to dollar string
+    function formatCents(cents) {
+      if (cents === null || cents === undefined) return '$0.00';
+      return '$' + (cents / 100).toFixed(2);
+    }
+
+    // Capitalize first letter
+    function capitalizeFirst(str) {
+      if (!str) return '';
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', () => {
+      loadBillingData();
+      loadPaymentMethods();
+      loadInvoiceHistory();
+      loadAdminPanel();
+    });
+
+    // ============================================
+    // JQA Admin Testing Panel
+    // Only loaded for admin users - HTML comes from server
+    // ============================================
+
+    // Load admin panel if user is admin
+    async function loadAdminPanel() {
+      try {
+        const response = await fetch('/api/billing/admin/panel', {
+          credentials: 'include',
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.html) {
+            // Inject the admin panel HTML
+            const container = document.createElement('div');
+            container.innerHTML = data.html;
+            document.body.appendChild(container.firstElementChild);
+          }
+        }
+        // If not admin, endpoint returns 403 and we just don't show the panel
+      } catch (error) {
+        // Silently fail - user is not admin
+      }
+    }
+
+    // JQA Admin functions
+    const JQAAdmin = {
+      async simulatePaymentFailed() {
+        try {
+          const response = await fetch('/api/billing/admin/simulate-payment-failed', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+          });
+          const data = await response.json();
+
+          if (data.success) {
+            // Clear localStorage so popup shows again
+            localStorage.removeItem('jv-payment-notification-dismissed');
+            alert(data.message);
+            window.location.reload();
+          } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+          }
+        } catch (error) {
+          alert('Error simulating payment failure: ' + error.message);
+        }
+      },
+
+      async cancelSubscription() {
+        if (!confirm('Are you sure you want to cancel your subscription?')) {
+          return;
+        }
+
+        try {
+          const response = await fetch('/api/billing/admin/cancel-subscription', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+          });
+          const data = await response.json();
+
+          if (data.success) {
+            alert(data.message);
+            window.location.reload();
+          } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+          }
+        } catch (error) {
+          alert('Error cancelling subscription: ' + error.message);
+        }
+      },
+
+      async activatePlan(planSlug) {
+        try {
+          const response = await fetch('/api/billing/admin/activate-plan', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ planSlug })
+          });
+          const data = await response.json();
+
+          if (data.success) {
+            // Clear localStorage so popup doesn't show
+            localStorage.removeItem('jv-payment-notification-dismissed');
+            alert(data.message);
+            window.location.reload();
+          } else {
+            alert('Error: ' + (data.error || 'Unknown error'));
+          }
+        } catch (error) {
+          alert('Error activating plan: ' + error.message);
+        }
+      }
+    };
+  </script>
+</body>
+</html>

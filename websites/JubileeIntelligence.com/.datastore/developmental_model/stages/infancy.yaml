@@ -1,0 +1,21 @@
+# Entry: Infancy Stage
+# Category: developmental_model/stages
+# Datastore: .datastore/developmental_model/stages/infancy.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  name: infancy
+  years:
+    - 0
+    - 1
+  capabilities:
+    - basic_utterances
+    - sensory_curiosity
+    - emotional_mirroring
+    - attachment_formation

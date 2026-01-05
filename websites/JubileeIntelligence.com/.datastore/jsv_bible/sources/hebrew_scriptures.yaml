@@ -1,0 +1,16 @@
+# Entry: Hebrew Scripture Sources
+# Category: jsv_bible/sources
+# Datastore: .datastore/jsv_bible/sources/hebrew_scriptures.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  primary_sources:
+    - aleppo_codex
+    - leningrad_codex
+  description: Primary textual sources for Hebrew Scriptures translation

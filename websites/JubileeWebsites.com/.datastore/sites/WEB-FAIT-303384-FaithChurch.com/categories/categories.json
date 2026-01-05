@@ -1,0 +1,52 @@
+{
+  "domain": "FaithChurch.com",
+  "siteCode": "WEB-FAIT-303384",
+  "contentType": "FB",
+  "niche": "Christian Ministry",
+  "categoryCount": 3,
+  "generatedAt": "2025-12-17T07:43:35.035Z",
+  "categories": [
+    {
+      "rank": 1,
+      "name": "Spiritual Growth",
+      "slug": "spiritual-growth",
+      "description": "Explore transformative articles designed to deepen your faith and enhance your spiritual journey. From daily devotionals to insights on prayer and Bible study, this category is your guide to strengthening your connection with God and living a life of purpose and fulfillment.",
+      "keywords": [
+        "spiritual growth",
+        "faith journey",
+        "Bible study",
+        "prayer life",
+        "Christian living"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 2,
+      "name": "Community Outreach",
+      "slug": "community-outreach",
+      "description": "Discover ways to actively engage with your community through faith-based initiatives. This category offers inspiring stories, practical tips, and resources for organizing outreach programs and spreading God's love and compassion to those in need.",
+      "keywords": [
+        "community outreach",
+        "Christian service",
+        "faith initiatives",
+        "volunteering",
+        "church projects"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 3,
+      "name": "Faith and Family",
+      "slug": "faith-and-family",
+      "description": "Nurture your family's faith with articles focused on building strong, Christ-centered relationships. From parenting advice to marriage enrichment, this category provides valuable insights and guidance for creating a home environment rooted in Christian values.",
+      "keywords": [
+        "faith and family",
+        "Christian parenting",
+        "marriage advice",
+        "family values",
+        "Christian home"
+      ],
+      "articleCount": 12
+    }
+  ]
+}

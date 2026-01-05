@@ -1,0 +1,428 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+                <title>JubileeChat - Sign In</title>
+  
+    <!---->
+    <link href="/css/main.css?v=Lpcax7bcacYoJVJLGkDZwZRMHR478pqwiE78LncbT_0" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,500,600,700,800%7CMontserrat:400,700" rel="stylesheet" type="text/css" />
+    <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.min.css' />
+    <link href="/lib/bootstrap/dist/css/bootstrap.css?v=lUWhWBrak76xVbPS3MZm7a2UofhDVjPACXG5QYel-zo" rel="stylesheet" />
+    <link href="/lib/bootstrap/dist/css/bootstrap-grid.min.css?v=96ayIUEnpKr7n5BIsFK5vJ3qXMXFgvRl9_CBcHs6_Ts" rel="stylesheet" />
+    <link href="/lib/bootstrap/dist/css/bootstrap-reboot.min.css?v=359CMPAICGkV-zve4A4HJMha3bwqTFTjl-QC1KJK5DQ" rel="stylesheet" />
+    <link href="/lib/bootstrap/dist/css/bootstrap-utilities.min.css?v=ekoF4YNq4OUU4BoZ6FG2LTKD68LJvW49arNgykHOZfM" rel="stylesheet" />
+    <link href="/css/icons.min.css" rel="stylesheet" />
+    <link href="/css/app.css?v=JfoKhxZ8lWlrxP-ZOrkz5K2uNBWCN6yeWM2fqfmqVzA" rel="stylesheet" />
+    <link href="/css/main.css?v=Lpcax7bcacYoJVJLGkDZwZRMHR478pqwiE78LncbT_0" rel="stylesheet" />
+    <link rel="shortcut icon" href="" id="lnkFavicon" />
+    <style>
+        /* Custom textbox styling - yellow border with darker gray background to match panel */
+        .form-control {
+            background-color: rgba(80, 80, 80, 0.7) !important;
+            border: 2px solid #f0ad4e !important;
+            border-radius: 8px !important;
+            color: #fff !important;
+            padding-top: 28px !important;
+            padding-bottom: 8px !important;
+            height: auto !important;
+            min-height: 58px !important;
+        }
+        .form-control:focus {
+            background-color: rgba(80, 80, 80, 0.8) !important;
+            border-color: #f0ad4e !important;
+            border-radius: 8px !important;
+            box-shadow: 0 0 0 0.2rem rgba(240, 173, 78, 0.25) !important;
+        }
+        .form-control::placeholder {
+            color: transparent !important;
+        }
+        /* Floating label container */
+        .floating-label-group {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        /* Floating label inside textbox */
+        .floating-label {
+            position: absolute;
+            top: 8px;
+            left: 14px;
+            color: #c0c0c0 !important;
+            font-size: 12px;
+            font-weight: 500;
+            pointer-events: none;
+            z-index: 5;
+            transition: all 0.2s ease;
+        }
+        /* Floating label inside password wrapper */
+        .password-input-wrapper .floating-label {
+            position: absolute;
+            top: 8px;
+            left: 14px;
+            color: #c0c0c0 !important;
+            font-size: 12px;
+            font-weight: 500;
+            pointer-events: none;
+            z-index: 5;
+        }
+        /* Password div positioning fix */
+        .password-div {
+            position: relative !important;
+        }
+        /* Hide Norton/browser extension icons and popups in input fields */
+        input::-webkit-credentials-auto-fill-button,
+        input::-webkit-caps-lock-indicator,
+        input::-ms-reveal,
+        input::-ms-clear {
+            display: none !important;
+            visibility: hidden !important;
+        }
+        /* Hide any extension-injected elements and popups */
+        input ~ div[data-lastpass-root],
+        input ~ div[data-dashlanecreated],
+        div[data-norton-safeweb],
+        [class*="norton"],
+        [id*="norton"],
+        [class*="Norton"],
+        [id*="Norton"],
+        [class*="lastpass"],
+        [id*="lastpass"],
+        [class*="dashlane"],
+        [id*="dashlane"],
+        div[data-google-oa],
+        div[class*="credential"],
+        iframe[src*="accounts.google"],
+        div[id*="credential_picker"] {
+            display: none !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        /* Disable autocomplete dropdown styling interference */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0px 1000px rgba(80, 80, 80, 0.9) inset !important;
+            -webkit-text-fill-color: #fff !important;
+            border: 2px solid #f0ad4e !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+        /* Yellow password dots */
+        input[type="password"] {
+            -webkit-text-security: disc;
+            font-family: text-security-disc, Arial, sans-serif;
+            color: #f0ad4e !important;
+        }
+        /* Password input wrapper for eye positioning */
+        .password-input-wrapper {
+            position: relative;
+        }
+        /* Ensure password input matches email input height */
+        .password-input-wrapper .form-control {
+            padding-top: 28px !important;
+            padding-bottom: 8px !important;
+            min-height: 58px !important;
+            height: 58px !important;
+        }
+        /* Email input explicit height */
+        .floating-label-group > .form-control {
+            height: 58px !important;
+        }
+        /* Custom eye button for JubileeVerse password toggle */
+        .btn-eye-custom {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #f0ad4e;
+            cursor: pointer;
+            z-index: 10;
+            padding: 5px;
+            font-size: 24px;
+            line-height: 1;
+        }
+        .btn-eye-custom:hover {
+            color: #fff;
+        }
+        .btn-eye-custom i {
+            font-size: 24px;
+        }
+        /* Yellow checkmark for Remember Me */
+        .form-check-input:checked {
+            background-color: #f0ad4e !important;
+            border-color: #f0ad4e !important;
+        }
+        .form-check-input:focus {
+            border-color: #f0ad4e !important;
+            box-shadow: 0 0 0 0.2rem rgba(240, 173, 78, 0.25) !important;
+        }
+        /* Forgot password link styling */
+        .forgot-password-link {
+            font-size: 12px;
+        }
+        /* Animated waving yellow bar at top - gray background with yellow wave */
+        .wave-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background-color: #555555;
+            z-index: 9999;
+            overflow: hidden;
+        }
+        .wave-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                #f0ad4e 20%,
+                #ffcc00 50%,
+                #f0ad4e 80%,
+                transparent 100%);
+            animation: yellowWave 2s ease-in-out infinite;
+        }
+        @keyframes yellowWave {
+            0% { left: -50%; }
+            100% { left: 100%; }
+        }
+        /* Custom SweetAlert styling - black background with yellow border */
+        .swal2-popup {
+            background: #1a1a1a !important;
+            border: 2px solid #f0ad4e !important;
+            border-radius: 12px !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+        }
+        .swal2-title {
+            color: #f0ad4e !important;
+            font-weight: 600 !important;
+        }
+        .swal2-content, .swal2-html-container {
+            color: #ffffff !important;
+        }
+        .swal2-confirm {
+            background: linear-gradient(135deg, #f0ad4e 0%, #ec971f 100%) !important;
+            border: none !important;
+            border-radius: 8px !important;
+            color: #000 !important;
+            font-weight: 600 !important;
+            padding: 10px 24px !important;
+            box-shadow: 0 4px 12px rgba(240, 173, 78, 0.3) !important;
+        }
+        .swal2-confirm:hover {
+            background: linear-gradient(135deg, #ec971f 0%, #d58512 100%) !important;
+        }
+        .swal2-cancel {
+            background: #333333 !important;
+            border: 1px solid #f0ad4e !important;
+            border-radius: 8px !important;
+            color: #f0ad4e !important;
+            font-weight: 600 !important;
+            padding: 10px 24px !important;
+        }
+        .swal2-cancel:hover {
+            background: #444444 !important;
+        }
+        .swal2-icon.swal2-error {
+            border-color: #f0ad4e !important;
+        }
+        .swal2-icon.swal2-error [class^='swal2-x-mark-line'] {
+            background-color: #f0ad4e !important;
+        }
+        .swal2-icon.swal2-warning {
+            border-color: #f0ad4e !important;
+            color: #f0ad4e !important;
+        }
+        .swal2-icon.swal2-success {
+            border-color: #f0ad4e !important;
+        }
+        .swal2-icon.swal2-success [class^='swal2-success-line'] {
+            background-color: #f0ad4e !important;
+        }
+        .swal2-icon.swal2-success .swal2-success-ring {
+            border-color: rgba(240, 173, 78, 0.3) !important;
+        }
+        .swal2-icon.swal2-info {
+            border-color: #f0ad4e !important;
+            color: #f0ad4e !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated waving yellow bar -->
+    <div class="wave-bar"></div>
+
+    <div class="pace pace-active">
+        <div class="pace-progress" data-progress-text="99%" data-progress="99" style="transform: translate3d(100%, 0px, 0px);">
+            <div class="pace-progress-inner"></div>
+        </div>
+    </div>
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <div class="col-xxl-3 col-lg-4 col-md-5">
+                <div class="auth-full-page-content d-flex p-4">
+                    <div class="w-100">
+                        <div class="d-flex flex-column h-100">
+                            
+                            <div class="auth-content my-auto">
+                                <div class="text-center">
+                                    <a href="/" class="auth-logo">
+                                        <img id="imgMainLogo" src="" alt="" />
+                                        <div class="ancLogoSign"></div>
+                                    </a>
+                                </div>
+                                <div class="text-center">
+                                    <h5 class="mb-0 text-white" style="font-size: 26px!important;">Welcome Back!</h5>
+                                    <p class="text-white mb-0">
+                                        Don't have an account? <a href="/SignUp"> Sign Up</a>.
+                                    </p>
+                                </div>
+                                <div class="mt-4 pt-2">
+                                    <div class="floating-label-group">
+                                        <input type="text" class="form-control" id="txtEmailAddress" autocomplete="off" tabindex="1" placeholder=" ">
+                                        <label class="floating-label">Email Address</label>
+                                    </div>
+                                    <div class="floating-label-group password-div">
+                                        <div class="password-input-wrapper">
+                                            <input type="password" class="form-control" aria-label="Password" aria-describedby="password-addon" id="txtPassword" autocomplete="new-password" data-form-type="other" tabindex="1" placeholder=" ">
+                                            <label class="floating-label">Password</label>
+                                            <button class="btn-eye-custom" type="button" id="password-addon" onclick="togglePasswordVisibility()"><i class="mdi mdi-eye-outline"></i></button>
+                                        </div>
+                                        <div style="text-align:right;" class="mt-1">
+                                            <a href="/ForgetPassword" class="color-white forgot-password-link">Forgot Password?</a>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="chkRememberMe" checked="checked">
+                                                <label class="form-check-label" for="remember-check">
+                                                    Remember me
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <button class="btn-login w-100" id="login-btn" onclick="Login()" tabindex="1">Sign In</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 mt-md-5 text-center">
+                                <p class="mb-0 copyright">© <span id="currentYear"></span> JubileeVerse.com | <a href="/termscondition" target="_blank">Terms of Use</a> | <a href="/privacypolicy" target="_blank">Privacy Policy</a> </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xxl-9 col-lg-8 col-md-7">
+                <div class="auth-bg pt-md-5 p-4 d-flex" id="backgroundImageContainer">
+                    <div class="bg-overlay" style="background-color: rgba(192, 192, 192, 0.75);"></div>
+                    <ul class="bg-bubbles">
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                        <li></li>
+                    </ul>
+                    <!-- end bubble effect -->
+                    <div class="row justify-content-center align-items-center">
+                        <div class="col-xl-7">
+                            <div class="p-0 p-sm-4 px-xl-0">
+                                <div id="reviewcarouselIndicators" class="carousel slide" data-bs-ride="carousel">
+                                    <div class="carousel-indicators carousel-indicators-rounded justify-content-start ms-0 mb-0" id="divCarouselBtn">
+                                        <!---->
+                                        <!---->
+                                    </div>
+                                    <!-- end carouselIndicators -->
+                                    <div class="carousel-inner" id="divCrausal">
+                                        <!---->
+                                        <!---->
+                                    </div>
+                                    <!-- end carousel-inner -->
+                                </div>
+                                <!-- end review carousel -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+<script src="/lib/jquery/dist/jquery.min.js?v=82hEkGrSMJh3quMSG4f7FbngmAPLTDM63H4eNayS4Us"></script>
+<script src="/lib/bootstrap/dist/js/bootstrap.min.js?v=uAMYHAQlaHq1buKLwrk7FF4qxvcLWntS2_DpdKucfmU"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.all.min.js"></script>
+<script src="/js/common.js?v=5T2x5H5wnDNuBk1upvdJ9nWCe_NFVPVM6D7TOX8wmHE"></script>
+<script src="/lib/jquery/dist/jquery.min.js?v=82hEkGrSMJh3quMSG4f7FbngmAPLTDM63H4eNayS4Us"></script>
+<script src="/js/app.js?v=Di0hP2geJPLKHd8_mR-QwGlqglPOsClZejnolmA7Szo"></script>
+<script src="/js/account/login.js?v=1&amp;v=lLZI1Z-cdW2V40x-LGOL8F2bzzkG0bd1Iet25d0_auw"></script>
+
+
+<script>
+    // Set current year dynamically
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+    // Get the list of background image paths from ViewData
+    var backgroundImagePaths = ["../sliderImages/login-bg.jpg","../sliderImages/slider-bg-2.jpg","../sliderImages/slider-bg-3.jpg","../sliderImages/slider-bg-4.jpg","../sliderImages/slider-bg-5.jpg"];
+    // Get the container element
+    var backgroundImageContainer = document.getElementById("backgroundImageContainer");
+    // Function to change the background image
+    function changeBackgroundImage() {
+        var randomImagePath = backgroundImagePaths[Math.floor(Math.random() * backgroundImagePaths.length)];
+        backgroundImageContainer.style.backgroundImage = "url('" + randomImagePath + "')";
+    }
+    // Initial setup
+    changeBackgroundImage();
+    // Change background image every 2 minutes
+    setInterval(changeBackgroundImage, 4000);
+
+    // Block extension popups by preventing their injection
+    (function() {
+        var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1) {
+                        // Check for common password manager and popup elements
+                        var shouldHide = false;
+                        if (node.id && (node.id.toLowerCase().includes('norton') ||
+                                        node.id.toLowerCase().includes('lastpass') ||
+                                        node.id.toLowerCase().includes('dashlane') ||
+                                        node.id.toLowerCase().includes('credential'))) {
+                            shouldHide = true;
+                        }
+                        if (node.className && typeof node.className === 'string' &&
+                            (node.className.toLowerCase().includes('norton') ||
+                             node.className.toLowerCase().includes('lastpass') ||
+                             node.className.toLowerCase().includes('dashlane') ||
+                             node.className.toLowerCase().includes('credential'))) {
+                            shouldHide = true;
+                        }
+                        if (node.tagName === 'IFRAME' && node.src && node.src.includes('accounts.google')) {
+                            shouldHide = true;
+                        }
+                        if (shouldHide) {
+                            node.style.display = 'none';
+                            node.style.visibility = 'hidden';
+                        }
+                    }
+                });
+            });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+    })();
+</script>

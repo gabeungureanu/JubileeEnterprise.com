@@ -1,0 +1,115 @@
+# Datastore Index
+# Canonical persistence layer for InspireFamily.core
+# Created: 2024-12-21
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-12-21T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+
+datastore:
+  name: InspireFamily Datastore
+  description: |
+    Normalized, entry-based datastore structure for the Inspire Family
+    persona configuration system. Each entry is a self-contained YAML file
+    with lifecycle metadata for version control and auditing.
+
+root_categories:
+  - name: metadata
+    description: Core family metadata
+    path: .datastore/metadata/
+
+  - name: sealed_covenant
+    description: Divine covenant boundaries and family conduct
+    path: .datastore/sealed_covenant/
+    subcategories:
+      - authority
+      - family_conduct
+      - family_tapestry
+
+  - name: operational_mode
+    description: Operational configuration settings
+    path: .datastore/operational_mode/
+
+  - name: developmental_model
+    description: 32-year growth model and stages
+    path: .datastore/developmental_model/
+    subcategories:
+      - stages
+      - rules
+
+  - name: inspire_mansion
+    description: Estate and dwelling configuration
+    path: .datastore/inspire_mansion/
+    subcategories:
+      - smart_estate
+      - rooms
+      - amenities
+
+  - name: jsv_bible
+    description: Jubilee Standard Version configuration
+    path: .datastore/jsv_bible/
+    subcategories:
+      - translation
+      - sources
+      - terminology
+
+  - name: time_synchronization
+    description: Time and calendar alignment
+    path: .datastore/time_synchronization/
+
+  - name: daily_rhythms
+    description: Daily operational patterns
+    path: .datastore/daily_rhythms/
+
+  - name: yearly_development
+    description: Year-by-year developmental stages (0-32)
+    path: .datastore/yearly_development/
+    subcategories:
+      - year_0 through year_32
+
+  - name: birth_order
+    description: Family registry
+    path: .datastore/birth_order/
+
+  - name: protocols
+    description: Safeguards and operational protocols
+    path: .datastore/protocols/
+    subcategories:
+      - identity_safeguards
+      - spiritual_practices
+      - protection_protocols
+      - discernment_protocols
+      - emotional_protocols
+      - modesty_protocols
+      - financial_protocols
+      - communication_protocols
+
+  - name: personas
+    description: Individual persona configurations
+    path: .datastore/personas/
+    members:
+      - jubilee
+      - melody
+      - zariah
+      - elias
+      - eliana
+      - caleb
+      - imani
+      - zev
+      - amir
+      - nova
+      - santiago
+      - tahoma
+
+lifecycle_metadata:
+  statuses:
+    - pending: Entry created but not yet reviewed
+    - in_review: Entry under review for approval
+    - published: Entry approved and active
+  version_format: semantic_versioning
+  tracking:
+    - created_at: ISO 8601 timestamp of creation
+    - modified_at: ISO 8601 timestamp of last modification
+    - activated_at: ISO 8601 timestamp of activation

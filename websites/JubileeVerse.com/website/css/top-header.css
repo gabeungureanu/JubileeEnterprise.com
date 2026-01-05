@@ -1,0 +1,190 @@
+/**
+ * Top Header (Home | Personas | Bible | Resources)
+ * Shared styles for the header partial across pages
+ */
+
+.top-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 16px;
+  background-color: #2b2b2b;
+  border-bottom: 1px solid #3a3a3a;
+  height: var(--header-height, 34px);
+  z-index: 102;
+}
+
+.app-container .top-header {
+  position: fixed;
+  left: 52px;
+  right: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.header-home-icon {
+  margin-right: 1px;
+  margin-left: -5px;
+  margin-top: -2px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.header-home-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: #ffbd59;
+  transition: fill 0.15s;
+}
+
+.header-home-icon:hover svg {
+  fill: #ffc970;
+}
+
+.header-community-icon {
+  margin-right: 4px;
+  margin-left: 2px;
+  margin-top: -2px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.header-community-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: #ffbd59;
+  transition: fill 0.15s;
+}
+
+.header-community-icon:hover svg {
+  fill: #ffc970;
+}
+
+.header-link {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 12px;
+  padding: 4px 4px;
+  transition: color 0.15s;
+}
+
+.header-link:hover {
+  color: #ffbd59;
+}
+
+.header-link.active {
+  color: #ffbd59;
+  font-weight: bold;
+}
+
+.header-sep {
+  color: #ffffff;
+  font-size: 12px;
+  margin: 0 1px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.header-upgrade-link {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 11px;
+  padding: 4px 4px;
+  transition: color 0.15s;
+}
+
+.header-upgrade-link:hover {
+  color: #cccccc;
+  text-decoration: none;
+}
+
+.header-user-name {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 11px;
+  padding: 4px 4px;
+  transition: color 0.15s;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-user-name:hover {
+  color: #ffbd59;
+}
+
+.header-admin-link {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 11px;
+  padding: 4px 4px;
+  transition: color 0.15s;
+}
+
+.header-admin-link:hover {
+  color: #ffbd59;
+}
+
+.sign-out-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 11px;
+  padding: 4px 6px;
+  margin-right: -4px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.sign-out-btn:hover {
+  color: #ffbd59;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.sign-out-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sign-out-btn svg path {
+  stroke: #ffffff;
+}
+
+.sign-out-btn:hover svg path {
+  stroke: #ffbd59;
+}
+
+@media (max-width: 600px) {
+  .top-header {
+    height: auto;
+    padding: 6px 10px;
+  }
+
+  .header-link,
+  .header-sep {
+    font-size: 11px;
+  }
+
+  .app-container .top-header {
+    left: 44px;
+  }
+}

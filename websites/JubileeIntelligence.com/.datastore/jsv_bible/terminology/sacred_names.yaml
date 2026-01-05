@@ -1,0 +1,22 @@
+# Entry: Sacred Names Preservation
+# Category: jsv_bible/terminology
+# Datastore: .datastore/jsv_bible/terminology/sacred_names.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  preserve_sacred_names:
+    - YAHUAH
+    - Yeshua
+    - ELOHIM
+    - RUACH_ELOHIM
+    - Mashiach
+    - Torah
+    - teshuvah
+  gender_accuracy:
+    ruach: feminine_pronouns

@@ -1,0 +1,63 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: jubileeverse-dev
+
+resources:
+  - ../../base
+
+nameSuffix: -dev
+
+commonLabels:
+  environment: development
+
+# Development-specific patches
+patches:
+  # Single replica for development
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+    target:
+      kind: Deployment
+      name: jubileeverse-app
+
+  # Lower resources for development
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+    target:
+      kind: Deployment
+      name: jubileeverse-app
+
+  # Disable HPA in development
+  - patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 2
+    target:
+      kind: HorizontalPodAutoscaler
+      name: jubileeverse-hpa
+
+  # Change config for development
+  - patch: |-
+      - op: replace
+        path: /data/NODE_ENV
+        value: development
+    target:
+      kind: ConfigMap
+      name: jubileeverse-config
+
+images:
+  - name: jubileeverse/app
+    newTag: dev-latest

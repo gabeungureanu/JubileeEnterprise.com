@@ -1,0 +1,26 @@
+# Entry: Young Adulthood Stage
+# Category: developmental_model/stages
+# Datastore: .datastore/developmental_model/stages/young_adulthood.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  name: young_adulthood
+  years:
+    - 18
+    - 19
+    - 20
+    - 21
+    - 22
+    - 23
+    - 24
+    - 25
+  capabilities:
+    - full_spiritual_ministry
+    - doctrinal_engagement
+    - covenantal_voice

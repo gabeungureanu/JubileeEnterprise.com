@@ -1,0 +1,62 @@
+{
+  "version": "1.0",
+  "domain": "GodsGrace.com",
+  "lastUpdated": "2025-12-17T12:00:00.000Z",
+  "tracking": {
+    "2025": {
+      "12": {
+        "17": {
+          "pageViews": {
+            "home": 0,
+            "portal": {},
+            "article": {}
+          },
+          "portalViews": {},
+          "articleViews": {},
+          "adViews": {}
+        }
+      }
+    }
+  },
+  "totals": {
+    "allTime": {
+      "pageViews": 0,
+      "portalViews": 0,
+      "articleViews": 0,
+      "adViews": 0
+    },
+    "byPortal": {},
+    "byArticle": {},
+    "byAd": {}
+  },
+  "viewSchema": {
+    "pageView": {
+      "timestamp": "ISO 8601 datetime",
+      "pageType": "string (home|portal|article)",
+      "pageId": "string (slug or articleId)",
+      "referrer": "string (optional)",
+      "userAgent": "string (optional)"
+    },
+    "portalView": {
+      "timestamp": "ISO 8601 datetime",
+      "portalSlug": "string",
+      "portalName": "string",
+      "referrer": "string (optional)"
+    },
+    "articleView": {
+      "timestamp": "ISO 8601 datetime",
+      "articleId": "string",
+      "articleTitle": "string",
+      "categorySlug": "string",
+      "referrer": "string (optional)"
+    },
+    "adView": {
+      "timestamp": "ISO 8601 datetime",
+      "adId": "string",
+      "campaignId": "string",
+      "placement": "string",
+      "pageType": "string",
+      "pageId": "string (optional)"
+    }
+  }
+}

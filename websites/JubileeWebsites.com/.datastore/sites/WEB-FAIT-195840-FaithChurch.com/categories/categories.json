@@ -1,0 +1,52 @@
+{
+  "domain": "FaithChurch.com",
+  "siteCode": "WEB-FAIT-195840",
+  "contentType": "FB",
+  "niche": "Christian Ministry",
+  "categoryCount": 3,
+  "generatedAt": "2025-12-17T10:27:39.944Z",
+  "categories": [
+    {
+      "rank": 1,
+      "name": "Inspiring Sermons",
+      "slug": "inspiring-sermons",
+      "description": "Discover a collection of powerful sermons that uplift and inspire faith. This category offers teachings from renowned pastors that delve into scripture and provide practical applications for everyday life. Perfect for individuals seeking spiritual growth and deeper understanding of Christian teachings.",
+      "keywords": [
+        "Christian sermons",
+        "faith inspiration",
+        "Bible teachings",
+        "spiritual growth",
+        "pastoral messages"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 2,
+      "name": "Faith Journeys",
+      "slug": "faith-journeys",
+      "description": "Explore personal testimonies and journeys of faith that resonate with hearts seeking hope and transformation. These stories highlight diverse experiences of individuals who have found strength and purpose through their Christian walk, offering encouragement to those on their own spiritual path.",
+      "keywords": [
+        "Christian testimonies",
+        "spiritual journeys",
+        "faith stories",
+        "transformation",
+        "hope in Christ"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 3,
+      "name": "Bible Study Guides",
+      "slug": "bible-study-guides",
+      "description": "Enhance your understanding of the Bible with comprehensive study guides designed for both individual and group exploration. This category provides insightful analyses, historical context, and practical applications to deepen your knowledge and relationship with scripture.",
+      "keywords": [
+        "Bible study",
+        "scripture guides",
+        "Christian education",
+        "Bible analysis",
+        "study resources"
+      ],
+      "articleCount": 12
+    }
+  ]
+}

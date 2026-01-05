@@ -1,0 +1,52 @@
+{
+  "domain": "GodsGrace.com",
+  "siteCode": "WEB-GODS-070312",
+  "contentType": "FB",
+  "niche": "Christian",
+  "categoryCount": 3,
+  "generatedAt": "2025-12-17T12:04:54.090Z",
+  "categories": [
+    {
+      "rank": 1,
+      "name": "Divine Inspirations",
+      "slug": "divine-inspirations",
+      "description": "Explore a collection of uplifting stories, quotes, and reflections designed to inspire and deepen your faith. This category features narratives of divine intervention, powerful testimonies, and motivational messages that highlight the grace and presence of God in everyday life.",
+      "keywords": [
+        "faith inspiration",
+        "Christian stories",
+        "God's grace",
+        "spiritual quotes",
+        "divine intervention"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 2,
+      "name": "Prayer & Worship",
+      "slug": "prayer-worship",
+      "description": "Delve into the heart of prayer and worship with guides, practices, and reflections to enrich your spiritual journey. Discover new ways to connect with God, enhance your worship experience, and explore the power of prayer in transforming lives.",
+      "keywords": [
+        "Christian prayer",
+        "worship guides",
+        "spiritual practices",
+        "connect with God",
+        "prayer transformation"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 3,
+      "name": "Biblical Teachings",
+      "slug": "biblical-teachings",
+      "description": "Engage with insightful articles that unravel the wisdom of the Bible, providing context, interpretation, and application for modern Christian living. From in-depth scripture analysis to practical advice on living a Christ-centered life, this category empowers believers to grow in their faith.",
+      "keywords": [
+        "Bible study",
+        "Christian teachings",
+        "scripture analysis",
+        "faith growth",
+        "Christ-centered living"
+      ],
+      "articleCount": 12
+    }
+  ]
+}

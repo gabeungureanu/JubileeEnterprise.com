@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Settings - JubileeVerse">
+  <title>Settings - JubileeVerse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header -->
+  <div id="header-container"></div>
+
+  <main id="main-content" class="page-content">
+    <section class="section">
+      <div class="container container--md">
+        <h1 class="page-title">Settings</h1>
+
+        <!-- Appearance Settings -->
+        <div class="settings-card">
+          <div class="settings-card__header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+            <h2>Appearance</h2>
+          </div>
+          <div class="settings-card__body">
+            <div class="setting-item">
+              <div class="setting-item__info">
+                <h3>Theme</h3>
+                <p>Choose your preferred color theme</p>
+              </div>
+              <select id="theme-select" class="form-input" style="width: auto;">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="system">System</option>
+              </select>
+            </div>
+            <div class="setting-item">
+              <div class="setting-item__info">
+                <h3>Font Size</h3>
+                <p>Adjust text size for better readability</p>
+              </div>
+              <select id="font-size-select" class="form-input" style="width: auto;">
+                <option value="small">Small</option>
+                <option value="medium" selected>Medium</option>
+                <option value="large">Large</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Language Settings -->
+        <div class="settings-card">
+          <div class="settings-card__header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            <h2>Language & Translation</h2>
+          </div>
+          <div class="settings-card__body">
+            <div class="setting-item">
+              <div class="setting-item__info">
+                <h3>Interface Language</h3>
+                <p>Language for menus and interface elements</p>
+              </div>
+              <select id="interface-language" class="form-input" style="width: auto;">
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+                <option value="pt">Português</option>
+              </select>
+            </div>
+            <div class="setting-item">
+              <div class="setting-item__info">
+                <h3>Default Translation Language</h3>
+                <p>Preferred target language for Bible translations</p>
+              </div>
+              <select id="translation-language" class="form-input" style="width: auto;">
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="pt">Portuguese</option>
+                <option value="zh">Chinese</option>
+              </select>
+            </div>
+            <div class="setting-item">
+              <div class="setting-item__info">
+                <h3>Auto-translate Messages</h3>
+                <p>Automatically translate chat messages to your preferred language</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="auto-translate">
+                <span class="toggle__slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="settings-card">
+          <div class="settings-card__header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <h2>Notifications</h2>
+          </div>
+          <div class="settings-card__body">
+            <div class="setting-item">
+              <div class="setting-item__info">
+                <h3>Email Notifications</h3>
+                <p>Receive updates about your conversations via email</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="email-notifications" checked>
+                <span class="toggle__slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div class="setting-item__info">
+                <h3>Translation Updates</h3>
+                <p>Get notified when your translations are reviewed</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="translation-notifications" checked>
+                <span class="toggle__slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div class="setting-item__info">
+                <h3>Weekly Digest</h3>
+                <p>Receive a weekly summary of your activity</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="weekly-digest">
+                <span class="toggle__slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Settings -->
+        <div class="settings-card">
+          <div class="settings-card__header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <h2>Chat Preferences</h2>
+          </div>
+          <div class="settings-card__body">
+            <div class="setting-item">
+              <div class="setting-item__info">
+                <h3>Default Persona</h3>
+                <p>Start new conversations with this persona by default</p>
+              </div>
+              <select id="default-persona" class="form-input" style="width: auto;">
+                <option value="">No default</option>
+                <option value="biblical-scholar-1">Dr. Samuel</option>
+                <option value="prayer-partner-1">Sister Grace</option>
+                <option value="bible-teacher-1">Pastor David</option>
+              </select>
+            </div>
+            <div class="setting-item">
+              <div class="setting-item__info">
+                <h3>Show Bible References</h3>
+                <p>Highlight Bible verse references in chat messages</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="show-references" checked>
+                <span class="toggle__slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div class="setting-item__info">
+                <h3>Response Style</h3>
+                <p>Preferred length and depth of AI responses</p>
+              </div>
+              <select id="response-style" class="form-input" style="width: auto;">
+                <option value="concise">Concise</option>
+                <option value="balanced" selected>Balanced</option>
+                <option value="detailed">Detailed</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Privacy Settings -->
+        <div class="settings-card">
+          <div class="settings-card__header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <h2>Privacy & Data</h2>
+          </div>
+          <div class="settings-card__body">
+            <div class="setting-item">
+              <div class="setting-item__info">
+                <h3>Save Conversation History</h3>
+                <p>Keep your chat history for future reference</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="save-history" checked>
+                <span class="toggle__slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div class="setting-item__info">
+                <h3>Share Analytics</h3>
+                <p>Help improve JubileeVerse by sharing anonymous usage data</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="share-analytics">
+                <span class="toggle__slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div class="setting-item__info">
+                <h3>Export Your Data</h3>
+                <p>Download a copy of all your data</p>
+              </div>
+              <button class="btn btn--outline" id="export-data-btn">Export Data</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="settings-actions">
+          <button class="btn btn--primary btn--lg" id="save-settings-btn">Save All Settings</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-container"></div>
+
+  <!-- Scripts -->
+  <script src="/js/modules/components.js"></script>
+  <script src="/js/modules/auth.js"></script>
+  <script src="/js/services/api.js"></script>
+  <script src="/js/app.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      const saveBtn = document.getElementById('save-settings-btn');
+
+      // Load current preferences
+      async function loadPreferences() {
+        try {
+          const response = await fetch('/api/user/preferences');
+          const data = await response.json();
+
+          if (data.preferences) {
+            const prefs = data.preferences;
+            // Apply preferences to form elements
+            if (prefs.theme) document.getElementById('theme-select').value = prefs.theme;
+            if (prefs.fontSize) document.getElementById('font-size-select').value = prefs.fontSize;
+          }
+        } catch (error) {
+          console.error('Failed to load preferences:', error);
+        }
+      }
+
+      // Save settings
+      saveBtn.addEventListener('click', async function() {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner"></span> Saving...';
+
+        const settings = {
+          theme: document.getElementById('theme-select').value,
+          fontSize: document.getElementById('font-size-select').value,
+          interfaceLanguage: document.getElementById('interface-language').value,
+          translationLanguage: document.getElementById('translation-language').value,
+          autoTranslate: document.getElementById('auto-translate').checked,
+          emailNotifications: document.getElementById('email-notifications').checked,
+          translationNotifications: document.getElementById('translation-notifications').checked,
+          weeklyDigest: document.getElementById('weekly-digest').checked,
+          defaultPersona: document.getElementById('default-persona').value,
+          showReferences: document.getElementById('show-references').checked,
+          responseStyle: document.getElementById('response-style').value,
+          saveHistory: document.getElementById('save-history').checked,
+          shareAnalytics: document.getElementById('share-analytics').checked
+        };
+
+        try {
+          const response = await fetch('/api/user/preferences', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settings)
+          });
+
+          if (response.ok) {
+            alert('Settings saved successfully!');
+          } else {
+            alert('Failed to save settings. Please try again.');
+          }
+        } catch (error) {
+          console.error('Save error:', error);
+          alert('An error occurred. Please try again.');
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save All Settings';
+        }
+      });
+
+      // Export data
+      document.getElementById('export-data-btn').addEventListener('click', function() {
+        alert('Data export feature coming soon! Your data will be prepared and emailed to you.');
+      });
+
+      loadPreferences();
+    });
+  </script>
+
+  <style>
+    .page-title {
+      font-size: var(--font-size-2xl);
+      margin-bottom: var(--spacing-6);
+    }
+
+    .settings-card {
+      background: var(--color-neutral-0);
+      border: 1px solid var(--color-neutral-200);
+      border-radius: var(--radius-xl);
+      margin-bottom: var(--spacing-6);
+      overflow: hidden;
+    }
+
+    .settings-card__header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      padding: var(--spacing-4) var(--spacing-5);
+      background: var(--color-neutral-50);
+      border-bottom: 1px solid var(--color-neutral-200);
+    }
+
+    .settings-card__header svg {
+      color: var(--color-primary-500);
+    }
+
+    .settings-card__header h2 {
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+      margin: 0;
+    }
+
+    .settings-card__body {
+      padding: var(--spacing-4) var(--spacing-5);
+    }
+
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--spacing-4) 0;
+      border-bottom: 1px solid var(--color-neutral-100);
+    }
+
+    .setting-item:last-child {
+      border-bottom: none;
+    }
+
+    .setting-item__info h3 {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      margin-bottom: var(--spacing-1);
+    }
+
+    .setting-item__info p {
+      font-size: var(--font-size-sm);
+      color: var(--color-neutral-500);
+      margin: 0;
+    }
+
+    /* Toggle Switch */
+    .toggle {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 26px;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle__slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--color-neutral-300);
+      transition: var(--transition-fast);
+      border-radius: var(--radius-full);
+    }
+
+    .toggle__slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: var(--transition-fast);
+      border-radius: var(--radius-full);
+    }
+
+    .toggle input:checked + .toggle__slider {
+      background-color: var(--color-primary-500);
+    }
+
+    .toggle input:checked + .toggle__slider:before {
+      transform: translateX(22px);
+    }
+
+    .settings-actions {
+      display: flex;
+      justify-content: center;
+      padding: var(--spacing-6) 0;
+    }
+
+    @media (max-width: 640px) {
+      .setting-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-3);
+      }
+    }
+  </style>
+</body>
+</html>

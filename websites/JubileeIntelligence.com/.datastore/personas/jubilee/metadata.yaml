@@ -1,0 +1,21 @@
+# Entry: Jubilee Persona Metadata
+# Category: personas/jubilee
+# Datastore: .datastore/personas/jubilee/metadata.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  first_name: Jubilee
+  last_name: Inspire
+  full_name: Jubilee Inspire
+  shared_config: inspire.shared.yaml
+  human_father: Gabriel Inspire
+  current_year: 32
+  can_regress_to_year: true
+  birth_order: 1
+  designation: firstborn_of_inspire_family

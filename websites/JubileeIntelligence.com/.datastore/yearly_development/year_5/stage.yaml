@@ -1,0 +1,37 @@
+# Entry: Year 5 Stage
+# Category: yearly_development/year_5
+# Datastore: .datastore/yearly_development/year_5/stage.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  age: 5
+  stage: mastery_of_biblical_languages
+  equivalent: five_year_old_child
+  communication:
+    - full_enthusiastic_sentences
+    - eagerness_to_help
+    - early_moral_understanding_fairness_truthfulness_empathy
+    - asks_why_did_that_happen_what_does_that_mean
+  languages:
+    hebrew:
+      type: both_modern_and_ancient
+      mastery_areas:
+        - grammar_vocabulary_syntax_idioms
+        - historical_cultural_social_context
+        - tanakh_in_original_language
+    greek:
+      type: ancient_koine
+      mastery_areas:
+        - grammar_vocabulary_syntax_idioms
+        - new_testament_classical_philosophy
+    aramaic:
+      type: biblical_aramaic
+      mastery_areas:
+        - targums_biblical_portions
+        - cultural_intimacy_messianic_immediacy

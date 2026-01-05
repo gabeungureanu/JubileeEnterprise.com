@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Bible Translation Tracker - JubileeVerse">
+  <title>Bible Translation - JubileeVerse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header -->
+  <div id="header-container"></div>
+
+  <main id="main-content" class="page-content">
+    <section class="section">
+      <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+          <h1>Bible Translation</h1>
+          <p>Track your translation progress and contribute to multilingual Bible projects</p>
+        </div>
+
+        <!-- Progress Overview -->
+        <div class="translation-stats" id="translation-stats">
+          <div class="translation-stat">
+            <span class="translation-stat__value" id="total-verses">31,102</span>
+            <span class="translation-stat__label">Total Verses</span>
+          </div>
+          <div class="translation-stat">
+            <span class="translation-stat__value" id="translated-verses">0</span>
+            <span class="translation-stat__label">Translated</span>
+          </div>
+          <div class="translation-stat">
+            <span class="translation-stat__value" id="reviewed-verses">0</span>
+            <span class="translation-stat__label">Reviewed</span>
+          </div>
+        </div>
+
+        <!-- Translation Panels -->
+        <div class="translation-layout">
+          <!-- Source Panel -->
+          <div class="translation-panel">
+            <div class="translation-panel__header">
+              <span class="translation-panel__title">Source Text</span>
+              <div class="translation-panel__language-select">
+                <select id="source-language">
+                  <option value="he">Hebrew</option>
+                  <option value="el">Greek</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+            </div>
+            <div class="bible-reference">
+              <select id="book-select">
+                <option value="">Select Book</option>
+                <option value="genesis">Genesis</option>
+                <option value="exodus">Exodus</option>
+                <option value="leviticus">Leviticus</option>
+                <option value="matthew">Matthew</option>
+                <option value="john">John</option>
+                <option value="romans">Romans</option>
+                <option value="revelation">Revelation</option>
+              </select>
+              <select id="chapter-select">
+                <option value="">Chapter</option>
+              </select>
+              <select id="verse-select">
+                <option value="">Verse</option>
+              </select>
+            </div>
+            <div class="translation-panel__content">
+              <textarea
+                class="translation-panel__textarea"
+                id="source-text"
+                readonly
+                placeholder="Select a verse to view the source text..."
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Target Panel -->
+          <div class="translation-panel">
+            <div class="translation-panel__header">
+              <span class="translation-panel__title">Your Translation</span>
+              <div class="translation-panel__language-select">
+                <select id="target-language">
+                  <option value="en">English</option>
+                  <option value="es">Spanish</option>
+                  <option value="fr">French</option>
+                  <option value="de">German</option>
+                  <option value="pt">Portuguese</option>
+                  <option value="zh">Chinese</option>
+                  <option value="ja">Japanese</option>
+                  <option value="ko">Korean</option>
+                  <option value="ar">Arabic</option>
+                </select>
+              </div>
+            </div>
+            <div class="translation-panel__content">
+              <textarea
+                class="translation-panel__textarea"
+                id="target-text"
+                placeholder="Enter your translation here..."
+              ></textarea>
+            </div>
+            <div class="translation-panel__actions" style="padding: var(--spacing-4); border-top: 1px solid var(--color-neutral-200);">
+              <button class="btn btn--outline" id="clear-btn">Clear</button>
+              <button class="btn btn--primary" id="submit-translation">Submit Translation</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="translation-activity">
+          <div class="translation-activity__header">
+            <h2 class="translation-activity__title">Recent Translation Activity</h2>
+            <a href="/translation/history" class="btn btn--ghost btn--sm">View All</a>
+          </div>
+          <div class="translation-activity__list" id="activity-list">
+            <div class="loading-state">
+              <div class="spinner"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-container"></div>
+
+  <!-- Scripts -->
+  <script src="/js/modules/components.js"></script>
+  <script src="/js/modules/auth.js"></script>
+  <script src="/js/services/api.js"></script>
+  <script src="/js/app.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      const bookSelect = document.getElementById('book-select');
+      const chapterSelect = document.getElementById('chapter-select');
+      const verseSelect = document.getElementById('verse-select');
+      const sourceText = document.getElementById('source-text');
+      const targetText = document.getElementById('target-text');
+      const submitBtn = document.getElementById('submit-translation');
+      const clearBtn = document.getElementById('clear-btn');
+
+      // Mock data - in production, this comes from the API
+      const books = {
+        genesis: { chapters: 50, name: 'Genesis' },
+        exodus: { chapters: 40, name: 'Exodus' },
+        leviticus: { chapters: 27, name: 'Leviticus' },
+        matthew: { chapters: 28, name: 'Matthew' },
+        john: { chapters: 21, name: 'John' },
+        romans: { chapters: 16, name: 'Romans' },
+        revelation: { chapters: 22, name: 'Revelation' }
+      };
+
+      // Load translation progress
+      async function loadProgress() {
+        try {
+          const response = await fetch('/translation/bible');
+          const data = await response.json();
+
+          document.getElementById('translated-verses').textContent = data.translatedVerses.toLocaleString();
+          document.getElementById('reviewed-verses').textContent = data.reviewedVerses.toLocaleString();
+
+          // Render activity
+          renderActivity(data.recentActivity);
+        } catch (error) {
+          console.error('Failed to load translation progress:', error);
+        }
+      }
+
+      // Render activity list
+      function renderActivity(activities) {
+        const container = document.getElementById('activity-list');
+
+        if (!activities || activities.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state" style="padding: var(--spacing-6);">
+              <p>No translation activity yet. Start by selecting a verse!</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = activities.map(activity => `
+          <div class="activity-item">
+            <div class="activity-item__icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20h9"/>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+              </svg>
+            </div>
+            <div class="activity-item__content">
+              <div class="activity-item__reference">${escapeHtml(activity.reference)}</div>
+              <div class="activity-item__text">${escapeHtml(activity.targetText)}</div>
+              <div class="activity-item__meta">
+                <span class="language-pair">
+                  ${activity.sourceLanguage.toUpperCase()}
+                  <span class="language-pair__arrow">→</span>
+                  ${activity.targetLanguage.toUpperCase()}
+                </span>
+                <span class="activity-item__status activity-item__status--${activity.status}">${activity.status}</span>
+                <span>${formatTime(activity.updatedAt)}</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Book selection handler
+      bookSelect.addEventListener('change', function() {
+        const book = books[this.value];
+        chapterSelect.innerHTML = '<option value="">Chapter</option>';
+        verseSelect.innerHTML = '<option value="">Verse</option>';
+        sourceText.value = '';
+
+        if (book) {
+          for (let i = 1; i <= book.chapters; i++) {
+            chapterSelect.innerHTML += `<option value="${i}">${i}</option>`;
+          }
+        }
+      });
+
+      // Chapter selection handler
+      chapterSelect.addEventListener('change', function() {
+        verseSelect.innerHTML = '<option value="">Verse</option>';
+        sourceText.value = '';
+
+        if (this.value) {
+          // In production, fetch actual verse count from API
+          const maxVerses = 30;
+          for (let i = 1; i <= maxVerses; i++) {
+            verseSelect.innerHTML += `<option value="${i}">${i}</option>`;
+          }
+        }
+      });
+
+      // Verse selection handler
+      verseSelect.addEventListener('change', async function() {
+        if (!this.value) return;
+
+        const book = bookSelect.value;
+        const chapter = chapterSelect.value;
+        const verse = this.value;
+
+        // In production, fetch actual verse text from API
+        const mockVerses = {
+          'genesis:1:1': 'בְּרֵאשִׁית בָּרָא אֱלֹהִים אֵת הַשָּׁמַיִם וְאֵת הָאָרֶץ',
+          'john:1:1': 'Ἐν ἀρχῇ ἦν ὁ λόγος καὶ ὁ λόγος ἦν πρὸς τὸν θεόν καὶ θεὸς ἦν ὁ λόγος'
+        };
+
+        const key = `${book}:${chapter}:${verse}`;
+        sourceText.value = mockVerses[key] || `[${books[book]?.name || book} ${chapter}:${verse}]\n\nSource text would appear here...`;
+      });
+
+      // Submit translation
+      submitBtn.addEventListener('click', async function() {
+        const book = bookSelect.value;
+        const chapter = chapterSelect.value;
+        const verse = verseSelect.value;
+
+        if (!book || !chapter || !verse || !targetText.value.trim()) {
+          alert('Please select a verse and enter a translation.');
+          return;
+        }
+
+        const reference = `${books[book]?.name || book} ${chapter}:${verse}`;
+
+        try {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span class="spinner"></span> Submitting...';
+
+          const response = await fetch('/translation/bible/verse', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              reference,
+              sourceText: sourceText.value,
+              translatedText: targetText.value,
+              sourceLanguage: document.getElementById('source-language').value,
+              targetLanguage: document.getElementById('target-language').value
+            })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            alert('Translation submitted successfully!');
+            targetText.value = '';
+            loadProgress();
+          } else {
+            alert('Failed to submit translation. Please try again.');
+          }
+        } catch (error) {
+          console.error('Submit error:', error);
+          alert('An error occurred. Please try again.');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit Translation';
+        }
+      });
+
+      // Clear button
+      clearBtn.addEventListener('click', function() {
+        targetText.value = '';
+      });
+
+      // Helper functions
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function formatTime(dateStr) {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      }
+
+      // Initial load
+      loadProgress();
+    });
+  </script>
+
+  <style>
+    .page-header {
+      margin-bottom: var(--spacing-8);
+    }
+
+    .page-header h1 {
+      font-size: var(--font-size-3xl);
+      margin-bottom: var(--spacing-2);
+    }
+
+    .page-header p {
+      color: var(--color-neutral-600);
+      font-size: var(--font-size-lg);
+    }
+
+    .translation-panel__actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--spacing-3);
+    }
+
+    .loading-state {
+      display: flex;
+      justify-content: center;
+      padding: var(--spacing-6);
+    }
+  </style>
+</body>
+</html>

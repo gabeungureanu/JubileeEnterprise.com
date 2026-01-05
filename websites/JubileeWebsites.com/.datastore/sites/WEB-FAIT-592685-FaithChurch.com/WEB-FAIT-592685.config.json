@@ -1,0 +1,25 @@
+{
+  "siteCode": "WEB-FAIT-592685",
+  "domain": "FaithChurch.com",
+  "overview": "General website",
+  "categoryCount": 3,
+  "quickMode": false,
+  "contentType": "FB",
+  "analysis": {
+    "contentType": "FB",
+    "confidence": "high",
+    "reasoning": "The domain name 'FaithChurch.com' strongly suggests a religious or faith-based organization, likely a church.",
+    "keywords": [
+      "faith",
+      "church",
+      "spiritual",
+      "worship",
+      "ministry"
+    ],
+    "niche": "religious organization",
+    "tone": "inspirational"
+  },
+  "writersCount": 13,
+  "createdAt": "2025-12-17T06:56:37.175Z",
+  "status": "step1_complete"
+}

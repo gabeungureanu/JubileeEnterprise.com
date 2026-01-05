@@ -1,0 +1,2470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JubileeVerse.com</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=Oswald:wght@400;500;600;700&display=swap&v=2" rel="stylesheet">
+  <style>
+    :root {
+      --gold: #d4af37;
+      --gold-light: #f4e4a6;
+      --gold-dark: #996515;
+      --yellow: #fbbf24;
+      --yellow-light: #fde68a;
+      --navy: #1a1a2e;
+      --navy-light: #16213e;
+      --navy-dark: #0f0f1a;
+      --purple: #4a3f6b;
+      --cyan: #00d4ff;
+      --green: #4ade80;
+      --orange: #fb923c;
+      --red: #f87171;
+      --white: #f8f8f8;
+      --gray: #888;
+      --black: #000000;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 50%, var(--navy-light) 100%);
+      color: var(--white);
+      min-height: 100vh;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      background: var(--black);
+      border-bottom: 2px solid var(--yellow);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    #mainLogo {
+      font-family: 'Cinzel', Georgia, 'Times New Roman', Times, serif !important;
+      font-size: 1.5rem !important;
+      font-weight: 700 !important;
+      color: #fbbf24 !important;
+      letter-spacing: 0 !important;
+      text-transform: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .header h1 {
+      font-family: 'Cinzel', serif !important;
+      font-size: 1.5rem !important;
+      font-weight: 700 !important;
+      color: var(--yellow) !important;
+      letter-spacing: 0 !important;
+      text-transform: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    .logo {
+      font-family: 'Cinzel', serif !important;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--yellow);
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    
+    .header .logo {
+      font-family: 'Cinzel', serif !important;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.85rem;
+    }
+
+    .status-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #9ca3af;
+      transition: background-color 0.3s ease;
+    }
+
+    /* Wavy color animations for status dot */
+    @keyframes waveSilver {
+      0%, 100% { background: #d1d5db; box-shadow: 0 0 8px rgba(209, 213, 219, 0.6); }
+      25% { background: #9ca3af; box-shadow: 0 0 12px rgba(156, 163, 175, 0.8); }
+      50% { background: #6b7280; box-shadow: 0 0 16px rgba(107, 114, 128, 1); }
+      75% { background: #9ca3af; box-shadow: 0 0 12px rgba(156, 163, 175, 0.8); }
+    }
+
+    @keyframes waveGreen {
+      0%, 100% { background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.6); }
+      25% { background: #16a34a; box-shadow: 0 0 12px rgba(22, 163, 74, 0.8); }
+      50% { background: #15803d; box-shadow: 0 0 16px rgba(21, 128, 61, 1); }
+      75% { background: #16a34a; box-shadow: 0 0 12px rgba(22, 163, 74, 0.8); }
+    }
+
+    @keyframes waveBlue {
+      0%, 100% { background: #60a5fa; box-shadow: 0 0 8px rgba(96, 165, 250, 0.6); }
+      25% { background: #3b82f6; box-shadow: 0 0 12px rgba(59, 130, 246, 0.8); }
+      50% { background: #2563eb; box-shadow: 0 0 16px rgba(37, 99, 235, 1); }
+      75% { background: #3b82f6; box-shadow: 0 0 12px rgba(59, 130, 246, 0.8); }
+    }
+
+    @keyframes waveOrange {
+      0%, 100% { background: #fb923c; box-shadow: 0 0 8px rgba(251, 146, 60, 0.6); }
+      25% { background: #f97316; box-shadow: 0 0 12px rgba(249, 115, 22, 0.8); }
+      50% { background: #ea580c; box-shadow: 0 0 16px rgba(234, 88, 12, 1); }
+      75% { background: #f97316; box-shadow: 0 0 12px rgba(249, 115, 22, 0.8); }
+    }
+
+    .status-dot.idle { 
+      animation: waveSilver 2s ease-in-out infinite;
+    }
+    .status-dot.openai { 
+      animation: waveBlue 1.5s ease-in-out infinite;
+    }
+    .status-dot.claude { 
+      animation: waveOrange 1.5s ease-in-out infinite;
+    }
+    .status-dot.connected { 
+      animation: waveGreen 2s ease-in-out infinite;
+    }
+
+    /* Main Container - Centered */
+    .main-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      min-height: 0;
+    }
+
+    /* Panel */
+    .panel {
+      background: linear-gradient(145deg, rgba(26, 26, 46, 0.9), rgba(22, 33, 62, 0.9));
+      border: 2px solid var(--yellow);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 900px;
+      max-height: calc(100vh - 120px);
+      overflow: hidden;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Step containers should flex and not overflow */
+    .panel > div:not(.hidden) {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Custom scrollbar - shifted 40px inward */
+    .panel::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    .panel::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 6px;
+    }
+
+    .panel::-webkit-scrollbar-thumb {
+      background: #6b7280;
+      border-radius: 6px;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+    }
+
+    .panel::-webkit-scrollbar-thumb:hover {
+      background: #9ca3af;
+    }
+
+    /* Balanced padding for centered content */
+    .panel {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+
+    /* Step Header */
+    .step-header {
+      text-align: left;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--yellow);
+      flex-shrink: 0;
+    }
+
+    .step-title {
+      font-family: 'Cinzel', Georgia, 'Times New Roman', Times, serif !important;
+      font-size: 2rem;
+      color: var(--yellow);
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    /* Form Sections */
+    .form-section {
+      margin-bottom: 2rem;
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 600;
+      color: var(--yellow);
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .form-description {
+      color: var(--gray);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+
+    /* Input Field */
+    .input-field {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(251, 191, 36, 0.3);
+      border-radius: 8px;
+      color: var(--white);
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--yellow);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+    }
+
+    .input-field::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Text Area Container with Dropdown */
+    .textarea-container {
+      position: relative;
+    }
+
+    .textarea-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .category-select-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .category-label {
+      color: var(--gray);
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .category-select {
+      padding: 0.4rem 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(251, 191, 36, 0.3);
+      border-radius: 6px;
+      color: var(--white);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .category-select:focus {
+      outline: none;
+      border-color: var(--yellow);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .category-select option {
+      background: var(--navy-dark);
+      color: var(--white);
+    }
+
+    /* Text Area */
+    .textarea-field {
+      width: 100%;
+      min-height: 200px;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(251, 191, 36, 0.3);
+      border-radius: 8px;
+      color: var(--white);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      resize: vertical;
+      transition: all 0.3s ease;
+    }
+
+    .textarea-field:focus {
+      outline: none;
+      border-color: var(--yellow);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+    }
+
+    .textarea-field::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Character Counter */
+    .char-counter {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--gray);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    .checkbox-input {
+      cursor: pointer;
+      accent-color: var(--yellow);
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--gold);
+      background: var(--black);
+      border-radius: 3px;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox-input:hover {
+      border-color: var(--yellow);
+      box-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+    }
+
+    .checkbox-input:checked {
+      background: var(--black);
+      border-color: var(--yellow);
+    }
+
+    .checkbox-input:checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--yellow);
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    /* Hidden Class */
+    .hidden {
+      display: none !important;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(251, 191, 36, 0.2);
+    }
+
+    .btn {
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: var(--yellow);
+      color: var(--black);
+    }
+
+    .btn-primary:hover {
+      background: var(--gold);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--white);
+      border: 2px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: var(--yellow);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Scrollable Table Container */
+    .table-scroll-container {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      margin: 0.5rem 0;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* The tbody wrapper that actually scrolls */
+    .table-body-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .table-body-scroll::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .table-body-scroll::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+    }
+
+    .table-body-scroll::-webkit-scrollbar-thumb {
+      background: #6b7280;
+      border-radius: 4px;
+    }
+
+    .table-body-scroll::-webkit-scrollbar-thumb:hover {
+      background: #9ca3af;
+    }
+
+    /* Content wrapper for steps with tables */
+    .step-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Data Table (matching create_books.html) */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      table-layout: fixed;
+    }
+
+    /* Header table - fixed at top */
+    .data-table-header {
+      width: 100%;
+      border-collapse: collapse;
+      background: linear-gradient(145deg, rgba(26, 26, 46, 1), rgba(22, 33, 62, 1));
+      table-layout: fixed;
+      flex-shrink: 0;
+    }
+
+    .data-table-header tr {
+      border-bottom: 2px solid var(--yellow);
+    }
+
+    .data-table-header th {
+      padding: 0.2rem 0.75rem;
+      text-align: left;
+      color: var(--yellow);
+      font-weight: 600;
+      font-size: 0.85rem;
+      background: linear-gradient(145deg, rgba(26, 26, 46, 1), rgba(22, 33, 62, 1));
+      height: 20px;
+      line-height: 1;
+    }
+
+    .data-table thead {
+      background: linear-gradient(145deg, rgba(26, 26, 46, 1), rgba(22, 33, 62, 1));
+    }
+
+    .data-table thead tr {
+      border-bottom: 2px solid var(--yellow);
+    }
+
+    .data-table th {
+      padding: 0.2rem 0.75rem;
+      text-align: left;
+      color: var(--yellow);
+      font-weight: 600;
+      font-size: 0.85rem;
+      background: linear-gradient(145deg, rgba(26, 26, 46, 1), rgba(22, 33, 62, 1));
+      height: 20px;
+      line-height: 1;
+    }
+
+    .data-table th.col-rank,
+    .data-table-header th.col-rank {
+      width: 60px;
+      text-align: center;
+    }
+
+    .data-table th.col-score,
+    .data-table-header th.col-score {
+      width: 100px;
+      text-align: center;
+    }
+
+    .data-table tbody tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      transition: background-color 0.2s;
+      cursor: pointer;
+      height: 20px;
+    }
+
+    .data-table tbody tr:hover:not(.selected) {
+      background: rgba(251, 191, 36, 0.08);
+    }
+
+    .data-table tbody tr.selected {
+      background: rgba(251, 191, 36, 0.25);
+    }
+
+    .data-table tbody tr.selected td,
+    .data-table tbody tr.selected td span,
+    .data-table tbody tr.selected .writer-name,
+    .data-table tbody tr.selected .writer-expertise,
+    .data-table tbody tr.selected .writer-tone,
+    .data-table tbody tr.selected .writer-style,
+    .data-table tbody tr.selected .category-name,
+    .data-table tbody tr.selected .category-slug,
+    .data-table tbody tr.selected .article-title,
+    .data-table tbody tr.selected .article-writer {
+      color: var(--white) !important;
+      font-weight: 700 !important;
+    }
+
+    .data-table td {
+      padding: 0.25rem 0.75rem;
+      color: var(--white);
+      font-size: 0.85rem;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    .data-table td.col-rank {
+      width: 60px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--yellow);
+    }
+
+    .writer-name {
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .writer-expertise {
+      color: var(--white);
+      font-size: 0.85rem;
+    }
+
+    .writer-tone {
+      color: var(--white);
+      font-size: 0.85rem;
+    }
+
+    .writer-style {
+      color: var(--white);
+      font-size: 0.85rem;
+    }
+
+    /* Category table specific styles */
+    .category-name {
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .category-slug {
+      color: var(--white);
+      font-size: 0.85rem;
+      font-family: 'Courier New', monospace;
+    }
+
+    .category-articles {
+      color: var(--yellow);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    .data-table th.col-articles,
+    .data-table-header th.col-articles {
+      width: 80px;
+      text-align: center;
+    }
+
+    .data-table td.col-articles {
+      text-align: center;
+      font-weight: 600;
+      color: var(--yellow);
+    }
+
+    /* Article table specific styles */
+    .data-table th.col-writer,
+    .data-table-header th.col-writer {
+      width: 150px;
+      text-align: right;
+    }
+
+    .data-table td.col-writer {
+      text-align: right;
+    }
+
+    .article-title {
+      font-weight: 500;
+      color: var(--white);
+    }
+
+    .article-writer {
+      color: var(--yellow);
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    /* Step 5 Progress Styles - Compact Version */
+    .generation-progress-compact {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1rem;
+      flex: 1;
+    }
+
+    .progress-container-compact {
+      text-align: center;
+      width: 100%;
+    }
+
+    .progress-spinner-medium {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(251, 191, 36, 0.2);
+      border-top: 3px solid var(--yellow);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1.5rem;
+    }
+
+    .progress-status-main {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--yellow);
+      margin-bottom: 1rem;
+      min-height: 1.5rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 1rem;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--yellow) 0%, var(--gold) 100%);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-stats {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* Completion Screen Styles */
+    .completion-container {
+      text-align: center;
+      padding: 1.5rem 2rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .completion-icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--yellow) 0%, var(--gold) 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: var(--dark);
+      margin: 0 auto 1rem;
+      font-weight: bold;
+    }
+
+    .completion-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--yellow);
+      margin-bottom: 0.25rem;
+    }
+
+    .completion-message {
+      font-size: 0.9rem;
+      color: var(--white);
+      opacity: 0.9;
+      margin-bottom: 1rem;
+    }
+
+    .completion-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      max-width: 450px;
+      margin: 0 auto;
+    }
+
+    .stat-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      border-radius: 8px;
+      padding: 0.75rem 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--yellow);
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 0.15rem;
+    }
+
+    /* Image Preview Grid for Step 6 */
+    .image-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      max-width: 500px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+
+    .image-preview-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      border-radius: 8px;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .image-preview-item img {
+      width: 100%;
+      height: 80px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .image-preview-item .image-label {
+      padding: 0.5rem;
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.8);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Persona Details Section */
+    .persona-details {
+      margin-top: 0.75rem;
+    }
+
+    .persona-details-label {
+      display: block;
+      font-weight: 600;
+      color: var(--yellow);
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    .persona-details-textarea {
+      width: 100%;
+      min-height: 80px;
+      max-height: 100px;
+      padding: 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(251, 191, 36, 0.3);
+      border-radius: 8px;
+      color: var(--white);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      resize: none;
+      transition: all 0.3s ease;
+      overflow-y: auto;
+    }
+
+    .persona-details-textarea:focus {
+      outline: none;
+      border-color: var(--yellow);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+    }
+
+    .persona-details-textarea::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Custom scrollbar for bio textarea */
+    .persona-details-textarea::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .persona-details-textarea::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+    }
+
+    .persona-details-textarea::-webkit-scrollbar-thumb {
+      background: #6b7280;
+      border-radius: 4px;
+    }
+
+    .persona-details-textarea::-webkit-scrollbar-thumb:hover {
+      background: #9ca3af;
+    }
+
+    .persona-details-textarea::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem 1.5rem;
+      justify-content: center;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 6px;
+      margin-top: 1rem;
+      font-size: 0.8rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+
+    /* Loading State */
+    .loading {
+      text-align: center;
+      padding: 3rem 2rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(251, 191, 36, 0.2);
+      border-top-color: var(--yellow);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1.5rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: var(--yellow);
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .step-title {
+        font-size: 1.4rem;
+      }
+
+      .panel {
+        padding: 1.5rem;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+        align-items: flex-end;
+      }
+
+      .btn {
+        width: 100%;
+        max-width: 200px;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <h1 id="mainLogo" style="font-family: 'Cinzel', Georgia, 'Times New Roman', Times, serif !important; font-size: 1.5rem !important; font-weight: 700 !important; color: #fbbf24 !important; margin: 0 !important; padding: 0 !important; letter-spacing: 0 !important;">JubileeVerse.com</h1>
+    <div class="status-bar">
+      <div class="status-dot idle" id="statusDot"></div>
+      <span id="statusText">Jubilee Intelligence 8.0</span>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="main-container">
+    <div class="panel">
+      <!-- STEP 1: Domain Input -->
+      <div id="step1">
+        <!-- Step Header -->
+        <div class="step-header">
+          <h1 class="step-title">Create Website (Step 1 of 5)</h1>
+        </div>
+
+        <!-- Domain Name Input -->
+        <div class="form-section">
+          <label class="form-label" for="domainName">Domain Name *</label>
+          <input 
+            type="text" 
+            id="domainName" 
+            class="input-field" 
+            placeholder="example: faithfulparenting.com"
+            required
+          >
+        </div>
+
+        <!-- Website Overview -->
+        <div class="form-section">
+          <div class="textarea-header">
+            <label class="form-label" for="websiteOverview">Website Overview</label>
+            <div class="category-select-wrapper">
+              <span class="category-label">Categories:</span>
+              <select id="categoryCount" class="category-select">
+                <option value="3" selected>3 Categories</option>
+                <option value="7">7 Categories</option>
+                <option value="12">12 Categories</option>
+              </select>
+            </div>
+          </div>
+          <textarea 
+            id="websiteOverview" 
+            class="textarea-field" 
+            placeholder="Example: A Christian parenting website dedicated to helping parents raise children with faith-based values. We provide practical advice, biblical wisdom, and community support for families navigating modern parenting challenges..."
+            maxlength="8000"
+          ></textarea>
+          <div class="char-counter">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin: 0;">
+              <input type="checkbox" id="quickMode" class="checkbox-input">
+              <span style="color: var(--yellow); font-size: 0.9rem; font-weight: 500;">Quick Mode</span>
+            </label>
+            <span><span id="charCount">0</span> / 8000 characters</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button type="button" class="btn btn-primary" id="nextBtn">
+            Next
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Generate Writers -->
+      <div id="step2" class="hidden">
+        <!-- Step Header -->
+        <div class="step-header">
+          <h1 class="step-title">Generate Writers (Step 2 of 5)</h1>
+        </div>
+
+        <!-- Loading State -->
+        <div id="writersLoading" class="loading">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Analyzing content type and generating writers...</div>
+        </div>
+
+        <!-- Writers Content -->
+        <div id="writersContent" class="hidden step-content">
+          <!-- Scrollable Table Container -->
+          <div class="table-scroll-container">
+            <!-- Fixed Header Table -->
+            <table class="data-table-header">
+              <tr>
+                <th class="col-rank">#</th>
+                <th>Name</th>
+                <th>Expertise</th>
+                <th>Tone</th>
+                <th>Style</th>
+              </tr>
+            </table>
+            <!-- Scrollable Body -->
+            <div class="table-body-scroll">
+              <table class="data-table" id="writersTable">
+                <tbody id="writersList"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Persona Details Section -->
+          <div class="persona-details" style="flex-shrink: 0;">
+            <label class="persona-details-label" id="personaDetailsLabel">Select a persona to view details</label>
+            <textarea
+              id="personaDetailsTextarea"
+              class="persona-details-textarea"
+              placeholder="Click on a persona row above to view their bio and details..."
+              readonly
+            ></textarea>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons" style="margin-top: 1rem; border-top: none; padding-top: 0; flex-shrink: 0;">
+            <button type="button" class="btn btn-secondary" onclick="goBackToStep1()">Back</button>
+            <button type="button" class="btn btn-primary" onclick="continueToCategories()">Next</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Generate Categories -->
+      <div id="step3" class="hidden">
+        <!-- Step Header -->
+        <div class="step-header">
+          <h1 class="step-title" id="step3Title">Generate Categories (Step 3 of 5)</h1>
+        </div>
+
+        <!-- Loading State -->
+        <div id="categoriesLoading" class="loading">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Generating compelling categories for your domain...</div>
+        </div>
+
+        <!-- Categories Content -->
+        <div id="categoriesContent" class="hidden step-content">
+          <!-- Scrollable Table Container -->
+          <div class="table-scroll-container">
+            <!-- Fixed Header Table -->
+            <table class="data-table-header">
+              <tr>
+                <th class="col-rank">#</th>
+                <th>Category</th>
+                <th>Slug</th>
+                <th class="col-articles">Articles</th>
+              </tr>
+            </table>
+            <!-- Scrollable Body -->
+            <div class="table-body-scroll">
+              <table class="data-table" id="categoriesTable">
+                <tbody id="categoriesList"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Category Details Section -->
+          <div class="persona-details" style="flex-shrink: 0;">
+            <label class="persona-details-label" id="categoryDetailsLabel">Select a category to view details</label>
+            <textarea
+              id="categoryDetailsTextarea"
+              class="persona-details-textarea"
+              placeholder="Click on a category row above to view its description..."
+              readonly
+            ></textarea>
+          </div>
+
+          <!-- Action Buttons with Category Dropdown -->
+          <div class="action-buttons" style="margin-top: 1rem; border-top: none; padding-top: 0; justify-content: space-between; flex-shrink: 0;">
+            <div class="category-select-wrapper">
+              <select id="categoryCountStep3" class="category-select" onchange="onCategoryCountChange()">
+                <option value="3">Generate Categories (3)</option>
+                <option value="7">Generate Categories (7)</option>
+                <option value="12">Generate Categories (12)</option>
+              </select>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+              <button type="button" class="btn btn-secondary" onclick="goBackToStep2()">Back</button>
+              <button type="button" class="btn btn-primary" onclick="continueToArticles()">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4: Generate Web Pages -->
+      <div id="step4" class="hidden">
+        <!-- Step Header -->
+        <div class="step-header">
+          <h1 class="step-title" id="step4Title">Generate Web Pages (Step 4 of 5)</h1>
+        </div>
+
+        <!-- Loading State -->
+        <div id="articlesLoading" class="loading">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Generating article titles for all categories...</div>
+        </div>
+
+        <!-- Articles Content -->
+        <div id="articlesContent" class="hidden step-content">
+          <!-- Scrollable Table Container -->
+          <div class="table-scroll-container">
+            <!-- Fixed Header Table -->
+            <table class="data-table-header">
+              <tr>
+                <th class="col-rank">#</th>
+                <th>Article Title</th>
+                <th class="col-writer">Writer</th>
+              </tr>
+            </table>
+            <!-- Scrollable Body -->
+            <div class="table-body-scroll">
+              <table class="data-table" id="articlesTable">
+                <tbody id="articlesList"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons" style="margin-top: 1rem; border-top: none; padding-top: 0; flex-shrink: 0;">
+            <button type="button" class="btn btn-secondary" onclick="goBackToStep3()">Back</button>
+            <button type="button" class="btn btn-primary" onclick="continueToStep5()">Next</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 5: Generate Content -->
+      <div id="step5" class="hidden">
+        <!-- Step Header -->
+        <div class="step-header">
+          <h1 class="step-title" id="step5Title">Generate Website (Step 5 of 5)</h1>
+        </div>
+
+        <!-- Progress Splash Screen -->
+        <div id="step5Progress" class="generation-progress-compact">
+          <div class="progress-container-compact">
+            <div class="progress-spinner-medium"></div>
+            <div class="progress-status-main" id="progressStatus">Initializing...</div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="progress-stats">
+              <span id="progressCount">0 / 0</span> items processed
+            </div>
+          </div>
+        </div>
+
+        <!-- Completion Screen -->
+        <div id="step5Complete" class="hidden">
+          <div class="completion-container">
+            <div class="completion-icon">✓</div>
+            <h2 class="completion-title">Website Generation Complete!</h2>
+            <p class="completion-message">All content and images have been successfully generated.</p>
+            <div class="completion-stats" id="completionStats">
+              <!-- Stats will be populated dynamically -->
+            </div>
+            <p class="completion-message" style="margin-top: 1.5rem; color: var(--yellow);">
+              Redirecting to your website...
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 6: Generate Content Images -->
+      <div id="step6" class="hidden">
+        <!-- Step Header -->
+        <div class="step-header">
+          <h1 class="step-title" id="step6Title">Generate Content Images (Step 6 of 7)</h1>
+        </div>
+
+        <!-- Progress Screen -->
+        <div id="step6Progress" class="generation-progress-compact">
+          <div class="progress-container-compact">
+            <div class="progress-spinner-medium"></div>
+            <div class="progress-status-main" id="imageProgressStatus">Initializing image generation...</div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="imageProgressBar"></div>
+            </div>
+            <div class="progress-stats">
+              <span id="imageProgressCount">0 / 0</span> images generated
+            </div>
+          </div>
+        </div>
+
+        <!-- Completion Screen -->
+        <div id="step6Complete" class="hidden">
+          <div class="completion-container">
+            <div class="completion-icon">🖼️</div>
+            <h2 class="completion-title">Images Generated!</h2>
+            <p class="completion-message">All category images have been successfully created.</p>
+            <div class="image-preview-grid" id="imagePreviewGrid">
+              <!-- Image previews will be populated dynamically -->
+            </div>
+            <div class="action-buttons" style="margin-top: 2rem; border-top: none; padding-top: 0; justify-content: center;">
+              <button type="button" class="btn btn-primary" onclick="continueToStep7()">View Website</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('========== SCRIPT STARTED ==========');
+    
+    // Force font on logo - absolute backup
+    setTimeout(function() {
+      const logo = document.getElementById('mainLogo');
+      if (logo) {
+        logo.style.fontFamily = "'Cinzel', Georgia, 'Times New Roman', Times, serif";
+        logo.style.fontWeight = "700";
+        logo.style.fontSize = "1.5rem";
+        console.log('Logo font forced via JavaScript');
+        console.log('Logo computed font:', window.getComputedStyle(logo).fontFamily);
+      }
+    }, 100);
+    
+    // Error handler
+    window.onerror = function(msg, url, line, col, error) {
+      console.error('JavaScript Error:', msg, 'at line', line);
+      return false;
+    };
+    
+    // ========================================================================
+    // COOKIE FUNCTIONS
+    // ========================================================================
+    function setCookie(name, value, days) {
+      const expires = new Date();
+      expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+      document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+    }
+
+    function getCookie(name) {
+      const nameEQ = name + "=";
+      const ca = document.cookie.split(';');
+      for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+      }
+      return null;
+    }
+
+    // ========================================================================
+    // PAGE INITIALIZATION
+    // ========================================================================
+    
+    // Character counter
+    const textarea = document.getElementById('websiteOverview');
+    const charCount = document.getElementById('charCount');
+
+    textarea.addEventListener('input', () => {
+      charCount.textContent = textarea.value.length;
+    });
+
+    // Load saved category count from cookie
+    const categorySelect = document.getElementById('categoryCount');
+    const savedCategoryCount = getCookie('website_category_count');
+    if (savedCategoryCount) {
+      categorySelect.value = savedCategoryCount;
+    }
+
+    // Save category count when changed
+    categorySelect.addEventListener('change', () => {
+      setCookie('website_category_count', categorySelect.value, 365);
+      console.log(`Category count saved to cookie: ${categorySelect.value}`);
+    });
+
+    // ========================================================================
+    // FORM VALIDATION AND SUBMISSION
+    // ========================================================================
+    
+    // Use setTimeout to ensure DOM is completely ready
+    setTimeout(function() {
+      console.log('Setting up Next button...');
+      const nextButton = document.getElementById('nextBtn');
+      console.log('Next button element:', nextButton);
+      console.log('Button parent:', nextButton ? nextButton.parentElement : 'N/A');
+      console.log('Button computed style:', nextButton ? window.getComputedStyle(nextButton).pointerEvents : 'N/A');
+      
+      if (nextButton) {
+        nextButton.onclick = function(e) {
+          console.log('BUTTON CLICKED! Event:', e);
+          handleNextClick();
+          return false;
+        };
+        console.log('Next button handler attached successfully');
+        
+        // Test that it's working
+        console.log('Testing if handler is attached:', nextButton.onclick);
+      } else {
+        console.error('ERROR: Next button not found!');
+      }
+    }, 100);
+
+    async function handleNextClick() {
+      console.log('handleNextClick called');
+      
+      const domainInput = document.getElementById('domainName');
+      const overviewInput = document.getElementById('websiteOverview');
+      const categorySelect = document.getElementById('categoryCount');
+      const quickModeCheckbox = document.getElementById('quickMode');
+      
+      // Validate inputs - only domain is required
+      if (!domainInput.value.trim()) {
+        alert('Please enter a domain name');
+        domainInput.focus();
+        return;
+      }
+
+      // Gather form data
+      const formData = {
+        domain: domainInput.value.trim(),
+        overview: overviewInput.value.trim(),
+        categoryCount: parseInt(categorySelect.value),
+        quickMode: quickModeCheckbox.checked
+      };
+
+      console.log('Form Data:', formData);
+
+      // Store data in sessionStorage for next steps
+      sessionStorage.setItem('websiteData', JSON.stringify(formData));
+
+      // Show Step 2
+      showStep2();
+      
+      // Generate writers
+      await generateWriters(formData);
+    }
+    
+    // Make it globally accessible
+    window.handleNextClick = handleNextClick;
+
+    // Quick mode checkbox handler
+    document.getElementById('quickMode').onchange = function() {
+      const mode = this.checked ? 'Quick Mode' : 'Full Mode';
+      console.log(`Generation mode: ${mode}`);
+    };
+
+    // ========================================================================
+    // STEP NAVIGATION FUNCTIONS
+    // ========================================================================
+    
+    function showStep2() {
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('step2').classList.remove('hidden');
+      document.getElementById('writersLoading').style.display = 'block';
+      document.getElementById('writersContent').classList.add('hidden');
+      
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+
+    function goBackToStep1() {
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step1').classList.remove('hidden');
+      
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+    
+    // Make globally accessible
+    window.goBackToStep1 = goBackToStep1;
+
+    // ========================================================================
+    // WRITERS GENERATION FUNCTIONS
+    // ========================================================================
+    
+    async function generateWriters(formData) {
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+      
+      statusDot.className = 'status-dot openai';
+      statusText.textContent = 'Analyzing content...';
+
+      try {
+        // Call the API endpoint to analyze domain AND generate writers
+        const response = await fetch('/api/website/analyze-and-generate-writers', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          statusDot.className = 'status-dot connected';
+          statusText.textContent = 'Jubilee Intelligence 8.0';
+          
+          // Store site data in sessionStorage for next steps
+          sessionStorage.setItem('currentSite', JSON.stringify({
+            siteCode: result.siteCode,
+            domain: result.domain,
+            analysis: result.analysis,
+            config: result.config,
+            writers: result.writers,
+            contentType: result.contentType
+          }));
+
+          // Display writers
+          displayWriters(result.writers, result.contentType);
+          
+        } else {
+          statusDot.className = 'status-dot idle';
+          statusText.textContent = 'Jubilee Intelligence 8.0';
+          alert(`❌ Error: ${result.error}\n\nPlease try again or check your API keys.`);
+          goBackToStep1();
+        }
+      } catch (error) {
+        statusDot.className = 'status-dot idle';
+        statusText.textContent = 'Jubilee Intelligence 8.0';
+        console.error('API Error:', error);
+        alert(`❌ Connection Error: ${error.message}\n\nMake sure the server is running on port 3001.`);
+        goBackToStep1();
+      }
+    }
+
+    // ========================================================================
+    // WRITERS DISPLAY FUNCTIONS
+    // ========================================================================
+
+    // Store writers data for selection
+    let currentWriters = [];
+    let selectedWriterIndex = -1;
+
+    // Map expertise arrays to single-word taxonomy
+    function getExpertiseWord(expertise) {
+      if (!expertise || !expertise.length) return 'General';
+      // Extract first word from first expertise area
+      const firstExpertise = expertise[0];
+      const words = firstExpertise.split(/[\s,]+/);
+      return words[0];
+    }
+
+    // Clean name to only show first and last name (no titles, prefixes, suffixes)
+    function cleanName(fullName) {
+      if (!fullName) return 'Unknown';
+
+      // List of titles/prefixes/suffixes to remove
+      const titlesToRemove = [
+        'Rev.', 'Rev', 'Reverend',
+        'Pastor', 'Pr.', 'Pr',
+        'Dr.', 'Dr', 'Doctor',
+        'Prof.', 'Prof', 'Professor',
+        'Fr.', 'Fr', 'Father',
+        'Sr.', 'Sr', 'Sister',
+        'Br.', 'Br', 'Brother',
+        'Elder', 'Deacon', 'Bishop',
+        'Minister', 'Chaplain',
+        'MD', 'M.D.', 'PhD', 'Ph.D.', 'PharmD', 'Pharm.D.',
+        'JD', 'J.D.', 'MBA', 'M.B.A.',
+        'MA', 'M.A.', 'MS', 'M.S.', 'BA', 'B.A.', 'BS', 'B.S.',
+        'Esq.', 'Esq', 'Esquire',
+        'Jr.', 'Jr', 'Junior',
+        'Sr.', 'Sr', 'Senior',
+        'II', 'III', 'IV', 'V'
+      ];
+
+      // Create regex pattern for removal (case insensitive, word boundaries)
+      let cleanedName = fullName;
+      titlesToRemove.forEach(title => {
+        const regex = new RegExp('\\b' + title.replace('.', '\\.') + '\\b\\.?', 'gi');
+        cleanedName = cleanedName.replace(regex, '');
+      });
+
+      // Clean up extra spaces and trim
+      cleanedName = cleanedName.replace(/\s+/g, ' ').trim();
+
+      // Split into parts and take first and last name only
+      const nameParts = cleanedName.split(' ').filter(part => part.length > 0);
+      if (nameParts.length === 0) return 'Unknown';
+      if (nameParts.length === 1) return nameParts[0];
+
+      // Return first name + last name only
+      return `${nameParts[0]} ${nameParts[nameParts.length - 1]}`;
+    }
+
+    function displayWriters(writers, contentType) {
+      const writersLoading = document.getElementById('writersLoading');
+      const writersContent = document.getElementById('writersContent');
+      const writersList = document.getElementById('writersList');
+
+      // Store writers (limit to 12)
+      currentWriters = writers.slice(0, 12);
+      selectedWriterIndex = -1;
+
+      // Clear existing rows
+      writersList.innerHTML = '';
+
+      // Populate table with single-line rows
+      currentWriters.forEach((writer, index) => {
+        const row = document.createElement('tr');
+        row.setAttribute('data-index', index);
+
+        // Get single-word expertise and clean name
+        const expertiseWord = getExpertiseWord(writer.expertise);
+        const displayName = cleanName(writer.name);
+
+        row.innerHTML = `
+          <td class="col-rank">${index + 1}</td>
+          <td><span class="writer-name">${displayName}</span></td>
+          <td><span class="writer-expertise">${expertiseWord}</span></td>
+          <td><span class="writer-tone">${writer.tone || 'Professional'}</span></td>
+          <td><span class="writer-style">${writer.style || 'Engaging'}</span></td>
+        `;
+
+        // Add click handler for row selection
+        row.addEventListener('click', () => selectPersona(index));
+
+        writersList.appendChild(row);
+      });
+
+      // Hide loading, show content
+      writersLoading.style.display = 'none';
+      writersContent.classList.remove('hidden');
+
+      // Auto-select first persona on load
+      if (currentWriters.length > 0) {
+        selectPersona(0);
+      }
+    }
+
+    function selectPersona(index) {
+      const writersList = document.getElementById('writersList');
+      const rows = writersList.querySelectorAll('tr');
+      const detailsLabel = document.getElementById('personaDetailsLabel');
+      const detailsTextarea = document.getElementById('personaDetailsTextarea');
+
+      // Remove selected class from all rows
+      rows.forEach(row => row.classList.remove('selected'));
+
+      // Add selected class to clicked row
+      if (index >= 0 && index < rows.length) {
+        rows[index].classList.add('selected');
+        selectedWriterIndex = index;
+
+        // Get writer data
+        const writer = currentWriters[index];
+        const displayName = cleanName(writer.name);
+
+        // Update label with persona name (cleaned)
+        detailsLabel.textContent = `${displayName} - Bio`;
+
+        // Populate textarea with bio
+        detailsTextarea.value = writer.bio || 'No bio available for this persona.';
+      }
+    }
+
+    // Make selectPersona globally accessible
+    window.selectPersona = selectPersona;
+
+    // ========================================================================
+    // STEP 3: CATEGORY GENERATION FUNCTIONS
+    // ========================================================================
+
+    // Store categories data for selection
+    let currentCategories = [];
+    let selectedCategoryIndex = -1;
+
+    function continueToCategories() {
+      // Get current site data
+      const siteData = JSON.parse(sessionStorage.getItem('currentSite') || '{}');
+      const websiteData = JSON.parse(sessionStorage.getItem('websiteData') || '{}');
+
+      if (!siteData.siteCode) {
+        alert('Error: No site data found. Please go back and try again.');
+        return;
+      }
+
+      // Show Step 3
+      showStep3();
+
+      // Set the dropdown to match the selected category count from Step 1
+      const categoryCount = websiteData.categoryCount || siteData.config?.categoryCount || 3;
+      const dropdown = document.getElementById('categoryCountStep3');
+      if (dropdown) {
+        dropdown.value = categoryCount;
+      }
+
+      // Generate categories
+      generateCategories(siteData.siteCode, categoryCount);
+    }
+
+    // Make globally accessible
+    window.continueToCategories = continueToCategories;
+
+    function showStep3() {
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step3').classList.remove('hidden');
+      document.getElementById('categoriesLoading').style.display = 'block';
+      document.getElementById('categoriesContent').classList.add('hidden');
+
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+
+    function goBackToStep2() {
+      document.getElementById('step3').classList.add('hidden');
+      document.getElementById('step2').classList.remove('hidden');
+
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+
+    // Make globally accessible
+    window.goBackToStep2 = goBackToStep2;
+
+    // Handle category count dropdown change
+    function onCategoryCountChange() {
+      const dropdown = document.getElementById('categoryCountStep3');
+      const newCount = parseInt(dropdown.value);
+
+      // Get current site data
+      const siteData = JSON.parse(sessionStorage.getItem('currentSite') || '{}');
+
+      if (!siteData.siteCode) {
+        alert('Error: No site data found.');
+        return;
+      }
+
+      // Update the stored website data
+      const websiteData = JSON.parse(sessionStorage.getItem('websiteData') || '{}');
+      websiteData.categoryCount = newCount;
+      sessionStorage.setItem('websiteData', JSON.stringify(websiteData));
+
+      // Save to cookie for persistence
+      setCookie('website_category_count', newCount, 365);
+
+      // Show loading and regenerate categories
+      document.getElementById('categoriesLoading').style.display = 'block';
+      document.getElementById('categoriesContent').classList.add('hidden');
+
+      generateCategories(siteData.siteCode, newCount);
+    }
+
+    // Make globally accessible
+    window.onCategoryCountChange = onCategoryCountChange;
+
+    async function generateCategories(siteCode, categoryCount) {
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+
+      statusDot.className = 'status-dot openai';
+      statusText.textContent = 'Generating categories...';
+
+      try {
+        const response = await fetch('/api/website/generate-categories', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            siteCode,
+            categoryCount
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          statusDot.className = 'status-dot connected';
+          statusText.textContent = 'Jubilee Intelligence 8.0';
+
+          // Update site data in sessionStorage
+          const siteData = JSON.parse(sessionStorage.getItem('currentSite') || '{}');
+          siteData.categories = result.categories;
+          siteData.categoryCount = result.categoryCount;
+          sessionStorage.setItem('currentSite', JSON.stringify(siteData));
+
+          // Display categories
+          displayCategories(result.categories);
+
+        } else {
+          statusDot.className = 'status-dot idle';
+          statusText.textContent = 'Jubilee Intelligence 8.0';
+          alert(`Error: ${result.error}\n\nPlease try again.`);
+          goBackToStep2();
+        }
+      } catch (error) {
+        statusDot.className = 'status-dot idle';
+        statusText.textContent = 'Jubilee Intelligence 8.0';
+        console.error('API Error:', error);
+        alert(`Connection Error: ${error.message}\n\nMake sure the server is running.`);
+        goBackToStep2();
+      }
+    }
+
+    function displayCategories(categories) {
+      const categoriesLoading = document.getElementById('categoriesLoading');
+      const categoriesContent = document.getElementById('categoriesContent');
+      const categoriesList = document.getElementById('categoriesList');
+
+      // Store categories
+      currentCategories = categories;
+      selectedCategoryIndex = -1;
+
+      // Clear existing rows
+      categoriesList.innerHTML = '';
+
+      // Populate table with category rows
+      currentCategories.forEach((category, index) => {
+        const row = document.createElement('tr');
+        row.setAttribute('data-index', index);
+
+        row.innerHTML = `
+          <td class="col-rank">${category.rank || index + 1}</td>
+          <td><span class="category-name">${category.name}</span></td>
+          <td><span class="category-slug">/${category.slug}</span></td>
+          <td class="col-articles">${category.articleCount || 12}</td>
+        `;
+
+        // Add click handler for row selection
+        row.addEventListener('click', () => selectCategory(index));
+
+        categoriesList.appendChild(row);
+      });
+
+      // Hide loading, show content
+      categoriesLoading.style.display = 'none';
+      categoriesContent.classList.remove('hidden');
+
+      // Auto-select first category on load
+      if (currentCategories.length > 0) {
+        selectCategory(0);
+      }
+    }
+
+    function selectCategory(index) {
+      const categoriesList = document.getElementById('categoriesList');
+      const rows = categoriesList.querySelectorAll('tr');
+      const detailsLabel = document.getElementById('categoryDetailsLabel');
+      const detailsTextarea = document.getElementById('categoryDetailsTextarea');
+
+      // Remove selected class from all rows
+      rows.forEach(row => row.classList.remove('selected'));
+
+      // Add selected class to clicked row
+      if (index >= 0 && index < rows.length) {
+        rows[index].classList.add('selected');
+        selectedCategoryIndex = index;
+
+        // Get category data
+        const category = currentCategories[index];
+
+        // Update label with category name
+        detailsLabel.textContent = `${category.name} - Description`;
+
+        // Populate textarea with description
+        detailsTextarea.value = category.description || 'No description available for this category.';
+      }
+    }
+
+    // Make selectCategory globally accessible
+    window.selectCategory = selectCategory;
+
+    // ========================================================================
+    // STEP 4: ARTICLE GENERATION FUNCTIONS
+    // ========================================================================
+
+    // Store articles data
+    let currentArticles = [];
+
+    function continueToArticles() {
+      // Get current site data
+      const siteData = JSON.parse(sessionStorage.getItem('currentSite') || '{}');
+
+      if (!siteData.siteCode) {
+        alert('Error: No site data found. Please go back and try again.');
+        return;
+      }
+
+      // Show Step 4
+      showStep4();
+
+      // Generate articles
+      generateArticles(siteData.siteCode);
+    }
+
+    // Make globally accessible
+    window.continueToArticles = continueToArticles;
+
+    function showStep4() {
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step3').classList.add('hidden');
+      document.getElementById('step4').classList.remove('hidden');
+      document.getElementById('articlesLoading').style.display = 'block';
+      document.getElementById('articlesContent').classList.add('hidden');
+
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+
+    function goBackToStep3() {
+      document.getElementById('step4').classList.add('hidden');
+      document.getElementById('step3').classList.remove('hidden');
+
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+
+    // Make globally accessible
+    window.goBackToStep3 = goBackToStep3;
+
+    async function generateArticles(siteCode) {
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+
+      statusDot.className = 'status-dot openai';
+      statusText.textContent = 'Generating article titles...';
+
+      try {
+        const response = await fetch('/api/website/generate-articles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ siteCode })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          statusDot.className = 'status-dot connected';
+          statusText.textContent = 'Jubilee Intelligence 8.0';
+
+          // Update site data in sessionStorage
+          const siteData = JSON.parse(sessionStorage.getItem('currentSite') || '{}');
+          siteData.articles = result.articles;
+          siteData.totalArticles = result.totalArticles;
+          sessionStorage.setItem('currentSite', JSON.stringify(siteData));
+
+          // Display articles
+          displayArticles(result.articles);
+
+        } else {
+          statusDot.className = 'status-dot idle';
+          statusText.textContent = 'Jubilee Intelligence 8.0';
+          alert(`Error: ${result.error}\n\nPlease try again.`);
+          goBackToStep3();
+        }
+      } catch (error) {
+        statusDot.className = 'status-dot idle';
+        statusText.textContent = 'Jubilee Intelligence 8.0';
+        console.error('API Error:', error);
+        alert(`Connection Error: ${error.message}\n\nMake sure the server is running.`);
+        goBackToStep3();
+      }
+    }
+
+    function displayArticles(articles) {
+      const articlesLoading = document.getElementById('articlesLoading');
+      const articlesContent = document.getElementById('articlesContent');
+      const articlesList = document.getElementById('articlesList');
+
+      // Store articles
+      currentArticles = articles;
+
+      // Clear existing rows
+      articlesList.innerHTML = '';
+
+      // Populate table with article rows
+      currentArticles.forEach((article, index) => {
+        const row = document.createElement('tr');
+        row.setAttribute('data-index', index);
+
+        row.innerHTML = `
+          <td class="col-rank">${article.number}</td>
+          <td><span class="article-title">${article.title}</span></td>
+          <td class="col-writer"><span class="article-writer">${article.writerName}</span></td>
+        `;
+
+        articlesList.appendChild(row);
+      });
+
+      // Hide loading, show content
+      articlesLoading.style.display = 'none';
+      articlesContent.classList.remove('hidden');
+    }
+
+    // ========================================================================
+    // STEP 5: CONTENT GENERATION FUNCTIONS
+    // ========================================================================
+
+    let writerIdMap = {};
+    let totalArticlesToGenerate = 0;
+    let articlesGenerated = 0;
+    let step5ImagesGenerated = 0;
+    let step5TotalImages = 0;
+    let categoryFirstArticles = new Set(); // Track first articles in each category
+
+    function continueToStep5() {
+      // Get current site data
+      const siteData = JSON.parse(sessionStorage.getItem('currentSite') || '{}');
+
+      if (!siteData.siteCode) {
+        alert('Error: No site data found. Please go back and try again.');
+        return;
+      }
+
+      // Show Step 5
+      showStep5();
+
+      // Start content generation automatically
+      startContentGeneration(siteData.siteCode);
+    }
+
+    // Make globally accessible
+    window.continueToStep5 = continueToStep5;
+
+    function showStep5() {
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step3').classList.add('hidden');
+      document.getElementById('step4').classList.add('hidden');
+      document.getElementById('step5').classList.remove('hidden');
+      document.getElementById('step5Progress').classList.remove('hidden');
+      document.getElementById('step5Complete').classList.add('hidden');
+
+      // Reset progress indicators
+      document.getElementById('progressStatus').textContent = 'Initializing...';
+      document.getElementById('progressBar').style.width = '0%';
+      document.getElementById('progressCount').textContent = '0 / 0';
+
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+
+    function updateProgress(current, total, currentItem, imageStatus = '') {
+      const percentage = Math.round((current / total) * 100);
+      document.getElementById('progressBar').style.width = `${percentage}%`;
+      document.getElementById('progressCount').textContent = `${current} / ${total}`;
+
+      // Show both content and image progress
+      let statusText = `Creating content: ${currentItem}`;
+      if (imageStatus) {
+        statusText += ` | ${imageStatus}`;
+      }
+      document.getElementById('progressStatus').textContent = statusText;
+    }
+
+    // Identify first article in each category
+    function identifyFirstArticlesInCategories(articles) {
+      categoryFirstArticles.clear();
+      const seenCategories = new Set();
+
+      articles.forEach((article, index) => {
+        if (!seenCategories.has(article.categorySlug)) {
+          seenCategories.add(article.categorySlug);
+          categoryFirstArticles.add(index);
+        }
+      });
+
+      step5TotalImages = categoryFirstArticles.size;
+      return categoryFirstArticles;
+    }
+
+    // Generate article image using the article ID
+    async function generateArticleImage(siteCode, article, isFirstInCategory, articleId) {
+      if (!isFirstInCategory || !articleId) return { skipped: true };
+
+      try {
+        const response = await fetch('/api/website/generate-article-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ siteCode, article, isFirstInCategory, articleId })
+        });
+        return await response.json();
+      } catch (error) {
+        console.error(`Image generation error for ${article.categoryName}:`, error);
+        return { success: false, error: error.message };
+      }
+    }
+
+    async function startContentGeneration(siteCode) {
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+
+      statusDot.className = 'status-dot openai';
+      statusText.textContent = 'Generating website data...';
+
+      try {
+        // Phase 1: Create folder structure and JSON files
+        document.getElementById('progressStatus').textContent = 'Creating folder structure...';
+
+        const initResponse = await fetch('/api/website/generate-content', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ siteCode })
+        });
+
+        const initResult = await initResponse.json();
+
+        if (!initResult.success) {
+          throw new Error(initResult.error || 'Failed to initialize content generation');
+        }
+
+        // Store writer ID map for article generation
+        writerIdMap = initResult.writerIdMap;
+
+        // Get articles from session storage
+        const siteData = JSON.parse(sessionStorage.getItem('currentSite') || '{}');
+        const articles = siteData.articles || [];
+
+        totalArticlesToGenerate = articles.length;
+        articlesGenerated = 0;
+        step5ImagesGenerated = 0;
+
+        // Identify which articles are first in their category (for image generation)
+        identifyFirstArticlesInCategories(articles);
+
+        document.getElementById('progressCount').textContent = `0 / ${totalArticlesToGenerate}`;
+
+        // Phase 2: Generate content first, then images (using article ID)
+        // For each article, generate content. For first article in each category, also generate image using the article ID.
+        for (let i = 0; i < articles.length; i++) {
+          const article = articles[i];
+          const isFirstInCategory = categoryFirstArticles.has(i);
+
+          // Update progress UI
+          const imageStatus = `Images: ${step5ImagesGenerated}/${step5TotalImages}`;
+          updateProgress(i, totalArticlesToGenerate, article.title, imageStatus);
+
+          try {
+            // Step 1: Generate article content first
+            const contentResponse = await fetch('/api/website/generate-article-content', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ siteCode, article, writerIdMap })
+            });
+            const articleResult = await contentResponse.json();
+
+            if (articleResult.success) {
+              articlesGenerated++;
+
+              // Step 2: For first article in category, generate image using the article ID
+              if (isFirstInCategory && articleResult.articleId) {
+                console.log(`Requesting image for first article in ${article.categoryName}: ${articleResult.articleId}`);
+                const imageResult = await generateArticleImage(siteCode, article, true, articleResult.articleId);
+                console.log(`Image result:`, imageResult);
+
+                if (imageResult.success && imageResult.imageGenerated) {
+                  step5ImagesGenerated++;
+                  console.log(`Article image generated: ${articleResult.articleId} (${article.categoryName})`);
+                } else if (imageResult.success && imageResult.cached) {
+                  step5ImagesGenerated++;
+                  console.log(`Article image cached: ${articleResult.articleId} (${article.categoryName})`);
+                }
+              }
+            } else {
+              console.error(`Failed to generate article: ${article.title}`, articleResult.error);
+              articlesGenerated++;
+            }
+
+            // Update progress with image status
+            const newImageStatus = `Images: ${step5ImagesGenerated}/${step5TotalImages}`;
+            updateProgress(articlesGenerated, totalArticlesToGenerate, article.title, newImageStatus);
+
+          } catch (articleError) {
+            console.error(`Error generating article: ${article.title}`, articleError);
+            articlesGenerated++;
+          }
+        }
+
+        // Phase 3: Finalize content generation
+        document.getElementById('progressStatus').textContent = 'Finalizing content generation...';
+
+        const finalizeResponse = await fetch('/api/website/finalize-content', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ siteCode })
+        });
+
+        const finalizeResult = await finalizeResponse.json();
+
+        if (!finalizeResult.success) {
+          console.error('Finalization warning:', finalizeResult.error);
+        }
+
+        // Phase 4: Build the website
+        document.getElementById('progressStatus').textContent = 'Building website...';
+
+        const buildResponse = await fetch('/api/website/build-website', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ siteCode })
+        });
+
+        const buildResult = await buildResponse.json();
+
+        if (!buildResult.success) {
+          console.error('Website build warning:', buildResult.error);
+        }
+
+        // Update session storage
+        siteData.status = 'complete';
+        siteData.imagesGenerated = step5ImagesGenerated;
+        siteData.websiteUrl = buildResult.websiteUrl;
+        sessionStorage.setItem('currentSite', JSON.stringify(siteData));
+
+        // Show completion screen briefly, then redirect
+        statusDot.className = 'status-dot connected';
+        statusText.textContent = 'Jubilee Intelligence 8.0';
+
+        showCompletionScreen(initResult);
+
+        // Redirect to the website after a brief delay
+        const domain = siteData.domain || siteData.config?.domain;
+        if (domain) {
+          document.getElementById('progressStatus').textContent = 'Redirecting to your website...';
+          setTimeout(() => {
+            window.location.href = `/websites/${domain}/index.html`;
+          }, 2000);
+        }
+
+      } catch (error) {
+        statusDot.className = 'status-dot idle';
+        statusText.textContent = 'Jubilee Intelligence 8.0';
+        console.error('Content generation error:', error);
+        alert(`Content Generation Error: ${error.message}\n\nPlease try again.`);
+        goBackToStep4();
+      }
+    }
+
+    function showCompletionScreen(initResult) {
+      const siteData = JSON.parse(sessionStorage.getItem('currentSite') || '{}');
+
+      // Hide progress, show completion
+      document.getElementById('step5Progress').classList.add('hidden');
+      document.getElementById('step5Complete').classList.remove('hidden');
+
+      // Populate completion stats
+      const statsContainer = document.getElementById('completionStats');
+      statsContainer.innerHTML = `
+        <div class="stat-item">
+          <div class="stat-value">${initResult.categories || 0}</div>
+          <div class="stat-label">Categories</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">${articlesGenerated}</div>
+          <div class="stat-label">Articles</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">${initResult.writers || 0}</div>
+          <div class="stat-label">Writers</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">${step5ImagesGenerated}</div>
+          <div class="stat-label">Images</div>
+        </div>
+      `;
+    }
+
+    function goBackToStep4() {
+      document.getElementById('step5').classList.add('hidden');
+      document.getElementById('step4').classList.remove('hidden');
+
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+
+    // Make globally accessible
+    window.goBackToStep4 = goBackToStep4;
+
+    // ========================================================================
+    // STEP 6: IMAGE GENERATION FUNCTIONS
+    // ========================================================================
+
+    let totalImagesToGenerate = 0;
+    let imagesGenerated = 0;
+    let generatedImages = [];
+
+    function continueToStep6() {
+      // Get current site data
+      const siteData = JSON.parse(sessionStorage.getItem('currentSite') || '{}');
+
+      if (!siteData.siteCode) {
+        alert('Error: No site data found. Please go back and try again.');
+        return;
+      }
+
+      // Show Step 6
+      showStep6();
+
+      // Start image generation automatically
+      startImageGeneration(siteData.siteCode);
+    }
+
+    // Make globally accessible
+    window.continueToStep6 = continueToStep6;
+
+    function showStep6() {
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step3').classList.add('hidden');
+      document.getElementById('step4').classList.add('hidden');
+      document.getElementById('step5').classList.add('hidden');
+      document.getElementById('step6').classList.remove('hidden');
+      document.getElementById('step6Progress').classList.remove('hidden');
+      document.getElementById('step6Complete').classList.add('hidden');
+
+      // Reset progress indicators
+      document.getElementById('imageProgressStatus').textContent = 'Initializing image generation...';
+      document.getElementById('imageProgressBar').style.width = '0%';
+      document.getElementById('imageProgressCount').textContent = '0 / 0';
+
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+
+    function updateImageProgress(current, total, categoryName) {
+      const percentage = Math.round((current / total) * 100);
+      document.getElementById('imageProgressBar').style.width = `${percentage}%`;
+      document.getElementById('imageProgressCount').textContent = `${current} / ${total}`;
+      document.getElementById('imageProgressStatus').textContent = `Generating image: ${categoryName}`;
+    }
+
+    async function startImageGeneration(siteCode) {
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+
+      statusDot.className = 'status-dot openai';
+      statusText.textContent = 'Generating category images...';
+
+      try {
+        // Get categories from session storage
+        const siteData = JSON.parse(sessionStorage.getItem('currentSite') || '{}');
+        const categories = siteData.categories || [];
+
+        totalImagesToGenerate = categories.length;
+        imagesGenerated = 0;
+        generatedImages = [];
+
+        document.getElementById('imageProgressCount').textContent = `0 / ${totalImagesToGenerate}`;
+
+        // Generate image for each category sequentially
+        for (let i = 0; i < categories.length; i++) {
+          const category = categories[i];
+
+          // Update progress UI
+          updateImageProgress(i, totalImagesToGenerate, category.name);
+
+          try {
+            const imageResponse = await fetch('/api/website/generate-category-image', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                siteCode,
+                category: category.name,
+                categorySlug: category.slug,
+                description: category.description
+              })
+            });
+
+            const imageResult = await imageResponse.json();
+
+            if (imageResult.success) {
+              imagesGenerated++;
+              generatedImages.push({
+                name: category.name,
+                slug: category.slug,
+                imagePath: imageResult.imagePath
+              });
+              updateImageProgress(imagesGenerated, totalImagesToGenerate, category.name);
+            } else {
+              console.error(`Failed to generate image for: ${category.name}`, imageResult.error);
+              imagesGenerated++;
+              generatedImages.push({
+                name: category.name,
+                slug: category.slug,
+                imagePath: null
+              });
+            }
+          } catch (imageError) {
+            console.error(`Error generating image for: ${category.name}`, imageError);
+            imagesGenerated++;
+            generatedImages.push({
+              name: category.name,
+              slug: category.slug,
+              imagePath: null
+            });
+          }
+        }
+
+        // Generate the website index.html
+        document.getElementById('imageProgressStatus').textContent = 'Building website...';
+
+        const buildResponse = await fetch('/api/website/build-website', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ siteCode })
+        });
+
+        const buildResult = await buildResponse.json();
+
+        if (!buildResult.success) {
+          console.error('Website build warning:', buildResult.error);
+        }
+
+        // Update session storage
+        siteData.status = 'step6_complete';
+        siteData.websiteUrl = buildResult.websiteUrl;
+        sessionStorage.setItem('currentSite', JSON.stringify(siteData));
+
+        // Show completion screen
+        statusDot.className = 'status-dot connected';
+        statusText.textContent = 'Jubilee Intelligence 8.0';
+
+        showImageCompletionScreen();
+
+      } catch (error) {
+        statusDot.className = 'status-dot idle';
+        statusText.textContent = 'Jubilee Intelligence 8.0';
+        console.error('Image generation error:', error);
+        alert(`Image Generation Error: ${error.message}\n\nPlease try again.`);
+        goBackToStep5();
+      }
+    }
+
+    function showImageCompletionScreen() {
+      // Hide progress, show completion
+      document.getElementById('step6Progress').classList.add('hidden');
+      document.getElementById('step6Complete').classList.remove('hidden');
+
+      // Populate image preview grid
+      const gridContainer = document.getElementById('imagePreviewGrid');
+      gridContainer.innerHTML = '';
+
+      generatedImages.forEach(img => {
+        const item = document.createElement('div');
+        item.className = 'image-preview-item';
+
+        if (img.imagePath) {
+          item.innerHTML = `
+            <img src="${img.imagePath}" alt="${img.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23333%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2250%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23666%22>No Image</text></svg>'">
+            <div class="image-label">${img.name}</div>
+          `;
+        } else {
+          item.innerHTML = `
+            <div style="height: 80px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.4); font-size: 0.7rem;">No Image</div>
+            <div class="image-label">${img.name}</div>
+          `;
+        }
+
+        gridContainer.appendChild(item);
+      });
+    }
+
+    function goBackToStep5() {
+      document.getElementById('step6').classList.add('hidden');
+      document.getElementById('step5').classList.remove('hidden');
+
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+
+    function continueToStep7() {
+      // Get site data to get the website URL
+      const siteData = JSON.parse(sessionStorage.getItem('currentSite') || '{}');
+      const domain = siteData.domain || siteData.config?.domain;
+
+      if (domain) {
+        // Open the generated website in a new tab
+        window.open(`/websites/${domain}/index.html`, '_blank');
+      } else {
+        alert('Website URL not found. Please check the generation process.');
+      }
+    }
+
+    // Make globally accessible
+    window.goBackToStep5 = goBackToStep5;
+    window.continueToStep7 = continueToStep7;
+  </script>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Discover AI personas for faith-based conversations - Biblical scholars, prayer partners, and spiritual guides">
+  <title>AI Personas - JubileeVerse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header -->
+  <div id="header-container"></div>
+
+  <main id="main-content" class="page-content">
+    <!-- Hero Section -->
+    <section class="persona-hero">
+      <div class="container">
+        <h1 class="persona-hero__title">Meet Our AI Personas</h1>
+        <p class="persona-hero__subtitle">
+          Each persona brings unique expertise and perspective to help you explore faith,
+          understand scripture, and grow spiritually.
+        </p>
+      </div>
+    </section>
+
+    <!-- Filters and Grid -->
+    <section class="section">
+      <div class="container">
+        <!-- Filters -->
+        <div class="persona-filters">
+          <div class="persona-filters__search">
+            <svg class="persona-filters__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              type="text"
+              id="persona-search"
+              class="form-input"
+              placeholder="Search personas by name or specialty..."
+            >
+          </div>
+          <div class="persona-filters__categories" id="category-filters">
+            <button class="persona-category is-active" data-category="all">All Personas</button>
+            <button class="persona-category" data-category="biblical-scholars">Biblical Scholars</button>
+            <button class="persona-category" data-category="prayer-partners">Prayer Partners</button>
+            <button class="persona-category" data-category="bible-teachers">Bible Teachers</button>
+            <button class="persona-category" data-category="worship-leaders">Worship Leaders</button>
+            <button class="persona-category" data-category="counselors">Counselors</button>
+          </div>
+        </div>
+
+        <!-- Persona Grid -->
+        <div class="persona-grid" id="persona-grid">
+          <!-- Personas will be loaded here dynamically -->
+          <div class="loading-state">
+            <div class="spinner spinner--lg"></div>
+            <p>Loading personas...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Persona Detail Modal -->
+  <div class="modal-backdrop" id="persona-modal-backdrop">
+    <div class="modal" id="persona-modal" role="dialog" aria-modal="true">
+      <div class="modal__header">
+        <h2 class="modal__title" id="modal-persona-name">Persona Name</h2>
+        <button class="modal__close" id="modal-close" aria-label="Close modal">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <div class="persona-detail" id="persona-detail-content">
+          <!-- Detail content loaded dynamically -->
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--outline" id="modal-close-btn">Close</button>
+        <a href="#" class="btn btn--primary" id="modal-start-chat">Start Conversation</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div id="footer-container"></div>
+
+  <!-- Scripts -->
+  <script src="/js/modules/components.js"></script>
+  <script src="/js/modules/auth.js"></script>
+  <script src="/js/services/api.js"></script>
+  <script src="/js/app.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const personaGrid = document.getElementById('persona-grid');
+      const searchInput = document.getElementById('persona-search');
+      const categoryBtns = document.querySelectorAll('.persona-category');
+      const modal = document.getElementById('persona-modal');
+      const modalBackdrop = document.getElementById('persona-modal-backdrop');
+      const modalClose = document.getElementById('modal-close');
+      const modalCloseBtn = document.getElementById('modal-close-btn');
+      const modalStartChat = document.getElementById('modal-start-chat');
+
+      let currentCategory = 'all';
+      let searchQuery = '';
+      let personas = [];
+
+      // Load personas
+      async function loadPersonas() {
+        try {
+          const params = new URLSearchParams();
+          if (currentCategory !== 'all') params.set('category', currentCategory);
+          if (searchQuery) params.set('search', searchQuery);
+
+          const response = await fetch('/personas/list?' + params.toString());
+          const data = await response.json();
+          personas = data.personas;
+          renderPersonas();
+        } catch (error) {
+          console.error('Failed to load personas:', error);
+          personaGrid.innerHTML = `
+            <div class="empty-state">
+              <p>Failed to load personas. Please try again.</p>
+              <button class="btn btn--primary" onclick="loadPersonas()">Retry</button>
+            </div>
+          `;
+        }
+      }
+
+      // Render personas
+      function renderPersonas() {
+        if (personas.length === 0) {
+          personaGrid.innerHTML = `
+            <div class="empty-state">
+              <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <h3 class="empty-state__title">No personas found</h3>
+              <p class="empty-state__description">Try adjusting your search or filter criteria.</p>
+            </div>
+          `;
+          return;
+        }
+
+        personaGrid.innerHTML = personas.map(persona => `
+          <div class="persona-card" data-persona-id="${persona.id}">
+            <div class="persona-card__header">
+              <div class="persona-card__avatar">
+                <div class="avatar avatar--xl">${getInitials(persona.name)}</div>
+              </div>
+              <div class="persona-card__info">
+                <h3>${escapeHtml(persona.name)}</h3>
+                <span class="persona-card__title">${escapeHtml(persona.title)}</span>
+              </div>
+            </div>
+            <div class="persona-card__body">
+              <p class="persona-card__description">${escapeHtml(persona.description)}</p>
+              <div class="persona-card__specialties">
+                ${persona.specialties.slice(0, 3).map(s => `
+                  <span class="persona-specialty">${escapeHtml(s)}</span>
+                `).join('')}
+              </div>
+              <div class="persona-card__languages">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+                <span>${persona.languages.length} languages</span>
+              </div>
+            </div>
+            <div class="persona-card__footer">
+              <button class="btn btn--outline persona-card__btn" onclick="showPersonaDetail('${persona.id}')">
+                Learn More
+              </button>
+              <a href="/personas/${persona.id}/start" class="btn btn--primary persona-card__btn">
+                Start Chat
+              </a>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Show persona detail modal
+      window.showPersonaDetail = async function(personaId) {
+        try {
+          const response = await fetch('/personas/' + personaId);
+          const data = await response.json();
+          const persona = data.persona;
+
+          document.getElementById('modal-persona-name').textContent = persona.name;
+          document.getElementById('modal-start-chat').href = '/personas/' + personaId + '/start';
+
+          document.getElementById('persona-detail-content').innerHTML = `
+            <div class="persona-detail__header">
+              <div class="persona-detail__avatar">
+                <div class="avatar avatar--xl">${getInitials(persona.name)}</div>
+              </div>
+              <div class="persona-detail__info">
+                <h2>${escapeHtml(persona.name)}</h2>
+                <span class="persona-detail__title">${escapeHtml(persona.title)}</span>
+                <div class="persona-card__languages" style="margin-top: var(--spacing-2);">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="2" y1="12" x2="22" y2="12"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                  </svg>
+                  <span>Speaks: ${persona.languages.join(', ').toUpperCase()}</span>
+                </div>
+              </div>
+            </div>
+            <p class="persona-detail__bio">${escapeHtml(persona.bio || persona.description)}</p>
+            <div class="persona-detail__section">
+              <h4 class="persona-detail__section-title">Specialties</h4>
+              <div class="persona-card__specialties">
+                ${persona.specialties.map(s => `
+                  <span class="persona-specialty">${escapeHtml(s)}</span>
+                `).join('')}
+              </div>
+            </div>
+            ${persona.conversationStarters ? `
+              <div class="persona-detail__section">
+                <h4 class="persona-detail__section-title">Conversation Starters</h4>
+                <div class="persona-detail__starters">
+                  ${persona.conversationStarters.map(starter => `
+                    <button class="persona-starter" onclick="startWithQuestion('${personaId}', '${escapeHtml(starter)}')">${escapeHtml(starter)}</button>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+          `;
+
+          openModal();
+        } catch (error) {
+          console.error('Failed to load persona details:', error);
+        }
+      };
+
+      // Start conversation with specific question
+      window.startWithQuestion = function(personaId, question) {
+        closeModal();
+        window.location.href = `/chat?persona=${personaId}&message=${encodeURIComponent(question)}`;
+      };
+
+      // Modal controls
+      function openModal() {
+        modal.classList.add('is-open');
+        modalBackdrop.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeModal() {
+        modal.classList.remove('is-open');
+        modalBackdrop.classList.remove('is-open');
+        document.body.style.overflow = '';
+      }
+
+      modalClose.addEventListener('click', closeModal);
+      modalCloseBtn.addEventListener('click', closeModal);
+      modalBackdrop.addEventListener('click', function(e) {
+        if (e.target === modalBackdrop) closeModal();
+      });
+
+      // Search
+      let searchTimeout;
+      searchInput.addEventListener('input', function(e) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          searchQuery = e.target.value;
+          loadPersonas();
+        }, 300);
+      });
+
+      // Category filter
+      categoryBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          categoryBtns.forEach(b => b.classList.remove('is-active'));
+          this.classList.add('is-active');
+          currentCategory = this.dataset.category;
+          loadPersonas();
+        });
+      });
+
+      // Helper functions
+      function getInitials(name) {
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Initial load
+      loadPersonas();
+    });
+  </script>
+
+  <style>
+    .loading-state {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-12);
+      gap: var(--spacing-4);
+      color: var(--color-neutral-500);
+    }
+  </style>
+</body>
+</html>

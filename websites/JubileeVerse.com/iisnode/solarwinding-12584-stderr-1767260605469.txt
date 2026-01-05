@@ -1,0 +1,19 @@
+(node:12584) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Failed to obtain server version. Unable to check client-server compatibility. Set checkCompatibility=false to skip version check.
+{"timestamp":"2026-01-01T09:43:27.837Z","level":"warn","message":"Could not connect to Qdrant, falling back to mock mode","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","error":"fetch failed","host":"localhost","port":6333}
+{"timestamp":"2026-01-01T09:43:28.201Z","level":"warn","message":"Worker ai-response: Using mock worker (no Redis)","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+ValidationError: An undefined 'request.ip' was detected. This might indicate a misconfiguration or the connection being destroyed prematurely. See https://express-rate-limit.github.io/ERR_ERL_UNDEFINED_IP_ADDRESS/ for more information.
+    at Object.ip (C:\Data\JubileeVerse.com\node_modules\express-rate-limit\dist\index.cjs:144:13)
+    at wrappedValidations.<computed> [as ip] (C:\Data\JubileeVerse.com\node_modules\express-rate-limit\dist\index.cjs:397:22)
+    at Object.keyGenerator (C:\Data\JubileeVerse.com\node_modules\express-rate-limit\dist\index.cjs:656:20)
+    at C:\Data\JubileeVerse.com\node_modules\express-rate-limit\dist\index.cjs:710:32
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async C:\Data\JubileeVerse.com\node_modules\express-rate-limit\dist\index.cjs:691:5 {
+  code: 'ERR_ERL_UNDEFINED_IP_ADDRESS',
+  help: 'https://express-rate-limit.github.io/ERR_ERL_UNDEFINED_IP_ADDRESS/'
+}
+{"timestamp":"2026-01-01T09:43:43.213Z","level":"warn","message":"Request completed","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","traceId":"87cb71c18ee1498e94142b9ae5c3e66d","requestId":"e133e8a6","method":"GET","path":"/signin","route":"/signin","statusCode":404,"durationMs":16,"userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"}
+{"timestamp":"2026-01-01T09:43:44.280Z","level":"warn","message":"Request completed","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","traceId":"ba23a97eb0324733addeb494f215b9bb","requestId":"d3a8e082","method":"GET","path":"/favicon.ico","route":"/favicon.ico","statusCode":404,"durationMs":11,"userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"}
+{"timestamp":"2026-01-01T09:44:50.989Z","level":"warn","message":"Request completed","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","traceId":"053407e53c27495eac67c4827c992531","requestId":"0ba58250","method":"GET","path":"/signin","route":"/signin","statusCode":404,"durationMs":9,"userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"}
+{"timestamp":"2026-01-01T09:44:51.092Z","level":"warn","message":"Request completed","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","traceId":"8391d8ffb4ad4c94ae6e4b0eec8ba673","requestId":"d445b49c","method":"GET","path":"/favicon.ico","route":"/favicon.ico","statusCode":404,"durationMs":6,"userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"}

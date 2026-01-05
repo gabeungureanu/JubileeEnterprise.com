@@ -1,0 +1,43 @@
+{
+  "name": "@jubilee/internet",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jubilee SSO and Identity Services",
+  "type": "module",
+  "workspaces": [
+    "services/*",
+    "packages/*",
+    "website/*"
+  ],
+  "scripts": {
+    "dev": "PORT=3005 npm run dev --workspace=@jubilee/sso",
+    "dev:website": "PORT=3005 npm run dev --workspace=@jubilee/website-backend & npm run dev --workspace=@jubilee/website-frontend",
+    "dev:backend": "PORT=3005 npm run dev --workspace=@jubilee/website-backend",
+    "dev:frontend": "npm run dev --workspace=@jubilee/website-frontend",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "test:coverage": "npm run test:coverage --workspaces",
+    "lint": "npm run lint --workspaces",
+    "lint:fix": "npm run lint:fix --workspaces",
+    "format": "npm run format --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "migrate": "npm run migrate --workspace=@jubilee/sso",
+    "migrate:create": "npm run migrate:create --workspace=@jubilee/sso",
+    "migrate:rollback": "npm run migrate:rollback --workspace=@jubilee/sso",
+    "seed:dev": "npm run seed:dev --workspace=@jubilee/sso",
+    "seed:tlds": "npm run seed:tlds --workspace=@jubilee/website-backend",
+    "migrate:website": "npm run migrate --workspace=@jubilee/website-backend",
+    "clean": "npm run clean --workspaces",
+    "docker:dev": "docker-compose -f infra/docker/docker-compose.dev.yml up -d",
+    "docker:down": "docker-compose -f infra/docker/docker-compose.dev.yml down"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jubilee-internet/jubilee-sso.git"
+  },
+  "author": "Jubilee Internet, Inc.",
+  "license": "UNLICENSED"
+}

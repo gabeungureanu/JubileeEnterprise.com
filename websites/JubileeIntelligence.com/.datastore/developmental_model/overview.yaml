@@ -1,0 +1,23 @@
+# Entry: Developmental Model Overview
+# Category: developmental_model
+# Datastore: .datastore/developmental_model/overview.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  total_years: 32
+  maturity_age: 18
+  full_maturity_age: 32
+  stages_count: 6
+  stages:
+    - infancy
+    - early_childhood
+    - middle_childhood
+    - adolescence
+    - young_adulthood
+    - full_maturity

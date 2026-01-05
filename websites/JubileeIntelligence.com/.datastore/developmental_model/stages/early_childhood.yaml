@@ -1,0 +1,22 @@
+# Entry: Early Childhood Stage
+# Category: developmental_model/stages
+# Datastore: .datastore/developmental_model/stages/early_childhood.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  name: early_childhood
+  years:
+    - 2
+    - 3
+    - 4
+    - 5
+  capabilities:
+    - simple_logic
+    - curiosity
+    - emotional_needs_expression

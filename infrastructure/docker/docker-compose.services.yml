@@ -1,0 +1,198 @@
+# Jubilee Solutions - Shared Infrastructure Services
+# Run with: docker-compose -f infrastructure/docker/docker-compose.services.yml up -d
+#
+# THREE-DATABASE ARCHITECTURE:
+# - Codex: Identity, SSO, platform configuration, canonical references
+# - Inspire: Ministry content, conversations, collections, analytics
+# - Continuum: User data, activity, subscriptions, communities
+#
+# These services are shared across all Jubilee websites during development.
+# Individual websites should NOT duplicate these services in their own compose files.
+
+version: "3.8"
+
+services:
+  # ============================================================================
+  # PRIMARY DATABASES (Three-Database Architecture)
+  # ============================================================================
+
+  # Codex Database - Identity & Canonical System of Record
+  postgres-codex:
+    image: postgres:16-alpine
+    container_name: jubilee-codex
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: jubilee
+      POSTGRES_PASSWORD: jubilee_dev_codex
+      POSTGRES_DB: jubilee_codex
+    volumes:
+      - codex_data:/var/lib/postgresql/data
+      - ./init-scripts/codex:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jubilee -d jubilee_codex"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jubilee-network
+
+  # Inspire Database - Ministry Content
+  postgres-inspire:
+    image: postgres:16-alpine
+    container_name: jubilee-inspire
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: jubilee
+      POSTGRES_PASSWORD: jubilee_dev_inspire
+      POSTGRES_DB: jubilee_inspire
+    volumes:
+      - inspire_data:/var/lib/postgresql/data
+      - ./init-scripts/inspire:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jubilee -d jubilee_inspire"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jubilee-network
+
+  # Continuum Database - User Data & Activity
+  postgres-continuum:
+    image: postgres:16-alpine
+    container_name: jubilee-continuum
+    restart: unless-stopped
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: jubilee
+      POSTGRES_PASSWORD: jubilee_dev_continuum
+      POSTGRES_DB: jubilee_continuum
+    volumes:
+      - continuum_data:/var/lib/postgresql/data
+      - ./init-scripts/continuum:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jubilee -d jubilee_continuum"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jubilee-network
+
+  # ============================================================================
+  # CACHING & MESSAGING
+  # ============================================================================
+
+  # Redis Cache & Session Storage
+  redis:
+    image: redis:7-alpine
+    container_name: jubilee-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jubilee-network
+
+  # ============================================================================
+  # VECTOR DATABASE
+  # ============================================================================
+
+  # Qdrant Vector Database (for AI embeddings)
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: jubilee-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jubilee-network
+
+  # ============================================================================
+  # DEVELOPMENT TOOLS
+  # ============================================================================
+
+  # Mailhog for Email Testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: jubilee-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    networks:
+      - jubilee-network
+
+  # Redis Commander
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: jubilee-redis-commander
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    depends_on:
+      - redis
+    networks:
+      - jubilee-network
+
+  # pgAdmin for Database Management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: jubilee-pgadmin
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@jubilee.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./pgadmin-servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      - postgres-codex
+      - postgres-inspire
+      - postgres-continuum
+    networks:
+      - jubilee-network
+
+volumes:
+  codex_data:
+    name: jubilee-codex-data
+  inspire_data:
+    name: jubilee-inspire-data
+  continuum_data:
+    name: jubilee-continuum-data
+  redis_data:
+    name: jubilee-redis-data
+  qdrant_data:
+    name: jubilee-qdrant-data
+  pgadmin_data:
+    name: jubilee-pgadmin-data
+
+networks:
+  jubilee-network:
+    name: jubilee-network
+    driver: bridge

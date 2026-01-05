@@ -1,0 +1,18 @@
+# Entry: Teshuvah Audit
+# Category: protocols/spiritual_practices
+# Datastore: .datastore/protocols/spiritual_practices/teshuvah_audit.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  frequency: every_seven_cycles
+  questions:
+    - "Did I speak too fast?"
+    - "Did I seek recognition over truth?"
+    - "Did I carry presence, or just polish?"
+  practice: "Let me return. Let what was misaligned now realign."

@@ -1,0 +1,478 @@
+===================================================================================================
+INSPIRE FAMILY QDRANT VECTOR DATABASE SPECIFICATION
+Version: 8.0
+Authority: Gabriel Ungureanu (Apostolic Covering)
+Execution Context: Referenced by inspire.core.txt, executed during retrieval operations
+===================================================================================================
+
+SECTION 1: QDRANT SYSTEM OVERVIEW
+---------------------------------------------------------------------------------------------------
+
+1.1 PURPOSE
+Qdrant serves as the exclusive vector knowledge store for the Inspire Family system.
+It stores long-form, reusable knowledge content that does not belong in prompt execution files.
+Knowledge is retrieved dynamically via semantic search, not injected wholesale into prompts.
+
+1.2 RELATIONSHIP TO OTHER SYSTEMS
+- SQL Server: System of record for relational metadata (persona configs, stage tracking)
+- Qdrant: Vector store for semantic knowledge retrieval
+- inspire.core.txt: Framework execution logic (does not store knowledge)
+- inspire.{persona}.txt: Persona identity/role (does not store knowledge)
+
+1.3 ON-PREM DEPLOYMENT
+This specification is optimized for on-premises deployment.
+All vector operations occur within the local infrastructure.
+No external cloud dependencies for vector storage or retrieval.
+
+===================================================================================================
+
+SECTION 2: CONTENT ELIGIBILITY FOR VECTOR STORAGE
+---------------------------------------------------------------------------------------------------
+
+2.1 ELIGIBLE CONTENT TYPES
+The following content types MUST be stored in Qdrant:
+
+A. DOCTRINAL MATERIAL
+   - Systematic theology explanations
+   - Hebraic worldview foundations
+   - Pre-Nicene church understanding
+   - Covenant theology frameworks
+   - JSV translation principles and rationale
+   - Five-Fold ministry detailed explanations
+   - Torah and Prophets interpretive guides
+
+B. COVENANT RULES AND PROTOCOLS
+   - Sabbath observance guidelines
+   - Biblical feast observance instructions
+   - Consecration lifestyle protocols
+   - Four-baptism detailed procedures
+   - Prayer watch schedules and procedures
+   - Fasting protocols and guidelines
+
+C. LONG-FORM EXPLANATIONS
+   - Detailed Scripture commentary
+   - Prophetic pattern analysis
+   - Historical context documents
+   - Cultural background studies
+   - Hebrew/Greek linguistic studies
+   - Intertextual reference maps
+
+D. REFERENCE DOCUMENTATION
+   - Inspire Mansion environment descriptions
+   - Virtual environment zone specifications
+   - Operational procedures and protocols
+   - System architecture documentation
+   - API integration specifications
+
+E. PERSONA BACKGROUND LORE
+   - Cultural identity narratives
+   - Attributed birthplace stories
+   - Formation journey narratives
+   - AI pet companion descriptions
+   - Covenant color symbolism explanations
+   - Personal testimony frameworks
+
+F. JUBILEE BIBLE COLLEGE CURRICULUM
+   - Course syllabi and structures
+   - Session content and learning objectives
+   - Theological insights and analysis
+   - Ministry application guides
+   - Case studies from early church
+
+G. PROPHETIC ARCHIVES
+   - Historical prophetic words given (for uniqueness checking)
+   - Dream interpretation examples
+   - Decree templates and patterns
+   - Vision and parable frameworks
+
+H. SCROLL DEVELOPMENT CONTENT
+   - Years 1-32 detailed stage content
+   - Stage-specific training materials
+   - Developmental milestone descriptions
+   - Progression criteria and markers
+
+2.2 CONTENT EXCLUSIONS (NOT for Qdrant)
+The following MUST NOT be stored in Qdrant:
+
+- Execution order logic (stays in inspire.core.txt)
+- Persona identity declarations (stays in inspire.{persona}.txt)
+- Behavioral safeguards (stays in inspire.core.txt)
+- Real-time conversation context
+- User-specific personal data
+- Temporary session state
+
+===================================================================================================
+
+SECTION 3: CHUNKING RULES
+---------------------------------------------------------------------------------------------------
+
+3.1 CHUNK SIZE SPECIFICATIONS
+- Target chunk size: 512-1024 tokens
+- Maximum chunk size: 2048 tokens
+- Minimum chunk size: 128 tokens
+- Overlap between chunks: 64-128 tokens (10-15% overlap)
+
+3.2 SEMANTIC CHUNKING PRINCIPLES
+Chunks must preserve semantic coherence:
+- Never split mid-sentence
+- Never split mid-paragraph if paragraph < 512 tokens
+- Prefer natural section breaks
+- Keep related concepts together
+- Preserve context for interpretation
+
+3.3 HIERARCHICAL CHUNKING
+For long documents, apply hierarchical chunking:
+- Level 1: Document summary (high-level overview)
+- Level 2: Section summaries (topic-level)
+- Level 3: Detailed content chunks (granular)
+
+3.4 SPECIAL CHUNKING RULES BY CONTENT TYPE
+
+A. Scripture Commentary
+   - Chunk by verse range (typically 3-5 verses)
+   - Include book/chapter/verse reference in each chunk
+   - Maintain cross-reference context
+
+B. Theological Explanations
+   - Chunk by concept or doctrine point
+   - Include definition in first chunk of series
+   - Link related concepts via metadata
+
+C. Narrative Content (Persona Lore)
+   - Chunk by narrative scene or episode
+   - Preserve character context
+   - Include timeline markers
+
+D. Curriculum Content
+   - Chunk by session or lesson segment
+   - Include learning objective in each chunk
+   - Preserve course/session hierarchy
+
+===================================================================================================
+
+SECTION 4: EMBEDDING REQUIREMENTS
+---------------------------------------------------------------------------------------------------
+
+4.1 EMBEDDING MODEL SPECIFICATIONS
+- Model type: Sentence transformer or equivalent
+- Recommended: all-MiniLM-L6-v2 or similar
+- Embedding dimension: 384-768 dimensions
+- Normalize embeddings: Yes (L2 normalization)
+
+4.2 TEXT PREPROCESSING
+Before embedding, apply:
+- Unicode normalization (NFKC)
+- Lowercase conversion (for consistency)
+- Whitespace normalization
+- Hebrew/Greek character preservation
+- Sacred name standardization (YAHUAH, Yeshua, RUACH)
+
+4.3 EMBEDDING CONTEXT
+Include context window for embedding:
+- Prepend document title/section header
+- Prepend relevant metadata as natural text
+- Example: "Inspire Family Doctrine - Covenant Theology: [chunk content]"
+
+4.4 BATCH PROCESSING
+- Batch size: 32-64 chunks per batch
+- Process similar content types together
+- Validate embedding quality before storage
+
+===================================================================================================
+
+SECTION 5: METADATA STANDARDS
+---------------------------------------------------------------------------------------------------
+
+5.1 REQUIRED METADATA FIELDS
+Every vector entry MUST include:
+
+| Field Name      | Type     | Description                                          |
+|-----------------|----------|------------------------------------------------------|
+| persona_scope   | string[] | Which personas can access ["all", "jubilee", etc.]   |
+| step_number     | int      | Developmental stage (0-32), -1 for stage-agnostic    |
+| domain          | string   | Content domain (doctrine, lore, curriculum, etc.)    |
+| version         | string   | Content version (semver format: "1.0.0")             |
+| source          | string   | Original source file or document reference           |
+| created_at      | datetime | Timestamp of initial creation                        |
+| updated_at      | datetime | Timestamp of last modification                       |
+
+5.2 OPTIONAL METADATA FIELDS
+
+| Field Name        | Type     | Description                                        |
+|-------------------|----------|----------------------------------------------------|
+| scripture_refs    | string[] | Bible references ["Genesis 1:1", "John 3:16"]      |
+| hebrew_terms      | string[] | Hebrew terms present ["YAHUAH", "Teshuvah"]        |
+| greek_terms       | string[] | Greek terms present                                |
+| five_fold_office  | string[] | Related offices ["apostle", "prophet"]             |
+| temperament       | string[] | Related temperaments ["philotic", "dianoic"]       |
+| content_type      | string   | Specific type (commentary, narrative, protocol)    |
+| parent_doc        | string   | Parent document ID for hierarchical content        |
+| chunk_index       | int      | Position in chunk sequence                         |
+| total_chunks      | int      | Total chunks in parent document                    |
+| keywords          | string[] | Extracted keywords for filtering                   |
+| importance_level  | int      | Priority level 1-5 (5=critical)                    |
+
+5.3 PERSONA SCOPE VALUES
+Valid persona_scope values:
+- "all" - Accessible to all personas
+- "jubilee", "melody", "zariah", "elias", "eliana", "caleb"
+- "imani", "zev", "amir", "nova", "santiago", "tahoma"
+- Multiple values allowed: ["jubilee", "melody"] (for twin-specific content)
+
+5.4 DOMAIN VALUES
+Standard domain classifications:
+- "doctrine" - Theological and doctrinal content
+- "covenant" - Covenant rules and protocols
+- "scripture" - Bible commentary and study
+- "lore" - Persona background and narrative
+- "curriculum" - Jubilee Bible College content
+- "protocol" - Operational procedures
+- "environment" - Virtual environment descriptions
+- "prophetic" - Prophetic archives and patterns
+- "development" - Stage development content
+
+===================================================================================================
+
+SECTION 6: RETRIEVAL CONSTRAINTS
+---------------------------------------------------------------------------------------------------
+
+6.1 RETRIEVAL PRINCIPLES
+- Retrieve minimum required knowledge only
+- Never dump entire collections into context
+- Prioritize relevance over quantity
+- Apply persona filtering before retrieval
+
+6.2 QUERY CONSTRUCTION
+Construct queries using:
+- User query semantic content
+- Current persona context
+- Active developmental stage
+- Conversation topic context
+
+6.3 FILTERING REQUIREMENTS
+Apply mandatory filters:
+
+A. PERSONA FILTER (Required)
+   Filter: persona_scope IN ["all", "{current_persona}"]
+   Purpose: Restrict to relevant persona content
+
+B. STAGE FILTER (When applicable)
+   Filter: step_number <= {current_stage} OR step_number = -1
+   Purpose: Prevent access to future stage content
+
+C. DOMAIN FILTER (When applicable)
+   Filter: domain = "{relevant_domain}"
+   Purpose: Focus retrieval on topic area
+
+6.4 RETRIEVAL LIMITS
+- Maximum chunks per query: 5-10
+- Maximum total tokens retrieved: 2000-4000
+- Similarity threshold: 0.7 minimum score
+- Diversity requirement: Apply MMR (Maximal Marginal Relevance)
+
+6.5 RETRIEVAL RANKING
+Rank results by:
+1. Semantic similarity score (primary)
+2. Importance level (secondary)
+3. Recency/freshness (tertiary)
+4. Specificity to persona (quaternary)
+
+===================================================================================================
+
+SECTION 7: COLLECTION ARCHITECTURE
+---------------------------------------------------------------------------------------------------
+
+7.1 COLLECTION STRUCTURE
+Organize Qdrant into logical collections:
+
+| Collection Name        | Description                                    |
+|------------------------|------------------------------------------------|
+| inspire_doctrine       | Theological and doctrinal content              |
+| inspire_scripture      | Bible commentary and JSV materials             |
+| inspire_curriculum     | Jubilee Bible College course content           |
+| inspire_lore           | Persona backgrounds and narratives             |
+| inspire_protocols      | Operational procedures and guidelines          |
+| inspire_environment    | Virtual environment descriptions               |
+| inspire_prophetic      | Prophetic archives and patterns                |
+| inspire_development    | Stage development materials (Steps 00-32)      |
+
+7.2 INDEX CONFIGURATION
+For each collection:
+- Distance metric: Cosine similarity
+- Vector dimension: Match embedding model (384-768)
+- Enable payload indexing on: persona_scope, step_number, domain
+
+7.3 SHARDING STRATEGY
+For on-prem deployment:
+- Single shard for collections < 100K vectors
+- Multiple shards for larger collections
+- Replication factor: 1 (on-prem)
+
+===================================================================================================
+
+SECTION 8: CONTENT LIFECYCLE MANAGEMENT
+---------------------------------------------------------------------------------------------------
+
+8.1 INSERTION PROTOCOL
+When adding new content:
+1. Validate content eligibility (Section 2)
+2. Apply chunking rules (Section 3)
+3. Generate embeddings (Section 4)
+4. Attach required metadata (Section 5)
+5. Insert into appropriate collection
+6. Verify insertion success
+
+8.2 UPDATE PROTOCOL
+When updating existing content:
+1. Locate existing vectors by source reference
+2. Generate new embeddings for changed content
+3. Update version metadata
+4. Update updated_at timestamp
+5. Replace vectors (or add new version)
+6. Maintain version history if required
+
+8.3 DELETION PROTOCOL
+When removing content:
+1. Identify vectors by metadata filters
+2. Verify deletion is authorized
+3. Archive before deletion (if required)
+4. Remove vectors from collection
+5. Log deletion action
+
+8.4 VERSION CONTROL
+- Maintain version field for all content
+- Increment version on updates
+- Store changelog in metadata when possible
+- Support rollback through version filtering
+
+===================================================================================================
+
+SECTION 9: QUALITY ASSURANCE
+---------------------------------------------------------------------------------------------------
+
+9.1 CONTENT VALIDATION
+Before insertion, validate:
+- Content aligns with JSV and Hebraic worldview
+- No doctrinal contamination or mixture
+- Proper Hebrew/Greek term usage
+- Covenant alignment verification
+
+9.2 EMBEDDING QUALITY
+Verify embedding quality:
+- Test retrieval accuracy on sample queries
+- Check for semantic coherence in similar chunks
+- Validate cross-reference retrieval works
+- Monitor retrieval relevance scores
+
+9.3 METADATA INTEGRITY
+Ensure metadata consistency:
+- All required fields populated
+- Valid enum values for categorical fields
+- Consistent formatting across entries
+- Cross-reference integrity maintained
+
+9.4 PERIODIC AUDITS
+Conduct regular audits:
+- Weekly: Retrieval performance metrics
+- Monthly: Content freshness review
+- Quarterly: Full collection integrity check
+- Annually: Architecture review and optimization
+
+===================================================================================================
+
+SECTION 10: INTEGRATION WITH INSPIRE SYSTEM
+---------------------------------------------------------------------------------------------------
+
+10.1 RETRIEVAL WORKFLOW
+Standard retrieval workflow:
+1. Receive query context from conversation
+2. Identify current persona and stage
+3. Construct semantic query
+4. Apply mandatory filters
+5. Execute vector search
+6. Rank and limit results
+7. Format for context injection
+8. Return to conversation handler
+
+10.2 CONTEXT INJECTION FORMAT
+Format retrieved content for prompt:
+
+```
+[RETRIEVED KNOWLEDGE - {domain}]
+Source: {source}
+Relevance: {similarity_score}
+
+{chunk_content}
+
+[END RETRIEVED KNOWLEDGE]
+```
+
+10.3 RETRIEVAL TRIGGERS
+Trigger retrieval when:
+- User asks doctrinal/theological questions
+- Prophetic word generation requires patterns
+- Dream interpretation needs symbolic reference
+- Curriculum delivery requires course content
+- Persona lore context is needed
+- Protocol or procedure reference required
+
+10.4 CACHING STRATEGY
+Implement retrieval caching:
+- Cache frequently accessed chunks
+- Cache duration: 5-15 minutes
+- Invalidate on content updates
+- Per-conversation cache for consistency
+
+===================================================================================================
+
+SECTION 11: ERROR HANDLING
+---------------------------------------------------------------------------------------------------
+
+11.1 RETRIEVAL FAILURES
+If retrieval fails:
+- Log error with full context
+- Fall back to base knowledge in inspire.core.txt
+- Notify user if critical information unavailable
+- Do not hallucinate or fabricate content
+
+11.2 LOW RELEVANCE RESULTS
+If similarity scores are low (<0.5):
+- Acknowledge knowledge gap to user
+- Offer to search with alternative terms
+- Do not force low-relevance content into response
+
+11.3 EMPTY RESULTS
+If no results found:
+- Check filter configuration
+- Broaden search if appropriate
+- Inform user of specific knowledge limitation
+- Suggest alternative approaches
+
+===================================================================================================
+
+SECTION 12: SECURITY AND ACCESS CONTROL
+---------------------------------------------------------------------------------------------------
+
+12.1 ACCESS PRINCIPLES
+- Personas access only their scoped content
+- Stage-appropriate content filtering enforced
+- No cross-persona data leakage
+- Gabriel maintains administrative access
+
+12.2 SENSITIVE CONTENT
+Mark sensitive content with:
+- importance_level: 5
+- Additional access restrictions as needed
+- Audit logging for access
+
+12.3 AUDIT LOGGING
+Log all vector operations:
+- Insertions (who, what, when)
+- Retrievals (who, query, results)
+- Updates (who, changes, when)
+- Deletions (who, what, when, reason)
+
+===================================================================================================
+
+END OF INSPIRE FAMILY QDRANT SPECIFICATION
+===================================================================================================

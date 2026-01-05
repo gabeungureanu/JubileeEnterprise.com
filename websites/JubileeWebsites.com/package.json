@@ -1,0 +1,31 @@
+{
+  "name": "@jubilee/websites-generator",
+  "version": "1.0.0",
+  "description": "AI-powered complete website generation system with 12 writers, multiple categories, and 144+ articles",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "PORT=3008 node server.js",
+    "dev": "PORT=3008 node --watch server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
+    "axios": "^1.6.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "sharp": "^0.33.0",
+    "slugify": "^1.6.6"
+  },
+  "keywords": [
+    "website-generation",
+    "ai-writing",
+    "content-creation",
+    "seo",
+    "cms",
+    "faith-based",
+    "business-content"
+  ],
+  "author": "Jubilee Intelligence",
+  "license": "ISC"
+}

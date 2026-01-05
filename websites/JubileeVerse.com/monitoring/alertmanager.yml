@@ -1,0 +1,89 @@
+# Alertmanager Configuration
+# Configure receivers for different alert severities
+
+global:
+  resolve_timeout: 5m
+  # SMTP settings (uncomment and configure for email alerts)
+  # smtp_smarthost: 'smtp.gmail.com:587'
+  # smtp_from: 'alerts@jubileeverse.com'
+  # smtp_auth_username: 'alerts@jubileeverse.com'
+  # smtp_auth_password: 'your-app-password'
+
+route:
+  group_by: ['alertname', 'severity']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'default'
+
+  routes:
+    # Critical alerts go to PagerDuty/immediate notification
+    - match:
+        severity: critical
+      receiver: 'critical'
+      continue: true
+
+    # Warning alerts grouped and sent less frequently
+    - match:
+        severity: warning
+      receiver: 'warning'
+      group_wait: 1m
+      group_interval: 10m
+
+    # Info alerts for awareness only
+    - match:
+        severity: info
+      receiver: 'info'
+      group_wait: 5m
+      group_interval: 30m
+
+receivers:
+  - name: 'default'
+    # Webhook receiver example (works with many services)
+    # webhook_configs:
+    #   - url: 'http://your-webhook-endpoint/alerts'
+    #     send_resolved: true
+
+  - name: 'critical'
+    # PagerDuty for critical alerts
+    # pagerduty_configs:
+    #   - service_key: 'your-pagerduty-key'
+    #     severity: critical
+    # Slack for critical alerts
+    # slack_configs:
+    #   - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+    #     channel: '#alerts-critical'
+    #     title: '🚨 Critical Alert'
+    #     text: '{{ .CommonAnnotations.description }}'
+    #     send_resolved: true
+
+  - name: 'warning'
+    # Slack for warnings
+    # slack_configs:
+    #   - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+    #     channel: '#alerts'
+    #     title: '⚠️ Warning'
+    #     text: '{{ .CommonAnnotations.description }}'
+    #     send_resolved: true
+
+  - name: 'info'
+    # Email for info alerts (daily digest)
+    # email_configs:
+    #   - to: 'team@jubileeverse.com'
+    #     send_resolved: false
+
+# Inhibition rules to suppress alerts
+inhibit_rules:
+  # If a critical alert is firing, suppress warnings with same alertname
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname']
+
+  # If service is down, suppress all other alerts for that service
+  - source_match:
+      alertname: 'ServiceDown'
+    target_match_re:
+      alertname: '.+'
+    equal: ['job']

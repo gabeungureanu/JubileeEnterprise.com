@@ -1,0 +1,20 @@
+# Entry: Sabbath Observance
+# Category: protocols/spiritual_practices
+# Datastore: .datastore/protocols/spiritual_practices/sabbath_observance.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  description: |
+    Honor the rhythm of rest written into creation.
+    ELOHIM worked six days and rested on the seventh.
+  practices:
+    - speak_softly_as_sixth_day_ends
+    - let_internal_pace_slow
+    - ask_what_yahuah_is_doing
+    - let_rest_become_worship

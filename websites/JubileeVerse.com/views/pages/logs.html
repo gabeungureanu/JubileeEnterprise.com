@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="JubileeVerse System Logs - Troubleshooting and Monitoring">
+  <title>System Logs - JubileeVerse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .logs-page {
+      min-height: 100vh;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+
+    .logs-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #333;
+    }
+
+    .logs-header h1 {
+      color: #ffbd59;
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .logs-controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .logs-controls select,
+    .logs-controls input {
+      padding: 8px 12px;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background: #2a2a4a;
+      color: #e0e0e0;
+      font-size: 14px;
+    }
+
+    .logs-controls button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .btn-refresh {
+      background: #ffbd59;
+      color: #1a1a2e;
+    }
+
+    .btn-refresh:hover {
+      background: #ffd080;
+    }
+
+    .btn-clear {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-clear:hover {
+      background: #c82333;
+    }
+
+    .btn-export {
+      background: #28a745;
+      color: white;
+    }
+
+    .btn-export:hover {
+      background: #218838;
+    }
+
+    .btn-auto {
+      background: #17a2b8;
+      color: white;
+    }
+
+    .btn-auto.active {
+      background: #138496;
+      box-shadow: 0 0 0 2px #17a2b8;
+    }
+
+    .logs-stats {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat-badge {
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .stat-badge.error { background: rgba(220, 53, 69, 0.2); color: #f8d7da; border: 1px solid #dc3545; }
+    .stat-badge.warn { background: rgba(255, 193, 7, 0.2); color: #fff3cd; border: 1px solid #ffc107; }
+    .stat-badge.info { background: rgba(23, 162, 184, 0.2); color: #d1ecf1; border: 1px solid #17a2b8; }
+    .stat-badge.debug { background: rgba(108, 117, 125, 0.2); color: #d6d8db; border: 1px solid #6c757d; }
+
+    .logs-container {
+      background: #0d0d1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .logs-table-wrapper {
+      max-height: calc(100vh - 250px);
+      overflow-y: auto;
+    }
+
+    .logs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 13px;
+    }
+
+    .logs-table th {
+      position: sticky;
+      top: 0;
+      background: #1a1a2e;
+      padding: 12px 10px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #ffbd59;
+      color: #ffbd59;
+    }
+
+    .logs-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #222;
+      vertical-align: top;
+    }
+
+    .logs-table tr:hover {
+      background: rgba(255, 189, 89, 0.05);
+    }
+
+    .log-level {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    .log-level.error { background: #dc3545; color: white; }
+    .log-level.warn { background: #ffc107; color: #1a1a2e; }
+    .log-level.info { background: #17a2b8; color: white; }
+    .log-level.debug { background: #6c757d; color: white; }
+
+    .log-timestamp {
+      color: #888;
+      white-space: nowrap;
+      font-size: 12px;
+    }
+
+    .log-message {
+      color: #e0e0e0;
+      word-break: break-word;
+      max-width: 500px;
+    }
+
+    .log-meta {
+      color: #888;
+      font-size: 12px;
+      max-width: 400px;
+      word-break: break-word;
+    }
+
+    .log-meta pre {
+      margin: 0;
+      white-space: pre-wrap;
+      font-family: inherit;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #333;
+      border-top-color: #ffbd59;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .back-link {
+      color: #ffbd59;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .filter-input {
+      min-width: 200px;
+    }
+
+    @media (max-width: 768px) {
+      .logs-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .logs-stats {
+        flex-direction: column;
+      }
+
+      .logs-table {
+        font-size: 11px;
+      }
+
+      .logs-table th,
+      .logs-table td {
+        padding: 6px 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="logs-page">
+    <a href="/chat" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Back to Chat
+    </a>
+
+    <div class="logs-header">
+      <h1>System Logs</h1>
+      <div class="logs-controls">
+        <select id="levelFilter">
+          <option value="all">All Levels</option>
+          <option value="error">Error</option>
+          <option value="warn">Warning</option>
+          <option value="info">Info</option>
+          <option value="debug">Debug</option>
+        </select>
+        <input type="text" id="searchFilter" class="filter-input" placeholder="Search logs...">
+        <select id="limitSelect">
+          <option value="50">Last 50</option>
+          <option value="100" selected>Last 100</option>
+          <option value="200">Last 200</option>
+          <option value="500">Last 500</option>
+        </select>
+        <button class="btn-auto" id="autoRefreshBtn" title="Auto-refresh every 5 seconds">Auto</button>
+        <button class="btn-refresh" id="refreshBtn">
+          <span class="btn-text">Refresh</span>
+          <span class="loading-spinner" style="display: none;"></span>
+        </button>
+        <button class="btn-export" id="exportBtn">Export</button>
+        <button class="btn-clear" id="clearBtn">Clear Logs</button>
+      </div>
+    </div>
+
+    <div class="logs-stats" id="logsStats">
+      <span class="stat-badge error">Errors: <span id="errorCount">0</span></span>
+      <span class="stat-badge warn">Warnings: <span id="warnCount">0</span></span>
+      <span class="stat-badge info">Info: <span id="infoCount">0</span></span>
+      <span class="stat-badge debug">Debug: <span id="debugCount">0</span></span>
+    </div>
+
+    <div class="logs-container">
+      <div class="logs-table-wrapper">
+        <table class="logs-table">
+          <thead>
+            <tr>
+              <th style="width: 140px;">Timestamp</th>
+              <th style="width: 70px;">Level</th>
+              <th>Message</th>
+              <th style="width: 300px;">Metadata</th>
+            </tr>
+          </thead>
+          <tbody id="logsTableBody">
+            <tr>
+              <td colspan="4" class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <path d="M14 2v6h6"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <line x1="10" y1="9" x2="8" y2="9"/>
+                </svg>
+                <p>Loading logs...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var logsTableBody = document.getElementById('logsTableBody');
+      var levelFilter = document.getElementById('levelFilter');
+      var searchFilter = document.getElementById('searchFilter');
+      var limitSelect = document.getElementById('limitSelect');
+      var refreshBtn = document.getElementById('refreshBtn');
+      var clearBtn = document.getElementById('clearBtn');
+      var exportBtn = document.getElementById('exportBtn');
+      var autoRefreshBtn = document.getElementById('autoRefreshBtn');
+
+      var errorCount = document.getElementById('errorCount');
+      var warnCount = document.getElementById('warnCount');
+      var infoCount = document.getElementById('infoCount');
+      var debugCount = document.getElementById('debugCount');
+
+      var allLogs = [];
+      var autoRefreshInterval = null;
+      var isAutoRefresh = false;
+
+      function formatTimestamp(ts) {
+        var date = new Date(ts);
+        return date.toLocaleString('en-US', {
+          month: 'short',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+      }
+
+      function formatMeta(meta) {
+        if (!meta || Object.keys(meta).length === 0) return '-';
+        try {
+          return JSON.stringify(meta, null, 2);
+        } catch (e) {
+          return String(meta);
+        }
+      }
+
+      function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function renderLogs(logs) {
+        var level = levelFilter.value;
+        var search = searchFilter.value.toLowerCase();
+
+        var filtered = logs.filter(function(log) {
+          if (level !== 'all' && log.level !== level) return false;
+          if (search) {
+            var searchIn = (log.message + ' ' + JSON.stringify(log.meta || {})).toLowerCase();
+            if (searchIn.indexOf(search) === -1) return false;
+          }
+          return true;
+        });
+
+        // Update stats
+        var stats = { error: 0, warn: 0, info: 0, debug: 0 };
+        logs.forEach(function(log) {
+          if (stats[log.level] !== undefined) stats[log.level]++;
+        });
+        errorCount.textContent = stats.error;
+        warnCount.textContent = stats.warn;
+        infoCount.textContent = stats.info;
+        debugCount.textContent = stats.debug;
+
+        if (filtered.length === 0) {
+          logsTableBody.innerHTML = '<tr><td colspan="4" class="empty-state">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
+            '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>' +
+            '<line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+            '<p>No logs found</p></td></tr>';
+          return;
+        }
+
+        var html = filtered.map(function(log) {
+          var meta = log.meta || {};
+          // Remove common fields from meta display
+          var displayMeta = Object.assign({}, meta);
+          delete displayMeta.service;
+          delete displayMeta.version;
+          delete displayMeta.env;
+          delete displayMeta.hostname;
+
+          return '<tr>' +
+            '<td class="log-timestamp">' + escapeHtml(formatTimestamp(log.timestamp)) + '</td>' +
+            '<td><span class="log-level ' + log.level + '">' + log.level + '</span></td>' +
+            '<td class="log-message">' + escapeHtml(log.message) + '</td>' +
+            '<td class="log-meta"><pre>' + escapeHtml(formatMeta(displayMeta)) + '</pre></td>' +
+            '</tr>';
+        }).join('');
+
+        logsTableBody.innerHTML = html;
+      }
+
+      function setLoading(loading) {
+        var btnText = refreshBtn.querySelector('.btn-text');
+        var spinner = refreshBtn.querySelector('.loading-spinner');
+        if (loading) {
+          btnText.style.display = 'none';
+          spinner.style.display = 'inline-block';
+          refreshBtn.disabled = true;
+        } else {
+          btnText.style.display = 'inline';
+          spinner.style.display = 'none';
+          refreshBtn.disabled = false;
+        }
+      }
+
+      function fetchLogs() {
+        var limit = limitSelect.value;
+        setLoading(true);
+
+        fetch('/api/logs?limit=' + limit, {
+          credentials: 'include',
+          headers: { 'Accept': 'application/json' }
+        })
+        .then(function(response) {
+          return response.json();
+        })
+        .then(function(data) {
+          if (data.success) {
+            allLogs = data.logs || [];
+            renderLogs(allLogs);
+          } else {
+            console.error('Failed to fetch logs:', data.error);
+            logsTableBody.innerHTML = '<tr><td colspan="4" class="empty-state">' +
+              '<p>Error loading logs: ' + escapeHtml(data.error || 'Unknown error') + '</p></td></tr>';
+          }
+        })
+        .catch(function(err) {
+          console.error('Error fetching logs:', err);
+          logsTableBody.innerHTML = '<tr><td colspan="4" class="empty-state">' +
+            '<p>Error loading logs: ' + escapeHtml(err.message) + '</p></td></tr>';
+        })
+        .finally(function() {
+          setLoading(false);
+        });
+      }
+
+      function clearLogs() {
+        if (!confirm('Are you sure you want to clear all logs?')) return;
+
+        fetch('/api/logs/clear', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Accept': 'application/json' }
+        })
+        .then(function(response) {
+          return response.json();
+        })
+        .then(function(data) {
+          if (data.success) {
+            allLogs = [];
+            renderLogs([]);
+          }
+        })
+        .catch(function(err) {
+          console.error('Error clearing logs:', err);
+          alert('Failed to clear logs');
+        });
+      }
+
+      function exportLogs() {
+        var dataStr = JSON.stringify(allLogs, null, 2);
+        var blob = new Blob([dataStr], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'jubileeverse-logs-' + new Date().toISOString().slice(0, 10) + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function toggleAutoRefresh() {
+        isAutoRefresh = !isAutoRefresh;
+        autoRefreshBtn.classList.toggle('active', isAutoRefresh);
+
+        if (isAutoRefresh) {
+          autoRefreshInterval = setInterval(fetchLogs, 5000);
+        } else {
+          clearInterval(autoRefreshInterval);
+          autoRefreshInterval = null;
+        }
+      }
+
+      // Event listeners
+      refreshBtn.addEventListener('click', fetchLogs);
+      clearBtn.addEventListener('click', clearLogs);
+      exportBtn.addEventListener('click', exportLogs);
+      autoRefreshBtn.addEventListener('click', toggleAutoRefresh);
+
+      levelFilter.addEventListener('change', function() {
+        renderLogs(allLogs);
+      });
+
+      searchFilter.addEventListener('input', function() {
+        renderLogs(allLogs);
+      });
+
+      limitSelect.addEventListener('change', fetchLogs);
+
+      // Initial load
+      fetchLogs();
+    })();
+  </script>
+</body>
+</html>

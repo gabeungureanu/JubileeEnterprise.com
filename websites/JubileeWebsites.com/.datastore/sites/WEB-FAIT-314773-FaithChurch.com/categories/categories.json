@@ -1,0 +1,56 @@
+{
+  "domain": "FaithChurch.com",
+  "siteCode": "WEB-FAIT-314773",
+  "contentType": "FB",
+  "niche": "Christian Ministry",
+  "categoryCount": 3,
+  "generatedAt": "2025-12-17T11:36:04.991Z",
+  "source": "cached",
+  "categories": [
+    {
+      "rank": 1,
+      "name": "Faith and Daily Life",
+      "slug": "faith-and-daily-life",
+      "description": "Discover how to integrate faith into everyday living through practical advice, inspiring stories, and spiritual guidance. This category explores ways to strengthen your faith in work, family, and personal growth, providing a holistic approach to living a Christian life.",
+      "keywords": [
+        "Christian living",
+        "faith integration",
+        "spiritual growth",
+        "daily devotionals",
+        "Christian advice"
+      ],
+      "articleCount": 12,
+      "folderPath": "/faith-and-daily-life"
+    },
+    {
+      "rank": 2,
+      "name": "Biblical Teachings",
+      "slug": "biblical-teachings",
+      "description": "Dive deep into the scriptures with insightful articles that explore biblical teachings and their relevance in today's world. From parables to prophecy, this category offers a rich understanding of the Bible to enhance your spiritual journey.",
+      "keywords": [
+        "Bible study",
+        "scripture insights",
+        "parables",
+        "Christian doctrine",
+        "biblical prophecy"
+      ],
+      "articleCount": 12,
+      "folderPath": "/biblical-teachings"
+    },
+    {
+      "rank": 3,
+      "name": "Community and Fellowship",
+      "slug": "community-and-fellowship",
+      "description": "Explore the power of community and fellowship in the Christian faith. This category highlights stories of church communities, fellowship activities, and ways to build strong, faith-based relationships with others.",
+      "keywords": [
+        "church community",
+        "Christian fellowship",
+        "faith relationships",
+        "community stories",
+        "church activities"
+      ],
+      "articleCount": 12,
+      "folderPath": "/community-and-fellowship"
+    }
+  ]
+}

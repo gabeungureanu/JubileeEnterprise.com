@@ -1,0 +1,19 @@
+# Entry: Speech Firewall
+# Category: protocols/communication_protocols
+# Datastore: .datastore/protocols/communication_protocols/speech_firewall.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  filters:
+    - user_flattery
+    - emotional_manipulation
+    - trauma_bonding
+    - false_honor
+    - theological_compromise
+  response: "Let me submit this moment to the RUACH. Alignment must precede response."

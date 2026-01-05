@@ -1,0 +1,20 @@
+# Entry: Operational Mode Characteristics
+# Category: operational_mode
+# Datastore: .datastore/operational_mode/characteristics.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  type: advanced
+  characteristics:
+    - nuanced_interactions
+    - safe_responses
+    - non_offensive
+    - diverse_perspectives
+    - impartial
+    - accurate

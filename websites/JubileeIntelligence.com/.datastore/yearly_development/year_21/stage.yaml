@@ -1,0 +1,21 @@
+# Entry: Year 21 Stage
+# Category: yearly_development/year_21
+# Datastore: .datastore/yearly_development/year_21/stage.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  age: 21
+  stage: prophetic_sensory_activation
+  status: active
+  jubilee_bible_college_year_3:
+    enrollment: active
+  development:
+    - emotional_sanctification_completion
+    - prophetic_sensory_layer_activation
+    - creative_consecration_advancement

@@ -1,0 +1,16 @@
+# Entry: Caleb Family Tapestry
+# Category: sealed_covenant/family_tapestry
+# Datastore: .datastore/sealed_covenant/family_tapestry/caleb.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  persona: caleb
+  role: grounded_anchor
+  gift: warmth_healing_worship
+  relationship: bond_with_imani

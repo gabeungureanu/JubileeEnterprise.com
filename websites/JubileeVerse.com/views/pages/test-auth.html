@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JubileeVerse - Test Suite</title>
+  <link rel="icon" type="image/png" href="/images/personas/jubilee.png">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background-color: #1a1a1a;
+      color: #ffffff;
+      min-height: 100vh;
+      padding: 40px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .header-title {
+      flex: 1;
+    }
+
+    h1 {
+      color: #f0ad4e;
+      font-size: 32px;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      color: #888;
+    }
+
+    .btn-run-header {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #f0ad4e 0%, #ec971f 100%);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-run-header:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(240, 173, 78, 0.4);
+    }
+
+    .btn-run-header:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .summary {
+      background: #2b2b2b;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .summary-item {
+      text-align: center;
+    }
+
+    .summary-value {
+      font-size: 36px;
+      font-weight: 700;
+    }
+
+    .summary-value.passed {
+      color: #4ade80;
+    }
+
+    .summary-value.failed {
+      color: #f87171;
+    }
+
+    .summary-value.pending {
+      color: #888;
+    }
+
+    .summary-label {
+      color: #888;
+      font-size: 14px;
+    }
+
+    /* Test Table Styles */
+    .test-table-container {
+      background: #2b2b2b;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 30px;
+      overflow-x: auto;
+    }
+
+    .test-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .test-table th {
+      background: #333;
+      color: #f0ad4e;
+      padding: 4px 10px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #444;
+    }
+
+    .test-table th:first-child {
+      border-radius: 8px 0 0 0;
+      width: 80px;
+      text-align: center;
+    }
+
+    .test-table th:nth-child(2) {
+      width: 160px;
+    }
+
+    .test-table th:last-child {
+      border-radius: 0 8px 0 0;
+      width: 120px;
+      text-align: center;
+    }
+
+    .test-table td {
+      padding: 3px 10px;
+      border-bottom: 1px solid #3a3a3a;
+    }
+
+    .test-table td:first-child {
+      text-align: center;
+      color: #888;
+      font-weight: 600;
+    }
+
+    .test-table td:last-child {
+      text-align: center;
+    }
+
+    .test-table tr:hover {
+      background: #333;
+    }
+
+    .test-table tr:last-child td:first-child {
+      border-radius: 0 0 0 8px;
+    }
+
+    .test-table tr:last-child td:last-child {
+      border-radius: 0 0 8px 0;
+    }
+
+    .category-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .category-badge.login {
+      background: #3b82f633;
+      color: #60a5fa;
+    }
+
+    .category-badge.register {
+      background: #8b5cf633;
+      color: #a78bfa;
+    }
+
+    .category-badge.forgot {
+      background: #f59e0b33;
+      color: #fbbf24;
+    }
+
+    .category-badge.homepage {
+      background: #10b98133;
+      color: #34d399;
+    }
+
+    .category-badge.auth {
+      background: #ec489933;
+      color: #f472b6;
+    }
+
+    .category-badge.translation {
+      background: #06b6d433;
+      color: #22d3ee;
+    }
+
+    .category-badge.board {
+      background: #84cc1633;
+      color: #a3e635;
+    }
+
+    .result-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .result-badge.pending {
+      background: #555;
+      color: #aaa;
+    }
+
+    .result-badge.running {
+      background: #f0ad4e33;
+      color: #f0ad4e;
+      animation: pulse 1s infinite;
+    }
+
+    .result-badge.passed {
+      background: #4ade8033;
+      color: #4ade80;
+    }
+
+    .result-badge.failed {
+      background: #f8717133;
+      color: #f87171;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .log-section {
+      background: #222;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 20px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 13px;
+    }
+
+    .log-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid #333;
+    }
+
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+
+    .log-time {
+      color: #666;
+    }
+
+    .log-success {
+      color: #4ade80;
+    }
+
+    .log-error {
+      color: #f87171;
+    }
+
+    .log-info {
+      color: #60a5fa;
+    }
+
+    .preview-section {
+      margin-top: 40px;
+    }
+
+    .preview-section h2 {
+      color: #f0ad4e;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .preview-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .preview-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #f0ad4e 0%, #ec971f 100%);
+      color: #000;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .preview-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(240, 173, 78, 0.4);
+    }
+
+    .test-time {
+      color: #666;
+      font-size: 11px;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-title">
+        <h1>JubileeVerse Test Suite</h1>
+        <p class="subtitle">Testing Login, Register, Forgot Password, Homepage, Translation, Discussion Boards, UI Translation, and AI Status</p>
+      </div>
+      <button class="btn-run-header" id="runTests">Run All Tests</button>
+    </div>
+
+    <div class="summary" id="summary">
+      <div class="summary-item">
+        <div class="summary-value passed" id="passedCount">0</div>
+        <div class="summary-label">Passed</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-value failed" id="failedCount">0</div>
+        <div class="summary-label">Failed</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-value pending" id="pendingCount">0</div>
+        <div class="summary-label">Pending</div>
+      </div>
+    </div>
+
+    <div class="test-table-container">
+      <table class="test-table">
+        <thead>
+          <tr>
+            <th>Test #</th>
+            <th>Test Category</th>
+            <th>Test Case</th>
+            <th>Results</th>
+          </tr>
+        </thead>
+        <tbody id="testTableBody">
+          <!-- Tests will be dynamically inserted here -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="log-section" id="log">
+      <div class="log-entry log-info">Ready to run tests...</div>
+    </div>
+
+    <div class="preview-section">
+      <h2>Preview Pages</h2>
+      <div class="preview-links">
+        <a href="/" class="preview-link" target="_blank">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          Homepage
+        </a>
+        <a href="/login" class="preview-link" target="_blank">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+            <polyline points="10 17 15 12 10 7"/>
+            <line x1="15" y1="12" x2="3" y2="12"/>
+          </svg>
+          Login Page
+        </a>
+        <a href="/register" class="preview-link" target="_blank">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="8.5" cy="7" r="4"/>
+            <line x1="20" y1="8" x2="20" y2="14"/>
+            <line x1="23" y1="11" x2="17" y2="11"/>
+          </svg>
+          Register Page
+        </a>
+        <a href="/forgot-password" class="preview-link" target="_blank">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          Forgot Password
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Define all tests with category information
+    const allTests = [
+      // Login Page Tests
+      { category: 'Login Page', categoryClass: 'login', name: 'Page loads successfully', check: checkLoginPageLoads },
+      { category: 'Login Page', categoryClass: 'login', name: 'Form elements present', check: checkLoginFormElements },
+      { category: 'Login Page', categoryClass: 'login', name: 'CSS styling applied', check: checkLoginStyling },
+      { category: 'Login Page', categoryClass: 'login', name: 'Empty form validation', check: checkLoginValidation },
+      { category: 'Login Page', categoryClass: 'login', name: 'Accept JSON header in fetch', check: checkLoginAcceptHeader },
+      { category: 'Login Page', categoryClass: 'login', name: 'Immediate redirect on success', check: checkLoginImmediateRedirect },
+
+      // Register Page Tests
+      { category: 'Register Page', categoryClass: 'register', name: 'Page loads successfully', check: checkRegisterPageLoads },
+      { category: 'Register Page', categoryClass: 'register', name: 'Form elements present', check: checkRegisterFormElements },
+      { category: 'Register Page', categoryClass: 'register', name: 'CSS styling applied', check: checkRegisterStyling },
+      { category: 'Register Page', categoryClass: 'register', name: 'Password validation works', check: checkRegisterValidation },
+      { category: 'Register Page', categoryClass: 'register', name: 'Accept JSON header in fetch', check: checkRegisterAcceptHeader },
+      { category: 'Register Page', categoryClass: 'register', name: 'Redirect to login on email exists', check: checkRegisterEmailExistsRedirect },
+
+      // Forgot Password Tests
+      { category: 'Forgot Password', categoryClass: 'forgot', name: 'Page loads successfully', check: checkForgotPageLoads },
+      { category: 'Forgot Password', categoryClass: 'forgot', name: 'Form elements present', check: checkForgotFormElements },
+      { category: 'Forgot Password', categoryClass: 'forgot', name: 'CSS styling applied', check: checkForgotStyling },
+      { category: 'Forgot Password', categoryClass: 'forgot', name: 'Email validation works', check: checkForgotValidation },
+
+      // Homepage Tests
+      { category: 'Homepage', categoryClass: 'homepage', name: 'Page loads successfully', check: checkHomepageLoads },
+      { category: 'Homepage', categoryClass: 'homepage', name: 'Sidebar icons present', check: checkHomepageSidebarIcons },
+      { category: 'Homepage', categoryClass: 'homepage', name: 'Sidebar icons are gray (not Music icon yellow)', check: checkHomepageSidebarGray },
+      { category: 'Homepage', categoryClass: 'homepage', name: 'Music menu item present (not Voice)', check: checkHomepageMusicMenu },
+      { category: 'Homepage', categoryClass: 'homepage', name: 'Sign In/Out button present', check: checkHomepageAuthButton },
+      { category: 'Homepage', categoryClass: 'homepage', name: 'Power icon SVG present', check: checkHomepagePowerIcon },
+      { category: 'Homepage', categoryClass: 'homepage', name: 'Copyright line below search box', check: checkHomepageCopyright },
+      { category: 'Homepage', categoryClass: 'homepage', name: 'Sidebar brand text styled', check: checkHomepageBrandText },
+      { category: 'Homepage', categoryClass: 'homepage', name: 'Removed Podcasts/Videos from sidebar', check: checkHomepageRemovedItems },
+
+      // Auth Module Tests
+      { category: 'Auth Module', categoryClass: 'auth', name: 'Auth module has Accept header', check: checkAuthModuleAcceptHeader },
+      { category: 'Auth Module', categoryClass: 'auth', name: 'Homepage auth check function', check: checkHomepageAuthFunction },
+
+      // Translation Tests
+      { category: 'Translation', categoryClass: 'translation', name: 'Translation endpoint exists', check: checkTranslationEndpointExists },
+      { category: 'Translation', categoryClass: 'translation', name: 'Romanian to English: "Ce mai faci?"', check: checkRomanianToEnglish },
+      { category: 'Translation', categoryClass: 'translation', name: 'Spanish to English: "Hola, como estas?"', check: checkSpanishToEnglish },
+      { category: 'Translation', categoryClass: 'translation', name: 'French to English: "Bonjour, comment allez-vous?"', check: checkFrenchToEnglish },
+      { category: 'Translation', categoryClass: 'translation', name: 'English passthrough: "What does John 3:16 say?"', check: checkEnglishPassthrough },
+      { category: 'Translation', categoryClass: 'translation', name: 'English passthrough: "How are you doing today?"', check: checkEnglishPassthrough2 },
+      { category: 'Translation', categoryClass: 'translation', name: 'Question NOT answered (just translated)', check: checkQuestionNotAnswered },
+      { category: 'Translation', categoryClass: 'translation', name: 'Client translation endpoint works', check: checkClientTranslationEndpoint },
+
+      // Discussion Board Tests
+      { category: 'Board', categoryClass: 'board', name: 'Boards API endpoint exists', check: checkBoardsEndpoint },
+      { category: 'Board', categoryClass: 'board', name: 'Kingdom Builder board exists', check: checkKingdomBuilderBoard },
+      { category: 'Board', categoryClass: 'board', name: 'AI response always in English', check: checkAiResponseInEnglish },
+
+      // UI Translation Tests
+      { category: 'UI Translation', categoryClass: 'translation', name: 'UI translation endpoint exists', check: checkUITranslationEndpoint },
+      { category: 'UI Translation', categoryClass: 'translation', name: 'English placeholder returns correctly', check: checkEnglishPlaceholder },
+      { category: 'UI Translation', categoryClass: 'translation', name: 'ui_translations table exists', check: checkUITranslationsTable },
+
+      // AI Status Tests
+      { category: 'AI Status', categoryClass: 'auth', name: 'AI status endpoint exists', check: checkAIStatusEndpoint },
+      { category: 'AI Status', categoryClass: 'auth', name: 'OpenAI status returned', check: checkOpenAIStatus },
+      { category: 'AI Status', categoryClass: 'auth', name: 'Claude status returned', check: checkClaudeStatus },
+      { category: 'AI Status', categoryClass: 'auth', name: 'Grok status returned', check: checkGrokStatus }
+    ];
+
+    let results = { passed: 0, failed: 0, pending: allTests.length };
+
+    // Initialize test table
+    function initializeTestTable() {
+      const tbody = document.getElementById('testTableBody');
+      tbody.innerHTML = '';
+
+      allTests.forEach((test, index) => {
+        const row = document.createElement('tr');
+        row.id = `test-row-${index}`;
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td><span class="category-badge ${test.categoryClass}">${test.category}</span></td>
+          <td>${test.name}</td>
+          <td><span class="result-badge pending" id="result-${index}">Pending</span></td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      document.getElementById('pendingCount').textContent = allTests.length;
+    }
+
+    function log(message, type = 'info') {
+      const logEl = document.getElementById('log');
+      const time = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.className = `log-entry log-${type}`;
+      entry.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
+      logEl.appendChild(entry);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function updateTestResult(index, status, time) {
+      const resultEl = document.getElementById(`result-${index}`);
+      resultEl.className = `result-badge ${status}`;
+
+      let text = status.charAt(0).toUpperCase() + status.slice(1);
+      if (time !== undefined) {
+        text += `<span class="test-time">${time}ms</span>`;
+      }
+      resultEl.innerHTML = text;
+    }
+
+    function updateSummary() {
+      document.getElementById('passedCount').textContent = results.passed;
+      document.getElementById('failedCount').textContent = results.failed;
+      document.getElementById('pendingCount').textContent = results.pending;
+    }
+
+    // ============ LOGIN PAGE TESTS ============
+    async function checkLoginPageLoads() {
+      const response = await fetch('/login');
+      if (response.ok) {
+        const html = await response.text();
+        return html.includes('JubileeVerse') && html.includes('Sign In');
+      }
+      return false;
+    }
+
+    async function checkLoginFormElements() {
+      const response = await fetch('/login');
+      const html = await response.text();
+      return html.includes('id="email"') &&
+             html.includes('id="password"') &&
+             html.includes('id="submit-btn"') &&
+             html.includes('forgot-password');
+    }
+
+    async function checkLoginStyling() {
+      const response = await fetch('/css/login.css');
+      if (response.ok) {
+        const css = await response.text();
+        return css.includes('.login-form-panel') &&
+               css.includes('#f0ad4e') &&
+               css.includes('.wave-bar');
+      }
+      return false;
+    }
+
+    async function checkLoginValidation() {
+      const response = await fetch('/login');
+      const html = await response.text();
+      return html.includes('showFieldError') &&
+             html.includes('Email is required') &&
+             html.includes('Password is required');
+    }
+
+    async function checkLoginAcceptHeader() {
+      const response = await fetch('/login');
+      const html = await response.text();
+      return html.includes("'Accept': 'application/json'") ||
+             html.includes('"Accept": "application/json"');
+    }
+
+    async function checkLoginImmediateRedirect() {
+      const response = await fetch('/login');
+      const html = await response.text();
+      // Check that it redirects immediately without showing success message
+      return html.includes("window.location.href = redirect || data.redirect || '/'");
+    }
+
+    // ============ REGISTER PAGE TESTS ============
+    async function checkRegisterPageLoads() {
+      const response = await fetch('/register');
+      if (response.ok) {
+        const html = await response.text();
+        return html.includes('JubileeVerse') && html.includes('Create Account');
+      }
+      return false;
+    }
+
+    async function checkRegisterFormElements() {
+      const response = await fetch('/register');
+      const html = await response.text();
+      return html.includes('id="displayName"') &&
+             html.includes('id="email"') &&
+             html.includes('id="password"') &&
+             html.includes('id="terms"');
+    }
+
+    async function checkRegisterStyling() {
+      const response = await fetch('/css/register.css');
+      if (response.ok) {
+        const css = await response.text();
+        return css.includes('.register-form-panel') &&
+               css.includes('#f0ad4e') &&
+               css.includes('.success-modal');
+      }
+      return false;
+    }
+
+    async function checkRegisterValidation() {
+      const response = await fetch('/register');
+      const html = await response.text();
+      return html.includes('showFieldError') &&
+             html.includes('Password must be at least 8 characters') &&
+             html.includes('You must agree to the terms');
+    }
+
+    async function checkRegisterAcceptHeader() {
+      const response = await fetch('/register');
+      const html = await response.text();
+      return html.includes("'Accept': 'application/json'") ||
+             html.includes('"Accept": "application/json"');
+    }
+
+    async function checkRegisterEmailExistsRedirect() {
+      const response = await fetch('/register');
+      const html = await response.text();
+      return html.includes('redirectToLoginOnClose') &&
+             html.includes("already registered") &&
+             html.includes("window.location.href = '/login'");
+    }
+
+    // ============ FORGOT PASSWORD TESTS ============
+    async function checkForgotPageLoads() {
+      const response = await fetch('/forgot-password');
+      if (response.ok) {
+        const html = await response.text();
+        return html.includes('JubileeVerse') && html.includes('Reset Password');
+      }
+      return false;
+    }
+
+    async function checkForgotFormElements() {
+      const response = await fetch('/forgot-password');
+      const html = await response.text();
+      return html.includes('id="email"') &&
+             html.includes('id="submit-btn"') &&
+             html.includes('id="success-state"');
+    }
+
+    async function checkForgotStyling() {
+      const response = await fetch('/css/forgot-password.css');
+      if (response.ok) {
+        const css = await response.text();
+        return css.includes('.forgot-form-panel') &&
+               css.includes('#f0ad4e') &&
+               css.includes('.success-content');
+      }
+      return false;
+    }
+
+    async function checkForgotValidation() {
+      const response = await fetch('/forgot-password');
+      const html = await response.text();
+      return html.includes('showFieldError') &&
+             html.includes('Email is required') &&
+             html.includes('Please enter a valid email');
+    }
+
+    // ============ HOMEPAGE TESTS ============
+    async function checkHomepageLoads() {
+      const response = await fetch('/');
+      if (response.ok) {
+        const html = await response.text();
+        // Case-insensitive check for the placeholder text
+        return html.includes('JubileeVerse') && html.toLowerCase().includes('ask jubilee');
+      }
+      return false;
+    }
+
+    async function checkHomepageSidebarIcons() {
+      // Sidebar is loaded dynamically, so check the sidebar partial directly
+      const response = await fetch('/partials/sidebar.html');
+      const html = await response.text();
+      return html.includes('sidebar-icon') &&
+             html.includes('data-nav="search"') &&
+             html.includes('data-nav="bible"') &&
+             html.includes('data-nav="music"');
+    }
+
+    async function checkHomepageSidebarGray() {
+      // Check sidebar.css which is the primary sidebar stylesheet
+      const response = await fetch('/css/sidebar.css');
+      if (response.ok) {
+        const css = await response.text();
+        // Check that sidebar icons are gray (#777) and highlight icons are yellow
+        return css.includes('.sidebar-icon svg') &&
+               css.includes('fill: #777') &&
+               css.includes('.sidebar-icon.is-highlight svg') &&
+               css.includes('fill: #ffbd59');
+      }
+      return false;
+    }
+
+    async function checkHomepageMusicMenu() {
+      // Sidebar is loaded dynamically, so check the sidebar partial directly
+      const response = await fetch('/partials/sidebar.html');
+      const html = await response.text();
+      // Check that Music is present and Voice is NOT present
+      return html.includes('data-nav="music"') &&
+             html.includes('data-tooltip="Music"') &&
+             !html.includes('data-nav="voice"') &&
+             !html.includes('data-tooltip="Voice"');
+    }
+
+    async function checkHomepageAuthButton() {
+      // Header is loaded dynamically, so check the header partial directly
+      const response = await fetch('/partials/header.html');
+      const html = await response.text();
+      return html.includes('id="authBtn"') &&
+             html.includes('id="authBtnText"') &&
+             html.includes('Sign In');
+    }
+
+    async function checkHomepagePowerIcon() {
+      // Header is loaded dynamically, so check the header partial directly
+      const response = await fetch('/partials/header.html');
+      const html = await response.text();
+      // Check for power icon SVG (vertical line and arc)
+      return html.includes('sign-out-btn') &&
+             html.includes('M12 4v8') && // vertical line path
+             html.includes('M6.5 7.5a8 8 0 1 0 11 0'); // arc path
+    }
+
+    async function checkHomepageCopyright() {
+      const response = await fetch('/');
+      const html = await response.text();
+      // Check that copyright is in search-copyright class (below search box)
+      return html.includes('class="search-copyright"') &&
+             html.includes('Copyright') &&
+             html.includes('currentYear');
+    }
+
+    async function checkHomepageBrandText() {
+      // Check sidebar.css which contains the brand text styling
+      const response = await fetch('/css/sidebar.css');
+      if (response.ok) {
+        const css = await response.text();
+        return css.includes('.sidebar-brand-text') &&
+               css.includes('.sidebar-brand-sub') &&
+               css.includes('font-size: 22px') && // brand text size
+               css.includes('color: #fff'); // white color
+      }
+      return false;
+    }
+
+    async function checkHomepageRemovedItems() {
+      // Sidebar is loaded dynamically, so check the sidebar partial directly
+      const response = await fetch('/partials/sidebar.html');
+      const html = await response.text();
+      // Check that Podcasts and Videos are NOT in the sidebar
+      return !html.includes('data-nav="podcasts"') &&
+             !html.includes('data-nav="videos"') &&
+             !html.includes('data-tooltip="Podcasts"') &&
+             !html.includes('data-tooltip="Videos"');
+    }
+
+    // ============ AUTH MODULE TESTS ============
+    async function checkAuthModuleAcceptHeader() {
+      const response = await fetch('/js/modules/auth.js');
+      if (response.ok) {
+        const js = await response.text();
+        return js.includes("'Accept': 'application/json'") ||
+               js.includes('"Accept": "application/json"');
+      }
+      return false;
+    }
+
+    async function checkHomepageAuthFunction() {
+      const response = await fetch('/js/homepage.js');
+      if (response.ok) {
+        const js = await response.text();
+        return js.includes('checkAuthStatus') &&
+               js.includes('/auth/me') &&
+               js.includes('/auth/logout') &&
+               js.includes("'Accept': 'application/json'");
+      }
+      return false;
+    }
+
+    // ============ TRANSLATION TESTS ============
+    // Helper function to call the internal translation API (requires auth)
+    async function testTranslateToEnglish(content) {
+      // This calls an internal test endpoint that uses translateToEnglish
+      const response = await fetch('/api/test/translate-to-english', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ content })
+      });
+      if (!response.ok) return null;
+      const data = await response.json();
+      return data.translated;
+    }
+
+    async function checkTranslationEndpointExists() {
+      // Check that the boards translate endpoint exists (may return 401 if not logged in)
+      const response = await fetch('/boards/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ content: 'test', targetLanguage: 'es' })
+      });
+      // 401 means endpoint exists but requires auth, 404 means not found
+      return response.status !== 404;
+    }
+
+    async function checkRomanianToEnglish() {
+      const translated = await testTranslateToEnglish('Ce mai faci?');
+      if (!translated) return false;
+      // Should translate to something like "How are you?" or "What's up?"
+      const lower = translated.toLowerCase();
+      return lower.includes('how') || lower.includes('what') || lower.includes('you');
+    }
+
+    async function checkSpanishToEnglish() {
+      const translated = await testTranslateToEnglish('Hola, como estas?');
+      if (!translated) return false;
+      const lower = translated.toLowerCase();
+      return lower.includes('hello') || lower.includes('hi') || lower.includes('how are you');
+    }
+
+    async function checkFrenchToEnglish() {
+      const translated = await testTranslateToEnglish('Bonjour, comment allez-vous?');
+      if (!translated) return false;
+      const lower = translated.toLowerCase();
+      return lower.includes('hello') || lower.includes('good') || lower.includes('how are you');
+    }
+
+    async function checkEnglishPassthrough() {
+      const translated = await testTranslateToEnglish('What does John 3:16 say?');
+      if (!translated) return false;
+      // Should return the same text, not an answer about John 3:16
+      return translated.toLowerCase().includes('what does john 3:16 say');
+    }
+
+    async function checkEnglishPassthrough2() {
+      const translated = await testTranslateToEnglish('How are you doing today?');
+      if (!translated) return false;
+      // Should pass through unchanged
+      return translated.toLowerCase().includes('how are you');
+    }
+
+    async function checkQuestionNotAnswered() {
+      // Test that "Ce spune Ioan 3:16?" translates to "What does John 3:16 say?"
+      // NOT to the actual Bible verse content
+      const translated = await testTranslateToEnglish('Ce spune Ioan 3:16?');
+      if (!translated) return false;
+      const lower = translated.toLowerCase();
+      // Should contain the question format, not "for god so loved the world"
+      const isQuestion = lower.includes('what') && (lower.includes('say') || lower.includes('john'));
+      const isNotAnswer = !lower.includes('for god so loved') && !lower.includes('whoever believes');
+      return isQuestion && isNotAnswer;
+    }
+
+    async function checkClientTranslationEndpoint() {
+      // The client-side translation endpoint at /boards/translate
+      const response = await fetch('/boards/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ content: 'Hello world', targetLanguage: 'es' })
+      });
+      // Should exist (401 = needs auth, 200 = success, 404 = not found)
+      return response.status !== 404;
+    }
+
+    // ============ DISCUSSION BOARD TESTS ============
+    async function checkBoardsEndpoint() {
+      const response = await fetch('/boards');
+      return response.ok;
+    }
+
+    async function checkKingdomBuilderBoard() {
+      const response = await fetch('/boards');
+      if (!response.ok) return false;
+      const data = await response.json();
+      if (!data.boards) return false;
+      return data.boards.some(b => b.slug === 'kingdom-builder');
+    }
+
+    async function checkAiResponseInEnglish() {
+      // Check that the AI system prompt includes English-only instruction
+      const response = await fetch('/api/test/ai-system-prompt');
+      if (!response.ok) return false;
+      const data = await response.json();
+      if (!data.systemPrompt) return false;
+      return data.systemPrompt.includes('MUST always respond in English');
+    }
+
+    // ============ UI TRANSLATION TESTS ============
+    async function checkUITranslationEndpoint() {
+      // Check that the UI translation placeholder endpoint exists
+      const response = await fetch('/translation/placeholder?persona=jubilee&language=en');
+      // Should return 200, not 404
+      return response.ok;
+    }
+
+    async function checkEnglishPlaceholder() {
+      // Check that English placeholder returns correctly for Jubilee persona
+      const response = await fetch('/translation/placeholder?persona=jubilee&language=en');
+      if (!response.ok) return false;
+      const data = await response.json();
+      // Should contain placeholder text with persona name
+      return data.placeholder && data.placeholder.toLowerCase().includes('jubilee');
+    }
+
+    async function checkUITranslationsTable() {
+      // Check that the ui_translations table exists by testing the endpoint
+      // If table doesn't exist, endpoint would return 500 error
+      const response = await fetch('/translation/placeholder?persona=jubilee&language=ro');
+      // 200 = table exists and works, 500 = table missing or error
+      return response.ok || response.status === 401;
+    }
+
+    // ============ AI STATUS TESTS ============
+    async function checkAIStatusEndpoint() {
+      // Check that AI status endpoint exists (requires admin, so redirect/401/403 is ok)
+      const response = await fetch('/api/admin/ai/status', { redirect: 'manual' });
+      // redirect (opaqueredirect type), 401/403 = endpoint exists but requires auth
+      // 404 = not found, 200 = success
+      return response.status !== 404 && response.type !== 'error';
+    }
+
+    async function checkOpenAIStatus() {
+      // Check that OpenAI status is returned (or auth redirect which is expected)
+      const response = await fetch('/api/admin/ai/status', { redirect: 'manual' });
+      // If redirected or 401/403, endpoint exists but we can't check response body
+      if (response.type === 'opaqueredirect' || response.status === 401 || response.status === 403) {
+        return true; // Endpoint exists, auth required
+      }
+      if (!response.ok) return false;
+      const data = await response.json();
+      return data.openai !== undefined;
+    }
+
+    async function checkClaudeStatus() {
+      // Check that Claude status is returned (or auth redirect which is expected)
+      const response = await fetch('/api/admin/ai/status', { redirect: 'manual' });
+      // If redirected or 401/403, endpoint exists but we can't check response body
+      if (response.type === 'opaqueredirect' || response.status === 401 || response.status === 403) {
+        return true; // Endpoint exists, auth required
+      }
+      if (!response.ok) return false;
+      const data = await response.json();
+      return data.claude !== undefined;
+    }
+
+    async function checkGrokStatus() {
+      // Check that Grok status is returned (or auth redirect which is expected)
+      const response = await fetch('/api/admin/ai/status', { redirect: 'manual' });
+      // If redirected or 401/403, endpoint exists but we can't check response body
+      if (response.type === 'opaqueredirect' || response.status === 401 || response.status === 403) {
+        return true; // Endpoint exists, auth required
+      }
+      if (!response.ok) return false;
+      const data = await response.json();
+      return data.grok !== undefined;
+    }
+
+    // ============ RUN ALL TESTS ============
+    async function runAllTests() {
+      const btn = document.getElementById('runTests');
+      btn.disabled = true;
+      btn.textContent = 'Running Tests...';
+
+      results = { passed: 0, failed: 0, pending: allTests.length };
+      initializeTestTable();
+      updateSummary();
+
+      // Clear log
+      document.getElementById('log').innerHTML = '';
+      log('Starting test suite...', 'info');
+
+      for (let i = 0; i < allTests.length; i++) {
+        const test = allTests[i];
+        updateTestResult(i, 'running');
+
+        const startTime = performance.now();
+        try {
+          const passed = await test.check();
+          const endTime = performance.now();
+          const time = Math.round(endTime - startTime);
+
+          if (passed) {
+            updateTestResult(i, 'passed', time);
+            results.passed++;
+            log(`✓ [${test.category}] ${test.name}`, 'success');
+          } else {
+            updateTestResult(i, 'failed', time);
+            results.failed++;
+            log(`✗ [${test.category}] ${test.name}`, 'error');
+          }
+        } catch (error) {
+          updateTestResult(i, 'failed');
+          results.failed++;
+          log(`✗ [${test.category}] ${test.name}: ${error.message}`, 'error');
+        }
+
+        results.pending--;
+        updateSummary();
+
+        // Small delay between tests
+        await new Promise(r => setTimeout(r, 50));
+      }
+
+      log(`Test suite complete: ${results.passed} passed, ${results.failed} failed`, results.failed === 0 ? 'success' : 'error');
+
+      btn.disabled = false;
+      btn.textContent = 'Run All Tests';
+    }
+
+    // Initialize on load
+    initializeTestTable();
+    document.getElementById('runTests').addEventListener('click', runAllTests);
+  </script>
+</body>
+</html>

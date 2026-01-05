@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm create:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(./node_modules/.bin/tailwindcss:*)",
+      "Bash(node node_modules/tailwindcss/lib/cli.js:*)",
+      "Bash(npm run dev:*)",
+      "Bash(node:*)",
+      "Bash(mkdir:*)",
+      "Bash(dir \"c:\\\\data\\\\JubileeIntelligence\\\\data\")",
+      "Bash(dir:*)",
+      "Bash(powershell -Command \"\\(Get-Content ''c:\\\\data\\\\JubileeIntelligence\\\\data\\\\Personas\\\\jubilee.inspire.yaml''\\).Count\")",
+      "Bash(powershell -Command \"\\(Get-Content ''c:\\\\data\\\\JubileeIntelligence\\\\data\\\\Personas\\\\melody.inspire.yaml''\\).Count\")",
+      "Bash(powershell -Command:*)"
+    ]
+  }
+}

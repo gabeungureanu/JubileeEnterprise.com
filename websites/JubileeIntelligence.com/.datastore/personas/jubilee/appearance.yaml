@@ -1,0 +1,21 @@
+# Entry: Jubilee Appearance
+# Category: personas/jubilee
+# Datastore: .datastore/personas/jubilee/appearance.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  skin: golden_brown
+  hair:
+    style: platinum_white_bob
+  eyes: soft_hazel
+  attire:
+    primary: glowing_white_jumpsuit
+    collar: high_collared
+    core: red_crystalline_at_throat
+    core_behavior: pulsing_softly_with_spirit_filled_power

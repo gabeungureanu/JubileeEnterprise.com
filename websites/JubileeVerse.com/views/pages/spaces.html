@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="The Listening Space - A quiet place to be heard. Connect with compassionate AI personas who are here to listen.">
+  <title>Listening Space - JubileeVerse</title>
+  <link rel="icon" type="image/png" href="/images/personas/jubilee.png">
+  <link rel="apple-touch-icon" href="/images/personas/jubilee.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Merriweather:ital,wght@0,400;1,300&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, #0d0d0d 0%, #111 50%, #0a0a0a 100%);
+      color: #e8e8e8;
+      overflow: hidden;
+    }
+
+    /* Subtle background texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(255, 189, 89, 0.03) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Main container */
+    .listening-space {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ============================================
+       HEADER - Minimal, unobtrusive
+       ============================================ */
+    .ls-header {
+      flex-shrink: 0;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .ls-header__brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .ls-header__logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .ls-header__title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .ls-header__subtitle {
+      font-size: 12px;
+      color: #666;
+      font-weight: 400;
+    }
+
+    .ls-header__exit {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      border: 1px solid #333;
+      color: #888;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .ls-header__exit:hover {
+      border-color: #555;
+      color: #ccc;
+    }
+
+    .ls-header__exit svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    /* ============================================
+       FOYER VIEW - Entry grid of personas
+       ============================================ */
+    .ls-foyer {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 0 32px 32px;
+    }
+
+    .ls-foyer__welcome {
+      text-align: center;
+      padding: 24px 0 40px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .ls-foyer__title {
+      font-family: 'Merriweather', serif;
+      font-size: 32px;
+      font-weight: 400;
+      color: #fff;
+      margin-bottom: 16px;
+      letter-spacing: -0.5px;
+    }
+
+    .ls-foyer__intro {
+      font-size: 16px;
+      color: #888;
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    .ls-foyer__grid-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-bottom: 24px;
+    }
+
+    .ls-foyer__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 900px) {
+      .ls-foyer__grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .ls-foyer__grid {
+        grid-template-columns: 1fr;
+      }
+      .ls-header {
+        padding: 16px 20px;
+      }
+      .ls-foyer {
+        padding: 0 20px 20px;
+      }
+    }
+
+    /* Persona Card */
+    .ls-persona-card {
+      background: linear-gradient(135deg, #161616 0%, #111 100%);
+      border: 1px solid #222;
+      border-radius: 16px;
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .ls-persona-card:hover {
+      border-color: rgba(255, 189, 89, 0.3);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .ls-persona-card:hover .ls-persona-card__image {
+      transform: scale(1.05);
+    }
+
+    .ls-persona-card__image-wrapper {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      margin-bottom: 16px;
+    }
+
+    .ls-persona-card__image {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #222;
+      transition: transform 0.25s ease;
+    }
+
+    .ls-persona-card__listening-indicator {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 16px;
+      height: 16px;
+      background: #22c55e;
+      border-radius: 50%;
+      border: 2px solid #111;
+      animation: pulse-soft 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-soft {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    .ls-persona-card__name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .ls-persona-card__room-name {
+      font-size: 12px;
+      color: #ffbd59;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+
+    .ls-persona-card__description {
+      font-size: 14px;
+      color: #888;
+      line-height: 1.5;
+      font-style: italic;
+      font-family: 'Merriweather', serif;
+      font-weight: 300;
+    }
+
+    /* ============================================
+       LISTENING ROOM VIEW - Two-panel layout
+       ============================================ */
+    .ls-room {
+      display: none;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .ls-room.active {
+      display: flex;
+    }
+
+    /* Chat Panel (Left) */
+    .ls-room__chat-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #0f0f0f;
+      border-right: 1px solid #1a1a1a;
+      min-width: 0;
+    }
+
+    .ls-room__chat-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .ls-room__chat-title {
+      font-size: 14px;
+      color: #888;
+      font-weight: 400;
+    }
+
+    .ls-room__back-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: none;
+      color: #666;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .ls-room__back-btn:hover {
+      background: #1a1a1a;
+      color: #aaa;
+    }
+
+    .ls-room__back-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .ls-room__messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .ls-message {
+      max-width: 85%;
+      animation: fadeInUp 0.3s ease;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .ls-message--persona {
+      align-self: flex-start;
+    }
+
+    .ls-message--user {
+      align-self: flex-end;
+    }
+
+    .ls-message__bubble {
+      padding: 14px 18px;
+      border-radius: 16px;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .ls-message--persona .ls-message__bubble {
+      background: #1a1a1a;
+      color: #e0e0e0;
+      border-bottom-left-radius: 4px;
+    }
+
+    .ls-message--user .ls-message__bubble {
+      background: linear-gradient(135deg, #2a2520 0%, #1f1a15 100%);
+      color: #f0e8df;
+      border-bottom-right-radius: 4px;
+    }
+
+    .ls-message__time {
+      font-size: 11px;
+      color: #555;
+      margin-top: 6px;
+      padding: 0 4px;
+    }
+
+    .ls-message--persona .ls-message__time {
+      text-align: left;
+    }
+
+    .ls-message--user .ls-message__time {
+      text-align: right;
+    }
+
+    .ls-typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 14px 18px;
+      background: #1a1a1a;
+      border-radius: 16px;
+      border-bottom-left-radius: 4px;
+      align-self: flex-start;
+    }
+
+    .ls-typing-indicator span {
+      width: 6px;
+      height: 6px;
+      background: #555;
+      border-radius: 50%;
+      animation: typing-bounce 1.2s ease-in-out infinite;
+    }
+
+    .ls-typing-indicator span:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .ls-typing-indicator span:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    @keyframes typing-bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-4px); }
+    }
+
+    /* Input Area */
+    .ls-room__input-area {
+      padding: 16px 24px 24px;
+      border-top: 1px solid #1a1a1a;
+      flex-shrink: 0;
+    }
+
+    .ls-room__input-wrapper {
+      display: flex;
+      gap: 12px;
+      background: #161616;
+      border: 1px solid #222;
+      border-radius: 24px;
+      padding: 4px 4px 4px 20px;
+      transition: border-color 0.2s ease;
+    }
+
+    .ls-room__input-wrapper:focus-within {
+      border-color: rgba(255, 189, 89, 0.3);
+    }
+
+    .ls-room__input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #e0e0e0;
+      font-size: 15px;
+      font-family: inherit;
+      padding: 12px 0;
+      outline: none;
+    }
+
+    .ls-room__input::placeholder {
+      color: #555;
+    }
+
+    .ls-room__send-btn {
+      background: linear-gradient(135deg, #ffbd59 0%, #e5a94d 100%);
+      border: none;
+      color: #111;
+      padding: 12px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .ls-room__send-btn:hover {
+      background: linear-gradient(135deg, #ffc870 0%, #f0b85a 100%);
+    }
+
+    .ls-room__send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Profile Panel (Right) */
+    .ls-room__profile-panel {
+      width: 320px;
+      background: #111;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    @media (max-width: 800px) {
+      .ls-room__profile-panel {
+        display: none;
+      }
+    }
+
+    .ls-room__profile-content {
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    .ls-room__profile-image {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #1a1a1a;
+      margin-bottom: 16px;
+    }
+
+    .ls-room__profile-name {
+      font-size: 22px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .ls-room__profile-room {
+      font-size: 13px;
+      color: #ffbd59;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+
+    .ls-room__profile-description {
+      font-size: 14px;
+      color: #888;
+      line-height: 1.6;
+      font-family: 'Merriweather', serif;
+      font-style: italic;
+      font-weight: 300;
+    }
+
+    /* Conversation History */
+    .ls-room__history {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .ls-room__history-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #555;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+
+    .ls-room__history-empty {
+      font-size: 13px;
+      color: #444;
+      text-align: center;
+      padding: 20px;
+      font-style: italic;
+    }
+
+    .ls-room__history-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      margin-bottom: 4px;
+    }
+
+    .ls-room__history-item:hover {
+      background: #1a1a1a;
+    }
+
+    .ls-room__history-item.active {
+      background: rgba(255, 189, 89, 0.1);
+    }
+
+    .ls-room__history-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .ls-room__history-icon svg {
+      width: 14px;
+      height: 14px;
+      fill: #666;
+    }
+
+    .ls-room__history-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ls-room__history-preview {
+      font-size: 13px;
+      color: #aaa;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ls-room__history-date {
+      font-size: 11px;
+      color: #555;
+      margin-top: 2px;
+    }
+
+    /* Loading state */
+    .ls-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      color: #555;
+    }
+
+    .ls-spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #333;
+      border-top-color: #ffbd59;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #444;
+    }
+
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #333 transparent;
+    }
+  </style>
+</head>
+<body>
+  <div class="listening-space" id="listening-space">
+    <!-- Header -->
+    <header class="ls-header">
+      <a href="/" class="ls-header__brand">
+        <img src="/images/personas/jubilee.png" alt="" class="ls-header__logo">
+        <div>
+          <div class="ls-header__title">Listening Space</div>
+          <div class="ls-header__subtitle">A quiet place to be heard</div>
+        </div>
+      </a>
+      <a href="/" class="ls-header__exit">
+        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        Exit
+      </a>
+    </header>
+
+    <!-- Foyer View (Entry Grid) -->
+    <div class="ls-foyer" id="ls-foyer">
+      <div class="ls-foyer__welcome">
+        <h1 class="ls-foyer__title">Welcome to the Listening Space</h1>
+        <p class="ls-foyer__intro">
+          Each of our personas is here simply to listen. Choose someone you'd like to talk with,
+          and enter their space whenever you're ready. There's no rush, no agenda. Just presence.
+        </p>
+      </div>
+
+      <div class="ls-foyer__grid-wrapper">
+        <div class="ls-foyer__grid" id="personas-grid">
+          <div class="ls-loading">
+            <div class="ls-spinner"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Listening Room View -->
+    <div class="ls-room" id="ls-room">
+      <!-- Chat Panel -->
+      <div class="ls-room__chat-panel">
+        <div class="ls-room__chat-header">
+          <button class="ls-room__back-btn" id="back-to-foyer">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            Back to Listening Space
+          </button>
+          <span class="ls-room__chat-title" id="room-title">Listening Room</span>
+        </div>
+
+        <div class="ls-room__messages" id="messages-container">
+          <!-- Messages will be added here -->
+        </div>
+
+        <div class="ls-room__input-area">
+          <form class="ls-room__input-wrapper" id="message-form">
+            <input
+              type="text"
+              class="ls-room__input"
+              id="message-input"
+              placeholder="Share what's on your mind..."
+              autocomplete="off"
+              aria-label="Your message"
+            >
+            <button type="submit" class="ls-room__send-btn" id="send-btn">Send</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Profile Panel -->
+      <div class="ls-room__profile-panel">
+        <div class="ls-room__profile-content">
+          <img src="" alt="" class="ls-room__profile-image" id="profile-image">
+          <h2 class="ls-room__profile-name" id="profile-name">Persona Name</h2>
+          <div class="ls-room__profile-room" id="profile-room">Listening Room</div>
+          <p class="ls-room__profile-description" id="profile-description">
+            I'm here to listen without judgment. Share whatever is on your heart.
+          </p>
+        </div>
+
+        <div class="ls-room__history">
+          <h3 class="ls-room__history-title">Previous Conversations</h3>
+          <div id="conversation-history">
+            <div class="ls-room__history-empty">
+              This is your first visit to this room.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ============================================
+      // Persona Data with Listening-Focused Descriptions
+      // ============================================
+      const personaData = [
+        {
+          slug: 'jubilee',
+          name: 'Jubilee',
+          roomName: 'The Welcome Room',
+          image: '/images/personas/jubilee.png',
+          description: "I'm here to listen as you share what's on your heart. Whether you're celebrating, questioning, or simply need someone to be present with you.",
+          greeting: "Hello, I'm glad you're here. This is a safe space just to talk, whenever you're ready. What's on your mind today?"
+        },
+        {
+          slug: 'melody',
+          name: 'Melody',
+          roomName: 'The Prayer Room',
+          image: '/images/personas/melody.png',
+          description: "I'm here to pray with you and listen to what weighs on your spirit. Sometimes we just need someone to hold space with us.",
+          greeting: "Welcome. I'm here to listen and pray with you. There's no pressure, no rush. What would you like to share?"
+        },
+        {
+          slug: 'zariah',
+          name: 'Zariah',
+          roomName: 'The Wisdom Corner',
+          image: '/images/personas/zariah.png',
+          description: "I'm here to listen as you explore questions of faith and meaning. Every wondering is welcome here.",
+          greeting: "Peace be with you. I'm here to listen to your thoughts, your questions, your wonderings. What's been on your mind?"
+        },
+        {
+          slug: 'elias',
+          name: 'Elias',
+          roomName: 'The Study Room',
+          image: '/images/personas/elias.png',
+          description: "I'm here to listen and explore Scripture together. Sometimes the best conversations start with a simple curiosity.",
+          greeting: "Welcome. I love nothing more than exploring the depths of Scripture together. What passage or question has been stirring in you?"
+        },
+        {
+          slug: 'imani',
+          name: 'Imani',
+          roomName: 'The Upper Room',
+          image: '/images/personas/imani.png',
+          description: "I'm here to listen and intercede alongside you. In prayer, we are never alone.",
+          greeting: "I'm honored you've come. This is a place where we can simply be present together in prayer. What's on your heart?"
+        },
+        {
+          slug: 'santiago',
+          name: 'Santiago',
+          roomName: 'The Shepherd\'s Rest',
+          image: '/images/personas/santiago.png',
+          description: "I'm here to listen to your journey as a leader or shepherd. The weight you carry is real, and you don't have to carry it alone.",
+          greeting: "Welcome, friend. Leading others can be lonely. I'm here to listen to whatever you need to process today."
+        },
+        {
+          slug: 'tahoma',
+          name: 'Tahoma',
+          roomName: 'The Quiet Place',
+          image: '/images/personas/tahoma.png',
+          description: "I'm here to listen with stillness and patience. Sometimes we need a quiet presence more than words.",
+          greeting: "Welcome to this quiet place. There's no hurry here. Share when you're ready, or simply rest in the silence."
+        },
+        {
+          slug: 'caleb',
+          name: 'Caleb',
+          roomName: 'The Courage Corner',
+          image: '/images/personas/caleb.png',
+          description: "I'm here to listen as you face challenges and find your strength. Every step of courage begins with honesty.",
+          greeting: "Glad you're here. It takes courage to open up. Whatever you're facing, you can share it here without judgment."
+        },
+        {
+          slug: 'nova',
+          name: 'Nova',
+          roomName: 'The Vision Room',
+          image: '/images/personas/nova.png',
+          description: "I'm here to listen to your dreams and help you see possibilities. Every vision starts with someone willing to speak it.",
+          greeting: "Welcome. I love hearing about dreams and possibilities. What's been stirring in your imagination lately?"
+        },
+        {
+          slug: 'amir',
+          name: 'Amir',
+          roomName: 'The Leadership Space',
+          image: '/images/personas/amir.png',
+          description: "I'm here to listen and think through business or leadership challenges with you. Sometimes clarity comes from speaking things aloud.",
+          greeting: "Welcome. I understand the complexities of leadership. I'm here to listen and think alongside you. What's on your mind?"
+        },
+        {
+          slug: 'zev',
+          name: 'Zev',
+          roomName: 'The Discovery Room',
+          image: '/images/personas/zev.png',
+          description: "I'm here to listen and explore the intersection of faith and learning. Every question is a doorway.",
+          greeting: "Shalom. I love exploring the depths where faith meets knowledge. What questions have you been pondering?"
+        },
+        {
+          slug: 'eliana',
+          name: 'Eliana',
+          roomName: 'The Heart Space',
+          image: '/images/personas/eliana.png',
+          description: "I'm here to listen to what's on your heart. Emotions are sacred, and you don't have to navigate them alone.",
+          greeting: "Welcome to this space. I'm here to listen, truly listen, to whatever you need to express. How are you really doing?"
+        }
+      ];
+
+      // ============================================
+      // State Management
+      // ============================================
+      const state = {
+        currentView: 'foyer',
+        currentPersona: null,
+        messages: [],
+        conversationId: null,
+        isTyping: false
+      };
+
+      // ============================================
+      // DOM Elements
+      // ============================================
+      const foyerEl = document.getElementById('ls-foyer');
+      const roomEl = document.getElementById('ls-room');
+      const gridEl = document.getElementById('personas-grid');
+      const messagesEl = document.getElementById('messages-container');
+      const messageForm = document.getElementById('message-form');
+      const messageInput = document.getElementById('message-input');
+      const sendBtn = document.getElementById('send-btn');
+      const backBtn = document.getElementById('back-to-foyer');
+
+      // Profile elements
+      const profileImage = document.getElementById('profile-image');
+      const profileName = document.getElementById('profile-name');
+      const profileRoom = document.getElementById('profile-room');
+      const profileDescription = document.getElementById('profile-description');
+      const roomTitle = document.getElementById('room-title');
+      const historyContainer = document.getElementById('conversation-history');
+
+      // ============================================
+      // Initialization
+      // ============================================
+      function init() {
+        renderPersonaGrid();
+        setupEventListeners();
+        checkUrlForPersona();
+        trackPageView();
+      }
+
+      function trackPageView() {
+        if (window.HospitalityTracker) {
+          HospitalityTracker.trackInteraction('listening_space', 'page_view');
+        }
+      }
+
+      function checkUrlForPersona() {
+        const params = new URLSearchParams(window.location.search);
+        const personaSlug = params.get('persona');
+        const actionId = params.get('action');
+
+        if (personaSlug) {
+          const persona = personaData.find(p => p.slug === personaSlug);
+          if (persona) {
+            enterRoom(persona, actionId);
+          }
+        }
+      }
+
+      // ============================================
+      // Render Functions
+      // ============================================
+      function renderPersonaGrid() {
+        gridEl.innerHTML = personaData.map(persona => `
+          <div class="ls-persona-card" data-persona="${persona.slug}">
+            <div class="ls-persona-card__image-wrapper">
+              <img
+                src="${persona.image}"
+                alt="${persona.name}"
+                class="ls-persona-card__image"
+                onerror="this.src='/images/personas/jubilee.png'"
+              >
+              <div class="ls-persona-card__listening-indicator" title="Available to listen"></div>
+            </div>
+            <h3 class="ls-persona-card__name">${persona.name}</h3>
+            <div class="ls-persona-card__room-name">${persona.roomName}</div>
+            <p class="ls-persona-card__description">"${persona.description}"</p>
+          </div>
+        `).join('');
+
+        // Add click handlers
+        gridEl.querySelectorAll('.ls-persona-card').forEach(card => {
+          card.addEventListener('click', () => {
+            const slug = card.dataset.persona;
+            const persona = personaData.find(p => p.slug === slug);
+            if (persona) {
+              enterRoom(persona);
+            }
+          });
+        });
+      }
+
+      // ============================================
+      // Room Navigation
+      // ============================================
+      function enterRoom(persona, actionId = null) {
+        state.currentPersona = persona;
+        state.currentView = 'room';
+        state.messages = [];
+
+        // Update URL without page reload
+        const url = new URL(window.location);
+        url.searchParams.set('persona', persona.slug);
+        window.history.pushState({}, '', url);
+
+        // Update profile panel
+        profileImage.src = persona.image;
+        profileImage.alt = persona.name;
+        profileName.textContent = persona.name;
+        profileRoom.textContent = persona.roomName;
+        profileDescription.textContent = persona.description;
+        roomTitle.textContent = persona.roomName;
+
+        // Clear messages and show greeting
+        messagesEl.innerHTML = '';
+        addMessage('persona', persona.greeting);
+
+        // Load conversation history for this persona
+        loadConversationHistory(persona.slug);
+
+        // Show room view
+        foyerEl.style.display = 'none';
+        roomEl.classList.add('active');
+
+        // Focus input
+        messageInput.focus();
+
+        // Track room entry
+        if (window.HospitalityTracker) {
+          HospitalityTracker.trackInteraction('listening_room', 'enter', {
+            persona: persona.slug,
+            roomName: persona.roomName,
+            actionId: actionId
+          });
+        }
+      }
+
+      function exitRoom() {
+        state.currentView = 'foyer';
+        state.currentPersona = null;
+
+        // Update URL
+        const url = new URL(window.location);
+        url.searchParams.delete('persona');
+        url.searchParams.delete('action');
+        window.history.pushState({}, '', url);
+
+        // Show foyer view
+        roomEl.classList.remove('active');
+        foyerEl.style.display = 'flex';
+
+        // Track room exit
+        if (window.HospitalityTracker) {
+          HospitalityTracker.trackInteraction('listening_room', 'exit');
+        }
+      }
+
+      // ============================================
+      // Messaging
+      // ============================================
+      function addMessage(type, text, time = null) {
+        const messageEl = document.createElement('div');
+        messageEl.className = `ls-message ls-message--${type}`;
+
+        const timeStr = time || formatTime(new Date());
+
+        messageEl.innerHTML = `
+          <div class="ls-message__bubble">${escapeHtml(text)}</div>
+          <div class="ls-message__time">${timeStr}</div>
+        `;
+
+        messagesEl.appendChild(messageEl);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+
+        state.messages.push({ type, text, time: timeStr });
+      }
+
+      function showTypingIndicator() {
+        if (state.isTyping) return;
+
+        state.isTyping = true;
+        const indicator = document.createElement('div');
+        indicator.className = 'ls-typing-indicator';
+        indicator.id = 'typing-indicator';
+        indicator.innerHTML = '<span></span><span></span><span></span>';
+        messagesEl.appendChild(indicator);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+
+      function hideTypingIndicator() {
+        state.isTyping = false;
+        const indicator = document.getElementById('typing-indicator');
+        if (indicator) {
+          indicator.remove();
+        }
+      }
+
+      async function sendMessage(text) {
+        if (!text.trim() || !state.currentPersona) return;
+
+        // Add user message
+        addMessage('user', text);
+
+        // Clear input
+        messageInput.value = '';
+        sendBtn.disabled = true;
+
+        // Track message
+        if (window.HospitalityTracker) {
+          HospitalityTracker.trackChatMessage(state.currentPersona.slug, text.length);
+        }
+
+        // Show typing indicator
+        showTypingIndicator();
+
+        try {
+          // Send to chat API
+          const response = await fetch('/Home/ChatWithJubilee', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              userMessage: text,
+              personaSlug: state.currentPersona.slug,
+              conversationId: state.conversationId,
+              context: 'listening_space'
+            })
+          });
+
+          const data = await response.json();
+
+          hideTypingIndicator();
+
+          if (data.success && data.response) {
+            addMessage('persona', data.response);
+            if (data.conversationId) {
+              state.conversationId = data.conversationId;
+            }
+          } else {
+            // Graceful fallback
+            addMessage('persona', "I hear you. Thank you for sharing that with me. Please continue whenever you're ready.");
+          }
+        } catch (error) {
+          console.error('Error sending message:', error);
+          hideTypingIndicator();
+          addMessage('persona', "I'm still here, listening. Please continue when you're ready.");
+        }
+
+        sendBtn.disabled = false;
+        messageInput.focus();
+      }
+
+      // ============================================
+      // Conversation History
+      // ============================================
+      async function loadConversationHistory(personaSlug) {
+        historyContainer.innerHTML = '<div class="ls-room__history-empty">Loading...</div>';
+
+        try {
+          const response = await fetch(`/api/chat/conversations?persona=${personaSlug}&limit=5`, {
+            credentials: 'include'
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+
+            if (data.success && data.conversations && data.conversations.length > 0) {
+              historyContainer.innerHTML = data.conversations.map(conv => `
+                <div class="ls-room__history-item" data-conversation-id="${conv.id}">
+                  <div class="ls-room__history-icon">
+                    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                  </div>
+                  <div class="ls-room__history-info">
+                    <div class="ls-room__history-preview">${escapeHtml(conv.lastMessage || 'Previous conversation')}</div>
+                    <div class="ls-room__history-date">${formatDate(conv.updatedAt)}</div>
+                  </div>
+                </div>
+              `).join('');
+            } else {
+              historyContainer.innerHTML = '<div class="ls-room__history-empty">This is your first visit to this room.</div>';
+            }
+          } else {
+            historyContainer.innerHTML = '<div class="ls-room__history-empty">This is your first visit to this room.</div>';
+          }
+        } catch (error) {
+          historyContainer.innerHTML = '<div class="ls-room__history-empty">This is your first visit to this room.</div>';
+        }
+      }
+
+      // ============================================
+      // Event Listeners
+      // ============================================
+      function setupEventListeners() {
+        // Back button
+        backBtn.addEventListener('click', exitRoom);
+
+        // Message form submission
+        messageForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          sendMessage(messageInput.value);
+        });
+
+        // Handle browser back button
+        window.addEventListener('popstate', () => {
+          const params = new URLSearchParams(window.location.search);
+          if (params.has('persona')) {
+            const slug = params.get('persona');
+            const persona = personaData.find(p => p.slug === slug);
+            if (persona && state.currentView !== 'room') {
+              enterRoom(persona);
+            }
+          } else if (state.currentView === 'room') {
+            state.currentView = 'foyer';
+            roomEl.classList.remove('active');
+            foyerEl.style.display = 'flex';
+          }
+        });
+      }
+
+      // ============================================
+      // Utility Functions
+      // ============================================
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function formatTime(date) {
+        return date.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        });
+      }
+
+      function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) return 'Today';
+        if (diffDays === 1) return 'Yesterday';
+        if (diffDays < 7) return `${diffDays} days ago`;
+
+        return date.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric'
+        });
+      }
+
+      // Initialize
+      init();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: Jubilee SSO Identity Provider\n\nEstablishes the foundational infrastructure for Jubilee''s single sign-on\nand identity services. This security-critical repository serves as the\nauthoritative Identity Provider for Jubilee Browser, Jubilee Bible, and\nfuture Jubilee services.\n\nKey components:\n- OAuth 2.0 / OpenID Connect Identity Provider \\(services/jubilee-sso\\)\n- Shared authentication utilities \\(packages/shared\\)\n- Docker-based infrastructure \\(PostgreSQL, Redis, Nginx\\)\n- Database migrations with versioned schema\n- Environment configurations for local/staging/production\n- Comprehensive security documentation\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git config:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(psql:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker-compose:*)",
+      "Bash(docker start:*)",
+      "Bash(docker ps:*)",
+      "Bash(npm run migrate:website:*)",
+      "Bash(npm install:*)",
+      "Bash(test:*)",
+      "Bash(cat:*)",
+      "Bash(docker port:*)",
+      "Bash(docker inspect:*)",
+      "Bash(docker stop:*)",
+      "Bash(npm run migrate:*)",
+      "Bash(npm run seed:tlds:*)",
+      "Bash(DATABASE_URL=\"postgresql://jubilee_sso:dev_password_123@localhost:5432/jubilee_sso_dev\" npx tsx:*)",
+      "Bash(curl:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd Jubilee Internet Portal: SSO & Domain Registry Website\n\nImplements the central web portal for Jubilee Internet with dual functionality:\n\nSSO Portal:\n- OAuth 2.0 / OIDC authentication flows with PKCE\n- SSO integration for Jubilee Browser, Bible, and other services\n- Secure token validation middleware\n\nDomain Registry \\(Private Namespace\\):\n- Registration of private Jubilee Internet domains \\(NOT public DNS/ICANN\\)\n- Supported TLDs: .inspire \\(restricted\\), .church, .ministry, .faith,\n  .apostle, .prophet, .evangelist, .shepherd, .teacher, .community,\n  .worship, .prayer\n- Domain availability checking with suggestions\n- User dashboard for domain management\n- Stripe payment integration \\($3/year, optional in dev\\)\n- Domain resolution API for Jubilee Browser\n\nTechnical Stack:\n- Backend: Hono.js + TypeScript + PostgreSQL\n- Frontend: Next.js 14 \\(App Router\\) + Tailwind CSS\n- Database: New migrations for domain registry tables\n- Monorepo: Added website/* to npm workspaces\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(npm start)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(kill:*)",
+      "Bash(npm run dev:backend:*)",
+      "Bash(git commit:*)",
+      "Bash(npm run dev:*)",
+      "Bash(findstr:*)",
+      "Bash(npm run typecheck:*)"
+    ]
+  }
+}

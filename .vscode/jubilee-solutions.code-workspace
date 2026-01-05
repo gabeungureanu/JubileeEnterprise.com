@@ -1,0 +1,79 @@
+{
+  "folders": [
+    {
+      "name": "Solution Root",
+      "path": ".."
+    },
+    {
+      "name": "Shared Packages",
+      "path": "../packages/shared"
+    },
+    {
+      "name": "JubileeBrowser.com",
+      "path": "../websites/JubileeBrowser.com"
+    },
+    {
+      "name": "JubileeInspire.com",
+      "path": "../websites/JubileeInspire.com"
+    },
+    {
+      "name": "JubileeIntelligence.com",
+      "path": "../websites/JubileeIntelligence.com"
+    },
+    {
+      "name": "JubileeInternet.com",
+      "path": "../websites/JubileeInternet.com"
+    },
+    {
+      "name": "JubileePersonas.com",
+      "path": "../websites/JubileePersonas.com"
+    },
+    {
+      "name": "JubileeVerse.com",
+      "path": "../websites/JubileeVerse.com"
+    },
+    {
+      "name": "JubileeWebsites.com",
+      "path": "../websites/JubileeWebsites.com"
+    },
+    {
+      "name": "JubileeBrowser.WPF",
+      "path": "../applications/JubileeBrowser.wpf"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/.git": true,
+      "**/bin": true,
+      "**/obj": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/bin": true,
+      "**/obj": true,
+      "**/package-lock.json": true
+    },
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "typescript.tsdk": "node_modules/typescript/lib"
+  },
+  "extensions": {
+    "recommendations": [
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "ms-vscode.vscode-typescript-next",
+      "bradlc.vscode-tailwindcss",
+      "ms-dotnettools.csharp",
+      "ms-azuretools.vscode-docker",
+      "humao.rest-client",
+      "formulahendry.auto-rename-tag",
+      "christian-kohler.path-intellisense"
+    ]
+  }
+}

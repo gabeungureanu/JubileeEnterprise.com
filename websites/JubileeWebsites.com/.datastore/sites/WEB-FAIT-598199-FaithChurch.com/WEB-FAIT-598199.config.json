@@ -1,0 +1,25 @@
+{
+  "siteCode": "WEB-FAIT-598199",
+  "domain": "FaithChurch.com",
+  "overview": "General website",
+  "categoryCount": 3,
+  "quickMode": false,
+  "contentType": "FB",
+  "analysis": {
+    "contentType": "FB",
+    "confidence": "high",
+    "reasoning": "The domain name 'FaithChurch.com' contains keywords directly associated with religious and spiritual themes, specifically Christianity.",
+    "keywords": [
+      "faith",
+      "church"
+    ],
+    "niche": "Christian Ministry",
+    "tone": "inspirational"
+  },
+  "writersCount": 12,
+  "createdAt": "2025-12-17T11:06:39.725Z",
+  "status": "step4_complete",
+  "categoriesGeneratedAt": "2025-12-17T11:08:15.611Z",
+  "totalArticles": 36,
+  "articlesGeneratedAt": "2025-12-17T11:08:41.781Z"
+}

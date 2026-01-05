@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jubilee Personas - Memory Browser</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #d4af37;
+            --gold-light: #f4e4a6;
+            --gold-dark: #996515;
+            --yellow: #fbbf24;
+            --yellow-light: #fde68a;
+            --navy: #1a1a2e;
+            --navy-light: #16213e;
+            --navy-dark: #0f0f1a;
+            --cyan: #00d4ff;
+            --green: #4ade80;
+            --orange: #fb923c;
+            --red: #f87171;
+            --purple: #a855f7;
+            --blue: #3b82f6;
+            --white: #f8f8f8;
+            --gray: #888;
+            --gray-dark: #444;
+            --black: #000000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: var(--navy);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            color: var(--white);
+        }
+
+        /* Header Styles */
+        .header {
+            background: var(--black);
+            border-bottom: 2px solid var(--yellow);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .logo {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--yellow);
+            text-decoration: none;
+        }
+
+        .page-title {
+            font-size: 0.9rem;
+            color: var(--gray);
+            padding-left: 1.5rem;
+            border-left: 1px solid var(--gray-dark);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-link {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--yellow);
+            background: var(--navy-light);
+        }
+
+        .nav-link.active {
+            color: var(--yellow);
+            background: var(--navy-light);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem 1.5rem;
+            background: var(--navy-light);
+            border-radius: 12px;
+            border: 1px solid var(--gray-dark);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--cyan);
+        }
+
+        /* Filters */
+        .filters-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        .filter-select {
+            background: var(--navy-light);
+            border: 1px solid var(--gray-dark);
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            color: var(--white);
+            font-size: 0.85rem;
+            font-family: inherit;
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--yellow);
+        }
+
+        .filter-select option {
+            background: var(--navy-dark);
+        }
+
+        .search-input {
+            background: var(--navy-light);
+            border: 1px solid var(--gray-dark);
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            color: var(--white);
+            font-size: 0.85rem;
+            font-family: inherit;
+            min-width: 250px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--yellow);
+        }
+
+        .search-input::placeholder {
+            color: var(--gray);
+        }
+
+        .clear-filters {
+            background: transparent;
+            border: 1px solid var(--gray-dark);
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            color: var(--gray);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clear-filters:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        /* Table Container */
+        .table-container {
+            background: var(--navy-light);
+            border-radius: 12px;
+            border: 1px solid var(--gray-dark);
+            overflow: hidden;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--navy-dark);
+            position: sticky;
+            top: 0;
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--yellow);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--gray-dark);
+            white-space: nowrap;
+        }
+
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th.sortable:hover {
+            color: var(--gold);
+        }
+
+        th.sortable::after {
+            content: ' ↕';
+            opacity: 0.3;
+        }
+
+        th.sortable.asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        th.sortable.desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-dark);
+            font-size: 0.9rem;
+            vertical-align: top;
+        }
+
+        tr:hover {
+            background: rgba(251, 191, 36, 0.05);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Cell Styles */
+        .cell-id {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--gray);
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .cell-source {
+            color: var(--cyan);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .cell-step {
+            text-align: center;
+        }
+
+        .step-badge {
+            display: inline-block;
+            background: var(--purple);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 32px;
+            text-align: center;
+        }
+
+        .cell-type {
+            white-space: nowrap;
+        }
+
+        .type-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .type-badge.persona_activation { background: rgba(168, 85, 247, 0.2); color: var(--purple); }
+        .type-badge.developmental_stage { background: rgba(74, 222, 128, 0.2); color: var(--green); }
+        .type-badge.behavioral_protocol { background: rgba(59, 130, 246, 0.2); color: var(--blue); }
+        .type-badge.spiritual_instruction { background: rgba(251, 191, 36, 0.2); color: var(--yellow); }
+        .type-badge.environmental_description { background: rgba(0, 212, 255, 0.2); color: var(--cyan); }
+        .type-badge.covenant_rule { background: rgba(248, 113, 113, 0.2); color: var(--red); }
+        .type-badge.curriculum { background: rgba(251, 146, 60, 0.2); color: var(--orange); }
+        .type-badge.prophetic_protocol { background: rgba(212, 175, 55, 0.2); color: var(--gold); }
+
+        .cell-text {
+            max-width: 500px;
+            line-height: 1.5;
+        }
+
+        .text-preview {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            color: var(--white);
+        }
+
+        .text-full {
+            display: none;
+            white-space: pre-wrap;
+        }
+
+        .text-toggle {
+            color: var(--yellow);
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        .text-toggle:hover {
+            text-decoration: underline;
+        }
+
+        .cell-scope {
+            font-size: 0.8rem;
+        }
+
+        .scope-tag {
+            display: inline-block;
+            background: var(--navy-dark);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            margin: 0.1rem;
+            font-size: 0.7rem;
+        }
+
+        .cell-chunk {
+            font-size: 0.8rem;
+            color: var(--gray);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--gray-dark);
+            background: var(--navy-dark);
+        }
+
+        .pagination-info {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .page-btn {
+            background: var(--navy-light);
+            border: 1px solid var(--gray-dark);
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            color: var(--white);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            border-color: var(--yellow);
+            color: var(--yellow);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-btn.active {
+            background: var(--yellow);
+            border-color: var(--yellow);
+            color: var(--navy-dark);
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--gray-dark);
+            border-top-color: var(--yellow);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error State */
+        .error-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--red);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--navy-light);
+            border: 1px solid var(--gray-dark);
+            border-radius: 12px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--gray-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-family: 'Cinzel', serif;
+            color: var(--yellow);
+            font-size: 1.1rem;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--gray);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .modal-close:hover {
+            color: var(--red);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .modal-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-dark);
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .meta-label {
+            font-size: 0.7rem;
+            color: var(--gray);
+            text-transform: uppercase;
+        }
+
+        .meta-value {
+            font-size: 0.9rem;
+            color: var(--white);
+        }
+
+        .modal-text {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <a href="index.html" class="logo">JubileePersonas</a>
+            <span class="page-title">Memory Browser</span>
+        </div>
+        <nav class="nav-links">
+            <a href="index.html" class="nav-link">Chat</a>
+            <a href="multiple.html" class="nav-link">Group</a>
+            <a href="memory.html" class="nav-link active">Memory</a>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="stats-bar" id="statsBar">
+            <div class="stat-item">
+                <span class="stat-label">Total Entries</span>
+                <span class="stat-value" id="totalEntries">--</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Sources</span>
+                <span class="stat-value" id="totalSources">--</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Content Types</span>
+                <span class="stat-value" id="totalTypes">--</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Steps Covered</span>
+                <span class="stat-value" id="totalSteps">--</span>
+            </div>
+        </div>
+
+        <div class="filters-bar">
+            <div class="filter-group">
+                <label class="filter-label">Source:</label>
+                <select id="sourceFilter" class="filter-select">
+                    <option value="">All Sources</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Type:</label>
+                <select id="typeFilter" class="filter-select">
+                    <option value="">All Types</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Step:</label>
+                <select id="stepFilter" class="filter-select">
+                    <option value="">All Steps</option>
+                </select>
+            </div>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search text content...">
+            <button id="clearFilters" class="clear-filters">Clear Filters</button>
+        </div>
+
+        <div class="table-container">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">ID</th>
+                            <th class="sortable" data-sort="source">Source</th>
+                            <th class="sortable" data-sort="step" style="width: 80px;">Step</th>
+                            <th class="sortable" data-sort="contentType">Type</th>
+                            <th>Text Content</th>
+                            <th style="width: 100px;">Scope</th>
+                            <th style="width: 80px;">Chunk</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="7">
+                                <div class="loading">
+                                    <div class="loading-spinner"></div>
+                                    <p>Loading memory entries...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="pagination" style="display: none;">
+                <span class="pagination-info" id="paginationInfo">Showing 1-100 of 857 entries</span>
+                <div class="pagination-controls" id="paginationControls"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Memory Entry Details</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let allEntries = [];
+        let filteredEntries = [];
+        let currentPage = 1;
+        const pageSize = 50;
+        let sortField = null;
+        let sortDirection = 'asc';
+        let filters = {
+            sources: [],
+            contentTypes: [],
+            steps: []
+        };
+
+        // DOM Elements
+        const tableBody = document.getElementById('tableBody');
+        const sourceFilter = document.getElementById('sourceFilter');
+        const typeFilter = document.getElementById('typeFilter');
+        const stepFilter = document.getElementById('stepFilter');
+        const searchInput = document.getElementById('searchInput');
+        const clearFilters = document.getElementById('clearFilters');
+        const pagination = document.getElementById('pagination');
+        const paginationInfo = document.getElementById('paginationInfo');
+        const paginationControls = document.getElementById('paginationControls');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalBody = document.getElementById('modalBody');
+        const modalClose = document.getElementById('modalClose');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadMemoryEntries();
+            setupEventListeners();
+        });
+
+        // Load all memory entries
+        async function loadMemoryEntries() {
+            try {
+                const response = await fetch('/api/memory?limit=1000');
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                allEntries = data.entries;
+                filteredEntries = [...allEntries];
+                filters = data.filters;
+
+                // Update stats
+                document.getElementById('totalEntries').textContent = data.total.toLocaleString();
+                document.getElementById('totalSources').textContent = filters.sources.length;
+                document.getElementById('totalTypes').textContent = filters.contentTypes.length;
+                document.getElementById('totalSteps').textContent = filters.steps.length;
+
+                // Populate filter dropdowns
+                populateFilters();
+
+                // Render table
+                renderTable();
+
+            } catch (error) {
+                showError('Failed to connect to server: ' + error.message);
+            }
+        }
+
+        // Populate filter dropdowns
+        function populateFilters() {
+            // Sources
+            sourceFilter.innerHTML = '<option value="">All Sources</option>';
+            filters.sources.forEach(source => {
+                const option = document.createElement('option');
+                option.value = source;
+                option.textContent = source;
+                sourceFilter.appendChild(option);
+            });
+
+            // Content Types
+            typeFilter.innerHTML = '<option value="">All Types</option>';
+            filters.contentTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = formatContentType(type);
+                typeFilter.appendChild(option);
+            });
+
+            // Steps
+            stepFilter.innerHTML = '<option value="">All Steps</option>';
+            filters.steps.forEach(step => {
+                const option = document.createElement('option');
+                option.value = step;
+                option.textContent = `Step ${String(step).padStart(2, '0')}`;
+                stepFilter.appendChild(option);
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            sourceFilter.addEventListener('change', applyFilters);
+            typeFilter.addEventListener('change', applyFilters);
+            stepFilter.addEventListener('change', applyFilters);
+            searchInput.addEventListener('input', debounce(applyFilters, 300));
+            clearFilters.addEventListener('click', resetFilters);
+
+            // Sorting
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => handleSort(th.dataset.sort));
+            });
+
+            // Modal
+            modalClose.addEventListener('click', closeModal);
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) closeModal();
+            });
+
+            // Keyboard
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeModal();
+            });
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const sourceVal = sourceFilter.value;
+            const typeVal = typeFilter.value;
+            const stepVal = stepFilter.value;
+            const searchVal = searchInput.value.toLowerCase();
+
+            filteredEntries = allEntries.filter(entry => {
+                if (sourceVal && entry.source !== sourceVal) return false;
+                if (typeVal && entry.contentType !== typeVal) return false;
+                if (stepVal && entry.step !== parseInt(stepVal)) return false;
+                if (searchVal && !entry.text.toLowerCase().includes(searchVal)) return false;
+                return true;
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        // Reset filters
+        function resetFilters() {
+            sourceFilter.value = '';
+            typeFilter.value = '';
+            stepFilter.value = '';
+            searchInput.value = '';
+            filteredEntries = [...allEntries];
+            currentPage = 1;
+            renderTable();
+        }
+
+        // Handle sorting
+        function handleSort(field) {
+            if (sortField === field) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortField = field;
+                sortDirection = 'asc';
+            }
+
+            // Update header styles
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.classList.remove('asc', 'desc');
+                if (th.dataset.sort === sortField) {
+                    th.classList.add(sortDirection);
+                }
+            });
+
+            // Sort entries
+            filteredEntries.sort((a, b) => {
+                let aVal = a[field];
+                let bVal = b[field];
+
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+
+                if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            renderTable();
+        }
+
+        // Render table
+        function renderTable() {
+            if (filteredEntries.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <p>No entries found matching your filters.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                pagination.style.display = 'none';
+                return;
+            }
+
+            const start = (currentPage - 1) * pageSize;
+            const end = Math.min(start + pageSize, filteredEntries.length);
+            const pageEntries = filteredEntries.slice(start, end);
+
+            tableBody.innerHTML = pageEntries.map(entry => `
+                <tr data-id="${entry.id}" onclick="showEntryDetails('${entry.id}')">
+                    <td class="cell-id" title="${entry.id}">${truncateId(entry.id)}</td>
+                    <td class="cell-source">${entry.source}</td>
+                    <td class="cell-step">
+                        <span class="step-badge">${String(entry.step).padStart(2, '0')}</span>
+                    </td>
+                    <td class="cell-type">
+                        <span class="type-badge ${entry.contentType}">${formatContentType(entry.contentType)}</span>
+                    </td>
+                    <td class="cell-text">
+                        <div class="text-preview">${escapeHtml(entry.text)}</div>
+                    </td>
+                    <td class="cell-scope">
+                        ${formatScope(entry.personaScope)}
+                    </td>
+                    <td class="cell-chunk">${entry.chunkIndex + 1}/${entry.totalChunks}</td>
+                </tr>
+            `).join('');
+
+            // Update pagination
+            const totalPages = Math.ceil(filteredEntries.length / pageSize);
+            paginationInfo.textContent = `Showing ${start + 1}-${end} of ${filteredEntries.length} entries`;
+
+            if (totalPages > 1) {
+                pagination.style.display = 'flex';
+                renderPagination(totalPages);
+            } else {
+                pagination.style.display = 'none';
+            }
+        }
+
+        // Render pagination controls
+        function renderPagination(totalPages) {
+            let html = '';
+
+            html += `<button class="page-btn" onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>First</button>`;
+            html += `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Prev</button>`;
+
+            // Page numbers
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+
+            html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>`;
+            html += `<button class="page-btn" onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>Last</button>`;
+
+            paginationControls.innerHTML = html;
+        }
+
+        // Go to page
+        function goToPage(page) {
+            currentPage = page;
+            renderTable();
+            document.querySelector('.table-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Show entry details modal
+        function showEntryDetails(id) {
+            const entry = allEntries.find(e => e.id === id);
+            if (!entry) return;
+
+            modalBody.innerHTML = `
+                <div class="modal-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">ID</span>
+                        <span class="meta-value" style="font-family: monospace; font-size: 0.8rem;">${entry.id}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Source</span>
+                        <span class="meta-value" style="color: var(--cyan);">${entry.source}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Step</span>
+                        <span class="meta-value">${String(entry.step).padStart(2, '0')}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Content Type</span>
+                        <span class="meta-value">${formatContentType(entry.contentType)}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Persona Scope</span>
+                        <span class="meta-value">${entry.personaScope ? entry.personaScope.join(', ') : 'all'}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Chunk</span>
+                        <span class="meta-value">${entry.chunkIndex + 1} of ${entry.totalChunks}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Version</span>
+                        <span class="meta-value">${entry.version}</span>
+                    </div>
+                </div>
+                <div class="modal-text">${escapeHtml(entry.text)}</div>
+            `;
+
+            modalOverlay.classList.add('active');
+        }
+
+        // Close modal
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+        }
+
+        // Show error
+        function showError(message) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        <div class="error-state">
+                            <p>${escapeHtml(message)}</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Helper functions
+        function truncateId(id) {
+            if (typeof id === 'string' && id.length > 8) {
+                return id.substring(0, 8) + '...';
+            }
+            return id;
+        }
+
+        function formatContentType(type) {
+            if (!type) return 'unknown';
+            return type.replace(/_/g, ' ');
+        }
+
+        function formatScope(scope) {
+            if (!scope || scope.length === 0) return '<span class="scope-tag">all</span>';
+            return scope.map(s => `<span class="scope-tag">${s}</span>`).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function debounce(fn, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+    </script>
+</body>
+</html>

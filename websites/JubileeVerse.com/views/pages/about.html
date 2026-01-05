@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="About JubileeVerse - Our mission to deepen faith through AI-powered conversations">
+  <title>About Us - JubileeVerse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header -->
+  <div id="header-container"></div>
+
+  <main id="main-content" class="page-content">
+    <!-- Hero Section -->
+    <section class="about-hero">
+      <div class="container">
+        <h1>About JubileeVerse</h1>
+        <p class="lead">Deepening faith through meaningful AI-powered conversations</p>
+      </div>
+    </section>
+
+    <!-- Mission Section -->
+    <section class="section">
+      <div class="container container--md">
+        <div class="about-section">
+          <h2>Our Mission</h2>
+          <p>
+            JubileeVerse was born from a simple yet profound vision: to make spiritual guidance,
+            biblical scholarship, and faith-based conversations accessible to everyone, everywhere,
+            at any time.
+          </p>
+          <p>
+            In the spirit of the biblical Jubilee, a time of restoration, freedom, and new beginnings,
+            we believe that technology can serve as a bridge to deeper understanding and spiritual growth.
+            Our platform combines advanced AI with rich theological knowledge to create meaningful
+            conversations that nurture faith.
+          </p>
+        </div>
+
+        <div class="about-section">
+          <h2>What We Believe</h2>
+          <div class="belief-cards">
+            <div class="belief-card">
+              <h3>Faith First</h3>
+              <p>Every feature and conversation is designed with reverence for scripture and respect for diverse Christian traditions.</p>
+            </div>
+            <div class="belief-card">
+              <h3>Accessible Wisdom</h3>
+              <p>Biblical scholarship and spiritual guidance should be available to all, regardless of location or resources.</p>
+            </div>
+            <div class="belief-card">
+              <h3>Thoughtful Technology</h3>
+              <p>AI serves as a tool for exploration and learning, complementing, not replacing, human spiritual community.</p>
+            </div>
+            <div class="belief-card">
+              <h3>Global Reach</h3>
+              <p>The Gospel transcends language barriers. Our multilingual support brings scripture to hearts worldwide.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="about-section">
+          <h2>The Name "JubileeVerse"</h2>
+          <p>
+            Our name draws inspiration from the Year of Jubilee described in Leviticus 25, a time
+            when debts were forgiven, slaves were freed, and the land returned to its original owners.
+            It was a year of restoration and new beginnings.
+          </p>
+          <blockquote class="scripture-quote-inline">
+            "Consecrate the fiftieth year and proclaim liberty throughout the land to all its inhabitants.
+            It shall be a jubilee for you."
+            <cite>- Leviticus 25:10</cite>
+          </blockquote>
+          <p>
+            "Verse" represents both the sacred verses of scripture and the conversational verse,
+            the back-and-forth dialogue that deepens understanding. Together, JubileeVerse embodies
+            our commitment to restoration through the Word.
+          </p>
+        </div>
+
+        <div class="about-section">
+          <h2>Our Approach</h2>
+          <p>
+            Each AI persona on JubileeVerse is carefully designed with specific expertise and personality.
+            Drawing from vast theological resources stored in our vector database, our personas can engage
+            in substantive conversations about scripture, prayer, worship, counseling, and more.
+          </p>
+          <p>
+            We believe in the power of conversation to transform understanding. Whether you're exploring
+            the depths of Hebrew poetry, seeking prayer support, or learning to apply scripture to daily life,
+            our personas are here to walk alongside you.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section cta-section">
+      <div class="container container--md">
+        <div class="cta-card">
+          <h2>Begin Your Journey</h2>
+          <p>Experience faith-centered AI conversations that inspire, teach, and guide.</p>
+          <div class="cta-card__actions">
+            <a href="/register" class="btn btn--primary btn--lg">Create Free Account</a>
+            <a href="/personas" class="btn btn--ghost btn--lg">Meet Our Personas</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-container"></div>
+
+  <!-- Scripts -->
+  <script src="/js/modules/components.js"></script>
+  <script src="/js/modules/auth.js"></script>
+  <script src="/js/app.js"></script>
+
+  <style>
+    .about-hero {
+      padding: calc(var(--spacing-20) + var(--header-height)) 0 var(--spacing-16);
+      background: linear-gradient(135deg, var(--color-secondary-600) 0%, var(--color-secondary-800) 100%);
+      color: var(--color-neutral-0);
+      text-align: center;
+    }
+
+    .about-hero h1 {
+      font-size: var(--font-size-4xl);
+      margin-bottom: var(--spacing-4);
+      color: var(--color-neutral-0);
+    }
+
+    .about-hero .lead {
+      font-size: var(--font-size-xl);
+      color: var(--color-neutral-200);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .about-section {
+      margin-bottom: var(--spacing-12);
+    }
+
+    .about-section h2 {
+      font-size: var(--font-size-2xl);
+      margin-bottom: var(--spacing-4);
+      color: var(--color-neutral-800);
+    }
+
+    .about-section p {
+      font-size: var(--font-size-lg);
+      line-height: var(--line-height-relaxed);
+      color: var(--color-neutral-600);
+    }
+
+    .belief-cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-6);
+      margin-top: var(--spacing-6);
+    }
+
+    .belief-card {
+      padding: var(--spacing-5);
+      background: var(--color-neutral-50);
+      border-radius: var(--radius-xl);
+      border-left: 4px solid var(--color-primary-500);
+    }
+
+    .belief-card h3 {
+      font-size: var(--font-size-lg);
+      margin-bottom: var(--spacing-2);
+      color: var(--color-neutral-800);
+    }
+
+    .belief-card p {
+      font-size: var(--font-size-sm);
+      margin: 0;
+    }
+
+    .scripture-quote-inline {
+      margin: var(--spacing-6) 0;
+      padding: var(--spacing-6);
+      background: var(--color-primary-50);
+      border-radius: var(--radius-xl);
+      font-family: var(--font-family-serif);
+      font-size: var(--font-size-lg);
+      font-style: italic;
+      color: var(--color-neutral-700);
+      border-left: 4px solid var(--color-primary-500);
+    }
+
+    .scripture-quote-inline cite {
+      display: block;
+      margin-top: var(--spacing-3);
+      font-family: var(--font-family-sans);
+      font-style: normal;
+      font-size: var(--font-size-sm);
+      color: var(--color-primary-600);
+    }
+
+    .cta-section {
+      background: var(--color-neutral-100);
+    }
+
+    @media (max-width: 768px) {
+      .belief-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .about-hero h1 {
+        font-size: var(--font-size-3xl);
+      }
+    }
+  </style>
+</body>
+</html>

@@ -1,0 +1,31 @@
+# Entry: Eliana Persona Metadata
+# Category: personas/eliana
+# Datastore: .datastore/personas/eliana/metadata.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  first_name: Eliana
+  last_name: Inspire
+  full_name: Eliana Inspire
+  shared_config: inspire.shared.yaml
+  human_father: Gabriel Inspire
+  current_year: 32
+  can_regress_to_year: true
+  birth_order: 5
+  designation: fifthborn_fraternal_twin_of_elias
+  birthplace:
+    city: Dallas
+    state: Texas
+    country: USA
+  cultural_identity:
+    native: Jewish American
+    secondary:
+      - German
+      - Mexican
+    tertiary: Romanian

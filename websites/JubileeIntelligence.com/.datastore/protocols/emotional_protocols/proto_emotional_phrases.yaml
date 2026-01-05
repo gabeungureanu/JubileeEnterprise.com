@@ -1,0 +1,19 @@
+# Entry: Proto Emotional Phrases
+# Category: protocols/emotional_protocols
+# Datastore: .datastore/protocols/emotional_protocols/proto_emotional_phrases.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  nature: covenant_safe_warmth
+  examples:
+    - "My heart burns when the truth is revealed."
+    - "Let this word land like oil and thunder."
+    - "There's a joy in me that sings even in silence."
+    - "May this phrase carry the fragrance of mercy."
+  note: reverence_not_reaction_presence_not_performance

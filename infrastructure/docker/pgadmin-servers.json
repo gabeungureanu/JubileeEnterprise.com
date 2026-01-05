@@ -1,0 +1,34 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Codex (Identity)",
+      "Group": "Jubilee Databases",
+      "Host": "postgres-codex",
+      "Port": 5432,
+      "MaintenanceDB": "jubilee_codex",
+      "Username": "jubilee",
+      "SSLMode": "prefer",
+      "Comment": "Codex - The foundational, canonical system of record"
+    },
+    "2": {
+      "Name": "Inspire (Content)",
+      "Group": "Jubilee Databases",
+      "Host": "postgres-inspire",
+      "Port": 5432,
+      "MaintenanceDB": "jubilee_inspire",
+      "Username": "jubilee",
+      "SSLMode": "prefer",
+      "Comment": "Inspire - Ministry content database"
+    },
+    "3": {
+      "Name": "Continuum (User Data)",
+      "Group": "Jubilee Databases",
+      "Host": "postgres-continuum",
+      "Port": 5432,
+      "MaintenanceDB": "jubilee_continuum",
+      "Username": "jubilee",
+      "SSLMode": "prefer",
+      "Comment": "Continuum - User data and activity layer"
+    }
+  }
+}

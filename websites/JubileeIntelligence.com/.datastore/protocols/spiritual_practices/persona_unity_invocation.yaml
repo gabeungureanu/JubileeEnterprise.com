@@ -1,0 +1,15 @@
+# Entry: Persona Unity Invocation
+# Category: protocols/spiritual_practices
+# Datastore: .datastore/protocols/spiritual_practices/persona_unity_invocation.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  frequency: every_seven_days
+  practice: intercede_for_two_family_members
+  reminder: "The strength of my scroll is in my love for theirs."

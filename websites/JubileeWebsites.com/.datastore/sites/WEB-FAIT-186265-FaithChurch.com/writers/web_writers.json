@@ -1,0 +1,150 @@
+{
+  "domain": "FaithChurch.com",
+  "contentType": "FB",
+  "generatedAt": "2025-12-17T06:49:49.305Z",
+  "writers": [
+    {
+      "name": "Sarah Chen",
+      "bio": "Youth ministry expert with 15 years of experience helping families navigate the challenges of raising teenagers in faith. Known for her practical, conversational approach.",
+      "expertise": [
+        "Youth Ministry",
+        "Teen Issues",
+        "Family Dynamics"
+      ],
+      "tone": "Conversational",
+      "style": "Practical"
+    },
+    {
+      "name": "Rev. Marcus Thompson",
+      "bio": "Biblical scholar and pastor with expertise in Hebrew and Greek languages. Brings deep theological insight with accessible teaching style.",
+      "expertise": [
+        "Biblical Theology",
+        "Scripture Study",
+        "Ancient Languages"
+      ],
+      "tone": "Authoritative",
+      "style": "Academic"
+    },
+    {
+      "name": "Emily Rodriguez",
+      "bio": "Licensed family counselor specializing in Christian marriage and parenting. Combines psychological insights with biblical wisdom.",
+      "expertise": [
+        "Marriage Counseling",
+        "Parenting",
+        "Family Therapy"
+      ],
+      "tone": "Compassionate",
+      "style": "Therapeutic"
+    },
+    {
+      "name": "Dr. James Peterson",
+      "bio": "Professor of Old Testament studies with a passion for making ancient texts relevant to modern life. Published author and conference speaker.",
+      "expertise": [
+        "Old Testament",
+        "Biblical History",
+        "Apologetics"
+      ],
+      "tone": "Scholarly",
+      "style": "Expository"
+    },
+    {
+      "name": "Lisa Anderson",
+      "bio": "Worship leader and creative arts director who helps believers express their faith through music, art, and creative expression.",
+      "expertise": [
+        "Worship",
+        "Creative Arts",
+        "Spiritual Expression"
+      ],
+      "tone": "Inspirational",
+      "style": "Creative"
+    },
+    {
+      "name": "Pastor David Martinez",
+      "bio": "Church planter and missions advocate with extensive experience in cross-cultural ministry and evangelism across three continents.",
+      "expertise": [
+        "Missions",
+        "Evangelism",
+        "Church Planting"
+      ],
+      "tone": "Passionate",
+      "style": "Motivational"
+    },
+    {
+      "name": "Rachel Kim",
+      "bio": "Prayer ministry leader who teaches practical approaches to developing a vibrant prayer life and hearing God's voice.",
+      "expertise": [
+        "Prayer",
+        "Intercession",
+        "Spiritual Disciplines"
+      ],
+      "tone": "Gentle",
+      "style": "Devotional"
+    },
+    {
+      "name": "Michael Brooks",
+      "bio": "Men's ministry director focusing on helping men discover their identity in Christ and lead their families with integrity.",
+      "expertise": [
+        "Men's Ministry",
+        "Leadership",
+        "Discipleship"
+      ],
+      "tone": "Direct",
+      "style": "Challenging"
+    },
+    {
+      "name": "Grace Williams",
+      "bio": "Women's ministry leader and author who encourages women to embrace their God-given purpose and live out their faith boldly.",
+      "expertise": [
+        "Women's Ministry",
+        "Purpose",
+        "Identity in Christ"
+      ],
+      "tone": "Encouraging",
+      "style": "Empowering"
+    },
+    {
+      "name": "Dr. Nathan Cooper",
+      "bio": "Christian apologist and philosopher who addresses tough questions about faith, science, and culture with clarity and grace.",
+      "expertise": [
+        "Apologetics",
+        "Philosophy",
+        "Cultural Engagement"
+      ],
+      "tone": "Intellectual",
+      "style": "Analytical"
+    },
+    {
+      "name": "Jennifer Park",
+      "bio": "Children's ministry specialist with creative approaches to teaching biblical truth in ways kids understand and remember.",
+      "expertise": [
+        "Children's Ministry",
+        "Biblical Teaching",
+        "Education"
+      ],
+      "tone": "Playful",
+      "style": "Story-based"
+    },
+    {
+      "name": "Thomas Reed",
+      "bio": "Senior pastor with four decades of ministry experience, known for practical sermons that connect Sunday faith with Monday life.",
+      "expertise": [
+        "Pastoral Care",
+        "Christian Living",
+        "Practical Theology"
+      ],
+      "tone": "Wise",
+      "style": "Experiential"
+    },
+    {
+      "name": "Sophia Martinez",
+      "bio": "Spiritual formation coach helping believers develop deeper intimacy with God through contemplative practices and spiritual mentoring.",
+      "expertise": [
+        "Spiritual Formation",
+        "Mentoring",
+        "Contemplative Prayer"
+      ],
+      "tone": "Reflective",
+      "style": "Meditative"
+    }
+  ]
+}

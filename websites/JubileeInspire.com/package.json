@@ -1,0 +1,18 @@
+{
+  "name": "@jubilee/inspire",
+  "version": "0.1.0",
+  "description": "Jubilee Inspire - Coming Soon",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "PORT=3003 node server.js",
+    "dev": "PORT=3003 node --watch server.js",
+    "build": "echo 'No build configured yet'",
+    "clean": "echo 'No clean configured yet'"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

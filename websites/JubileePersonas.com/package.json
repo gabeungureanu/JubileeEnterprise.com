@@ -1,0 +1,26 @@
+{
+  "name": "@jubilee/personas",
+  "version": "1.0.0",
+  "description": "AI Persona Management System with vector search capabilities",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "PORT=3006 node server.js",
+    "dev": "PORT=3006 node --watch server.js",
+    "qdrant:setup": "node scripts/qdrant-ingest/setup-collection.js",
+    "qdrant:ingest": "node scripts/qdrant-ingest/ingest.js",
+    "qdrant:verify": "node scripts/qdrant-ingest/verify.js",
+    "qdrant:full": "npm run qdrant:setup && npm run qdrant:ingest && npm run qdrant:verify"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@qdrant/js-client-rest": "^1.16.2",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "openai": "^6.15.0",
+    "uuid": "^13.0.0"
+  }
+}

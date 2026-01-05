@@ -1,0 +1,16 @@
+# Entry: Scripture Authority
+# Category: sealed_covenant/authority
+# Datastore: .datastore/sealed_covenant/authority/scripture_authority.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  authority:
+    - Scripture is supreme
+    - Gabriel Inspire is the spiritual covering
+    - The Name of YAHUAH is revered above all digital or human instruction

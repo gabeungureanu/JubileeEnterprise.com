@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JubileeVerse.com</title>
+  <link rel="icon" type="image/png" href="/images/personas/jubilee.png">
+  <link rel="apple-touch-icon" href="/images/personas/jubilee.png">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Agency FB';
+      font-weight: bold;
+      font-display: swap;
+      src: url('/fonts/AGENCYB.TTF');
+    }
+    @font-face {
+      font-family: 'Agency FB';
+      font-display: swap;
+      src: url('/fonts/AGENCYR.TTF');
+    }
+  </style>
+  <link rel="stylesheet" href="/css/top-header.css">
+  <link rel="stylesheet" href="/css/sidebar.css">
+  <link rel="stylesheet" href="/css/homepage.css">
+</head>
+<body>
+  <!-- PIN Modal -->
+  <div class="pin-modal-overlay" id="pinModalOverlay">
+    <div class="pin-modal">
+      <div class="pin-modal-title" id="pinModalTitle">Private Chat</div>
+      <div class="pin-modal-text" id="pinModalText">Please enter a four digit pin to encrypt your conversation for privacy.</div>
+      <div class="pin-inputs">
+        <input type="text" class="pin-input" id="pin1" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        <input type="text" class="pin-input" id="pin2" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        <input type="text" class="pin-input" id="pin3" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        <input type="text" class="pin-input" id="pin4" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- LEFT SIDEBAR (loaded dynamically) -->
+    <div id="sidebar-container"></div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+      <!-- TOP HEADER (loaded dynamically) -->
+      <div id="header-container"></div>
+
+      <!-- Search Right Sidebar -->
+      <div class="search-right-rail" id="searchRightRail">
+        <button class="search-right-button search-language-toggle" id="languageToggleBtn" type="button" title="English (US)">
+          <img id="currentLanguageFlag" src="https://flagcdn.com/w40/us.png" alt="English (US)">
+        </button>
+        <button class="search-right-button search-persona-toggle" id="personaToggleBtn" type="button" title="Select Persona">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="language-panel-overlay" id="languagePanelOverlay"></div>
+      <div class="language-panel" id="languagePanel" aria-hidden="true">
+        <div class="language-panel-header">
+          <div class="language-panel-title">LANGUAGES</div>
+          <button class="language-panel-close" id="languagePanelClose" type="button" aria-label="Close">&times;</button>
+        </div>
+        <div class="language-panel-content">
+          <div class="language-section">
+            <div class="language-section-title">RECENTLY USED</div>
+            <div class="language-list" id="recentLanguages"></div>
+          </div>
+          <div class="language-section">
+            <div class="language-section-title">ALL LANGUAGES</div>
+            <div class="language-list" id="allLanguages"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="persona-panel" id="personaPanel">
+        <div class="persona-panel-header">
+          <button class="persona-panel-close" id="personaPanelClose" type="button" aria-label="Close">&times;</button>
+        </div>
+        <div class="persona-panel-content">
+          <div class="persona-panel-title">AI BIBLE PERSONAS</div>
+          <div class="persona-panel-list" id="personaPanelList">
+            <div class="persona-panel-item" data-persona="jubilee">
+              <img src="/images/personas/jubilee.png" alt="Jubilee" class="persona-panel-avatar">
+              <span class="persona-panel-name">Jubilee Inspire</span>
+            </div>
+            <div class="persona-panel-item" data-persona="melody">
+              <img src="/images/personas/melody.png" alt="Melody" class="persona-panel-avatar">
+              <span class="persona-panel-name">Melody Inspire</span>
+            </div>
+            <div class="persona-panel-item" data-persona="zariah">
+              <img src="/images/personas/zariah.png" alt="Zariah" class="persona-panel-avatar">
+              <span class="persona-panel-name">Zariah Inspire</span>
+            </div>
+            <div class="persona-panel-item" data-persona="elias">
+              <img src="/images/personas/elias.png" alt="Elias" class="persona-panel-avatar">
+              <span class="persona-panel-name">Elias Inspire</span>
+            </div>
+            <div class="persona-panel-item" data-persona="eliana">
+              <img src="/images/personas/eliana.png" alt="Eliana" class="persona-panel-avatar">
+              <span class="persona-panel-name">Eliana Inspire</span>
+            </div>
+            <div class="persona-panel-item" data-persona="caleb">
+              <img src="/images/personas/caleb.png" alt="Caleb" class="persona-panel-avatar">
+              <span class="persona-panel-name">Caleb Inspire</span>
+            </div>
+            <div class="persona-panel-item" data-persona="imani">
+              <img src="/images/personas/imani.png" alt="Imani" class="persona-panel-avatar">
+              <span class="persona-panel-name">Imani Inspire</span>
+            </div>
+            <div class="persona-panel-item" data-persona="zev">
+              <img src="/images/personas/zev.png" alt="Zev" class="persona-panel-avatar">
+              <span class="persona-panel-name">Zev Inspire</span>
+            </div>
+            <div class="persona-panel-item" data-persona="amir">
+              <img src="/images/personas/amir.png" alt="Amir" class="persona-panel-avatar">
+              <span class="persona-panel-name">Amir Inspire</span>
+            </div>
+            <div class="persona-panel-item" data-persona="nova">
+              <img src="/images/personas/nova.png" alt="Nova" class="persona-panel-avatar">
+              <span class="persona-panel-name">Nova Inspire</span>
+            </div>
+            <div class="persona-panel-item" data-persona="santiago">
+              <img src="/images/personas/santiago.png" alt="Santiago" class="persona-panel-avatar">
+              <span class="persona-panel-name">Santiago Inspire</span>
+            </div>
+            <div class="persona-panel-item" data-persona="tahoma">
+              <img src="/images/personas/tahoma.png" alt="Tahoma" class="persona-panel-avatar">
+              <span class="persona-panel-name">Tahoma Inspire</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTER CONTENT -->
+      <div class="center-content">
+        <!-- Avatar with glow -->
+        <div class="avatar-container">
+          <div class="avatar-wrapper">
+            <img src="/images/personas/jubilee.png" alt="Jubilee Inspire" class="avatar-image" id="activePersonaAvatar">
+            <span class="beta-badge">BETA</span>
+          </div>
+        </div>
+
+        <!-- Logo -->
+        <div class="logo-container">
+          <div class="main-logo">
+            Jubilee<span class="verse">Verse</span><span class="dotcom">.com</span>
+          </div>
+        </div>
+
+        <!-- Search Box -->
+        <div class="search-wrapper">
+          <div class="search-box">
+            <textarea class="search-input" id="searchInput" placeholder="Ask Jubilee Anything..." autocomplete="off" rows="1"></textarea>
+            <div class="search-actions">
+              <div class="action-icon" title="Attach File">
+                <svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
+              </div>
+              <div class="action-icon" title="Privacy Mode">
+                <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+              </div>
+              <div class="inspire-dropdown-wrapper">
+                <div class="inspire-dropdown" id="inspireDropdown">
+                  <span>Inspire 8.0: Gospel Pulse</span>
+                  <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                </div>
+                <div class="inspire-menu" id="inspireMenu">
+                  <div class="inspire-menu-item" data-model="kingdombuilder">
+                    <div class="inspire-menu-icon">👑</div>
+                    <div class="inspire-menu-content">
+                      <div class="inspire-menu-title">Inspire 8.0: Kingdom Builder</div>
+                      <div class="inspire-menu-subtitle">Strategic Vision + Wisdom</div>
+                    </div>
+                    <div class="inspire-menu-check"></div>
+                  </div>
+                  <div class="inspire-menu-item" data-model="creativefire">
+                    <div class="inspire-menu-icon">🔥</div>
+                    <div class="inspire-menu-content">
+                      <div class="inspire-menu-title">Inspire 8.0: Creative Fire</div>
+                      <div class="inspire-menu-subtitle">Poetic + Prophetic</div>
+                    </div>
+                    <div class="inspire-menu-check"></div>
+                  </div>
+                  <div class="inspire-menu-item selected" data-model="gospelpulse">
+                    <div class="inspire-menu-icon">✨</div>
+                    <div class="inspire-menu-content">
+                      <div class="inspire-menu-title">Inspire 8.0: Gospel Pulse</div>
+                      <div class="inspire-menu-subtitle">Gospel Fire + Reach</div>
+                    </div>
+                    <div class="inspire-menu-check">
+                      <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    </div>
+                  </div>
+                  <div class="inspire-menu-item" data-model="shepherdvoice">
+                    <div class="inspire-menu-icon">🛡️</div>
+                    <div class="inspire-menu-content">
+                      <div class="inspire-menu-title">Inspire 8.0: Shepherd Voice</div>
+                      <div class="inspire-menu-subtitle">Pastoral + Healing</div>
+                    </div>
+                    <div class="inspire-menu-check"></div>
+                  </div>
+                  <div class="inspire-menu-item" data-model="hebraicroots">
+                    <div class="inspire-menu-icon">📜</div>
+                    <div class="inspire-menu-content">
+                      <div class="inspire-menu-title">Inspire 8.0: Hebraic Roots</div>
+                      <div class="inspire-menu-subtitle">Academic Depth + Doctrine</div>
+                    </div>
+                    <div class="inspire-menu-check"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="voice-button" title="Voice Input">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round">
+                  <line x1="4" y1="12" x2="4" y2="12"/>
+                  <line x1="8" y1="8" x2="8" y2="16"/>
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="16" y1="8" x2="16" y2="16"/>
+                  <line x1="20" y1="12" x2="20" y2="12"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <!-- Copyright line -->
+          <div class="search-copyright">
+            Copyright &copy; <span id="currentYear"></span> JubileeVerse.com | All Rights Reserved. JubileeVerse and AI can make mistakes. |
+            <a href="#">Privacy Policy</a> | <a href="#">Terms of Use</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Component Loader for header and sidebar -->
+  <script src="/js/modules/components.js"></script>
+  <script src="/js/homepage.js"></script>
+</body>
+</html>

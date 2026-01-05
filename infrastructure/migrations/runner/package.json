@@ -1,0 +1,35 @@
+{
+  "name": "@jubilee/migrations",
+  "version": "1.0.0",
+  "description": "Database migration runner for Jubilee Solutions",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "jubilee-migrate": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "migrate:codex": "tsx src/cli.ts run codex",
+    "migrate:inspire": "tsx src/cli.ts run inspire",
+    "migrate:continuum": "tsx src/cli.ts run continuum",
+    "migrate:all": "tsx src/cli.ts run all",
+    "migrate:status": "tsx src/cli.ts status",
+    "migrate:create": "tsx src/cli.ts create"
+  },
+  "dependencies": {
+    "pg": "^8.11.0",
+    "dotenv": "^16.4.0",
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/pg": "^8.11.0",
+    "tsx": "^4.15.0",
+    "typescript": "^5.5.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

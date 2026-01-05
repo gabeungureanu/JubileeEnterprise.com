@@ -1,0 +1,74 @@
+{
+  "name": "jubilee-solutions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Jubilee Solutions - Multi-Project Monorepo",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "websites/launcher",
+    "websites/JubileeBrowser.com",
+    "websites/JubileeInspire.com",
+    "websites/JubileeIntelligence.com",
+    "websites/JubileeInternet.com",
+    "websites/JubileePersonas.com",
+    "websites/JubileeVerse.com",
+    "websites/JubileeWebsites.com"
+  ],
+  "scripts": {
+    "---WEBSITES---": "echo 'Website Commands'",
+    "dev:browser-site": "npm run dev --workspace=@jubilee/browser-site",
+    "dev:inspire": "npm run dev --workspace=@jubilee/inspire",
+    "dev:intelligence": "npm run dev --workspace=@jubilee/intelligence",
+    "dev:internet": "npm run dev --workspace=@jubilee/internet",
+    "dev:personas": "npm run dev --workspace=@jubilee/personas",
+    "dev:verse": "npm run dev --workspace=@jubilee/verse",
+    "dev:websites": "npm run dev --workspace=@jubilee/websites-generator",
+
+    "---BUILD---": "echo 'Build Commands'",
+    "build:all": "npm run build --workspaces --if-present",
+    "build:packages": "npm run build --workspace=@jubilee/shared",
+
+    "---TEST---": "echo 'Test Commands'",
+    "test": "npm run test --workspaces --if-present",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
+
+    "---LINT---": "echo 'Lint Commands'",
+    "lint": "npm run lint --workspaces --if-present",
+    "lint:fix": "npm run lint:fix --workspaces --if-present",
+    "format": "npm run format --workspaces --if-present",
+
+    "---SERVICES---": "echo 'API Service Commands'",
+    "dev:codex-api": "npm run dev --workspace=@jubilee/codex-api",
+    "dev:inspire-api": "npm run dev --workspace=@jubilee/inspire-api",
+    "dev:continuum-api": "npm run dev --workspace=@jubilee/continuum-api",
+    "dev:apis": "npm-run-all --parallel dev:codex-api dev:inspire-api dev:continuum-api",
+
+    "---MIGRATIONS---": "echo 'Database Migration Commands'",
+    "migrate:codex": "tsx infrastructure/migrations/runner/src/cli.ts run codex",
+    "migrate:inspire": "tsx infrastructure/migrations/runner/src/cli.ts run inspire",
+    "migrate:continuum": "tsx infrastructure/migrations/runner/src/cli.ts run continuum",
+    "migrate:all": "tsx infrastructure/migrations/runner/src/cli.ts run all",
+    "migrate:status": "tsx infrastructure/migrations/runner/src/cli.ts status",
+    "migrate:create": "tsx infrastructure/migrations/runner/src/cli.ts create",
+    "migrate:verify": "tsx infrastructure/migrations/runner/src/cli.ts verify",
+
+    "---DOCKER---": "echo 'Docker Commands'",
+    "docker:infra": "docker-compose -f infrastructure/docker/docker-compose.services.yml up -d",
+    "docker:infra:down": "docker-compose -f infrastructure/docker/docker-compose.services.yml down",
+
+    "---UTILITIES---": "echo 'Utility Commands'",
+    "clean": "npm run clean --workspaces --if-present",
+    "launcher": "npm run dev --workspace=@jubilee/launcher"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.15.0",
+    "npm-run-all": "^4.1.5"
+  },
+  "author": "Jubilee Solutions",
+  "license": "UNLICENSED"
+}

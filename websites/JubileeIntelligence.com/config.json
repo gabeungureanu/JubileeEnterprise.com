@@ -1,0 +1,20 @@
+{
+  "version": "8.00.101",
+  "qdrant": {
+    "url": "http://localhost:6333",
+    "apiKey": null,
+    "collections": {
+      "personas": "Inspire_vP",
+      "system": "Inspire_vS"
+    },
+    "vectorSize": 1536,
+    "distance": "Cosine"
+  },
+  "embedding": {
+    "provider": "openai",
+    "model": "text-embedding-3-small"
+  },
+  "overlay": {
+    "dbPath": "./data/overlay.db"
+  }
+}

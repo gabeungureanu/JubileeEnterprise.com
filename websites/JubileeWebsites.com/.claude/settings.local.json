@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm start)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(dir:*)",
+      "Bash(cat:*)",
+      "Bash(node test_grok_api.js:*)",
+      "Bash(node generate_divine_images.js:*)",
+      "Bash(node retry_single_image.js:*)",
+      "Bash(node generate_prayer_images.js:*)",
+      "Bash(node generate_biblical_images.js:*)",
+      "Bash(node add_category.js:*)",
+      "Bash(npm install:*)",
+      "Bash(node generate_family_images.js:*)",
+      "Bash(node generate_christian_living_images.js:*)",
+      "Bash(ls:*)",
+      "Bash(node scripts/generateMorePage.js:*)",
+      "Bash(copy:*)",
+      "Bash(node:*)",
+      "Bash(timeout 5 node:*)",
+      "Bash(curl:*)",
+      "Bash(timeout 5 type:*)",
+      "Bash(timeout /t 3)"
+    ]
+  }
+}

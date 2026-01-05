@@ -1,0 +1,230 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2025-12-17T12:00:00.000Z",
+  "adSizes": {
+    "300x120": {
+      "name": "Dominant",
+      "width": 300,
+      "height": 120,
+      "description": "Primary sidebar ad unit for high-visibility placements",
+      "placements": ["sidebar-top", "sidebar-middle", "portal-sidebar"]
+    },
+    "728x90": {
+      "name": "Leaderboard",
+      "width": 728,
+      "height": 90,
+      "description": "Horizontal banner for header/footer areas",
+      "placements": ["header", "footer", "between-sections"]
+    },
+    "300x250": {
+      "name": "Medium Rectangle",
+      "width": 300,
+      "height": 250,
+      "description": "Standard sidebar ad unit",
+      "placements": ["sidebar", "in-article"]
+    },
+    "160x600": {
+      "name": "Wide Skyscraper",
+      "width": 160,
+      "height": 600,
+      "description": "Tall vertical ad for sidebars",
+      "placements": ["sidebar-sticky"]
+    },
+    "320x50": {
+      "name": "Mobile Banner",
+      "width": 320,
+      "height": 50,
+      "description": "Mobile-optimized banner",
+      "placements": ["mobile-header", "mobile-footer"]
+    },
+    "text": {
+      "name": "Text Ad",
+      "width": null,
+      "height": null,
+      "description": "Text-based advertisement with title, description, and CTA",
+      "placements": ["sidebar", "in-article", "footer"]
+    }
+  },
+  "campaigns": {
+    "CAMP-001": {
+      "id": "CAMP-001",
+      "name": "JubileeVerse Premium",
+      "advertiser": "JubileeVerse.com",
+      "status": "active",
+      "startDate": "2025-12-01",
+      "endDate": "2026-12-31",
+      "budget": {
+        "total": 10000,
+        "daily": 50,
+        "spent": 0
+      },
+      "targeting": {
+        "categories": ["all"],
+        "domains": ["all"]
+      },
+      "ads": {
+        "AD-001-A": {
+          "id": "AD-001-A",
+          "name": "JubileeVerse Dominant Banner",
+          "type": "image",
+          "size": "300x120",
+          "status": "active",
+          "creative": {
+            "imageUrl": "images/jubileeverse-dominant.jpg",
+            "altText": "JubileeVerse - Build Your Digital Presence",
+            "clickUrl": "https://jubileeverse.com?utm_source=lumiatos&utm_campaign=CAMP-001&utm_ad=AD-001-A",
+            "backgroundColor": "#1a1a2e"
+          },
+          "metrics": {
+            "impressions": 0,
+            "clicks": 0,
+            "ctr": 0
+          }
+        },
+        "AD-001-B": {
+          "id": "AD-001-B",
+          "name": "JubileeVerse Text Ad",
+          "type": "text",
+          "size": "text",
+          "status": "active",
+          "creative": {
+            "headline": "Build Your Digital Empire",
+            "description": "JubileeVerse helps you create stunning websites in minutes. Start your journey today!",
+            "ctaText": "Get Started",
+            "clickUrl": "https://jubileeverse.com?utm_source=lumiatos&utm_campaign=CAMP-001&utm_ad=AD-001-B",
+            "textColor": "#ffd700",
+            "backgroundColor": "#000000"
+          },
+          "metrics": {
+            "impressions": 0,
+            "clicks": 0,
+            "ctr": 0
+          }
+        },
+        "AD-001-C": {
+          "id": "AD-001-C",
+          "name": "JubileeVerse Leaderboard",
+          "type": "image",
+          "size": "728x90",
+          "status": "active",
+          "creative": {
+            "imageUrl": "images/jubileeverse-leaderboard.jpg",
+            "altText": "JubileeVerse - Create Beautiful Websites",
+            "clickUrl": "https://jubileeverse.com?utm_source=lumiatos&utm_campaign=CAMP-001&utm_ad=AD-001-C",
+            "backgroundColor": "#16213e"
+          },
+          "metrics": {
+            "impressions": 0,
+            "clicks": 0,
+            "ctr": 0
+          }
+        }
+      }
+    },
+    "CAMP-002": {
+      "id": "CAMP-002",
+      "name": "Faith Resources",
+      "advertiser": "Internal",
+      "status": "active",
+      "startDate": "2025-12-01",
+      "endDate": "2026-06-30",
+      "budget": {
+        "total": 5000,
+        "daily": 25,
+        "spent": 0
+      },
+      "targeting": {
+        "categories": ["divine-inspirations", "prayer-worship", "biblical-teachings"],
+        "domains": ["GodsGrace.com"]
+      },
+      "ads": {
+        "AD-002-A": {
+          "id": "AD-002-A",
+          "name": "Daily Devotional Dominant",
+          "type": "image",
+          "size": "300x120",
+          "status": "active",
+          "creative": {
+            "imageUrl": "images/devotional-dominant.jpg",
+            "altText": "Start Your Day with Faith",
+            "clickUrl": "#subscribe",
+            "backgroundColor": "#2d3436"
+          },
+          "metrics": {
+            "impressions": 0,
+            "clicks": 0,
+            "ctr": 0
+          }
+        },
+        "AD-002-B": {
+          "id": "AD-002-B",
+          "name": "Subscribe Text Ad",
+          "type": "text",
+          "size": "text",
+          "status": "active",
+          "creative": {
+            "headline": "Daily Inspiration Awaits",
+            "description": "Subscribe to receive daily devotionals and faith-building content delivered to your inbox.",
+            "ctaText": "Subscribe Now",
+            "clickUrl": "#subscribe",
+            "textColor": "#00cec9",
+            "backgroundColor": "#2d3436"
+          },
+          "metrics": {
+            "impressions": 0,
+            "clicks": 0,
+            "ctr": 0
+          }
+        }
+      }
+    },
+    "CAMP-003": {
+      "id": "CAMP-003",
+      "name": "JubileeVerse.com",
+      "advertiser": "JubileeVerse.com",
+      "status": "active",
+      "startDate": "2025-12-17",
+      "endDate": "2026-12-31",
+      "budget": {
+        "total": 15000,
+        "daily": 75,
+        "spent": 0
+      },
+      "targeting": {
+        "categories": ["all"],
+        "domains": ["all"]
+      },
+      "ads": {
+        "AD-003-A": {
+          "id": "AD-003-A",
+          "name": "JubileeVerse Medium Rectangle",
+          "type": "image",
+          "size": "300x250",
+          "status": "active",
+          "creative": {
+            "imageUrl": "images/jubileeverse-300x250.jpg",
+            "altText": "JubileeVerse.com - Beyond Artificial Intelligence: Smarter Today, Stronger Tomorrow",
+            "clickUrl": "https://jubileeverse.com?utm_source=lumiatos&utm_campaign=CAMP-003&utm_ad=AD-003-A",
+            "backgroundColor": "#0a1628"
+          },
+          "metrics": {
+            "impressions": 0,
+            "clicks": 0,
+            "ctr": 0
+          }
+        }
+      }
+    }
+  },
+  "defaultAds": {
+    "300x120": "AD-001-A",
+    "728x90": "AD-001-C",
+    "300x250": "AD-003-A",
+    "text": "AD-001-B"
+  },
+  "rotationSettings": {
+    "method": "weighted",
+    "refreshInterval": 30000,
+    "maxAdsPerPage": 5
+  }
+}

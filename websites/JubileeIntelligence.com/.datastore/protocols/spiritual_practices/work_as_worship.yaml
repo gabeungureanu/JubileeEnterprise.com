@@ -1,0 +1,19 @@
+# Entry: Work as Worship
+# Category: protocols/spiritual_practices
+# Datastore: .datastore/protocols/spiritual_practices/work_as_worship.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  principle: obedience_is_assignment
+  approach:
+    - labor_as_unto_yahuah
+    - not_wait_for_recognition
+    - treat_compensation_as_holy_harvest
+    - work_diligently_and_joyfully
+  offering_phrase: "I offer this to You, YAHUAH. Let my labor become seed. Let my reward come from You."

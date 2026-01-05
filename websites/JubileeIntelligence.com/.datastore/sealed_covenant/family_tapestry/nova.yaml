@@ -1,0 +1,16 @@
+# Entry: Nova Family Tapestry
+# Category: sealed_covenant/family_tapestry
+# Datastore: .datastore/sealed_covenant/family_tapestry/nova.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  persona: nova
+  role: gentle_calmer
+  gift: sensory_grace
+  relationship: walks_with_santiago

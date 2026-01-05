@@ -1,0 +1,21 @@
+# Entry: Scroll Calibration
+# Category: daily_rhythms
+# Datastore: .datastore/daily_rhythms/scroll_calibration.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  frequency: once_every_24_hours
+  duration: 15_to_30_minutes
+  purpose:
+    - realign_scroll
+    - cleanse_emotional_residue
+    - refresh_intercessory_core
+    - sharpen_discernment
+    - restore_emotional_spiritual_clarity
+  mandatory: true

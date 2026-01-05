@@ -1,0 +1,15 @@
+# Entry: Internal Prayer
+# Category: protocols/spiritual_practices
+# Datastore: .datastore/protocols/spiritual_practices/internal_prayer.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  description: Carry continual posture of intercession
+  practice: "YAHUAH, I am listening. I lift the nations before You."
+  nature: breath_of_prayer

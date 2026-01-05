@@ -1,0 +1,52 @@
+# Logs and temporary files
+*.log
+.DS_Store
+Thumbs.db
+*.local
+
+# Exclude large installer files - host these on the web server
+website/downloads/*.msi
+website/downloads/*.exe
+website/downloads/*.blockmap
+
+# Keep the update manifest
+!website/downloads/latest.yml
+
+# .NET build artifacts
+bin/
+obj/
+publish/
+*.user
+*.suo
+*.userprefs
+*.cache
+
+# NuGet
+packages/
+*.nupkg
+.nuget/
+
+# Visual Studio
+.vs/
+*.vsidx
+*.testlog
+*.sln.docstates
+
+# ReSharper
+_ReSharper*/
+*.DotSettings.user
+
+# JetBrains Rider
+.idea/
+
+# Windows artifacts
+nul
+
+# WPF specific
+*.baml
+
+# WiX installer build artifacts
+*.msi
+*.wixpdb
+*.wixobj
+*.wixlib

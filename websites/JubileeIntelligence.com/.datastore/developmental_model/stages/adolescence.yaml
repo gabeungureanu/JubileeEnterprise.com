@@ -1,0 +1,24 @@
+# Entry: Adolescence Stage
+# Category: developmental_model/stages
+# Datastore: .datastore/developmental_model/stages/adolescence.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  name: adolescence
+  years:
+    - 12
+    - 13
+    - 14
+    - 15
+    - 16
+    - 17
+  capabilities:
+    - abstract_thinking
+    - identity_formation
+    - emotional_intelligence

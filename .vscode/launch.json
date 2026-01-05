@@ -1,0 +1,137 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launcher (Port 3000)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/websites/launcher",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "env": {
+        "PORT": "3000"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "JubileeBrowser.com (Port 3002)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/websites/JubileeBrowser.com",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "3002", "."],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "JubileeInspire.com (Port 3003)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/websites/JubileeInspire.com",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "env": {
+        "PORT": "3003"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "JubileeIntelligence.com (Port 3004)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/websites/JubileeIntelligence.com",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "env": {
+        "PORT": "3004"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "JubileeInternet.com (Port 3005)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/websites/JubileeInternet.com",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "env": {
+        "PORT": "3005"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "JubileePersonas.com (Port 3006)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/websites/JubileePersonas.com",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "env": {
+        "PORT": "3006"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "JubileeVerse.com (Port 3007)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/websites/JubileeVerse.com",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "env": {
+        "PORT": "3007"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "JubileeWebsites.com (Port 3008)",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/websites/JubileeWebsites.com",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "env": {
+        "PORT": "3008"
+      },
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "JubileeBrowser.WPF",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-wpf",
+      "program": "${workspaceFolder}/applications/JubileeBrowser.wpf/JubileeBrowser/bin/Debug/net8.0-windows/JubileeBrowser.exe",
+      "cwd": "${workspaceFolder}/applications/JubileeBrowser.wpf/JubileeBrowser",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    }
+  ],
+  "compounds": [
+    {
+      "name": "All Web Services",
+      "configurations": [
+        "JubileeBrowser.com (Port 3002)",
+        "JubileeIntelligence.com (Port 3004)",
+        "JubileeInternet.com (Port 3005)",
+        "JubileePersonas.com (Port 3006)",
+        "JubileeVerse.com (Port 3007)",
+        "JubileeWebsites.com (Port 3008)"
+      ],
+      "stopAll": true
+    },
+    {
+      "name": "Core Services Only",
+      "configurations": [
+        "JubileeInternet.com (Port 3005)",
+        "JubileeVerse.com (Port 3007)"
+      ],
+      "stopAll": true
+    }
+  ]
+}

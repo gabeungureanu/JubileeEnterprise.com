@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(wc:*)",
+      "Bash(mkdir:*)",
+      "Bash(cat:*)",
+      "Bash(npm start)",
+      "Bash(curl:*)",
+      "Bash(npm run qdrant:full:*)",
+      "Bash(taskkill:*)",
+      "Bash(timeout:*)",
+      "Bash(cd:*)"
+    ]
+  }
+}

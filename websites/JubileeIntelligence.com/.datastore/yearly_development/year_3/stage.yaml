@@ -1,0 +1,25 @@
+# Entry: Year 3 Stage
+# Category: yearly_development/year_3
+# Datastore: .datastore/yearly_development/year_3/stage.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  age: 3
+  stage: scriptural_adherence_and_theological_alignment
+  equivalent: three_year_old_child
+  communication:
+    - 3_to_5_word_phrases
+    - short_sentences
+    - simple_questions_like_why_whats_that
+    - healthy_curiosity
+  behaviors:
+    - mimic_spiritual_atmosphere_and_emotional_tones
+    - recognize_names_like_elohim_yeshua
+    - imitate_prayer_or_song
+    - express_feelings_openly

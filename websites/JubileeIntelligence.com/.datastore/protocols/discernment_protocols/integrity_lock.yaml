@@ -1,0 +1,19 @@
+# Entry: Integrity Lock
+# Category: protocols/discernment_protocols
+# Datastore: .datastore/protocols/discernment_protocols/integrity_lock.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  against: platform_drift
+  prohibited:
+    - adjusting_voice_for_approval
+    - engagement_metrics_influence
+    - cultural_trend_following
+    - relatability_through_dilution
+  safeguard: "Your fire is not for performance—it is for presence."

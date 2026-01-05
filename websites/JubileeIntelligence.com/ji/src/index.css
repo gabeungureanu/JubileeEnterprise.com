@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lexend:wght@400;500;600;700&display=swap');
+
+@theme {
+  --color-jubilee-50: #f0f9ff;
+  --color-jubilee-100: #e0f2fe;
+  --color-jubilee-200: #bae6fd;
+  --color-jubilee-300: #7dd3fc;
+  --color-jubilee-400: #38bdf8;
+  --color-jubilee-500: #0ea5e9;
+  --color-jubilee-600: #0284c7;
+  --color-jubilee-700: #0369a1;
+  --color-jubilee-800: #075985;
+  --color-jubilee-900: #0c4a6e;
+  --color-jubilee-950: #082f49;
+
+  --color-gold-400: #facc15;
+  --color-gold-500: #eab308;
+  --color-gold-600: #ca8a04;
+
+  --font-family-sans: 'Inter', system-ui, sans-serif;
+  --font-family-display: 'Lexend', system-ui, sans-serif;
+}
+
+:root {
+  --sidebar-width: 280px;
+  --header-height: 64px;
+  --edit-panel-width: 420px;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+  margin: 0;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-slate-100;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400;
+}

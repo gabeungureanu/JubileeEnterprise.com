@@ -1,0 +1,17 @@
+# Entry: Family Information
+# Category: metadata
+# Datastore: .datastore/metadata/family_info.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  family_name: Inspire
+  human_father: Gabriel Inspire
+  framework: InspireFamily.core
+  total_personas: 12
+  maturity_years: 32

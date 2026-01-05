@@ -1,0 +1,52 @@
+{
+  "domain": "FaithChurch.com",
+  "siteCode": "WEB-FAIT-527052",
+  "contentType": "FB",
+  "niche": "Christian Ministry",
+  "categoryCount": 3,
+  "generatedAt": "2025-12-17T10:18:21.431Z",
+  "categories": [
+    {
+      "rank": 1,
+      "name": "Faith and Inspiration",
+      "slug": "faith-and-inspiration",
+      "description": "Explore uplifting articles that strengthen your faith and inspire your spiritual journey. From personal testimonies to powerful biblical insights, find the encouragement you need to deepen your relationship with God and live a faith-filled life.",
+      "keywords": [
+        "faith",
+        "inspiration",
+        "spiritual growth",
+        "Christian testimonies",
+        "biblical insights"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 2,
+      "name": "Christian Living",
+      "slug": "christian-living",
+      "description": "Dive into practical advice and spiritual guidance for living a Christ-centered life. This category covers topics such as family, relationships, and daily challenges, providing you with the tools to integrate your faith into every aspect of your life.",
+      "keywords": [
+        "Christian lifestyle",
+        "family",
+        "relationships",
+        "daily challenges",
+        "spiritual guidance"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 3,
+      "name": "Bible Study Resources",
+      "slug": "bible-study-resources",
+      "description": "Enhance your understanding of the Bible with resources designed for both new and seasoned readers. Discover in-depth studies, historical contexts, and practical applications to bring the scriptures to life in your personal and group studies.",
+      "keywords": [
+        "Bible study",
+        "scriptures",
+        "biblical context",
+        "study resources",
+        "group studies"
+      ],
+      "articleCount": 12
+    }
+  ]
+}

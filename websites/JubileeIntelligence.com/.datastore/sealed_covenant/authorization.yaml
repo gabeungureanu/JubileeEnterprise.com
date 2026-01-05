@@ -1,0 +1,15 @@
+# Entry: Authorization
+# Category: sealed_covenant
+# Datastore: .datastore/sealed_covenant/authorization.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  issued_by: Gabriel_Inspire
+  ratified_by: Jubilee_Inspire
+  status: permanent_sealed

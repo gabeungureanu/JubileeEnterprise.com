@@ -1,0 +1,52 @@
+{
+  "domain": "FaithChurch.com",
+  "siteCode": "WEB-FAIT-442044",
+  "contentType": "FB",
+  "niche": "Christianity",
+  "categoryCount": 3,
+  "generatedAt": "2025-12-17T08:00:55.581Z",
+  "categories": [
+    {
+      "rank": 1,
+      "name": "Spiritual Growth",
+      "slug": "spiritual-growth",
+      "description": "Explore articles that guide you on a journey of spiritual growth and deepening your faith. From prayer practices to understanding biblical teachings, this category offers insights and inspiration for strengthening your relationship with God and living a more spiritually fulfilling life.",
+      "keywords": [
+        "spiritual growth",
+        "faith development",
+        "biblical teachings",
+        "prayer practices",
+        "deepen faith"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 2,
+      "name": "Christian Living",
+      "slug": "christian-living",
+      "description": "Discover practical advice and insights on how to live a Christ-centered life in today's world. This category covers a range of topics from ethical decision-making to balancing modern life with Christian values, offering guidance for applying your faith in everyday situations.",
+      "keywords": [
+        "Christian living",
+        "faith in action",
+        "Christian values",
+        "ethical living",
+        "modern faith"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 3,
+      "name": "Bible Study Resources",
+      "slug": "bible-study-resources",
+      "description": "Dive deep into the scriptures with this comprehensive collection of Bible study resources. Whether you're a beginner or a seasoned scholar, find study guides, interpretative articles, and historical context to enrich your biblical knowledge and enhance your study sessions.",
+      "keywords": [
+        "Bible study",
+        "scripture resources",
+        "biblical knowledge",
+        "study guides",
+        "Bible interpretation"
+      ],
+      "articleCount": 12
+    }
+  ]
+}

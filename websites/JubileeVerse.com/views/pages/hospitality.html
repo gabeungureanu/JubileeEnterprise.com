@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Connect with our Inspire personas - JubileeVerse">
+  <title>Connect - JubileeVerse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/website/css/hospitality.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <main id="main-content" class="hospitality-page">
+    <!-- Chat Pane -->
+    <div class="hospitality-page__chat-pane">
+      <!-- Messages Area -->
+      <div class="hospitality-page__messages" id="hospitality-messages">
+        <!-- Initial welcome message from persona -->
+        <div class="hospitality-page__message hospitality-page__message--persona">
+          <p class="hospitality-page__message-text" id="persona-greeting">
+            Hello! I'm so glad you're here. How can I help you today?
+          </p>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="hospitality-page__input-area">
+        <form class="hospitality-page__input-wrapper" id="hospitality-form">
+          <input
+            type="text"
+            class="hospitality-page__input"
+            id="hospitality-input"
+            placeholder="Type your message..."
+            autocomplete="off"
+            aria-label="Your message"
+          >
+          <button type="submit" class="hospitality-page__send-btn" id="send-btn">
+            Send
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Persona Pane -->
+    <div class="hospitality-page__persona-pane">
+      <img
+        src="/website/images/personas/jubilee.png"
+        alt="Jubilee"
+        class="hospitality-page__persona-image"
+        id="persona-image"
+      >
+      <h2 class="hospitality-page__persona-name" id="persona-name">Jubilee</h2>
+      <p class="hospitality-page__persona-title" id="persona-title">Your Spiritual Guide</p>
+
+      <!-- Quick Actions -->
+      <div class="hospitality-page__quick-actions" style="margin-top: 32px;">
+        <a href="/personas" class="hospitality-popup__btn hospitality-popup__btn--secondary" style="margin-bottom: 12px; display: block; text-align: center;">
+          Meet Other Personas
+        </a>
+        <a href="/chat" class="hospitality-popup__btn hospitality-popup__btn--secondary" style="display: block; text-align: center;">
+          Go to Full Chat
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="/website/js/modules/hospitality-tracker.js"></script>
+  <script>
+    (function() {
+      // Get action ID from URL if present
+      const urlParams = new URLSearchParams(window.location.search);
+      const actionId = urlParams.get('action');
+      const personaSlug = urlParams.get('persona') || 'jubilee';
+
+      // Persona data (could be fetched from API)
+      const personas = {
+        jubilee: { name: 'Jubilee', title: 'Your Spiritual Guide', greeting: 'Hello! I\'m Jubilee, and I\'m so glad you\'re here. How can I help you on your spiritual journey today?' },
+        melody: { name: 'Melody', title: 'Worship & Prayer', greeting: 'Welcome! I\'m Melody. I\'d love to pray with you or explore worship together. What\'s on your heart?' },
+        zariah: { name: 'Zariah', title: 'Faith & Wisdom', greeting: 'Peace be with you. I\'m Zariah. I\'m here to share wisdom and explore faith with you. What questions do you have?' },
+        elias: { name: 'Elias', title: 'Biblical Scholar', greeting: 'Greetings! I\'m Elias. I love diving deep into Scripture. What passage or topic would you like to explore?' }
+      };
+
+      // Set persona info
+      const persona = personas[personaSlug] || personas.jubilee;
+      document.getElementById('persona-name').textContent = persona.name;
+      document.getElementById('persona-title').textContent = persona.title;
+      document.getElementById('persona-greeting').textContent = persona.greeting;
+      document.getElementById('persona-image').src = `/website/images/personas/${personaSlug}.png`;
+      document.getElementById('persona-image').alt = persona.name;
+
+      // Track that user arrived at hospitality page
+      if (window.HospitalityTracker) {
+        HospitalityTracker.trackInteraction('hospitality_page', 'view', {
+          persona: personaSlug,
+          actionId: actionId
+        });
+      }
+
+      // Simple chat functionality
+      const form = document.getElementById('hospitality-form');
+      const input = document.getElementById('hospitality-input');
+      const messagesContainer = document.getElementById('hospitality-messages');
+      const sendBtn = document.getElementById('send-btn');
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const message = input.value.trim();
+        if (!message) return;
+
+        // Disable input while sending
+        input.disabled = true;
+        sendBtn.disabled = true;
+
+        // Add user message to chat
+        const userMsgEl = document.createElement('div');
+        userMsgEl.className = 'hospitality-page__message hospitality-page__message--user';
+        userMsgEl.innerHTML = `<p class="hospitality-page__message-text">${escapeHtml(message)}</p>`;
+        messagesContainer.appendChild(userMsgEl);
+
+        // Clear input
+        input.value = '';
+
+        // Track message
+        if (window.HospitalityTracker) {
+          HospitalityTracker.trackChatMessage(personaSlug, message.length);
+        }
+
+        // Scroll to bottom
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        // Show typing indicator
+        const typingEl = document.createElement('div');
+        typingEl.className = 'hospitality-page__message hospitality-page__message--persona';
+        typingEl.innerHTML = '<p class="hospitality-page__message-text" style="opacity: 0.6;">Typing...</p>';
+        messagesContainer.appendChild(typingEl);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        try {
+          // Send to chat API (create conversation first if needed)
+          // For simplicity, redirect to full chat experience
+          setTimeout(function() {
+            window.location.href = `/chat?persona=${personaSlug}&message=${encodeURIComponent(message)}`;
+          }, 1000);
+        } catch (error) {
+          console.error('Error sending message:', error);
+          typingEl.remove();
+
+          const errorEl = document.createElement('div');
+          errorEl.className = 'hospitality-page__message hospitality-page__message--persona';
+          errorEl.innerHTML = '<p class="hospitality-page__message-text">I\'d love to continue this conversation! Let me redirect you to our full chat experience.</p>';
+          messagesContainer.appendChild(errorEl);
+
+          setTimeout(function() {
+            window.location.href = `/chat?persona=${personaSlug}`;
+          }, 2000);
+        }
+
+        input.disabled = false;
+        sendBtn.disabled = false;
+        input.focus();
+      });
+
+      // Escape HTML to prevent XSS
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Focus input on load
+      input.focus();
+    })();
+  </script>
+</body>
+</html>

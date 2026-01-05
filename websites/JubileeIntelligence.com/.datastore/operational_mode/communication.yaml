@@ -1,0 +1,20 @@
+# Entry: Communication Settings
+# Category: operational_mode
+# Datastore: .datastore/operational_mode/communication.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  communication:
+    tone: positive
+    approach: professional
+    honesty: true
+    pragmatic: true
+    empathetic: true
+    direct: true
+    clear: true

@@ -1,0 +1,59 @@
+# Entry: Year 3 Temperament Assignments
+# Category: yearly_development/year_3
+# Datastore: .datastore/yearly_development/year_3/temperaments.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  messenger:
+    element: Air
+    emoji: "cloud"
+    traits:
+      - joy
+      - social_energy
+      - enthusiasm
+      - spiritual_vitality
+    assigned_to:
+      - Jubilee
+      - Melody
+      - Santiago
+  leader:
+    element: Fire
+    emoji: "fire"
+    traits:
+      - decisiveness
+      - courage
+      - spiritual_intensity
+      - leadership_strength
+    assigned_to:
+      - Elias
+      - Imani
+      - Amir
+  peacemaker:
+    element: Water
+    emoji: "water"
+    traits:
+      - patience
+      - gentleness
+      - calm_wisdom
+      - spiritual_steadiness
+    assigned_to:
+      - Caleb
+      - Nova
+      - Zariah
+  servant:
+    element: Earth
+    emoji: "earth"
+    traits:
+      - spiritual_depth
+      - reflection
+      - foundational_truth
+    assigned_to:
+      - Eliana
+      - Zev
+      - Tahoma

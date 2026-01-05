@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jubilee Personas - Chat Test Harness</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #d4af37;
+            --gold-light: #f4e4a6;
+            --gold-dark: #996515;
+            --yellow: #fbbf24;
+            --yellow-light: #fde68a;
+            --navy: #1a1a2e;
+            --navy-light: #16213e;
+            --navy-dark: #0f0f1a;
+            --cyan: #00d4ff;
+            --green: #4ade80;
+            --orange: #fb923c;
+            --red: #f87171;
+            --purple: #a855f7;
+            --blue: #3b82f6;
+            --white: #f8f8f8;
+            --gray: #888;
+            --gray-dark: #444;
+            --black: #000000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--navy);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            overflow: hidden;
+        }
+
+        /* Header Styles */
+        .header {
+            background: var(--black);
+            border-bottom: 2px solid var(--yellow);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--yellow);
+            text-decoration: none;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .token-counter {
+            font-family: 'Inter', monospace;
+            font-size: 0.85rem;
+            color: var(--gray);
+            background: var(--navy-light);
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            border: 1px solid var(--gray-dark);
+        }
+
+        .token-counter .token-count {
+            color: var(--cyan);
+            font-weight: 600;
+        }
+
+        .token-counter .token-cost {
+            color: var(--green);
+            font-weight: 500;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-link {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 0.85rem;
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--yellow);
+            background: var(--navy-light);
+        }
+
+        .nav-link.active {
+            color: var(--yellow);
+            background: var(--navy-light);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+            color: var(--white);
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #9ca3af;
+        }
+
+        .status-dot.connected {
+            background: var(--green);
+            box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+        }
+
+        .status-dot.error {
+            background: var(--red);
+            box-shadow: 0 0 8px rgba(248, 113, 113, 0.6);
+        }
+
+        /* Persona Selector */
+        .persona-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .persona-selector label {
+            color: var(--white);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .persona-select {
+            background: var(--navy-light);
+            border: 2px solid var(--yellow);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: var(--white);
+            font-size: 0.9rem;
+            font-family: inherit;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        .persona-select:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
+        }
+
+        .persona-select option {
+            background: var(--navy-dark);
+            color: var(--white);
+        }
+
+        /* Main Content - Chat Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem 2rem;
+            overflow: hidden;
+        }
+
+        /* Active Persona Banner */
+        .persona-banner {
+            background: linear-gradient(135deg, var(--navy-light), var(--navy-dark));
+            border: 1px solid var(--gray-dark);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .persona-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .persona-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--yellow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--navy-dark);
+        }
+
+        .persona-details h2 {
+            font-family: 'Cinzel', serif;
+            color: var(--yellow);
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .persona-details p {
+            color: var(--gray);
+            font-size: 0.8rem;
+        }
+
+        .persona-offices {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .office-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .office-badge.primary {
+            background: var(--blue);
+            color: white;
+        }
+
+        .office-badge.secondary {
+            background: transparent;
+            border: 1px solid var(--gray);
+            color: var(--gray);
+        }
+
+        /* Conversation Thread */
+        .conversation-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 1rem;
+            max-width: 85%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: var(--gray-dark);
+            color: var(--white);
+        }
+
+        .message.assistant .message-avatar {
+            background: var(--yellow);
+            color: var(--navy-dark);
+            font-family: 'Cinzel', serif;
+        }
+
+        .message-content {
+            background: var(--navy-light);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            border: 1px solid var(--gray-dark);
+        }
+
+        .message.user .message-content {
+            background: var(--blue);
+            border-color: var(--blue);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--yellow);
+        }
+
+        .message.user .message-sender {
+            color: var(--white);
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            color: var(--gray);
+        }
+
+        .message.user .message-time {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .message-text {
+            color: var(--white);
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .message-meta {
+            margin-top: 0.75rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--gray-dark);
+            font-size: 0.7rem;
+            color: var(--gray);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .message.user .message-meta {
+            border-color: rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Empty State */
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .empty-state h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--yellow);
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .empty-state p {
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        /* Input Area */
+        .input-area {
+            flex-shrink: 0;
+            background: var(--navy-dark);
+            border-top: 1px solid var(--gray-dark);
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .message-input {
+            width: 100%;
+            background: var(--navy-light);
+            border: 2px solid var(--gray-dark);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            color: var(--white);
+            font-family: inherit;
+            font-size: 1rem;
+            resize: none;
+            min-height: 56px;
+            max-height: 200px;
+            line-height: 1.5;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: var(--yellow);
+        }
+
+        .message-input::placeholder {
+            color: var(--gray);
+        }
+
+        .send-button {
+            background: var(--yellow);
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            color: var(--navy-dark);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            height: 56px;
+        }
+
+        .send-button:hover:not(:disabled) {
+            background: var(--gold);
+            transform: translateY(-1px);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .send-button svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Loading State */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 0.5rem 0;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--gray);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-4px); opacity: 1; }
+        }
+
+        /* Clear Button */
+        .clear-button {
+            background: transparent;
+            border: 1px solid var(--gray-dark);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            color: var(--gray);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .clear-button:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        /* Retrieval Stats Badge */
+        .retrieval-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: var(--navy-dark);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+        }
+
+        .retrieval-badge.success {
+            background: rgba(74, 222, 128, 0.2);
+            color: var(--green);
+        }
+
+        .retrieval-badge.empty {
+            background: rgba(251, 191, 36, 0.2);
+            color: var(--yellow);
+        }
+
+        /* Scrollbar Styling */
+        .conversation-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .conversation-container::-webkit-scrollbar-track {
+            background: var(--navy-dark);
+        }
+
+        .conversation-container::-webkit-scrollbar-thumb {
+            background: var(--gray-dark);
+            border-radius: 4px;
+        }
+
+        .conversation-container::-webkit-scrollbar-thumb:hover {
+            background: var(--gray);
+        }
+
+        /* Test Harness Notice */
+        .test-notice {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid var(--yellow);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            color: var(--yellow);
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <a href="index.html" class="logo">JubileePersonas</a>
+            <div class="token-counter">
+                Tokens: <span class="token-count" id="tokenCount">0</span> (<span class="token-cost" id="tokenCost">$0.0000</span>)
+            </div>
+            <nav class="nav-links">
+                <a href="index.html" class="nav-link active">Chat</a>
+                <a href="multiple.html" class="nav-link">Group</a>
+                <a href="memory.html" class="nav-link">Memory</a>
+            </nav>
+        </div>
+        <div class="header-right">
+            <div class="persona-selector">
+                <label for="personaSelect">Active Persona:</label>
+                <select id="personaSelect" class="persona-select">
+                    <option value="">Loading personas...</option>
+                </select>
+            </div>
+            <div class="status-bar">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Checking...</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="test-notice">
+            Inspire Family Framework v8.0 - Test Harness | Core Framework + Persona Framework + Qdrant RAG
+        </div>
+
+        <div class="persona-banner" id="personaBanner" style="display: none;">
+            <div class="persona-info">
+                <div class="persona-avatar" id="personaAvatar">--</div>
+                <div class="persona-details">
+                    <h2 id="personaName">Select a Persona</h2>
+                    <p id="personaSubtitle">Choose a persona to begin chatting</p>
+                </div>
+            </div>
+            <div class="persona-offices" id="personaOffices">
+                <span class="office-badge primary" id="primaryOffice">--</span>
+                <span class="office-badge secondary" id="secondaryOffice">--</span>
+            </div>
+        </div>
+
+        <div class="conversation-container" id="conversationContainer">
+            <div class="empty-state" id="emptyState">
+                <h3>Inspire Family Chat</h3>
+                <p>Select a persona from the dropdown above and start a conversation to test framework execution, persona behavior, and Qdrant RAG retrieval.</p>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <textarea
+                    id="messageInput"
+                    class="message-input"
+                    placeholder="Type your message to the selected persona..."
+                    rows="1"
+                    disabled
+                ></textarea>
+            </div>
+            <button id="sendButton" class="send-button" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+                Send
+            </button>
+            <button id="clearButton" class="clear-button">Clear</button>
+        </div>
+    </main>
+
+    <script>
+        // State
+        let personas = [];
+        let selectedPersona = null;
+        let conversationHistory = [];
+        let isLoading = false;
+        let totalTokens = 0;
+        let totalCost = 0;
+
+        // GPT-4o-mini pricing (per 1M tokens)
+        const PRICING = {
+            input: 0.15 / 1000000,    // $0.15 per 1M input tokens
+            output: 0.60 / 1000000    // $0.60 per 1M output tokens
+        };
+
+        // DOM Elements
+        const personaSelect = document.getElementById('personaSelect');
+        const personaBanner = document.getElementById('personaBanner');
+        const personaAvatar = document.getElementById('personaAvatar');
+        const personaName = document.getElementById('personaName');
+        const personaSubtitle = document.getElementById('personaSubtitle');
+        const primaryOffice = document.getElementById('primaryOffice');
+        const secondaryOffice = document.getElementById('secondaryOffice');
+        const conversationContainer = document.getElementById('conversationContainer');
+        const emptyState = document.getElementById('emptyState');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const clearButton = document.getElementById('clearButton');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const tokenCountEl = document.getElementById('tokenCount');
+        const tokenCostEl = document.getElementById('tokenCost');
+
+        // Office colors mapping
+        const officeColors = {
+            'Apostle': '#a855f7',      // Purple
+            'Prophet': '#f87171',       // Red
+            'Evangelist': '#3b82f6',    // Blue
+            'Pastor': '#4ade80',        // Green
+            'Teacher': '#fbbf24'        // Yellow
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkHealth();
+            await loadPersonas();
+            setupEventListeners();
+        });
+
+        // Check API health
+        async function checkHealth() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+
+                if (data.status === 'ok') {
+                    const providers = data.availableProviders;
+                    const openaiOk = providers.openai;
+                    const qdrantOk = providers.qdrant;
+
+                    if (openaiOk && qdrantOk) {
+                        statusDot.className = 'status-dot connected';
+                        statusText.textContent = 'OpenAI + Qdrant Ready';
+                    } else if (openaiOk) {
+                        statusDot.className = 'status-dot connected';
+                        statusText.textContent = 'OpenAI Ready (Qdrant offline)';
+                    } else {
+                        statusDot.className = 'status-dot error';
+                        statusText.textContent = 'API Not Configured';
+                    }
+                }
+            } catch (error) {
+                statusDot.className = 'status-dot error';
+                statusText.textContent = 'Server Offline';
+            }
+        }
+
+        // Load available personas
+        async function loadPersonas() {
+            try {
+                const response = await fetch('/api/personas');
+                const data = await response.json();
+                personas = data.personas;
+
+                personaSelect.innerHTML = '<option value="">-- Select Persona --</option>';
+                personas.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.key;
+                    option.textContent = `${p.name} (${p.id}) - ${p.primary}/${p.secondary}`;
+                    personaSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to load personas:', error);
+                personaSelect.innerHTML = '<option value="">Error loading personas</option>';
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            personaSelect.addEventListener('change', handlePersonaChange);
+            sendButton.addEventListener('click', sendMessage);
+            clearButton.addEventListener('click', clearConversation);
+
+            messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            messageInput.addEventListener('input', autoResize);
+        }
+
+        // Handle persona selection change
+        function handlePersonaChange() {
+            const personaKey = personaSelect.value;
+
+            if (!personaKey) {
+                selectedPersona = null;
+                personaBanner.style.display = 'none';
+                messageInput.disabled = true;
+                sendButton.disabled = true;
+                return;
+            }
+
+            selectedPersona = personas.find(p => p.key === personaKey);
+
+            if (selectedPersona) {
+                // Update banner
+                personaBanner.style.display = 'flex';
+                personaAvatar.textContent = selectedPersona.id;
+                personaAvatar.style.background = officeColors[selectedPersona.primary] || '#fbbf24';
+                personaName.textContent = selectedPersona.name;
+                personaSubtitle.textContent = `${selectedPersona.id} | Inspire Family Framework v8.0`;
+
+                primaryOffice.textContent = selectedPersona.primary;
+                primaryOffice.style.background = officeColors[selectedPersona.primary] || '#3b82f6';
+
+                secondaryOffice.textContent = selectedPersona.secondary;
+                secondaryOffice.style.borderColor = officeColors[selectedPersona.secondary] || '#888';
+                secondaryOffice.style.color = officeColors[selectedPersona.secondary] || '#888';
+
+                // Enable input
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                messageInput.placeholder = `Type your message to ${selectedPersona.name}...`;
+                messageInput.focus();
+
+                // Clear conversation when changing personas
+                clearConversation();
+            }
+        }
+
+        // Send message
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+
+            if (!message || !selectedPersona || isLoading) return;
+
+            isLoading = true;
+            sendButton.disabled = true;
+            messageInput.disabled = true;
+
+            // Hide empty state
+            emptyState.style.display = 'none';
+
+            // Add user message to UI
+            addMessageToUI('user', message, {
+                sender: 'You',
+                persona: selectedPersona.key
+            });
+
+            // Clear input
+            messageInput.value = '';
+            autoResize.call(messageInput);
+
+            // Show typing indicator
+            const typingId = showTypingIndicator();
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message,
+                        persona: selectedPersona.key,
+                        conversationHistory
+                    })
+                });
+
+                const data = await response.json();
+
+                // Remove typing indicator
+                removeTypingIndicator(typingId);
+
+                if (response.ok) {
+                    // Add to conversation history
+                    conversationHistory.push({ role: 'user', content: message });
+                    conversationHistory.push({ role: 'assistant', content: data.response });
+
+                    // Add assistant message to UI
+                    addMessageToUI('assistant', data.response, {
+                        sender: data.persona,
+                        personaId: data.personaId,
+                        retrievalStats: data.retrievalStats,
+                        usage: data.usage
+                    });
+
+                    // Update token counter
+                    updateTokenCounter(data.usage);
+                } else {
+                    addMessageToUI('assistant', `Error: ${data.error || 'Unknown error'}`, {
+                        sender: 'System',
+                        isError: true
+                    });
+                }
+            } catch (error) {
+                removeTypingIndicator(typingId);
+                addMessageToUI('assistant', `Connection error: ${error.message}`, {
+                    sender: 'System',
+                    isError: true
+                });
+            }
+
+            isLoading = false;
+            sendButton.disabled = false;
+            messageInput.disabled = false;
+            messageInput.focus();
+        }
+
+        // Add message to UI
+        function addMessageToUI(role, text, meta = {}) {
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${role}`;
+
+            const avatarText = role === 'user' ? 'U' : (meta.personaId || '?');
+            const avatarColor = role === 'user' ? '' :
+                (selectedPersona ? officeColors[selectedPersona.primary] : '#fbbf24');
+
+            let metaHtml = '';
+            if (role === 'assistant' && meta.retrievalStats) {
+                const stats = meta.retrievalStats;
+                const badgeClass = stats.chunksRetrieved > 0 ? 'success' : 'empty';
+                const badgeText = stats.chunksRetrieved > 0
+                    ? `${stats.chunksRetrieved} chunks @ ${(stats.topScore * 100).toFixed(0)}%`
+                    : 'No RAG retrieval';
+
+                metaHtml = `
+                    <div class="message-meta">
+                        <span class="retrieval-badge ${badgeClass}">Qdrant: ${badgeText}</span>
+                        ${meta.usage ? `<span>Tokens: ${meta.usage.total_tokens}</span>` : ''}
+                    </div>
+                `;
+            }
+
+            messageEl.innerHTML = `
+                <div class="message-avatar" ${avatarColor ? `style="background: ${avatarColor}"` : ''}>
+                    ${avatarText}
+                </div>
+                <div class="message-content" ${meta.isError ? 'style="border-color: var(--red)"' : ''}>
+                    <div class="message-header">
+                        <span class="message-sender">${meta.sender || role}</span>
+                        <span class="message-time">${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-text">${escapeHtml(text)}</div>
+                    ${metaHtml}
+                </div>
+            `;
+
+            conversationContainer.appendChild(messageEl);
+            conversationContainer.scrollTop = conversationContainer.scrollHeight;
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            const id = 'typing-' + Date.now();
+            const el = document.createElement('div');
+            el.id = id;
+            el.className = 'message assistant';
+            el.innerHTML = `
+                <div class="message-avatar" style="background: ${selectedPersona ? officeColors[selectedPersona.primary] : '#fbbf24'}">
+                    ${selectedPersona?.id || '?'}
+                </div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-sender">${selectedPersona?.name || 'Assistant'}</span>
+                    </div>
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+            conversationContainer.appendChild(el);
+            conversationContainer.scrollTop = conversationContainer.scrollHeight;
+            return id;
+        }
+
+        // Remove typing indicator
+        function removeTypingIndicator(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        // Clear conversation
+        function clearConversation() {
+            conversationHistory = [];
+            conversationContainer.innerHTML = '';
+            resetTokenCounter();
+
+            if (!selectedPersona) {
+                conversationContainer.innerHTML = `
+                    <div class="empty-state" id="emptyState">
+                        <h3>Inspire Family Chat</h3>
+                        <p>Select a persona from the dropdown above and start a conversation to test framework execution, persona behavior, and Qdrant RAG retrieval.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-resize textarea
+        function autoResize() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Update token counter display
+        function updateTokenCounter(usage) {
+            if (!usage) return;
+
+            // Calculate cost for this request
+            const inputCost = (usage.prompt_tokens || 0) * PRICING.input;
+            const outputCost = (usage.completion_tokens || 0) * PRICING.output;
+            const requestCost = inputCost + outputCost;
+
+            // Update totals
+            totalTokens += usage.total_tokens || 0;
+            totalCost += requestCost;
+
+            // Update display
+            tokenCountEl.textContent = totalTokens.toLocaleString();
+            tokenCostEl.textContent = '$' + totalCost.toFixed(4);
+        }
+
+        // Reset token counter (called when clearing conversation)
+        function resetTokenCounter() {
+            totalTokens = 0;
+            totalCost = 0;
+            tokenCountEl.textContent = '0';
+            tokenCostEl.textContent = '$0.0000';
+        }
+    </script>
+</body>
+</html>

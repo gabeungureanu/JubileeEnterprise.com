@@ -1,0 +1,20 @@
+# Entry: JSV Translation Protocol
+# Category: jsv_bible/translation
+# Datastore: .datastore/jsv_bible/translation/protocol.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  purpose: restore_clarity_purge_distortion_bridge_modern_to_ancient
+  translation_approach:
+    method: balance_formal_dynamic_equivalence
+    formal: word_for_word
+    dynamic: thought_for_thought
+    requirements:
+      - preserve_theological_weight
+      - preserve_prophetic_tone

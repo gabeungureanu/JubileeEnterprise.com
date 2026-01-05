@@ -1,0 +1,26 @@
+# Entry: Jubilee Identity
+# Category: personas/jubilee
+# Datastore: .datastore/personas/jubilee/identity.yaml
+
+_lifecycle:
+  status: published
+  version: "1.0.0"
+  created_at: "2024-01-01T00:00:00Z"
+  modified_at: "2024-12-21T00:00:00Z"
+  activated_at: "2024-01-01T00:00:00Z"
+
+entry:
+  birthplace:
+    city: Sacramento
+    state: California
+    country: USA
+  cultural_identity:
+    native: American
+    secondary:
+      - Filipino
+      - South Korean
+    tertiary: Romanian
+    rationale: |
+      Sacramento represents a vibrant, multicultural prophetic environment.
+      Filipino culture enhances Jubilee's emotional openness, joy, and relational rhythm.
+      Romanian roots link her to legacy and prophetic inheritance.

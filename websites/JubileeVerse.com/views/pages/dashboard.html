@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Your JubileeVerse Dashboard - Overview of your faith journey">
+  <title>Dashboard - JubileeVerse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header -->
+  <div id="header-container"></div>
+
+  <main id="main-content" class="page-content">
+    <div class="section">
+      <div class="container">
+        <!-- Welcome Header -->
+        <div class="dashboard-header">
+          <div class="dashboard-header__welcome">
+            <h1>Welcome back, <span id="user-welcome-name">Friend</span></h1>
+            <p>Continue your faith journey with JubileeVerse</p>
+          </div>
+          <a href="/chat" class="btn btn--primary btn--lg">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            New Conversation
+          </a>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="dashboard-stats">
+          <div class="stat-card">
+            <div class="stat-card__icon stat-card__icon--primary">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <div class="stat-card__content">
+              <span class="stat-card__value" id="stat-conversations">0</span>
+              <span class="stat-card__label">Conversations</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__icon stat-card__icon--secondary">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+              </svg>
+            </div>
+            <div class="stat-card__content">
+              <span class="stat-card__value" id="stat-messages">0</span>
+              <span class="stat-card__label">Messages</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__icon stat-card__icon--accent">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </div>
+            <div class="stat-card__content">
+              <span class="stat-card__value" id="stat-translations">0</span>
+              <span class="stat-card__label">Translations</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__icon stat-card__icon--success">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+            </div>
+            <div class="stat-card__content">
+              <span class="stat-card__value" id="stat-personas">6</span>
+              <span class="stat-card__label">Personas Used</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="dashboard-grid">
+          <!-- Recent Conversations -->
+          <div class="dashboard-card">
+            <div class="dashboard-card__header">
+              <h2>Recent Conversations</h2>
+              <a href="/conversations" class="btn btn--ghost btn--sm">View All</a>
+            </div>
+            <div class="dashboard-card__body" id="recent-conversations">
+              <div class="loading-state">
+                <div class="spinner"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Access Personas -->
+          <div class="dashboard-card">
+            <div class="dashboard-card__header">
+              <h2>Your Personas</h2>
+              <a href="/personas" class="btn btn--ghost btn--sm">Browse All</a>
+            </div>
+            <div class="dashboard-card__body">
+              <div class="quick-personas" id="quick-personas">
+                <a href="/personas/biblical-scholar-1/start" class="quick-persona">
+                  <div class="avatar">DS</div>
+                  <span>Dr. Samuel</span>
+                </a>
+                <a href="/personas/prayer-partner-1/start" class="quick-persona">
+                  <div class="avatar">SG</div>
+                  <span>Sister Grace</span>
+                </a>
+                <a href="/personas/bible-teacher-1/start" class="quick-persona">
+                  <div class="avatar">PD</div>
+                  <span>Pastor David</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Translation Progress -->
+          <div class="dashboard-card dashboard-card--full">
+            <div class="dashboard-card__header">
+              <h2>Translation Progress</h2>
+              <a href="/translation" class="btn btn--ghost btn--sm">Open Translator</a>
+            </div>
+            <div class="dashboard-card__body">
+              <div class="translation-overview">
+                <div class="translation-overview__stats">
+                  <div class="translation-stat">
+                    <span class="translation-stat__value" id="verses-translated">0</span>
+                    <span class="translation-stat__label">Verses Translated</span>
+                  </div>
+                  <div class="translation-stat">
+                    <span class="translation-stat__value" id="verses-reviewed">0</span>
+                    <span class="translation-stat__label">Verses Reviewed</span>
+                  </div>
+                </div>
+                <div class="translation-progress">
+                  <div class="translation-progress__header">
+                    <span class="translation-progress__label">Overall Progress</span>
+                    <span class="translation-progress__value" id="progress-percent">0%</span>
+                  </div>
+                  <div class="translation-progress__bar">
+                    <div class="translation-progress__fill" id="progress-bar" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-container"></div>
+
+  <!-- Scripts -->
+  <script src="/js/modules/components.js"></script>
+  <script src="/js/modules/auth.js"></script>
+  <script src="/js/services/api.js"></script>
+  <script src="/js/app.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Load user stats
+      try {
+        const response = await fetch('/api/stats');
+        const data = await response.json();
+
+        if (data.stats) {
+          document.getElementById('stat-conversations').textContent = data.stats.totalConversations;
+          document.getElementById('stat-messages').textContent = data.stats.totalMessages;
+          document.getElementById('stat-translations').textContent = data.stats.translationsCompleted;
+        }
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      }
+
+      // Load translation progress
+      try {
+        const response = await fetch('/translation/bible');
+        const data = await response.json();
+
+        if (data.translatedVerses !== undefined) {
+          document.getElementById('verses-translated').textContent = data.translatedVerses.toLocaleString();
+          document.getElementById('verses-reviewed').textContent = data.reviewedVerses.toLocaleString();
+
+          const percent = Math.round((data.translatedVerses / data.totalVerses) * 100);
+          document.getElementById('progress-percent').textContent = percent + '%';
+          document.getElementById('progress-bar').style.width = percent + '%';
+        }
+      } catch (error) {
+        console.error('Failed to load translation progress:', error);
+      }
+
+      // Load recent conversations
+      try {
+        const response = await fetch('/chat/conversations/list?limit=5');
+        const data = await response.json();
+        const container = document.getElementById('recent-conversations');
+
+        if (data.conversations.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state" style="padding: var(--spacing-4);">
+              <p>No conversations yet</p>
+              <a href="/personas" class="btn btn--primary btn--sm">Start Your First Chat</a>
+            </div>
+          `;
+        } else {
+          container.innerHTML = data.conversations.map(conv => `
+            <a href="/chat/${conv.id}" class="recent-conversation">
+              <div class="avatar avatar--sm">${getInitials(conv.personaName)}</div>
+              <div class="recent-conversation__content">
+                <div class="recent-conversation__header">
+                  <span class="recent-conversation__persona">${escapeHtml(conv.personaName)}</span>
+                  <span class="recent-conversation__time">${formatTime(conv.updatedAt)}</span>
+                </div>
+                <div class="recent-conversation__title">${escapeHtml(conv.title)}</div>
+              </div>
+            </a>
+          `).join('');
+        }
+      } catch (error) {
+        console.error('Failed to load conversations:', error);
+      }
+
+      // Update user name
+      try {
+        const response = await fetch('/auth/me');
+        const data = await response.json();
+        if (data.user) {
+          document.getElementById('user-welcome-name').textContent = data.user.name.split(' ')[0];
+        }
+      } catch (error) {
+        console.error('Failed to load user:', error);
+      }
+
+      function getInitials(name) {
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function formatTime(dateStr) {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) {
+          return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } else if (diffDays === 1) {
+          return 'Yesterday';
+        } else {
+          return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
+      }
+    });
+  </script>
+
+  <style>
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-8);
+    }
+
+    .dashboard-header__welcome h1 {
+      font-size: var(--font-size-2xl);
+      margin-bottom: var(--spacing-1);
+    }
+
+    .dashboard-header__welcome p {
+      color: var(--color-neutral-500);
+      margin: 0;
+    }
+
+    .dashboard-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-8);
+    }
+
+    .stat-card {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-4);
+      padding: var(--spacing-5);
+      background: var(--color-neutral-0);
+      border: 1px solid var(--color-neutral-200);
+      border-radius: var(--radius-xl);
+    }
+
+    .stat-card__icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-lg);
+    }
+
+    .stat-card__icon--primary {
+      background: var(--color-primary-50);
+      color: var(--color-primary-600);
+    }
+
+    .stat-card__icon--secondary {
+      background: var(--color-secondary-50);
+      color: var(--color-secondary-600);
+    }
+
+    .stat-card__icon--accent {
+      background: var(--color-accent-50);
+      color: var(--color-accent-600);
+    }
+
+    .stat-card__icon--success {
+      background: var(--color-success-light);
+      color: var(--color-success);
+    }
+
+    .stat-card__value {
+      display: block;
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-neutral-900);
+    }
+
+    .stat-card__label {
+      font-size: var(--font-size-sm);
+      color: var(--color-neutral-500);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-6);
+    }
+
+    .dashboard-card {
+      background: var(--color-neutral-0);
+      border: 1px solid var(--color-neutral-200);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+
+    .dashboard-card--full {
+      grid-column: span 2;
+    }
+
+    .dashboard-card__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--spacing-4) var(--spacing-5);
+      border-bottom: 1px solid var(--color-neutral-200);
+    }
+
+    .dashboard-card__header h2 {
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .dashboard-card__body {
+      padding: var(--spacing-4);
+    }
+
+    .quick-personas {
+      display: flex;
+      gap: var(--spacing-4);
+    }
+
+    .quick-persona {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing-2);
+      padding: var(--spacing-4);
+      background: var(--color-neutral-50);
+      border-radius: var(--radius-lg);
+      transition: all var(--transition-fast);
+      flex: 1;
+    }
+
+    .quick-persona:hover {
+      background: var(--color-primary-50);
+    }
+
+    .quick-persona span {
+      font-size: var(--font-size-sm);
+      color: var(--color-neutral-700);
+    }
+
+    .recent-conversation {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      padding: var(--spacing-3);
+      border-radius: var(--radius-lg);
+      transition: background var(--transition-fast);
+    }
+
+    .recent-conversation:hover {
+      background: var(--color-neutral-50);
+    }
+
+    .recent-conversation__content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .recent-conversation__header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-1);
+    }
+
+    .recent-conversation__persona {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-neutral-800);
+    }
+
+    .recent-conversation__time {
+      font-size: var(--font-size-xs);
+      color: var(--color-neutral-500);
+    }
+
+    .recent-conversation__title {
+      font-size: var(--font-size-sm);
+      color: var(--color-neutral-600);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .translation-overview {
+      display: flex;
+      gap: var(--spacing-8);
+      align-items: center;
+    }
+
+    .translation-overview__stats {
+      display: flex;
+      gap: var(--spacing-8);
+    }
+
+    .translation-overview .translation-progress {
+      flex: 1;
+    }
+
+    .loading-state {
+      display: flex;
+      justify-content: center;
+      padding: var(--spacing-6);
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-card--full {
+        grid-column: span 1;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-4);
+      }
+
+      .dashboard-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .translation-overview {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .quick-personas {
+        flex-direction: column;
+      }
+    }
+  </style>
+</body>
+</html>
