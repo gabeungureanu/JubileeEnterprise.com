@@ -339,18 +339,19 @@ img {
 }
 
 .hero-fullimage .hero-title {
-  font-size: calc(2.5rem - 10px);
+  font-size: calc(2.5rem + 1px);
   font-weight: 800;
   line-height: 1.15;
   margin-bottom: var(--spacing-md);
-  max-width: 480px;
+  max-width: 552px;
+  margin-top: -60px;
 }
 
 .hero-fullimage .hero-subtitle {
   font-size: 1.1rem;
   opacity: 0.95;
   margin-bottom: var(--spacing-xl);
-  max-width: 450px;
+  max-width: 518px;
   margin-left: 0;
   margin-right: 0;
   line-height: 1.6;
@@ -400,7 +401,7 @@ img {
   margin-top: var(--spacing-lg);
   font-style: italic;
   color: rgba(255, 255, 255, 0.85);
-  max-width: 450px;
+  max-width: 518px;
 }
 
 .hero-fullimage .hero-reassurance {
@@ -453,7 +454,7 @@ img {
 .section-subtitle {
   color: var(--text-secondary);
   text-align: center;
-  max-width: 600px;
+  max-width: 720px;
   margin: 0 auto var(--spacing-2xl);
 }
 
