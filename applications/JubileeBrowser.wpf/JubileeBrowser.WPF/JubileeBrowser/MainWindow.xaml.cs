@@ -9,6 +9,7 @@ using System.Windows.Media;
 using WpfShapes = System.Windows.Shapes;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
+using JubileeBrowser.Controls;
 using JubileeBrowser.Models;
 using JubileeBrowser.Services;
 
@@ -59,6 +60,9 @@ public partial class MainWindow : Window
     // Tab groups and vertical tabs
     private readonly ObservableCollection<TabGroup> _tabGroups = new();
     private bool _isVerticalTabsEnabled;
+
+    // Mobile device emulation
+    private readonly MobileEmulationManager _mobileEmulationManager;
 
     public ObservableCollection<TabState> Tabs { get; } = new();
 
@@ -143,6 +147,7 @@ public partial class MainWindow : Window
         _zoomSettingsManager = new ZoomSettingsManager();
         _recentlyClosedTabsManager = new RecentlyClosedTabsManager();
         _tabManager = new TabManager();
+        _mobileEmulationManager = new MobileEmulationManager();
 
         // Initialize profile and sync services
         _profileAuthService = new ProfileAuthService();
@@ -701,6 +706,10 @@ public partial class MainWindow : Window
                     ShowBookmarks();
                     e.Handled = true;
                     break;
+                case Key.M:
+                    ToggleMobileEmulation();
+                    e.Handled = true;
+                    break;
             }
         }
         else if (Keyboard.Modifiers == ModifierKeys.Alt)
@@ -1087,6 +1096,9 @@ public partial class MainWindow : Window
             // Update zoom level from the new tab's WebView
             _currentZoomLevel = newWebView.ZoomFactor * 100;
             UpdateZoomDisplay();
+
+            // Update mobile emulation panel for this tab
+            UpdateMobileEmulationPanelForTab(tabId);
         }
 
         UpdateWelcomePanel();
@@ -1113,6 +1125,9 @@ public partial class MainWindow : Window
             webView.Dispose();
             _webViews.Remove(tabId);
         }
+
+        // Cleanup mobile emulation state for the closed tab
+        _mobileEmulationManager.RemoveTabState(tabId);
 
         // Switch to adjacent tab
         if (_activeTabId == tabId && Tabs.Count > 0)
@@ -1359,6 +1374,12 @@ public partial class MainWindow : Window
 
             // Record platform hit for analytics (fire and forget)
             _ = _hitCountService.RecordHitAsync();
+        }
+
+        // Re-apply mobile emulation after navigation (some overrides may be lost on page load)
+        if (e.IsSuccess && _webViews.TryGetValue(tabId, out var emulationWebView))
+        {
+            _ = _mobileEmulationManager.ReapplyEmulationAfterNavigationAsync(tabId, emulationWebView);
         }
     }
 
@@ -2867,6 +2888,177 @@ public partial class MainWindow : Window
             CaptureWebPage(webView, tab?.Title ?? "Capture");
         }
     }
+
+    private void MainMenu_MobileView_Click(object sender, RoutedEventArgs e)
+    {
+        MainMenuPopup.IsOpen = false;
+        ToggleMobileEmulation();
+    }
+
+    private void ContextMenu_MobileView_Click(object sender, RoutedEventArgs e)
+    {
+        ToggleMobileEmulation();
+    }
+
+    #region Mobile Emulation
+
+    private void ToggleMobileEmulation()
+    {
+        if (_activeTabId == null) return;
+
+        var tab = Tabs.FirstOrDefault(t => t.Id == _activeTabId);
+        if (tab == null) return;
+
+        if (!_webViews.TryGetValue(_activeTabId, out var webView)) return;
+
+        var state = _mobileEmulationManager.GetEmulationState(_activeTabId);
+
+        if (state.IsEnabled)
+        {
+            // Disable emulation
+            _ = DisableMobileEmulationAsync(_activeTabId, webView);
+        }
+        else
+        {
+            // Enable emulation with default device (iPhone 14 Pro)
+            var defaultDevice = DeviceProfiles.GetById("iphone-14-pro") ?? DeviceProfiles.All.FirstOrDefault();
+            if (defaultDevice != null)
+            {
+                _ = EnableMobileEmulationAsync(_activeTabId, webView, defaultDevice);
+            }
+        }
+    }
+
+    private async Task EnableMobileEmulationAsync(string tabId, WebView2 webView, DeviceProfile device)
+    {
+        var tab = Tabs.FirstOrDefault(t => t.Id == tabId);
+        if (tab == null) return;
+
+        await _mobileEmulationManager.EnableEmulationAsync(tabId, webView, device);
+        tab.IsMobileEmulationEnabled = true;
+
+        // Show the emulation panel
+        MobileEmulationPanel.Visibility = Visibility.Visible;
+        MobileEmulationPanel.UpdateFromState(_mobileEmulationManager.GetEmulationState(tabId));
+
+        // Update menu text
+        MobileViewMenuText.Text = "Exit mobile view";
+
+        System.Diagnostics.Debug.WriteLine($"Mobile emulation enabled for tab {tabId}: {device.Name}");
+    }
+
+    private async Task EnableResponsiveModeAsync(string tabId, WebView2 webView, int width, int height, double dpr)
+    {
+        var tab = Tabs.FirstOrDefault(t => t.Id == tabId);
+        if (tab == null) return;
+
+        await _mobileEmulationManager.EnableResponsiveModeAsync(tabId, webView, width, height, dpr);
+        tab.IsMobileEmulationEnabled = true;
+
+        // Show the emulation panel
+        MobileEmulationPanel.Visibility = Visibility.Visible;
+        MobileEmulationPanel.UpdateFromState(_mobileEmulationManager.GetEmulationState(tabId));
+
+        // Update menu text
+        MobileViewMenuText.Text = "Exit mobile view";
+
+        System.Diagnostics.Debug.WriteLine($"Responsive mode enabled for tab {tabId}: {width}x{height}@{dpr}x");
+    }
+
+    private async Task DisableMobileEmulationAsync(string tabId, WebView2 webView)
+    {
+        var tab = Tabs.FirstOrDefault(t => t.Id == tabId);
+        if (tab == null) return;
+
+        await _mobileEmulationManager.DisableEmulationAsync(tabId, webView);
+        tab.IsMobileEmulationEnabled = false;
+
+        // Hide the emulation panel
+        MobileEmulationPanel.Visibility = Visibility.Collapsed;
+
+        // Update menu text
+        MobileViewMenuText.Text = "Toggle mobile view";
+
+        System.Diagnostics.Debug.WriteLine($"Mobile emulation disabled for tab {tabId}");
+    }
+
+    private void MobileEmulationPanel_DeviceSelected(object? sender, DeviceSelectedEventArgs e)
+    {
+        if (_activeTabId == null || !_webViews.TryGetValue(_activeTabId, out var webView)) return;
+
+        if (e.IsResponsiveMode)
+        {
+            // Switch to responsive mode with current custom dimensions
+            var state = _mobileEmulationManager.GetEmulationState(_activeTabId);
+            _ = EnableResponsiveModeAsync(_activeTabId, webView, state.CustomWidth, state.CustomHeight, state.CustomDevicePixelRatio);
+        }
+        else if (e.Device != null)
+        {
+            // Switch to specific device
+            _ = _mobileEmulationManager.SwitchDeviceAsync(_activeTabId, webView, e.Device);
+        }
+    }
+
+    private void MobileEmulationPanel_DimensionsChanged(object? sender, DimensionsChangedEventArgs e)
+    {
+        if (_activeTabId == null || !_webViews.TryGetValue(_activeTabId, out var webView)) return;
+
+        _ = _mobileEmulationManager.UpdateResponsiveDimensionsAsync(_activeTabId, webView, e.Width, e.Height);
+    }
+
+    private void MobileEmulationPanel_OrientationChanged(object? sender, OrientationChangedEventArgs e)
+    {
+        if (_activeTabId == null || !_webViews.TryGetValue(_activeTabId, out var webView)) return;
+
+        _ = _mobileEmulationManager.SetOrientationAsync(_activeTabId, webView, e.Orientation);
+    }
+
+    private void MobileEmulationPanel_DprChanged(object? sender, DprChangedEventArgs e)
+    {
+        if (_activeTabId == null || !_webViews.TryGetValue(_activeTabId, out var webView)) return;
+
+        _ = _mobileEmulationManager.UpdateDevicePixelRatioAsync(_activeTabId, webView, e.DevicePixelRatio);
+    }
+
+    private void MobileEmulationPanel_NetworkThrottleChanged(object? sender, NetworkThrottleChangedEventArgs e)
+    {
+        if (_activeTabId == null || !_webViews.TryGetValue(_activeTabId, out var webView)) return;
+
+        _ = _mobileEmulationManager.SetNetworkThrottlingAsync(_activeTabId, webView, e.Preset);
+    }
+
+    private void MobileEmulationPanel_CpuThrottleChanged(object? sender, CpuThrottleChangedEventArgs e)
+    {
+        if (_activeTabId == null || !_webViews.TryGetValue(_activeTabId, out var webView)) return;
+
+        _ = _mobileEmulationManager.SetCpuThrottlingAsync(_activeTabId, webView, e.Preset);
+    }
+
+    private void MobileEmulationPanel_CloseRequested(object? sender, EventArgs e)
+    {
+        if (_activeTabId == null || !_webViews.TryGetValue(_activeTabId, out var webView)) return;
+
+        _ = DisableMobileEmulationAsync(_activeTabId, webView);
+    }
+
+    private void UpdateMobileEmulationPanelForTab(string tabId)
+    {
+        var state = _mobileEmulationManager.GetEmulationState(tabId);
+
+        if (state.IsEnabled)
+        {
+            MobileEmulationPanel.Visibility = Visibility.Visible;
+            MobileEmulationPanel.UpdateFromState(state);
+            MobileViewMenuText.Text = "Exit mobile view";
+        }
+        else
+        {
+            MobileEmulationPanel.Visibility = Visibility.Collapsed;
+            MobileViewMenuText.Text = "Toggle mobile view";
+        }
+    }
+
+    #endregion
 
     private void MainMenu_ZoomIn_Click(object sender, RoutedEventArgs e)
     {

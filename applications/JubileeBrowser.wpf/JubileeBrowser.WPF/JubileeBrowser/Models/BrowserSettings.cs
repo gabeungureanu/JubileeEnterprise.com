@@ -75,6 +75,47 @@ public class AdvancedSettings
     public bool BackgroundApps { get; set; }
 }
 
+/// <summary>
+/// Settings for mobile device emulation feature.
+/// </summary>
+public class MobileEmulationSettings
+{
+    /// <summary>
+    /// Last selected device profile ID (null for responsive mode).
+    /// </summary>
+    public string? LastDeviceId { get; set; }
+
+    /// <summary>
+    /// Last used custom width in responsive mode.
+    /// </summary>
+    public int LastCustomWidth { get; set; } = 375;
+
+    /// <summary>
+    /// Last used custom height in responsive mode.
+    /// </summary>
+    public int LastCustomHeight { get; set; } = 667;
+
+    /// <summary>
+    /// Last used device pixel ratio in responsive mode.
+    /// </summary>
+    public double LastCustomDpr { get; set; } = 2.0;
+
+    /// <summary>
+    /// Last selected network throttle preset.
+    /// </summary>
+    public string LastNetworkThrottle { get; set; } = "None";
+
+    /// <summary>
+    /// Last selected CPU throttle preset.
+    /// </summary>
+    public string LastCpuThrottle { get; set; } = "None";
+
+    /// <summary>
+    /// Whether to remember emulation state between sessions.
+    /// </summary>
+    public bool RememberState { get; set; } = true;
+}
+
 public class BrowserSettings
 {
     public BrowserMode DefaultMode { get; set; } = BrowserMode.Internet;
@@ -86,4 +127,5 @@ public class BrowserSettings
     public SearchSettings Search { get; set; } = new();
     public StartupSettings Startup { get; set; } = new();
     public AdvancedSettings Advanced { get; set; } = new();
+    public MobileEmulationSettings MobileEmulation { get; set; } = new();
 }

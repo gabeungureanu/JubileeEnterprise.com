@@ -50,7 +50,22 @@
       "Bash(dir:*)",
       "Bash(dotnet restore:*)",
       "Bash(ssh-keygen:*)",
-      "Bash(scp:*)"
+      "Bash(scp:*)",
+      "Bash(node --version:*)",
+      "Bash(npm --version:*)",
+      "Bash(npx create-expo-app@latest . --template blank-typescript --yes)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx expo:*)",
+      "Bash(npx expo-doctor:*)",
+      "Bash(timeout 15 npx expo start:*)",
+      "Bash(copy:*)",
+      "Bash(cmd /c copy \"c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\JubileeVerse.com\\\\website\\\\images\\\\personas\\\\jubilee.png\" \"c:\\\\data\\\\JubileeEnterprise.com\\\\mobile\\\\JubileeInspire.ios\\\\assets\\\\jubilee-profile.png\")",
+      "Bash(cmd /c \"cd /d c:\\\\data\\\\JubileeEnterprise.com\\\\mobile\\\\JubileeInspire.ios && npx tsc --noEmit\")",
+      "Bash(cmd /c \"copy \"\"c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\JubileeVerse.com\\\\website\\\\images\\\\personas\\\\jubilee.png\"\" \"\"c:\\\\data\\\\JubileeEnterprise.com\\\\mobile\\\\JubileeInspire.ios\\\\assets\\\\jubilee-profile.png\"\"\")",
+      "Bash(cmd /c \"dir c:\\\\data\\\\JubileeEnterprise.com\\\\mobile\\\\JubileeInspire.ios\\\\assets\"\")",
+      "Bash(cmd /c \"dir c:\\\\data\\\\JubileeEnterprise.com\\\\mobile\\\\JubileeInspire.ios\\\\assets\")",
+      "Bash(xargs:*)"
     ]
   }
 }

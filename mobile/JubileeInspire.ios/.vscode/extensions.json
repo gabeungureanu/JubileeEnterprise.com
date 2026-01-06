@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "msjsdiag.vscode-react-native",
+    "ms-vscode.vscode-typescript-next",
+    "orta.vscode-jest",
+    "formulahendry.auto-rename-tag",
+    "naumovs.color-highlight",
+    "christian-kohler.path-intellisense"
+  ],
+  "unwantedRecommendations": []
+}

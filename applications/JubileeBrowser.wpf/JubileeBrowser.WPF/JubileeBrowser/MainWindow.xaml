@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         xmlns:local="clr-namespace:JubileeBrowser"
+        xmlns:controls="clr-namespace:JubileeBrowser.Controls"
         mc:Ignorable="d"
         Title="Jubilee Browser"
         Height="800" Width="1280"
@@ -396,6 +397,8 @@
                          InputGestureText="F12" Click="ContextMenu_DevTools_Click"/>
                 <MenuItem Header="Web capture" Tag="&#xE924;" Style="{StaticResource TabContextMenuItemStyle}"
                          InputGestureText="Ctrl+Shift+S" Click="ContextMenu_WebCapture_Click"/>
+                <MenuItem x:Name="ContextMenuMobileView" Header="Toggle mobile view" Tag="&#xE1C9;" Style="{StaticResource TabContextMenuItemStyle}"
+                         InputGestureText="Ctrl+Shift+M" Click="ContextMenu_MobileView_Click"/>
             </MenuItem>
         </ContextMenu>
 
@@ -1543,94 +1546,109 @@
                 </Grid>
             </Border>
 
-            <!-- WebView Container -->
-            <Grid x:Name="WebViewContainer" Grid.Column="1" Background="{StaticResource BgPrimaryBrush}">
-                <!-- Welcome Message (shown when no tabs) -->
-                <StackPanel x:Name="WelcomePanel"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"
-                           Visibility="Collapsed">
-                    <TextBlock Text="Welcome to Jubilee Browser"
-                              Foreground="{StaticResource TextPrimaryBrush}"
-                              FontSize="28"
-                              FontWeight="Light"
-                              HorizontalAlignment="Center"/>
-                    <TextBlock Text="Press Ctrl+T to open a new tab"
-                              Foreground="{StaticResource TextSecondaryBrush}"
-                              FontSize="14"
-                              Margin="0,12,0,0"
-                              HorizontalAlignment="Center"/>
-                </StackPanel>
+            <!-- WebView Container with Mobile Emulation -->
+            <DockPanel Grid.Column="1" Background="{StaticResource BgPrimaryBrush}">
+                <!-- Mobile Emulation Panel (docked at top, initially hidden) -->
+                <controls:MobileEmulationPanel x:Name="MobileEmulationPanel"
+                                               DockPanel.Dock="Top"
+                                               Visibility="Collapsed"
+                                               DeviceSelected="MobileEmulationPanel_DeviceSelected"
+                                               DimensionsChanged="MobileEmulationPanel_DimensionsChanged"
+                                               OrientationChanged="MobileEmulationPanel_OrientationChanged"
+                                               DprChanged="MobileEmulationPanel_DprChanged"
+                                               NetworkThrottleChanged="MobileEmulationPanel_NetworkThrottleChanged"
+                                               CpuThrottleChanged="MobileEmulationPanel_CpuThrottleChanged"
+                                               CloseRequested="MobileEmulationPanel_CloseRequested"/>
 
-                <!-- Loading Indicator -->
-                <ProgressBar x:Name="LoadingBar"
-                            Height="2"
-                            VerticalAlignment="Top"
-                            IsIndeterminate="True"
-                            Visibility="Collapsed"
-                            Foreground="{StaticResource AccentBrush}"
-                            Background="Transparent"
-                            BorderThickness="0"/>
-
-                <!-- Zoom Overlay - appears below address bar when zooming -->
-                <Border x:Name="ZoomOverlay"
-                        VerticalAlignment="Top"
-                        HorizontalAlignment="Center"
-                        Margin="0,8,0,0"
-                        Background="#CC000000"
-                        CornerRadius="8"
-                        Padding="16,10"
-                        Visibility="Collapsed"
-                        Panel.ZIndex="100">
-                    <Border.Effect>
-                        <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="2" Opacity="0.5"/>
-                    </Border.Effect>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Zoom Out Button -->
-                        <Button x:Name="ZoomOverlayMinusButton"
-                                Width="28" Height="28"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Cursor="Hand"
-                                Click="ZoomOverlayMinus_Click"
-                                ToolTip="Zoom Out (Ctrl+-)">
-                            <TextBlock Text="&#xE738;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                        </Button>
-                        <!-- Zoom Level Display -->
-                        <TextBlock x:Name="ZoomOverlayText"
-                                  Text="100%"
-                                  Foreground="White"
+                <!-- WebView Content Area -->
+                <Grid x:Name="WebViewContainer">
+                    <!-- Welcome Message (shown when no tabs) -->
+                    <StackPanel x:Name="WelcomePanel"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Visibility="Collapsed">
+                        <TextBlock Text="Welcome to Jubilee Browser"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  FontSize="28"
+                                  FontWeight="Light"
+                                  HorizontalAlignment="Center"/>
+                        <TextBlock Text="Press Ctrl+T to open a new tab"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
                                   FontSize="14"
-                                  FontWeight="SemiBold"
-                                  VerticalAlignment="Center"
-                                  Margin="8,0"
-                                  MinWidth="50"
-                                  TextAlignment="Center"/>
-                        <!-- Zoom In Button -->
-                        <Button x:Name="ZoomOverlayPlusButton"
-                                Width="28" Height="28"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Cursor="Hand"
-                                Click="ZoomOverlayPlus_Click"
-                                ToolTip="Zoom In (Ctrl++)">
-                            <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                        </Button>
-                        <!-- Separator -->
-                        <Border Width="1" Height="20" Background="#555555" Margin="8,0"/>
-                        <!-- Reset Button -->
-                        <Button x:Name="ZoomOverlayResetButton"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Cursor="Hand"
-                                Padding="8,4"
-                                Click="ZoomOverlayReset_Click"
-                                ToolTip="Reset to 100% (Ctrl+0)">
-                            <TextBlock Text="Reset" Foreground="White" FontSize="12" VerticalAlignment="Center"/>
-                        </Button>
+                                  Margin="0,12,0,0"
+                                  HorizontalAlignment="Center"/>
                     </StackPanel>
-                </Border>
-            </Grid>
+
+                    <!-- Loading Indicator -->
+                    <ProgressBar x:Name="LoadingBar"
+                                Height="2"
+                                VerticalAlignment="Top"
+                                IsIndeterminate="True"
+                                Visibility="Collapsed"
+                                Foreground="{StaticResource AccentBrush}"
+                                Background="Transparent"
+                                BorderThickness="0"/>
+
+                    <!-- Zoom Overlay - appears below address bar when zooming -->
+                    <Border x:Name="ZoomOverlay"
+                            VerticalAlignment="Top"
+                            HorizontalAlignment="Center"
+                            Margin="0,8,0,0"
+                            Background="#CC000000"
+                            CornerRadius="8"
+                            Padding="16,10"
+                            Visibility="Collapsed"
+                            Panel.ZIndex="100">
+                        <Border.Effect>
+                            <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="2" Opacity="0.5"/>
+                        </Border.Effect>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Zoom Out Button -->
+                            <Button x:Name="ZoomOverlayMinusButton"
+                                    Width="28" Height="28"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    Click="ZoomOverlayMinus_Click"
+                                    ToolTip="Zoom Out (Ctrl+-)">
+                                <TextBlock Text="&#xE738;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            </Button>
+                            <!-- Zoom Level Display -->
+                            <TextBlock x:Name="ZoomOverlayText"
+                                      Text="100%"
+                                      Foreground="White"
+                                      FontSize="14"
+                                      FontWeight="SemiBold"
+                                      VerticalAlignment="Center"
+                                      Margin="8,0"
+                                      MinWidth="50"
+                                      TextAlignment="Center"/>
+                            <!-- Zoom In Button -->
+                            <Button x:Name="ZoomOverlayPlusButton"
+                                    Width="28" Height="28"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    Click="ZoomOverlayPlus_Click"
+                                    ToolTip="Zoom In (Ctrl++)">
+                                <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            </Button>
+                            <!-- Separator -->
+                            <Border Width="1" Height="20" Background="#555555" Margin="8,0"/>
+                            <!-- Reset Button -->
+                            <Button x:Name="ZoomOverlayResetButton"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    Padding="8,4"
+                                    Click="ZoomOverlayReset_Click"
+                                    ToolTip="Reset to 100% (Ctrl+0)">
+                                <TextBlock Text="Reset" Foreground="White" FontSize="12" VerticalAlignment="Center"/>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </DockPanel>
 
             <!-- Chat Panel Splitter -->
             <GridSplitter x:Name="ChatSplitter"
@@ -2264,6 +2282,19 @@
                                     <TextBlock Grid.Column="0" Text="&#xE924;" FontFamily="Segoe MDL2 Assets" FontSize="14" Width="24" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="1" Text="Web capture" VerticalAlignment="Center"/>
                                     <TextBlock Grid.Column="2" Text="Ctrl+Shift+S" Foreground="#FFD700" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </Button>
+                            <Button x:Name="MobileViewMenuButton" Style="{StaticResource MainMenuItemStyle}" Click="MainMenu_MobileView_Click"
+                                    AutomationProperties.Name="Mobile View">
+                                <Grid Width="196">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="&#xE1C9;" FontFamily="Segoe MDL2 Assets" FontSize="14" Width="24" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="MobileViewMenuText" Grid.Column="1" Text="Toggle mobile view" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="Ctrl+Shift+M" Foreground="#FFD700" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right"/>
                                 </Grid>
                             </Button>
                         </StackPanel>

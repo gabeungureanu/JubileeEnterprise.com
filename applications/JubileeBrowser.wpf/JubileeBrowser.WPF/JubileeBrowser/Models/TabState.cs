@@ -19,6 +19,7 @@ public class TabState : INotifyPropertyChanged
     private bool _isMuted;
     private bool _isAudible;
     private string? _groupId;
+    private bool _isMobileEmulationEnabled;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -123,5 +124,14 @@ public class TabState : INotifyPropertyChanged
     {
         get => _groupId;
         set { if (_groupId != value) { _groupId = value; OnPropertyChanged(); } }
+    }
+
+    /// <summary>
+    /// Indicates whether mobile device emulation is enabled for this tab.
+    /// </summary>
+    public bool IsMobileEmulationEnabled
+    {
+        get => _isMobileEmulationEnabled;
+        set { if (_isMobileEmulationEnabled != value) { _isMobileEmulationEnabled = value; OnPropertyChanged(); } }
     }
 }
