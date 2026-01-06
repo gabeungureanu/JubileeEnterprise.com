@@ -140,6 +140,64 @@ app.get('/health', async (req, res) => {
     res.status(health.status === 'ok' ? 200 : 503).json(health);
 });
 
+// =============================================================================
+// DEPLOYMENT WEBHOOK - Allows remote deployment via HTTP
+// =============================================================================
+
+const DEPLOY_SECRET = process.env.DEPLOY_SECRET || 'jubilee-deploy-2026';
+
+app.post('/api/deploy', async (req, res) => {
+    // Verify deploy secret
+    const providedSecret = req.headers['x-deploy-secret'] || req.body.secret;
+    if (providedSecret !== DEPLOY_SECRET) {
+        console.log('Deploy webhook: Unauthorized attempt');
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    console.log('Deploy webhook: Starting deployment...');
+
+    try {
+        const { execSync } = require('child_process');
+        const repoPath = 'C:\\data\\JubileeEnterprise.com';
+
+        // Git pull
+        const gitOutput = execSync('git pull origin main', {
+            cwd: repoPath,
+            encoding: 'utf8',
+            timeout: 60000
+        });
+
+        console.log('Deploy webhook: Git pull completed');
+        console.log(gitOutput);
+
+        // Touch web.config to trigger iisnode restart
+        const webConfigPath = `${repoPath}\\websites\\codex\\InspireCodex.com\\web.config`;
+        try {
+            const fs = require('fs');
+            const now = new Date();
+            fs.utimesSync(webConfigPath, now, now);
+            console.log('Deploy webhook: Touched web.config to trigger restart');
+        } catch (e) {
+            console.log('Deploy webhook: web.config touch failed (may not exist):', e.message);
+        }
+
+        res.json({
+            success: true,
+            message: 'Deployment completed',
+            gitOutput: gitOutput.trim(),
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (err) {
+        console.error('Deploy webhook error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Deployment failed',
+            message: err.message
+        });
+    }
+});
+
 app.get('/api/v1/status', async (req, res) => {
     try {
         // Get database stats
@@ -1207,6 +1265,7 @@ app.use((req, res) => {
         available_endpoints: {
             health: 'GET /health',
             status: 'GET /api/v1/status',
+            deploy: 'POST /api/deploy (requires X-Deploy-Secret header)',
             auth: {
                 login: 'POST /api/auth/login',
                 register: 'POST /api/auth/register',
