@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Your Conversations - JubileeVerse">
+  <title>My Conversations - JubileeVerse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header -->
+  <div id="header-container"></div>
+
+  <main id="main-content" class="page-content">
+    <section class="section">
+      <div class="container">
+        <!-- Page Header -->
+        <div class="conversations-header">
+          <div>
+            <h1>My Conversations</h1>
+            <p>View and manage all your chat history</p>
+          </div>
+          <a href="/personas" class="btn btn--primary">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            New Conversation
+          </a>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="conversations-filters">
+          <div class="conversations-search">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="search-input" class="form-input" placeholder="Search conversations...">
+          </div>
+          <div class="conversations-sort">
+            <select id="sort-select" class="form-input">
+              <option value="recent">Most Recent</option>
+              <option value="oldest">Oldest First</option>
+              <option value="persona">By Persona</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Conversations List -->
+        <div class="conversations-list" id="conversations-list">
+          <div class="loading-state">
+            <div class="spinner spinner--lg"></div>
+            <p>Loading conversations...</p>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="conversations-pagination" id="pagination" style="display: none;">
+          <button class="btn btn--outline" id="prev-btn" disabled>Previous</button>
+          <span class="pagination-info" id="page-info">Page 1</span>
+          <button class="btn btn--outline" id="next-btn">Next</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-backdrop" id="delete-modal-backdrop">
+    <div class="modal" id="delete-modal">
+      <div class="modal__header">
+        <h2 class="modal__title">Delete Conversation</h2>
+        <button class="modal__close" id="modal-close">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal__body">
+        <p>Are you sure you want to delete this conversation? This action cannot be undone.</p>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--outline" id="cancel-delete">Cancel</button>
+        <button class="btn btn--primary" style="background: var(--color-error);" id="confirm-delete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div id="footer-container"></div>
+
+  <!-- Scripts -->
+  <script src="/js/modules/components.js"></script>
+  <script src="/js/modules/auth.js"></script>
+  <script src="/js/services/api.js"></script>
+  <script src="/js/app.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      const conversationsList = document.getElementById('conversations-list');
+      const searchInput = document.getElementById('search-input');
+      const sortSelect = document.getElementById('sort-select');
+      const pagination = document.getElementById('pagination');
+      const prevBtn = document.getElementById('prev-btn');
+      const nextBtn = document.getElementById('next-btn');
+      const pageInfo = document.getElementById('page-info');
+
+      let currentPage = 1;
+      let totalPages = 1;
+      let deleteConversationId = null;
+
+      // Load conversations
+      async function loadConversations() {
+        try {
+          const response = await fetch(`/chat/conversations/list?page=${currentPage}&limit=10`);
+          const data = await response.json();
+
+          renderConversations(data.conversations);
+
+          totalPages = Math.ceil(data.pagination.total / data.pagination.limit);
+          updatePagination();
+        } catch (error) {
+          console.error('Failed to load conversations:', error);
+          conversationsList.innerHTML = `
+            <div class="empty-state">
+              <p>Failed to load conversations. Please try again.</p>
+              <button class="btn btn--primary" onclick="loadConversations()">Retry</button>
+            </div>
+          `;
+        }
+      }
+
+      // Render conversations
+      function renderConversations(conversations) {
+        if (conversations.length === 0) {
+          conversationsList.innerHTML = `
+            <div class="empty-state">
+              <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              <h3 class="empty-state__title">No conversations yet</h3>
+              <p class="empty-state__description">Start a conversation with one of our AI personas.</p>
+              <a href="/personas" class="btn btn--primary">Browse Personas</a>
+            </div>
+          `;
+          pagination.style.display = 'none';
+          return;
+        }
+
+        conversationsList.innerHTML = conversations.map(conv => `
+          <div class="conversation-card" data-id="${conv.id}">
+            <a href="/chat/${conv.id}" class="conversation-card__content">
+              <div class="avatar">${getInitials(conv.personaName)}</div>
+              <div class="conversation-card__info">
+                <div class="conversation-card__header">
+                  <h3 class="conversation-card__title">${escapeHtml(conv.title)}</h3>
+                  <span class="conversation-card__time">${formatTime(conv.updatedAt)}</span>
+                </div>
+                <div class="conversation-card__meta">
+                  <span class="badge badge--primary">${escapeHtml(conv.personaName)}</span>
+                </div>
+                <p class="conversation-card__preview">${escapeHtml(conv.lastMessage || 'No messages yet')}</p>
+              </div>
+            </a>
+            <div class="conversation-card__actions">
+              <button class="btn btn--icon btn--ghost delete-btn" data-id="${conv.id}" title="Delete conversation">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        `).join('');
+
+        // Add delete handlers
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showDeleteModal(btn.dataset.id);
+          });
+        });
+
+        pagination.style.display = totalPages > 1 ? 'flex' : 'none';
+      }
+
+      // Update pagination
+      function updatePagination() {
+        pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+        prevBtn.disabled = currentPage <= 1;
+        nextBtn.disabled = currentPage >= totalPages;
+      }
+
+      // Delete modal
+      function showDeleteModal(conversationId) {
+        deleteConversationId = conversationId;
+        document.getElementById('delete-modal-backdrop').classList.add('is-open');
+        document.getElementById('delete-modal').classList.add('is-open');
+      }
+
+      function hideDeleteModal() {
+        deleteConversationId = null;
+        document.getElementById('delete-modal-backdrop').classList.remove('is-open');
+        document.getElementById('delete-modal').classList.remove('is-open');
+      }
+
+      // Delete conversation
+      async function deleteConversation() {
+        if (!deleteConversationId) return;
+
+        try {
+          const response = await fetch(`/chat/conversations/${deleteConversationId}`, {
+            method: 'DELETE'
+          });
+
+          if (response.ok) {
+            hideDeleteModal();
+            loadConversations();
+          }
+        } catch (error) {
+          console.error('Failed to delete conversation:', error);
+        }
+      }
+
+      // Event listeners
+      prevBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          loadConversations();
+        }
+      });
+
+      nextBtn.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          loadConversations();
+        }
+      });
+
+      document.getElementById('modal-close').addEventListener('click', hideDeleteModal);
+      document.getElementById('cancel-delete').addEventListener('click', hideDeleteModal);
+      document.getElementById('confirm-delete').addEventListener('click', deleteConversation);
+      document.getElementById('delete-modal-backdrop').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) hideDeleteModal();
+      });
+
+      let searchTimeout;
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          // In production, implement search
+          console.log('Searching:', e.target.value);
+        }, 300);
+      });
+
+      // Helper functions
+      function getInitials(name) {
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function formatTime(dateStr) {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) return 'Today';
+        if (diffDays === 1) return 'Yesterday';
+        if (diffDays < 7) return date.toLocaleDateString([], { weekday: 'long' });
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+
+      // Initial load
+      loadConversations();
+    });
+  </script>
+
+  <style>
+    .conversations-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--spacing-6);
+    }
+
+    .conversations-header h1 {
+      font-size: var(--font-size-2xl);
+      margin-bottom: var(--spacing-1);
+    }
+
+    .conversations-header p {
+      color: var(--color-neutral-500);
+      margin: 0;
+    }
+
+    .conversations-filters {
+      display: flex;
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+    }
+
+    .conversations-search {
+      flex: 1;
+      position: relative;
+    }
+
+    .conversations-search svg {
+      position: absolute;
+      left: var(--spacing-4);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-neutral-400);
+    }
+
+    .conversations-search input {
+      padding-left: var(--spacing-10);
+    }
+
+    .conversations-sort select {
+      min-width: 160px;
+    }
+
+    .conversations-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-4);
+    }
+
+    .conversation-card {
+      display: flex;
+      background: var(--color-neutral-0);
+      border: 1px solid var(--color-neutral-200);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      transition: box-shadow var(--transition-fast);
+    }
+
+    .conversation-card:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .conversation-card__content {
+      display: flex;
+      gap: var(--spacing-4);
+      padding: var(--spacing-4);
+      flex: 1;
+    }
+
+    .conversation-card__info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .conversation-card__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: var(--spacing-2);
+    }
+
+    .conversation-card__title {
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .conversation-card__time {
+      font-size: var(--font-size-xs);
+      color: var(--color-neutral-500);
+    }
+
+    .conversation-card__meta {
+      margin-bottom: var(--spacing-2);
+    }
+
+    .conversation-card__preview {
+      font-size: var(--font-size-sm);
+      color: var(--color-neutral-600);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin: 0;
+    }
+
+    .conversation-card__actions {
+      display: flex;
+      align-items: center;
+      padding: var(--spacing-4);
+      border-left: 1px solid var(--color-neutral-200);
+    }
+
+    .conversations-pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: var(--spacing-4);
+      margin-top: var(--spacing-8);
+    }
+
+    .pagination-info {
+      font-size: var(--font-size-sm);
+      color: var(--color-neutral-600);
+    }
+
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing-4);
+      padding: var(--spacing-12);
+      color: var(--color-neutral-500);
+    }
+
+    @media (max-width: 768px) {
+      .conversations-header {
+        flex-direction: column;
+        gap: var(--spacing-4);
+      }
+
+      .conversations-filters {
+        flex-direction: column;
+      }
+
+      .conversations-sort select {
+        width: 100%;
+      }
+    }
+  </style>
+</body>
+</html>

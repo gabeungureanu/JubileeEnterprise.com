@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jubileeverse
+  labels:
+    app.kubernetes.io/name: jubileeverse
+    app.kubernetes.io/part-of: jubileeverse-platform

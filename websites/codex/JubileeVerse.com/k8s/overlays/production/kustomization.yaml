@@ -1,0 +1,61 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: jubileeverse
+
+resources:
+  - ../../base
+
+commonLabels:
+  environment: production
+
+# Production-specific patches
+patches:
+  # Increase replicas for production
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 5
+    target:
+      kind: Deployment
+      name: jubileeverse-app
+
+  # Increase resource limits for production
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "2000m"
+            memory: "1Gi"
+    target:
+      kind: Deployment
+      name: jubileeverse-app
+
+  # Increase HPA max replicas
+  - patch: |-
+      - op: replace
+        path: /spec/maxReplicas
+        value: 100
+    target:
+      kind: HorizontalPodAutoscaler
+      name: jubileeverse-hpa
+
+images:
+  - name: jubileeverse/app
+    newName: your-registry.com/jubileeverse/app
+    newTag: v8.0.0
+
+# Generate secret from files (use sealed-secrets or external-secrets in production)
+secretGenerator:
+  - name: jubileeverse-secrets
+    behavior: replace
+    files:
+      - secrets/session-secret
+      - secrets/db-password
+      - secrets/redis-password
+      - secrets/openai-key
+      - secrets/anthropic-key

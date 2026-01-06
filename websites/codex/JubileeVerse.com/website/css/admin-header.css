@@ -1,0 +1,183 @@
+/**
+ * Admin Header Styles
+ * Header for admin pages with navigation links
+ */
+
+.admin-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 16px;
+  background-color: #1a1a1a;
+  border-bottom: 2px solid #ffbd59;
+  height: 34px;
+  z-index: 102;
+}
+
+.admin-header-left {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.admin-header-home-icon {
+  margin-right: 1px;
+  margin-left: -5px;
+  margin-top: -2px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.admin-header-home-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: #ffbd59;
+  transition: fill 0.15s;
+}
+
+.admin-header-home-icon:hover svg {
+  fill: #ffc970;
+}
+
+.admin-header-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  font-family: 'Agency FB', Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.admin-header-logo .logo-jubilee {
+  color: #ffffff;
+}
+
+.admin-header-logo .logo-intelligence {
+  color: #ffbd59;
+}
+
+.admin-header-title {
+  color: #ffbd59;
+  font-size: 13px;
+  font-weight: 600;
+  margin-right: 12px;
+  padding-left: 8px;
+  border-left: 1px solid #444;
+  margin-left: 8px;
+}
+
+.admin-header-link {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 12px;
+  padding: 4px 6px;
+  transition: color 0.15s;
+}
+
+.admin-header-link:hover {
+  color: #ffbd59;
+}
+
+.admin-header-link.active {
+  color: #ffbd59;
+  font-weight: bold;
+}
+
+.admin-header-sep {
+  color: #666;
+  font-size: 12px;
+  margin: 0 1px;
+}
+
+.admin-header-right {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.admin-header-upgrade-link {
+  color: #ffbd59;
+  text-decoration: none;
+  font-size: 11px;
+  padding: 4px 6px;
+  transition: color 0.15s;
+}
+
+.admin-header-upgrade-link:hover {
+  color: #ffc970;
+  text-decoration: underline;
+}
+
+.admin-header-user-name {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 11px;
+  padding: 4px 6px;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-header-back-link {
+  color: #888;
+  text-decoration: none;
+  font-size: 11px;
+  padding: 4px 6px;
+  transition: color 0.15s;
+}
+
+.admin-header-back-link:hover {
+  color: #ffbd59;
+}
+
+.admin-sign-out-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 11px;
+  padding: 4px 8px;
+  margin-right: -4px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.admin-sign-out-btn:hover {
+  color: #ffbd59;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.admin-sign-out-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.admin-sign-out-btn svg path {
+  stroke: #ffffff;
+}
+
+.admin-sign-out-btn:hover svg path {
+  stroke: #ffbd59;
+}
+
+@media (max-width: 600px) {
+  .admin-header {
+    left: 0;
+    height: auto;
+    padding: 6px 10px;
+  }
+
+  .admin-header-link,
+  .admin-header-sep {
+    font-size: 11px;
+  }
+}

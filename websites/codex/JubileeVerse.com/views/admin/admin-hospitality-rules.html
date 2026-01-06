@@ -1,0 +1,3933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Hospitality Rules Management - JubileeVerse Admin">
+  <title>Hospitality Rules - Admin - JubileeVerse</title>
+  <link rel="icon" type="image/png" href="/images/personas/jubilee.png">
+  <link rel="apple-touch-icon" href="/images/personas/jubilee.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin-header.css">
+  <link rel="stylesheet" href="/css/admin-sidebar.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #0a0a0a;
+      color: #f2f2f2;
+      overflow: hidden;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #1a1a1a;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #444;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #666;
+    }
+
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #444 #1a1a1a;
+    }
+
+    .app-container {
+      display: flex;
+      height: calc(100vh - 36px);
+      width: 100vw;
+      margin-top: 36px;
+      overflow-x: hidden;
+    }
+
+    .main-area {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+      padding-top: 0;
+    }
+
+    .main-content-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ==================== FULL-WIDTH HEADER BAR ==================== */
+    .hospitality-rules-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      height: 48px;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 2px solid #ffbd59;
+      flex-shrink: 0;
+    }
+
+    .hospitality-rules-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hospitality-rules-header-bar svg {
+      width: 18px;
+      height: 18px;
+      fill: #ffbd59;
+    }
+
+    .hospitality-rules-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Gold Star VIP Icon */
+    .vip-star-icon {
+      width: 30px;
+      height: 30px;
+      fill: #ffbd59;
+      filter: drop-shadow(0 0 4px rgba(255, 189, 89, 0.6));
+      animation: starGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes starGlow {
+      0% { filter: drop-shadow(0 0 3px rgba(255, 189, 89, 0.4)); }
+      100% { filter: drop-shadow(0 0 8px rgba(255, 189, 89, 0.9)); }
+    }
+
+    /* ==================== THREE PANEL LAYOUT ==================== */
+    .rules-layout {
+      flex: 1;
+      display: flex;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    /* ==================== RIGHT SIDEBAR - HOSPITALITY NAV ==================== */
+    .hospitality-control-panel {
+      width: 72px;
+      background: linear-gradient(180deg, #111 0%, #0a0a0a 100%);
+      border-left: 2px solid #ffbd59;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 12px;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .control-btn {
+      width: 48px;
+      height: 48px;
+      border: 2px solid #333;
+      border-radius: 10px;
+      background: #151515;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      position: relative;
+      text-decoration: none;
+    }
+
+    .control-btn:hover {
+      background: #1f1f1f;
+      border-color: #555;
+    }
+
+    .control-btn.active {
+      background: linear-gradient(135deg, rgba(255, 189, 89, 0.15) 0%, rgba(255, 189, 89, 0.05) 100%);
+      border-color: #ffbd59;
+    }
+
+    .control-btn.active svg {
+      fill: #ffbd59;
+    }
+
+    .control-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: #888;
+      transition: fill 0.2s ease;
+    }
+
+    .control-btn:hover svg {
+      fill: #bbb;
+    }
+
+    .control-btn-label {
+      position: absolute;
+      right: 60px;
+      background: #222;
+      color: #fff;
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .control-btn:hover .control-btn-label {
+      opacity: 1;
+    }
+
+    .control-divider {
+      width: 32px;
+      height: 1px;
+      background: #333;
+      margin: 8px 0;
+    }
+
+    /* ==================== ENGAGEMENT RULES TREE PANEL ==================== */
+    .rules-tree-panel {
+      width: 260px;
+      min-width: 260px;
+      background-color: #1a1a1a;
+      border-right: 1px solid #333;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .tree-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      height: 38px;
+      border-bottom: 1px solid #333;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .tree-header svg {
+      width: 18px;
+      height: 18px;
+      fill: #ffbd59;
+    }
+
+    .tree-header span {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .tree-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    /* Search at bottom of panel */
+    .tree-search {
+      padding: 10px 12px;
+      border-top: 1px solid #333;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .tree-search input {
+      width: 100%;
+      padding: 8px 10px;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 12px;
+    }
+
+    .tree-search input:focus {
+      outline: none;
+      border-color: #ffbd59;
+    }
+
+    .tree-search-hint {
+      font-size: 9px;
+      color: #666;
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    /* Tree Item Styling */
+    .tree-item {
+      position: relative;
+      user-select: none;
+    }
+
+    .tree-item-row {
+      display: flex;
+      align-items: center;
+      padding: 5px 8px 5px 12px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      gap: 4px;
+    }
+
+    .tree-item-row:hover {
+      background-color: rgba(255, 189, 89, 0.1);
+    }
+
+    .tree-item-row.active {
+      background-color: rgba(255, 189, 89, 0.15);
+    }
+
+    .tree-item-row.active::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background-color: #ffbd59;
+    }
+
+    /* Expand/Collapse Toggle - Plus/Minus icon (compact with yellow border) */
+    .tree-toggle {
+      width: 14px;
+      height: 14px;
+      min-width: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      border-radius: 2px;
+      transition: background-color 0.15s;
+      font-size: 11px;
+      font-weight: bold;
+      color: #ffbd59;
+      line-height: 1;
+      border: 1px solid #ffbd59;
+      margin-right: 6px;
+    }
+
+    .tree-toggle:hover {
+      background-color: rgba(255, 189, 89, 0.3);
+    }
+
+    .tree-toggle.empty {
+      width: 14px;
+      min-width: 14px;
+      visibility: hidden;
+      border: none;
+    }
+
+    /* Category Icon - Gold folder */
+    .tree-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tree-icon svg {
+      width: 14px;
+      height: 14px;
+      fill: #ffbd59;
+    }
+
+    /* Category Name */
+    .tree-name {
+      flex: 1;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: color 0.15s ease;
+    }
+
+    /* Selected category - yellow text */
+    .tree-item-row.active .tree-name {
+      color: #ffbd59;
+      font-weight: 700;
+    }
+
+    /* Rule Count Badge */
+    .tree-count {
+      font-size: 9px;
+      font-weight: 600;
+      color: #666;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1px 5px;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+
+    .tree-item-row.active .tree-count {
+      color: #ffbd59;
+      background: rgba(255, 189, 89, 0.2);
+    }
+
+    /* Child Items Container */
+    .tree-children {
+      display: none;
+      margin-left: 20px;
+      border-left: 1px solid #333;
+      padding-left: 4px;
+    }
+
+    .tree-item.expanded > .tree-children {
+      display: block;
+    }
+
+    /* Depth-based indentation - subcategories get additional padding via tree-children margin */
+    .tree-item[data-depth="0"] > .tree-item-row { padding-left: 12px; }
+    .tree-item[data-depth="1"] > .tree-item-row { padding-left: 8px; }
+    .tree-item[data-depth="2"] > .tree-item-row { padding-left: 8px; }
+    .tree-item[data-depth="3"] > .tree-item-row { padding-left: 8px; }
+    .tree-item[data-depth="4"] > .tree-item-row { padding-left: 8px; }
+
+    /* Items without children - align with parent items that have toggles */
+    .tree-item.no-children > .tree-item-row {
+      padding-left: 32px !important;
+    }
+
+    /* Depth 0 items without children need less padding since they have no parent toggle */
+    .tree-item.no-children[data-depth="0"] > .tree-item-row {
+      padding-left: 32px !important;
+    }
+
+    /* All Rules special item */
+    .tree-item-all {
+      padding: 6px 12px;
+      margin: 0 8px 8px 8px;
+      background: rgba(255, 189, 89, 0.1);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+
+    .tree-item-all:hover {
+      background: rgba(255, 189, 89, 0.2);
+    }
+
+    .tree-item-all.active {
+      background: rgba(255, 189, 89, 0.25);
+      border: 1px solid rgba(255, 189, 89, 0.4);
+    }
+
+    .tree-item-all svg {
+      width: 16px;
+      height: 16px;
+      fill: #ffbd59;
+    }
+
+    .tree-item-all span {
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffbd59;
+    }
+
+    .tree-item-all .tree-count {
+      margin-left: auto;
+      color: #ffbd59;
+      background: rgba(255, 189, 89, 0.2);
+    }
+
+    /* Loading State */
+    .tree-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #666;
+      font-size: 11px;
+    }
+
+    .tree-loading::before {
+      content: "";
+      width: 14px;
+      height: 14px;
+      border: 2px solid #333;
+      border-top-color: #ffbd59;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==================== PANEL 2: RULES LIST ==================== */
+    .rules-list-panel {
+      flex: 1;
+      min-width: 350px;
+      max-width: 500px;
+      background: linear-gradient(180deg, #111 0%, #0d0d0d 100%);
+      border-right: 1px solid #222;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .rules-list-subheader {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      height: 38px;
+      border-bottom: 2px solid #888; /* Silver horizontal divider */
+      background: rgba(0, 0, 0, 0.1);
+      gap: 8px;
+    }
+
+    .context-display {
+      flex: 1;
+      font-size: 12px;
+      font-weight: 600;
+      color: #ffbd59;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* New Rule Icon Button - Gold + icon with gold border */
+    .btn-new-rule-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      background: transparent;
+      border: 1px solid #ffbd59;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      margin-right: 1px;
+    }
+
+    .btn-new-rule-icon:hover {
+      background: rgba(255, 189, 89, 0.15);
+      box-shadow: 0 2px 8px rgba(255, 189, 89, 0.3);
+    }
+
+    .btn-new-rule-icon svg {
+      width: 14px;
+      height: 14px;
+      fill: #ffbd59;
+    }
+
+    /* New Category Button */
+    .btn-new-category {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      background: rgba(255, 189, 89, 0.2);
+      border: 1px solid rgba(255, 189, 89, 0.4);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-new-category:hover {
+      background: rgba(255, 189, 89, 0.4);
+      border-color: #ffbd59;
+    }
+
+    .btn-new-category svg {
+      width: 14px;
+      height: 14px;
+      fill: #ffbd59;
+    }
+
+    /* ==================== RESIZE HANDLES ==================== */
+    .resize-handle {
+      width: 6px;
+      background: #222;
+      cursor: col-resize;
+      transition: background-color 0.2s;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .resize-handle:hover,
+    .resize-handle.active {
+      background: #c0c0c0;
+    }
+
+    .resize-handle::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 2px;
+      height: 40px;
+      background: #444;
+      border-radius: 1px;
+    }
+
+    .resize-handle:hover::after,
+    .resize-handle.active::after {
+      background: #000;
+    }
+
+    /* ==================== SELECTED CATEGORY STYLING ==================== */
+    /* IMPORTANT: No margin changes to prevent horizontal shifting */
+    .tree-item-row.selected-category {
+      background: rgba(255, 189, 89, 0.15);
+      position: relative;
+    }
+
+    .tree-item-row.selected-category::before {
+      content: "";
+      position: absolute;
+      left: 1px; /* Default for depth 0 */
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: #ffbd59;
+    }
+
+    /* Dynamically offset the selection indicator based on nesting depth */
+    /* Each .tree-children adds 12px margin-left, so we compensate with negative offset */
+    /* This ensures the indicator is always 1px to the right of the yellow sidebar border */
+    .tree-item[data-depth="1"] > .tree-item-row.selected-category::before { left: calc(1px - 12px); }
+    .tree-item[data-depth="2"] > .tree-item-row.selected-category::before { left: calc(1px - 24px); }
+    .tree-item[data-depth="3"] > .tree-item-row.selected-category::before { left: calc(1px - 36px); }
+    .tree-item[data-depth="4"] > .tree-item-row.selected-category::before { left: calc(1px - 48px); }
+    .tree-item[data-depth="5"] > .tree-item-row.selected-category::before { left: calc(1px - 60px); }
+
+    .tree-item-row.selected-category .tree-name {
+      color: #ffbd59;
+      font-weight: 700;
+    }
+
+    .tree-item-row.selected-category .tree-count {
+      color: #ffbd59;
+      background: rgba(255, 189, 89, 0.2);
+    }
+
+    .rules-list-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    /* Individual Rule List Item - Compact 20px height */
+    .rule-list-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 20px;
+      padding: 0 8px;
+      margin-bottom: 0;
+      background: transparent;
+      border: 1px solid transparent;
+      border-bottom: 1px solid #333;
+      border-radius: 0;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .rule-list-item:last-child {
+      border-bottom: none;
+    }
+
+    .rule-list-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Selected rule - yellow box around the row */
+    .rule-list-item.selected {
+      background: rgba(255, 189, 89, 0.12);
+      border: 1px solid #ffbd59;
+      border-radius: 4px;
+    }
+
+    .rule-list-item.inactive {
+      opacity: 0.6;
+    }
+
+    /* Star Icon in Rule List */
+    .rule-star-icon {
+      width: 9px;
+      height: 9px;
+      min-width: 9px;
+      border-radius: 50%;
+      background: rgba(255, 189, 89, 0.15);
+      border: 1px solid #ffbd59;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffbd59;
+    }
+
+    .rule-star-icon svg {
+      width: 5px;
+      height: 5px;
+    }
+
+    .rule-list-item.selected .rule-star-icon {
+      background: rgba(255, 189, 89, 0.3);
+    }
+
+    /* Rule List Item Content */
+    .rule-list-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .rule-list-title {
+      font-size: 10px;
+      font-weight: 400;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rule-list-description {
+      font-size: 10px;
+      color: #999;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Rule Status Indicator */
+    .rule-list-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .rule-list-status.active {
+      background: #4ade80;
+      box-shadow: 0 0 4px rgba(74, 222, 128, 0.5);
+    }
+
+    .rule-list-status.inactive {
+      background: #666;
+    }
+
+    /* ==================== PANEL 3: RULE EDITOR ==================== */
+    .rules-edit-panel {
+      flex: 1;
+      min-width: 400px;
+      background: linear-gradient(180deg, #111 0%, #0d0d0d 100%);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .edit-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      height: 38px;
+      border-bottom: 2px solid #888;
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .edit-panel-tabs {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex: 1;
+    }
+
+    .edit-panel-tab {
+      background: none;
+      border: none;
+      padding: 4px 4px;
+      font-size: 9px;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      transition: color 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .edit-panel-tab:hover {
+      color: #aaa;
+    }
+
+    .edit-panel-tab.active {
+      color: #c0c0c0;
+    }
+
+    .edit-panel-tab-divider {
+      color: #444;
+      font-size: 9px;
+      user-select: none;
+      padding: 0 2px;
+    }
+
+    /* Tab content visibility */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .edit-panel-close {
+      width: 22px;
+      height: 22px;
+      border: 1px solid #888;
+      background: transparent;
+      border-radius: 4px;
+      color: #888;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .edit-panel-close:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: #fff;
+      color: #fff;
+    }
+
+    .edit-panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    /* Primary Content Editor - top text area for immediate editing */
+    .primary-content-editor {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #333;
+      padding-top: 0;
+      position: relative;
+    }
+
+    .primary-content-editor label {
+      position: absolute;
+      top: 6px;
+      left: 19px;
+      font-size: 10px;
+      font-weight: 500;
+      color: #666;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .primary-content-textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 28px 14px 10px 14px;
+      background: #000;
+      border: 1px solid #333;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      color: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.5;
+      resize: vertical;
+      transition: all 0.2s ease;
+    }
+
+    .primary-content-textarea::placeholder {
+      color: #888;
+    }
+
+    /* AI Instruction Input - horizontal bar below textarea */
+    .ai-instruction-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 0;
+      padding: 8px 12px;
+      background: #000;
+      border: 1px solid #333;
+      border-radius: 0 0 8px 8px;
+      transition: all 0.2s ease;
+    }
+
+    .ai-instruction-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #c0c0c0;
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+      transition: color 0.2s ease;
+    }
+
+    .ai-instruction-input::placeholder {
+      color: #666;
+      font-style: italic;
+      transition: color 0.2s ease;
+    }
+
+    .ai-instruction-btn {
+      padding: 6px 16px;
+      background: linear-gradient(135deg, #ffbd59 0%, #f0ad4e 100%);
+      border: 1px solid transparent;
+      border-radius: 4px;
+      color: #000;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .ai-instruction-btn:hover {
+      background: linear-gradient(135deg, #ffc970 0%, #f5b75f 100%);
+      transform: translateY(-1px);
+    }
+
+    .ai-instruction-btn:active {
+      transform: translateY(0);
+    }
+
+    .ai-instruction-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .ai-instruction-btn.loading {
+      position: relative;
+      color: transparent;
+    }
+
+    .ai-instruction-btn.loading::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 14px;
+      height: 14px;
+      margin: -7px 0 0 -7px;
+      border: 2px solid #000;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Synchronized Focus Group - Active State */
+    .primary-content-editor.focus-group-active .primary-content-textarea {
+      border: 1px solid #ffbd59;
+      border-bottom: none;
+      box-shadow: -3px 0 0 0 rgba(255, 189, 89, 0.25), 3px 0 0 0 rgba(255, 189, 89, 0.25), 0 -3px 0 0 rgba(255, 189, 89, 0.25);
+    }
+
+    .primary-content-editor.focus-group-active .ai-instruction-bar {
+      background: #ffbd59;
+      border-color: #ffbd59;
+      box-shadow: -3px 0 0 0 rgba(255, 189, 89, 0.25), 3px 0 0 0 rgba(255, 189, 89, 0.25), 0 3px 0 0 rgba(255, 189, 89, 0.25);
+    }
+
+    .primary-content-editor.focus-group-active .ai-instruction-input {
+      color: #000;
+    }
+
+    .primary-content-editor.focus-group-active .ai-instruction-input::placeholder {
+      color: #333;
+    }
+
+    .primary-content-editor.focus-group-active .ai-instruction-btn {
+      background: transparent;
+      border: 1px solid #000;
+      color: #000;
+    }
+
+    .primary-content-editor.focus-group-active .ai-instruction-btn:hover {
+      background: rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .edit-section {
+      margin-bottom: 24px;
+    }
+
+    .edit-section-title {
+      font-size: 9px;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #ffbd59;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      padding-left: 14px;
+      border-bottom: 1px solid #222;
+    }
+
+    .edit-field {
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .edit-field label {
+      position: absolute;
+      top: 6px;
+      left: 14px;
+      font-size: 10px;
+      font-weight: 500;
+      color: #666;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .edit-field input,
+    .edit-field textarea,
+    .edit-field select {
+      width: 100%;
+      padding: 28px 14px 10px 14px;
+      background: #000;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .edit-field input:focus,
+    .edit-field textarea:focus,
+    .edit-field select:focus {
+      outline: none;
+      background: #000;
+      border: 1px solid #ffbd59;
+      box-shadow: 0 0 0 3px rgba(255, 189, 89, 0.25);
+    }
+
+    .edit-field textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .edit-field select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c0c0c0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    .edit-field-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .edit-field-row .edit-field {
+      flex: 1;
+    }
+
+    .edit-toggle-field {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: #151515;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+
+    .edit-toggle-label {
+      font-size: 13px;
+      color: #ccc;
+    }
+
+    .edit-toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: #333;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .edit-toggle.active {
+      background: #22c55e;
+    }
+
+    .edit-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+    }
+
+    .edit-toggle.active::after {
+      transform: translateX(20px);
+    }
+
+    /* Button Configuration */
+    .button-config-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .button-config-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      background: #151515;
+      border: 1px solid #252525;
+      border-radius: 6px;
+    }
+
+    .button-config-item input {
+      flex: 1;
+      padding: 6px 8px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 12px;
+    }
+
+    .button-config-item select {
+      width: 100px;
+      padding: 6px 8px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 12px;
+    }
+
+    .button-config-remove {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      color: #666;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .button-config-remove:hover {
+      color: #ef4444;
+    }
+
+    .btn-add-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px;
+      background: transparent;
+      border: 1px dashed #333;
+      border-radius: 6px;
+      color: #888;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-add-button:hover {
+      border-color: #ffbd59;
+      color: #ffbd59;
+    }
+
+    /* Auto-save indicator */
+    .autosave-indicator {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(34, 197, 94, 0.9);
+      border-radius: 6px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .autosave-indicator.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .autosave-indicator svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Empty State */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .empty-state-text {
+      font-size: 13px;
+      text-align: center;
+      max-width: 300px;
+    }
+
+    /* Persona selector in edit panel */
+    .persona-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px 0;
+    }
+
+    .persona-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 54px;
+      height: 54px;
+      user-select: none;
+      position: relative;
+    }
+
+    .persona-option:hover {
+      border-color: #555;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Secondary persona - silver border (single-click) */
+    .persona-option.secondary {
+      border-color: #c0c0c0;
+      background: rgba(192, 192, 192, 0.1);
+    }
+
+    /* Primary persona - gold border (double-click) */
+    .persona-option.primary {
+      border-color: #ffbd59;
+      background: rgba(255, 189, 89, 0.1);
+    }
+
+    .persona-option img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+    }
+
+    .persona-option span {
+      font-size: 8px;
+      color: #888;
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    .persona-option.secondary span {
+      color: #c0c0c0;
+    }
+
+    .persona-option.primary span {
+      color: #ffbd59;
+    }
+
+    /* Trigger Condition Builder */
+    .trigger-condition {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: #151515;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .trigger-condition select,
+    .trigger-condition input {
+      padding: 6px 8px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 12px;
+    }
+
+    .trigger-condition select {
+      width: 140px;
+    }
+
+    .trigger-condition input {
+      width: 60px;
+    }
+
+    .trigger-condition-remove {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      color: #666;
+      cursor: pointer;
+    }
+
+    .trigger-condition-remove:hover {
+      color: #ef4444;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- ADMIN LEFT SIDEBAR -->
+    <div class="admin-sidebar">
+      <a href="/admin" class="admin-sidebar-icon" data-tooltip="Dashboard" data-nav="dashboard">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+      </a>
+      <a href="/search" class="admin-sidebar-icon" data-tooltip="Search" data-nav="search">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      </a>
+      <a href="/admin/tasks" class="admin-sidebar-icon" data-tooltip="Tasks" data-nav="tasks">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      </a>
+      <a href="/admin/hospitality" class="admin-sidebar-icon active" data-tooltip="Hospitality" data-nav="hospitality">
+        <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+      </a>
+
+      <div class="admin-sidebar-spacer"></div>
+
+      <!-- Brand Text -->
+      <div class="admin-sidebar-brand-section">
+        <div class="admin-sidebar-brand-text">Jubilee<span class="verse">Verse</span><span class="dotcom">.com</span></div>
+        <div class="admin-sidebar-brand-sub">ADMIN DASHBOARD</div>
+      </div>
+
+      <!-- User Avatar -->
+      <div class="admin-sidebar-avatar">
+        <img src="/images/personas/jubilee.png" alt="Admin" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23666%22%3E%3Cpath d=%22M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z%22/%3E%3C/svg%3E'">
+      </div>
+    </div>
+
+    <!-- MAIN AREA -->
+    <div class="main-area">
+      <!-- ADMIN HEADER -->
+      <div class="admin-header">
+        <div class="admin-header-left">
+          <a href="/search" class="admin-header-logo">
+            <span class="logo-jubilee">Jubilee</span><span class="logo-intelligence">Intelligence</span>
+          </a>
+        </div>
+        <div class="admin-header-right">
+          <span class="admin-header-user-name" id="adminUserName"></span>
+          <span class="admin-header-sep">|</span>
+          <a href="/admin/hospitality" class="admin-header-back-link">Hospitality</a>
+          <span class="admin-header-sep">|</span>
+          <a href="#" class="admin-sign-out-btn" id="adminAuthBtn">
+            <span id="adminAuthBtnText">Sign Out</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 4v8" stroke="currentColor" stroke-width="2.5"/>
+              <path d="M6.5 7.5a8 8 0 1 0 11 0" stroke="currentColor" stroke-width="2" fill="none"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+      <!-- Main Content Wrapper -->
+      <div class="main-content-wrapper">
+        <!-- Full-width Header Bar -->
+        <div class="hospitality-rules-header-bar">
+          <div class="hospitality-rules-header-left">
+            <span class="hospitality-rules-title" id="mainHeaderTitle">
+              <svg class="vip-star-icon" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              Hospitality Rules
+            </span>
+          </div>
+        </div>
+      <div class="rules-layout">
+        <!-- ==================== PANEL 1: ENGAGEMENT CATEGORIES ==================== -->
+        <div class="rules-tree-panel">
+          <div class="tree-content" id="categoryTreeContent">
+            <!-- All Rules item (hidden, used for state tracking) -->
+            <div class="tree-item-all active" id="allRulesItem" style="display: none;">
+              <span>All Rules</span>
+              <span class="tree-count" id="countAll">0</span>
+            </div>
+            <!-- Category tree will be loaded here -->
+            <div id="categoryTree">
+              <div class="tree-loading">Loading categories...</div>
+            </div>
+          </div>
+          <!-- Search at bottom -->
+          <div class="tree-search">
+            <input type="text" id="categorySearch" placeholder="Search rules...">
+            <div class="tree-search-hint">Searches rule titles and descriptions</div>
+          </div>
+        </div>
+
+        <!-- Resize Handle 1 -->
+        <div class="resize-handle" id="resizeHandle1"></div>
+
+        <!-- ==================== PANEL 2: RULES LIST ==================== -->
+        <div class="rules-list-panel">
+          <div class="rules-list-subheader">
+            <span class="context-display" id="contextDisplay">All Rules</span>
+            <button class="btn-new-rule-icon" title="New Rule">
+              <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            </button>
+          </div>
+          <div class="rules-list-content" id="rulesListContent">
+            <!-- Rules list will be populated here -->
+          </div>
+        </div>
+
+        <!-- Resize Handle 2 -->
+        <div class="resize-handle" id="resizeHandle2"></div>
+
+        <!-- ==================== PANEL 3: RULE EDITOR ==================== -->
+        <div class="rules-edit-panel" id="editPanel">
+          <div class="edit-panel-header">
+            <div class="edit-panel-tabs">
+              <button class="edit-panel-tab active" data-tab="details">DETAILS</button>
+              <span class="edit-panel-tab-divider">|</span>
+              <button class="edit-panel-tab" data-tab="build">BUILD</button>
+              <span class="edit-panel-tab-divider">|</span>
+              <button class="edit-panel-tab" data-tab="personas">PERSONAS</button>
+              <span class="edit-panel-tab-divider">|</span>
+              <button class="edit-panel-tab" data-tab="preview">PREVIEW</button>
+              <span class="edit-panel-tab-divider">|</span>
+              <button class="edit-panel-tab" data-tab="history">HISTORY</button>
+            </div>
+            <button class="edit-panel-close">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+          </div>
+          <div class="edit-panel-content" id="editPanelContent">
+            <div class="empty-state" id="editEmptyState">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+              <div class="empty-state-title">No Rule Selected</div>
+              <div class="empty-state-text">Select a rule from the list to view and edit its configuration.</div>
+            </div>
+            <div id="editForm" style="display: none;">
+
+              <!-- TAB: DETAILS -->
+              <div class="tab-content active" data-tab-content="details">
+              <!-- Basic Information Section Header -->
+              <div class="edit-section-title" style="margin-top: 8px;">Basic Information</div>
+
+              <!-- Rule Title -->
+              <div class="edit-field" style="margin-bottom: 12px;">
+                <label>Rule Name</label>
+                <input type="text" id="editName" onchange="autoSave()">
+              </div>
+
+              <!-- Primary Content Editor - Text area with AI instruction bar (Synchronized Focus Group) -->
+              <div class="primary-content-editor" id="primaryContentEditorGroup"
+                   onmouseenter="setFocusGroupHover(true)"
+                   onmouseleave="setFocusGroupHover(false)">
+                <label>Rule Description</label>
+                <textarea
+                  id="primaryContentEditor"
+                  class="primary-content-textarea"
+                  placeholder="Enter the description for this hospitality rule..."
+                  oninput="autoSave()"
+                  onfocus="setFocusGroupFocus(true)"
+                  onblur="setFocusGroupFocus(false)"
+                ></textarea>
+                <!-- AI Instruction Bar -->
+                <div class="ai-instruction-bar" id="aiInstructionBar">
+                  <input
+                    type="text"
+                    id="aiInstructionInput"
+                    class="ai-instruction-input"
+                    placeholder="Enter instructions to update the text above."
+                    onkeydown="if(event.key === 'Enter') processAiInstruction()"
+                    onfocus="setFocusGroupFocus(true)"
+                    onblur="setFocusGroupFocus(false)"
+                  >
+                  <button class="ai-instruction-btn" id="aiUpdateBtn" onclick="processAiInstruction()">UPDATE</button>
+                </div>
+              </div>
+
+              <div class="edit-section">
+                <div class="edit-field">
+                  <label>Description</label>
+                  <textarea id="editDescription" rows="3" onchange="autoSave()"></textarea>
+                </div>
+                <div class="edit-field-row">
+                  <div class="edit-field">
+                    <label>Category</label>
+                    <select id="editCategory" onchange="autoSave()">
+                      <!-- Options populated dynamically -->
+                    </select>
+                  </div>
+                  <div class="edit-field">
+                    <label>Priority</label>
+                    <input type="number" id="editPriority" min="1" max="1000" onchange="autoSave()">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Targeting -->
+              <div class="edit-section">
+                <div class="edit-section-title">Targeting</div>
+                <div class="edit-field">
+                  <label>Target Audience</label>
+                  <select id="editAudience" onchange="autoSave()">
+                    <option value="all">All Users</option>
+                    <option value="visitor">Visitors Only</option>
+                    <option value="subscriber">Subscribers Only</option>
+                    <option value="free">Free Tier</option>
+                    <option value="paid">Paid Tier</option>
+                  </select>
+                </div>
+                <div class="edit-field">
+                  <label>Action Type</label>
+                  <select id="editActionType" onchange="autoSave()">
+                    <option value="popup">Popup Message</option>
+                    <option value="notification">Notification</option>
+                    <option value="persona_message">Persona Message</option>
+                    <option value="redirect">Redirect</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Trigger Conditions -->
+              <div class="edit-section">
+                <div class="edit-section-title">Trigger Conditions</div>
+                <div id="triggerConditions">
+                  <!-- Trigger conditions will be populated here -->
+                </div>
+                <button class="btn-add-button" data-action="add-trigger">
+                  <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                  Add Condition
+                </button>
+              </div>
+
+              <!-- Message Template -->
+              <div class="edit-section">
+                <div class="edit-section-title">Message Template</div>
+                <div class="edit-field">
+                  <label>Message Text</label>
+                  <textarea id="editMessage" rows="4" placeholder="Use {{name}}, {{persona}}, {{time}} for personalization" onchange="autoSave()"></textarea>
+                </div>
+                <div class="edit-field">
+                  <label style="font-size: 11px; color: #666;">Available placeholders: {{name}}, {{persona_name}}, {{time_of_day}}, {{visit_count}}</label>
+                </div>
+              </div>
+
+              <!-- Button Configuration -->
+              <div class="edit-section">
+                <div class="edit-section-title" style="margin-top: 20px;">Action Buttons</div>
+                <div class="button-config-list" id="buttonConfigList">
+                  <!-- Button configs will be populated here -->
+                </div>
+                <button class="btn-add-button" data-action="add-button">
+                  <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                  Add Button
+                </button>
+              </div>
+
+              <!-- Rate Limiting -->
+              <div class="edit-section">
+                <div class="edit-section-title">Rate Limiting</div>
+                <div class="edit-field-row">
+                  <div class="edit-field">
+                    <label>Max Per Session</label>
+                    <input type="number" id="editMaxSession" min="1" max="10" onchange="autoSave()">
+                  </div>
+                  <div class="edit-field">
+                    <label>Max Per Day</label>
+                    <input type="number" id="editMaxDay" min="1" max="20" onchange="autoSave()">
+                  </div>
+                </div>
+                <div class="edit-field">
+                  <label>Cooldown (seconds)</label>
+                  <input type="number" id="editCooldown" min="0" max="86400" onchange="autoSave()">
+                </div>
+              </div>
+
+              <!-- Status -->
+              <div class="edit-section">
+                <div class="edit-section-title">Status</div>
+                <div class="edit-toggle-field">
+                  <span class="edit-toggle-label">Rule Active</span>
+                  <div class="edit-toggle" id="editActiveToggle"></div>
+                </div>
+              </div>
+              </div><!-- END TAB: DETAILS -->
+
+              <!-- TAB: BUILD -->
+              <div class="tab-content" data-tab-content="build">
+              </div><!-- END TAB: BUILD -->
+
+              <!-- TAB: PERSONAS -->
+              <div class="tab-content" data-tab-content="personas">
+                <div class="edit-section">
+                  <div class="edit-section-title">Persona Assignment</div>
+                  <div class="edit-section-subtitle" style="color: #888; font-size: 11px; margin-bottom: 12px;">
+                    Double-click to set primary persona (gold). Single-click to add/remove secondary personas (silver).
+                  </div>
+                  <div class="persona-selector" id="personaSelector">
+                    <!-- Personas will be populated here -->
+                  </div>
+                </div>
+              </div><!-- END TAB: PERSONAS -->
+
+              <!-- TAB: PREVIEW -->
+              <div class="tab-content" data-tab-content="preview">
+              </div><!-- END TAB: PREVIEW -->
+
+              <!-- TAB: HISTORY -->
+              <div class="tab-content" data-tab-content="history">
+              </div><!-- END TAB: HISTORY -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Control Panel - Hospitality View Navigation -->
+        <div class="hospitality-control-panel">
+          <!-- Dashboard View -->
+          <a href="/admin/hospitality" class="control-btn" title="Dashboard - Analytics & Gauges">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            <span class="control-btn-label">Dashboard</span>
+          </a>
+          <!-- Subscribers View -->
+          <a href="/admin/hospitality?view=subscribers" class="control-btn" title="Subscriber Hospitality">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+            <span class="control-btn-label">Subscribers</span>
+          </a>
+          <!-- Visitors View -->
+          <a href="/admin/hospitality?view=visitors" class="control-btn" title="Visitor Hospitality">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            <span class="control-btn-label">Visitors</span>
+          </a>
+          <!-- Rules View (Active) -->
+          <a href="/admin/hospitality/rules" class="control-btn active" title="Hospitality Rules">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            <span class="control-btn-label">Rules</span>
+          </a>
+
+          <!-- Spacer -->
+          <div style="flex: 1;"></div>
+
+          <!-- Cockpit View -->
+          <a href="/admin/hospitality/cockpit" class="control-btn" title="Hospitality Cockpit">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-1.95.7-3.74 1.87-5.13L9 10v1c0 1.1.9 2 2 2v5.59c0 .27.11.52.29.71l.71.7c-4.42 0-8-3.58-8-8zm13 5.59V14h-2v-2H9V9h3V6h2v1.17c2.36 1.13 4 3.53 4 6.33 0 1.77-.65 3.39-1.73 4.63l-.27-.54z"/></svg>
+            <span class="control-btn-label">Cockpit</span>
+          </a>
+        </div>
+
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auto-save indicator -->
+  <div class="autosave-indicator" id="autosaveIndicator">
+    <svg viewBox="0 0 24 24"><path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    Changes saved
+  </div>
+
+  <script>
+    // State
+    let rules = [];
+    let categories = [];
+    let categoryMap = {};  // Map of category ID to category object
+    let selectedRuleId = null;
+    let selectedCategoryId = null;  // null means "All Rules"
+    let expandedCategories = new Set();  // Track which categories are expanded
+    let saveTimeout = null;
+
+    // Available personas for rule assignment (12 actual personas from database)
+    const personas = [
+      { id: 'jubilee', name: 'Jubilee', image: '/images/personas/jubilee.png' },
+      { id: 'melody', name: 'Melody', image: '/images/personas/melody.png' },
+      { id: 'zariah', name: 'Zariah', image: '/images/personas/zariah.png' },
+      { id: 'elias', name: 'Elias', image: '/images/personas/elias.png' },
+      { id: 'eliana', name: 'Eliana', image: '/images/personas/eliana.png' },
+      { id: 'caleb', name: 'Caleb', image: '/images/personas/caleb.png' },
+      { id: 'imani', name: 'Imani', image: '/images/personas/imani.png' },
+      { id: 'zev', name: 'Zev', image: '/images/personas/zev.png' },
+      { id: 'amir', name: 'Amir', image: '/images/personas/amir.png' },
+      { id: 'nova', name: 'Nova', image: '/images/personas/nova.png' },
+      { id: 'santiago', name: 'Santiago', image: '/images/personas/santiago.png' },
+      { id: 'tahoma', name: 'Tahoma', image: '/images/personas/tahoma.png' }
+    ];
+
+    // ==================== CATEGORY TREE FUNCTIONS ====================
+
+    // Load categories from API
+    // Load categories - always use demo data for now to match demo rules
+    async function loadCategories() {
+      console.log('loadCategories called - forcing demo data');
+      loadDemoCategories();
+    }
+
+    // Build flat map for quick lookups
+    function buildCategoryMap(cats, parentPath = []) {
+      cats.forEach(cat => {
+        cat.fullPath = [...parentPath, cat.name];
+        categoryMap[cat.id] = cat;
+        if (cat.children && cat.children.length > 0) {
+          buildCategoryMap(cat.children, cat.fullPath);
+        }
+      });
+    }
+
+    // Demo categories fallback (matches database seed data)
+    function loadDemoCategories() {
+      categories = [
+        { id: 'cat-welcome', slug: 'welcome-onboarding', name: 'Welcome & Onboarding', icon: null, color: '#4ade80', children: [
+          { id: 'cat-first-visit', slug: 'first-visit', name: 'First Visit', icon: null, color: '#4ade80', children: [] },
+          { id: 'cat-return-visitor', slug: 'return-visitor', name: 'Return Visitor', icon: null, color: '#4ade80', children: [] }
+        ]},
+        { id: 'cat-prayer', slug: 'prayer', name: 'Prayer', icon: null, color: '#a855f7', children: [
+          { id: 'cat-prayer-rooms', slug: 'prayer-rooms', name: 'Prayer Rooms', icon: null, color: '#a855f7', children: [
+            { id: 'cat-upper-room', slug: 'upper-room', name: 'Upper Room', icon: null, color: '#a855f7', children: [] },
+            { id: 'cat-healing-room', slug: 'healing-room', name: 'Healing Room', icon: null, color: '#a855f7', children: [] },
+            { id: 'cat-nations-room', slug: 'nations-room', name: 'Nations Room', icon: null, color: '#a855f7', children: [] }
+          ]},
+          { id: 'cat-intercessory', slug: 'intercessory-prayer', name: 'Intercessory Prayer', icon: null, color: '#a855f7', children: [] },
+          { id: 'cat-prayer-requests', slug: 'prayer-requests', name: 'Prayer Requests', icon: null, color: '#a855f7', children: [] },
+          { id: 'cat-prayer-partners', slug: 'prayer-partners', name: 'Prayer Partners', icon: null, color: '#a855f7', children: [] }
+        ]},
+        { id: 'cat-discipleship', slug: 'discipleship-growth', name: 'Discipleship & Growth', icon: null, color: '#60a5fa', children: [] },
+        { id: 'cat-bible-study', slug: 'bible-study', name: 'Bible Study', icon: null, color: '#f59e0b', children: [
+          { id: 'cat-hebraic', slug: 'hebraic-studies', name: 'Hebraic Studies', icon: null, color: '#f59e0b', children: [
+            { id: 'cat-hebrew-lang', slug: 'hebrew-language', name: 'Hebrew Language', icon: null, color: '#f59e0b', children: [] },
+            { id: 'cat-jewish-roots', slug: 'jewish-roots', name: 'Jewish Roots', icon: null, color: '#f59e0b', children: [] },
+            { id: 'cat-feasts', slug: 'feasts-festivals', name: 'Feasts & Festivals', icon: null, color: '#f59e0b', children: [] }
+          ]},
+          { id: 'cat-greek', slug: 'greek-word-study', name: 'Greek Word Study', icon: null, color: '#f59e0b', children: [] },
+          { id: 'cat-prophecy', slug: 'prophecy', name: 'Prophecy', icon: null, color: '#f59e0b', children: [] },
+          { id: 'cat-topical', slug: 'topical-studies', name: 'Topical Studies', icon: null, color: '#f59e0b', children: [] }
+        ]},
+        { id: 'cat-community', slug: 'community-groups', name: 'Community & Groups', icon: null, color: '#22c55e', children: [] },
+        { id: 'cat-family', slug: 'family-kids', name: 'Family & Kids', icon: null, color: '#ec4899', children: [
+          { id: 'cat-childrens', slug: 'childrens-ministry', name: "Children's Ministry", icon: null, color: '#ec4899', children: [
+            { id: 'cat-ages-0-2', slug: 'ages-0-2', name: 'Nursery (0-2)', icon: null, color: '#ec4899', children: [] },
+            { id: 'cat-ages-3-5', slug: 'ages-3-5', name: 'Preschool (3-5)', icon: null, color: '#ec4899', children: [] },
+            { id: 'cat-ages-6-8', slug: 'ages-6-8', name: 'Early Elementary (6-8)', icon: null, color: '#ec4899', children: [] },
+            { id: 'cat-ages-9-11', slug: 'ages-9-11', name: 'Upper Elementary (9-11)', icon: null, color: '#ec4899', children: [] }
+          ]},
+          { id: 'cat-parenting', slug: 'parenting', name: 'Parenting', icon: null, color: '#ec4899', children: [] },
+          { id: 'cat-marriage-family', slug: 'marriage-family', name: 'Marriage & Family', icon: null, color: '#ec4899', children: [] }
+        ]},
+        { id: 'cat-youth', slug: 'youth-young-adults', name: 'Youth & Young Adults', icon: null, color: '#8b5cf6', children: [] },
+        { id: 'cat-men-women', slug: 'men-women', name: 'Men & Women', icon: null, color: '#06b6d4', children: [] },
+        { id: 'cat-care', slug: 'care-coaching', name: 'Care & Coaching', icon: null, color: '#ef4444', children: [
+          { id: 'cat-grief', slug: 'grief-support', name: 'Grief Support', icon: null, color: '#ef4444', children: [] },
+          { id: 'cat-anxiety', slug: 'anxiety-support', name: 'Anxiety Support', icon: null, color: '#ef4444', children: [] },
+          { id: 'cat-marriage-support', slug: 'marriage-support', name: 'Marriage Support', icon: null, color: '#ef4444', children: [] },
+          { id: 'cat-addiction', slug: 'addiction-recovery', name: 'Addiction Recovery', icon: null, color: '#ef4444', children: [] },
+          { id: 'cat-transitions', slug: 'life-transitions', name: 'Life Transitions', icon: null, color: '#ef4444', children: [] }
+        ]},
+        { id: 'cat-outreach', slug: 'outreach-missions', name: 'Outreach & Missions', icon: null, color: '#f97316', children: [
+          { id: 'cat-prison', slug: 'prison-outreach', name: 'Prison Outreach', icon: null, color: '#f97316', children: [] },
+          { id: 'cat-local', slug: 'local-outreach', name: 'Local Outreach', icon: null, color: '#f97316', children: [] },
+          { id: 'cat-global', slug: 'global-missions', name: 'Global Missions', icon: null, color: '#f97316', children: [] },
+          { id: 'cat-digital-evan', slug: 'digital-evangelism', name: 'Digital Evangelism', icon: null, color: '#f97316', children: [] }
+        ]},
+        { id: 'cat-leadership', slug: 'leadership-ops', name: 'Leadership & Ministry Ops', icon: null, color: '#64748b', children: [] },
+        { id: 'cat-health', slug: 'health-wellness', name: 'Health & Wellness', icon: null, color: '#10b981', children: [] },
+        { id: 'cat-marketplace', slug: 'marketplace-work', name: 'Marketplace & Work', icon: null, color: '#84cc16', children: [] },
+        { id: 'cat-ai-digital', slug: 'ai-digital', name: 'AI & Digital Ministry', icon: null, color: '#ffbd59', children: [
+          { id: 'cat-ai-literacy', slug: 'ai-literacy', name: 'AI Literacy', icon: null, color: '#ffbd59', children: [] },
+          { id: 'cat-ai-tools', slug: 'ai-tools-church', name: 'AI Tools for Church', icon: null, color: '#ffbd59', children: [] },
+          { id: 'cat-ai-ethics', slug: 'ai-ethics', name: 'AI Ethics', icon: null, color: '#ffbd59', children: [] },
+          { id: 'cat-digital-disc', slug: 'digital-discipleship', name: 'Digital Discipleship', icon: null, color: '#ffbd59', children: [] }
+        ]}
+      ];
+      console.log('Loaded demo categories:', categories);
+      console.log('Categories with children:', categories.filter(c => c.children && c.children.length > 0).map(c => c.name));
+      buildCategoryMap(categories);
+      renderCategoryTree();
+    }
+
+    // Render the category tree
+    function renderCategoryTree() {
+      const container = document.getElementById('categoryTree');
+      if (!container) {
+        console.error('categoryTree container not found!');
+        return;
+      }
+      console.log('Rendering tree with', categories.length, 'root categories, expanded:', [...expandedCategories]);
+      container.innerHTML = renderCategoryBranch(categories, 0);
+      updateAllRulesCount();
+    }
+
+    // Render a branch of the category tree
+    function renderCategoryBranch(cats, depth) {
+      if (!cats || cats.length === 0) return '';
+
+      return cats.map(cat => {
+        const hasChildren = cat.children && cat.children.length > 0;
+        const isExpanded = expandedCategories.has(cat.id);
+        const isSelected = selectedCategoryId === cat.id;
+        const ruleCount = getRuleCountForCategory(cat.id);
+        // Use + or - symbol based on expanded state
+        const toggleSymbol = isExpanded ? '−' : '+';
+
+        if (depth === 0 && hasChildren) {
+          console.log(`Root category "${cat.name}" has ${cat.children.length} children, expanded: ${isExpanded}`);
+        }
+
+        // Use 'selected-category' class for yellow bordered box styling
+        const selectedClass = isSelected ? 'selected-category' : '';
+        const noChildrenClass = !hasChildren ? 'no-children' : '';
+        return `
+          <div class="tree-item ${isExpanded ? 'expanded' : ''} ${noChildrenClass}" data-id="${cat.id}" data-depth="${depth}">
+            <div class="tree-item-row ${selectedClass}">
+              <div class="tree-toggle ${hasChildren ? '' : 'empty'}">${hasChildren ? toggleSymbol : ''}</div>
+              <div class="tree-icon">
+                <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+              </div>
+              <span class="tree-name" title="${escapeHtml(cat.name)}">${escapeHtml(cat.name)}</span>
+              ${ruleCount > 0 ? `<span class="tree-count">${String(ruleCount).padStart(2, '0')}</span>` : ''}
+            </div>
+            ${hasChildren ? `
+              <div class="tree-children">
+                ${renderCategoryBranch(cat.children, depth + 1)}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Toggle category expand/collapse
+    function toggleCategory(categoryId) {
+      if (expandedCategories.has(categoryId)) {
+        expandedCategories.delete(categoryId);
+      } else {
+        expandedCategories.add(categoryId);
+      }
+
+      // If currently searching, re-render with filter; otherwise normal render
+      if (currentSearchTerm) {
+        // Recalculate visible categories for current search
+        const matchingRules = rules.filter(rule => {
+          const nameMatch = fuzzyMatch(currentSearchTerm, rule.name);
+          const descMatch = fuzzyMatch(currentSearchTerm, rule.description || '');
+          const categoryMatch = fuzzyMatch(currentSearchTerm, getCategoryDisplayName(rule));
+          return nameMatch || descMatch || categoryMatch;
+        });
+
+        const categoriesWithMatches = new Set();
+        matchingRules.forEach(rule => {
+          const catId = rule.category_id || getCategoryIdFromSlug(rule.category);
+          if (catId) {
+            categoriesWithMatches.add(catId);
+            const ancestors = getAncestorCategoryIds(catId);
+            ancestors.forEach(id => categoriesWithMatches.add(id));
+          }
+        });
+
+        renderCategoryTreeFiltered(categoriesWithMatches);
+      } else {
+        renderCategoryTree();
+      }
+    }
+
+    // Select a category to filter rules
+    function selectCategory(categoryId) {
+      console.log('selectCategory called with:', categoryId, 'rules loaded:', rules.length);
+      selectedCategoryId = categoryId;
+
+      // Update "All Rules" active state
+      const allRulesItem = document.getElementById('allRulesItem');
+      if (categoryId === null) {
+        allRulesItem.classList.add('active');
+      } else {
+        allRulesItem.classList.remove('active');
+      }
+
+      // Re-render tree to update active states (handle filtered mode)
+      if (currentSearchTerm) {
+        // Recalculate visible categories for current search
+        const matchingRules = rules.filter(rule => {
+          const nameMatch = fuzzyMatch(currentSearchTerm, rule.name);
+          const descMatch = fuzzyMatch(currentSearchTerm, rule.description || '');
+          const categoryMatch = fuzzyMatch(currentSearchTerm, getCategoryDisplayName(rule));
+          return nameMatch || descMatch || categoryMatch;
+        });
+
+        const categoriesWithMatches = new Set();
+        matchingRules.forEach(rule => {
+          const catId = rule.category_id || getCategoryIdFromSlug(rule.category);
+          if (catId) {
+            categoriesWithMatches.add(catId);
+            const ancestors = getAncestorCategoryIds(catId);
+            ancestors.forEach(id => categoriesWithMatches.add(id));
+          }
+        });
+
+        renderCategoryTreeFiltered(categoriesWithMatches);
+      } else {
+        renderCategoryTree();
+      }
+
+      // API call to fetch additional rules disabled for now - using demo data only
+      // if (categoryId) {
+      //   try {
+      //     const response = await fetch(`/api/hospitality/admin/categories/${categoryId}/rules`);
+      //     ...
+      //   } catch (err) { ... }
+      // }
+
+      // Clear current selection when switching categories to auto-select first rule
+      if (categoryId) {
+        selectedRuleId = null;
+      }
+
+      // Re-render rules list (Panel 2) - IMMEDIATE refresh on selection, auto-select first rule
+      renderRulesList(categoryId !== null);
+
+      // Save navigation state to cookie
+      saveNavigationState();
+
+      // Update context display
+      updateContextDisplay();
+    }
+
+    // Get rule count for a category (only directly associated rules, not descendants)
+    function getRuleCountForCategory(categoryId) {
+      return rules.filter(r => {
+        const ruleCatId = r.category_id || getCategoryIdFromSlug(r.category);
+        return ruleCatId === categoryId;
+      }).length;
+    }
+
+    // Get all descendant category IDs
+    function getDescendantCategoryIds(categoryId) {
+      const cat = categoryMap[categoryId];
+      if (!cat || !cat.children) return [];
+
+      let ids = [];
+      cat.children.forEach(child => {
+        ids.push(child.id);
+        ids = ids.concat(getDescendantCategoryIds(child.id));
+      });
+      return ids;
+    }
+
+    // Map old category slugs to new category IDs (for backward compatibility)
+    function getCategoryIdFromSlug(slug) {
+      for (const cat of Object.values(categoryMap)) {
+        if (cat.slug === slug || cat.slug.includes(slug)) {
+          return cat.id;
+        }
+      }
+      return null;
+    }
+
+    // Update "All Rules" count
+    function updateAllRulesCount() {
+      document.getElementById('countAll').textContent = rules.length;
+    }
+
+    // State to track pre-search expanded categories
+    let preSearchExpandedCategories = null;
+    let currentSearchTerm = '';
+
+    // Fuzzy match helper - returns true if all characters in needle appear in haystack in order
+    function fuzzyMatch(needle, haystack) {
+      if (!needle || !haystack) return false;
+      needle = needle.toLowerCase();
+      haystack = haystack.toLowerCase();
+
+      // Simple contains check for better UX
+      if (haystack.includes(needle)) return true;
+
+      // Fuzzy matching - characters must appear in order but not necessarily consecutively
+      let needleIdx = 0;
+      for (let i = 0; i < haystack.length && needleIdx < needle.length; i++) {
+        if (haystack[i] === needle[needleIdx]) {
+          needleIdx++;
+        }
+      }
+      return needleIdx === needle.length;
+    }
+
+    // Fuzzy search categories based on rule content
+    function fuzzySearchCategories(query) {
+      const searchTerm = query.toLowerCase().trim();
+      currentSearchTerm = searchTerm;
+
+      if (!searchTerm) {
+        // Restore pre-search state
+        if (preSearchExpandedCategories !== null) {
+          expandedCategories = preSearchExpandedCategories;
+          preSearchExpandedCategories = null;
+        }
+        renderCategoryTree();
+        return;
+      }
+
+      // Save current expanded state before first search
+      if (preSearchExpandedCategories === null) {
+        preSearchExpandedCategories = new Set(expandedCategories);
+      }
+
+      // Find rules that match the search term
+      const matchingRules = rules.filter(rule => {
+        const nameMatch = fuzzyMatch(searchTerm, rule.name);
+        const descMatch = fuzzyMatch(searchTerm, rule.description || '');
+        const categoryMatch = fuzzyMatch(searchTerm, getCategoryDisplayName(rule));
+        return nameMatch || descMatch || categoryMatch;
+      });
+
+      // Get category IDs that have matching rules
+      const categoriesWithMatches = new Set();
+      matchingRules.forEach(rule => {
+        const catId = rule.category_id || getCategoryIdFromSlug(rule.category);
+        if (catId) {
+          categoriesWithMatches.add(catId);
+          // Also add all ancestor categories
+          const ancestors = getAncestorCategoryIds(catId);
+          ancestors.forEach(id => categoriesWithMatches.add(id));
+        }
+      });
+
+      // Expand all categories that lead to matches
+      expandedCategories = new Set(categoriesWithMatches);
+
+      // Render tree with only matching categories visible
+      renderCategoryTreeFiltered(categoriesWithMatches);
+    }
+
+    // Get all ancestor category IDs for a given category
+    function getAncestorCategoryIds(categoryId) {
+      const ancestors = [];
+
+      function findAncestors(cats, targetId, path = []) {
+        for (const cat of cats) {
+          if (cat.id === targetId) {
+            return path;
+          }
+          if (cat.children && cat.children.length > 0) {
+            const result = findAncestors(cat.children, targetId, [...path, cat.id]);
+            if (result) return result;
+          }
+        }
+        return null;
+      }
+
+      const result = findAncestors(categories, categoryId);
+      return result || [];
+    }
+
+    // Render category tree with filtering for search
+    function renderCategoryTreeFiltered(visibleCategoryIds) {
+      const container = document.getElementById('categoryTree');
+      if (!container) return;
+
+      container.innerHTML = renderCategoryBranchFiltered(categories, 0, visibleCategoryIds);
+      updateAllRulesCount();
+    }
+
+    // Render a branch with filtering
+    function renderCategoryBranchFiltered(cats, depth, visibleCategoryIds) {
+      if (!cats || cats.length === 0) return '';
+
+      return cats.map(cat => {
+        // Check if this category or any descendant is visible
+        const isVisible = visibleCategoryIds.has(cat.id);
+        const hasVisibleDescendant = hasVisibleDescendants(cat, visibleCategoryIds);
+
+        if (!isVisible && !hasVisibleDescendant) {
+          return ''; // Skip this category entirely
+        }
+
+        const hasChildren = cat.children && cat.children.length > 0;
+        const isExpanded = expandedCategories.has(cat.id);
+        const isSelected = selectedCategoryId === cat.id;
+        const ruleCount = getRuleCountForCategory(cat.id);
+        const toggleSymbol = isExpanded ? '−' : '+';
+        // Use 'selected-category' class for yellow bordered box styling
+        const selectedClass = isSelected ? 'selected-category' : '';
+        const noChildrenClass = !hasChildren ? 'no-children' : '';
+
+        return `
+          <div class="tree-item ${isExpanded ? 'expanded' : ''} ${noChildrenClass}" data-id="${cat.id}" data-depth="${depth}">
+            <div class="tree-item-row ${selectedClass}">
+              <div class="tree-toggle ${hasChildren ? '' : 'empty'}">${hasChildren ? toggleSymbol : ''}</div>
+              <div class="tree-icon">
+                <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+              </div>
+              <span class="tree-name" title="${escapeHtml(cat.name)}">${escapeHtml(cat.name)}</span>
+              ${ruleCount > 0 ? `<span class="tree-count">${String(ruleCount).padStart(2, '0')}</span>` : ''}
+            </div>
+            ${hasChildren ? `
+              <div class="tree-children">
+                ${renderCategoryBranchFiltered(cat.children, depth + 1, visibleCategoryIds)}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Check if category has any visible descendants
+    function hasVisibleDescendants(cat, visibleCategoryIds) {
+      if (!cat.children || cat.children.length === 0) return false;
+
+      for (const child of cat.children) {
+        if (visibleCategoryIds.has(child.id)) return true;
+        if (hasVisibleDescendants(child, visibleCategoryIds)) return true;
+      }
+      return false;
+    }
+
+    // Get filtered rules based on selected category
+    // Only returns rules directly associated with the selected category (not descendants)
+    function getFilteredRules() {
+      console.log('getFilteredRules called - selectedCategoryId:', selectedCategoryId, '(type:', typeof selectedCategoryId, ')');
+
+      // If no category selected, return ALL rules
+      if (selectedCategoryId === null || selectedCategoryId === undefined || selectedCategoryId === '') {
+        console.log('No category filter, returning all', rules.length, 'rules');
+        return rules;
+      }
+
+      // Only filter by the selected category - NOT descendants
+      const filtered = rules.filter(r => {
+        const ruleCatId = r.category_id || getCategoryIdFromSlug(r.category);
+        return ruleCatId === selectedCategoryId;
+      });
+
+      console.log('Filtered result:', filtered.length, 'rules for category:', selectedCategoryId);
+      return filtered;
+    }
+
+    // Category icons (legacy - for backward compatibility with old category slugs)
+    const categoryIcons = {
+      welcome: '<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
+      engagement: '<svg viewBox="0 0 24 24"><path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/></svg>',
+      assistance: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>',
+      recognition: '<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>',
+      retention: '<svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>'
+    };
+
+    // Populate the category select dropdown with hierarchical options
+    function populateCategorySelect(selectedCategoryId = null) {
+      const select = document.getElementById('editCategory');
+      if (!select) return;
+
+      let html = '<option value="">-- Select Category --</option>';
+
+      function addCategoryOptions(cats, depth = 0) {
+        cats.forEach(cat => {
+          const indent = '\u00A0\u00A0'.repeat(depth);  // Non-breaking spaces for indentation
+          const prefix = depth > 0 ? '└ ' : '';
+          const isSelected = cat.id === selectedCategoryId ? 'selected' : '';
+          html += `<option value="${cat.id}" ${isSelected}>${indent}${prefix}${escapeHtml(cat.name)}</option>`;
+
+          if (cat.children && cat.children.length > 0) {
+            addCategoryOptions(cat.children, depth + 1);
+          }
+        });
+      }
+
+      addCategoryOptions(categories);
+      select.innerHTML = html;
+    }
+
+    // Get category name by ID
+    function getCategoryNameById(categoryId) {
+      const cat = categoryMap[categoryId];
+      return cat ? cat.name : 'Unknown';
+    }
+
+    // Get category color by ID
+    function getCategoryColorById(categoryId) {
+      const cat = categoryMap[categoryId];
+      return cat ? cat.color : '#9a9a9a';
+    }
+
+    // Get display name for a rule's category (handles both old slug and new ID)
+    function getCategoryDisplayName(rule) {
+      if (rule.category_id && categoryMap[rule.category_id]) {
+        return categoryMap[rule.category_id].name;
+      }
+      // Fallback to old category slug
+      return rule.category || 'Uncategorized';
+    }
+
+    // Load rules on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+      console.log('DOMContentLoaded - starting initialization');
+
+      await Promise.all([loadRules(), loadCategories()]);
+      console.log('Data loaded - rules:', rules.length, 'categories:', categories.length, 'categoryMap keys:', Object.keys(categoryMap).length);
+
+      initSidebar();
+      initResizeHandles();
+      initEventDelegation();
+
+      // Restore saved state from cookies
+      const savedCategoryId = getCookie('hospitalityRules_categoryId');
+      const savedRuleId = getCookie('hospitalityRules_ruleId');
+      const savedExpanded = getCookie('hospitalityRules_expanded');
+
+      // Restore expanded categories
+      if (savedExpanded) {
+        try {
+          expandedCategories = new Set(JSON.parse(savedExpanded));
+        } catch (e) {
+          console.warn('Failed to parse expanded categories');
+        }
+      }
+
+      // Select saved category or default to null (All Rules)
+      if (savedCategoryId && categoryMap[savedCategoryId]) {
+        selectedCategoryId = savedCategoryId;
+      } else {
+        selectedCategoryId = null;
+      }
+
+      // Render category tree and rules list
+      renderCategoryTree();
+      renderRulesList();
+
+      // Select saved rule or default to first rule in filtered list
+      const filteredRules = getFilteredRules();
+      if (savedRuleId && filteredRules.find(r => r.id === savedRuleId)) {
+        selectRule(savedRuleId);
+      } else if (filteredRules.length > 0) {
+        selectRule(filteredRules[0].id);
+      }
+
+      // Update displays
+      updateContextDisplay();
+
+      console.log('Initialization complete');
+    });
+
+    // Event delegation for dynamically created elements (CSP-compliant)
+    function initEventDelegation() {
+      // Category tree event delegation
+      const categoryTree = document.getElementById('categoryTree');
+      if (categoryTree) {
+        // Single click handler
+        categoryTree.addEventListener('click', (e) => {
+          // Handle toggle click
+          const toggle = e.target.closest('.tree-toggle');
+          if (toggle && !toggle.classList.contains('empty')) {
+            e.stopPropagation();
+            const treeItem = toggle.closest('.tree-item');
+            if (treeItem) {
+              toggleCategory(treeItem.dataset.id);
+            }
+            return;
+          }
+
+          // Handle row click (select category)
+          const row = e.target.closest('.tree-item-row');
+          if (row) {
+            const treeItem = row.closest('.tree-item');
+            if (treeItem) {
+              selectCategory(treeItem.dataset.id);
+            }
+          }
+        });
+
+        // Double-click handler to expand/collapse folders
+        categoryTree.addEventListener('dblclick', (e) => {
+          const row = e.target.closest('.tree-item-row');
+          if (row) {
+            const treeItem = row.closest('.tree-item');
+            if (treeItem) {
+              const toggle = treeItem.querySelector('.tree-toggle');
+              // Only toggle if this category has children (toggle is not empty)
+              if (toggle && !toggle.classList.contains('empty')) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleCategory(treeItem.dataset.id);
+              }
+            }
+          }
+        });
+      }
+
+      // All Rules item click
+      const allRulesItem = document.getElementById('allRulesItem');
+      if (allRulesItem) {
+        allRulesItem.addEventListener('click', () => selectCategory(null));
+      }
+
+      // New category button
+      const newCategoryBtn = document.querySelector('.btn-new-category');
+      if (newCategoryBtn) {
+        newCategoryBtn.addEventListener('click', createNewCategory);
+      }
+
+      // New rule button
+      const newRuleBtn = document.querySelector('.btn-new-rule-icon');
+      if (newRuleBtn) {
+        newRuleBtn.addEventListener('click', createNewRule);
+      }
+
+      // Close edit panel button
+      const closeEditBtn = document.querySelector('.edit-panel-close');
+      if (closeEditBtn) {
+        closeEditBtn.addEventListener('click', closeEditPanel);
+      }
+
+      // Edit panel tabs
+      const editPanelTabs = document.querySelector('.edit-panel-tabs');
+      if (editPanelTabs) {
+        editPanelTabs.addEventListener('click', (e) => {
+          const tab = e.target.closest('.edit-panel-tab');
+          if (tab) {
+            // Remove active from all tabs
+            editPanelTabs.querySelectorAll('.edit-panel-tab').forEach(t => t.classList.remove('active'));
+            // Add active to clicked tab
+            tab.classList.add('active');
+            // Switch tab content
+            switchEditPanelTab(tab.dataset.tab);
+          }
+        });
+      }
+
+      // Active toggle
+      const activeToggle = document.getElementById('editActiveToggle');
+      if (activeToggle) {
+        activeToggle.addEventListener('click', toggleActive);
+      }
+
+      // Rules list event delegation (for rulesListContent container)
+      const rulesListContent = document.getElementById('rulesListContent');
+      if (rulesListContent) {
+        rulesListContent.addEventListener('click', (e) => {
+          const ruleItem = e.target.closest('.rule-list-item');
+          if (ruleItem) {
+            const ruleId = ruleItem.dataset.id;
+            if (ruleId) {
+              selectRule(ruleId);
+            }
+          }
+        });
+      }
+
+      // Add trigger condition button
+      const addTriggerBtn = document.querySelector('.btn-add-button[data-action="add-trigger"]');
+      if (addTriggerBtn) {
+        addTriggerBtn.addEventListener('click', addTriggerCondition);
+      }
+
+      // Add button config button
+      const addButtonBtn = document.querySelector('.btn-add-button[data-action="add-button"]');
+      if (addButtonBtn) {
+        addButtonBtn.addEventListener('click', addButton);
+      }
+
+      // Search input
+      const searchInput = document.getElementById('categorySearch');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => fuzzySearchCategories(e.target.value));
+      }
+    }
+
+    // Initialize sidebar highlighting
+    function initSidebar() {
+      document.querySelectorAll('.admin-sidebar-icon').forEach(icon => {
+        icon.classList.remove('active');
+        if (icon.dataset.nav === 'hospitality') {
+          icon.classList.add('active');
+        }
+      });
+    }
+
+    // Load rules - always use demo data for now
+    async function loadRules() {
+      console.log('loadRules called - forcing demo data');
+      loadDemoRules();
+    }
+
+    // ML-inspired rule generation based on sentiment analysis and contextual engagement patterns
+    // Each category has 5+ emotionally compelling rules designed to maximize user engagement
+    function loadDemoRules() {
+      rules = [
+        // ==================== WELCOME & ONBOARDING (cat-welcome) ====================
+        { id: 'w1', rule_number: 'HR-0001', name: 'First Steps of Faith', category_id: 'cat-welcome', is_active: true,
+          primary_persona_id: 'jubilee', secondary_persona_ids: ['melody', 'eliana'],
+          description: 'Warmly greets first-time visitors with a personalized introduction to their spiritual journey, creating an immediate sense of belonging and divine purpose.' },
+        { id: 'w2', rule_number: 'HR-0002', name: 'Divine Appointment Recognition', category_id: 'cat-welcome', is_active: true,
+          primary_persona_id: 'elias', secondary_persona_ids: ['jubilee'],
+          description: 'Acknowledges the significance of the visitor\'s arrival, framing their visit as a meaningful moment orchestrated by providence rather than chance.' },
+        { id: 'w3', rule_number: 'HR-0003', name: 'Gentle Path Guide', category_id: 'cat-welcome', is_active: true,
+          primary_persona_id: 'melody', secondary_persona_ids: ['nova', 'imani'],
+          description: 'Offers intuitive navigation assistance when confusion is detected, ensuring no seeker feels lost on their journey of discovery.' },
+        { id: 'w4', rule_number: 'HR-0004', name: 'Warm Return Embrace', category_id: 'cat-welcome', is_active: true,
+          primary_persona_id: 'jubilee', secondary_persona_ids: [],
+          description: 'Celebrates returning visitors with heartfelt recognition, remembering their previous interactions and continuing their unique story.' },
+        { id: 'w5', rule_number: 'HR-0005', name: 'Curiosity Spark Igniter', category_id: 'cat-welcome', is_active: true,
+          primary_persona_id: 'nova', secondary_persona_ids: ['zev', 'caleb'],
+          description: 'Detects exploratory behavior and offers personalized recommendations that align with the visitor\'s apparent spiritual interests.' },
+        { id: 'w6', rule_number: 'HR-0006', name: 'Hesitation Comfort Response', category_id: 'cat-welcome', is_active: true,
+          primary_persona_id: 'eliana', secondary_persona_ids: ['melody', 'imani'],
+          description: 'Senses visitor uncertainty and provides reassuring guidance, transforming hesitation into confident exploration.' },
+
+        // ==================== PRAYER (cat-prayer) ====================
+        { id: 'p1', rule_number: 'HR-0010', name: 'Burden Sensing Invitation', category_id: 'cat-prayer', is_active: true,
+          primary_persona_id: 'zariah', secondary_persona_ids: ['eliana', 'tahoma'],
+          description: 'Uses sentiment analysis to detect emotional weight in user messages and gently offers prayer support at the perfect moment.' },
+        { id: 'p2', rule_number: 'HR-0011', name: 'Gratitude Celebration Prompt', category_id: 'cat-prayer', is_active: true,
+          primary_persona_id: 'melody', secondary_persona_ids: ['jubilee'],
+          description: 'Recognizes expressions of joy and blessing, inviting users to transform their gratitude into a shared prayer of thanksgiving.' },
+        { id: 'p3', rule_number: 'HR-0012', name: 'Midnight Watch Companion', category_id: 'cat-prayer', is_active: true,
+          primary_persona_id: 'tahoma', secondary_persona_ids: ['zariah', 'elias'],
+          description: 'Offers compassionate presence during late-night visits, recognizing that sleepless hours often carry unspoken prayers.' },
+        { id: 'p4', rule_number: 'HR-0013', name: 'Breakthrough Moment Catalyst', category_id: 'cat-prayer', is_active: true,
+          primary_persona_id: 'elias', secondary_persona_ids: ['amir', 'caleb'],
+          description: 'Identifies spiritual breakthrough patterns and encourages users to press deeper into transformative prayer experiences.' },
+        { id: 'p5', rule_number: 'HR-0014', name: 'Intercessory Circle Invitation', category_id: 'cat-prayer', is_active: true,
+          primary_persona_id: 'imani', secondary_persona_ids: ['zariah', 'santiago'],
+          description: 'Connects users with prayer warriors when their needs align with available intercessors, building community through shared petition.' },
+        { id: 'p6', rule_number: 'HR-0015', name: 'Scripture-Anchored Prayer Guide', category_id: 'cat-prayer', is_active: true,
+          description: 'Pairs user concerns with relevant scripture passages, empowering them to pray with biblical authority and confidence.' },
+
+        // ==================== DISCIPLESHIP & GROWTH (cat-discipleship) ====================
+        { id: 'd1', rule_number: 'HR-0020', name: 'Growth Edge Discovery', category_id: 'cat-discipleship', is_active: true,
+          description: 'Analyzes engagement patterns to identify the user\'s current spiritual growth edge and suggests targeted next steps.' },
+        { id: 'd2', rule_number: 'HR-0021', name: 'Consistency Celebration', category_id: 'cat-discipleship', is_active: true,
+          description: 'Recognizes faithful daily engagement and celebrates spiritual discipline milestones with encouraging affirmation.' },
+        { id: 'd3', rule_number: 'HR-0022', name: 'Plateau Breakthrough Prompt', category_id: 'cat-discipleship', is_active: true,
+          description: 'Detects stagnation in spiritual exploration and offers fresh perspectives to reignite passion for growth.' },
+        { id: 'd4', rule_number: 'HR-0023', name: 'Mentor Moment Connector', category_id: 'cat-discipleship', is_active: true,
+          description: 'Identifies teachable moments in user interactions and connects them with relevant mentoring resources or personas.' },
+        { id: 'd5', rule_number: 'HR-0024', name: 'Transformation Story Prompt', category_id: 'cat-discipleship', is_active: true,
+          description: 'Invites users to reflect on and share their growth journey, reinforcing transformation through articulation.' },
+
+        // ==================== BIBLE STUDY (cat-bible-study) ====================
+        { id: 'b1', rule_number: 'HR-0030', name: 'Contextual Scripture Illumination', category_id: 'cat-bible-study', is_active: true,
+          description: 'Analyzes conversation topics and surfaces relevant scripture passages that speak directly to the user\'s current questions.' },
+        { id: 'b2', rule_number: 'HR-0031', name: 'Deep Dive Invitation', category_id: 'cat-bible-study', is_active: true,
+          description: 'Recognizes surface-level engagement and invites users to explore the rich depths beneath familiar passages.' },
+        { id: 'b3', rule_number: 'HR-0032', name: 'Hebrew Roots Revelation', category_id: 'cat-bible-study', is_active: true,
+          description: 'Offers fascinating Hebrew word studies when users engage with Old Testament content, unlocking hidden layers of meaning.' },
+        { id: 'b4', rule_number: 'HR-0033', name: 'Prophetic Pattern Recognition', category_id: 'cat-bible-study', is_active: true,
+          description: 'Highlights prophetic connections across scripture when users explore prophecy-related content.' },
+        { id: 'b5', rule_number: 'HR-0034', name: 'Life Application Bridge', category_id: 'cat-bible-study', is_active: true,
+          description: 'Transforms academic study into practical wisdom by suggesting real-life applications of biblical principles.' },
+
+        // ==================== COMMUNITY & GROUPS (cat-community) ====================
+        { id: 'c1', rule_number: 'HR-0040', name: 'Kindred Spirit Connector', category_id: 'cat-community', is_active: true,
+          description: 'Identifies shared interests and spiritual journeys, suggesting community connections that could blossom into meaningful fellowship.' },
+        { id: 'c2', rule_number: 'HR-0041', name: 'Isolation Detection Outreach', category_id: 'cat-community', is_active: true,
+          description: 'Senses patterns of spiritual isolation and warmly invites users into the embrace of community.' },
+        { id: 'c3', rule_number: 'HR-0042', name: 'Gift Discovery Catalyst', category_id: 'cat-community', is_active: true,
+          description: 'Recognizes emerging spiritual gifts in user interactions and encourages their development within community context.' },
+        { id: 'c4', rule_number: 'HR-0043', name: 'Celebration Amplifier', category_id: 'cat-community', is_active: true,
+          description: 'Identifies moments worthy of community celebration and invites shared rejoicing in testimonies of breakthrough.' },
+        { id: 'c5', rule_number: 'HR-0044', name: 'Service Opportunity Matcher', category_id: 'cat-community', is_active: true,
+          description: 'Connects user passions and abilities with community service opportunities where they can make meaningful impact.' },
+
+        // ==================== FAMILY & KIDS (cat-family) ====================
+        { id: 'f1', rule_number: 'HR-0050', name: 'Family Devotion Spark', category_id: 'cat-family', is_active: true,
+          description: 'Suggests age-appropriate family devotional activities when parent-child engagement patterns are detected.' },
+        { id: 'f2', rule_number: 'HR-0051', name: 'Parenting Wisdom Moment', category_id: 'cat-family', is_active: true,
+          description: 'Offers timely parenting insights and biblical wisdom when family-related concerns emerge in conversations.' },
+        { id: 'f3', rule_number: 'HR-0052', name: 'Legacy Building Invitation', category_id: 'cat-family', is_active: true,
+          description: 'Encourages parents to capture and share faith stories that will become treasured family heritage.' },
+        { id: 'f4', rule_number: 'HR-0053', name: 'Child Wonder Cultivator', category_id: 'cat-family', is_active: true,
+          description: 'Provides engaging, imaginative content that nurtures children\'s natural sense of wonder about God.' },
+        { id: 'f5', rule_number: 'HR-0054', name: 'Marriage Strengthener Prompt', category_id: 'cat-family', is_active: true,
+          description: 'Detects opportunities to encourage couples and offers resources for deepening marital connection.' },
+
+        // ==================== YOUTH & YOUNG ADULTS (cat-youth) ====================
+        { id: 'y1', rule_number: 'HR-0060', name: 'Identity Anchor Moment', category_id: 'cat-youth', is_active: true,
+          description: 'Recognizes identity struggles common to young adults and offers grounding truth about their worth and purpose.' },
+        { id: 'y2', rule_number: 'HR-0061', name: 'Purpose Discovery Guide', category_id: 'cat-youth', is_active: true,
+          description: 'Helps young seekers explore their unique calling through guided reflection and biblical examples.' },
+        { id: 'y3', rule_number: 'HR-0062', name: 'Peer Pressure Shield', category_id: 'cat-youth', is_active: true,
+          description: 'Provides courage-building content when conversations reveal social pressure or compromise temptation.' },
+        { id: 'y4', rule_number: 'HR-0063', name: 'Authentic Faith Cultivator', category_id: 'cat-youth', is_active: true,
+          description: 'Encourages genuine spiritual expression over religious performance, validating honest questions and doubts.' },
+        { id: 'y5', rule_number: 'HR-0064', name: 'Future Vision Caster', category_id: 'cat-youth', is_active: true,
+          description: 'Helps young adults envision a hope-filled future aligned with God\'s purposes for their generation.' },
+
+        // ==================== MEN & WOMEN (cat-men-women) ====================
+        { id: 'mw1', rule_number: 'HR-0070', name: 'Warrior Heart Awakening', category_id: 'cat-men-women', is_active: true,
+          description: 'Calls forth courage and strength in men facing challenges, connecting them with biblical examples of godly masculinity.' },
+        { id: 'mw2', rule_number: 'HR-0071', name: 'Esther Moment Recognition', category_id: 'cat-men-women', is_active: true,
+          description: 'Empowers women to recognize their unique influence and step into their "for such a time as this" calling.' },
+        { id: 'mw3', rule_number: 'HR-0072', name: 'Brotherhood Bond Builder', category_id: 'cat-men-women', is_active: true,
+          description: 'Encourages men toward authentic connection and accountability with other believers.' },
+        { id: 'mw4', rule_number: 'HR-0073', name: 'Sisterhood Circle Invitation', category_id: 'cat-men-women', is_active: true,
+          description: 'Creates opportunities for women to find support, encouragement, and deep friendship in faith community.' },
+        { id: 'mw5', rule_number: 'HR-0074', name: 'Gender-Specific Wisdom Path', category_id: 'cat-men-women', is_active: true,
+          description: 'Tailors spiritual growth content to address the unique challenges and opportunities of each gender.' },
+
+        // ==================== CARE & COACHING (cat-care) ====================
+        { id: 'cc1', rule_number: 'HR-0080', name: 'Grief Companion Presence', category_id: 'cat-care', is_active: true,
+          description: 'Detects expressions of loss and provides gentle, patient presence without rushing toward resolution.' },
+        { id: 'cc2', rule_number: 'HR-0081', name: 'Anxiety Anchor Activation', category_id: 'cat-care', is_active: true,
+          description: 'Senses anxious patterns and offers grounding techniques rooted in scriptural promises of peace.' },
+        { id: 'cc3', rule_number: 'HR-0082', name: 'Hope Restoration Initiative', category_id: 'cat-care', is_active: true,
+          description: 'Recognizes hopelessness indicators and carefully rebuilds vision through testimonies and truth.' },
+        { id: 'cc4', rule_number: 'HR-0083', name: 'Burden Sharing Invitation', category_id: 'cat-care', is_active: true,
+          description: 'Creates safe space for users to articulate struggles, modeling the biblical command to bear one another\'s burdens.' },
+        { id: 'cc5', rule_number: 'HR-0084', name: 'Recovery Milestone Celebration', category_id: 'cat-care', is_active: true,
+          description: 'Tracks and celebrates progress in healing journeys, reinforcing hope and perseverance.' },
+        { id: 'cc6', rule_number: 'HR-0085', name: 'Crisis Intervention Bridge', category_id: 'cat-care', is_active: true,
+          description: 'Identifies urgent distress signals and connects users with appropriate human support resources.' },
+
+        // ==================== OUTREACH & MISSIONS (cat-outreach) ====================
+        { id: 'o1', rule_number: 'HR-0090', name: 'Compassion Activation Moment', category_id: 'cat-outreach', is_active: true,
+          description: 'Transforms awareness of world needs into actionable compassion through strategic engagement prompts.' },
+        { id: 'o2', rule_number: 'HR-0091', name: 'Local Impact Opportunity', category_id: 'cat-outreach', is_active: true,
+          description: 'Connects users with nearby service opportunities that match their passions and availability.' },
+        { id: 'o3', rule_number: 'HR-0092', name: 'Global Prayer Focus', category_id: 'cat-outreach', is_active: true,
+          description: 'Introduces unreached peoples and persecuted believers, mobilizing intercession for the nations.' },
+        { id: 'o4', rule_number: 'HR-0093', name: 'Story Sharing Empowerment', category_id: 'cat-outreach', is_active: true,
+          description: 'Equips users to naturally share their faith story with confidence and authenticity.' },
+        { id: 'o5', rule_number: 'HR-0094', name: 'Neighbor Love Prompt', category_id: 'cat-outreach', is_active: true,
+          description: 'Suggests practical ways to demonstrate Christ\'s love to neighbors, coworkers, and community.' },
+
+        // ==================== LEADERSHIP & MINISTRY OPS (cat-leadership) ====================
+        { id: 'l1', rule_number: 'HR-0100', name: 'Emerging Leader Recognition', category_id: 'cat-leadership', is_active: true,
+          description: 'Identifies leadership potential in user engagement patterns and offers development pathways.' },
+        { id: 'l2', rule_number: 'HR-0101', name: 'Servant Heart Cultivation', category_id: 'cat-leadership', is_active: true,
+          description: 'Reinforces servant leadership principles through timely examples and reflective prompts.' },
+        { id: 'l3', rule_number: 'HR-0102', name: 'Vision Clarity Coach', category_id: 'cat-leadership', is_active: true,
+          description: 'Helps leaders articulate and refine their God-given vision for ministry impact.' },
+        { id: 'l4', rule_number: 'HR-0103', name: 'Team Building Wisdom', category_id: 'cat-leadership', is_active: true,
+          description: 'Provides biblical principles for building and nurturing healthy ministry teams.' },
+        { id: 'l5', rule_number: 'HR-0104', name: 'Burnout Prevention Alert', category_id: 'cat-leadership', is_active: true,
+          description: 'Detects overextension patterns in ministry leaders and encourages sustainable rhythms of rest.' },
+
+        // ==================== HEALTH & WELLNESS (cat-health) ====================
+        { id: 'h1', rule_number: 'HR-0110', name: 'Temple Stewardship Reminder', category_id: 'cat-health', is_active: true,
+          description: 'Encourages holistic self-care as an act of worship and stewardship of the body as God\'s temple.' },
+        { id: 'h2', rule_number: 'HR-0111', name: 'Rest Sabbath Invitation', category_id: 'cat-health', is_active: true,
+          description: 'Detects exhaustion patterns and invites users into the biblical rhythm of sabbath rest.' },
+        { id: 'h3', rule_number: 'HR-0112', name: 'Mind Renewal Focus', category_id: 'cat-health', is_active: true,
+          description: 'Offers mental wellness resources grounded in the transformative power of renewed thinking.' },
+        { id: 'h4', rule_number: 'HR-0113', name: 'Healing Journey Companion', category_id: 'cat-health', is_active: true,
+          description: 'Provides encouragement and prayer support for those navigating health challenges.' },
+        { id: 'h5', rule_number: 'HR-0114', name: 'Wholeness Vision Caster', category_id: 'cat-health', is_active: true,
+          description: 'Paints a picture of integrated spiritual, emotional, and physical flourishing as God\'s design.' },
+
+        // ==================== MARKETPLACE & WORK (cat-marketplace) ====================
+        { id: 'm1', rule_number: 'HR-0120', name: 'Monday Morning Courage', category_id: 'cat-marketplace', is_active: true,
+          description: 'Strengthens believers heading into their workweek with purpose, integrity, and kingdom perspective.' },
+        { id: 'm2', rule_number: 'HR-0121', name: 'Workplace Witness Wisdom', category_id: 'cat-marketplace', is_active: true,
+          description: 'Equips professionals to authentically represent Christ in their vocational sphere of influence.' },
+        { id: 'm3', rule_number: 'HR-0122', name: 'Ethical Crossroads Guide', category_id: 'cat-marketplace', is_active: true,
+          description: 'Provides biblical wisdom for navigating complex ethical decisions in professional contexts.' },
+        { id: 'm4', rule_number: 'HR-0123', name: 'Kingdom Economy Perspective', category_id: 'cat-marketplace', is_active: true,
+          description: 'Reframes financial decisions through the lens of eternal investment and generous stewardship.' },
+        { id: 'm5', rule_number: 'HR-0124', name: 'Calling Confirmation Moment', category_id: 'cat-marketplace', is_active: true,
+          description: 'Affirms the sacred nature of secular work and helps users see their profession as ministry.' },
+
+        // ==================== AI & DIGITAL MINISTRY (cat-ai-digital) ====================
+        { id: 'a1', rule_number: 'HR-0130', name: 'Digital Discipleship Pioneer', category_id: 'cat-ai-digital', is_active: true,
+          description: 'Celebrates innovative uses of technology for kingdom impact and encourages creative digital ministry.' },
+        { id: 'a2', rule_number: 'HR-0131', name: 'AI Ethics Conversation Starter', category_id: 'cat-ai-digital', is_active: true,
+          description: 'Facilitates thoughtful exploration of artificial intelligence through a biblical worldview lens.' },
+        { id: 'a3', rule_number: 'HR-0132', name: 'Digital Wellness Check', category_id: 'cat-ai-digital', is_active: true,
+          description: 'Encourages healthy technology boundaries and mindful digital consumption habits.' },
+        { id: 'a4', rule_number: 'HR-0133', name: 'Innovation Blessing Prompt', category_id: 'cat-ai-digital', is_active: true,
+          description: 'Invites users to consider how emerging technologies can be leveraged for gospel advancement.' },
+        { id: 'a5', rule_number: 'HR-0134', name: 'Virtual Community Builder', category_id: 'cat-ai-digital', is_active: true,
+          description: 'Helps users cultivate authentic spiritual community in digital spaces without losing human connection.' },
+
+        // ==================== SUBCATEGORIES ====================
+
+        // --- Welcome: First Visit (cat-first-visit) ---
+        { id: 'fv1', rule_number: 'HR-0200', name: 'First Impression Warmth', category_id: 'cat-first-visit', is_active: true,
+          description: 'Creates a memorable first impression by acknowledging the courage it takes to explore faith in a new space.' },
+        { id: 'fv2', rule_number: 'HR-0201', name: 'Newcomer Orientation Guide', category_id: 'cat-first-visit', is_active: true,
+          description: 'Provides gentle orientation to key features and resources available for spiritual exploration.' },
+        { id: 'fv3', rule_number: 'HR-0202', name: 'Safe Space Assurance', category_id: 'cat-first-visit', is_active: true,
+          description: 'Communicates that questions, doubts, and curiosity are welcomed without judgment.' },
+
+        // --- Welcome: Return Visitor (cat-return-visitor) ---
+        { id: 'rv1', rule_number: 'HR-0210', name: 'Welcome Back Recognition', category_id: 'cat-return-visitor', is_active: true,
+          description: 'Warmly acknowledges returning visitors and references their previous journey touchpoints.' },
+        { id: 'rv2', rule_number: 'HR-0211', name: 'Continued Journey Prompt', category_id: 'cat-return-visitor', is_active: true,
+          description: 'Suggests picking up where they left off or exploring new areas based on past interests.' },
+        { id: 'rv3', rule_number: 'HR-0212', name: 'Deepening Invitation', category_id: 'cat-return-visitor', is_active: true,
+          description: 'Invites returning visitors to consider membership or deeper community engagement.' },
+
+        // --- Prayer: Prayer Rooms (cat-prayer-rooms) ---
+        { id: 'pr1', rule_number: 'HR-0220', name: 'Sacred Space Entry', category_id: 'cat-prayer-rooms', is_active: true,
+          description: 'Prepares hearts for entering dedicated prayer spaces with reverence and expectation.' },
+        { id: 'pr2', rule_number: 'HR-0221', name: 'Room Selection Guide', category_id: 'cat-prayer-rooms', is_active: true,
+          description: 'Helps users choose the prayer room that best matches their current spiritual need.' },
+        { id: 'pr3', rule_number: 'HR-0222', name: 'Prayer Room Etiquette', category_id: 'cat-prayer-rooms', is_active: true,
+          description: 'Gently introduces the unique atmosphere and practices of each prayer room.' },
+
+        // --- Prayer: Upper Room (cat-upper-room) ---
+        { id: 'ur1', rule_number: 'HR-0230', name: 'Upper Room Encounter', category_id: 'cat-upper-room', is_active: true,
+          description: 'Invites users into the intimate, waiting-on-God atmosphere reminiscent of Acts 2.' },
+        { id: 'ur2', rule_number: 'HR-0231', name: 'Holy Spirit Invitation', category_id: 'cat-upper-room', is_active: true,
+          description: 'Creates space for users to invite fresh infilling and empowerment of the Spirit.' },
+        { id: 'ur3', rule_number: 'HR-0232', name: 'Unity in Prayer Focus', category_id: 'cat-upper-room', is_active: true,
+          description: 'Encourages one-accord praying with the global body of believers.' },
+
+        // --- Prayer: Healing Room (cat-healing-room) ---
+        { id: 'hr1', rule_number: 'HR-0240', name: 'Healing Faith Activation', category_id: 'cat-healing-room', is_active: true,
+          description: 'Stirs faith for physical, emotional, and spiritual healing through Scripture promises.' },
+        { id: 'hr2', rule_number: 'HR-0241', name: 'Wholeness Prayer Guide', category_id: 'cat-healing-room', is_active: true,
+          description: 'Leads users through comprehensive prayers addressing body, soul, and spirit.' },
+        { id: 'hr3', rule_number: 'HR-0242', name: 'Testimony of Healing Prompt', category_id: 'cat-healing-room', is_active: true,
+          description: 'Invites users to share and celebrate answered prayers for healing.' },
+
+        // --- Prayer: Nations Room (cat-nations-room) ---
+        { id: 'nr1', rule_number: 'HR-0250', name: 'Nations Prayer Focus', category_id: 'cat-nations-room', is_active: true,
+          description: 'Presents specific nations and people groups for targeted intercessory prayer.' },
+        { id: 'nr2', rule_number: 'HR-0251', name: 'Unreached Peoples Awareness', category_id: 'cat-nations-room', is_active: true,
+          description: 'Introduces unreached people groups and mobilizes prayer for gospel access.' },
+        { id: 'nr3', rule_number: 'HR-0252', name: 'Global Revival Intercession', category_id: 'cat-nations-room', is_active: true,
+          description: 'Unites prayers for worldwide spiritual awakening and harvest.' },
+
+        // --- Prayer: Intercessory Prayer (cat-intercessory) ---
+        { id: 'ip1', rule_number: 'HR-0260', name: 'Intercessor Activation', category_id: 'cat-intercessory', is_active: true,
+          description: 'Identifies and activates the gift of intercession in users showing prayer burden.' },
+        { id: 'ip2', rule_number: 'HR-0261', name: 'Standing in the Gap', category_id: 'cat-intercessory', is_active: true,
+          description: 'Teaches the biblical practice of standing in the gap for others.' },
+        { id: 'ip3', rule_number: 'HR-0262', name: 'Prayer Watch Assignment', category_id: 'cat-intercessory', is_active: true,
+          description: 'Connects intercessors with specific prayer assignments and watch schedules.' },
+
+        // --- Prayer: Prayer Requests (cat-prayer-requests) ---
+        { id: 'pq1', rule_number: 'HR-0270', name: 'Request Submission Comfort', category_id: 'cat-prayer-requests', is_active: true,
+          description: 'Creates a safe, confidential space for sharing personal prayer needs.' },
+        { id: 'pq2', rule_number: 'HR-0271', name: 'Prayer Request Follow-up', category_id: 'cat-prayer-requests', is_active: true,
+          description: 'Checks in on previously submitted requests and celebrates answered prayers.' },
+        { id: 'pq3', rule_number: 'HR-0272', name: 'Urgent Prayer Mobilization', category_id: 'cat-prayer-requests', is_active: true,
+          description: 'Quickly mobilizes prayer support for time-sensitive urgent needs.' },
+
+        // --- Prayer: Prayer Partners (cat-prayer-partners) ---
+        { id: 'pp1', rule_number: 'HR-0280', name: 'Prayer Partner Matching', category_id: 'cat-prayer-partners', is_active: true,
+          description: 'Connects users with compatible prayer partners for ongoing mutual support.' },
+        { id: 'pp2', rule_number: 'HR-0281', name: 'Partnership Cultivation', category_id: 'cat-prayer-partners', is_active: true,
+          description: 'Nurtures existing prayer partnerships with conversation starters and prayer points.' },
+        { id: 'pp3', rule_number: 'HR-0282', name: 'Accountability Prayer Check', category_id: 'cat-prayer-partners', is_active: true,
+          description: 'Facilitates accountability conversations between prayer partners.' },
+
+        // --- Bible Study: Hebraic Studies (cat-hebraic) ---
+        { id: 'hs1', rule_number: 'HR-0290', name: 'Hebrew Insight Reveal', category_id: 'cat-hebraic', is_active: true,
+          description: 'Unveils rich Hebrew meanings that transform understanding of familiar passages.' },
+        { id: 'hs2', rule_number: 'HR-0291', name: 'Ancient Context Discovery', category_id: 'cat-hebraic', is_active: true,
+          description: 'Illuminates biblical texts through their original Hebraic cultural context.' },
+        { id: 'hs3', rule_number: 'HR-0292', name: 'Torah Wisdom Connection', category_id: 'cat-hebraic', is_active: true,
+          description: 'Connects New Testament truths to their Torah foundations.' },
+
+        // --- Bible Study: Hebrew Language (cat-hebrew-lang) ---
+        { id: 'hl1', rule_number: 'HR-0300', name: 'Hebrew Word of the Day', category_id: 'cat-hebrew-lang', is_active: true,
+          description: 'Introduces beautiful Hebrew words that deepen scriptural understanding.' },
+        { id: 'hl2', rule_number: 'HR-0301', name: 'Aleph-Bet Discovery', category_id: 'cat-hebrew-lang', is_active: true,
+          description: 'Reveals the pictographic meanings hidden in Hebrew letters.' },
+        { id: 'hl3', rule_number: 'HR-0302', name: 'Hebrew Name Exploration', category_id: 'cat-hebrew-lang', is_active: true,
+          description: 'Explores the prophetic significance of Hebrew names in Scripture.' },
+
+        // --- Bible Study: Jewish Roots (cat-jewish-roots) ---
+        { id: 'jr1', rule_number: 'HR-0310', name: 'Jewish Context Illumination', category_id: 'cat-jewish-roots', is_active: true,
+          description: 'Enriches New Testament understanding through first-century Jewish practices.' },
+        { id: 'jr2', rule_number: 'HR-0311', name: 'Messianic Connection', category_id: 'cat-jewish-roots', is_active: true,
+          description: 'Highlights how Yeshua fulfills Jewish messianic expectations.' },
+        { id: 'jr3', rule_number: 'HR-0312', name: 'Grafted In Understanding', category_id: 'cat-jewish-roots', is_active: true,
+          description: 'Teaches Gentile believers about their connection to Israel\'s olive tree.' },
+
+        // --- Bible Study: Feasts & Festivals (cat-feasts) ---
+        { id: 'ff1', rule_number: 'HR-0320', name: 'Feast Day Celebration', category_id: 'cat-feasts', is_active: true,
+          description: 'Invites participation in biblical feasts with Christological significance.' },
+        { id: 'ff2', rule_number: 'HR-0321', name: 'Prophetic Feast Teaching', category_id: 'cat-feasts', is_active: true,
+          description: 'Reveals the prophetic fulfillment patterns in God\'s appointed times.' },
+        { id: 'ff3', rule_number: 'HR-0322', name: 'Sabbath Rest Invitation', category_id: 'cat-feasts', is_active: true,
+          description: 'Encourages entering God\'s rest through weekly sabbath observance.' },
+
+        // --- Bible Study: Greek Word Study (cat-greek) ---
+        { id: 'gw1', rule_number: 'HR-0330', name: 'Greek Word Precision', category_id: 'cat-greek', is_active: true,
+          description: 'Reveals nuanced meanings in Greek that English translations miss.' },
+        { id: 'gw2', rule_number: 'HR-0331', name: 'Koine Greek Discovery', category_id: 'cat-greek', is_active: true,
+          description: 'Explores the common Greek of the New Testament for deeper insight.' },
+        { id: 'gw3', rule_number: 'HR-0332', name: 'Greek Verb Tense Insight', category_id: 'cat-greek', is_active: true,
+          description: 'Unlocks meaning through understanding Greek verb tenses and aspects.' },
+
+        // --- Bible Study: Prophecy (cat-prophecy) ---
+        { id: 'py1', rule_number: 'HR-0340', name: 'Prophetic Word Activation', category_id: 'cat-prophecy', is_active: true,
+          description: 'Stirs hunger for understanding God\'s prophetic voice in Scripture and today.' },
+        { id: 'py2', rule_number: 'HR-0341', name: 'End Times Clarity', category_id: 'cat-prophecy', is_active: true,
+          description: 'Provides balanced teaching on eschatology without sensationalism.' },
+        { id: 'py3', rule_number: 'HR-0342', name: 'Fulfilled Prophecy Wonder', category_id: 'cat-prophecy', is_active: true,
+          description: 'Builds faith through examining prophecies already fulfilled in history.' },
+
+        // --- Bible Study: Topical Studies (cat-topical) ---
+        { id: 'ts1', rule_number: 'HR-0350', name: 'Topic Deep Dive Invitation', category_id: 'cat-topical', is_active: true,
+          description: 'Suggests comprehensive topical studies based on user interests.' },
+        { id: 'ts2', rule_number: 'HR-0351', name: 'Life Issue Scripture Map', category_id: 'cat-topical', is_active: true,
+          description: 'Maps relevant Scripture passages to specific life situations and questions.' },
+        { id: 'ts3', rule_number: 'HR-0352', name: 'Doctrine Foundation Builder', category_id: 'cat-topical', is_active: true,
+          description: 'Establishes solid doctrinal understanding through systematic study.' },
+
+        // --- Family: Children\'s Ministry (cat-childrens) ---
+        { id: 'cm1', rule_number: 'HR-0360', name: 'Kid-Friendly Faith', category_id: 'cat-childrens', is_active: true,
+          description: 'Presents biblical truths in engaging, age-appropriate ways for children.' },
+        { id: 'cm2', rule_number: 'HR-0361', name: 'Parent-Child Activity Prompt', category_id: 'cat-childrens', is_active: true,
+          description: 'Suggests fun faith-building activities for parents and children together.' },
+        { id: 'cm3', rule_number: 'HR-0362', name: 'Bible Hero Adventure', category_id: 'cat-childrens', is_active: true,
+          description: 'Brings Bible characters to life through interactive storytelling.' },
+
+        // --- Family: Nursery (cat-ages-0-2) ---
+        { id: 'n1', rule_number: 'HR-0370', name: 'Baby Blessing Moments', category_id: 'cat-ages-0-2', is_active: true,
+          description: 'Provides simple prayers and blessings for parents of infants.' },
+        { id: 'n2', rule_number: 'HR-0371', name: 'Lullaby Scripture Songs', category_id: 'cat-ages-0-2', is_active: true,
+          description: 'Offers Scripture-based lullabies and soothing spiritual content.' },
+        { id: 'n3', rule_number: 'HR-0372', name: 'First Faith Foundations', category_id: 'cat-ages-0-2', is_active: true,
+          description: 'Guides parents in laying spiritual foundations from the earliest age.' },
+
+        // --- Family: Preschool (cat-ages-3-5) ---
+        { id: 'ps1', rule_number: 'HR-0380', name: 'Preschool Wonder Stories', category_id: 'cat-ages-3-5', is_active: true,
+          description: 'Tells Bible stories that capture preschool imagination and attention.' },
+        { id: 'ps2', rule_number: 'HR-0381', name: 'Simple Prayer Teaching', category_id: 'cat-ages-3-5', is_active: true,
+          description: 'Teaches preschoolers to talk to God in their own simple words.' },
+        { id: 'ps3', rule_number: 'HR-0382', name: 'Creation Celebration', category_id: 'cat-ages-3-5', is_active: true,
+          description: 'Nurtures wonder at God\'s creation through nature-based activities.' },
+
+        // --- Family: Early Elementary (cat-ages-6-8) ---
+        { id: 'ee1', rule_number: 'HR-0390', name: 'Bible Adventure Quest', category_id: 'cat-ages-6-8', is_active: true,
+          description: 'Engages early readers in interactive Bible exploration adventures.' },
+        { id: 'ee2', rule_number: 'HR-0391', name: 'Character Building Stories', category_id: 'cat-ages-6-8', is_active: true,
+          description: 'Uses Bible narratives to teach godly character traits.' },
+        { id: 'ee3', rule_number: 'HR-0392', name: 'Memory Verse Champion', category_id: 'cat-ages-6-8', is_active: true,
+          description: 'Makes Scripture memorization fun and rewarding.' },
+
+        // --- Family: Upper Elementary (cat-ages-9-11) ---
+        { id: 'ue1', rule_number: 'HR-0400', name: 'Pre-Teen Faith Questions', category_id: 'cat-ages-9-11', is_active: true,
+          description: 'Addresses faith questions that emerge as children approach adolescence.' },
+        { id: 'ue2', rule_number: 'HR-0401', name: 'Bible Study Skills', category_id: 'cat-ages-9-11', is_active: true,
+          description: 'Teaches independent Bible study methods appropriate for this age.' },
+        { id: 'ue3', rule_number: 'HR-0402', name: 'Friendship & Faith', category_id: 'cat-ages-9-11', is_active: true,
+          description: 'Guides navigating friendships while staying true to faith values.' },
+
+        // --- Family: Parenting (cat-parenting) ---
+        { id: 'par1', rule_number: 'HR-0410', name: 'Parenting Wisdom Nugget', category_id: 'cat-parenting', is_active: true,
+          description: 'Delivers timely biblical parenting insights for current challenges.' },
+        { id: 'par2', rule_number: 'HR-0411', name: 'Age-Stage Guidance', category_id: 'cat-parenting', is_active: true,
+          description: 'Provides developmentally appropriate parenting strategies.' },
+        { id: 'par3', rule_number: 'HR-0412', name: 'Parent Prayer Support', category_id: 'cat-parenting', is_active: true,
+          description: 'Offers specific prayers for the unique challenges parents face.' },
+
+        // --- Family: Marriage & Family (cat-marriage-family) ---
+        { id: 'mf1', rule_number: 'HR-0420', name: 'Marriage Enrichment Moment', category_id: 'cat-marriage-family', is_active: true,
+          description: 'Provides quick marriage-building insights for busy couples.' },
+        { id: 'mf2', rule_number: 'HR-0421', name: 'Family Worship Ideas', category_id: 'cat-marriage-family', is_active: true,
+          description: 'Suggests creative ways to incorporate worship into family life.' },
+        { id: 'mf3', rule_number: 'HR-0422', name: 'Conflict Resolution Wisdom', category_id: 'cat-marriage-family', is_active: true,
+          description: 'Offers biblical approaches to resolving family conflicts with grace.' },
+
+        // --- Care: Grief Support (cat-grief) ---
+        { id: 'gr1', rule_number: 'HR-0430', name: 'Grief Journey Companion', category_id: 'cat-grief', is_active: true,
+          description: 'Provides compassionate presence for those walking through loss.' },
+        { id: 'gr2', rule_number: 'HR-0431', name: 'Lament Permission', category_id: 'cat-grief', is_active: true,
+          description: 'Validates the full range of grief emotions as biblical and healthy.' },
+        { id: 'gr3', rule_number: 'HR-0432', name: 'Hope Beyond Loss', category_id: 'cat-grief', is_active: true,
+          description: 'Gently points to resurrection hope without minimizing present pain.' },
+
+        // --- Care: Anxiety Support (cat-anxiety) ---
+        { id: 'ax1', rule_number: 'HR-0440', name: 'Peace Anchor Activation', category_id: 'cat-anxiety', is_active: true,
+          description: 'Provides grounding techniques rooted in God\'s promises of peace.' },
+        { id: 'ax2', rule_number: 'HR-0441', name: 'Worry to Prayer Transfer', category_id: 'cat-anxiety', is_active: true,
+          description: 'Guides the practice of casting anxieties on the Lord through prayer.' },
+        { id: 'ax3', rule_number: 'HR-0442', name: 'Present Moment Focus', category_id: 'cat-anxiety', is_active: true,
+          description: 'Teaches mindful presence grounded in God\'s faithfulness today.' },
+
+        // --- Care: Marriage Support (cat-marriage-support) ---
+        { id: 'ms1', rule_number: 'HR-0450', name: 'Marriage Crisis Support', category_id: 'cat-marriage-support', is_active: true,
+          description: 'Provides immediate support and resources for marriages in crisis.' },
+        { id: 'ms2', rule_number: 'HR-0451', name: 'Communication Restoration', category_id: 'cat-marriage-support', is_active: true,
+          description: 'Offers tools for rebuilding healthy communication patterns.' },
+        { id: 'ms3', rule_number: 'HR-0452', name: 'Covenant Renewal Invitation', category_id: 'cat-marriage-support', is_active: true,
+          description: 'Encourages couples to renew their commitment with fresh vision.' },
+
+        // --- Care: Addiction Recovery (cat-addiction) ---
+        { id: 'ad1', rule_number: 'HR-0460', name: 'Recovery Hope Spark', category_id: 'cat-addiction', is_active: true,
+          description: 'Meets those struggling with addiction with hope and non-judgment.' },
+        { id: 'ad2', rule_number: 'HR-0461', name: 'Daily Strength Renewal', category_id: 'cat-addiction', is_active: true,
+          description: 'Provides daily encouragement for those in recovery journeys.' },
+        { id: 'ad3', rule_number: 'HR-0462', name: 'Accountability Connection', category_id: 'cat-addiction', is_active: true,
+          description: 'Connects users with recovery support and accountability resources.' },
+
+        // --- Care: Life Transitions (cat-transitions) ---
+        { id: 'lt1', rule_number: 'HR-0470', name: 'Season Change Navigation', category_id: 'cat-transitions', is_active: true,
+          description: 'Provides wisdom for navigating major life transitions with faith.' },
+        { id: 'lt2', rule_number: 'HR-0471', name: 'New Beginning Blessing', category_id: 'cat-transitions', is_active: true,
+          description: 'Celebrates new chapters with prayers of blessing and commissioning.' },
+        { id: 'lt3', rule_number: 'HR-0472', name: 'Letting Go Grace', category_id: 'cat-transitions', is_active: true,
+          description: 'Helps process endings with gratitude and trust for what\'s ahead.' },
+
+        // --- Outreach: Prison Outreach (cat-prison) ---
+        { id: 'po1', rule_number: 'HR-0480', name: 'Prison Ministry Call', category_id: 'cat-prison', is_active: true,
+          description: 'Awakens hearts to the transformative ministry of visiting the imprisoned.' },
+        { id: 'po2', rule_number: 'HR-0481', name: 'Second Chance Gospel', category_id: 'cat-prison', is_active: true,
+          description: 'Proclaims the message of redemption and new beginnings in Christ.' },
+        { id: 'po3', rule_number: 'HR-0482', name: 'Reentry Support Connection', category_id: 'cat-prison', is_active: true,
+          description: 'Connects with resources for supporting those reentering society.' },
+
+        // --- Outreach: Local Outreach (cat-local) ---
+        { id: 'lo1', rule_number: 'HR-0490', name: 'Neighborhood Impact Ideas', category_id: 'cat-local', is_active: true,
+          description: 'Suggests practical ways to serve and bless the local community.' },
+        { id: 'lo2', rule_number: 'HR-0491', name: 'Local Needs Awareness', category_id: 'cat-local', is_active: true,
+          description: 'Highlights specific needs in the local area and ways to help.' },
+        { id: 'lo3', rule_number: 'HR-0492', name: 'Community Partnership Builder', category_id: 'cat-local', is_active: true,
+          description: 'Connects with local organizations for collaborative kingdom impact.' },
+
+        // --- Outreach: Global Missions (cat-global) ---
+        { id: 'gm1', rule_number: 'HR-0500', name: 'Missionary Spotlight', category_id: 'cat-global', is_active: true,
+          description: 'Introduces missionaries serving around the world for prayer support.' },
+        { id: 'gm2', rule_number: 'HR-0501', name: 'Go or Send Challenge', category_id: 'cat-global', is_active: true,
+          description: 'Challenges users to consider their role in the Great Commission.' },
+        { id: 'gm3', rule_number: 'HR-0502', name: 'Missions Trip Preparation', category_id: 'cat-global', is_active: true,
+          description: 'Provides resources for those preparing for cross-cultural ministry.' },
+
+        // --- Outreach: Digital Evangelism (cat-digital-evan) ---
+        { id: 'de1', rule_number: 'HR-0510', name: 'Digital Witness Training', category_id: 'cat-digital-evan', is_active: true,
+          description: 'Equips believers to share faith effectively in online spaces.' },
+        { id: 'de2', rule_number: 'HR-0511', name: 'Social Media Ministry', category_id: 'cat-digital-evan', is_active: true,
+          description: 'Provides strategies for redemptive presence on social platforms.' },
+        { id: 'de3', rule_number: 'HR-0512', name: 'Online Conversation Guide', category_id: 'cat-digital-evan', is_active: true,
+          description: 'Helps navigate spiritual conversations in digital contexts.' },
+
+        // --- AI & Digital: AI Literacy (cat-ai-literacy) ---
+        { id: 'al1', rule_number: 'HR-0520', name: 'AI Understanding Builder', category_id: 'cat-ai-literacy', is_active: true,
+          description: 'Demystifies AI technology through accessible, faith-informed explanation.' },
+        { id: 'al2', rule_number: 'HR-0521', name: 'AI Opportunity Awareness', category_id: 'cat-ai-literacy', is_active: true,
+          description: 'Highlights positive applications of AI for ministry and life.' },
+        { id: 'al3', rule_number: 'HR-0522', name: 'AI Caution Wisdom', category_id: 'cat-ai-literacy', is_active: true,
+          description: 'Provides balanced awareness of AI limitations and concerns.' },
+
+        // --- AI & Digital: AI Tools for Church (cat-ai-tools) ---
+        { id: 'at1', rule_number: 'HR-0530', name: 'Ministry AI Applications', category_id: 'cat-ai-tools', is_active: true,
+          description: 'Introduces practical AI tools that can enhance ministry effectiveness.' },
+        { id: 'at2', rule_number: 'HR-0531', name: 'AI Implementation Guide', category_id: 'cat-ai-tools', is_active: true,
+          description: 'Provides step-by-step guidance for adopting AI tools wisely.' },
+        { id: 'at3', rule_number: 'HR-0532', name: 'AI Best Practices', category_id: 'cat-ai-tools', is_active: true,
+          description: 'Shares best practices for ethical and effective AI use in church.' },
+
+        // --- AI & Digital: AI Ethics (cat-ai-ethics) ---
+        { id: 'ae1', rule_number: 'HR-0540', name: 'AI Ethics Framework', category_id: 'cat-ai-ethics', is_active: true,
+          description: 'Presents a biblical framework for evaluating AI ethical questions.' },
+        { id: 'ae2', rule_number: 'HR-0541', name: 'Human Dignity in AI Age', category_id: 'cat-ai-ethics', is_active: true,
+          description: 'Affirms the unique value of human beings in an AI-enhanced world.' },
+        { id: 'ae3', rule_number: 'HR-0542', name: 'Responsible AI Advocacy', category_id: 'cat-ai-ethics', is_active: true,
+          description: 'Encourages thoughtful engagement in AI policy and development.' },
+
+        // --- AI & Digital: Digital Discipleship (cat-digital-disc) ---
+        { id: 'dd1', rule_number: 'HR-0550', name: 'Online Growth Community', category_id: 'cat-digital-disc', is_active: true,
+          description: 'Connects users with digital communities for spiritual growth.' },
+        { id: 'dd2', rule_number: 'HR-0551', name: 'Digital Spiritual Disciplines', category_id: 'cat-digital-disc', is_active: true,
+          description: 'Adapts classic spiritual disciplines for digital practice.' },
+        { id: 'dd3', rule_number: 'HR-0552', name: 'Screen Sabbath Encouragement', category_id: 'cat-digital-disc', is_active: true,
+          description: 'Promotes healthy digital boundaries for spiritual wellbeing.' }
+      ];
+      console.log('loadDemoRules completed - rules count:', rules.length);
+      updateAllRulesCount();
+      // Note: renderRulesList() is called by the caller after data is ready
+    }
+
+    // Render rules list (Panel 2) - Shows persona icon, title, and one-line description
+    function renderRulesList(autoSelectFirst = false) {
+      const container = document.getElementById('rulesListContent');
+
+      if (!container) {
+        console.error('rulesListContent container not found!');
+        return;
+      }
+
+      // Apply category filter
+      let filteredRules = getFilteredRules();
+
+      // Auto-select first rule if requested and no rule is currently selected
+      if (autoSelectFirst && filteredRules.length > 0 && !selectedRuleId) {
+        selectedRuleId = filteredRules[0].id;
+        const rule = filteredRules[0];
+        loadRuleIntoEditor(rule);
+        document.getElementById('editEmptyState').style.display = 'none';
+        document.getElementById('editForm').style.display = 'block';
+      }
+
+      // Render the rules list with star icons and title
+      // DEBUG: Always show something
+      if (filteredRules.length === 0) {
+        console.log('WARNING: filteredRules is empty! rules.length:', rules.length, 'selectedCategoryId:', selectedCategoryId);
+        container.innerHTML = '<div style="color: orange; padding: 10px;">No rules found for this category (rules array has ' + rules.length + ' items)</div>';
+        return;
+      }
+
+      try {
+        const html = filteredRules.map(rule => {
+          const isActive = rule.is_active !== false;
+          return `
+            <div class="rule-list-item ${rule.id === selectedRuleId ? 'selected' : ''} ${!isActive ? 'inactive' : ''}"
+                 data-id="${rule.id}">
+              <div class="rule-star-icon">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              </div>
+              <div class="rule-list-content">
+                <div class="rule-list-title">${escapeHtml(rule.name)}</div>
+              </div>
+              <div class="rule-list-status ${isActive ? 'active' : 'inactive'}"></div>
+            </div>
+          `;
+        }).join('');
+        console.log('Setting container HTML with', filteredRules.length, 'rules, html length:', html.length);
+        container.innerHTML = html;
+      } catch (err) {
+        console.error('Error rendering rules:', err);
+        container.innerHTML = '<div style="color: red; padding: 10px;">Error: ' + err.message + '</div>';
+      }
+    }
+
+    // Get persona for a rule (uses persona_id field or defaults to Jubilee)
+    function getPersonaForRule(rule) {
+      if (rule.persona_id) {
+        const persona = personas.find(p => p.id === rule.persona_id);
+        if (persona) return persona;
+      }
+      // Default to Jubilee if no persona assigned
+      return personas[0];
+    }
+
+    // Format trigger conditions for display
+    function formatTriggerConditions(conditions) {
+      if (!conditions || Object.keys(conditions).length === 0) return 'No triggers';
+
+      const parts = [];
+      if (conditions.time_on_site_gte) parts.push(`${conditions.time_on_site_gte}s on site`);
+      if (conditions.page_views_gte) parts.push(`${conditions.page_views_gte}+ pages`);
+      if (conditions.engagement_score_gte) parts.push(`score ${conditions.engagement_score_gte}+`);
+      if (conditions.session_count_gte) parts.push(`${conditions.session_count_gte}+ sessions`);
+      if (conditions.idle_seconds_gte) parts.push(`${conditions.idle_seconds_gte}s idle`);
+      if (conditions.is_return_visit) parts.push('return visit');
+      if (conditions.persona_context) parts.push(conditions.persona_context);
+
+      return parts.length > 0 ? parts.join(', ') : 'Custom';
+    }
+
+    // Select a rule
+    function selectRule(ruleId) {
+      selectedRuleId = ruleId;
+      const rule = rules.find(r => r.id === ruleId);
+
+      if (rule) {
+        loadRuleIntoEditor(rule);
+        document.getElementById('editEmptyState').style.display = 'none';
+        document.getElementById('editForm').style.display = 'block';
+      }
+
+      // Re-render rules list to show selection
+      renderRulesList();
+
+      // Save navigation state to cookie
+      saveNavigationState();
+
+      // Update context display
+      updateContextDisplay();
+    }
+
+    // Load rule into editor
+    function loadRuleIntoEditor(rule) {
+      // Reset tabs to DETAILS when loading a new rule
+      document.querySelectorAll('.edit-panel-tab').forEach(t => t.classList.remove('active'));
+      document.querySelector('.edit-panel-tab[data-tab="details"]').classList.add('active');
+
+      // Load rule name field
+      const nameEditor = document.getElementById('editName');
+      nameEditor.value = rule.name || '';
+
+      // Load primary content editor with rule description
+      const primaryEditor = document.getElementById('primaryContentEditor');
+      const ruleContent = rule.description || '';
+      primaryEditor.value = ruleContent;
+
+      // Auto-focus the rule name field after a short delay to ensure DOM is ready
+      setTimeout(() => {
+        nameEditor.focus();
+        // Select all text for easy replacement
+        nameEditor.select();
+      }, 50);
+
+      // Render persona selector with primary and secondary personas
+      const primaryPersonaId = rule.primary_persona_id || rule.persona_id || 'jubilee';
+      const secondaryPersonaIds = rule.secondary_persona_ids || [];
+      renderPersonaSelector(primaryPersonaId, secondaryPersonaIds);
+      document.getElementById('editDescription').value = rule.description || '';
+
+      // Populate category dropdown and set value
+      const categoryId = rule.category_id || getCategoryIdFromSlug(rule.category);
+      populateCategorySelect(categoryId);
+
+      document.getElementById('editPriority').value = rule.priority || 100;
+      document.getElementById('editAudience').value = rule.target_audience || 'all';
+      document.getElementById('editActionType').value = rule.action_type || 'popup';
+      document.getElementById('editMessage').value = rule.message_template || '';
+      document.getElementById('editMaxSession').value = rule.max_per_session || 1;
+      document.getElementById('editMaxDay').value = rule.max_per_day || 3;
+      document.getElementById('editCooldown').value = rule.cooldown_seconds || 300;
+
+      // Set active toggle
+      const toggle = document.getElementById('editActiveToggle');
+      if (rule.is_active) {
+        toggle.classList.add('active');
+      } else {
+        toggle.classList.remove('active');
+      }
+
+      // Load trigger conditions
+      renderTriggerConditions(rule.trigger_conditions || {});
+
+      // Load button config
+      renderButtonConfig(rule.button_config || []);
+    }
+
+    // Render persona selector in the editor
+    // Supports primary persona (gold - double-click) and secondary personas (silver - single-click)
+    function renderPersonaSelector(primaryPersonaId, secondaryPersonaIds = []) {
+      const container = document.getElementById('personaSelector');
+      if (!container) return;
+
+      container.innerHTML = personas.map(persona => {
+        let className = 'persona-option';
+        if (persona.id === primaryPersonaId) {
+          className += ' primary';
+        } else if (secondaryPersonaIds.includes(persona.id)) {
+          className += ' secondary';
+        }
+        return `
+          <div class="${className}" data-persona-id="${persona.id}">
+            <img src="${persona.image}" alt="${persona.name}" onerror="this.src='/images/personas/jubilee.png'">
+            <span>${persona.name}</span>
+          </div>
+        `;
+      }).join('');
+
+      // Add click handlers via event delegation
+      container.onclick = handlePersonaClick;
+      container.ondblclick = handlePersonaDoubleClick;
+    }
+
+    // Handle single-click on persona (toggle secondary selection - silver border)
+    function handlePersonaClick(e) {
+      const option = e.target.closest('.persona-option');
+      if (!option) return;
+
+      const personaId = option.dataset.personaId;
+      const rule = rules.find(r => r.id === selectedRuleId);
+      if (!rule) return;
+
+      // Initialize secondary_persona_ids array if not exists
+      if (!rule.secondary_persona_ids) {
+        rule.secondary_persona_ids = [];
+      }
+
+      // If this is the primary persona, don't allow toggling as secondary
+      if (rule.primary_persona_id === personaId) return;
+
+      // Toggle secondary selection
+      const index = rule.secondary_persona_ids.indexOf(personaId);
+      if (index === -1) {
+        // Add to secondary
+        rule.secondary_persona_ids.push(personaId);
+        option.classList.add('secondary');
+      } else {
+        // Remove from secondary
+        rule.secondary_persona_ids.splice(index, 1);
+        option.classList.remove('secondary');
+      }
+
+      autoSave();
+    }
+
+    // Handle double-click on persona (set as primary - gold border)
+    function handlePersonaDoubleClick(e) {
+      const option = e.target.closest('.persona-option');
+      if (!option) return;
+
+      e.preventDefault();
+      const personaId = option.dataset.personaId;
+      const rule = rules.find(r => r.id === selectedRuleId);
+      if (!rule) return;
+
+      // Initialize arrays if not exists
+      if (!rule.secondary_persona_ids) {
+        rule.secondary_persona_ids = [];
+      }
+
+      // Remove from secondary if it was there
+      const secondaryIndex = rule.secondary_persona_ids.indexOf(personaId);
+      if (secondaryIndex !== -1) {
+        rule.secondary_persona_ids.splice(secondaryIndex, 1);
+      }
+
+      // Set as primary (also update legacy persona_id for compatibility)
+      rule.primary_persona_id = personaId;
+      rule.persona_id = personaId;
+
+      // Re-render to update all styles
+      renderPersonaSelector(rule.primary_persona_id, rule.secondary_persona_ids);
+      autoSave();
+
+      // Re-render rules list to update persona avatar
+      renderRulesList();
+    }
+
+    // Render trigger conditions
+    function renderTriggerConditions(conditions) {
+      const container = document.getElementById('triggerConditions');
+      const conditionTypes = [
+        { key: 'time_on_site_gte', label: 'Time on site ≥', suffix: 's' },
+        { key: 'page_views_gte', label: 'Page views ≥', suffix: '' },
+        { key: 'engagement_score_gte', label: 'Engagement score ≥', suffix: '' },
+        { key: 'session_count_gte', label: 'Session count ≥', suffix: '' },
+        { key: 'idle_seconds_gte', label: 'Idle time ≥', suffix: 's' }
+      ];
+
+      let html = '';
+      for (const [key, value] of Object.entries(conditions)) {
+        const condType = conditionTypes.find(c => c.key === key);
+        if (condType) {
+          html += `
+            <div class="trigger-condition" data-key="${key}">
+              <select onchange="updateTriggerKey(this, '${key}')">
+                ${conditionTypes.map(c => `<option value="${c.key}" ${c.key === key ? 'selected' : ''}>${c.label}</option>`).join('')}
+              </select>
+              <input type="number" value="${value}" onchange="updateTriggerValue('${key}', this.value)">
+              <button class="trigger-condition-remove" onclick="removeTriggerCondition('${key}')">
+                <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              </button>
+            </div>
+          `;
+        }
+      }
+
+      container.innerHTML = html;
+    }
+
+    // Render button configuration
+    function renderButtonConfig(buttons) {
+      const container = document.getElementById('buttonConfigList');
+
+      container.innerHTML = buttons.map((btn, index) => `
+        <div class="button-config-item" data-index="${index}">
+          <input type="text" value="${escapeHtml(btn.text || '')}" placeholder="Button text" onchange="updateButton(${index}, 'text', this.value)">
+          <select onchange="updateButton(${index}, 'type', this.value)">
+            <option value="primary" ${btn.type === 'primary' ? 'selected' : ''}>Primary</option>
+            <option value="secondary" ${btn.type === 'secondary' ? 'selected' : ''}>Secondary</option>
+            <option value="tertiary" ${btn.type === 'tertiary' ? 'selected' : ''}>Tertiary</option>
+          </select>
+          <select onchange="updateButton(${index}, 'action', this.value)">
+            <option value="dismiss" ${btn.action === 'dismiss' ? 'selected' : ''}>Dismiss</option>
+            <option value="open_intro" ${btn.action === 'open_intro' ? 'selected' : ''}>Open Intro</option>
+            <option value="open_signup" ${btn.action === 'open_signup' ? 'selected' : ''}>Open Signup</option>
+            <option value="open_prayer_space" ${btn.action === 'open_prayer_space' ? 'selected' : ''}>Prayer Space</option>
+            <option value="open_last_conversation" ${btn.action === 'open_last_conversation' ? 'selected' : ''}>Last Conversation</option>
+            <option value="open_new_chat" ${btn.action === 'open_new_chat' ? 'selected' : ''}>New Chat</option>
+            <option value="focus_input" ${btn.action === 'focus_input' ? 'selected' : ''}>Focus Input</option>
+            <option value="pause_notifications" ${btn.action === 'pause_notifications' ? 'selected' : ''}>Pause Notifications</option>
+          </select>
+          <button class="button-config-remove" onclick="removeButton(${index})">
+            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // Add new button
+    function addButton() {
+      const rule = rules.find(r => r.id === selectedRuleId);
+      if (!rule) return;
+
+      if (!rule.button_config) rule.button_config = [];
+      rule.button_config.push({ text: 'New Button', type: 'secondary', action: 'dismiss', style: 'subtle' });
+
+      renderButtonConfig(rule.button_config);
+      autoSave();
+    }
+
+    // Update button property
+    function updateButton(index, property, value) {
+      const rule = rules.find(r => r.id === selectedRuleId);
+      if (!rule || !rule.button_config[index]) return;
+
+      rule.button_config[index][property] = value;
+      autoSave();
+    }
+
+    // Remove button
+    function removeButton(index) {
+      const rule = rules.find(r => r.id === selectedRuleId);
+      if (!rule || !rule.button_config) return;
+
+      rule.button_config.splice(index, 1);
+      renderButtonConfig(rule.button_config);
+      autoSave();
+    }
+
+    // Add trigger condition
+    function addTriggerCondition() {
+      const rule = rules.find(r => r.id === selectedRuleId);
+      if (!rule) return;
+
+      if (!rule.trigger_conditions) rule.trigger_conditions = {};
+
+      // Find first unused condition type
+      const usedKeys = Object.keys(rule.trigger_conditions);
+      const availableKeys = ['time_on_site_gte', 'page_views_gte', 'engagement_score_gte', 'session_count_gte', 'idle_seconds_gte'];
+      const newKey = availableKeys.find(k => !usedKeys.includes(k));
+
+      if (newKey) {
+        rule.trigger_conditions[newKey] = 10;
+        renderTriggerConditions(rule.trigger_conditions);
+        autoSave();
+      }
+    }
+
+    // Update trigger condition value
+    function updateTriggerValue(key, value) {
+      const rule = rules.find(r => r.id === selectedRuleId);
+      if (!rule || !rule.trigger_conditions) return;
+
+      rule.trigger_conditions[key] = parseInt(value) || 0;
+      autoSave();
+    }
+
+    // Remove trigger condition
+    function removeTriggerCondition(key) {
+      const rule = rules.find(r => r.id === selectedRuleId);
+      if (!rule || !rule.trigger_conditions) return;
+
+      delete rule.trigger_conditions[key];
+      renderTriggerConditions(rule.trigger_conditions);
+      autoSave();
+    }
+
+    // Toggle active status
+    function toggleActive() {
+      const rule = rules.find(r => r.id === selectedRuleId);
+      if (!rule) return;
+
+      rule.is_active = !rule.is_active;
+
+      const toggle = document.getElementById('editActiveToggle');
+      if (rule.is_active) {
+        toggle.classList.add('active');
+      } else {
+        toggle.classList.remove('active');
+      }
+
+      renderRulesList();
+      autoSave();
+    }
+
+    // Close edit panel
+    function closeEditPanel() {
+      selectedRuleId = null;
+      document.getElementById('editEmptyState').style.display = 'flex';
+      document.getElementById('editForm').style.display = 'none';
+      renderRulesList();
+    }
+
+    // Switch edit panel tab
+    function switchEditPanelTab(tabName) {
+      console.log('Switching to tab:', tabName);
+
+      // Hide all tab contents
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+
+      // Show the selected tab content
+      const tabContent = document.querySelector(`.tab-content[data-tab-content="${tabName}"]`);
+      if (tabContent) {
+        tabContent.classList.add('active');
+      }
+    }
+
+    // Synchronized Focus Group State
+    let focusGroupHovered = false;
+    let focusGroupFocused = false;
+
+    // Update the focus group visual state
+    function updateFocusGroupState() {
+      const group = document.getElementById('primaryContentEditorGroup');
+      if (!group) return;
+
+      // Active when either hovered or focused
+      if (focusGroupHovered || focusGroupFocused) {
+        group.classList.add('focus-group-active');
+      } else {
+        group.classList.remove('focus-group-active');
+      }
+    }
+
+    // Handle mouse hover on the focus group
+    function setFocusGroupHover(isHovered) {
+      focusGroupHovered = isHovered;
+      updateFocusGroupState();
+    }
+
+    // Handle focus/blur on textarea or instruction input
+    function setFocusGroupFocus(isFocused) {
+      focusGroupFocused = isFocused;
+      // Delay the blur check to allow focus to transfer between elements
+      if (!isFocused) {
+        setTimeout(() => {
+          const group = document.getElementById('primaryContentEditorGroup');
+          if (group) {
+            const activeElement = document.activeElement;
+            const isStillInGroup = group.contains(activeElement);
+            if (!isStillInGroup) {
+              focusGroupFocused = false;
+              updateFocusGroupState();
+            }
+          }
+        }, 10);
+      } else {
+        updateFocusGroupState();
+      }
+    }
+
+    // Process AI instruction to update description
+    async function processAiInstruction() {
+      const instructionInput = document.getElementById('aiInstructionInput');
+      const updateBtn = document.getElementById('aiUpdateBtn');
+      const primaryEditor = document.getElementById('primaryContentEditor');
+
+      const instruction = instructionInput.value.trim();
+      if (!instruction) {
+        instructionInput.focus();
+        return;
+      }
+
+      const currentContent = primaryEditor.value;
+      const rule = rules.find(r => r.id === selectedRuleId);
+      if (!rule) return;
+
+      // Show loading state
+      updateBtn.classList.add('loading');
+      updateBtn.disabled = true;
+      instructionInput.disabled = true;
+
+      try {
+        // Call AI API to process the instruction
+        const response = await fetch('/api/hospitality/admin/ai/process-instruction', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            instruction: instruction,
+            currentContent: currentContent,
+            context: {
+              ruleName: rule.name,
+              ruleCategory: rule.category,
+              ruleType: rule.action_type
+            }
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.updatedContent) {
+            // Update the textarea with AI-generated content
+            primaryEditor.value = data.updatedContent;
+            // Trigger auto-save
+            autoSave();
+            // Clear the instruction input
+            instructionInput.value = '';
+            // Show success feedback
+            showAiUpdateSuccess();
+          }
+        } else {
+          // Fallback: For demo/development, simulate AI response
+          console.log('AI API not available, using demo mode');
+          const demoUpdatedContent = await simulateAiUpdate(instruction, currentContent, rule);
+          primaryEditor.value = demoUpdatedContent;
+          autoSave();
+          instructionInput.value = '';
+          showAiUpdateSuccess();
+        }
+      } catch (error) {
+        console.error('AI instruction processing error:', error);
+        // Fallback demo mode
+        const demoUpdatedContent = await simulateAiUpdate(instruction, currentContent, rule);
+        primaryEditor.value = demoUpdatedContent;
+        autoSave();
+        instructionInput.value = '';
+        showAiUpdateSuccess();
+      } finally {
+        // Reset loading state
+        updateBtn.classList.remove('loading');
+        updateBtn.disabled = false;
+        instructionInput.disabled = false;
+      }
+    }
+
+    // Simulate AI update for demo/development
+    function simulateAiUpdate(instruction, currentContent, rule) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          // Simple simulation based on common instructions
+          let updated = currentContent;
+          const lowerInstruction = instruction.toLowerCase();
+
+          if (lowerInstruction.includes('shorter') || lowerInstruction.includes('concise')) {
+            // Shorten the content
+            const sentences = currentContent.split(/[.!?]+/).filter(s => s.trim());
+            updated = sentences.slice(0, Math.ceil(sentences.length / 2)).join('. ').trim();
+            if (updated && !updated.match(/[.!?]$/)) updated += '.';
+          } else if (lowerInstruction.includes('longer') || lowerInstruction.includes('expand')) {
+            // Expand the content
+            updated = currentContent + ' This creates a warm and welcoming atmosphere for all visitors.';
+          } else if (lowerInstruction.includes('formal')) {
+            updated = currentContent.replace(/'/g, '').replace(/!/g, '.');
+          } else if (lowerInstruction.includes('friendly') || lowerInstruction.includes('warm')) {
+            updated = currentContent + ' We are here to support you every step of the way!';
+          } else {
+            // Generic enhancement
+            updated = currentContent + ' [Updated based on: ' + instruction + ']';
+          }
+
+          resolve(updated);
+        }, 800); // Simulate network delay
+      });
+    }
+
+    // Show success indicator for AI update
+    function showAiUpdateSuccess() {
+      const bar = document.querySelector('.ai-instruction-bar');
+      bar.style.borderColor = '#4CAF50';
+      bar.style.boxShadow = '0 0 8px rgba(76, 175, 80, 0.3)';
+      setTimeout(() => {
+        bar.style.borderColor = '#333';
+        bar.style.boxShadow = 'none';
+      }, 1500);
+    }
+
+    // Auto-save with debounce
+    function autoSave() {
+      const rule = rules.find(r => r.id === selectedRuleId);
+      if (!rule) return;
+
+      // Update rule from form
+      rule.name = document.getElementById('editName').value;
+      rule.description = document.getElementById('editDescription').value;
+
+      // Update category_id from dropdown (new system)
+      const selectedCatId = document.getElementById('editCategory').value;
+      if (selectedCatId) {
+        rule.category_id = selectedCatId;
+        // Also update legacy category field for backward compatibility
+        const cat = categoryMap[selectedCatId];
+        rule.category = cat ? cat.slug : null;
+      } else {
+        rule.category_id = null;
+        rule.category = null;
+      }
+
+      rule.priority = parseInt(document.getElementById('editPriority').value) || 100;
+      rule.target_audience = document.getElementById('editAudience').value;
+      rule.action_type = document.getElementById('editActionType').value;
+
+      // Sync primary content editor with message template
+      const primaryContent = document.getElementById('primaryContentEditor').value;
+      rule.message_template = primaryContent;
+      // Also update the other message field to stay in sync
+      document.getElementById('editMessage').value = primaryContent;
+      rule.max_per_session = parseInt(document.getElementById('editMaxSession').value) || 1;
+      rule.max_per_day = parseInt(document.getElementById('editMaxDay').value) || 3;
+      rule.cooldown_seconds = parseInt(document.getElementById('editCooldown').value) || 300;
+
+      // Debounced save
+      if (saveTimeout) clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        saveRule(rule);
+        renderRulesList();
+        // Also update category tree counts
+        renderCategoryTree();
+      }, 500);
+    }
+
+    // Save rule to server
+    async function saveRule(rule) {
+      try {
+        const response = await fetch(`/api/hospitality/admin/rules/${rule.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(rule)
+        });
+
+        if (response.ok) {
+          showAutoSaveIndicator();
+        }
+      } catch (error) {
+        console.error('Failed to save rule:', error);
+        // Show saved indicator anyway for demo mode
+        showAutoSaveIndicator();
+      }
+    }
+
+    // Show auto-save indicator
+    function showAutoSaveIndicator() {
+      const indicator = document.getElementById('autosaveIndicator');
+      indicator.classList.add('visible');
+      setTimeout(() => {
+        indicator.classList.remove('visible');
+      }, 2000);
+    }
+
+    // Create new rule
+    async function createNewRule() {
+      // Get first available category ID for default
+      const defaultCategoryId = categories.length > 0 ? categories[0].id : null;
+
+      const newRule = {
+        id: 'new-' + Date.now(),
+        rule_number: 'HR-' + String(rules.length + 1).padStart(4, '0'),
+        name: 'New Hospitality Rule',
+        slug: 'new-rule-' + Date.now(),
+        description: '',
+        category_id: defaultCategoryId,
+        category: categories.length > 0 ? categories[0].slug : 'engagement',
+        persona_id: 'jubilee',  // Default persona
+        target_audience: 'all',
+        trigger_conditions: { time_on_site_gte: 30 },
+        action_type: 'popup',
+        message_template: '',
+        button_config: [
+          { text: 'OK', type: 'primary', action: 'dismiss', style: 'gold' }
+        ],
+        is_active: false,
+        priority: 100,
+        max_per_session: 1,
+        max_per_day: 3,
+        cooldown_seconds: 300
+      };
+
+      try {
+        const response = await fetch('/api/hospitality/admin/rules', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(newRule)
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.rule) {
+            newRule.id = data.rule.id;
+            newRule.rule_number = data.rule.rule_number;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to create rule:', error);
+      }
+
+      rules.unshift(newRule);
+      updateAllRulesCount();
+      renderRulesList();
+      renderCategoryTree();
+      selectRule(newRule.id);
+    }
+
+    // Search handler is now handled via oninput in the HTML
+
+    // Escape HTML helper
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '';
+      const div = document.createElement('div');
+      div.textContent = String(text);
+      return div.innerHTML;
+    }
+
+    // ==================== COOKIE MANAGEMENT ====================
+
+    // Set a cookie with optional expiry days (defaults to 30 days)
+    function setCookie(name, value, days = 30) {
+      const date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      const expires = 'expires=' + date.toUTCString();
+      document.cookie = name + '=' + encodeURIComponent(value) + ';' + expires + ';path=/';
+    }
+
+    // Get a cookie value by name
+    function getCookie(name) {
+      const nameEQ = name + '=';
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        let c = cookies[i].trim();
+        if (c.indexOf(nameEQ) === 0) {
+          return decodeURIComponent(c.substring(nameEQ.length));
+        }
+      }
+      return null;
+    }
+
+    // ==================== NAVIGATION STATE MANAGEMENT ====================
+
+    // Save navigation state to cookies
+    function saveNavigationState() {
+      setCookie('hospitalityRules_categoryId', selectedCategoryId || '');
+      setCookie('hospitalityRules_ruleId', selectedRuleId || '');
+      // Also save expanded categories
+      setCookie('hospitalityRules_expanded', JSON.stringify([...expandedCategories]));
+    }
+
+    // Restore navigation state from cookies
+    function restoreNavigationState() {
+      const savedCategoryId = getCookie('hospitalityRules_categoryId');
+      const savedRuleId = getCookie('hospitalityRules_ruleId');
+      const savedExpanded = getCookie('hospitalityRules_expanded');
+
+      // Restore expanded categories
+      if (savedExpanded) {
+        try {
+          const expandedArray = JSON.parse(savedExpanded);
+          expandedCategories = new Set(expandedArray);
+        } catch (e) {
+          console.warn('Failed to parse expanded categories:', e);
+        }
+      }
+
+      // Return saved state for use after data loads
+      return {
+        categoryId: savedCategoryId || null,
+        ruleId: savedRuleId || null
+      };
+    }
+
+    // Auto-select first category and first rule if no saved state
+    function autoSelectInitial() {
+      const savedState = restoreNavigationState();
+      console.log('autoSelectInitial - savedState:', savedState, 'categoryMap has keys:', Object.keys(categoryMap).length);
+
+      // If we have a saved category, select it
+      if (savedState.categoryId && savedState.categoryId !== '' && categoryMap[savedState.categoryId]) {
+        console.log('Restoring saved category:', savedState.categoryId);
+        selectCategory(savedState.categoryId);
+      } else {
+        // Default to "All Rules" to show all rules without category filtering
+        console.log('No valid saved category, selecting All Rules (null)');
+        selectCategory(null);
+      }
+
+      // If we have a saved rule, select it
+      if (savedState.ruleId && savedState.ruleId !== '') {
+        const filteredRules = getFilteredRules();
+        const ruleExists = filteredRules.find(r => r.id === savedState.ruleId);
+        if (ruleExists) {
+          selectRule(savedState.ruleId);
+        } else if (filteredRules.length > 0) {
+          // Auto-select first rule in current filter
+          selectRule(filteredRules[0].id);
+        }
+      } else {
+        // Auto-select first rule
+        const filteredRules = getFilteredRules();
+        if (filteredRules.length > 0) {
+          selectRule(filteredRules[0].id);
+        }
+      }
+
+      // Update context display
+      updateContextDisplay();
+    }
+
+    // ==================== CONTEXT DISPLAY ====================
+
+    // Update the context display in middle panel header
+    function updateContextDisplay() {
+      const contextEl = document.getElementById('contextDisplay');
+      if (!contextEl) return;
+
+      let categoryName = 'All Rules';
+      let ruleName = '';
+
+      // Get category name
+      if (selectedCategoryId && categoryMap[selectedCategoryId]) {
+        categoryName = categoryMap[selectedCategoryId].name;
+      }
+
+      // Get rule name
+      if (selectedRuleId) {
+        const rule = rules.find(r => r.id === selectedRuleId);
+        if (rule) {
+          ruleName = rule.name;
+        }
+      }
+
+      // Format display: "Category | Rule" or just "Category" if no rule selected
+      if (ruleName) {
+        contextEl.textContent = `${categoryName} | ${ruleName}`;
+      } else {
+        contextEl.textContent = categoryName;
+      }
+    }
+
+    // ==================== RESIZABLE PANELS ====================
+
+    // Initialize resize handles
+    function initResizeHandles() {
+      const handle1 = document.getElementById('resizeHandle1');
+      const handle2 = document.getElementById('resizeHandle2');
+      const treePanel = document.querySelector('.rules-tree-panel');
+      const listPanel = document.querySelector('.rules-list-panel');
+      const editPanel = document.querySelector('.rules-edit-panel');
+
+      if (!handle1 || !handle2 || !treePanel || !listPanel || !editPanel) {
+        console.warn('Resize handles or panels not found');
+        return;
+      }
+
+      // Min and max widths
+      const MIN_TREE_WIDTH = 180;
+      const MAX_TREE_WIDTH = 400;
+      const MIN_LIST_WIDTH = 250;
+      const MAX_LIST_WIDTH = 500;
+      const MIN_EDIT_WIDTH = 350;
+
+      let isResizing = false;
+      let currentHandle = null;
+      let startX = 0;
+      let startTreeWidth = 0;
+      let startListWidth = 0;
+
+      // Handle 1: Between tree and list panels
+      handle1.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        currentHandle = 'handle1';
+        startX = e.clientX;
+        startTreeWidth = treePanel.offsetWidth;
+        handle1.classList.add('active');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+      });
+
+      // Handle 2: Between list and edit panels
+      handle2.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        currentHandle = 'handle2';
+        startX = e.clientX;
+        startListWidth = listPanel.offsetWidth;
+        handle2.classList.add('active');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+      });
+
+      // Mouse move handler
+      document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+
+        const deltaX = e.clientX - startX;
+
+        if (currentHandle === 'handle1') {
+          // Resize tree panel
+          let newTreeWidth = startTreeWidth + deltaX;
+          newTreeWidth = Math.max(MIN_TREE_WIDTH, Math.min(MAX_TREE_WIDTH, newTreeWidth));
+          treePanel.style.width = newTreeWidth + 'px';
+          treePanel.style.minWidth = newTreeWidth + 'px';
+          treePanel.style.maxWidth = newTreeWidth + 'px';
+        } else if (currentHandle === 'handle2') {
+          // Resize list panel
+          let newListWidth = startListWidth + deltaX;
+          newListWidth = Math.max(MIN_LIST_WIDTH, Math.min(MAX_LIST_WIDTH, newListWidth));
+          listPanel.style.width = newListWidth + 'px';
+          listPanel.style.minWidth = newListWidth + 'px';
+          listPanel.style.maxWidth = newListWidth + 'px';
+        }
+      });
+
+      // Mouse up handler
+      document.addEventListener('mouseup', () => {
+        if (isResizing) {
+          isResizing = false;
+          currentHandle = null;
+          handle1.classList.remove('active');
+          handle2.classList.remove('active');
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+
+          // Save panel widths to cookies
+          setCookie('hospitalityRules_treeWidth', treePanel.offsetWidth);
+          setCookie('hospitalityRules_listWidth', listPanel.offsetWidth);
+        }
+      });
+
+      // Restore saved panel widths
+      const savedTreeWidth = getCookie('hospitalityRules_treeWidth');
+      const savedListWidth = getCookie('hospitalityRules_listWidth');
+
+      if (savedTreeWidth) {
+        const width = parseInt(savedTreeWidth);
+        if (width >= MIN_TREE_WIDTH && width <= MAX_TREE_WIDTH) {
+          treePanel.style.width = width + 'px';
+          treePanel.style.minWidth = width + 'px';
+          treePanel.style.maxWidth = width + 'px';
+        }
+      }
+
+      if (savedListWidth) {
+        const width = parseInt(savedListWidth);
+        if (width >= MIN_LIST_WIDTH && width <= MAX_LIST_WIDTH) {
+          listPanel.style.width = width + 'px';
+          listPanel.style.minWidth = width + 'px';
+          listPanel.style.maxWidth = width + 'px';
+        }
+      }
+    }
+
+    // ==================== CREATE NEW CATEGORY ====================
+
+    // Create a new category
+    async function createNewCategory() {
+      const parentId = selectedCategoryId; // Use currently selected category as parent, or null for root
+
+      const newCategory = {
+        name: 'New Category',
+        slug: 'new-category-' + Date.now(),
+        parent_id: parentId,
+        color: '#ffbd59',
+        icon: null,
+        sort_order: 0
+      };
+
+      try {
+        const response = await fetch('/api/hospitality/admin/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(newCategory)
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.category) {
+            // Reload categories to get the new one
+            await loadCategories();
+            // Select the new category
+            if (data.category.id) {
+              selectCategory(data.category.id);
+            }
+            showAutoSaveIndicator();
+          }
+        } else {
+          // Demo mode - add locally
+          newCategory.id = 'cat-new-' + Date.now();
+          newCategory.children = [];
+
+          if (parentId && categoryMap[parentId]) {
+            // Add as child of selected category
+            categoryMap[parentId].children.push(newCategory);
+            expandedCategories.add(parentId); // Expand parent to show new child
+          } else {
+            // Add as root category
+            categories.push(newCategory);
+          }
+
+          buildCategoryMap(categories);
+          renderCategoryTree();
+          selectCategory(newCategory.id);
+          showAutoSaveIndicator();
+        }
+      } catch (error) {
+        console.error('Failed to create category:', error);
+        // Demo mode fallback
+        newCategory.id = 'cat-new-' + Date.now();
+        newCategory.children = [];
+
+        if (parentId && categoryMap[parentId]) {
+          categoryMap[parentId].children.push(newCategory);
+          expandedCategories.add(parentId);
+        } else {
+          categories.push(newCategory);
+        }
+
+        buildCategoryMap(categories);
+        renderCategoryTree();
+        selectCategory(newCategory.id);
+        showAutoSaveIndicator();
+      }
+    }
+  </script>
+</body>
+</html>

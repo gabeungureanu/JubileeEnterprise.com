@@ -1,0 +1,741 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2024-12-24",
+
+  "plans": {
+    "free": {
+      "id": "free",
+      "name": "Free Plan",
+      "description": "Try out the most advanced AI Bible personality.",
+      "pricing": {
+        "monthly": 0.00,
+        "annual": 0.00
+      },
+      "personaCount": 3,
+      "personas": ["Jubilee", "Melody", "Caleb"],
+      "isRecommended": false,
+      "sortOrder": 1
+    },
+    "standard": {
+      "id": "standard",
+      "name": "Standard Edition",
+      "description": "Resources for mentoring, group studies, and teaching.",
+      "pricing": {
+        "monthly": 19.95,
+        "annual": 199.95
+      },
+      "personaCount": 6,
+      "personas": ["Jubilee", "Melody", "Caleb", "Zev", "Nova", "Santiago"],
+      "isRecommended": true,
+      "sortOrder": 2
+    },
+    "ministry": {
+      "id": "ministry",
+      "name": "Ministry Edition",
+      "description": "Tools for churches, sermons, teams, and outreach.",
+      "pricing": {
+        "monthly": 49.95,
+        "annual": 499.95
+      },
+      "personaCount": 9,
+      "personas": ["Jubilee", "Melody", "Caleb", "Zev", "Nova", "Santiago", "Elias", "Imani", "Amir"],
+      "isRecommended": false,
+      "sortOrder": 3
+    },
+    "business": {
+      "id": "business",
+      "name": "Business Edition",
+      "description": "AI-powered tools for faith-based organizations.",
+      "pricing": {
+        "monthly": 99.95,
+        "annual": 999.95
+      },
+      "personaCount": 12,
+      "personas": ["Jubilee", "Melody", "Caleb", "Zev", "Nova", "Santiago", "Elias", "Imani", "Amir", "Eliana", "Zariah", "Tahoma"],
+      "isRecommended": false,
+      "sortOrder": 4
+    }
+  },
+
+  "featureCategories": {
+    "core": {
+      "id": "core",
+      "name": "Core Features",
+      "sortOrder": 1
+    },
+    "standard": {
+      "id": "standard",
+      "name": "Standard Edition Features",
+      "sortOrder": 2
+    },
+    "ministry": {
+      "id": "ministry",
+      "name": "Ministry Edition Features",
+      "sortOrder": 3
+    },
+    "business": {
+      "id": "business",
+      "name": "Business Edition Features",
+      "sortOrder": 4
+    }
+  },
+
+  "features": {
+    "ai_personas": {
+      "id": "ai_personas",
+      "key": "ai_personas",
+      "label": "Personalized AI Bible Personalities",
+      "description": "Experience our AI companions with 98% \"Simulated Sentient\" rating",
+      "category": "core",
+      "type": "count",
+      "plans": {
+        "free": { "enabled": true, "value": 3 },
+        "standard": { "enabled": true, "value": 6 },
+        "ministry": { "enabled": true, "value": 9 },
+        "business": { "enabled": true, "value": 12 }
+      },
+      "sortOrder": 1
+    },
+    "interactive_bible": {
+      "id": "interactive_bible",
+      "key": "interactive_bible",
+      "label": "Interactive Bible Verse Exploration",
+      "description": "Search verses and get powerful passages tailored to your questions",
+      "category": "core",
+      "type": "boolean",
+      "plans": {
+        "free": true,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 2
+    },
+    "multi_language": {
+      "id": "multi_language",
+      "key": "multi_language",
+      "label": "Multi-Language Bible Translations",
+      "description": "95+ written languages, 57 spoken languages",
+      "category": "core",
+      "type": "boolean",
+      "plans": {
+        "free": true,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 3
+    },
+    "prayer_support": {
+      "id": "prayer_support",
+      "key": "prayer_support",
+      "label": "AI-Assisted Personalized Prayer Support",
+      "description": "AI-crafted prayers for your spiritual needs",
+      "category": "core",
+      "type": "boolean",
+      "plans": {
+        "free": true,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 4
+    },
+    "daily_verses": {
+      "id": "daily_verses",
+      "key": "daily_verses",
+      "label": "Inspirational Daily Bible Verses & Reflection",
+      "description": "Daily verse and reflection to uplift your spirit",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 5
+    },
+    "hebrew_greek": {
+      "id": "hebrew_greek",
+      "key": "hebrew_greek",
+      "label": "Hebrew & Greek Word Study",
+      "description": "Explore meanings rooted in original Hebrew, Greek, and Aramaic",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 6
+    },
+    "daily_devotionals": {
+      "id": "daily_devotionals",
+      "key": "daily_devotionals",
+      "label": "Interactive Daily Devotionals",
+      "description": "Bite-sized reflections with Scripture and action steps",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 7
+    },
+    "journaling": {
+      "id": "journaling",
+      "key": "journaling",
+      "label": "AI-Assisted Journaling",
+      "description": "Deepen your faith and track spiritual growth",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 8
+    },
+    "faith_challenges": {
+      "id": "faith_challenges",
+      "key": "faith_challenges",
+      "label": "Faith-Building Challenges",
+      "description": "Weekly challenges to strengthen key disciplines",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 9
+    },
+    "prayer_suggestions": {
+      "id": "prayer_suggestions",
+      "key": "prayer_suggestions",
+      "label": "Personalized Prayer Suggestions",
+      "description": "Tailored prayer suggestions for your unique journey",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 10
+    },
+    "reading_plans": {
+      "id": "reading_plans",
+      "key": "reading_plans",
+      "label": "Thematic Bible Reading Plans",
+      "description": "Curated plans on grace, forgiveness, leadership, prophecy",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 11
+    },
+    "verse_application": {
+      "id": "verse_application",
+      "key": "verse_application",
+      "label": "Verse-to-Life Application",
+      "description": "Practical steps to apply biblical truths daily",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 12
+    },
+    "scripture_memorization": {
+      "id": "scripture_memorization",
+      "key": "scripture_memorization",
+      "label": "Scripture Memorization Assistant",
+      "description": "Personalized memory techniques for your learning style",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 13
+    },
+    "character_profiles": {
+      "id": "character_profiles",
+      "key": "character_profiles",
+      "label": "Biblical Character Profiles",
+      "description": "Explore journeys, challenges, and triumphs of biblical figures",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 14
+    },
+    "community_engagement": {
+      "id": "community_engagement",
+      "key": "community_engagement",
+      "label": "Community Engagement Tools",
+      "description": "Foster meaningful connections in your church community",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 15
+    },
+    "historical_context": {
+      "id": "historical_context",
+      "key": "historical_context",
+      "label": "Historical Event Contextualizer",
+      "description": "Detailed historical and cultural backdrop of biblical events",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 16
+    },
+    "prophetic_insights": {
+      "id": "prophetic_insights",
+      "key": "prophetic_insights",
+      "label": "Prophetic Insights Exploration",
+      "description": "Uncover meanings behind prophetic messages",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 17
+    },
+    "bedtime_stories": {
+      "id": "bedtime_stories",
+      "key": "bedtime_stories",
+      "label": "Faith-Based Bed-Time Stories",
+      "description": "Personalized bedtime stories rooted in biblical values",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 18
+    },
+    "family_devotionals": {
+      "id": "family_devotionals",
+      "key": "family_devotionals",
+      "label": "Family Devotional Ideas",
+      "description": "Transform family time into meaningful faith moments",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 19
+    },
+    "music_recommendations": {
+      "id": "music_recommendations",
+      "key": "music_recommendations",
+      "label": "Faith-Inspired Music Recommendations",
+      "description": "Curated hymns, worship songs tailored to you",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 20
+    },
+    "reflection_questions": {
+      "id": "reflection_questions",
+      "key": "reflection_questions",
+      "label": "Weekly Reflection Questions",
+      "description": "Thoughtfully crafted questions to strengthen understanding",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 21
+    },
+    "spiritual_goals": {
+      "id": "spiritual_goals",
+      "key": "spiritual_goals",
+      "label": "Spiritual Goal Setting",
+      "description": "Define and achieve meaningful spiritual goals",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 22
+    },
+    "discipleship_pathway": {
+      "id": "discipleship_pathway",
+      "key": "discipleship_pathway",
+      "label": "Discipleship Pathway Builder",
+      "description": "Customized discipleship journeys with milestones",
+      "category": "standard",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": true,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 23
+    },
+    "parables_explorer": {
+      "id": "parables_explorer",
+      "key": "parables_explorer",
+      "label": "Parables Explorer & Generator",
+      "description": "Contextual insights on Jesus' parables for modern life",
+      "category": "ministry",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 24
+    },
+    "sermon_inspiration": {
+      "id": "sermon_inspiration",
+      "key": "sermon_inspiration",
+      "label": "Sermon Inspiration Hub",
+      "description": "Generate sermon outlines, talking points, and Scripture",
+      "category": "ministry",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 25
+    },
+    "volunteer_management": {
+      "id": "volunteer_management",
+      "key": "volunteer_management",
+      "label": "Volunteer Management Tools",
+      "description": "Schedule tasks, assign responsibilities, send encouragement",
+      "category": "ministry",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 26
+    },
+    "bible_study_design": {
+      "id": "bible_study_design",
+      "key": "bible_study_design",
+      "label": "Bible Study Design Tools",
+      "description": "Create themed studies tailored to your group's needs",
+      "category": "ministry",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 27
+    },
+    "leadership_development": {
+      "id": "leadership_development",
+      "key": "leadership_development",
+      "label": "Faith-Based Leadership Development",
+      "description": "Tailored workshops and team-building resources",
+      "category": "ministry",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 28
+    },
+    "prayer_chain": {
+      "id": "prayer_chain",
+      "key": "prayer_chain",
+      "label": "Prayer Chain Organizer",
+      "description": "Create, manage prayer chains and track requests",
+      "category": "ministry",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 29
+    },
+    "counseling_insights": {
+      "id": "counseling_insights",
+      "key": "counseling_insights",
+      "label": "Counseling Insights",
+      "description": "AI-driven pastoral care support rooted in Scripture",
+      "category": "ministry",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 30
+    },
+    "ministry_analytics": {
+      "id": "ministry_analytics",
+      "key": "ministry_analytics",
+      "label": "Ministry Growth Analytics",
+      "description": "Insights into engagement, sermon feedback, attendance",
+      "category": "ministry",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 31
+    },
+    "resource_library": {
+      "id": "resource_library",
+      "key": "resource_library",
+      "label": "Custom Faith Resource Library",
+      "description": "Personalized faith-focused materials for your ministry",
+      "category": "ministry",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": true,
+        "business": true
+      },
+      "sortOrder": 32
+    },
+    "marketing_strategies": {
+      "id": "marketing_strategies",
+      "key": "marketing_strategies",
+      "label": "Values-Driven Marketing Strategies",
+      "description": "AI-powered marketing reflecting faith-based values",
+      "category": "business",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": false,
+        "business": true
+      },
+      "sortOrder": 33
+    },
+    "team_building": {
+      "id": "team_building",
+      "key": "team_building",
+      "label": "Inspirational Team-Building Activities",
+      "description": "Engaging exercises rooted in faith-based principles",
+      "category": "business",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": false,
+        "business": true
+      },
+      "sortOrder": 34
+    },
+    "customer_engagement": {
+      "id": "customer_engagement",
+      "key": "customer_engagement",
+      "label": "Faith-Centered Customer Engagement",
+      "description": "Personalized outreach with compassion and integrity",
+      "category": "business",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": false,
+        "business": true
+      },
+      "sortOrder": 35
+    },
+    "branding_assistance": {
+      "id": "branding_assistance",
+      "key": "branding_assistance",
+      "label": "Mission-Driven Branding Assistance",
+      "description": "Develop a powerful purpose-driven brand identity",
+      "category": "business",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": false,
+        "business": true
+      },
+      "sortOrder": 36
+    },
+    "leadership_training": {
+      "id": "leadership_training",
+      "key": "leadership_training",
+      "label": "Faith-Based Leadership Training",
+      "description": "Transformative tools grounded in biblical principles",
+      "category": "business",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": false,
+        "business": true
+      },
+      "sortOrder": 37
+    },
+    "community_impact": {
+      "id": "community_impact",
+      "key": "community_impact",
+      "label": "Community Impact Campaigns",
+      "description": "AI-guided planning for meaningful service projects",
+      "category": "business",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": false,
+        "business": true
+      },
+      "sortOrder": 38
+    },
+    "ethical_framework": {
+      "id": "ethical_framework",
+      "key": "ethical_framework",
+      "label": "Ethical Decision-Making Framework",
+      "description": "Navigate business decisions with faith-based integrity",
+      "category": "business",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": false,
+        "business": true
+      },
+      "sortOrder": 39
+    },
+    "workplace_devotionals": {
+      "id": "workplace_devotionals",
+      "key": "workplace_devotionals",
+      "label": "Workplace Devotional Resources",
+      "description": "Transform your workplace with spiritual growth tools",
+      "category": "business",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": false,
+        "business": true
+      },
+      "sortOrder": 40
+    },
+    "content_creation": {
+      "id": "content_creation",
+      "key": "content_creation",
+      "label": "Faith-Inspired Content Creation",
+      "description": "Generate captivating blogs, newsletters, social posts",
+      "category": "business",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": false,
+        "business": true
+      },
+      "sortOrder": 41
+    },
+    "networking_strategies": {
+      "id": "networking_strategies",
+      "key": "networking_strategies",
+      "label": "Personalized Networking Strategies",
+      "description": "Connect with like-minded faith-inspired professionals",
+      "category": "business",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": false,
+        "business": true
+      },
+      "sortOrder": 42
+    },
+    "business_insights": {
+      "id": "business_insights",
+      "key": "business_insights",
+      "label": "Scripture-Based Business Insights",
+      "description": "Biblical wisdom for stewardship and customer relations",
+      "category": "business",
+      "type": "boolean",
+      "plans": {
+        "free": false,
+        "standard": false,
+        "ministry": false,
+        "business": true
+      },
+      "sortOrder": 43
+    }
+  },
+
+  "planHierarchy": ["free", "standard", "ministry", "business"],
+
+  "annualDiscountMonths": 2,
+
+  "metadata": {
+    "defaultPlan": "free",
+    "trialDays": 0,
+    "currencySymbol": "$",
+    "currencyCode": "USD"
+  }
+}

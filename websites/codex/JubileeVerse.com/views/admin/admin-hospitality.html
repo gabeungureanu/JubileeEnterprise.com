@@ -1,0 +1,4576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Hospitality Management Console - JubileeVerse Admin">
+  <title>Hospitality Console - Admin - JubileeVerse</title>
+  <link rel="icon" type="image/png" href="/images/personas/jubilee.png">
+  <link rel="apple-touch-icon" href="/images/personas/jubilee.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin-header.css">
+  <link rel="stylesheet" href="/css/admin-sidebar.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #0a0a0a;
+      color: #f2f2f2;
+      overflow: hidden;
+    }
+
+    /* Custom scrollbar styles */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #1a1a1a;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #444;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #666;
+    }
+
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #444 #1a1a1a;
+    }
+
+    .app-container {
+      display: flex;
+      height: calc(100vh - 36px);
+      width: 100vw;
+      margin-top: 36px;
+    }
+
+    .main-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding-top: 0;
+    }
+
+    /* Main layout with content and control panel */
+    .hospitality-layout {
+      flex: 1;
+      display: flex;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    /* Main content area */
+    .hospitality-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 0 16px 12px 16px;
+    }
+
+    /* Right-side control panel */
+    .hospitality-control-panel {
+      width: 72px;
+      background: linear-gradient(180deg, #111 0%, #0a0a0a 100%);
+      border-left: 1px solid #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 12px;
+      gap: 16px;
+    }
+
+    .control-btn {
+      width: 48px;
+      height: 48px;
+      border: 2px solid #333;
+      border-radius: 10px;
+      background: #151515;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .control-btn:hover {
+      background: #1f1f1f;
+      border-color: #555;
+    }
+
+    .control-btn.active {
+      background: linear-gradient(135deg, rgba(255, 189, 89, 0.15) 0%, rgba(255, 189, 89, 0.05) 100%);
+      border-color: #ffbd59;
+    }
+
+    .control-btn.active svg {
+      fill: #ffbd59;
+    }
+
+    .control-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: #888;
+      transition: fill 0.2s ease;
+    }
+
+    .control-btn:hover svg {
+      fill: #bbb;
+    }
+
+    .control-btn-label {
+      position: absolute;
+      right: 60px;
+      background: #222;
+      color: #fff;
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .control-btn:hover .control-btn-label {
+      opacity: 1;
+    }
+
+    .control-divider {
+      width: 32px;
+      height: 1px;
+      background: #333;
+      margin: 8px 0;
+    }
+
+    /* Page header */
+    .hospitality-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0;
+      flex-shrink: 0;
+      height: 24px;
+      background: transparent;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hospitality-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hospitality-title-icon {
+      width: 18px;
+      height: 18px;
+      fill: #ffbd59;
+    }
+
+    .hospitality-subtitle {
+      font-size: 11px;
+      color: #666;
+      font-weight: 400;
+      margin-left: 8px;
+    }
+
+    /* Dashboard section */
+    .dashboard-section {
+      flex-shrink: 0;
+      margin-bottom: 20px;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .metric-card {
+      background: linear-gradient(135deg, #151515 0%, #111 100%);
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 16px;
+      transition: all 0.2s ease;
+    }
+
+    .metric-card:hover {
+      border-color: #333;
+      transform: translateY(-1px);
+    }
+
+    .metric-card.highlight {
+      border-color: rgba(255, 189, 89, 0.3);
+      background: linear-gradient(135deg, rgba(255, 189, 89, 0.08) 0%, #111 100%);
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .metric-value.gold {
+      color: #ffbd59;
+    }
+
+    .metric-subvalue {
+      font-size: 11px;
+      color: #555;
+      margin-top: 6px;
+    }
+
+    .metric-trend {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+    }
+
+    .metric-trend.up {
+      color: #4ade80;
+      background: rgba(74, 222, 128, 0.1);
+    }
+
+    .metric-trend.down {
+      color: #f87171;
+      background: rgba(248, 113, 113, 0.1);
+    }
+
+    /* Engagement distribution bar */
+    .engagement-bar-container {
+      grid-column: span 2;
+      padding: 20px;
+    }
+
+    .engagement-bar-label {
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .engagement-bar {
+      display: flex;
+      height: 24px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #1a1a1a;
+    }
+
+    .engagement-segment {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      color: #fff;
+      transition: all 0.3s ease;
+    }
+
+    .engagement-segment.high {
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    }
+
+    .engagement-segment.medium {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .engagement-segment.low {
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    }
+
+    .engagement-legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #888;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .legend-dot.high { background: #22c55e; }
+    .legend-dot.medium { background: #f59e0b; }
+    .legend-dot.low { background: #6b7280; }
+
+    /* Table section */
+    .table-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid #222;
+      flex-shrink: 0;
+    }
+
+    .table-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .table-meta {
+      font-size: 12px;
+      color: #555;
+    }
+
+    .table-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .sort-select {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #aaa;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .table-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      position: sticky;
+      top: 0;
+      background: #151515;
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #222;
+      z-index: 1;
+    }
+
+    .data-table th.sortable {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .data-table th.sortable:hover {
+      color: #888;
+    }
+
+    .data-table th.sorted {
+      color: #ffbd59;
+    }
+
+    .data-table td {
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #ccc;
+      border-bottom: 1px solid #1a1a1a;
+      vertical-align: middle;
+    }
+
+    .data-table tbody tr {
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .data-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .data-table tbody tr.expanded {
+      background: rgba(255, 189, 89, 0.05);
+    }
+
+    .data-table tbody tr.expanded td {
+      border-bottom-color: transparent;
+    }
+
+    /* User identifier column */
+    .user-identifier {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #333 0%, #222 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .user-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .user-avatar svg {
+      width: 16px;
+      height: 16px;
+      fill: #666;
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .user-name {
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .user-email {
+      font-size: 11px;
+      color: #555;
+    }
+
+    .session-id {
+      font-family: monospace;
+      font-size: 11px;
+      color: #888;
+      background: #1a1a1a;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    /* Stage badges */
+    .stage-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: capitalize;
+    }
+
+    .stage-badge.visitor {
+      background: rgba(107, 114, 128, 0.2);
+      color: #9ca3af;
+    }
+
+    .stage-badge.interested {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+    }
+
+    .stage-badge.engaged {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+    }
+
+    .stage-badge.subscriber {
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+    }
+
+    .stage-badge.advocate {
+      background: rgba(168, 85, 247, 0.2);
+      color: #c084fc;
+    }
+
+    /* Score display */
+    .score-display {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .score-bar {
+      width: 60px;
+      height: 6px;
+      background: #222;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .score-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .score-fill.high { background: linear-gradient(90deg, #22c55e, #4ade80); }
+    .score-fill.medium { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .score-fill.low { background: linear-gradient(90deg, #6b7280, #9ca3af); }
+
+    .score-value {
+      font-weight: 600;
+      min-width: 24px;
+    }
+
+    /* Subscription tier */
+    .tier-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tier-badge.standard {
+      background: rgba(107, 114, 128, 0.2);
+      color: #9ca3af;
+    }
+
+    .tier-badge.ministry {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+    }
+
+    .tier-badge.business {
+      background: rgba(168, 85, 247, 0.2);
+      color: #c084fc;
+    }
+
+    /* Likelihood indicator */
+    .likelihood-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .likelihood-bar {
+      width: 40px;
+      height: 4px;
+      background: #222;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .likelihood-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
+
+    .likelihood-fill.high { background: #22c55e; }
+    .likelihood-fill.medium { background: #f59e0b; }
+    .likelihood-fill.low { background: #6b7280; }
+
+    .likelihood-tier {
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .likelihood-tier.high { color: #4ade80; }
+    .likelihood-tier.medium { color: #fbbf24; }
+    .likelihood-tier.low { color: #9ca3af; }
+
+    /* Timestamp */
+    .timestamp {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .timestamp-ago {
+      color: #555;
+    }
+
+    /* Themes tags */
+    .theme-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .theme-tag {
+      padding: 2px 6px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 3px;
+      font-size: 10px;
+      color: #888;
+    }
+
+    /* Inline expansion panel */
+    .expansion-row {
+      display: none;
+    }
+
+    .expansion-row.visible {
+      display: table-row;
+    }
+
+    .expansion-row td {
+      padding: 0;
+      border-bottom: 1px solid #222;
+    }
+
+    .expansion-panel {
+      background: linear-gradient(135deg, #0f0f0f 0%, #111 100%);
+      border-top: 1px solid rgba(255, 189, 89, 0.2);
+      padding: 20px;
+      animation: slideDown 0.2s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .expansion-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .expansion-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .expansion-section-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .expansion-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #999;
+    }
+
+    .expansion-item-value {
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .persona-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .persona-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      font-size: 11px;
+    }
+
+    .persona-chip img {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+    }
+
+    .persona-chip-count {
+      color: #ffbd59;
+      font-weight: 600;
+    }
+
+    .action-history {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .action-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      padding: 6px 8px;
+      background: #151515;
+      border-radius: 4px;
+    }
+
+    .action-outcome {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .action-outcome.clicked { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+    .action-outcome.dismissed { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    .action-outcome.shown { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+
+    /* Rules table specific */
+    .rule-status-toggle {
+      position: relative;
+      width: 36px;
+      height: 20px;
+    }
+
+    .rule-status-toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #333;
+      border-radius: 10px;
+      transition: 0.3s;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background: #666;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+
+    .rule-status-toggle input:checked + .toggle-slider {
+      background: rgba(34, 197, 94, 0.3);
+    }
+
+    .rule-status-toggle input:checked + .toggle-slider:before {
+      background: #22c55e;
+      transform: translateX(16px);
+    }
+
+    /* Pagination */
+    .table-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-top: 1px solid #222;
+      flex-shrink: 0;
+    }
+
+    .pagination-info {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 4px;
+    }
+
+    .pagination-btn {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #888;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      background: #252525;
+      color: #fff;
+    }
+
+    .pagination-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination-btn.active {
+      background: #ffbd59;
+      border-color: #ffbd59;
+      color: #000;
+    }
+
+    /* View panels - only one visible at a time */
+    .view-panel {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .view-panel.active {
+      display: flex;
+    }
+
+    /* Gauges Section Styles */
+    .gauges-section {
+      margin-bottom: 20px;
+      flex-shrink: 0;
+    }
+
+    .section-header {
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin: 0;
+    }
+
+    .gauges-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .gauge-container {
+      background: linear-gradient(135deg, #151515 0%, #111 100%);
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.2s ease;
+    }
+
+    .gauge-container:hover {
+      border-color: #333;
+      transform: translateY(-2px);
+    }
+
+    .gauge-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .gauge-svg {
+      width: 100%;
+      max-width: 200px;
+      height: auto;
+    }
+
+    .gauge-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      margin-top: -10px;
+      text-shadow: 0 0 20px rgba(255, 189, 89, 0.3);
+    }
+
+    .gauge-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 8px;
+    }
+
+    /* Gauge needle animation */
+    .gauge-svg g[id$="Needle"] {
+      transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .gauge-svg path[id$="Arc"] {
+      transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (max-width: 900px) {
+      .gauges-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Loading state */
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 10, 10, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .loading-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #333;
+      border-top-color: #ffbd59;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Empty state */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      fill: #333;
+      margin-bottom: 16px;
+    }
+
+    .empty-state-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .empty-state-text {
+      font-size: 13px;
+      color: #555;
+    }
+
+    /* ============================================
+       FLIGHT INSTRUMENTS SECTION
+       Unified container width: 920px for all rows
+       ============================================ */
+    .flight-instruments-section {
+      background: linear-gradient(180deg, #0a0a0a 0%, #111 100%);
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 24px 24px 32px 24px; /* Extra bottom padding for persona labels */
+      margin-top: -20px;
+      margin-bottom: 20px;
+    }
+
+    /* Shared gauge row container - all rows use this width */
+    .instruments-row-top,
+    .instruments-row-bottom,
+    .persona-gauges-row {
+      width: 920px;
+      max-width: 100%;
+      margin-left: auto;
+      margin-right: auto;
+      box-sizing: border-box;
+    }
+
+    .instruments-row-top {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .instruments-row-bottom {
+      display: flex;
+      justify-content: space-evenly;
+      align-items: flex-start;
+      padding: 0 10px;
+      margin-top: -10px;
+      width: 100% !important;
+    }
+
+    .mini-gauges-column {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 16px;
+      margin-left: 24px;
+    }
+
+    .mini-gauges-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 6px;
+      align-items: center;
+      justify-items: center;
+      width: 240px; /* Fixed width for consistent sizing */
+    }
+
+    /* Move top row of mini gauges down 40px */
+    .mini-gauges-group > .instrument-deco-small:nth-child(-n+3) {
+      margin-top: 40px;
+    }
+
+    .instrument-large {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .instrument-large canvas {
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      box-shadow:
+        0 -80px 100px rgba(251, 191, 36, 0.30),
+        0 0 30px rgba(251, 191, 36, 0.30),
+        0 0 60px rgba(251, 191, 36, 0.18),
+        0 4px 20px rgba(0, 0, 0, 0.5),
+        inset 0 0 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .instrument-small {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .instrument-small canvas {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      box-shadow:
+        0 -40px 50px rgba(251, 191, 36, 0.20),
+        0 0 20px rgba(251, 191, 36, 0.22),
+        0 0 40px rgba(251, 191, 36, 0.12),
+        0 3px 15px rgba(0, 0, 0, 0.5),
+        inset 0 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .instrument-label {
+      margin-top: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .instrument-label-small {
+      margin-top: 8px;
+      font-size: 9px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .center-instruments {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .center-small-instruments {
+      display: flex;
+      align-items: center;
+      justify-content: space-evenly;
+      flex: 1;
+    }
+
+    .instrument-deco-large {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .instrument-deco-large canvas {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      box-shadow:
+        0 3px 15px rgba(0, 0, 0, 0.5),
+        inset 0 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .instrument-deco-small {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .instrument-deco-small canvas {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      box-shadow:
+        0 2px 8px #000000,
+        inset 0 0 10px #000000;
+    }
+
+    .emotion-label {
+      font-size: 7px;
+      font-weight: 600;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    /* Persona Gauges Row - uses shared 920px width from .instruments-row-top/.instruments-row-bottom */
+    .persona-gauges-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-top: 20px;
+      padding: 0 10px;
+      /* width inherited from shared rule above */
+    }
+
+    .persona-gauge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .persona-gauge canvas {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      box-shadow:
+        0 2px 6px #000000,
+        inset 0 0 8px #000000;
+    }
+
+    .persona-label {
+      font-size: 6px;
+      font-weight: 600;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-top: 4px;
+      text-align: center;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <!-- ADMIN HEADER -->
+  <div class="admin-header">
+    <div class="admin-header-left">
+      <a href="/search" class="admin-header-logo">
+        <span class="logo-jubilee">Jubilee</span><span class="logo-intelligence">Intelligence</span>
+      </a>
+    </div>
+    <div class="admin-header-right">
+      <span class="admin-header-user-name" id="adminUserName"></span>
+      <span class="admin-header-sep">|</span>
+      <a href="#" class="admin-sign-out-btn" id="adminAuthBtn">
+        <span id="adminAuthBtnText">Sign Out</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 4v8" stroke="currentColor" stroke-width="2.5"/>
+          <path d="M6.5 7.5a8 8 0 1 0 11 0" stroke="currentColor" stroke-width="2" fill="none"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- ADMIN LEFT SIDEBAR -->
+    <div class="admin-sidebar">
+      <a href="/admin" class="admin-sidebar-icon" data-tooltip="Dashboard" data-nav="dashboard">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+      </a>
+      <a href="/search" class="admin-sidebar-icon" data-tooltip="Search" data-nav="search">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      </a>
+      <a href="/admin/tasks" class="admin-sidebar-icon" data-tooltip="Tasks" data-nav="tasks">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      </a>
+      <a href="/admin/hospitality" class="admin-sidebar-icon is-active" data-tooltip="Hospitality" data-nav="hospitality">
+        <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+      </a>
+
+      <div class="admin-sidebar-spacer"></div>
+
+      <!-- Brand Text -->
+      <div class="admin-sidebar-brand-section">
+        <div class="admin-sidebar-brand-text">Jubilee<span class="verse">Verse</span><span class="dotcom">.com</span></div>
+        <div class="admin-sidebar-brand-sub">ADMIN DASHBOARD</div>
+      </div>
+
+      <!-- User Avatar -->
+      <div class="admin-sidebar-avatar">
+        <img src="/images/personas/jubilee.png" alt="Admin" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23666%22%3E%3Cpath d=%22M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z%22/%3E%3C/svg%3E'">
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-area">
+      <!-- Hospitality Layout -->
+      <div class="hospitality-layout">
+        <!-- Main Content -->
+        <div class="hospitality-content">
+          <!-- Dashboard View (Default) -->
+          <div class="view-panel active" id="view-dashboard">
+            <!-- Flight Instrument Gauges Section -->
+            <div class="flight-instruments-section">
+              <!-- Top Row: Mini Gauges + Large Instruments + Mini Gauges -->
+              <div class="instruments-row-top">
+                <!-- Mini Gauges Group - Left Side (6 gauges: Negative Emotions to Avoid) -->
+                <div class="mini-gauges-group">
+                  <div class="instrument-deco-small">
+                    <canvas id="decoMini9" width="70" height="70"></canvas>
+                    <div class="emotion-label">BEING IGNORED</div>
+                  </div>
+                  <div class="instrument-deco-small">
+                    <canvas id="decoMini5" width="70" height="70"></canvas>
+                    <div class="emotion-label">CONFUSION</div>
+                  </div>
+                  <div class="instrument-deco-small">
+                    <canvas id="decoMini7" width="70" height="70"></canvas>
+                    <div class="emotion-label">PRESSURE</div>
+                  </div>
+                  <div class="instrument-deco-small">
+                    <canvas id="decoMini10" width="70" height="70"></canvas>
+                    <div class="emotion-label">FRUSTRATION</div>
+                  </div>
+                  <div class="instrument-deco-small">
+                    <canvas id="decoMini6" width="70" height="70"></canvas>
+                    <div class="emotion-label">SKEPTICISM</div>
+                  </div>
+                  <div class="instrument-deco-small">
+                    <canvas id="decoMini8" width="70" height="70"></canvas>
+                    <div class="emotion-label">DISCONNECTION</div>
+                  </div>
+                </div>
+
+                <!-- Main Center Instruments -->
+                <div class="center-instruments">
+                  <!-- Attitude Indicator (Artificial Horizon) - Engagement Health -->
+                  <div class="instrument-large" id="attitude-indicator">
+                    <canvas id="attitudeCanvas" width="280" height="280"></canvas>
+                    <div class="instrument-label">ENGAGEMENT HEALTH</div>
+                  </div>
+
+                  <!-- Altimeter - User Altitude/Growth -->
+                  <div class="instrument-large" id="altimeter">
+                    <canvas id="altimeterCanvas" width="280" height="280"></canvas>
+                    <div class="instrument-label">SUBSCRIPTION GROWTH</div>
+                  </div>
+                </div>
+
+                <!-- Mini Gauges Group - Right Side (6 gauges: Positive Emotions to Cultivate) -->
+                <div class="mini-gauges-group">
+                  <div class="instrument-deco-small">
+                    <canvas id="decoMiniLeft" width="70" height="70"></canvas>
+                    <div class="emotion-label">BEING SEEN</div>
+                  </div>
+                  <div class="instrument-deco-small">
+                    <canvas id="decoMini3" width="70" height="70"></canvas>
+                    <div class="emotion-label">SAFETY</div>
+                  </div>
+                  <div class="instrument-deco-small">
+                    <canvas id="decoMini11" width="70" height="70"></canvas>
+                    <div class="emotion-label">HOPE</div>
+                  </div>
+                  <div class="instrument-deco-small">
+                    <canvas id="decoMiniRight" width="70" height="70"></canvas>
+                    <div class="emotion-label">CLARITY</div>
+                  </div>
+                  <div class="instrument-deco-small">
+                    <canvas id="decoMini4" width="70" height="70"></canvas>
+                    <div class="emotion-label">RELIEF</div>
+                  </div>
+                  <div class="instrument-deco-small">
+                    <canvas id="decoMini12" width="70" height="70"></canvas>
+                    <div class="emotion-label">CURIOSITY</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bottom Row: Side gauges + Small Instruments + Side gauges -->
+              <div class="instruments-row-bottom">
+                <!-- Left Side Decorative Gauge (same size as center small instruments) -->
+                <div class="instrument-small">
+                  <canvas id="decoTachLeft" width="160" height="160"></canvas>
+                  <div class="instrument-label-small">LOYALTY (RETURN INTENT)</div>
+                </div>
+
+                <!-- Center Small Instruments -->
+                <div class="center-small-instruments">
+                  <!-- Airspeed Indicator - Conversion Velocity -->
+                  <div class="instrument-small" id="airspeed-indicator">
+                    <canvas id="airspeedCanvas" width="160" height="160"></canvas>
+                    <div class="instrument-label-small">CONVERSION RATE</div>
+                  </div>
+
+                  <!-- Turn Coordinator - Session Balance -->
+                  <div class="instrument-small" id="turn-coordinator">
+                    <canvas id="turnCanvas" width="160" height="160"></canvas>
+                    <div class="instrument-label-small">SESSION BALANCE</div>
+                  </div>
+
+                  <!-- Heading Indicator - Rule Direction -->
+                  <div class="instrument-small" id="heading-indicator">
+                    <canvas id="headingCanvas" width="160" height="160"></canvas>
+                    <div class="instrument-label-small">RULE DIRECTION</div>
+                  </div>
+
+                  <!-- Vertical Speed Indicator - Growth Rate -->
+                  <div class="instrument-small" id="vsi">
+                    <canvas id="vsiCanvas" width="160" height="160"></canvas>
+                    <div class="instrument-label-small">GROWTH RATE</div>
+                  </div>
+                </div>
+
+                <!-- Right Side Decorative Gauge (same size as center small instruments) -->
+                <div class="instrument-small">
+                  <canvas id="decoTachRight" width="160" height="160"></canvas>
+                  <div class="instrument-label-small">INVOLVEMENT ACTIONS</div>
+                </div>
+              </div>
+
+              <!-- Persona Gauges Row: 12 Inspire Family Personas -->
+              <div class="persona-gauges-row">
+                <div class="persona-gauge">
+                  <canvas id="personaJubilee" width="60" height="60"></canvas>
+                  <div class="persona-label">JUBILEE INSPIRE</div>
+                </div>
+                <div class="persona-gauge">
+                  <canvas id="personaMelody" width="60" height="60"></canvas>
+                  <div class="persona-label">MELODY INSPIRE</div>
+                </div>
+                <div class="persona-gauge">
+                  <canvas id="personaZariah" width="60" height="60"></canvas>
+                  <div class="persona-label">ZARIAH INSPIRE</div>
+                </div>
+                <div class="persona-gauge">
+                  <canvas id="personaElias" width="60" height="60"></canvas>
+                  <div class="persona-label">ELIAS INSPIRE</div>
+                </div>
+                <div class="persona-gauge">
+                  <canvas id="personaEliana" width="60" height="60"></canvas>
+                  <div class="persona-label">ELIANA INSPIRE</div>
+                </div>
+                <div class="persona-gauge">
+                  <canvas id="personaCaleb" width="60" height="60"></canvas>
+                  <div class="persona-label">CALEB INSPIRE</div>
+                </div>
+                <div class="persona-gauge">
+                  <canvas id="personaImani" width="60" height="60"></canvas>
+                  <div class="persona-label">IMANI INSPIRE</div>
+                </div>
+                <div class="persona-gauge">
+                  <canvas id="personaZev" width="60" height="60"></canvas>
+                  <div class="persona-label">ZEV INSPIRE</div>
+                </div>
+                <div class="persona-gauge">
+                  <canvas id="personaAmir" width="60" height="60"></canvas>
+                  <div class="persona-label">AMIR INSPIRE</div>
+                </div>
+                <div class="persona-gauge">
+                  <canvas id="personaNova" width="60" height="60"></canvas>
+                  <div class="persona-label">NOVA INSPIRE</div>
+                </div>
+                <div class="persona-gauge">
+                  <canvas id="personaSantiago" width="60" height="60"></canvas>
+                  <div class="persona-label">SANTIAGO INSPIRE</div>
+                </div>
+                <div class="persona-gauge">
+                  <canvas id="personaTahoma" width="60" height="60"></canvas>
+                  <div class="persona-label">TAHOMA INSPIRE</div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Subscriber View -->
+          <div class="view-panel" id="view-subscribers">
+            <!-- Dashboard -->
+            <div class="dashboard-section">
+              <div class="dashboard-grid">
+                <div class="metric-card">
+                  <div class="metric-label">Active Subscribers</div>
+                  <div class="metric-value" id="sub-total">--</div>
+                  <div class="metric-subvalue" id="sub-change"></div>
+                </div>
+                <div class="metric-card highlight">
+                  <div class="metric-label">Advocates</div>
+                  <div class="metric-value gold" id="sub-advocates">--</div>
+                  <div class="metric-subvalue">High engagement tier</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Avg Engagement</div>
+                  <div class="metric-value" id="sub-avg-score">--</div>
+                  <div class="metric-subvalue" id="sub-score-trend"></div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Avg Session Time</div>
+                  <div class="metric-value" id="sub-avg-time">--</div>
+                  <div class="metric-subvalue">minutes</div>
+                </div>
+                <div class="metric-card engagement-bar-container">
+                  <div class="engagement-bar-label">Engagement Distribution</div>
+                  <div class="engagement-bar" id="sub-engagement-bar">
+                    <div class="engagement-segment high" style="width: 33%">33%</div>
+                    <div class="engagement-segment medium" style="width: 40%">40%</div>
+                    <div class="engagement-segment low" style="width: 27%">27%</div>
+                  </div>
+                  <div class="engagement-legend">
+                    <div class="legend-item"><span class="legend-dot high"></span>High (60+)</div>
+                    <div class="legend-item"><span class="legend-dot medium"></span>Medium (30-59)</div>
+                    <div class="legend-item"><span class="legend-dot low"></span>Low (0-29)</div>
+                  </div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Chat Engagement</div>
+                  <div class="metric-value gold" id="sub-chat-pct">--%</div>
+                  <div class="metric-subvalue">started conversations</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Feature Usage</div>
+                  <div class="metric-value" id="sub-features">--</div>
+                  <div class="metric-subvalue">avg features used</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Subscribers Table -->
+            <div class="table-section">
+              <div class="table-header">
+                <div>
+                  <span class="table-title">Subscribers</span>
+                  <span class="table-meta" id="sub-table-meta"></span>
+                </div>
+                <div class="table-controls">
+                  <select class="sort-select" id="sub-sort" onchange="loadSubscribers()">
+                    <option value="engagementScore">Sort by Score</option>
+                    <option value="lastActivityAt">Sort by Activity</option>
+                    <option value="displayName">Sort by Name</option>
+                  </select>
+                </div>
+              </div>
+              <div class="table-wrapper" id="sub-table-wrapper">
+                <table class="data-table" id="sub-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 25%">Subscriber</th>
+                      <th style="width: 10%">Plan</th>
+                      <th style="width: 12%">Score</th>
+                      <th style="width: 15%">Stage</th>
+                      <th style="width: 20%">Themes</th>
+                      <th style="width: 18%">Last Active</th>
+                    </tr>
+                  </thead>
+                  <tbody id="sub-tbody"></tbody>
+                </table>
+              </div>
+              <div class="table-footer">
+                <div class="pagination-info" id="sub-pagination-info">Showing 0 of 0</div>
+                <div class="pagination-controls" id="sub-pagination"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visitor View -->
+          <div class="view-panel" id="view-visitors">
+            <!-- Dashboard -->
+            <div class="dashboard-section">
+              <div class="dashboard-grid">
+                <div class="metric-card">
+                  <div class="metric-label">Active Visitors</div>
+                  <div class="metric-value" id="vis-total">--</div>
+                  <div class="metric-subvalue" id="vis-change"></div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Interested</div>
+                  <div class="metric-value" id="vis-interested">--</div>
+                  <div class="metric-subvalue">showing engagement</div>
+                </div>
+                <div class="metric-card highlight">
+                  <div class="metric-label">Engaged</div>
+                  <div class="metric-value gold" id="vis-engaged">--</div>
+                  <div class="metric-subvalue">ready for invitation</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Avg Score</div>
+                  <div class="metric-value" id="vis-avg-score">--</div>
+                  <div class="metric-subvalue">engagement score</div>
+                </div>
+                <div class="metric-card engagement-bar-container">
+                  <div class="engagement-bar-label">Funnel Distribution</div>
+                  <div class="engagement-bar" id="vis-funnel-bar">
+                    <div class="engagement-segment low" style="width: 50%">Visitor</div>
+                    <div class="engagement-segment medium" style="width: 30%">Interested</div>
+                    <div class="engagement-segment high" style="width: 20%">Engaged</div>
+                  </div>
+                  <div class="engagement-legend">
+                    <div class="legend-item"><span class="legend-dot low"></span>New Visitors</div>
+                    <div class="legend-item"><span class="legend-dot medium"></span>Interested</div>
+                    <div class="legend-item"><span class="legend-dot high"></span>Engaged</div>
+                  </div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Actions Offered</div>
+                  <div class="metric-value" id="vis-actions-offered">--</div>
+                  <div class="metric-subvalue" id="vis-actions-accepted"></div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Avg Session Depth</div>
+                  <div class="metric-value" id="vis-avg-pages">--</div>
+                  <div class="metric-subvalue">pages per session</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Visitors Table -->
+            <div class="table-section">
+              <div class="table-header">
+                <div>
+                  <span class="table-title">Visitors</span>
+                  <span class="table-meta" id="vis-table-meta"></span>
+                </div>
+                <div class="table-controls">
+                  <select class="sort-select" id="vis-sort" onchange="loadVisitors()">
+                    <option value="lastActivityAt">Sort by Activity</option>
+                    <option value="engagementScore">Sort by Score</option>
+                    <option value="pageViews">Sort by Page Views</option>
+                  </select>
+                </div>
+              </div>
+              <div class="table-wrapper" id="vis-table-wrapper">
+                <table class="data-table" id="vis-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 20%">Session</th>
+                      <th style="width: 12%">Score</th>
+                      <th style="width: 12%">Stage</th>
+                      <th style="width: 18%">Themes</th>
+                      <th style="width: 10%">Sessions</th>
+                      <th style="width: 15%">Last Active</th>
+                      <th style="width: 13%">Likelihood</th>
+                    </tr>
+                  </thead>
+                  <tbody id="vis-tbody"></tbody>
+                </table>
+              </div>
+              <div class="table-footer">
+                <div class="pagination-info" id="vis-pagination-info">Showing 0 of 0</div>
+                <div class="pagination-controls" id="vis-pagination"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rules View -->
+          <div class="view-panel" id="view-rules">
+            <!-- Dashboard -->
+            <div class="dashboard-section">
+              <div class="dashboard-grid">
+                <div class="metric-card">
+                  <div class="metric-label">Active Rules</div>
+                  <div class="metric-value" id="rules-active">--</div>
+                  <div class="metric-subvalue" id="rules-total-label"></div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Total Triggers</div>
+                  <div class="metric-value" id="rules-triggers">--</div>
+                  <div class="metric-subvalue">all time</div>
+                </div>
+                <div class="metric-card highlight">
+                  <div class="metric-label">Avg Accept Rate</div>
+                  <div class="metric-value gold" id="rules-accept-rate">--%</div>
+                  <div class="metric-subvalue">clicked vs shown</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Decline Rate</div>
+                  <div class="metric-value" id="rules-decline-rate">--%</div>
+                  <div class="metric-subvalue">dismissed vs shown</div>
+                </div>
+                <div class="metric-card engagement-bar-container">
+                  <div class="engagement-bar-label">Rule Outcomes</div>
+                  <div class="engagement-bar" id="rules-outcomes-bar">
+                    <div class="engagement-segment high" style="width: 40%">Clicked</div>
+                    <div class="engagement-segment medium" style="width: 30%">Shown</div>
+                    <div class="engagement-segment low" style="width: 30%">Dismissed</div>
+                  </div>
+                  <div class="engagement-legend">
+                    <div class="legend-item"><span class="legend-dot high"></span>Clicked</div>
+                    <div class="legend-item"><span class="legend-dot medium"></span>Shown Only</div>
+                    <div class="legend-item"><span class="legend-dot low"></span>Dismissed</div>
+                  </div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Conversions</div>
+                  <div class="metric-value gold" id="rules-conversions">--</div>
+                  <div class="metric-subvalue">from hospitality</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">Cooldown Active</div>
+                  <div class="metric-value" id="rules-cooldowns">--</div>
+                  <div class="metric-subvalue">users on cooldown</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rules Table -->
+            <div class="table-section">
+              <div class="table-header">
+                <div>
+                  <span class="table-title">Hospitality Rules</span>
+                  <span class="table-meta" id="rules-table-meta"></span>
+                </div>
+              </div>
+              <div class="table-wrapper" id="rules-table-wrapper">
+                <table class="data-table" id="rules-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 22%">Rule</th>
+                      <th style="width: 12%">Target</th>
+                      <th style="width: 12%">Persona</th>
+                      <th style="width: 14%">Trigger</th>
+                      <th style="width: 10%">Triggers</th>
+                      <th style="width: 12%">Click Rate</th>
+                      <th style="width: 10%">Status</th>
+                      <th style="width: 8%">Toggle</th>
+                    </tr>
+                  </thead>
+                  <tbody id="rules-tbody"></tbody>
+                </table>
+              </div>
+              <div class="table-footer">
+                <div class="pagination-info" id="rules-pagination-info">Showing all rules</div>
+                <div class="pagination-controls"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Control Panel - Hospitality View Navigation -->
+        <div class="hospitality-control-panel">
+          <!-- Dashboard View (Primary - default view, shows hospitality analytics and gauges) -->
+          <button class="control-btn active" data-view="dashboard" onclick="switchView('dashboard')" title="Dashboard - Analytics & Gauges">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            <span class="control-btn-label">Dashboard</span>
+          </button>
+          <!-- Subscribers View (shows subscriber hospitality data) -->
+          <button class="control-btn" data-view="subscribers" onclick="switchView('subscribers')" title="Subscriber Hospitality">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+            <span class="control-btn-label">Subscribers</span>
+          </button>
+          <!-- Visitors View (shows visitor hospitality data) -->
+          <button class="control-btn" data-view="visitors" onclick="switchView('visitors')" title="Visitor Hospitality">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            <span class="control-btn-label">Visitors</span>
+          </button>
+          <!-- Rules View (navigates to dedicated hospitality rules page) -->
+          <a href="/admin/hospitality/rules" class="control-btn" title="Hospitality Rules">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            <span class="control-btn-label">Rules</span>
+          </a>
+
+          <!-- Spacer to push refresh to bottom -->
+          <div style="flex: 1;"></div>
+
+          <!-- Refresh Button -->
+          <button class="control-btn" id="refreshBtn" title="Test Instruments">
+            <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+            <span class="control-btn-label">Refresh</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/js/modules/components.js"></script>
+  <script>
+    // ============================================
+    // State Management
+    // ============================================
+    const state = {
+      currentView: 'dashboard',
+      dashboard: { metrics: {}, activity: [], gauges: {} },
+      subscribers: { data: [], page: 1, limit: 25, total: 0, expanded: null },
+      visitors: { data: [], page: 1, limit: 25, total: 0, expanded: null },
+      rules: { data: [], performance: {} },
+      loading: false
+    };
+
+    const subtitles = {
+      dashboard: 'Hospitality Dashboard',
+      subscribers: 'Subscriber Engagement',
+      visitors: 'Visitor Engagement',
+      rules: 'Hospitality Rules'
+    };
+
+    // ============================================
+    // Initialization
+    // ============================================
+    async function init() {
+      // Initialize admin header auth button
+      initAdminHeader();
+
+      // Initialize refresh button
+      const refreshBtn = document.getElementById('refreshBtn');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+          refreshCurrentView();
+        });
+      }
+
+      // Check admin access
+      try {
+        const response = await fetch('/auth/me', { credentials: 'include' });
+        const data = await response.json();
+
+        if (!data.user || data.user.role !== 'admin') {
+          window.location.href = '/';
+          return;
+        }
+
+        // Display user name in header
+        const userNameEl = document.getElementById('adminUserName');
+        if (userNameEl && data.user) {
+          userNameEl.textContent = data.user.displayName || data.user.email || 'Admin';
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        window.location.href = '/';
+        return;
+      }
+
+      // Load initial dashboard data (default view)
+      loadDashboard();
+
+      // Auto-refresh every 30 seconds (use reloadCurrentView to avoid triggering animation)
+      setInterval(reloadCurrentView, 30000);
+    }
+
+    // Initialize admin header auth button
+    function initAdminHeader() {
+      const authBtn = document.getElementById('adminAuthBtn');
+      if (authBtn) {
+        authBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          try {
+            await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+            window.location.href = '/';
+          } catch (error) {
+            console.error('Logout failed:', error);
+          }
+        });
+      }
+    }
+
+    // ============================================
+    // View Switching
+    // ============================================
+    function switchView(view) {
+      if (state.currentView === view) return;
+
+      state.currentView = view;
+
+      // Update control buttons
+      document.querySelectorAll('.control-btn[data-view]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === view);
+      });
+
+      // Update view panels
+      document.querySelectorAll('.view-panel').forEach(panel => {
+        panel.classList.toggle('active', panel.id === 'view-' + view);
+      });
+
+      // Update subtitle
+      document.getElementById('view-subtitle').textContent = subtitles[view];
+
+      // Load data for view
+      switch (view) {
+        case 'dashboard':
+          loadDashboard();
+          break;
+        case 'subscribers':
+          loadSubscribers();
+          break;
+        case 'visitors':
+          loadVisitors();
+          break;
+        case 'rules':
+          loadRules();
+          break;
+      }
+    }
+
+    // Called when refresh button is clicked - triggers instrument test animation
+    function refreshCurrentView() {
+      if (state.currentView === 'dashboard') {
+        // Only trigger instrument test animation on manual refresh
+        testFlightInstruments();
+      } else {
+        // For other views, reload the data
+        reloadCurrentView();
+      }
+    }
+
+    // Called for auto-refresh and data reloading (no animation)
+    function reloadCurrentView() {
+      switch (state.currentView) {
+        case 'dashboard':
+          loadDashboard();
+          break;
+        case 'subscribers':
+          loadSubscribers();
+          break;
+        case 'visitors':
+          loadVisitors();
+          break;
+        case 'rules':
+          loadRules();
+          break;
+      }
+    }
+
+    // ============================================
+    // Dashboard View
+    // ============================================
+    async function loadDashboard() {
+      try {
+        // Load metrics from subscribers, visitors, and rules endpoints in parallel
+        const [subsRes, visRes, rulesRes, perfRes] = await Promise.all([
+          fetch('/api/hospitality/admin/subscribers?page=1&limit=1', { credentials: 'include' }),
+          fetch('/api/hospitality/admin/visitors?page=1&limit=1', { credentials: 'include' }),
+          fetch('/api/hospitality/admin/rules', { credentials: 'include' }),
+          fetch('/api/hospitality/admin/performance', { credentials: 'include' })
+        ]);
+
+        const [subsData, visData, rulesData, perfData] = await Promise.all([
+          subsRes.json(),
+          visRes.json(),
+          rulesRes.json(),
+          perfRes.json()
+        ]);
+
+        // Update dashboard metrics
+        const subCount = subsData.summary?.subscriber_count || 0;
+        const visCount = visData.summary?.visitor_count || 0;
+        const avgScore = Math.round(((subsData.summary?.avg_engagement_score || 0) + (visData.summary?.avg_engagement_score || 0)) / 2);
+
+        document.getElementById('dash-total-engaged').textContent = subCount + visCount;
+        document.getElementById('dash-subscribers').textContent = subCount;
+        document.getElementById('dash-visitors').textContent = visCount;
+        document.getElementById('dash-avg-score').textContent = avgScore;
+
+        // Calculate gauge values
+        const perfRules = perfData.rules || [];
+        let totalShown = 0, totalClicked = 0, totalConverted = 0;
+        perfRules.forEach(r => {
+          totalShown += r.timesShown || 0;
+          totalClicked += r.timesClicked || 0;
+          totalConverted += r.timesConverted || 0;
+        });
+
+        const engagementRate = avgScore; // 0-100
+        const conversionRate = totalShown > 0 ? Math.round((totalConverted / totalShown) * 100) : 0;
+        const acceptRate = totalShown > 0 ? Math.round((totalClicked / totalShown) * 100) : 0;
+
+        // Start flight instruments with hospitality data
+        const hospitalityData = {
+          avgEngagement: avgScore,
+          totalUsers: subCount + visCount,
+          conversionRate: conversionRate,
+          sessionBalance: 0, // TODO: Calculate from session data
+          ruleEffectiveness: acceptRate,
+          growthTrend: (subsData.summary?.new_today || 0) - (subsData.summary?.churned_today || 0)
+        };
+        startFlightInstruments(hospitalityData);
+
+        // Load recent activity
+        loadRecentActivity();
+
+        updateLastUpdated();
+      } catch (error) {
+        console.error('Failed to load dashboard:', error);
+        // Still initialize instruments with default values on error
+        startFlightInstruments({
+          avgEngagement: 50,
+          totalUsers: 0,
+          conversionRate: 0,
+          sessionBalance: 0,
+          ruleEffectiveness: 50,
+          growthTrend: 0
+        });
+      }
+    }
+
+    function updateGauge(gaugeId, value) {
+      // Clamp value between 0 and 100
+      value = Math.max(0, Math.min(100, value));
+
+      // Update gauge value display
+      const valueEl = document.getElementById(gaugeId + 'Value');
+      if (valueEl) {
+        valueEl.textContent = value + '%';
+      }
+
+      // Update needle rotation (-90 to 90 degrees for 0 to 100%)
+      const needle = document.getElementById(gaugeId + 'Needle');
+      if (needle) {
+        const rotation = -90 + (value * 1.8); // 180 degree range
+        needle.setAttribute('transform', `rotate(${rotation} 100 100)`);
+      }
+
+      // Update arc fill (251.2 is the arc length)
+      const arc = document.getElementById(gaugeId + 'Arc');
+      if (arc) {
+        const dashOffset = 251.2 * (1 - value / 100);
+        arc.setAttribute('stroke-dashoffset', dashOffset);
+      }
+    }
+
+    async function loadRecentActivity() {
+      try {
+        // Try to load from activity endpoint, or use fallback
+        const tbody = document.getElementById('dash-activity-tbody');
+        if (!tbody) return;
+
+        // For now, show a placeholder since there may not be an activity endpoint
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5">
+              <div class="empty-state" style="padding: 40px 20px;">
+                <svg viewBox="0 0 24 24" style="width: 32px; height: 32px; fill: #333; margin-bottom: 12px;"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+                <div class="empty-state-title">No recent activity</div>
+                <div class="empty-state-text">Hospitality activity will appear here as users interact with the system.</div>
+              </div>
+            </td>
+          </tr>
+        `;
+      } catch (error) {
+        console.error('Failed to load activity:', error);
+      }
+    }
+
+    // ============================================
+    // Subscribers View
+    // ============================================
+    async function loadSubscribers(page = 1) {
+      state.subscribers.page = page;
+      const sortBy = document.getElementById('sub-sort')?.value || 'engagementScore';
+
+      try {
+        const response = await fetch(`/api/hospitality/admin/subscribers?page=${page}&limit=${state.subscribers.limit}&sortBy=${sortBy}`, {
+          credentials: 'include'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          state.subscribers.data = data.subscribers || [];
+          state.subscribers.total = data.total || state.subscribers.data.length;
+
+          updateSubscriberDashboard(data.summary || {}, data.distribution || {});
+          renderSubscriberTable();
+          updateLastUpdated();
+        }
+      } catch (error) {
+        console.error('Failed to load subscribers:', error);
+      }
+    }
+
+    function updateSubscriberDashboard(summary, distribution) {
+      document.getElementById('sub-total').textContent = summary.subscriber_count || 0;
+      document.getElementById('sub-advocates').textContent = summary.advocates || 0;
+      document.getElementById('sub-avg-score').textContent = Math.round(summary.avg_engagement_score || 0);
+      document.getElementById('sub-avg-time').textContent = Math.round((summary.avg_time_on_site || 0) / 60);
+
+      // Calculate engagement distribution
+      const high = distribution.high || 0;
+      const medium = distribution.medium || 0;
+      const low = distribution.low || 0;
+      const total = high + medium + low || 1;
+
+      const highPct = Math.round((high / total) * 100);
+      const medPct = Math.round((medium / total) * 100);
+      const lowPct = 100 - highPct - medPct;
+
+      const bar = document.getElementById('sub-engagement-bar');
+      if (bar) {
+        bar.innerHTML = `
+          <div class="engagement-segment high" style="width: ${highPct}%">${highPct}%</div>
+          <div class="engagement-segment medium" style="width: ${medPct}%">${medPct}%</div>
+          <div class="engagement-segment low" style="width: ${lowPct}%">${lowPct}%</div>
+        `;
+      }
+    }
+
+    function renderSubscriberTable() {
+      const tbody = document.getElementById('sub-tbody');
+      const subscribers = state.subscribers.data;
+
+      if (!subscribers || subscribers.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                <div class="empty-state-title">No subscriber data</div>
+                <div class="empty-state-text">Subscriber engagement data will appear here once available.</div>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      let html = '';
+      subscribers.forEach((sub, index) => {
+        const isExpanded = state.subscribers.expanded === index;
+        const scoreClass = sub.engagementScore >= 60 ? 'high' : sub.engagementScore >= 30 ? 'medium' : 'low';
+        const themes = extractThemes(sub);
+        const tier = sub.subscriptionTier || 'standard';
+
+        html += `
+          <tr onclick="toggleSubscriberExpansion(${index})" class="${isExpanded ? 'expanded' : ''}">
+            <td>
+              <div class="user-identifier">
+                <div class="user-avatar">
+                  ${sub.avatarUrl
+                    ? `<img src="${sub.avatarUrl}" alt="">`
+                    : `<svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`
+                  }
+                </div>
+                <div class="user-info">
+                  <div class="user-name">${escapeHtml(sub.displayName || 'Unknown')}</div>
+                  <div class="user-email">${escapeHtml(sub.email || '')}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="tier-badge ${tier}">${tier}</span></td>
+            <td>
+              <div class="score-display">
+                <div class="score-bar">
+                  <div class="score-fill ${scoreClass}" style="width: ${sub.engagementScore || 0}%"></div>
+                </div>
+                <span class="score-value">${sub.engagementScore || 0}</span>
+              </div>
+            </td>
+            <td><span class="stage-badge ${sub.funnelStage || 'subscriber'}">${sub.funnelStage || 'subscriber'}</span></td>
+            <td>
+              <div class="theme-tags">
+                ${themes.map(t => `<span class="theme-tag">${t}</span>`).join('')}
+              </div>
+            </td>
+            <td>
+              <div class="timestamp">${formatTimeAgo(sub.lastActivityAt)}</div>
+            </td>
+          </tr>
+          <tr class="expansion-row ${isExpanded ? 'visible' : ''}" id="sub-expansion-${index}">
+            <td colspan="6">
+              <div class="expansion-panel">
+                ${renderSubscriberExpansion(sub)}
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+
+      // Update pagination info
+      const start = (state.subscribers.page - 1) * state.subscribers.limit + 1;
+      const end = Math.min(state.subscribers.page * state.subscribers.limit, state.subscribers.total);
+      document.getElementById('sub-pagination-info').textContent = `Showing ${start}-${end} of ${state.subscribers.total}`;
+      document.getElementById('sub-table-meta').textContent = ` - ${state.subscribers.total} total`;
+    }
+
+    function toggleSubscriberExpansion(index) {
+      const wasExpanded = state.subscribers.expanded === index;
+      state.subscribers.expanded = wasExpanded ? null : index;
+      renderSubscriberTable();
+    }
+
+    function renderSubscriberExpansion(sub) {
+      const personas = sub.personaInteractions || [];
+      const actions = sub.recentActions || [];
+
+      return `
+        <div class="expansion-grid">
+          <div class="expansion-section">
+            <div class="expansion-section-title">Engagement Summary</div>
+            <div class="expansion-item">Sessions: <span class="expansion-item-value">${sub.sessionCount || 0}</span></div>
+            <div class="expansion-item">Page Views: <span class="expansion-item-value">${sub.pageViews || 0}</span></div>
+            <div class="expansion-item">Time on Site: <span class="expansion-item-value">${Math.round((sub.totalTimeOnSiteSeconds || 0) / 60)}m</span></div>
+            <div class="expansion-item">Events: <span class="expansion-item-value">${sub.eventCount || 0}</span></div>
+          </div>
+          <div class="expansion-section">
+            <div class="expansion-section-title">Primary Interests</div>
+            <div class="expansion-item">Seeking: <span class="expansion-item-value">${sub.primaryInterest || 'General exploration'}</span></div>
+            <div class="expansion-item">Feature Focus: <span class="expansion-item-value">${sub.primaryFeature || 'Chat'}</span></div>
+            <div class="expansion-item">Engagement Trend: <span class="expansion-item-value">${sub.engagementTrend || 'Stable'}</span></div>
+          </div>
+          <div class="expansion-section">
+            <div class="expansion-section-title">Persona Affinity</div>
+            <div class="persona-chips">
+              ${personas.length > 0
+                ? personas.slice(0, 4).map(p => `
+                    <div class="persona-chip">
+                      <img src="/images/personas/${p.slug || 'jubilee'}.png" alt="${p.name}" onerror="this.style.display='none'">
+                      ${p.name || 'Unknown'}
+                      <span class="persona-chip-count">${p.count || 0}</span>
+                    </div>
+                  `).join('')
+                : '<div class="expansion-item">No persona interactions yet</div>'
+              }
+            </div>
+          </div>
+          <div class="expansion-section">
+            <div class="expansion-section-title">Hospitality Actions</div>
+            <div class="action-history">
+              ${actions.length > 0
+                ? actions.slice(0, 3).map(a => `
+                    <div class="action-item">
+                      <span class="action-outcome ${a.outcome}">${a.outcome}</span>
+                      <span>${a.ruleName || a.actionType}</span>
+                    </div>
+                  `).join('')
+                : '<div class="expansion-item">No hospitality actions recorded</div>'
+              }
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ============================================
+    // Visitors View
+    // ============================================
+    async function loadVisitors(page = 1) {
+      state.visitors.page = page;
+      const sortBy = document.getElementById('vis-sort')?.value || 'lastActivityAt';
+
+      try {
+        const response = await fetch(`/api/hospitality/admin/visitors?page=${page}&limit=${state.visitors.limit}&sortBy=${sortBy}`, {
+          credentials: 'include'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          state.visitors.data = data.visitors || [];
+          state.visitors.total = data.total || state.visitors.data.length;
+
+          updateVisitorDashboard(data.summary || {}, data.funnelBreakdown || []);
+          renderVisitorTable();
+          updateLastUpdated();
+        }
+      } catch (error) {
+        console.error('Failed to load visitors:', error);
+      }
+    }
+
+    function updateVisitorDashboard(summary, funnelBreakdown) {
+      document.getElementById('vis-total').textContent = summary.visitor_count || 0;
+      document.getElementById('vis-interested').textContent = summary.interested_count || 0;
+      document.getElementById('vis-engaged').textContent = summary.engaged_count || 0;
+      document.getElementById('vis-avg-score').textContent = Math.round(summary.avg_engagement_score || 0);
+      document.getElementById('vis-avg-pages').textContent = Math.round(summary.avg_page_views || 0);
+
+      // Calculate funnel distribution
+      const funnel = {};
+      funnelBreakdown.forEach(f => {
+        funnel[f.funnel_stage] = parseInt(f.count) || 0;
+      });
+
+      const visitorCount = funnel.visitor || 0;
+      const interestedCount = funnel.interested || 0;
+      const engagedCount = funnel.engaged || 0;
+      const total = visitorCount + interestedCount + engagedCount || 1;
+
+      const visPct = Math.round((visitorCount / total) * 100);
+      const intPct = Math.round((interestedCount / total) * 100);
+      const engPct = 100 - visPct - intPct;
+
+      const bar = document.getElementById('vis-funnel-bar');
+      if (bar) {
+        bar.innerHTML = `
+          <div class="engagement-segment low" style="width: ${visPct}%">${visPct > 10 ? 'Visitor' : ''}</div>
+          <div class="engagement-segment medium" style="width: ${intPct}%">${intPct > 10 ? 'Interested' : ''}</div>
+          <div class="engagement-segment high" style="width: ${engPct}%">${engPct > 10 ? 'Engaged' : ''}</div>
+        `;
+      }
+    }
+
+    function renderVisitorTable() {
+      const tbody = document.getElementById('vis-tbody');
+      const visitors = state.visitors.data;
+
+      if (!visitors || visitors.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                <div class="empty-state-title">No visitor data</div>
+                <div class="empty-state-text">Visitor engagement data will appear here once tracking begins.</div>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      let html = '';
+      visitors.forEach((vis, index) => {
+        const isExpanded = state.visitors.expanded === index;
+        const scoreClass = vis.engagementScore >= 60 ? 'high' : vis.engagementScore >= 30 ? 'medium' : 'low';
+        const themes = extractThemes(vis);
+        const likelihood = calculateLikelihood(vis);
+
+        html += `
+          <tr onclick="toggleVisitorExpansion(${index})" class="${isExpanded ? 'expanded' : ''}">
+            <td>
+              <div class="user-identifier">
+                <div class="user-avatar">
+                  <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </div>
+                <span class="session-id">${(vis.sessionId || 'unknown').substring(0, 12)}...</span>
+              </div>
+            </td>
+            <td>
+              <div class="score-display">
+                <div class="score-bar">
+                  <div class="score-fill ${scoreClass}" style="width: ${vis.engagementScore || 0}%"></div>
+                </div>
+                <span class="score-value">${vis.engagementScore || 0}</span>
+              </div>
+            </td>
+            <td><span class="stage-badge ${vis.funnelStage || 'visitor'}">${vis.funnelStage || 'visitor'}</span></td>
+            <td>
+              <div class="theme-tags">
+                ${themes.map(t => `<span class="theme-tag">${t}</span>`).join('')}
+              </div>
+            </td>
+            <td>${vis.sessionCount || 1}</td>
+            <td>
+              <div class="timestamp">${formatTimeAgo(vis.lastActivityAt)}</div>
+            </td>
+            <td>
+              <div class="likelihood-indicator">
+                <div class="likelihood-bar">
+                  <div class="likelihood-fill ${likelihood.class}" style="width: ${likelihood.value}%"></div>
+                </div>
+                <span class="likelihood-tier ${likelihood.class}">${likelihood.label}</span>
+              </div>
+            </td>
+          </tr>
+          <tr class="expansion-row ${isExpanded ? 'visible' : ''}" id="vis-expansion-${index}">
+            <td colspan="7">
+              <div class="expansion-panel">
+                ${renderVisitorExpansion(vis)}
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+
+      // Update pagination info
+      const start = (state.visitors.page - 1) * state.visitors.limit + 1;
+      const end = Math.min(state.visitors.page * state.visitors.limit, state.visitors.total);
+      document.getElementById('vis-pagination-info').textContent = `Showing ${start}-${end} of ${state.visitors.total}`;
+      document.getElementById('vis-table-meta').textContent = ` - ${state.visitors.total} total`;
+    }
+
+    function toggleVisitorExpansion(index) {
+      const wasExpanded = state.visitors.expanded === index;
+      state.visitors.expanded = wasExpanded ? null : index;
+      renderVisitorTable();
+    }
+
+    function renderVisitorExpansion(vis) {
+      const actions = vis.recentActions || [];
+
+      return `
+        <div class="expansion-grid">
+          <div class="expansion-section">
+            <div class="expansion-section-title">Session Summary</div>
+            <div class="expansion-item">Sessions: <span class="expansion-item-value">${vis.sessionCount || 1}</span></div>
+            <div class="expansion-item">Page Views: <span class="expansion-item-value">${vis.pageViews || 0}</span></div>
+            <div class="expansion-item">Time on Site: <span class="expansion-item-value">${Math.round((vis.totalTimeOnSiteSeconds || 0) / 60)}m</span></div>
+          </div>
+          <div class="expansion-section">
+            <div class="expansion-section-title">Engagement Behavior</div>
+            <div class="expansion-item">Last Page: <span class="expansion-item-value">${vis.lastPageUrl ? extractPageName(vis.lastPageUrl) : 'Unknown'}</span></div>
+            <div class="expansion-item">Last Persona: <span class="expansion-item-value">${vis.lastPersonaName || 'None'}</span></div>
+            <div class="expansion-item">Trajectory: <span class="expansion-item-value">${vis.trajectory || 'Exploring'}</span></div>
+          </div>
+          <div class="expansion-section">
+            <div class="expansion-section-title">Hospitality Shown</div>
+            <div class="expansion-item">Popups Shown Today: <span class="expansion-item-value">${vis.popupsShownToday || 0}</span></div>
+            <div class="expansion-item">Popups Dismissed: <span class="expansion-item-value">${vis.popupsDismissedToday || 0}</span></div>
+            <div class="expansion-item">On Cooldown: <span class="expansion-item-value">${vis.globalCooldownUntil ? 'Yes' : 'No'}</span></div>
+          </div>
+          <div class="expansion-section">
+            <div class="expansion-section-title">Recent Actions</div>
+            <div class="action-history">
+              ${actions.length > 0
+                ? actions.slice(0, 3).map(a => `
+                    <div class="action-item">
+                      <span class="action-outcome ${a.outcome}">${a.outcome}</span>
+                      <span>${a.ruleName || a.actionType}</span>
+                    </div>
+                  `).join('')
+                : '<div class="expansion-item">No hospitality actions yet</div>'
+              }
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function calculateLikelihood(vis) {
+      const score = vis.engagementScore || 0;
+      const sessions = vis.sessionCount || 1;
+
+      // Simple heuristic for subscription likelihood
+      let value = Math.min(score + (sessions * 5), 100);
+      let label, cssClass;
+
+      if (value >= 60) {
+        label = 'High';
+        cssClass = 'high';
+      } else if (value >= 30) {
+        label = 'Medium';
+        cssClass = 'medium';
+      } else {
+        label = 'Low';
+        cssClass = 'low';
+      }
+
+      return { value, label, class: cssClass };
+    }
+
+    // ============================================
+    // Rules View
+    // ============================================
+    async function loadRules() {
+      try {
+        const [rulesRes, perfRes] = await Promise.all([
+          fetch('/api/hospitality/admin/rules', { credentials: 'include' }),
+          fetch('/api/hospitality/admin/performance', { credentials: 'include' })
+        ]);
+
+        const rulesData = await rulesRes.json();
+        const perfData = await perfRes.json();
+
+        if (rulesData.success) {
+          state.rules.data = rulesData.rules || [];
+        }
+
+        if (perfData.success) {
+          const perfMap = {};
+          (perfData.rules || []).forEach(r => { perfMap[r.id] = r; });
+          state.rules.performance = perfMap;
+        }
+
+        updateRulesDashboard();
+        renderRulesTable();
+        updateLastUpdated();
+      } catch (error) {
+        console.error('Failed to load rules:', error);
+      }
+    }
+
+    function updateRulesDashboard() {
+      const rules = state.rules.data;
+      const perf = Object.values(state.rules.performance);
+
+      const activeCount = rules.filter(r => r.isActive).length;
+      const totalTriggers = perf.reduce((sum, p) => sum + (p.totalTriggers || 0), 0);
+      const totalShown = perf.reduce((sum, p) => sum + (p.timesShown || 0), 0);
+      const totalClicked = perf.reduce((sum, p) => sum + (p.timesClicked || 0), 0);
+      const totalDismissed = perf.reduce((sum, p) => sum + (p.timesDismissed || 0), 0);
+      const totalConverted = perf.reduce((sum, p) => sum + (p.timesConverted || 0), 0);
+
+      const acceptRate = totalShown > 0 ? Math.round((totalClicked / totalShown) * 100) : 0;
+      const declineRate = totalShown > 0 ? Math.round((totalDismissed / totalShown) * 100) : 0;
+
+      document.getElementById('rules-active').textContent = activeCount;
+      document.getElementById('rules-total-label').textContent = `of ${rules.length} total`;
+      document.getElementById('rules-triggers').textContent = totalTriggers;
+      document.getElementById('rules-accept-rate').textContent = acceptRate + '%';
+      document.getElementById('rules-decline-rate').textContent = declineRate + '%';
+      document.getElementById('rules-conversions').textContent = totalConverted;
+
+      // Update outcomes bar
+      const total = totalClicked + totalDismissed + (totalShown - totalClicked - totalDismissed);
+      if (total > 0) {
+        const clickPct = Math.round((totalClicked / total) * 100);
+        const shownPct = Math.round(((totalShown - totalClicked - totalDismissed) / total) * 100);
+        const dismissPct = 100 - clickPct - shownPct;
+
+        const bar = document.getElementById('rules-outcomes-bar');
+        if (bar) {
+          bar.innerHTML = `
+            <div class="engagement-segment high" style="width: ${clickPct}%">${clickPct > 10 ? 'Clicked' : ''}</div>
+            <div class="engagement-segment medium" style="width: ${shownPct}%">${shownPct > 10 ? 'Shown' : ''}</div>
+            <div class="engagement-segment low" style="width: ${dismissPct}%">${dismissPct > 10 ? 'Dismissed' : ''}</div>
+          `;
+        }
+      }
+    }
+
+    function renderRulesTable() {
+      const tbody = document.getElementById('rules-tbody');
+      const rules = state.rules.data;
+      const perf = state.rules.performance;
+
+      if (!rules || rules.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                <div class="empty-state-title">No hospitality rules</div>
+                <div class="empty-state-text">Create rules to enable hospitality actions.</div>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      let html = '';
+      rules.forEach(rule => {
+        const rulePerf = perf[rule.id] || {};
+        const clickRate = rulePerf.clickRate || 0;
+        const triggerCategory = extractTriggerCategory(rule.triggerConditions);
+        const personaName = rule.actionConfig?.personaName || 'Any';
+
+        html += `
+          <tr>
+            <td>
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <strong style="color: #fff;">${escapeHtml(rule.name)}</strong>
+                <span style="font-size: 11px; color: #555;">${escapeHtml(rule.slug)}</span>
+              </div>
+            </td>
+            <td><span class="stage-badge ${rule.targetAudience}">${rule.targetAudience}</span></td>
+            <td style="color: #888;">${personaName}</td>
+            <td style="color: #888;">${triggerCategory}</td>
+            <td>${rulePerf.totalTriggers || 0}</td>
+            <td>
+              <div class="score-display">
+                <div class="score-bar">
+                  <div class="score-fill ${clickRate >= 30 ? 'high' : clickRate >= 15 ? 'medium' : 'low'}" style="width: ${clickRate}%"></div>
+                </div>
+                <span class="score-value">${clickRate.toFixed(1)}%</span>
+              </div>
+            </td>
+            <td><span class="stage-badge ${rule.isActive ? 'engaged' : 'visitor'}">${rule.isActive ? 'Active' : 'Inactive'}</span></td>
+            <td>
+              <label class="rule-status-toggle">
+                <input type="checkbox" ${rule.isActive ? 'checked' : ''} onchange="toggleRule('${rule.id}')">
+                <span class="toggle-slider"></span>
+              </label>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+      document.getElementById('rules-table-meta').textContent = ` - ${rules.length} rules`;
+    }
+
+    async function toggleRule(ruleId) {
+      try {
+        await fetch(`/api/hospitality/admin/rules/${ruleId}/toggle`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+        loadRules();
+      } catch (error) {
+        console.error('Failed to toggle rule:', error);
+        loadRules(); // Reload to reset state
+      }
+    }
+
+    // ============================================
+    // Utility Functions
+    // ============================================
+    function formatTimeAgo(dateStr) {
+      if (!dateStr) return '--';
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return diffMins + 'm ago';
+      if (diffMins < 1440) return Math.floor(diffMins / 60) + 'h ago';
+      return Math.floor(diffMins / 1440) + 'd ago';
+    }
+
+    function extractThemes(user) {
+      // Extract engagement themes from user data
+      const themes = [];
+      if (user.lastPersonaId) themes.push('Persona');
+      if (user.pageViews > 10) themes.push('Explorer');
+      if (user.eventCount > 5) themes.push('Active');
+      if (user.engagementScore >= 40) themes.push('Engaged');
+      return themes.slice(0, 3);
+    }
+
+    function extractTriggerCategory(conditions) {
+      if (!conditions) return 'Event-based';
+      if (conditions.page_count_gte) return 'Page Count';
+      if (conditions.time_on_site_gte) return 'Time on Site';
+      if (conditions.event_type === 'chat_start') return 'Chat Start';
+      if (conditions.engagement_score_gte) return 'Engagement';
+      if (conditions.session_count_gte) return 'Return Visit';
+      return 'Event-based';
+    }
+
+    function extractPageName(url) {
+      if (!url) return 'Unknown';
+      try {
+        const path = new URL(url).pathname;
+        return path === '/' ? 'Home' : path.substring(1);
+      } catch {
+        return url.substring(0, 20);
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function updateLastUpdated() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const el = document.getElementById('last-updated');
+      if (el) el.textContent = 'Last updated: ' + timeStr;
+    }
+
+    // ============================================
+    // FLIGHT INSTRUMENTS RENDERING
+    // ============================================
+
+    // Instrument state for animations
+    const instrumentState = {
+      attitude: { pitch: 0, roll: 0, targetPitch: 0, targetRoll: 0 },
+      altimeter: { altitude: 0, targetAltitude: 0 },
+      airspeed: { speed: 0, targetSpeed: 0 },
+      turn: { turn: 0, slip: 0, targetTurn: 0, targetSlip: 0 },
+      heading: { heading: 0, targetHeading: 0 },
+      vsi: { rate: 0, targetRate: 0 }
+    };
+
+    // Flag to ensure only one animation loop runs
+    let animationRunning = false;
+
+    // Test animation for flight instruments
+    function testFlightInstruments() {
+      console.log('testFlightInstruments called, animationRunning:', animationRunning);
+
+      // Make sure animation is running
+      if (!animationRunning) {
+        animationRunning = true;
+        animateInstruments();
+      }
+
+      // Store current targets
+      const originalTargets = {
+        pitch: instrumentState.attitude.targetPitch,
+        roll: instrumentState.attitude.targetRoll,
+        altitude: instrumentState.altimeter.targetAltitude,
+        speed: instrumentState.airspeed.targetSpeed,
+        turn: instrumentState.turn.targetTurn,
+        slip: instrumentState.turn.targetSlip,
+        heading: instrumentState.heading.targetHeading,
+        rate: instrumentState.vsi.targetRate
+      };
+
+      console.log('Setting test values...');
+
+      // Set dramatic test values
+      instrumentState.attitude.targetPitch = 25;
+      instrumentState.attitude.targetRoll = -30;
+      instrumentState.altimeter.targetAltitude = 8500;
+      instrumentState.airspeed.targetSpeed = 85;
+      instrumentState.turn.targetTurn = 2;
+      instrumentState.turn.targetSlip = 1;
+      instrumentState.heading.targetHeading = instrumentState.heading.heading + 90;
+      instrumentState.vsi.targetRate = 1500;
+
+      // Also test decorative gauges
+      testDecoGauges();
+
+      // Return to original values after 1.5 seconds
+      setTimeout(() => {
+        console.log('Restoring original values...');
+        instrumentState.attitude.targetPitch = originalTargets.pitch;
+        instrumentState.attitude.targetRoll = originalTargets.roll;
+        instrumentState.altimeter.targetAltitude = originalTargets.altitude;
+        instrumentState.airspeed.targetSpeed = originalTargets.speed;
+        instrumentState.turn.targetTurn = originalTargets.turn;
+        instrumentState.turn.targetSlip = originalTargets.slip;
+        instrumentState.heading.targetHeading = originalTargets.heading;
+        instrumentState.vsi.targetRate = originalTargets.rate;
+      }, 1500);
+    }
+
+    // Draw Attitude Indicator (Artificial Horizon)
+    function drawAttitudeIndicator(canvasId, pitch, roll) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.min(w, h) / 2 - 10;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // === AMBIENT HALO GLOW (extends beyond gauge into background) - INTENSIFIED ===
+      // Layer 1: Outermost soft halo (largest, most diffuse)
+      ctx.save();
+      ctx.shadowColor = 'rgba(251, 191, 36, 0.5)';
+      ctx.shadowBlur = 80;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 20, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.18)';
+      ctx.lineWidth = 35;
+      ctx.stroke();
+      ctx.restore();
+
+      // Layer 2: Mid-range halo
+      ctx.save();
+      ctx.shadowColor = 'rgba(251, 191, 36, 0.6)';
+      ctx.shadowBlur = 50;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 15, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.25)';
+      ctx.lineWidth = 25;
+      ctx.stroke();
+      ctx.restore();
+
+      // Layer 3: Inner halo (tighter, more visible)
+      ctx.save();
+      ctx.shadowColor = 'rgba(251, 191, 36, 0.7)';
+      ctx.shadowBlur = 35;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 10, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.35)';
+      ctx.lineWidth = 18;
+      ctx.stroke();
+      ctx.restore();
+
+      // Save and clip to circle
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.clip();
+
+      // Rotate for roll
+      ctx.translate(cx, cy);
+      ctx.rotate(-roll * Math.PI / 180);
+      ctx.translate(-cx, -cy);
+
+      // Calculate horizon offset based on pitch
+      const pitchOffset = pitch * 2.5;
+
+      // Sky gradient (upper half)
+      const skyGrad = ctx.createLinearGradient(0, cy - r + pitchOffset, 0, cy + pitchOffset);
+      skyGrad.addColorStop(0, '#1a4a7a');
+      skyGrad.addColorStop(1, '#4a8fd6');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, w, cy + pitchOffset);
+
+      // Ground gradient (lower half)
+      const groundGrad = ctx.createLinearGradient(0, cy + pitchOffset, 0, cy + r + pitchOffset);
+      groundGrad.addColorStop(0, '#8b5a2b');
+      groundGrad.addColorStop(1, '#5c3a1a');
+      ctx.fillStyle = groundGrad;
+      ctx.fillRect(0, cy + pitchOffset, w, h);
+
+      // Horizon line
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, cy + pitchOffset);
+      ctx.lineTo(w, cy + pitchOffset);
+      ctx.stroke();
+
+      // Pitch ladder lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+      ctx.lineWidth = 1;
+      ctx.font = '10px Inter, sans-serif';
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      for (let p = -30; p <= 30; p += 10) {
+        if (p === 0) continue;
+        const y = cy + pitchOffset - p * 2.5;
+        const halfLen = p < 0 ? 25 : 35;
+        ctx.beginPath();
+        ctx.moveTo(cx - halfLen, y);
+        ctx.lineTo(cx + halfLen, y);
+        ctx.stroke();
+        ctx.fillText(Math.abs(p).toString(), cx - halfLen - 12, y + 3);
+        ctx.fillText(Math.abs(p).toString(), cx + halfLen + 12, y + 3);
+      }
+
+      ctx.restore();
+
+      // Fixed aircraft symbol (center)
+      ctx.strokeStyle = '#ffbd59';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+
+      // Left wing
+      ctx.beginPath();
+      ctx.moveTo(cx - 70, cy);
+      ctx.lineTo(cx - 20, cy);
+      ctx.stroke();
+
+      // Right wing
+      ctx.beginPath();
+      ctx.moveTo(cx + 20, cy);
+      ctx.lineTo(cx + 70, cy);
+      ctx.stroke();
+
+      // Center dot
+      ctx.fillStyle = '#ffbd59';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Roll indicator arc at top
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r - 15, -150 * Math.PI / 180, -30 * Math.PI / 180);
+      ctx.stroke();
+
+      // Roll tick marks
+      const rollTicks = [-60, -45, -30, -20, -10, 0, 10, 20, 30, 45, 60];
+      rollTicks.forEach(angle => {
+        const a = (-90 + angle) * Math.PI / 180;
+        const tickLen = [0, -45, 45].includes(angle) ? 15 : 8;
+        ctx.beginPath();
+        ctx.moveTo(cx + (r - 15) * Math.cos(a), cy + (r - 15) * Math.sin(a));
+        ctx.lineTo(cx + (r - 15 - tickLen) * Math.cos(a), cy + (r - 15 - tickLen) * Math.sin(a));
+        ctx.stroke();
+      });
+
+      // Roll pointer (triangle at top)
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(-roll * Math.PI / 180);
+      ctx.fillStyle = '#ffbd59';
+      ctx.beginPath();
+      ctx.moveTo(0, -(r - 15));
+      ctx.lineTo(-8, -(r - 30));
+      ctx.lineTo(8, -(r - 30));
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // === WPM-STYLE OUTER GLOW ONLY (matching Tasks page) ===
+      // Outer glow ring (soft ambient glow)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 189, 89, 0.15)';
+      ctx.lineWidth = 20;
+      ctx.stroke();
+
+      // Yellow glow around the outer edge with shadow
+      ctx.save();
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 23;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.9)';
+      ctx.lineWidth = 12;
+      ctx.stroke();
+      ctx.restore();
+
+      // Yellow outer edge line (5px)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 5;
+      ctx.stroke();
+
+      // Black separator line (3px)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 7, 0, Math.PI * 2);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Second yellow accent line (1px)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 10, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Draw Altimeter
+    function drawAltimeter(canvasId, altitude) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.min(w, h) / 2 - 10;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // === AMBIENT HALO GLOW (extends beyond gauge into background) - INTENSIFIED ===
+      // Layer 1: Outermost soft halo (largest, most diffuse)
+      ctx.save();
+      ctx.shadowColor = 'rgba(251, 191, 36, 0.5)';
+      ctx.shadowBlur = 80;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 20, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.18)';
+      ctx.lineWidth = 35;
+      ctx.stroke();
+      ctx.restore();
+
+      // Layer 2: Mid-range halo
+      ctx.save();
+      ctx.shadowColor = 'rgba(251, 191, 36, 0.6)';
+      ctx.shadowBlur = 50;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 15, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.25)';
+      ctx.lineWidth = 25;
+      ctx.stroke();
+      ctx.restore();
+
+      // Layer 3: Inner halo (tighter, more visible)
+      ctx.save();
+      ctx.shadowColor = 'rgba(251, 191, 36, 0.7)';
+      ctx.shadowBlur = 35;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 10, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.35)';
+      ctx.lineWidth = 18;
+      ctx.stroke();
+      ctx.restore();
+
+      // Background
+      const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      bgGrad.addColorStop(0, '#1a1a1a');
+      bgGrad.addColorStop(1, '#0a0a0a');
+      ctx.fillStyle = bgGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tick marks and numbers (0-9 for thousands feet scale)
+      ctx.strokeStyle = '#fff';
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 18px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      for (let i = 0; i < 10; i++) {
+        const angle = (i * 36 - 90) * Math.PI / 180;
+
+        // Major ticks
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx + (r - 10) * Math.cos(angle), cy + (r - 10) * Math.sin(angle));
+        ctx.lineTo(cx + (r - 25) * Math.cos(angle), cy + (r - 25) * Math.sin(angle));
+        ctx.stroke();
+
+        // Numbers
+        const numR = r - 45;
+        ctx.fillText(i.toString(), cx + numR * Math.cos(angle), cy + numR * Math.sin(angle));
+
+        // Minor ticks (5 between each major)
+        for (let j = 1; j < 5; j++) {
+          const minorAngle = ((i * 36 + j * 7.2) - 90) * Math.PI / 180;
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = '#666';
+          ctx.beginPath();
+          ctx.moveTo(cx + (r - 10) * Math.cos(minorAngle), cy + (r - 10) * Math.sin(minorAngle));
+          ctx.lineTo(cx + (r - 18) * Math.cos(minorAngle), cy + (r - 18) * Math.sin(minorAngle));
+          ctx.stroke();
+          ctx.strokeStyle = '#fff';
+        }
+      }
+
+      // Altitude window
+      ctx.fillStyle = '#111';
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(cx - 45, cy - 18, 90, 36, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      // Altitude value
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 20px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(Math.round(altitude).toLocaleString(), cx, cy + 42);
+
+      // 100ft needle (short) - gold accent
+      const needle100Angle = ((altitude % 1000) / 1000 * 360 - 90) * Math.PI / 180;
+      ctx.strokeStyle = '#ffe4a0';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + (r - 60) * Math.cos(needle100Angle), cy + (r - 60) * Math.sin(needle100Angle));
+      ctx.stroke();
+
+      // 1000ft needle (long) - gold primary
+      const needle1000Angle = ((altitude % 10000) / 10000 * 360 - 90) * Math.PI / 180;
+      ctx.strokeStyle = '#ffbd59';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + (r - 35) * Math.cos(needle1000Angle), cy + (r - 35) * Math.sin(needle1000Angle));
+      ctx.stroke();
+
+      // 10000ft indicator (small triangle)
+      const needle10000Angle = ((altitude % 100000) / 100000 * 360 - 90) * Math.PI / 180;
+      ctx.fillStyle = '#ffbd59';
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(needle10000Angle + Math.PI / 2);
+      ctx.beginPath();
+      ctx.moveTo(0, -(r - 70));
+      ctx.lineTo(-6, -(r - 85));
+      ctx.lineTo(6, -(r - 85));
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // === WPM-STYLE OUTER GLOW (matching Tasks page) ===
+      // Outer glow ring (soft ambient glow)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 189, 89, 0.15)';
+      ctx.lineWidth = 20;
+      ctx.stroke();
+
+      // Yellow glow around the outer edge with shadow
+      ctx.save();
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 23;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.9)';
+      ctx.lineWidth = 12;
+      ctx.stroke();
+      ctx.restore();
+
+      // Yellow outer edge line (5px)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 5;
+      ctx.stroke();
+
+      // Black separator line (3px)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 7, 0, Math.PI * 2);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Second yellow accent line (1px)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 10, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // === WPM-STYLE INNER GLOW ===
+      // Inner glow ring around the inside edge
+      ctx.save();
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r - 8, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.4)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+      ctx.restore();
+
+      // Center hub glow
+      ctx.save();
+      ctx.shadowColor = 'rgba(255, 189, 89, 0.6)';
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = 'rgba(255, 189, 89, 0.15)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Center cap with gold accent
+      ctx.fillStyle = '#cc9a47';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#111';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Draw Airspeed Indicator
+    function drawAirspeed(canvasId, speed) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.min(w, h) / 2 - 5;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Background
+      const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      bgGrad.addColorStop(0, '#1a1a1a');
+      bgGrad.addColorStop(1, '#0a0a0a');
+      ctx.fillStyle = bgGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Speed range arcs
+      const arcWidth = 8;
+      const arcR = r - 20;
+
+      // White arc (normal operating range: 40-100)
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = arcWidth;
+      ctx.beginPath();
+      ctx.arc(cx, cy, arcR, (40 * 2.7 - 90) * Math.PI / 180, (100 * 2.7 - 90) * Math.PI / 180);
+      ctx.stroke();
+
+      // Green arc (best performance: 60-90)
+      ctx.strokeStyle = '#22c55e';
+      ctx.beginPath();
+      ctx.arc(cx, cy, arcR, (60 * 2.7 - 90) * Math.PI / 180, (90 * 2.7 - 90) * Math.PI / 180);
+      ctx.stroke();
+
+      // Yellow arc (caution: 90-100)
+      ctx.strokeStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(cx, cy, arcR, (90 * 2.7 - 90) * Math.PI / 180, (100 * 2.7 - 90) * Math.PI / 180);
+      ctx.stroke();
+
+      // Tick marks and numbers
+      ctx.strokeStyle = '#fff';
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 11px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      for (let spd = 0; spd <= 100; spd += 10) {
+        const angle = (spd * 2.7 - 90) * Math.PI / 180;
+
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx + (r - 8) * Math.cos(angle), cy + (r - 8) * Math.sin(angle));
+        ctx.lineTo(cx + (r - 20) * Math.cos(angle), cy + (r - 20) * Math.sin(angle));
+        ctx.stroke();
+
+        const numR = r - 32;
+        ctx.fillText(spd.toString(), cx + numR * Math.cos(angle), cy + numR * Math.sin(angle));
+      }
+
+      // Minor ticks
+      for (let spd = 0; spd <= 100; spd += 5) {
+        if (spd % 10 === 0) continue;
+        const angle = (spd * 2.7 - 90) * Math.PI / 180;
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#666';
+        ctx.beginPath();
+        ctx.moveTo(cx + (r - 8) * Math.cos(angle), cy + (r - 8) * Math.sin(angle));
+        ctx.lineTo(cx + (r - 14) * Math.cos(angle), cy + (r - 14) * Math.sin(angle));
+        ctx.stroke();
+        ctx.strokeStyle = '#fff';
+      }
+
+      // Needle - gold
+      const clampedSpeed = Math.max(0, Math.min(100, speed));
+      const needleAngle = (clampedSpeed * 2.7 - 90) * Math.PI / 180;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(needleAngle + Math.PI / 2);
+
+      ctx.fillStyle = '#ffbd59';
+      ctx.beginPath();
+      ctx.moveTo(0, -(r - 30));
+      ctx.lineTo(-4, 15);
+      ctx.lineTo(4, 15);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // Center hub glow
+      ctx.save();
+      ctx.shadowColor = 'rgba(255, 189, 89, 0.6)';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = 'rgba(255, 189, 89, 0.15)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Center cap - gold
+      ctx.fillStyle = '#cc9a47';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#111';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // === YELLOW BORDER (scaled from top gauges) ===
+      // Outer glow ring (soft ambient glow)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 189, 89, 0.12)';
+      ctx.lineWidth = 12;
+      ctx.stroke();
+
+      // Yellow glow around the outer edge with shadow
+      ctx.save();
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+      ctx.restore();
+
+      // Yellow outer edge line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Black separator line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 5, 0, Math.PI * 2);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Second yellow accent line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 7, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Draw Turn Coordinator
+    function drawTurnCoordinator(canvasId, turnRate, slip) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.min(w, h) / 2 - 5;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Background
+      const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      bgGrad.addColorStop(0, '#1a1a1a');
+      bgGrad.addColorStop(1, '#0a0a0a');
+      ctx.fillStyle = bgGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Turn rate marks (L and R)
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 3;
+
+      // Left standard rate mark
+      ctx.beginPath();
+      ctx.moveTo(cx - 35, cy - 25);
+      ctx.lineTo(cx - 35, cy - 40);
+      ctx.stroke();
+
+      // Right standard rate mark
+      ctx.beginPath();
+      ctx.moveTo(cx + 35, cy - 25);
+      ctx.lineTo(cx + 35, cy - 40);
+      ctx.stroke();
+
+      // L and R labels
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 10px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('L', cx - 50, cy - 30);
+      ctx.fillText('R', cx + 50, cy - 30);
+
+      // Center mark
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 30);
+      ctx.lineTo(cx, cy - 45);
+      ctx.stroke();
+
+      // Aircraft symbol that rotates
+      const maxRotation = 30;
+      const rotation = Math.max(-maxRotation, Math.min(maxRotation, turnRate * 10)) * Math.PI / 180;
+
+      ctx.save();
+      ctx.translate(cx, cy - 5);
+      ctx.rotate(rotation);
+
+      // Wings - gold
+      ctx.strokeStyle = '#ffbd59';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-45, 0);
+      ctx.lineTo(-15, 0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(15, 0);
+      ctx.lineTo(45, 0);
+      ctx.stroke();
+
+      // Fuselage - gold
+      ctx.fillStyle = '#ffbd59';
+      ctx.beginPath();
+      ctx.arc(0, 0, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tail - gold
+      ctx.beginPath();
+      ctx.moveTo(0, 5);
+      ctx.lineTo(0, 20);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-12, 18);
+      ctx.lineTo(12, 18);
+      ctx.stroke();
+
+      ctx.restore();
+
+      // Slip/skid ball tube
+      ctx.strokeStyle = '#444';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy + 40, 25, Math.PI * 0.15, Math.PI * 0.85);
+      ctx.stroke();
+
+      // Ball marks
+      ctx.beginPath();
+      ctx.moveTo(cx - 10, cy + 55);
+      ctx.lineTo(cx - 10, cy + 62);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx + 10, cy + 55);
+      ctx.lineTo(cx + 10, cy + 62);
+      ctx.stroke();
+
+      // Slip ball - gold accent
+      const ballOffset = Math.max(-15, Math.min(15, slip * 5));
+      ctx.fillStyle = '#cc9a47';
+      ctx.strokeStyle = '#ffe4a0';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx + ballOffset, cy + 52, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Center hub glow
+      ctx.save();
+      ctx.shadowColor = 'rgba(255, 189, 89, 0.6)';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = 'rgba(255, 189, 89, 0.12)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // === YELLOW BORDER (scaled from top gauges) ===
+      // Outer glow ring (soft ambient glow)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 189, 89, 0.12)';
+      ctx.lineWidth = 12;
+      ctx.stroke();
+
+      // Yellow glow around the outer edge with shadow
+      ctx.save();
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+      ctx.restore();
+
+      // Yellow outer edge line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Black separator line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 5, 0, Math.PI * 2);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Second yellow accent line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 7, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Draw Heading Indicator (Directional Gyro)
+    function drawHeadingIndicator(canvasId, heading) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.min(w, h) / 2 - 5;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Background
+      const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      bgGrad.addColorStop(0, '#1a1a1a');
+      bgGrad.addColorStop(1, '#0a0a0a');
+      ctx.fillStyle = bgGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Rotating compass card
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(-heading * Math.PI / 180);
+
+      const cardR = r - 18;
+
+      // Major headings
+      const headings = ['N', '3', '6', 'E', '12', '15', 'S', '21', '24', 'W', '30', '33'];
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 10px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      headings.forEach((label, i) => {
+        const angle = (i * 30 - 90) * Math.PI / 180;
+
+        // Tick
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cardR * Math.cos(angle), cardR * Math.sin(angle));
+        ctx.lineTo((cardR - 12) * Math.cos(angle), (cardR - 12) * Math.sin(angle));
+        ctx.stroke();
+
+        // Label
+        const labelR = cardR - 22;
+        ctx.save();
+        ctx.translate(labelR * Math.cos(angle), labelR * Math.sin(angle));
+        ctx.rotate(angle + Math.PI / 2);
+        ctx.fillStyle = ['N', 'E', 'S', 'W'].includes(label) ? '#ffbd59' : '#fff';
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+      });
+
+      // Minor ticks (every 5 degrees)
+      for (let deg = 0; deg < 360; deg += 5) {
+        if (deg % 30 === 0) continue;
+        const angle = (deg - 90) * Math.PI / 180;
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cardR * Math.cos(angle), cardR * Math.sin(angle));
+        ctx.lineTo((cardR - 6) * Math.cos(angle), (cardR - 6) * Math.sin(angle));
+        ctx.stroke();
+      }
+
+      ctx.restore();
+
+      // Fixed lubber line at top
+      ctx.fillStyle = '#ffbd59';
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - r + 8);
+      ctx.lineTo(cx - 6, cy - r + 20);
+      ctx.lineTo(cx + 6, cy - r + 20);
+      ctx.closePath();
+      ctx.fill();
+
+      // Fixed aircraft symbol
+      ctx.strokeStyle = '#ffbd59';
+      ctx.lineWidth = 2;
+
+      // Wings
+      ctx.beginPath();
+      ctx.moveTo(cx - 20, cy);
+      ctx.lineTo(cx + 20, cy);
+      ctx.stroke();
+
+      // Fuselage
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - 25);
+      ctx.lineTo(cx, cy + 10);
+      ctx.stroke();
+
+      // Tail
+      ctx.beginPath();
+      ctx.moveTo(cx - 10, cy + 8);
+      ctx.lineTo(cx + 10, cy + 8);
+      ctx.stroke();
+
+      // Center pivot glow
+      ctx.save();
+      ctx.shadowColor = 'rgba(255, 189, 89, 0.6)';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = 'rgba(255, 189, 89, 0.12)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // === YELLOW BORDER (scaled from top gauges) ===
+      // Outer glow ring (soft ambient glow)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 189, 89, 0.12)';
+      ctx.lineWidth = 12;
+      ctx.stroke();
+
+      // Yellow glow around the outer edge with shadow
+      ctx.save();
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+      ctx.restore();
+
+      // Yellow outer edge line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Black separator line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 5, 0, Math.PI * 2);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Second yellow accent line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 7, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Draw Vertical Speed Indicator
+    function drawVSI(canvasId, rate) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.min(w, h) / 2 - 5;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Background
+      const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      bgGrad.addColorStop(0, '#1a1a1a');
+      bgGrad.addColorStop(1, '#0a0a0a');
+      ctx.fillStyle = bgGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // VSI scale: -2000 to +2000 ft/min
+      // Scale goes from -150 to +150 degrees from horizontal (right side = 0)
+      const maxRate = 2000;
+      const values = [0, 5, 10, 15, 20]; // hundreds of ft/min
+
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 10px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Draw UP scale (top half)
+      values.forEach((val, i) => {
+        const angle = (-90 + i * 30) * Math.PI / 180;
+
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = val === 0 ? 3 : 2;
+        ctx.beginPath();
+        ctx.moveTo(cx + (r - 8) * Math.cos(angle), cy + (r - 8) * Math.sin(angle));
+        ctx.lineTo(cx + (r - 18) * Math.cos(angle), cy + (r - 18) * Math.sin(angle));
+        ctx.stroke();
+
+        if (val > 0) {
+          const labelR = r - 30;
+          ctx.fillText(val.toString(), cx + labelR * Math.cos(angle), cy + labelR * Math.sin(angle));
+        }
+      });
+
+      // Draw DOWN scale (bottom half)
+      values.forEach((val, i) => {
+        if (i === 0) return;
+        const angle = (-90 - i * 30) * Math.PI / 180;
+
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx + (r - 8) * Math.cos(angle), cy + (r - 8) * Math.sin(angle));
+        ctx.lineTo(cx + (r - 18) * Math.cos(angle), cy + (r - 18) * Math.sin(angle));
+        ctx.stroke();
+
+        const labelR = r - 30;
+        ctx.fillText(val.toString(), cx + labelR * Math.cos(angle), cy + labelR * Math.sin(angle));
+      });
+
+      // UP/DN labels
+      ctx.fillStyle = '#888';
+      ctx.font = 'bold 8px Inter, sans-serif';
+      ctx.fillText('UP', cx + 25, cy - 35);
+      ctx.fillText('DN', cx + 25, cy + 40);
+
+      // Needle - gold
+      const clampedRate = Math.max(-maxRate, Math.min(maxRate, rate));
+      const needleAngle = (-90 + (clampedRate / maxRate) * 120) * Math.PI / 180;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(needleAngle + Math.PI / 2);
+
+      ctx.fillStyle = '#ffbd59';
+      ctx.beginPath();
+      ctx.moveTo(0, -(r - 25));
+      ctx.lineTo(-3, 10);
+      ctx.lineTo(3, 10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // Center hub glow
+      ctx.save();
+      ctx.shadowColor = 'rgba(255, 189, 89, 0.6)';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = 'rgba(255, 189, 89, 0.15)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Center - gold accent
+      ctx.fillStyle = '#cc9a47';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#111';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // === YELLOW BORDER (scaled from top gauges) ===
+      // Outer glow ring (soft ambient glow)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 189, 89, 0.12)';
+      ctx.lineWidth = 12;
+      ctx.stroke();
+
+      // Yellow glow around the outer edge with shadow
+      ctx.save();
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+      ctx.restore();
+
+      // Yellow outer edge line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Black separator line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 5, 0, Math.PI * 2);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Second yellow accent line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 7, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // ============================================
+    // DECORATIVE GAUGE DRAWING FUNCTIONS
+    // ============================================
+
+    // State for decorative gauges (scale 0-120)
+    const decoState = {
+      mini9: { value: 0, target: 68 },
+      mini10: { value: 0, target: 52 },
+      mini5: { value: 0, target: 72 },
+      mini6: { value: 0, target: 58 },
+      mini7: { value: 0, target: 45 },
+      mini8: { value: 0, target: 82 },
+      miniLeft: { value: 0, target: 80 },
+      miniRight: { value: 0, target: 70 },
+      mini3: { value: 0, target: 55 },
+      mini4: { value: 0, target: 65 },
+      mini11: { value: 0, target: 76 },
+      mini12: { value: 0, target: 42 },
+      tachLeft: { value: 0, target: 60 },
+      tachRight: { value: 0, target: 85 }
+    };
+
+    // Persona hospitality state - 12 Inspire Family personas
+    // Persona gauges default to 0 (needle pointing up at 12 o'clock)
+    const personaState = {
+      jubilee: { value: 0, target: 0 },
+      melody: { value: 0, target: 0 },
+      zariah: { value: 0, target: 0 },
+      elias: { value: 0, target: 0 },
+      eliana: { value: 0, target: 0 },
+      caleb: { value: 0, target: 0 },
+      imani: { value: 0, target: 0 },
+      zev: { value: 0, target: 0 },
+      amir: { value: 0, target: 0 },
+      nova: { value: 0, target: 0 },
+      santiago: { value: 0, target: 0 },
+      tahoma: { value: 0, target: 0 }
+    };
+
+    // Draw decorative speedometer gauge (small side gauges - 56x56)
+    function drawDecoSpeedometer(canvasId, value, isLeft) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.min(w, h) / 2 - 3;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Background
+      const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      bgGrad.addColorStop(0, '#1a1a1a');
+      bgGrad.addColorStop(1, '#0a0a0a');
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = bgGrad;
+      ctx.fill();
+
+      // Scale arc (partial circle)
+      const startAngle = Math.PI * 0.75;
+      const endAngle = Math.PI * 2.25;
+      const angleRange = endAngle - startAngle;
+
+      // Green arc between 80 and 100 (5th sixth of the range - healthy zone)
+      const greenStartAngle = startAngle + (4 / 6) * angleRange;
+      const greenEndAngle = startAngle + (5 / 6) * angleRange;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r - 8, greenStartAngle, greenEndAngle);
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Gold arc between 100 and 120 (last 1/6 of the range - caution zone)
+      const goldStartAngle = startAngle + (5 / 6) * angleRange;
+      const goldEndAngle = endAngle;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r - 8, goldStartAngle, goldEndAngle);
+      ctx.strokeStyle = '#ffbd59';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Tick marks and numbers - white, clear and bold
+      ctx.strokeStyle = '#fff';
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 7px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Major ticks at 0, 20, 40, 60, 80, 100, 120
+      for (let i = 0; i <= 6; i++) {
+        const angle = startAngle + (i / 6) * angleRange;
+        const innerR = r - 6;
+        const outerR = r - 2;
+
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(angle) * innerR, cy + Math.sin(angle) * innerR);
+        ctx.lineTo(cx + Math.cos(angle) * outerR, cy + Math.sin(angle) * outerR);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Numbers at major ticks - clear and readable
+        const numR = r - 11;
+        const num = i * 20;
+        ctx.fillText(num.toString(), cx + Math.cos(angle) * numR, cy + Math.sin(angle) * numR);
+      }
+
+      // Needle - yellow gold
+      const needleAngle = startAngle + (value / 120) * angleRange;
+      const needleLength = r - 12;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(needleAngle + Math.PI / 2);
+      ctx.fillStyle = '#ffbd59';
+      ctx.beginPath();
+      ctx.moveTo(0, -needleLength);
+      ctx.lineTo(-1.5, 4);
+      ctx.lineTo(1.5, 4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // Center hub glow
+      ctx.save();
+      ctx.shadowColor = 'rgba(255, 189, 89, 0.6)';
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = 'rgba(255, 189, 89, 0.15)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Center cap
+      ctx.fillStyle = '#222';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#444';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Outer gold glow
+      ctx.save();
+      ctx.shadowColor = 'rgba(255, 189, 89, 0.5)';
+      ctx.shadowBlur = 12;
+      ctx.strokeStyle = 'rgba(255, 189, 89, 0.35)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // Bezel
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 1, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Draw mini decorative gauge (small circular indicator)
+    // arcType: 'positive' for green arc (right side), 'negative' for red arc (left side)
+    function drawDecoMini(canvasId, value, arcType) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.min(w, h) / 2 - 4;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Background
+      const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      bgGrad.addColorStop(0, '#1a1a1a');
+      bgGrad.addColorStop(1, '#0a0a0a');
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = bgGrad;
+      ctx.fill();
+
+      // Colored arc indicator (10 o'clock to 12 o'clock position)
+      // 10 o'clock = -150 degrees = 210 degrees from 3 o'clock
+      // 12 o'clock = -90 degrees = 270 degrees from 3 o'clock
+      const arcStartAngle = (210) * Math.PI / 180;  // 10 o'clock
+      const arcEndAngle = (270) * Math.PI / 180;    // 12 o'clock
+      const arcRadius = r - 2;
+
+      if (arcType) {
+        ctx.save();
+        if (arcType === 'positive') {
+          ctx.strokeStyle = '#00ff66';  // Bright neon green
+          ctx.shadowColor = '#00ff66';
+        } else if (arcType === 'negative') {
+          ctx.strokeStyle = '#ff3333';  // Bright vivid red
+          ctx.shadowColor = '#ff3333';
+        }
+        ctx.shadowBlur = 6;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(cx, cy, arcRadius, arcStartAngle, arcEndAngle);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Tick marks around edge
+      for (let i = 0; i < 12; i++) {
+        const angle = (i * 30 - 90) * Math.PI / 180;
+        const isMajor = i % 3 === 0;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = isMajor ? 2 : 1;
+        ctx.beginPath();
+        ctx.moveTo(cx + (r - 3) * Math.cos(angle), cy + (r - 3) * Math.sin(angle));
+        ctx.lineTo(cx + (r - (isMajor ? 8 : 5)) * Math.cos(angle), cy + (r - (isMajor ? 8 : 5)) * Math.sin(angle));
+        ctx.stroke();
+      }
+
+      // Needle - gold
+      const needleAngle = (-90 + (value / 120) * 360) * Math.PI / 180;
+      ctx.save();
+      ctx.strokeStyle = '#ffd700';  // Gold
+      ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = 6;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + (r - 12) * Math.cos(needleAngle), cy + (r - 12) * Math.sin(needleAngle));
+      ctx.stroke();
+      ctx.restore();
+
+      // Center cap
+      ctx.fillStyle = '#333';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // === GRAY BORDER ===
+      // Medium gray outer edge
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 1, 0, Math.PI * 2);
+      ctx.strokeStyle = '#666666';  // Medium gray
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Draw persona gauge (for persona hospitality tracking)
+    // borderColor: Five-fold office color coding
+    // - Sky Blue (#00bfff): Apostle (Jubilee, Melody, Amir)
+    // - Gold (#ffd700): Prophet (Zariah, Zev)
+    // - Purple (#9932cc): Teacher (Elias, Eliana)
+    // - Green (#00ff66): Pastor (Caleb, Nova)
+    // - Red (#ff3333): Evangelist (Imani, Santiago, Tahoma)
+    function drawPersonaGauge(canvasId, value, borderColor) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.min(w, h) / 2 - 3;
+
+      // Default border color if not specified
+      borderColor = borderColor || '#666666';
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Background
+      const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      bgGrad.addColorStop(0, '#1a1a1a');
+      bgGrad.addColorStop(1, '#0a0a0a');
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = bgGrad;
+      ctx.fill();
+
+      // Green arc indicator (10 o'clock to 12 o'clock position)
+      const arcStartAngle = (210) * Math.PI / 180;
+      const arcEndAngle = (270) * Math.PI / 180;
+      const arcRadius = r - 2;
+
+      ctx.save();
+      ctx.strokeStyle = '#00ff66';  // Bright neon green
+      ctx.shadowColor = '#00ff66';
+      ctx.shadowBlur = 5;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, arcRadius, arcStartAngle, arcEndAngle);
+      ctx.stroke();
+      ctx.restore();
+
+      // Tick marks around edge
+      for (let i = 0; i < 12; i++) {
+        const angle = (i * 30 - 90) * Math.PI / 180;
+        const isMajor = i % 3 === 0;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = isMajor ? 1.5 : 0.75;
+        ctx.beginPath();
+        ctx.moveTo(cx + (r - 2) * Math.cos(angle), cy + (r - 2) * Math.sin(angle));
+        ctx.lineTo(cx + (r - (isMajor ? 6 : 4)) * Math.cos(angle), cy + (r - (isMajor ? 6 : 4)) * Math.sin(angle));
+        ctx.stroke();
+      }
+
+      // Needle - gold
+      const needleAngle = (-90 + (value / 100) * 360) * Math.PI / 180;
+      ctx.save();
+      ctx.strokeStyle = '#ffd700';
+      ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = 4;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + (r - 10) * Math.cos(needleAngle), cy + (r - 10) * Math.sin(needleAngle));
+      ctx.stroke();
+      ctx.restore();
+
+      // Center cap
+      ctx.fillStyle = '#333';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // === FIVE-FOLD OFFICE COLOR BORDER WITH GLOW ===
+      // Outer glow effect
+      ctx.save();
+      ctx.shadowColor = borderColor;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 1, 0, Math.PI * 2);
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+
+      // Bright border line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 1, 0, Math.PI * 2);
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Draw decorative tachometer (bottom row gauges - same size as center small instruments)
+    function drawDecoTachometer(canvasId, value, isLeft) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.min(w, h) / 2 - 5;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Background gradient
+      const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      bgGrad.addColorStop(0, '#1a1a1a');
+      bgGrad.addColorStop(1, '#0a0a0a');
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = bgGrad;
+      ctx.fill();
+
+      // Tachometer arc range
+      const startAngle = Math.PI * 0.75;
+      const endAngle = Math.PI * 2.25;
+      const angleRange = endAngle - startAngle;
+
+      // Green arc between 80 and 100 (5th sixth of the range - healthy zone)
+      const greenStartAngle = startAngle + (4 / 6) * angleRange;
+      const greenEndAngle = startAngle + (5 / 6) * angleRange;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r - 14, greenStartAngle, greenEndAngle);
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // Gold arc between 100 and 120 (last 1/6 of the range - caution zone)
+      const goldStartAngle = startAngle + (5 / 6) * angleRange;
+      const goldEndAngle = endAngle;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r - 14, goldStartAngle, goldEndAngle);
+      ctx.strokeStyle = '#ffbd59';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // Tick marks and numbers - white like original gauges (scale to 120)
+      ctx.strokeStyle = '#fff';
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 11px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Major ticks at 0, 20, 40, 60, 80, 100, 120
+      for (let i = 0; i <= 6; i++) {
+        const angle = startAngle + (i / 6) * angleRange;
+
+        // Major ticks
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#fff';
+        ctx.beginPath();
+        ctx.moveTo(cx + (r - 8) * Math.cos(angle), cy + (r - 8) * Math.sin(angle));
+        ctx.lineTo(cx + (r - 20) * Math.cos(angle), cy + (r - 20) * Math.sin(angle));
+        ctx.stroke();
+
+        // Numbers at major ticks - moved closer to center
+        const numR = r - 32;
+        const num = i * 20;
+        ctx.fillText(num.toString(), cx + numR * Math.cos(angle), cy + numR * Math.sin(angle));
+      }
+
+      // Minor ticks (every 10)
+      for (let i = 0; i <= 12; i++) {
+        if (i % 2 === 0) continue; // Skip major ticks
+        const angle = startAngle + (i / 12) * angleRange;
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx + (r - 8) * Math.cos(angle), cy + (r - 8) * Math.sin(angle));
+        ctx.lineTo(cx + (r - 14) * Math.cos(angle), cy + (r - 14) * Math.sin(angle));
+        ctx.stroke();
+      }
+
+      // Needle - yellow gold
+      const needleAngle = startAngle + (value / 120) * angleRange;
+      const needleLength = r - 30;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(needleAngle + Math.PI / 2);
+      ctx.fillStyle = '#ffbd59';
+      ctx.beginPath();
+      ctx.moveTo(0, -needleLength);
+      ctx.lineTo(-4, 15);
+      ctx.lineTo(4, 15);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // Center cap - gold like airspeed indicator
+      ctx.fillStyle = '#cc9a47';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#111';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // === YELLOW BORDER (scaled from top gauges) ===
+      // Outer glow ring (soft ambient glow)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255, 189, 89, 0.12)';
+      ctx.lineWidth = 12;
+      ctx.stroke();
+
+      // Yellow glow around the outer edge with shadow
+      ctx.save();
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+      ctx.restore();
+
+      // Yellow outer edge line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Black separator line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 5, 0, Math.PI * 2);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Second yellow accent line
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 7, 0, Math.PI * 2);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Initialize decorative gauges
+    function initDecoGauges() {
+      // Left side gauges - negative emotions (red arc)
+      drawDecoMini('decoMini9', 0, 'negative');
+      drawDecoMini('decoMini10', 0, 'negative');
+      drawDecoMini('decoMini5', 0, 'negative');
+      drawDecoMini('decoMini6', 0, 'negative');
+      drawDecoMini('decoMini7', 0, 'negative');
+      drawDecoMini('decoMini8', 0, 'negative');
+      // Right side gauges - positive emotions (green arc)
+      drawDecoMini('decoMiniLeft', 0, 'positive');
+      drawDecoMini('decoMiniRight', 0, 'positive');
+      drawDecoMini('decoMini3', 0, 'positive');
+      drawDecoMini('decoMini4', 0, 'positive');
+      drawDecoMini('decoMini11', 0, 'positive');
+      drawDecoMini('decoMini12', 0, 'positive');
+      drawDecoTachometer('decoTachLeft', 0, true);
+      drawDecoTachometer('decoTachRight', 0, false);
+      // Persona gauges with Five-Fold Office border colors
+      const APOSTLE_BLUE = '#00bfff';
+      const PROPHET_GOLD = '#ffd700';
+      const TEACHER_PURPLE = '#9932cc';
+      const PASTOR_GREEN = '#00ff66';
+      const EVANGELIST_RED = '#ff3333';
+
+      drawPersonaGauge('personaJubilee', 0, APOSTLE_BLUE);
+      drawPersonaGauge('personaMelody', 0, APOSTLE_BLUE);
+      drawPersonaGauge('personaZariah', 0, PROPHET_GOLD);
+      drawPersonaGauge('personaElias', 0, TEACHER_PURPLE);
+      drawPersonaGauge('personaEliana', 0, TEACHER_PURPLE);
+      drawPersonaGauge('personaCaleb', 0, PASTOR_GREEN);
+      drawPersonaGauge('personaImani', 0, EVANGELIST_RED);
+      drawPersonaGauge('personaZev', 0, PROPHET_GOLD);
+      drawPersonaGauge('personaAmir', 0, APOSTLE_BLUE);
+      drawPersonaGauge('personaNova', 0, PASTOR_GREEN);
+      drawPersonaGauge('personaSantiago', 0, EVANGELIST_RED);
+      drawPersonaGauge('personaTahoma', 0, EVANGELIST_RED);
+    }
+
+    // Animate decorative gauges
+    function animateDecoGauges() {
+      const lerp = (current, target, speed) => current + (target - current) * speed;
+      const animSpeed = 0.05;
+
+      decoState.mini9.value = lerp(decoState.mini9.value, decoState.mini9.target, animSpeed);
+      decoState.mini10.value = lerp(decoState.mini10.value, decoState.mini10.target, animSpeed);
+      decoState.mini5.value = lerp(decoState.mini5.value, decoState.mini5.target, animSpeed);
+      decoState.mini6.value = lerp(decoState.mini6.value, decoState.mini6.target, animSpeed);
+      decoState.mini7.value = lerp(decoState.mini7.value, decoState.mini7.target, animSpeed);
+      decoState.mini8.value = lerp(decoState.mini8.value, decoState.mini8.target, animSpeed);
+      decoState.miniLeft.value = lerp(decoState.miniLeft.value, decoState.miniLeft.target, animSpeed);
+      decoState.miniRight.value = lerp(decoState.miniRight.value, decoState.miniRight.target, animSpeed);
+      decoState.mini3.value = lerp(decoState.mini3.value, decoState.mini3.target, animSpeed);
+      decoState.mini4.value = lerp(decoState.mini4.value, decoState.mini4.target, animSpeed);
+      decoState.mini11.value = lerp(decoState.mini11.value, decoState.mini11.target, animSpeed);
+      decoState.mini12.value = lerp(decoState.mini12.value, decoState.mini12.target, animSpeed);
+      decoState.tachLeft.value = lerp(decoState.tachLeft.value, decoState.tachLeft.target, animSpeed);
+      decoState.tachRight.value = lerp(decoState.tachRight.value, decoState.tachRight.target, animSpeed);
+
+      // Left side gauges - negative emotions (red arc)
+      drawDecoMini('decoMini9', decoState.mini9.value, 'negative');
+      drawDecoMini('decoMini10', decoState.mini10.value, 'negative');
+      drawDecoMini('decoMini5', decoState.mini5.value, 'negative');
+      drawDecoMini('decoMini6', decoState.mini6.value, 'negative');
+      drawDecoMini('decoMini7', decoState.mini7.value, 'negative');
+      drawDecoMini('decoMini8', decoState.mini8.value, 'negative');
+      // Right side gauges - positive emotions (green arc)
+      drawDecoMini('decoMiniLeft', decoState.miniLeft.value, 'positive');
+      drawDecoMini('decoMiniRight', decoState.miniRight.value, 'positive');
+      drawDecoMini('decoMini3', decoState.mini3.value, 'positive');
+      drawDecoMini('decoMini4', decoState.mini4.value, 'positive');
+      drawDecoMini('decoMini11', decoState.mini11.value, 'positive');
+      drawDecoMini('decoMini12', decoState.mini12.value, 'positive');
+      drawDecoTachometer('decoTachLeft', decoState.tachLeft.value, true);
+      drawDecoTachometer('decoTachRight', decoState.tachRight.value, false);
+
+      // Animate persona gauges
+      personaState.jubilee.value = lerp(personaState.jubilee.value, personaState.jubilee.target, animSpeed);
+      personaState.melody.value = lerp(personaState.melody.value, personaState.melody.target, animSpeed);
+      personaState.zariah.value = lerp(personaState.zariah.value, personaState.zariah.target, animSpeed);
+      personaState.elias.value = lerp(personaState.elias.value, personaState.elias.target, animSpeed);
+      personaState.eliana.value = lerp(personaState.eliana.value, personaState.eliana.target, animSpeed);
+      personaState.caleb.value = lerp(personaState.caleb.value, personaState.caleb.target, animSpeed);
+      personaState.imani.value = lerp(personaState.imani.value, personaState.imani.target, animSpeed);
+      personaState.zev.value = lerp(personaState.zev.value, personaState.zev.target, animSpeed);
+      personaState.amir.value = lerp(personaState.amir.value, personaState.amir.target, animSpeed);
+      personaState.nova.value = lerp(personaState.nova.value, personaState.nova.target, animSpeed);
+      personaState.santiago.value = lerp(personaState.santiago.value, personaState.santiago.target, animSpeed);
+      personaState.tahoma.value = lerp(personaState.tahoma.value, personaState.tahoma.target, animSpeed);
+
+      // Draw persona gauges with Five-Fold Office border colors
+      // Apostle (Sky Blue): Jubilee, Melody, Amir
+      // Prophet (Gold): Zariah, Zev
+      // Teacher (Purple): Elias, Eliana
+      // Pastor (Green): Caleb, Nova
+      // Evangelist (Red): Imani, Santiago, Tahoma
+      const APOSTLE_BLUE = '#00bfff';
+      const PROPHET_GOLD = '#ffd700';
+      const TEACHER_PURPLE = '#9932cc';
+      const PASTOR_GREEN = '#00ff66';
+      const EVANGELIST_RED = '#ff3333';
+
+      drawPersonaGauge('personaJubilee', personaState.jubilee.value, APOSTLE_BLUE);
+      drawPersonaGauge('personaMelody', personaState.melody.value, APOSTLE_BLUE);
+      drawPersonaGauge('personaZariah', personaState.zariah.value, PROPHET_GOLD);
+      drawPersonaGauge('personaElias', personaState.elias.value, TEACHER_PURPLE);
+      drawPersonaGauge('personaEliana', personaState.eliana.value, TEACHER_PURPLE);
+      drawPersonaGauge('personaCaleb', personaState.caleb.value, PASTOR_GREEN);
+      drawPersonaGauge('personaImani', personaState.imani.value, EVANGELIST_RED);
+      drawPersonaGauge('personaZev', personaState.zev.value, PROPHET_GOLD);
+      drawPersonaGauge('personaAmir', personaState.amir.value, APOSTLE_BLUE);
+      drawPersonaGauge('personaNova', personaState.nova.value, PASTOR_GREEN);
+      drawPersonaGauge('personaSantiago', personaState.santiago.value, EVANGELIST_RED);
+      drawPersonaGauge('personaTahoma', personaState.tahoma.value, EVANGELIST_RED);
+
+      requestAnimationFrame(animateDecoGauges);
+    }
+
+    // Update decorative gauges with hospitality data
+    function updateDecoGauges(data) {
+      const { subscribers, visitors, events, actions } = data;
+      decoState.mini9.target = Math.min(100, (subscribers || 0) * 6);
+      decoState.mini10.target = Math.min(100, (visitors || 0) * 3);
+      decoState.mini5.target = Math.min(100, (subscribers || 0) * 8);
+      decoState.mini6.target = Math.min(100, (visitors || 0) * 4);
+      decoState.mini7.target = Math.min(100, (events || 0) / 15);
+      decoState.mini8.target = Math.min(100, (actions || 0) / 8);
+      decoState.miniLeft.target = Math.min(100, (events || 0) / 10);
+      decoState.miniRight.target = Math.min(100, (actions || 0) / 5);
+      decoState.mini3.target = Math.min(100, (subscribers || 0) * 10);
+      decoState.mini4.target = Math.min(100, (visitors || 0) * 5);
+      decoState.mini11.target = Math.min(100, (events || 0) / 12);
+      decoState.mini12.target = Math.min(100, (actions || 0) / 6);
+      decoState.tachLeft.target = Math.min(100, (events || 0) / 20);
+      decoState.tachRight.target = Math.min(100, (actions || 0) / 10);
+    }
+
+    // Test decorative gauges animation
+    function testDecoGauges() {
+      const originalTargets = {
+        mini9: decoState.mini9.target,
+        mini10: decoState.mini10.target,
+        mini5: decoState.mini5.target,
+        mini6: decoState.mini6.target,
+        mini7: decoState.mini7.target,
+        mini8: decoState.mini8.target,
+        miniLeft: decoState.miniLeft.target,
+        miniRight: decoState.miniRight.target,
+        mini3: decoState.mini3.target,
+        mini4: decoState.mini4.target,
+        mini11: decoState.mini11.target,
+        mini12: decoState.mini12.target,
+        tachLeft: decoState.tachLeft.target,
+        tachRight: decoState.tachRight.target
+      };
+
+      // Store persona original targets
+      const originalPersonaTargets = {
+        jubilee: personaState.jubilee.target,
+        melody: personaState.melody.target,
+        zariah: personaState.zariah.target,
+        elias: personaState.elias.target,
+        eliana: personaState.eliana.target,
+        caleb: personaState.caleb.target,
+        imani: personaState.imani.target,
+        zev: personaState.zev.target,
+        amir: personaState.amir.target,
+        nova: personaState.nova.target,
+        santiago: personaState.santiago.target,
+        tahoma: personaState.tahoma.target
+      };
+
+      // Set test values
+      decoState.mini9.target = 82;
+      decoState.mini10.target = 68;
+      decoState.mini5.target = 95;
+      decoState.mini6.target = 78;
+      decoState.mini7.target = 62;
+      decoState.mini8.target = 88;
+      decoState.miniLeft.target = 100;
+      decoState.miniRight.target = 90;
+      decoState.mini3.target = 75;
+      decoState.mini4.target = 88;
+      decoState.mini11.target = 92;
+      decoState.mini12.target = 58;
+      decoState.tachLeft.target = 85;
+      decoState.tachRight.target = 92;
+
+      // Set persona test values
+      personaState.jubilee.target = 95;
+      personaState.melody.target = 82;
+      personaState.zariah.target = 78;
+      personaState.elias.target = 88;
+      personaState.eliana.target = 92;
+      personaState.caleb.target = 75;
+      personaState.imani.target = 98;
+      personaState.zev.target = 65;
+      personaState.amir.target = 84;
+      personaState.nova.target = 96;
+      personaState.santiago.target = 72;
+      personaState.tahoma.target = 80;
+
+      // Restore after animation
+      setTimeout(() => {
+        decoState.mini9.target = originalTargets.mini9;
+        decoState.mini10.target = originalTargets.mini10;
+        decoState.mini5.target = originalTargets.mini5;
+        decoState.mini6.target = originalTargets.mini6;
+        decoState.mini7.target = originalTargets.mini7;
+        decoState.mini8.target = originalTargets.mini8;
+        decoState.miniLeft.target = originalTargets.miniLeft;
+        decoState.miniRight.target = originalTargets.miniRight;
+        decoState.mini3.target = originalTargets.mini3;
+        decoState.mini4.target = originalTargets.mini4;
+        decoState.mini11.target = originalTargets.mini11;
+        decoState.mini12.target = originalTargets.mini12;
+        decoState.tachLeft.target = originalTargets.tachLeft;
+        decoState.tachRight.target = originalTargets.tachRight;
+
+        // Restore persona targets
+        personaState.jubilee.target = originalPersonaTargets.jubilee;
+        personaState.melody.target = originalPersonaTargets.melody;
+        personaState.zariah.target = originalPersonaTargets.zariah;
+        personaState.elias.target = originalPersonaTargets.elias;
+        personaState.eliana.target = originalPersonaTargets.eliana;
+        personaState.caleb.target = originalPersonaTargets.caleb;
+        personaState.imani.target = originalPersonaTargets.imani;
+        personaState.zev.target = originalPersonaTargets.zev;
+        personaState.amir.target = originalPersonaTargets.amir;
+        personaState.nova.target = originalPersonaTargets.nova;
+        personaState.santiago.target = originalPersonaTargets.santiago;
+        personaState.tahoma.target = originalPersonaTargets.tahoma;
+      }, 1500);
+    }
+
+    // Initialize and animate instruments
+    function initFlightInstruments() {
+      // Draw all instruments with initial values
+      drawAttitudeIndicator('attitudeCanvas', 0, 0);
+      drawAltimeter('altimeterCanvas', 0);
+      drawAirspeed('airspeedCanvas', 0);
+      drawTurnCoordinator('turnCanvas', 0, 0);
+      drawHeadingIndicator('headingCanvas', 0);
+      drawVSI('vsiCanvas', 0);
+      // Initialize decorative gauges
+      initDecoGauges();
+    }
+
+    // Update instruments with hospitality data
+    function updateFlightInstruments(data) {
+      const { engagementScore, userGrowth, conversionRate, sessionBalance, ruleDirection, growthRate } = data;
+
+      // Animate Attitude Indicator (pitch = engagement deviation from 50, roll = trend)
+      const pitch = (engagementScore - 50) * 0.6; // -30 to +30 for 0-100 score
+      const roll = (sessionBalance || 0) * 15; // Session imbalance as roll
+      instrumentState.attitude.targetPitch = pitch;
+      instrumentState.attitude.targetRoll = roll;
+
+      // Animate Altimeter (user count as altitude)
+      instrumentState.altimeter.targetAltitude = (userGrowth || 0) * 100;
+
+      // Animate Airspeed (conversion rate 0-100)
+      instrumentState.airspeed.targetSpeed = conversionRate || 0;
+
+      // Animate Turn Coordinator
+      instrumentState.turn.targetTurn = (sessionBalance || 0);
+      instrumentState.turn.targetSlip = 0;
+
+      // Animate Heading (rule effectiveness as compass heading, 0-360)
+      instrumentState.heading.targetHeading = (ruleDirection || 0) * 3.6; // 0-100 mapped to 0-360
+
+      // Animate VSI (growth rate as vertical speed)
+      instrumentState.vsi.targetRate = (growthRate || 0) * 40; // Scale to ft/min range
+    }
+
+    // Animation loop for smooth instrument updates
+    function animateInstruments() {
+      const lerp = (current, target, speed) => current + (target - current) * speed;
+      const animSpeed = 0.08;
+
+      // Lerp all values
+      instrumentState.attitude.pitch = lerp(instrumentState.attitude.pitch, instrumentState.attitude.targetPitch, animSpeed);
+      instrumentState.attitude.roll = lerp(instrumentState.attitude.roll, instrumentState.attitude.targetRoll, animSpeed);
+      instrumentState.altimeter.altitude = lerp(instrumentState.altimeter.altitude, instrumentState.altimeter.targetAltitude, animSpeed);
+      instrumentState.airspeed.speed = lerp(instrumentState.airspeed.speed, instrumentState.airspeed.targetSpeed, animSpeed);
+      instrumentState.turn.turn = lerp(instrumentState.turn.turn, instrumentState.turn.targetTurn, animSpeed);
+      instrumentState.turn.slip = lerp(instrumentState.turn.slip, instrumentState.turn.targetSlip, animSpeed);
+      instrumentState.heading.heading = lerp(instrumentState.heading.heading, instrumentState.heading.targetHeading, animSpeed);
+      instrumentState.vsi.rate = lerp(instrumentState.vsi.rate, instrumentState.vsi.targetRate, animSpeed);
+
+      // Redraw instruments
+      drawAttitudeIndicator('attitudeCanvas', instrumentState.attitude.pitch, instrumentState.attitude.roll);
+      drawAltimeter('altimeterCanvas', instrumentState.altimeter.altitude);
+      drawAirspeed('airspeedCanvas', instrumentState.airspeed.speed);
+      drawTurnCoordinator('turnCanvas', instrumentState.turn.turn, instrumentState.turn.slip);
+      drawHeadingIndicator('headingCanvas', instrumentState.heading.heading);  // Uses animated value, defaults to 0 (North)
+      drawVSI('vsiCanvas', instrumentState.vsi.rate);
+
+      requestAnimationFrame(animateInstruments);
+    }
+
+    // Flag for decorative gauge animation
+    let decoAnimationRunning = false;
+
+    // Start instruments when dashboard loads
+    function startFlightInstruments(hospitalityData) {
+      initFlightInstruments();
+
+      // Convert hospitality metrics to instrument data
+      const instrumentData = {
+        engagementScore: hospitalityData.avgEngagement || 50,
+        userGrowth: hospitalityData.totalUsers || 0,
+        conversionRate: hospitalityData.conversionRate || 0,
+        sessionBalance: hospitalityData.sessionBalance || 0,
+        ruleDirection: hospitalityData.ruleEffectiveness || 0,
+        growthRate: hospitalityData.growthTrend || 0
+      };
+
+      updateFlightInstruments(instrumentData);
+
+      // Update decorative gauges with hospitality data
+      updateDecoGauges({
+        subscribers: hospitalityData.activeSubscribers || 0,
+        visitors: hospitalityData.activeVisitors || 0,
+        events: hospitalityData.totalEvents || 0,
+        actions: hospitalityData.totalActions || 0
+      });
+
+      // Only start animation loop if not already running
+      if (!animationRunning) {
+        animationRunning = true;
+        animateInstruments();
+      }
+
+      // Start decorative gauge animation loop
+      if (!decoAnimationRunning) {
+        decoAnimationRunning = true;
+        animateDecoGauges();
+      }
+    }
+
+    // Initialize on load
+    init();
+  </script>
+</body>
+</html>

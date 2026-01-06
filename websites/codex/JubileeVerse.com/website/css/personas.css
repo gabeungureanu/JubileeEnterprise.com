@@ -1,0 +1,290 @@
+/**
+ * Persona Discovery and Selection Styles
+ */
+
+/* Persona page hero */
+.persona-hero {
+  background: linear-gradient(135deg, var(--color-secondary-600) 0%, var(--color-secondary-800) 100%);
+  color: var(--color-neutral-0);
+  padding: var(--spacing-16) 0;
+  text-align: center;
+}
+
+.persona-hero__title {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-4);
+}
+
+.persona-hero__subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--color-neutral-200);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Persona filters */
+.persona-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-4);
+  padding: var(--spacing-6) 0;
+  border-bottom: 1px solid var(--color-neutral-200);
+}
+
+.persona-filters__search {
+  flex: 1;
+  min-width: 250px;
+  position: relative;
+}
+
+.persona-filters__search-input {
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-4);
+  padding-left: var(--spacing-10);
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-full);
+}
+
+.persona-filters__search-icon {
+  position: absolute;
+  left: var(--spacing-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-neutral-400);
+}
+
+.persona-filters__categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.persona-category {
+  padding: var(--spacing-2) var(--spacing-4);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-neutral-600);
+  background: var(--color-neutral-100);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.persona-category:hover {
+  background: var(--color-neutral-200);
+}
+
+.persona-category.is-active {
+  background: var(--color-primary-500);
+  color: var(--color-neutral-0);
+}
+
+/* Persona grid */
+.persona-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-6);
+  padding: var(--spacing-8) 0;
+}
+
+/* Persona card */
+.persona-card {
+  background: var(--color-neutral-0);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: all var(--transition-normal);
+}
+
+.persona-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+
+.persona-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-5);
+  background: linear-gradient(135deg, var(--color-neutral-50) 0%, var(--color-neutral-100) 100%);
+}
+
+.persona-card__avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.persona-card__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.persona-card__info h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-1);
+}
+
+.persona-card__title {
+  font-size: var(--font-size-sm);
+  color: var(--color-primary-600);
+  font-weight: var(--font-weight-medium);
+}
+
+.persona-card__body {
+  padding: var(--spacing-5);
+}
+
+.persona-card__description {
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-600);
+  line-height: var(--line-height-relaxed);
+  margin-bottom: var(--spacing-4);
+}
+
+.persona-card__specialties {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-4);
+}
+
+.persona-specialty {
+  padding: var(--spacing-1) var(--spacing-2);
+  font-size: var(--font-size-xs);
+  background: var(--color-neutral-100);
+  color: var(--color-neutral-700);
+  border-radius: var(--radius-md);
+}
+
+.persona-card__languages {
+  display: flex;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-neutral-500);
+}
+
+.persona-card__footer {
+  display: flex;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4) var(--spacing-5);
+  border-top: 1px solid var(--color-neutral-200);
+  background: var(--color-neutral-50);
+}
+
+.persona-card__btn {
+  flex: 1;
+}
+
+/* Persona detail modal */
+.persona-detail {
+  padding: var(--spacing-6);
+}
+
+.persona-detail__header {
+  display: flex;
+  gap: var(--spacing-5);
+  margin-bottom: var(--spacing-6);
+}
+
+.persona-detail__avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-100);
+  overflow: hidden;
+}
+
+.persona-detail__info h2 {
+  font-size: var(--font-size-2xl);
+  margin-bottom: var(--spacing-1);
+}
+
+.persona-detail__title {
+  font-size: var(--font-size-base);
+  color: var(--color-primary-600);
+  margin-bottom: var(--spacing-3);
+}
+
+.persona-detail__bio {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-neutral-600);
+  margin-bottom: var(--spacing-6);
+}
+
+.persona-detail__section {
+  margin-bottom: var(--spacing-6);
+}
+
+.persona-detail__section-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-neutral-700);
+  margin-bottom: var(--spacing-3);
+}
+
+.persona-detail__starters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.persona-starter {
+  padding: var(--spacing-3);
+  background: var(--color-neutral-50);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-700);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.persona-starter:hover {
+  background: var(--color-primary-50);
+  border-color: var(--color-primary-300);
+  color: var(--color-primary-700);
+}
+
+/* Dark Mode Adjustments */
+[data-theme="dark"] .persona-hero {
+  background: linear-gradient(135deg, var(--color-secondary-300) 0%, var(--color-secondary-100) 100%);
+}
+
+[data-theme="dark"] .persona-card__header {
+  background: linear-gradient(135deg, var(--color-neutral-100) 0%, var(--color-neutral-200) 100%);
+}
+
+[data-theme="dark"] .persona-card__avatar {
+  background: var(--color-primary-200);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .persona-hero {
+    padding: var(--spacing-10) 0;
+  }
+
+  .persona-hero__title {
+    font-size: var(--font-size-3xl);
+  }
+
+  .persona-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .persona-detail__header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+}

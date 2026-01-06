@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Server Error - JubileeVerse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="error-page">
+    <div class="error-content">
+      <div class="error-icon">
+        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <h1>500</h1>
+      <h2>Something Went Wrong</h2>
+      <p>We're experiencing technical difficulties. Please try again in a moment.</p>
+      <div class="error-actions">
+        <a href="/" class="btn btn--primary btn--lg">Go Home</a>
+        <button class="btn btn--outline btn--lg" onclick="location.reload()">Try Again</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .error-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-8);
+      background: linear-gradient(135deg, var(--color-neutral-50) 0%, var(--color-neutral-100) 100%);
+    }
+
+    .error-content {
+      text-align: center;
+      max-width: 500px;
+    }
+
+    .error-icon {
+      margin-bottom: var(--spacing-6);
+      color: var(--color-error);
+    }
+
+    .error-content h1 {
+      font-size: 6rem;
+      font-weight: var(--font-weight-bold);
+      color: var(--color-error);
+      line-height: 1;
+      margin-bottom: var(--spacing-2);
+    }
+
+    .error-content h2 {
+      font-size: var(--font-size-2xl);
+      color: var(--color-neutral-800);
+      margin-bottom: var(--spacing-4);
+    }
+
+    .error-content p {
+      font-size: var(--font-size-lg);
+      color: var(--color-neutral-600);
+      margin-bottom: var(--spacing-8);
+    }
+
+    .error-actions {
+      display: flex;
+      gap: var(--spacing-4);
+      justify-content: center;
+    }
+
+    @media (max-width: 640px) {
+      .error-content h1 {
+        font-size: 4rem;
+      }
+
+      .error-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</body>
+</html>

@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complete Your Subscription - JubileeVerse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #000000;
+      color: #fff;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ========================================
+       CIRCUIT BOARD BACKGROUND
+    ======================================== */
+    .animated-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+      background: #000000;
+    }
+
+    .grid-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+
+    /* ========================================
+       MAIN CONTENT CONTAINER
+    ======================================== */
+    .payment-container {
+      position: relative;
+      z-index: 10;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Back button */
+    .back-link {
+      position: absolute;
+      top: 18px;
+      left: 92px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: #fbbf24;
+    }
+
+    .back-link svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* ========================================
+       CREDIT CARD VISUAL
+    ======================================== */
+    .card-wrapper {
+      perspective: 1000px;
+      margin-top: 40px;
+      margin-bottom: 15px;
+    }
+
+    .credit-card {
+      width: 400px;
+      height: 240px;
+      max-width: 95vw;
+      background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 50%, #1a1a1a 100%);
+      border: 2px solid #d4af37;
+      border-radius: 16px;
+      padding: 28px;
+      position: relative;
+      box-shadow:
+        0 25px 50px -12px rgba(0, 0, 0, 0.6),
+        0 0 20px rgba(212, 175, 55, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      transform-style: preserve-3d;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+      animation: card-glow 3s ease-in-out infinite;
+    }
+
+    @keyframes card-glow {
+      0%, 100% {
+        box-shadow:
+          0 25px 50px -12px rgba(0, 0, 0, 0.6),
+          0 0 60px rgba(212, 175, 55, 0.35),
+          0 0 120px rgba(212, 175, 55, 0.2),
+          0 0 180px rgba(212, 175, 55, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+      50% {
+        box-shadow:
+          0 25px 50px -12px rgba(0, 0, 0, 0.6),
+          0 0 80px rgba(212, 175, 55, 0.45),
+          0 0 150px rgba(212, 175, 55, 0.25),
+          0 0 220px rgba(212, 175, 55, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+    }
+
+    .credit-card:hover {
+      transform: rotateY(-1deg) rotateX(1deg);
+      box-shadow:
+        0 30px 60px -15px rgba(0, 0, 0, 0.7),
+        0 0 40px rgba(212, 175, 55, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .credit-card.processing {
+      animation: card-pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes card-pulse {
+      0%, 100% {
+        box-shadow:
+          0 25px 50px -12px rgba(0, 0, 0, 0.6),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+      50% {
+        box-shadow:
+          0 25px 50px -12px rgba(0, 0, 0, 0.6),
+          0 0 60px rgba(212, 175, 55, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+    }
+
+    /* Stripe logo */
+    .stripe-logo {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 120px;
+      height: auto;
+    }
+
+    .stripe-logo svg {
+      width: 100%;
+      height: auto;
+      fill: #fff;
+    }
+
+    /* Card chip */
+    .card-chip {
+      width: 40px;
+      height: 30px;
+      background: linear-gradient(135deg, #d4af37 0%, #b8962e 50%, #d4af37 100%);
+      border-radius: 5px;
+      position: relative;
+      overflow: hidden;
+      margin-top: 20px;
+      margin-bottom: 15px;
+    }
+
+    .card-chip::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 1px;
+      background: rgba(0, 0, 0, 0.2);
+      top: 50%;
+      z-index: 1;
+    }
+
+    .card-chip::after {
+      content: '';
+      position: absolute;
+      width: 1px;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.2);
+      left: 50%;
+      z-index: 1;
+    }
+
+    .card-chip .shimmer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        120deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(255, 255, 255, 0.9) 50%,
+        transparent 60%,
+        transparent 100%
+      );
+      transform: translateX(-100%);
+      animation: chip-shimmer 7.5s ease-in-out infinite;
+      z-index: 2;
+    }
+
+    @keyframes chip-shimmer {
+      0%, 85% {
+        transform: translateX(-100%);
+      }
+      95%, 100% {
+        transform: translateX(200%);
+      }
+    }
+
+    .card-details-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .card-details-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .card-field {
+      flex: 1;
+      border: 1px solid #666;
+      border-radius: 4px;
+      padding: 4px 10px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .card-field.small {
+      flex: 0 0 90px;
+    }
+
+    .card-field.zip {
+      flex: 0 0 70px;
+    }
+
+    .card-field.cvc {
+      flex: 0 0 50px;
+    }
+
+    .card-field label {
+      display: block;
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+      margin-bottom: 2px;
+    }
+
+    .card-field input,
+    .card-field .stripe-element {
+      width: 100%;
+      height: 20px;
+      background: transparent;
+      border: none;
+      padding: 2px 0;
+      font-size: 16px;
+      font-family: 'Inter', monospace;
+      color: #fff;
+      letter-spacing: 0.5px;
+      outline: none;
+    }
+
+    .card-field input::placeholder {
+      color: #fff;
+      letter-spacing: 0.5px;
+      transition: color 0.2s ease;
+    }
+
+    .card-field input:focus::placeholder {
+      color: transparent;
+    }
+
+    /* Hide password manager icons (Norton, LastPass, 1Password, etc.) */
+    .card-field input::-webkit-credentials-auto-fill-button,
+    .card-field input::-webkit-contacts-auto-fill-button,
+    .card-field input::-webkit-credit-card-auto-fill-button {
+      visibility: hidden;
+      display: none !important;
+      pointer-events: none;
+      position: absolute;
+      right: 0;
+    }
+
+    .card-field [data-lastpass-icon-root],
+    .card-field [data-dashlanecreated],
+    .card-field .LPMobile_LastPass_Icon,
+    .card-field [class*="norton"],
+    .card-field [class*="Norton"],
+    .card-field [id*="norton"],
+    .card-field [id*="Norton"],
+    .card-field [class*="nss"],
+    .card-field [id*="nss"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+
+    .card-field:focus-within {
+      border-color: #d4af37;
+      box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+    }
+
+    .card-field .stripe-element {
+      padding: 2px 0;
+      position: relative;
+      top: -2px;
+    }
+
+    /* ========================================
+       PAYMENT BOX (Black container for button and messages)
+    ======================================== */
+    .payment-box {
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 12px;
+      padding: 20px 24px;
+      width: 440px;
+      max-width: 95vw;
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      box-sizing: border-box;
+    }
+
+    /* Terms Agreement */
+    .terms-agreement {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 15px;
+      cursor: pointer;
+    }
+
+    .terms-agreement input[type="checkbox"] {
+      display: none;
+    }
+
+    .terms-checkbox {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      color: #d4af37;
+      margin-top: 1px;
+      border: 2px solid #d4af37;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .terms-checkbox .checkmark {
+      display: none;
+      width: 14px;
+      height: 14px;
+    }
+
+    .terms-agreement input[type="checkbox"]:checked + .terms-checkbox .checkmark {
+      display: block;
+    }
+
+    .terms-text {
+      font-size: 10px;
+      color: #d4af37;
+      font-weight: 700;
+      line-height: 1.4;
+      text-align: justify;
+    }
+
+    /* ========================================
+       PAYMENT BUTTON
+    ======================================== */
+    .payment-actions {
+      width: 100%;
+    }
+
+    .payment-button {
+      width: 100%;
+      background: linear-gradient(135deg, #d4af37 0%, #b8962e 100%);
+      color: #000;
+      border: none;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 800;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .payment-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .payment-button:hover::before {
+      left: 100%;
+    }
+
+    .payment-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+    }
+
+    .payment-button:active {
+      transform: translateY(0);
+    }
+
+    .payment-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .payment-button:disabled::before {
+      display: none;
+    }
+
+    .payment-button.processing {
+      background: linear-gradient(135deg, #a08030 0%, #8a7028 100%);
+    }
+
+    .payment-button .spinner {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 10px;
+    }
+
+    .payment-button.processing .spinner {
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ========================================
+       STATUS MESSAGES
+    ======================================== */
+    .status-message {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-message.error {
+      display: flex;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .status-message.success {
+      display: flex;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #4ade80;
+    }
+
+    .status-message svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    /* ========================================
+       SUCCESS OVERLAY
+    ======================================== */
+    .success-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .success-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .success-content {
+      text-align: center;
+      transform: scale(0.8);
+      opacity: 0;
+      transition: all 0.5s ease 0.2s;
+    }
+
+    .success-overlay.show .success-content {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    .success-icon {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 30px;
+      background: linear-gradient(135deg, #d4af37 0%, #b8962e 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: success-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes success-pulse {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4);
+      }
+      50% {
+        box-shadow: 0 0 0 30px rgba(212, 175, 55, 0);
+      }
+    }
+
+    .success-icon svg {
+      width: 50px;
+      height: 50px;
+      fill: #000;
+    }
+
+    .success-content h2 {
+      font-size: 32px;
+      font-weight: 300;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+
+    .success-content p {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 30px;
+    }
+
+    .success-content .continue-btn {
+      background: transparent;
+      border: 1px solid #d4af37;
+      color: #d4af37;
+      padding: 14px 40px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .success-content .continue-btn:hover {
+      background: #d4af37;
+      color: #000;
+    }
+
+    /* ========================================
+       ERROR POPUP OVERLAY
+    ======================================== */
+    .error-popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .error-popup-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .error-popup {
+      width: 520px; /* 130% of 400px credit card */
+      max-width: 95vw;
+      background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 50%, #1a1a1a 100%);
+      border: 2px solid #d4af37;
+      border-radius: 16px;
+      padding: 30px;
+      text-align: center;
+      transform: scale(0.8);
+      opacity: 0;
+      transition: all 0.3s ease;
+      box-shadow:
+        0 25px 50px -12px rgba(0, 0, 0, 0.6),
+        0 0 60px rgba(212, 175, 55, 0.35),
+        0 0 120px rgba(212, 175, 55, 0.2);
+    }
+
+    .error-popup-overlay.show .error-popup {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    .error-popup-icon {
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .error-popup-icon svg {
+      width: 70px;
+      height: 70px;
+    }
+
+    .error-popup h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .error-popup p {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.5;
+      margin-bottom: 25px;
+    }
+
+    .error-popup-btn {
+      background: linear-gradient(135deg, #d4af37 0%, #b8962e 100%);
+      color: #000;
+      border: none;
+      padding: 12px 50px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .error-popup-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+    }
+
+    .error-popup-btn:active {
+      transform: translateY(0);
+    }
+
+    /* ========================================
+       SECURITY BADGE
+    ======================================== */
+    .security-info {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 10px;
+    }
+
+    .security-info svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* ========================================
+       RESPONSIVE
+    ======================================== */
+    @media (max-width: 480px) {
+      .credit-card {
+        height: auto;
+        min-height: 220px;
+        padding: 20px;
+      }
+
+      .card-chip {
+        width: 36px;
+        height: 28px;
+      }
+
+      .card-details-row {
+        gap: 10px;
+      }
+
+      .card-field.small {
+        flex: 0 0 70px;
+      }
+
+      .card-field {
+        padding: 6px 10px;
+      }
+
+      .card-field label {
+        font-size: 8px;
+      }
+
+      .payment-button {
+        padding: 14px 20px;
+      }
+
+      .back-link {
+        top: 23px;
+        left: 92px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="animated-background">
+    <canvas id="gridCanvas" class="grid-canvas"></canvas>
+  </div>
+
+  <!-- Main Content -->
+  <div class="payment-container">
+    <!-- Back Link -->
+    <a href="javascript:history.back()" class="back-link">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      Back
+    </a>
+
+    <!-- Credit Card Visual -->
+    <div class="card-wrapper">
+      <div class="credit-card" id="creditCard">
+        <!-- Stripe Logo -->
+        <div class="stripe-logo">
+          <svg viewBox="0 0 468 222.5" xmlns="http://www.w3.org/2000/svg">
+            <path d="M414 113.4c0-25.6-12.4-45.8-36.1-45.8-23.8 0-38.2 20.2-38.2 45.6 0 30.1 17 45.3 41.4 45.3 11.9 0 20.9-2.7 27.7-6.5v-20c-6.8 3.4-14.6 5.5-24.5 5.5-9.7 0-18.3-3.4-19.4-15.2h48.9c0-1.3.2-6.5.2-8.9zm-49.4-9.5c0-11.3 6.9-16 13.2-16 6.1 0 12.6 4.7 12.6 16h-25.8zM301.1 67.6c-9.8 0-16.1 4.6-19.6 7.8l-1.3-6.2h-22v116.6l25-5.3.1-28.3c3.6 2.6 8.9 6.3 17.7 6.3 17.9 0 34.2-14.4 34.2-46.1-.1-29-16.6-44.8-34.1-44.8zm-6 68.9c-5.9 0-9.4-2.1-11.8-4.7l-.1-37.1c2.6-2.9 6.2-4.9 11.9-4.9 9.1 0 15.4 10.2 15.4 23.3 0 13.4-6.2 23.4-15.4 23.4zM223.8 61.7l25.1-5.4V36l-25.1 5.3zM223.8 69.3h25.1v87.5h-25.1zM196.9 76.7l-1.6-7.4h-21.6v87.5h25V97.5c5.9-7.7 15.9-6.3 19-5.2v-23c-3.2-1.2-14.9-3.4-20.8 7.4zM146.9 47.6l-24.4 5.2-.1 80.1c0 14.8 11.1 25.7 25.9 25.7 8.2 0 14.2-1.5 17.5-3.3V135c-3.2 1.3-19 5.9-19-8.9V90.6h19V69.3h-19l.1-21.7zM79.3 94.7c0-3.9 3.2-5.4 8.5-5.4 7.6 0 17.2 2.3 24.8 6.4V72.2c-8.3-3.3-16.5-4.6-24.8-4.6C67.5 67.6 54 78.2 54 95.9c0 27.6 38 23.2 38 35.1 0 4.6-4 6.1-9.6 6.1-8.3 0-18.9-3.4-27.3-8v23.8c9.3 4 18.7 5.7 27.3 5.7 20.8 0 35.1-10.3 35.1-28.2-.1-29.8-38.2-24.5-38.2-35.7z"/>
+          </svg>
+        </div>
+        <!-- Card Chip -->
+        <div class="card-chip"><span class="shimmer"></span></div>
+
+        <!-- Card Input Fields -->
+        <div class="card-fields">
+          <!-- Row 1: Card Number | Expiration -->
+          <div class="card-details-row">
+            <div class="card-field">
+              <label>Card Number</label>
+              <div id="cardNumber" class="stripe-element"></div>
+            </div>
+            <div class="card-field small">
+              <label>Exp</label>
+              <input type="text" id="cardExpiry" placeholder="MM / YY" maxlength="7" autocomplete="off" data-lpignore="true" data-form-type="other" data-1p-ignore="true" data-bwignore="true" data-protonpass-ignore="true" data-nortonsafe="false" aria-autocomplete="none">
+            </div>
+          </div>
+          <!-- Row 2: Cardholder Name | ZIP | CVC -->
+          <div class="card-details-row">
+            <div class="card-field">
+              <label>Cardholder Name</label>
+              <input type="text" id="cardholderName" placeholder="Full Name" autocomplete="off" data-lpignore="true" data-form-type="other" data-1p-ignore="true" data-bwignore="true" data-protonpass-ignore="true" data-nortonsafe="false" aria-autocomplete="none">
+            </div>
+            <div class="card-field zip">
+              <label>ZIP Code</label>
+              <input type="text" id="cardZip" placeholder="12345" maxlength="5" autocomplete="off" data-lpignore="true" data-form-type="other" data-1p-ignore="true" data-bwignore="true" data-protonpass-ignore="true" data-nortonsafe="false" aria-autocomplete="none">
+            </div>
+            <div class="card-field cvc">
+              <label>CVC</label>
+              <input type="text" id="cardCvc" placeholder="123" maxlength="4" autocomplete="off" data-lpignore="true" data-form-type="other" data-1p-ignore="true" data-bwignore="true" data-protonpass-ignore="true" data-nortonsafe="false" aria-autocomplete="none">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Box (contains button, status message, and security info) -->
+    <div class="payment-box">
+      <!-- Terms Agreement -->
+      <label class="terms-agreement">
+        <input type="checkbox" id="termsCheckbox">
+        <span class="terms-checkbox">
+          <svg class="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <path d="M5 12l5 5 9-9" />
+          </svg>
+        </span>
+        <span class="terms-text">By continuing, you agree to the JubileeVerse.com Terms & Conditions and authorize a recurring charge for the selected subscription amount.</span>
+      </label>
+
+      <!-- Payment Button -->
+      <div class="payment-actions">
+        <button type="button" class="payment-button" id="paymentButton">
+          <span class="spinner"></span>
+          <span class="button-text">Process Payment – <span id="buttonPrice">$9.99 / month</span></span>
+        </button>
+      </div>
+
+      <!-- Status Message -->
+      <div class="status-message" id="statusMessage">
+        <svg viewBox="0 0 24 24" class="error-icon">
+          <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+        </svg>
+        <span class="message-text"></span>
+      </div>
+
+      <!-- Security Info -->
+      <div class="security-info">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+        </svg>
+        Secured by Stripe. Your payment information is encrypted.
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Overlay -->
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-content">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
+      </div>
+      <h2>Payment Successful</h2>
+      <p>Welcome to <span id="successPlanName">Standard</span>! Your subscription is now active.</p>
+      <button class="continue-btn" id="continueBtn">CONTINUE</button>
+    </div>
+  </div>
+
+  <!-- Error Popup Overlay -->
+  <div class="error-popup-overlay" id="errorPopupOverlay">
+    <div class="error-popup">
+      <div class="error-popup-icon">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- Professional yellow warning triangle with rounded corners -->
+          <defs>
+            <linearGradient id="yellowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#FFE135"/>
+              <stop offset="100%" style="stop-color:#F5C800"/>
+            </linearGradient>
+          </defs>
+          <!-- Outer black border/shadow -->
+          <path d="M50 8 L95 85 Q97 90 93 93 L7 93 Q3 90 5 85 Z" fill="#1a1a1a"/>
+          <!-- Yellow triangle fill -->
+          <path d="M50 14 L89 82 Q90 85 87 87 L13 87 Q10 85 11 82 Z" fill="url(#yellowGrad)"/>
+          <!-- Inner black border -->
+          <path d="M50 14 L89 82 Q90 85 87 87 L13 87 Q10 85 11 82 Z" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+          <!-- Exclamation mark stem -->
+          <path d="M50 35 L50 60" stroke="#1a1a1a" stroke-width="10" stroke-linecap="round"/>
+          <!-- Exclamation mark dot -->
+          <circle cx="50" cy="74" r="6" fill="#1a1a1a"/>
+        </svg>
+      </div>
+      <h3 id="errorPopupTitle">Attention Required</h3>
+      <p id="errorPopupMessage">Please review and correct the information before proceeding.</p>
+      <button class="error-popup-btn" id="errorPopupBtn">OK</button>
+    </div>
+  </div>
+
+  <script>
+    // ========================================
+    // CIRCUIT BOARD / NEURAL NETWORK BACKGROUND
+    // ========================================
+    (function initCircuitBackground() {
+      const canvas = document.getElementById('gridCanvas');
+      if (!canvas) {
+        console.error('Canvas element not found');
+        return;
+      }
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        console.error('Could not get 2D context');
+        return;
+      }
+      let nodes = [];
+      let connections = [];
+      let pulses = [];
+      let centerX, centerY;
+
+      // Colors - using yellow/gold for visibility
+      const cyanColor = { r: 212, g: 175, b: 55 };
+      const redColor = { r: 212, g: 175, b: 55 };
+      const darkBg = '#000000';
+
+      console.log('Circuit background initialized');
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        centerX = canvas.width / 2;
+        centerY = canvas.height / 2;
+        initCircuit();
+      }
+
+      function initCircuit() {
+        nodes = [];
+        connections = [];
+        pulses = [];
+
+        // Create traces emanating from center like a real circuit board
+        const traces = [];
+        const traceSpacing = 8; // Space between parallel traces
+        const cornerRadius = 6;
+
+        // Central chip dimensions
+        const chipWidth = 120;
+        const chipHeight = 80;
+
+        // Create traces going LEFT from center chip
+        for (let i = 0; i < 15; i++) {
+          const yOffset = (i - 7) * traceSpacing;
+          const startX = centerX - chipWidth/2;
+          const startY = centerY + yOffset;
+          const length = 150 + Math.random() * (centerX - chipWidth/2 - 50);
+
+          // Some traces go straight, some turn
+          if (Math.random() > 0.4) {
+            // Straight trace
+            traces.push({
+              points: [{x: startX, y: startY}, {x: startX - length, y: startY}],
+              brightness: 0.6 + Math.random() * 0.4
+            });
+          } else {
+            // Trace with turn
+            const turnX = startX - 50 - Math.random() * 100;
+            const turnDir = Math.random() > 0.5 ? 1 : -1;
+            const endY = startY + turnDir * (50 + Math.random() * 150);
+            traces.push({
+              points: [{x: startX, y: startY}, {x: turnX, y: startY}, {x: turnX, y: endY}, {x: turnX - 50 - Math.random() * 100, y: endY}],
+              brightness: 0.6 + Math.random() * 0.4
+            });
+          }
+        }
+
+        // Create traces going RIGHT from center chip
+        for (let i = 0; i < 15; i++) {
+          const yOffset = (i - 7) * traceSpacing;
+          const startX = centerX + chipWidth/2;
+          const startY = centerY + yOffset;
+          const length = 150 + Math.random() * (canvas.width - centerX - chipWidth/2 - 50);
+
+          if (Math.random() > 0.4) {
+            traces.push({
+              points: [{x: startX, y: startY}, {x: startX + length, y: startY}],
+              brightness: 0.6 + Math.random() * 0.4
+            });
+          } else {
+            const turnX = startX + 50 + Math.random() * 100;
+            const turnDir = Math.random() > 0.5 ? 1 : -1;
+            const endY = startY + turnDir * (50 + Math.random() * 150);
+            traces.push({
+              points: [{x: startX, y: startY}, {x: turnX, y: startY}, {x: turnX, y: endY}, {x: turnX + 50 + Math.random() * 100, y: endY}],
+              brightness: 0.6 + Math.random() * 0.4
+            });
+          }
+        }
+
+        // Create traces going UP from center chip
+        for (let i = 0; i < 12; i++) {
+          const xOffset = (i - 6) * traceSpacing;
+          const startX = centerX + xOffset;
+          const startY = centerY - chipHeight/2;
+          const length = 100 + Math.random() * (centerY - chipHeight/2 - 50);
+
+          if (Math.random() > 0.5) {
+            traces.push({
+              points: [{x: startX, y: startY}, {x: startX, y: startY - length}],
+              brightness: 0.6 + Math.random() * 0.4
+            });
+          } else {
+            const turnY = startY - 30 - Math.random() * 80;
+            const turnDir = Math.random() > 0.5 ? 1 : -1;
+            const endX = startX + turnDir * (80 + Math.random() * 200);
+            traces.push({
+              points: [{x: startX, y: startY}, {x: startX, y: turnY}, {x: endX, y: turnY}],
+              brightness: 0.6 + Math.random() * 0.4
+            });
+          }
+        }
+
+        // Create traces going DOWN from center chip
+        for (let i = 0; i < 12; i++) {
+          const xOffset = (i - 6) * traceSpacing;
+          const startX = centerX + xOffset;
+          const startY = centerY + chipHeight/2;
+          const length = 100 + Math.random() * (canvas.height - centerY - chipHeight/2 - 50);
+
+          if (Math.random() > 0.5) {
+            traces.push({
+              points: [{x: startX, y: startY}, {x: startX, y: startY + length}],
+              brightness: 0.6 + Math.random() * 0.4
+            });
+          } else {
+            const turnY = startY + 30 + Math.random() * 80;
+            const turnDir = Math.random() > 0.5 ? 1 : -1;
+            const endX = startX + turnDir * (80 + Math.random() * 200);
+            traces.push({
+              points: [{x: startX, y: startY}, {x: startX, y: turnY}, {x: endX, y: turnY}],
+              brightness: 0.6 + Math.random() * 0.4
+            });
+          }
+        }
+
+        // Add some corner traces (diagonal quadrants)
+        const corners = [
+          { dx: -1, dy: -1 }, // top-left
+          { dx: 1, dy: -1 },  // top-right
+          { dx: -1, dy: 1 },  // bottom-left
+          { dx: 1, dy: 1 }    // bottom-right
+        ];
+
+        corners.forEach(({ dx, dy }) => {
+          for (let i = 0; i < 6; i++) {
+            const offset = i * traceSpacing;
+            const startX = centerX + dx * (chipWidth/2 + offset);
+            const startY = centerY + dy * (chipHeight/2);
+            const midX = startX + dx * (40 + Math.random() * 60);
+            const midY = startY;
+            const endX = midX;
+            const endY = midY + dy * (60 + Math.random() * 150);
+            const finalX = endX + dx * (50 + Math.random() * 200);
+
+            traces.push({
+              points: [{x: startX, y: startY}, {x: midX, y: midY}, {x: endX, y: endY}, {x: finalX, y: endY}],
+              brightness: 0.5 + Math.random() * 0.4
+            });
+          }
+        });
+
+        // Store traces as connections for animation
+        traces.forEach((trace, idx) => {
+          connections.push({
+            trace: trace,
+            index: idx
+          });
+
+          // Add node at end of each trace
+          const lastPoint = trace.points[trace.points.length - 1];
+          nodes.push({
+            x: lastPoint.x,
+            y: lastPoint.y,
+            size: 2 + Math.random() * 2,
+            brightness: trace.brightness,
+            pulsePhase: Math.random() * Math.PI * 2
+          });
+        });
+
+        // Initialize traveling pulses
+        for (let i = 0; i < 25; i++) {
+          if (connections.length > 0) {
+            createPulse();
+          }
+        }
+      }
+
+      function createPulse() {
+        const connIndex = Math.floor(Math.random() * connections.length);
+        pulses.push({
+          connectionIndex: connIndex,
+          progress: 0,
+          speed: 0.0025 + Math.random() * 0.005,
+          reverse: Math.random() > 0.5
+        });
+      }
+
+      function drawConnection(conn) {
+        const trace = conn.trace;
+        const points = trace.points;
+
+        ctx.strokeStyle = `rgba(212, 175, 55, ${trace.brightness * 0.25})`;
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+
+        // Draw trace with rounded corners
+        ctx.moveTo(points[0].x, points[0].y);
+
+        for (let i = 1; i < points.length; i++) {
+          const prev = points[i - 1];
+          const curr = points[i];
+          const next = points[i + 1];
+
+          if (next && i < points.length - 1) {
+            // Calculate corner radius
+            const radius = 8;
+
+            // Direction vectors
+            const dx1 = curr.x - prev.x;
+            const dy1 = curr.y - prev.y;
+            const dx2 = next.x - curr.x;
+            const dy2 = next.y - curr.y;
+
+            // Normalize and find corner points
+            const len1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+            const len2 = Math.sqrt(dx2*dx2 + dy2*dy2);
+
+            if (len1 > 0 && len2 > 0) {
+              const cornerStart = {
+                x: curr.x - (dx1/len1) * Math.min(radius, len1/2),
+                y: curr.y - (dy1/len1) * Math.min(radius, len1/2)
+              };
+              const cornerEnd = {
+                x: curr.x + (dx2/len2) * Math.min(radius, len2/2),
+                y: curr.y + (dy2/len2) * Math.min(radius, len2/2)
+              };
+
+              ctx.lineTo(cornerStart.x, cornerStart.y);
+              ctx.quadraticCurveTo(curr.x, curr.y, cornerEnd.x, cornerEnd.y);
+            } else {
+              ctx.lineTo(curr.x, curr.y);
+            }
+          } else {
+            ctx.lineTo(curr.x, curr.y);
+          }
+        }
+
+        ctx.stroke();
+      }
+
+      // Track bright flash nodes
+      let brightNodes = [];
+      let lastFlashTime = 0;
+
+      function updateBrightNodes(time) {
+        // Add new bright nodes every 1.5-2.5 seconds
+        if (time - lastFlashTime > 1500 + Math.random() * 1000) {
+          lastFlashTime = time;
+          // Pick 2-3 random nodes to flash
+          const numFlashes = 2 + Math.floor(Math.random() * 2);
+          for (let i = 0; i < numFlashes; i++) {
+            if (nodes.length > 0) {
+              const randomIdx = Math.floor(Math.random() * nodes.length);
+              brightNodes.push({
+                nodeIdx: randomIdx,
+                startTime: time,
+                duration: 1000 + Math.random() * 500
+              });
+            }
+          }
+        }
+
+        // Remove expired flashes
+        brightNodes = brightNodes.filter(b => time - b.startTime < b.duration);
+      }
+
+      function drawNode(node, time, nodeIdx) {
+        const pulse = Math.sin(time * 0.002 + node.pulsePhase) * 0.3 + 0.7;
+        let finalBrightness = node.brightness * pulse;
+
+        // Check if this node should be bright yellow
+        const flashInfo = brightNodes.find(b => b.nodeIdx === nodeIdx);
+        let isBright = false;
+        if (flashInfo) {
+          const flashProgress = (time - flashInfo.startTime) / flashInfo.duration;
+          // Fade in and out
+          const flashIntensity = Math.sin(flashProgress * Math.PI);
+          if (flashIntensity > 0.1) {
+            isBright = true;
+            finalBrightness = flashIntensity;
+          }
+        }
+
+        if (isBright) {
+          // Bright yellow flash - 70% smaller
+          ctx.fillStyle = `rgba(255, 255, 0, ${finalBrightness})`;
+          ctx.shadowColor = `rgba(255, 255, 0, 1)`;
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, node.size * 0.9, 0, Math.PI * 2);
+          ctx.fill();
+          // Add extra glow ring
+          ctx.strokeStyle = `rgba(255, 255, 100, ${finalBrightness * 0.5})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, node.size * 1.5, 0, Math.PI * 2);
+          ctx.stroke();
+        } else {
+          // Normal dim node
+          ctx.fillStyle = `rgba(${cyanColor.r}, ${cyanColor.g}, ${cyanColor.b}, ${finalBrightness * 0.5})`;
+          ctx.shadowColor = `rgba(${cyanColor.r}, ${cyanColor.g}, ${cyanColor.b}, ${finalBrightness * 0.5})`;
+          ctx.shadowBlur = 4;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+      }
+
+      function drawCentralChip() {
+        const chipWidth = 120;
+        const chipHeight = 80;
+
+        // Draw chip body
+        ctx.fillStyle = 'rgba(20, 40, 60, 0.9)';
+        ctx.strokeStyle = 'rgba(212, 175, 55, 0.6)';
+        ctx.lineWidth = 2;
+
+        // Rounded rectangle for chip
+        const x = centerX - chipWidth/2;
+        const y = centerY - chipHeight/2;
+        const r = 8;
+
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + chipWidth - r, y);
+        ctx.quadraticCurveTo(x + chipWidth, y, x + chipWidth, y + r);
+        ctx.lineTo(x + chipWidth, y + chipHeight - r);
+        ctx.quadraticCurveTo(x + chipWidth, y + chipHeight, x + chipWidth - r, y + chipHeight);
+        ctx.lineTo(x + r, y + chipHeight);
+        ctx.quadraticCurveTo(x, y + chipHeight, x, y + chipHeight - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Inner detail rectangle
+        ctx.strokeStyle = 'rgba(212, 175, 55, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(centerX - 40, centerY - 25, 80, 50);
+
+        // Dot pattern inside chip
+        ctx.fillStyle = 'rgba(212, 175, 55, 0.15)';
+        for (let row = 0; row < 4; row++) {
+          for (let col = 0; col < 6; col++) {
+            ctx.beginPath();
+            ctx.arc(centerX - 30 + col * 12, centerY - 15 + row * 10, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+
+      function drawPulse(pulse) {
+        const conn = connections[pulse.connectionIndex];
+        if (!conn || !conn.trace) return;
+
+        const points = conn.trace.points;
+        const progress = pulse.reverse ? 1 - pulse.progress : pulse.progress;
+
+        // Calculate total path length
+        let totalLength = 0;
+        const segmentLengths = [];
+        for (let i = 1; i < points.length; i++) {
+          const dx = points[i].x - points[i-1].x;
+          const dy = points[i].y - points[i-1].y;
+          const len = Math.sqrt(dx*dx + dy*dy);
+          segmentLengths.push(len);
+          totalLength += len;
+        }
+
+        // Find position along path
+        let targetDist = progress * totalLength;
+        let x = points[0].x;
+        let y = points[0].y;
+
+        let accumulatedDist = 0;
+        for (let i = 0; i < segmentLengths.length; i++) {
+          if (accumulatedDist + segmentLengths[i] >= targetDist) {
+            const segProgress = (targetDist - accumulatedDist) / segmentLengths[i];
+            x = points[i].x + (points[i+1].x - points[i].x) * segProgress;
+            y = points[i].y + (points[i+1].y - points[i].y) * segProgress;
+            break;
+          }
+          accumulatedDist += segmentLengths[i];
+        }
+
+        // Draw glowing pulse (50% less visible)
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, 8);
+        gradient.addColorStop(0, 'rgba(255, 240, 150, 0.5)');
+        gradient.addColorStop(0.3, 'rgba(255, 215, 0, 0.35)');
+        gradient.addColorStop(1, 'rgba(212, 175, 55, 0)');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, 8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function drawCenterGlow(time) {
+        const pulse = Math.sin(time * 0.001) * 0.2 + 0.8;
+        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 150);
+        gradient.addColorStop(0, `rgba(255, 215, 0, ${0.4 * pulse})`);
+        gradient.addColorStop(0.3, `rgba(212, 175, 55, ${0.15 * pulse})`);
+        gradient.addColorStop(1, 'rgba(150, 120, 30, 0)');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 150, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function animate(time) {
+        // Dark background
+        ctx.fillStyle = darkBg;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw center glow
+        drawCenterGlow(time);
+
+        // Draw connections (traces)
+        connections.forEach(drawConnection);
+
+        // Draw central chip
+        drawCentralChip();
+
+        // Update bright flash nodes
+        updateBrightNodes(time);
+
+        // Draw endpoint nodes (pass index for flash check)
+        nodes.forEach((node, idx) => drawNode(node, time, idx));
+
+        // Update and draw pulses
+        pulses.forEach((pulse, index) => {
+          pulse.progress += pulse.speed;
+          if (pulse.progress >= 1) {
+            // Reset pulse to a new connection
+            pulse.connectionIndex = Math.floor(Math.random() * connections.length);
+            pulse.progress = 0;
+            pulse.reverse = Math.random() > 0.5;
+          }
+          drawPulse(pulse);
+        });
+
+        // Occasionally add new pulses
+        if (Math.random() < 0.01 && pulses.length < 30) {
+          createPulse();
+        }
+
+        requestAnimationFrame(animate);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+      requestAnimationFrame(animate);
+    })();
+
+    // ========================================
+    // STRIPE INTEGRATION
+    // ========================================
+    let stripe;
+    let cardNumber, cardExpiry, cardCvc;
+    let selectedPlan = null;
+
+    // Get plan info from URL
+    function getPlanFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        planId: params.get('plan') || 'standard',
+        billing: params.get('billing') || 'monthly'
+      };
+    }
+
+    // Plan pricing data (cents) - matches database values
+    const plans = {
+      free: { name: 'Free Edition', monthly: 0, yearly: 0 },
+      standard: { name: 'Standard Edition', monthly: 1995, yearly: 19995 },
+      ministry: { name: 'Ministry Edition', monthly: 4995, yearly: 49995 },
+      business: { name: 'Business Edition', monthly: 9995, yearly: 99995 }
+    };
+
+    // Format price
+    function formatPrice(cents) {
+      return '$' + (cents / 100).toFixed(2);
+    }
+
+    // Initialize page with plan info
+    function initPlanInfo() {
+      const { planId, billing } = getPlanFromURL();
+      const plan = plans[planId] || plans.standard;
+      const isYearly = billing === 'yearly';
+      const price = isYearly ? plan.yearly : plan.monthly;
+      const cycle = isYearly ? 'year' : 'month';
+
+      selectedPlan = { ...plan, planId, billing, price };
+
+      document.getElementById('buttonPrice').textContent = formatPrice(price) + ' / ' + cycle;
+      document.getElementById('successPlanName').textContent = plan.name;
+    }
+
+    // Initialize Stripe Elements
+    async function initStripe() {
+      // Set up expiry, CVC, and ZIP input formatting
+      setupExpiryInput();
+      setupCvcInput();
+      setupZipInput();
+
+      try {
+        // Get publishable key from server
+        const response = await fetch('/api/billing/stripe-config');
+        if (!response.ok) {
+          console.warn('Stripe config not available, using demo mode');
+          initDemoMode();
+          return;
+        }
+
+        const { publishableKey } = await response.json();
+        stripe = Stripe(publishableKey);
+
+        const elements = stripe.elements({
+          fonts: [{ cssSrc: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap' }]
+        });
+
+        const elementStyle = {
+          base: {
+            color: '#ffffff',
+            fontFamily: 'Inter, monospace',
+            fontSize: '16px',
+            letterSpacing: '0.5px',
+            '::placeholder': {
+              color: '#ffffff'
+            }
+          },
+          invalid: {
+            color: '#f87171'
+          }
+        };
+
+        // Only use Stripe element for card number
+        cardNumber = elements.create('cardNumber', { style: elementStyle, placeholder: '4242 4242 4242 4242' });
+        cardNumber.mount('#cardNumber');
+
+        // Update card brand icon on card type change
+        cardNumber.on('change', (event) => {
+          updateCardBrand(event.brand);
+        });
+
+      } catch (error) {
+        console.error('Failed to initialize Stripe:', error);
+        initDemoMode();
+      }
+    }
+
+    // Setup expiry input formatting (MM / YY)
+    function setupExpiryInput() {
+      const expiryInput = document.getElementById('cardExpiry');
+      if (expiryInput) {
+        expiryInput.addEventListener('input', (e) => {
+          let value = e.target.value.replace(/\D/g, '');
+          if (value.length >= 2) {
+            value = value.substring(0, 2) + ' / ' + value.substring(2, 4);
+          }
+          e.target.value = value;
+        });
+      }
+    }
+
+    // Setup CVC input (numbers only)
+    function setupCvcInput() {
+      const cvcInput = document.getElementById('cardCvc');
+      if (cvcInput) {
+        cvcInput.addEventListener('input', (e) => {
+          e.target.value = e.target.value.replace(/\D/g, '');
+        });
+      }
+    }
+
+    // Setup ZIP code input (numbers only)
+    function setupZipInput() {
+      const zipInput = document.getElementById('cardZip');
+      if (zipInput) {
+        zipInput.addEventListener('input', (e) => {
+          e.target.value = e.target.value.replace(/\D/g, '');
+        });
+      }
+    }
+
+    // Demo mode for development/testing
+    function initDemoMode() {
+      console.log('Running in demo mode - no real payments');
+
+      // Replace Stripe card number element with regular input
+      document.getElementById('cardNumber').innerHTML = '<input type="text" placeholder="4242 4242 4242 4242" maxlength="19" id="demoCardNumber">';
+
+      // Style the demo card number input
+      const cardInput = document.getElementById('demoCardNumber');
+      if (cardInput) {
+        cardInput.style.cssText = 'width:100%;background:transparent;border:none;padding:8px 0;font-size:16px;font-family:Inter,monospace;color:#fff;letter-spacing:2px;outline:none;';
+        cardInput.addEventListener('input', (e) => {
+          let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
+          value = value.match(/.{1,4}/g)?.join(' ') || value;
+          e.target.value = value;
+        });
+      }
+    }
+
+    // Update card brand icon
+    function updateCardBrand(brand) {
+      const brandEl = document.getElementById('cardBrand');
+      const brands = {
+        visa: '<svg viewBox="0 0 48 48"><path fill="rgba(212,175,55,0.8)" d="M44 12v24c0 2.2-1.8 4-4 4H8c-2.2 0-4-1.8-4-4V12c0-2.2 1.8-4 4-4h32c2.2 0 4 1.8 4 4z"/><path fill="#000" d="M19.5 30l1.8-11h2.9l-1.8 11h-2.9zm12.2-10.7c-.6-.2-1.4-.5-2.5-.5-2.8 0-4.8 1.5-4.8 3.6 0 1.6 1.4 2.4 2.5 3 1.1.5 1.5.9 1.5 1.4 0 .7-.9 1.1-1.8 1.1-1.2 0-1.8-.2-2.8-.6l-.4-.2-.4 2.5c.7.3 2 .6 3.3.6 3 0 4.9-1.5 4.9-3.7 0-1.2-.7-2.2-2.4-3-.9-.5-1.5-.8-1.5-1.3 0-.4.5-.9 1.5-.9.9 0 1.5.2 2 .4l.2.1.4-2.5zm7.3-.2h-2.2c-.7 0-1.2.2-1.5.9l-4.2 10h3l.6-1.6h3.6l.3 1.6h2.6l-2.2-10.9zm-3.5 7l1.5-4 .8 4h-2.3zM18 19l-2.8 7.5-.3-1.5c-.5-1.7-2-3.5-3.7-4.4l2.5 9.4h3L21 19h-3z"/></svg>',
+        mastercard: '<svg viewBox="0 0 48 48"><circle fill="rgba(212,175,55,0.8)" cx="19" cy="24" r="11"/><circle fill="rgba(180,140,30,0.8)" cx="29" cy="24" r="11"/></svg>',
+        amex: '<svg viewBox="0 0 48 48"><rect fill="rgba(212,175,55,0.8)" x="4" y="12" width="40" height="24" rx="4"/><text x="24" y="28" fill="#000" font-size="10" text-anchor="middle" font-weight="bold">AMEX</text></svg>',
+        discover: '<svg viewBox="0 0 48 48"><rect fill="rgba(212,175,55,0.8)" x="4" y="12" width="40" height="24" rx="4"/><circle fill="#000" cx="30" cy="24" r="8"/></svg>'
+      };
+
+      if (brands[brand]) {
+        brandEl.innerHTML = brands[brand];
+      }
+    }
+
+    // Handle payment submission
+    async function handlePayment() {
+      const button = document.getElementById('paymentButton');
+      const card = document.getElementById('creditCard');
+      const cardholderName = document.getElementById('cardholderName').value.trim();
+      const termsCheckbox = document.getElementById('termsCheckbox');
+
+      // Check if terms are accepted
+      if (!termsCheckbox.checked) {
+        showErrorPopup('Terms Agreement Required', 'Please accept the Terms & Conditions by checking the checkbox before proceeding with your payment.');
+        return;
+      }
+
+      if (!cardholderName) {
+        showErrorPopup('Missing Information', 'Please enter the cardholder name to continue.');
+        return;
+      }
+
+      // Start processing state
+      button.disabled = true;
+      button.classList.add('processing');
+      card.classList.add('processing');
+      hideError();
+
+      try {
+        // Check if we're in demo mode
+        if (!stripe) {
+          // Demo mode - simulate payment
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          showSuccess();
+          return;
+        }
+
+        // Create payment method with Stripe
+        const { paymentMethod, error } = await stripe.createPaymentMethod({
+          type: 'card',
+          card: cardNumber,
+          billing_details: {
+            name: cardholderName
+          }
+        });
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        // Send to server to create subscription
+        const response = await fetch('/api/billing/create-subscription', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            paymentMethodId: paymentMethod.id,
+            planId: selectedPlan.planId,
+            billing: selectedPlan.billing
+          })
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || 'Payment failed');
+        }
+
+        // Handle 3D Secure if required
+        if (result.requiresAction) {
+          const { error: confirmError } = await stripe.confirmCardPayment(result.clientSecret);
+          if (confirmError) {
+            throw new Error(confirmError.message);
+          }
+        }
+
+        showSuccess();
+
+      } catch (error) {
+        showErrorPopup('Payment Error', error.message);
+        button.disabled = false;
+        button.classList.remove('processing');
+        card.classList.remove('processing');
+      }
+    }
+
+    // Show error message
+    function showError(message) {
+      const statusEl = document.getElementById('statusMessage');
+      statusEl.classList.remove('success');
+      statusEl.classList.add('error');
+      statusEl.querySelector('.message-text').textContent = message;
+    }
+
+    // Hide error message
+    function hideError() {
+      const statusEl = document.getElementById('statusMessage');
+      statusEl.classList.remove('error', 'success');
+    }
+
+    // Show success overlay
+    function showSuccess() {
+      const overlay = document.getElementById('successOverlay');
+      overlay.classList.add('show');
+    }
+
+    // Show error popup
+    function showErrorPopup(title, message) {
+      const overlay = document.getElementById('errorPopupOverlay');
+      document.getElementById('errorPopupTitle').textContent = title;
+      document.getElementById('errorPopupMessage').textContent = message;
+      overlay.classList.add('show');
+    }
+
+    // Hide error popup
+    function hideErrorPopup() {
+      const overlay = document.getElementById('errorPopupOverlay');
+      overlay.classList.remove('show');
+    }
+
+    // Error popup button event listener
+    document.getElementById('errorPopupBtn').addEventListener('click', hideErrorPopup);
+
+    // Close popup on overlay click (outside the popup box)
+    document.getElementById('errorPopupOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        hideErrorPopup();
+      }
+    });
+
+    // Close popup on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        hideErrorPopup();
+      }
+    });
+
+    // Event listeners
+    document.getElementById('paymentButton').addEventListener('click', handlePayment);
+
+    // Continue button - navigate to search page
+    document.getElementById('continueBtn').addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = '/search';
+    });
+
+    // Allow Enter key to submit
+    document.getElementById('cardholderName').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        handlePayment();
+      }
+    });
+
+    // Fetch user name from session and populate cardholder field
+    async function fetchUserName() {
+      try {
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.user) {
+            // Use displayName from the user record
+            const fullName = data.user.displayName || data.user.display_name || '';
+            if (fullName) {
+              document.getElementById('cardholderName').value = fullName;
+            }
+          }
+        }
+      } catch (error) {
+        console.log('Could not fetch user info:', error);
+      }
+    }
+
+    // Initialize
+    initPlanInfo();
+    initStripe();
+    fetchUserName();
+  </script>
+</body>
+</html>

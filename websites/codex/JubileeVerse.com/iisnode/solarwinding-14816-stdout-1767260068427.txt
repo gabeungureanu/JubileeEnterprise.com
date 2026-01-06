@@ -1,0 +1,23 @@
+{"timestamp":"2026-01-01T09:34:30.435Z","level":"info","message":"Using mock Redis client (development mode)","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-01T09:34:30.470Z","level":"info","message":"Session: Using memory store","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-01T09:34:30.565Z","level":"info","message":"Session store configured with PostgreSQL","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-01T09:34:30.572Z","level":"info","message":"AI Response Worker initialized","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","concurrency":10,"limiter":{"max":50,"duration":1000}}
+{"timestamp":"2026-01-01T09:34:30.573Z","level":"info","message":"Queue workers initialized","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-01T09:34:30.575Z","level":"info","message":"Starting attachment cleanup job scheduler","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","intervalMs":86400000}
+{"timestamp":"2026-01-01T09:34:30.576Z","level":"info","message":"Starting attachment cleanup job","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-01T09:34:30.578Z","level":"info","message":"Starting expired attachments cleanup","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-01T09:34:30.581Z","level":"info","message":"Attachment cleanup job started","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-01T09:34:30.582Z","level":"info","message":"Starting analytics aggregation job scheduler","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","intervalMs":86400000}
+{"timestamp":"2026-01-01T09:34:30.584Z","level":"info","message":"Starting analytics aggregation job","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-01T09:34:30.587Z","level":"info","message":"Monthly analytics aggregation job started","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-01T09:34:30.590Z","level":"info","message":"JubileeVerse initialized for IISNode","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-01T09:34:30.614Z","level":"info","message":"PostgreSQL connection initialized","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","host":"localhost","port":5432,"database":"jubileeverse"}
+{"timestamp":"2026-01-01T09:34:30.654Z","level":"info","message":"Qdrant connection initialized (mock mode)","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-01T09:34:30.655Z","level":"info","message":"All database connections established","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-01T09:34:30.736Z","level":"info","message":"Expired attachments cleanup completed","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","totalExpired":0,"deleted":0,"errors":0}
+{"timestamp":"2026-01-01T09:34:30.737Z","level":"info","message":"Attachment cleanup job completed","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","totalExpired":0,"deleted":0,"errors":0}
+{"timestamp":"2026-01-01T09:34:30.855Z","level":"info","message":"First of month - finalizing previous month analytics","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","previousYearMonth":"2025-12"}
+Month 2025-12 finalized, affected users: 0
+{"timestamp":"2026-01-01T09:34:30.861Z","level":"info","message":"Previous month finalized","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","previousYearMonth":"2025-12","count":0}
+{"timestamp":"2026-01-01T09:34:30.866Z","level":"info","message":"Processing user analytics","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","yearMonth":"2026-01","userCount":0}
+{"timestamp":"2026-01-01T09:34:30.867Z","level":"info","message":"Analytics aggregation job completed","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","yearMonth":"2026-01","usersProcessed":0,"usersSucceeded":0,"usersFailed":0,"processingTimeMs":282}

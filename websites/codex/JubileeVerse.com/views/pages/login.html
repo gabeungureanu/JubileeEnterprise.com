@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>JubileeVerse - Sign In</title>
+  <link rel="icon" type="image/png" href="/images/personas/jubilee.png">
+  <link rel="apple-touch-icon" href="/images/personas/jubilee.png">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Agency FB';
+      font-weight: bold;
+      font-display: swap;
+      src: url('/fonts/AGENCYB.TTF');
+    }
+    @font-face {
+      font-family: 'Agency FB';
+      font-display: swap;
+      src: url('/fonts/AGENCYR.TTF');
+    }
+  </style>
+  <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+  <!-- Animated waving yellow bar -->
+  <div class="wave-bar"></div>
+
+  <div class="login-container">
+    <div class="login-row">
+      <!-- Left Panel - Form -->
+      <div class="login-form-panel">
+        <div class="login-form-content">
+          <div class="login-form-inner">
+            <!-- Logo -->
+            <div class="login-logo">
+              <a href="/">
+                <img src="/images/personas/jubilee.png" alt="JubileeVerse" class="login-logo-img">
+                <div class="login-logo-text">
+                  Jubilee<span class="verse">Verse</span><span class="dotcom">.com</span>
+                </div>
+              </a>
+            </div>
+
+            <!-- Welcome Text -->
+            <div class="login-welcome">
+              <p>Don't have an account? <a href="/register">Sign Up</a>.</p>
+            </div>
+
+            <!-- Alert container -->
+            <div id="auth-alert" class="auth-alert" style="display: none;"></div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="login-form" novalidate>
+              <!-- Email Field -->
+              <div class="floating-label-group">
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email"
+                  name="email"
+                  autocomplete="email"
+                  tabindex="1"
+                  placeholder=" "
+                  required
+                >
+                <label class="floating-label">Email Address</label>
+                <span class="field-error" id="email-error"></span>
+              </div>
+
+              <!-- Password Field -->
+              <div class="floating-label-group password-div">
+                <div class="password-input-wrapper">
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="password"
+                    name="password"
+                    autocomplete="current-password"
+                    data-form-type="other"
+                    tabindex="2"
+                    placeholder=" "
+                    required
+                  >
+                  <label class="floating-label">Password</label>
+                  <button class="btn-eye" type="button" id="password-toggle" tabindex="3">
+                    <svg class="eye-open" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <svg class="eye-closed" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  </button>
+                </div>
+                <div class="forgot-password-row">
+                  <a href="/forgot-password" class="forgot-password-link">Forgot Password?</a>
+                </div>
+                <span class="field-error" id="password-error"></span>
+              </div>
+
+              <!-- Remember Me -->
+              <div class="remember-row">
+                <label class="checkbox-wrapper">
+                  <input type="checkbox" id="remember" name="remember" checked>
+                  <span class="checkmark"></span>
+                  <span class="checkbox-label">Remember me</span>
+                </label>
+              </div>
+
+              <!-- Submit Button -->
+              <button type="submit" class="btn-login" id="submit-btn" tabindex="4">
+                Sign In
+              </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="login-footer">
+              <p class="copyright">
+                &copy; <span id="currentYear"></span> JubileeVerse.com |
+                <a href="/terms">Terms of Use</a> |
+                <a href="/privacy">Privacy Policy</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel - Background Image -->
+      <div class="login-bg-panel" id="backgroundImageContainer">
+        <div class="bg-overlay"></div>
+        <ul class="bg-bubbles">
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+        </ul>
+        <div class="bg-content">
+          <div class="bg-quote">
+            <blockquote>
+              "For where two or three gather in my name, there am I with them."
+            </blockquote>
+            <cite>Matthew 18:20</cite>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Validation Error Modal -->
+  <div class="success-modal-overlay" id="validationModal" style="display: none;">
+    <div class="success-modal terms-error-modal">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" width="60" height="60" fill="none" stroke="#f0ad4e" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M15 9l-6 6M9 9l6 6"/>
+        </svg>
+      </div>
+      <p id="validationMessage">Please fill in all required fields.</p>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set current year
+      document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+      // Background image rotation
+      var backgroundImages = [
+        '/images/slider/login-bg.jpg',
+        '/images/slider/slider-bg-2.jpg',
+        '/images/slider/slider-bg-3.jpg',
+        '/images/slider/slider-bg-4.jpg',
+        '/images/slider/slider-bg-5.jpg'
+      ];
+      var bgContainer = document.getElementById('backgroundImageContainer');
+      var currentBgIndex = 0;
+
+      function changeBackgroundImage() {
+        var randomIndex = Math.floor(Math.random() * backgroundImages.length);
+        bgContainer.style.backgroundImage = "url('" + backgroundImages[randomIndex] + "')";
+      }
+
+      // Set initial background and rotate every 4 seconds
+      changeBackgroundImage();
+      setInterval(changeBackgroundImage, 4000);
+
+      // Form elements
+      var form = document.getElementById('login-form');
+      var emailInput = document.getElementById('email');
+      var passwordInput = document.getElementById('password');
+      var submitBtn = document.getElementById('submit-btn');
+      var alertEl = document.getElementById('auth-alert');
+      var passwordToggle = document.getElementById('password-toggle');
+      var validationModal = document.getElementById('validationModal');
+      var validationMessage = document.getElementById('validationMessage');
+
+      // Password visibility toggle
+      passwordToggle.addEventListener('click', function() {
+        var type = passwordInput.type === 'password' ? 'text' : 'password';
+        passwordInput.type = type;
+
+        var eyeOpen = this.querySelector('.eye-open');
+        var eyeClosed = this.querySelector('.eye-closed');
+
+        if (type === 'text') {
+          eyeOpen.style.display = 'none';
+          eyeClosed.style.display = 'block';
+        } else {
+          eyeOpen.style.display = 'block';
+          eyeClosed.style.display = 'none';
+        }
+      });
+
+      // Form submission
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Clear previous errors
+        clearErrors();
+
+        // Validate - check for first error to display in modal
+        var errorMessage = null;
+
+        if (!emailInput.value.trim()) {
+          errorMessage = 'Email is required.';
+          emailInput.classList.add('is-error');
+        } else if (!isValidEmail(emailInput.value)) {
+          errorMessage = 'Please enter a valid email.';
+          emailInput.classList.add('is-error');
+        } else if (!passwordInput.value) {
+          errorMessage = 'Password is required.';
+          passwordInput.classList.add('is-error');
+        }
+
+        if (errorMessage) {
+          validationMessage.textContent = errorMessage;
+          validationModal.style.display = 'flex';
+          return;
+        }
+
+        // Submit
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner"></span> Signing in...';
+
+        try {
+          var response = await fetch('/auth/login', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              email: emailInput.value,
+              password: passwordInput.value,
+              remember: document.getElementById('remember').checked
+            })
+          });
+
+          var data = await response.json();
+
+          if (response.ok && data.success) {
+            // Redirect immediately
+            var params = new URLSearchParams(window.location.search);
+            var redirect = params.get('redirect');
+            window.location.href = redirect || data.redirect || '/';
+          } else {
+            // Show error in popup modal
+            validationMessage.textContent = data.error || 'Invalid email or password.';
+            validationModal.style.display = 'flex';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Sign In';
+          }
+        } catch (error) {
+          // Show error in popup modal
+          validationMessage.textContent = 'An error occurred. Please try again.';
+          validationModal.style.display = 'flex';
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Sign In';
+        }
+      });
+
+      function showFieldError(field, message) {
+        var input = document.getElementById(field);
+        var error = document.getElementById(field + '-error');
+        input.classList.add('is-error');
+        if (error) error.textContent = message;
+      }
+
+      function clearErrors() {
+        document.querySelectorAll('.form-control').forEach(function(input) {
+          input.classList.remove('is-error');
+        });
+        document.querySelectorAll('.field-error').forEach(function(error) {
+          error.textContent = '';
+        });
+        alertEl.style.display = 'none';
+      }
+
+      function showAlert(type, message) {
+        alertEl.className = 'auth-alert auth-alert--' + type;
+        alertEl.textContent = message;
+        alertEl.style.display = 'flex';
+      }
+
+      function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      }
+
+      // Enter key on inputs
+      emailInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          passwordInput.focus();
+        }
+      });
+
+      passwordInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          form.dispatchEvent(new Event('submit'));
+        }
+      });
+
+      // Block extension popups by preventing their injection
+      (function() {
+        var observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+              if (node.nodeType === 1) {
+                // Check for common password manager and popup elements
+                var shouldHide = false;
+                if (node.id && (node.id.toLowerCase().includes('norton') ||
+                                node.id.toLowerCase().includes('lastpass') ||
+                                node.id.toLowerCase().includes('dashlane') ||
+                                node.id.toLowerCase().includes('credential'))) {
+                  shouldHide = true;
+                }
+                if (node.className && typeof node.className === 'string' &&
+                    (node.className.toLowerCase().includes('norton') ||
+                     node.className.toLowerCase().includes('lastpass') ||
+                     node.className.toLowerCase().includes('dashlane') ||
+                     node.className.toLowerCase().includes('credential'))) {
+                  shouldHide = true;
+                }
+                if (node.tagName === 'IFRAME' && node.src && node.src.includes('accounts.google')) {
+                  shouldHide = true;
+                }
+                if (shouldHide) {
+                  node.style.display = 'none';
+                  node.style.visibility = 'hidden';
+                }
+              }
+            });
+          });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+      })();
+
+      // Close validation modal when clicking outside or on the modal
+      validationModal.addEventListener('click', function(e) {
+        validationModal.style.display = 'none';
+      });
+    });
+  </script>
+</body>
+</html>

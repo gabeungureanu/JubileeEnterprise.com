@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>JubileeVerse - Sign Up</title>
+  <link rel="icon" type="image/png" href="/images/personas/jubilee.png">
+  <link rel="apple-touch-icon" href="/images/personas/jubilee.png">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Agency FB';
+      font-weight: bold;
+      font-display: swap;
+      src: url('/fonts/AGENCYB.TTF');
+    }
+    @font-face {
+      font-family: 'Agency FB';
+      font-display: swap;
+      src: url('/fonts/AGENCYR.TTF');
+    }
+  </style>
+  <link rel="stylesheet" href="/css/register.css">
+</head>
+<body>
+  <!-- Animated waving yellow bar -->
+  <div class="wave-bar"></div>
+
+  <div class="register-container">
+    <div class="register-row">
+      <!-- Left Panel - Form -->
+      <div class="register-form-panel">
+        <div class="register-form-content">
+          <div class="register-form-inner">
+            <!-- Logo -->
+            <div class="register-logo">
+              <a href="/">
+                <img src="/images/personas/jubilee.png" alt="JubileeVerse" class="register-logo-img">
+                <div class="register-logo-text">
+                  Jubilee<span class="verse">Verse</span><span class="dotcom">.com</span>
+                </div>
+              </a>
+            </div>
+
+            <!-- Welcome Text -->
+            <div class="register-welcome">
+              <p>Already have an account? <a href="/login">Sign In</a>.</p>
+            </div>
+
+            <!-- Alert container -->
+            <div id="auth-alert" class="auth-alert" style="display: none;"></div>
+
+            <!-- Register Form -->
+            <form id="register-form" class="register-form" novalidate>
+              <!-- Full Name Field -->
+              <div class="floating-label-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="displayName"
+                  name="displayName"
+                  autocomplete="name"
+                  tabindex="1"
+                  placeholder=" "
+                  required
+                >
+                <label class="floating-label">Full Name</label>
+                <span class="field-error" id="displayName-error"></span>
+              </div>
+
+              <!-- Email Field -->
+              <div class="floating-label-group">
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email"
+                  name="email"
+                  autocomplete="email"
+                  tabindex="2"
+                  placeholder=" "
+                  required
+                >
+                <label class="floating-label">Email Address</label>
+                <span class="field-error" id="email-error"></span>
+              </div>
+
+              <!-- Password Field -->
+              <div class="floating-label-group password-div">
+                <div class="password-input-wrapper">
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="password"
+                    name="password"
+                    autocomplete="new-password"
+                    data-form-type="other"
+                    tabindex="3"
+                    placeholder=" "
+                    required
+                    minlength="8"
+                  >
+                  <label class="floating-label">Password</label>
+                  <button class="btn-eye" type="button" id="password-toggle" tabindex="4">
+                    <svg class="eye-open" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <svg class="eye-closed" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  </button>
+                </div>
+                <span class="field-error" id="password-error"></span>
+              </div>
+
+              <!-- Newsletter Checkbox -->
+              <div class="checkbox-group">
+                <label class="checkbox-wrapper">
+                  <input type="checkbox" id="newsletter" name="newsletter" checked>
+                  <span class="checkmark"></span>
+                  <span class="checkbox-label">Subscribe me to the newsletter</span>
+                </label>
+              </div>
+
+              <!-- Terms Checkbox -->
+              <div class="checkbox-group">
+                <label class="checkbox-wrapper">
+                  <input type="checkbox" id="terms" name="terms" required>
+                  <span class="checkmark"></span>
+                  <span class="checkbox-label">
+                    Yes, I agree to <a href="/terms" target="_blank">Terms of Use</a> and <a href="/privacy" target="_blank">Privacy Policy</a>
+                  </span>
+                </label>
+                <span class="field-error" id="terms-error"></span>
+              </div>
+
+              <!-- Submit Button -->
+              <button type="submit" class="btn-register" id="submit-btn" tabindex="5">
+                Create Account
+              </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="register-footer">
+              <p class="copyright">
+                &copy; <span id="currentYear"></span> JubileeVerse.com |
+                <a href="/terms">Terms of Use</a> |
+                <a href="/privacy">Privacy Policy</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel - Background Image -->
+      <div class="register-bg-panel" id="backgroundImageContainer">
+        <div class="bg-overlay"></div>
+        <ul class="bg-bubbles">
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+        </ul>
+        <div class="bg-content">
+          <div class="bg-quote">
+            <blockquote>
+              "Therefore, if anyone is in Christ, the new creation has come: The old has gone, the new is here!"
+            </blockquote>
+            <cite>2 Corinthians 5:17</cite>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="success-modal-overlay" id="successModal" style="display: none;">
+    <div class="success-modal">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" width="60" height="60" fill="none" stroke="#4ade80" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+      </div>
+      <h2>Awesome!</h2>
+      <p>Account created successfully!<br>Welcome to JubileeVerse.</p>
+      <button class="btn-register" onclick="window.location.href='/chat'">Start Chatting</button>
+    </div>
+  </div>
+
+  <!-- Validation Error Modal -->
+  <div class="success-modal-overlay" id="validationModal" style="display: none;">
+    <div class="success-modal terms-error-modal">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" width="60" height="60" fill="none" stroke="#f0ad4e" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M15 9l-6 6M9 9l6 6"/>
+        </svg>
+      </div>
+      <p id="validationMessage">Please fill in all required fields.</p>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set current year
+      document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+      // Background image rotation
+      var backgroundImages = [
+        '/images/slider/login-bg.jpg',
+        '/images/slider/slider-bg-2.jpg',
+        '/images/slider/slider-bg-3.jpg',
+        '/images/slider/slider-bg-4.jpg',
+        '/images/slider/slider-bg-5.jpg'
+      ];
+      var bgContainer = document.getElementById('backgroundImageContainer');
+      var currentBgIndex = 0;
+
+      function changeBackgroundImage() {
+        var randomIndex = Math.floor(Math.random() * backgroundImages.length);
+        bgContainer.style.backgroundImage = "url('" + backgroundImages[randomIndex] + "')";
+      }
+
+      // Set initial background and rotate every 4 seconds
+      changeBackgroundImage();
+      setInterval(changeBackgroundImage, 4000);
+
+      // Form elements
+      var form = document.getElementById('register-form');
+      var displayNameInput = document.getElementById('displayName');
+      var emailInput = document.getElementById('email');
+      var passwordInput = document.getElementById('password');
+      var termsInput = document.getElementById('terms');
+      var submitBtn = document.getElementById('submit-btn');
+      var alertEl = document.getElementById('auth-alert');
+      var passwordToggle = document.getElementById('password-toggle');
+      var successModal = document.getElementById('successModal');
+      var validationModal = document.getElementById('validationModal');
+      var validationMessage = document.getElementById('validationMessage');
+      var redirectToLoginOnClose = false;
+
+      // Password visibility toggle
+      passwordToggle.addEventListener('click', function() {
+        var type = passwordInput.type === 'password' ? 'text' : 'password';
+        passwordInput.type = type;
+
+        var eyeOpen = this.querySelector('.eye-open');
+        var eyeClosed = this.querySelector('.eye-closed');
+
+        if (type === 'text') {
+          eyeOpen.style.display = 'none';
+          eyeClosed.style.display = 'block';
+        } else {
+          eyeOpen.style.display = 'block';
+          eyeClosed.style.display = 'none';
+        }
+      });
+
+      // Form submission
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Clear previous errors
+        clearErrors();
+
+        // Validate - check for first error to display in modal
+        var errorMessage = null;
+
+        if (!displayNameInput.value.trim()) {
+          errorMessage = 'Full Name is required.';
+          displayNameInput.classList.add('is-error');
+        } else if (!emailInput.value.trim()) {
+          errorMessage = 'Email is required.';
+          emailInput.classList.add('is-error');
+        } else if (!isValidEmail(emailInput.value)) {
+          errorMessage = 'Please enter a valid email.';
+          emailInput.classList.add('is-error');
+        } else if (!passwordInput.value) {
+          errorMessage = 'Password is required.';
+          passwordInput.classList.add('is-error');
+        } else if (passwordInput.value.length < 8) {
+          errorMessage = 'Password must be at least 8 characters.';
+          passwordInput.classList.add('is-error');
+        } else if (!termsInput.checked) {
+          errorMessage = 'Please agree to the Terms and Conditions.';
+        }
+
+        if (errorMessage) {
+          validationMessage.textContent = errorMessage;
+          validationModal.style.display = 'flex';
+          return;
+        }
+
+        // Submit
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner"></span> Creating account...';
+
+        try {
+          var response = await fetch('/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              displayName: displayNameInput.value.trim(),
+              email: emailInput.value.trim(),
+              password: passwordInput.value,
+              preferredLanguage: 'en'
+            })
+          });
+
+          var data = await response.json();
+
+          if (response.ok && data.success) {
+            // Show success modal
+            successModal.style.display = 'flex';
+          } else {
+            // Show error in popup modal
+            var errorMsg = data.error || 'Registration failed. Please try again.';
+            validationMessage.textContent = errorMsg;
+            validationModal.style.display = 'flex';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create Account';
+
+            // Check if email is already registered - redirect to login on modal close
+            if (errorMsg.toLowerCase().includes('already registered')) {
+              redirectToLoginOnClose = true;
+            }
+          }
+        } catch (error) {
+          // Show error in popup modal with actual error details
+          console.error('Registration error:', error);
+          validationMessage.textContent = error.message || 'An error occurred. Please try again.';
+          validationModal.style.display = 'flex';
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Create Account';
+        }
+      });
+
+      function showFieldError(field, message) {
+        var input = document.getElementById(field);
+        var error = document.getElementById(field + '-error');
+        if (input) input.classList.add('is-error');
+        if (error) error.textContent = message;
+      }
+
+      function clearErrors() {
+        document.querySelectorAll('.form-control').forEach(function(input) {
+          input.classList.remove('is-error');
+        });
+        document.querySelectorAll('.field-error').forEach(function(error) {
+          error.textContent = '';
+        });
+        alertEl.style.display = 'none';
+      }
+
+      function showAlert(type, message) {
+        alertEl.className = 'auth-alert auth-alert--' + type;
+        alertEl.textContent = message;
+        alertEl.style.display = 'flex';
+      }
+
+      function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      }
+
+      // Close modal when clicking outside
+      successModal.addEventListener('click', function(e) {
+        if (e.target === successModal) {
+          window.location.href = '/chat';
+        }
+      });
+
+      // Close validation modal when clicking outside or on the modal
+      validationModal.addEventListener('click', function(e) {
+        validationModal.style.display = 'none';
+        if (redirectToLoginOnClose) {
+          window.location.href = '/login';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

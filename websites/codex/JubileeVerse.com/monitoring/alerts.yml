@@ -1,0 +1,151 @@
+# Prometheus Alerting Rules for JubileeVerse
+# Place in monitoring/alerts/ directory
+
+groups:
+  - name: jubileeverse-application
+    rules:
+      # High error rate
+      - alert: HighErrorRate
+        expr: sum(rate(jubileeverse_http_requests_total{status_code=~"5.."}[5m])) / sum(rate(jubileeverse_http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      # High latency
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum(rate(jubileeverse_http_request_duration_seconds_bucket[5m])) by (le)) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request latency"
+          description: "95th percentile latency is {{ $value | humanizeDuration }} (threshold: 2s)"
+
+      # Very high latency
+      - alert: CriticalLatency
+        expr: histogram_quantile(0.99, sum(rate(jubileeverse_http_request_duration_seconds_bucket[5m])) by (le)) > 10
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical request latency"
+          description: "99th percentile latency is {{ $value | humanizeDuration }} (threshold: 10s)"
+
+      # Low request rate (possible issue)
+      - alert: LowTraffic
+        expr: sum(rate(jubileeverse_http_requests_total[5m])) < 0.1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Unusually low traffic"
+          description: "Request rate is {{ $value }} req/s, which may indicate a problem"
+
+      # Too many in-flight requests
+      - alert: HighConcurrency
+        expr: sum(jubileeverse_http_requests_in_progress) > 100
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High number of concurrent requests"
+          description: "{{ $value }} requests currently in progress"
+
+  - name: jubileeverse-ai
+    rules:
+      # AI queue backing up
+      - alert: AIQueueBacklog
+        expr: jubileeverse_queue_depth{queue="ai-response", state="waiting"} > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "AI response queue backing up"
+          description: "{{ $value }} jobs waiting in AI queue"
+
+      # AI response slow
+      - alert: SlowAIResponses
+        expr: histogram_quantile(0.95, sum(rate(jubileeverse_ai_response_duration_seconds_bucket[5m])) by (le)) > 30
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "AI responses are slow"
+          description: "95th percentile AI response time is {{ $value | humanizeDuration }}"
+
+      # AI errors
+      - alert: HighAIErrorRate
+        expr: sum(rate(jubileeverse_ai_requests_total{status="error"}[5m])) / sum(rate(jubileeverse_ai_requests_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High AI request error rate"
+          description: "AI error rate is {{ $value | humanizePercentage }}"
+
+  - name: jubileeverse-infrastructure
+    rules:
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: jubileeverse_nodejs_heap_size_used_bytes / jubileeverse_nodejs_heap_size_total_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Node.js heap memory usage"
+          description: "Heap usage is {{ $value | humanizePercentage }}"
+
+      # Event loop lag
+      - alert: HighEventLoopLag
+        expr: jubileeverse_nodejs_eventloop_lag_seconds > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High event loop lag"
+          description: "Event loop lag is {{ $value | humanizeDuration }}"
+
+      # WebSocket connections spike
+      - alert: WebSocketConnectionSpike
+        expr: increase(jubileeverse_websocket_connections[5m]) > 500
+        for: 2m
+        labels:
+          severity: info
+        annotations:
+          summary: "Rapid increase in WebSocket connections"
+          description: "{{ $value }} new connections in 5 minutes"
+
+      # Cache errors
+      - alert: CacheErrors
+        expr: rate(jubileeverse_cache_operations_total{result="error"}[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cache operation errors"
+          description: "{{ $value }} cache errors per second"
+
+  - name: jubileeverse-availability
+    rules:
+      # Service down
+      - alert: ServiceDown
+        expr: up{job="jubileeverse"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "JubileeVerse service is down"
+          description: "The application is not responding to scrapes"
+
+      # Readiness probe failing
+      - alert: ReadinessFailure
+        expr: probe_success{job="jubileeverse-blackbox", probe="ready"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Readiness probe failing"
+          description: "The /api/admin/ready endpoint is not responding"

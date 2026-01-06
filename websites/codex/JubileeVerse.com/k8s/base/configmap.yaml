@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jubileeverse-config
+  namespace: jubileeverse
+  labels:
+    app.kubernetes.io/name: jubileeverse
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  HOST: "0.0.0.0"
+  DB_PORT: "5432"
+  DB_NAME: "jubileeverse"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  QDRANT_PORT: "6333"
+  QUEUE_CONCURRENCY: "10"
+  QUEUE_RATE_LIMIT: "50"
+  RATE_LIMIT_WINDOW_MS: "900000"
+  RATE_LIMIT_MAX_REQUESTS: "100"

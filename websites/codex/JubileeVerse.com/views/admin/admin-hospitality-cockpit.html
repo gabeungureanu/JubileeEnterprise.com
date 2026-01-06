@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Hospitality Cockpit - Situational Awareness Dashboard - JubileeVerse Admin">
+  <title>Hospitality Cockpit - Admin - JubileeVerse</title>
+  <link rel="icon" type="image/png" href="/images/personas/jubilee.png">
+  <link rel="apple-touch-icon" href="/images/personas/jubilee.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/website/css/admin-header.css">
+  <link rel="stylesheet" href="/website/css/admin-sidebar.css">
+  <link rel="stylesheet" href="/website/css/hospitality-cockpit.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #0a0a0a;
+      color: #f2f2f2;
+      overflow: hidden;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1a1a1a; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #666; }
+    * { scrollbar-width: thin; scrollbar-color: #444 #1a1a1a; }
+    .app-container { display: flex; height: 100vh; width: 100vw; }
+    .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; margin-left: 52px; padding-top: 36px; }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div id="admin-sidebar-container"></div>
+    <div class="main-area">
+      <div id="admin-header-container"></div>
+
+      <!-- Cockpit Container -->
+      <div class="cockpit-container">
+        <!-- Header -->
+        <div class="cockpit-header">
+          <div class="cockpit-title">
+            <svg class="cockpit-title-icon" viewBox="0 0 24 24" fill="#ffbd59">
+              <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+            </svg>
+            Hospitality Cockpit
+          </div>
+          <div class="health-status-indicator" id="health-indicator">
+            <span id="health-label">Loading...</span>
+            <span class="health-score" id="health-score">--</span>
+          </div>
+        </div>
+
+        <!-- Instruments Panel -->
+        <div class="instruments-panel">
+          <!-- Primary Six-Pack -->
+          <div class="primary-instruments">
+            <!-- Attitude Indicator -->
+            <div class="gauge-container primary">
+              <div class="gauge-label">Attitude (Mood)</div>
+              <div class="attitude-indicator" id="attitude-gauge">
+                <div class="attitude-horizon" id="attitude-horizon">
+                  <div class="attitude-sky"></div>
+                  <div class="attitude-ground"></div>
+                  <div class="attitude-horizon-line"></div>
+                </div>
+                <div class="attitude-aircraft-symbol">
+                  <div class="aircraft-wing left"></div>
+                  <div class="aircraft-center"></div>
+                  <div class="aircraft-wing right"></div>
+                </div>
+                <div class="attitude-bank-indicator">
+                  <div class="bank-triangle"></div>
+                </div>
+              </div>
+              <div class="gauge-value" id="attitude-value">0.0</div>
+              <div class="gauge-unit">pitch degrees</div>
+              <div class="gauge-trend" id="attitude-trend">Stable</div>
+            </div>
+
+            <!-- Altimeter -->
+            <div class="gauge-container primary">
+              <div class="gauge-label">Altitude (Retention)</div>
+              <div class="altimeter" id="altimeter-gauge">
+                <div class="altimeter-face">
+                  <div class="altimeter-markings" id="altimeter-markings"></div>
+                </div>
+                <div class="altimeter-hand thousands" id="alt-thousands"></div>
+                <div class="altimeter-hand hundreds" id="alt-hundreds"></div>
+                <div class="altimeter-center"></div>
+                <div class="altimeter-readout">
+                  <span class="altimeter-readout-value" id="alt-readout">00000</span>
+                </div>
+              </div>
+              <div class="gauge-value" id="altitude-value">0</div>
+              <div class="gauge-unit">feet</div>
+              <div class="gauge-trend" id="altitude-trend">Level</div>
+            </div>
+
+            <!-- Airspeed Indicator -->
+            <div class="gauge-container primary">
+              <div class="gauge-label">Airspeed (Velocity)</div>
+              <div class="airspeed-indicator" id="airspeed-gauge">
+                <div class="airspeed-arc"></div>
+                <div class="airspeed-needle" id="airspeed-needle"></div>
+                <div class="airspeed-center"></div>
+              </div>
+              <div class="gauge-value" id="airspeed-value">0</div>
+              <div class="gauge-unit">knots</div>
+              <div class="gauge-trend" id="airspeed-zone">Cruise</div>
+            </div>
+
+            <!-- Turn Coordinator / Placeholder -->
+            <div class="gauge-container primary">
+              <div class="gauge-label">Heading (Alignment)</div>
+              <div class="heading-indicator" id="heading-gauge">
+                <div class="heading-compass-card" id="heading-card">
+                  <span class="heading-cardinal n">N</span>
+                  <span class="heading-cardinal e">E</span>
+                  <span class="heading-cardinal s">S</span>
+                  <span class="heading-cardinal w">W</span>
+                </div>
+                <div class="heading-aircraft-symbol"></div>
+              </div>
+              <div class="gauge-value" id="heading-value">0</div>
+              <div class="gauge-unit">degrees</div>
+              <div class="gauge-trend" id="heading-deviation">On Course</div>
+            </div>
+
+            <!-- Heading Indicator -->
+            <div class="gauge-container primary">
+              <div class="gauge-label">Vertical Speed (Trend)</div>
+              <div class="vsi" id="vsi-gauge">
+                <div class="vsi-zero-line"></div>
+                <div class="vsi-scale" id="vsi-scale"></div>
+                <div class="vsi-needle" id="vsi-needle"></div>
+                <div class="vsi-center"></div>
+              </div>
+              <div class="gauge-value" id="vsi-value">0</div>
+              <div class="gauge-unit">fpm</div>
+              <div class="gauge-trend" id="vsi-trend">Level</div>
+            </div>
+
+            <!-- VSI -->
+            <div class="gauge-container primary" style="background: linear-gradient(135deg, #0f1a0f 0%, #0a0a0a 100%); border-color: rgba(34, 197, 94, 0.3);">
+              <div class="gauge-label">System Status</div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 20px;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="#4ade80">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <div style="font-size: 18px; font-weight: 600; color: #4ade80;" id="system-status">All Systems Nominal</div>
+                <div style="font-size: 12px; color: #666;">Last calculated: <span id="last-calc">--</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Engine Panel -->
+          <div class="engine-panel">
+            <div class="engine-panel-title">Engine Health</div>
+
+            <!-- Fuel -->
+            <div class="engine-gauge" id="fuel-gauge">
+              <div class="engine-gauge-icon fuel">
+                <svg viewBox="0 0 24 24"><path d="M19.77 7.23l.01-.01-3.72-3.72L15 4.56l2.11 2.11c-.94.36-1.61 1.26-1.61 2.33 0 1.38 1.12 2.5 2.5 2.5.36 0 .69-.08 1-.21v7.21c0 .55-.45 1-1 1s-1-.45-1-1V14c0-1.1-.9-2-2-2h-1V5c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v16h10v-7.5h1.5v5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V9c0-.69-.28-1.32-.73-1.77zM12 10H6V5h6v5z"/></svg>
+              </div>
+              <div class="engine-gauge-info">
+                <div class="engine-gauge-label">Fuel (Capacity)</div>
+                <div class="engine-gauge-bar">
+                  <div class="engine-gauge-fill fuel" id="fuel-fill" style="width: 75%"></div>
+                </div>
+              </div>
+              <div class="engine-gauge-value" id="fuel-value">75%</div>
+            </div>
+
+            <!-- Stress -->
+            <div class="engine-gauge" id="stress-gauge">
+              <div class="engine-gauge-icon stress">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              </div>
+              <div class="engine-gauge-info">
+                <div class="engine-gauge-label">Stress (Pressure)</div>
+                <div class="engine-gauge-bar">
+                  <div class="engine-gauge-fill stress" id="stress-fill" style="width: 20%"></div>
+                </div>
+              </div>
+              <div class="engine-gauge-value" id="stress-value">20%</div>
+            </div>
+
+            <!-- Friction -->
+            <div class="engine-gauge" id="friction-gauge">
+              <div class="engine-gauge-icon friction">
+                <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+              </div>
+              <div class="engine-gauge-info">
+                <div class="engine-gauge-label">Friction (Resistance)</div>
+                <div class="engine-gauge-bar">
+                  <div class="engine-gauge-fill friction" id="friction-fill" style="width: 10%"></div>
+                </div>
+              </div>
+              <div class="engine-gauge-value" id="friction-value">10%</div>
+            </div>
+
+            <!-- RPM -->
+            <div class="engine-gauge" id="rpm-gauge">
+              <div class="engine-gauge-icon rpm">
+                <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+              </div>
+              <div class="engine-gauge-info">
+                <div class="engine-gauge-label">RPM (Intensity)</div>
+                <div class="engine-gauge-bar">
+                  <div class="engine-gauge-fill rpm" id="rpm-fill" style="width: 30%"></div>
+                </div>
+              </div>
+              <div class="engine-gauge-value" id="rpm-value">30%</div>
+            </div>
+
+            <!-- Alerts Panel -->
+            <div class="alerts-panel" style="margin-top: auto;">
+              <div class="alerts-header">
+                <span class="alerts-title">Active Alerts</span>
+                <span class="alerts-count" id="alerts-count">0</span>
+              </div>
+              <div id="alerts-list">
+                <div class="no-alerts">All systems operating normally</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #111; border: 1px solid #222; border-radius: 8px;">
+          <div style="font-size: 12px; color: #666;">
+            Data refreshes automatically every 30 seconds
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button onclick="refreshCockpit()" style="background: #1a1a1a; border: 1px solid #333; color: #aaa; padding: 8px 16px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+              Refresh
+            </button>
+            <a href="/admin/hospitality" style="background: #1a1a1a; border: 1px solid #333; color: #aaa; padding: 8px 16px; border-radius: 6px; font-size: 12px; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+              View Console
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/website/js/modules/components.js"></script>
+  <script>
+    // State
+    let cockpitData = null;
+    let refreshInterval = null;
+
+    // Initialize
+    async function init() {
+      if (window.ComponentLoader) {
+        ComponentLoader.load('admin-header-container', '/views/partials/admin-header.html');
+        ComponentLoader.load('admin-sidebar-container', '/views/partials/admin-sidebar.html');
+      }
+
+      // Check admin access
+      try {
+        const response = await fetch('/auth/me', { credentials: 'include' });
+        const data = await response.json();
+        if (!data.user || data.user.role !== 'admin') {
+          window.location.href = '/';
+          return;
+        }
+      } catch (error) {
+        window.location.href = '/';
+        return;
+      }
+
+      // Initial data load
+      await refreshCockpit();
+
+      // Auto-refresh every 30 seconds
+      refreshInterval = setInterval(refreshCockpit, 30000);
+    }
+
+    // Fetch and update cockpit data
+    async function refreshCockpit() {
+      try {
+        const response = await fetch('/api/hospitality/admin/cockpit', { credentials: 'include' });
+        const data = await response.json();
+
+        if (data.success) {
+          cockpitData = data.metrics;
+          updateAllGauges();
+          updateAlerts(data.alerts || []);
+          document.getElementById('last-calc').textContent = new Date().toLocaleTimeString();
+        }
+      } catch (error) {
+        console.error('Failed to fetch cockpit data:', error);
+      }
+    }
+
+    // Update all gauges
+    function updateAllGauges() {
+      if (!cockpitData) return;
+
+      updateHealthIndicator();
+      updateAttitudeIndicator();
+      updateAltimeter();
+      updateAirspeed();
+      updateHeading();
+      updateVSI();
+      updateEngineGauges();
+    }
+
+    // Health indicator
+    function updateHealthIndicator() {
+      const indicator = document.getElementById('health-indicator');
+      const label = document.getElementById('health-label');
+      const score = document.getElementById('health-score');
+      const status = document.getElementById('system-status');
+
+      const health = cockpitData.overallHealthScore || 50;
+      const statusText = cockpitData.healthStatus || 'nominal';
+
+      indicator.className = 'health-status-indicator ' + statusText;
+      label.textContent = statusText.charAt(0).toUpperCase() + statusText.slice(1);
+      score.textContent = health + '%';
+
+      const statusMessages = {
+        optimal: 'All Systems Optimal',
+        nominal: 'All Systems Nominal',
+        warning: 'Systems Require Attention',
+        critical: 'Systems Critical'
+      };
+      status.textContent = statusMessages[statusText] || 'Status Unknown';
+      status.style.color = statusText === 'optimal' ? '#4ade80' :
+                           statusText === 'nominal' ? '#60a5fa' :
+                           statusText === 'warning' ? '#fbbf24' : '#f87171';
+    }
+
+    // Attitude indicator
+    function updateAttitudeIndicator() {
+      const attitude = cockpitData.attitude || {};
+      const pitch = attitude.pitch || 0;
+      const roll = attitude.roll || 0;
+
+      // Update horizon position (pitch moves horizon up/down, roll rotates)
+      const horizon = document.getElementById('attitude-horizon');
+      const pitchOffset = pitch * 1.5; // Scale pitch to pixels
+      horizon.style.transform = `translateY(${-pitchOffset}px) rotate(${roll}deg)`;
+
+      // Update value display
+      document.getElementById('attitude-value').textContent = pitch.toFixed(1);
+
+      // Update trend
+      const trend = document.getElementById('attitude-trend');
+      if (pitch > 15) {
+        trend.textContent = 'Climbing';
+        trend.className = 'gauge-trend up';
+      } else if (pitch < -15) {
+        trend.textContent = 'Descending';
+        trend.className = 'gauge-trend down';
+      } else {
+        trend.textContent = attitude.stability || 'Stable';
+        trend.className = 'gauge-trend stable';
+      }
+    }
+
+    // Altimeter
+    function updateAltimeter() {
+      const altitude = cockpitData.altitude || {};
+      const feet = altitude.feet || 0;
+
+      // Update readout
+      document.getElementById('alt-readout').textContent = feet.toString().padStart(5, '0');
+      document.getElementById('altitude-value').textContent = feet.toLocaleString();
+
+      // Update hands
+      // Thousands hand: 0-40000 = 0-400 degrees (40k max)
+      const thousandsAngle = (feet / 40000) * 360;
+      document.getElementById('alt-thousands').style.transform = `rotate(${thousandsAngle}deg)`;
+
+      // Hundreds hand: each 1000 = 360 degrees
+      const hundredsAngle = ((feet % 1000) / 1000) * 360;
+      document.getElementById('alt-hundreds').style.transform = `rotate(${hundredsAngle}deg)`;
+
+      // Update trend
+      const trend = document.getElementById('altitude-trend');
+      const trendText = altitude.trend || 'level';
+      trend.textContent = trendText.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
+      trend.className = 'gauge-trend ' + (trendText.includes('climbing') ? 'up' : trendText.includes('descending') ? 'down' : 'stable');
+    }
+
+    // Airspeed
+    function updateAirspeed() {
+      const airspeed = cockpitData.airspeed || {};
+      const knots = airspeed.knots || 0;
+      const zone = airspeed.zone || 'cruise';
+
+      // Update needle (0-500 knots = -135 to +135 degrees)
+      const angle = -135 + (knots / 500) * 270;
+      document.getElementById('airspeed-needle').style.transform = `rotate(${angle}deg)`;
+
+      // Update value
+      document.getElementById('airspeed-value').textContent = knots;
+
+      // Update zone
+      const zoneEl = document.getElementById('airspeed-zone');
+      zoneEl.textContent = zone.charAt(0).toUpperCase() + zone.slice(1);
+      zoneEl.className = 'gauge-trend ' + (zone === 'cruise' ? 'stable' : zone === 'fast' ? 'up' : zone === 'stall' ? 'down' : 'stable');
+    }
+
+    // Heading
+    function updateHeading() {
+      const heading = cockpitData.heading || {};
+      const degrees = heading.degrees || 0;
+      const deviation = heading.deviation || 0;
+
+      // Rotate compass card (inverse of heading)
+      document.getElementById('heading-card').style.transform = `rotate(${-degrees}deg)`;
+
+      // Update value
+      document.getElementById('heading-value').textContent = degrees;
+
+      // Update deviation
+      const devEl = document.getElementById('heading-deviation');
+      if (deviation > 30) {
+        devEl.textContent = `${deviation} off course`;
+        devEl.className = 'gauge-trend down';
+      } else if (deviation > 10) {
+        devEl.textContent = `${deviation} deviation`;
+        devEl.className = 'gauge-trend stable';
+      } else {
+        devEl.textContent = 'On Course';
+        devEl.className = 'gauge-trend up';
+      }
+    }
+
+    // VSI
+    function updateVSI() {
+      const vs = cockpitData.verticalSpeed || {};
+      const fpm = vs.fpm || 0;
+      const trend = vs.trend || 'level';
+
+      // Update needle (-2000 to +2000 = -90 to +90 degrees from horizontal)
+      const angle = (fpm / 2000) * 90;
+      document.getElementById('vsi-needle').style.transform = `rotate(${angle}deg)`;
+
+      // Update value
+      const sign = fpm > 0 ? '+' : '';
+      document.getElementById('vsi-value').textContent = sign + fpm;
+
+      // Update trend
+      const trendEl = document.getElementById('vsi-trend');
+      trendEl.textContent = trend.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
+      trendEl.className = 'gauge-trend ' + (fpm > 200 ? 'up' : fpm < -200 ? 'down' : 'stable');
+    }
+
+    // Engine gauges
+    function updateEngineGauges() {
+      const engine = cockpitData.engine || {};
+
+      // Fuel
+      const fuel = engine.fuel || 75;
+      document.getElementById('fuel-fill').style.width = fuel + '%';
+      document.getElementById('fuel-value').textContent = fuel + '%';
+      document.getElementById('fuel-gauge').className = 'engine-gauge' + (engine.fuelWarning ? ' warning' : '');
+
+      // Stress
+      const stress = engine.stress || 20;
+      document.getElementById('stress-fill').style.width = stress + '%';
+      document.getElementById('stress-value').textContent = stress + '%';
+      document.getElementById('stress-gauge').className = 'engine-gauge' + (engine.stressWarning ? ' warning' : '');
+
+      // Friction
+      const friction = engine.friction || 10;
+      document.getElementById('friction-fill').style.width = friction + '%';
+      document.getElementById('friction-value').textContent = friction + '%';
+      document.getElementById('friction-gauge').className = 'engine-gauge' + (engine.frictionWarning ? ' warning' : '');
+
+      // RPM
+      const rpm = engine.rpm || 30;
+      document.getElementById('rpm-fill').style.width = rpm + '%';
+      document.getElementById('rpm-value').textContent = rpm + '%';
+      document.getElementById('rpm-gauge').className = 'engine-gauge' + (engine.rpmWarning ? ' warning' : '');
+    }
+
+    // Update alerts
+    function updateAlerts(alerts) {
+      const list = document.getElementById('alerts-list');
+      const count = document.getElementById('alerts-count');
+
+      count.textContent = alerts.length;
+
+      if (alerts.length === 0) {
+        list.innerHTML = '<div class="no-alerts">All systems operating normally</div>';
+        return;
+      }
+
+      list.innerHTML = alerts.map(alert => `
+        <div class="alert-item ${alert.severity}">
+          <div class="alert-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          </div>
+          <div class="alert-content">
+            <div class="alert-message">${alert.message}</div>
+            ${alert.recommendation ? `<div class="alert-recommendation">${alert.recommendation}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Initialize on load
+    init();
+  </script>
+</body>
+</html>

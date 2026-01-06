@@ -1,0 +1,881 @@
+/* ============================================
+   Hospitality Cockpit - Flight Instruments CSS
+   ============================================ */
+
+/* Cockpit Layout */
+.cockpit-container {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+  gap: 20px;
+  padding: 20px;
+  overflow: auto;
+}
+
+.cockpit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cockpit-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cockpit-title-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.health-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.health-status-indicator.optimal {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.health-status-indicator.nominal {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.health-status-indicator.warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.health-status-indicator.critical {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.health-score {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+/* Main Instruments Panel */
+.instruments-panel {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+/* Primary Six-Pack Layout */
+.primary-instruments {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 16px;
+  background: linear-gradient(135deg, #0d0d0d 0%, #151515 100%);
+  border: 1px solid #222;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+/* Individual Gauge Container */
+.gauge-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: linear-gradient(135deg, #111 0%, #0a0a0a 100%);
+  border: 1px solid #222;
+  border-radius: 12px;
+  min-height: 200px;
+}
+
+.gauge-container:hover {
+  border-color: #333;
+}
+
+.gauge-container.primary {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+
+.gauge-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.gauge-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  margin-top: 8px;
+}
+
+.gauge-unit {
+  font-size: 11px;
+  color: #555;
+  margin-top: 2px;
+}
+
+.gauge-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.gauge-trend.up {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+.gauge-trend.down {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.gauge-trend.stable {
+  background: rgba(107, 114, 128, 0.15);
+  color: #9ca3af;
+}
+
+/* ============================================
+   Attitude Indicator (Artificial Horizon)
+   ============================================ */
+.attitude-indicator {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: #0a0a0a;
+  border: 3px solid #333;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.attitude-horizon {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  left: -50%;
+  top: -50%;
+  transition: transform 0.5s ease-out;
+}
+
+.attitude-sky {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, #1a4a7a 0%, #3d7ab8 100%);
+}
+
+.attitude-ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, #8b5a2b 0%, #5c3d1f 100%);
+}
+
+.attitude-horizon-line {
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: #fff;
+  transform: translateY(-50%);
+}
+
+.attitude-pitch-marks {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  pointer-events: none;
+}
+
+.pitch-mark {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 1px;
+  background: #fff;
+  opacity: 0.6;
+}
+
+.pitch-mark.major {
+  width: 40px;
+  opacity: 1;
+}
+
+.pitch-mark.minor {
+  width: 20px;
+}
+
+.pitch-label {
+  position: absolute;
+  font-size: 8px;
+  color: #fff;
+  transform: translateX(-50%);
+}
+
+.attitude-aircraft-symbol {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 8px;
+  z-index: 10;
+}
+
+.aircraft-wing {
+  position: absolute;
+  top: 50%;
+  height: 3px;
+  background: #ffbd59;
+  border-radius: 2px;
+  transform: translateY(-50%);
+}
+
+.aircraft-wing.left {
+  left: 0;
+  width: 25px;
+}
+
+.aircraft-wing.right {
+  right: 0;
+  width: 25px;
+}
+
+.aircraft-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background: #ffbd59;
+  border-radius: 50%;
+  border: 2px solid #111;
+}
+
+.attitude-bank-indicator {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+}
+
+.bank-triangle {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 10px solid #ffbd59;
+}
+
+.attitude-bank-scale {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+}
+
+/* ============================================
+   Altimeter (Retention Altitude)
+   ============================================ */
+.altimeter {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
+  border: 3px solid #333;
+  position: relative;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.altimeter-face {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+}
+
+.altimeter-markings {
+  position: absolute;
+  inset: 0;
+}
+
+.altimeter-tick {
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  width: 2px;
+  transform-origin: bottom center;
+  background: #666;
+}
+
+.altimeter-tick.major {
+  height: 15px;
+  background: #fff;
+}
+
+.altimeter-tick.minor {
+  height: 8px;
+}
+
+.altimeter-number {
+  position: absolute;
+  font-size: 10px;
+  font-weight: 600;
+  color: #999;
+  transform: translate(-50%, -50%);
+}
+
+.altimeter-hand {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  width: 4px;
+  background: #fff;
+  transform-origin: bottom center;
+  border-radius: 2px;
+  transition: transform 0.5s ease-out;
+}
+
+.altimeter-hand.thousands {
+  height: 50px;
+  margin-left: -2px;
+  z-index: 3;
+}
+
+.altimeter-hand.hundreds {
+  height: 65px;
+  width: 2px;
+  margin-left: -1px;
+  background: #ffbd59;
+  z-index: 2;
+}
+
+.altimeter-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: #333;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  z-index: 4;
+}
+
+.altimeter-readout {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #000;
+  border: 1px solid #333;
+  padding: 4px 12px;
+  border-radius: 4px;
+  z-index: 5;
+}
+
+.altimeter-readout-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  font-family: 'Courier New', monospace;
+}
+
+/* ============================================
+   Airspeed Indicator
+   ============================================ */
+.airspeed-indicator {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
+  border: 3px solid #333;
+  position: relative;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.airspeed-arc {
+  position: absolute;
+  inset: 10px;
+  border-radius: 50%;
+}
+
+.airspeed-green-arc {
+  position: absolute;
+  inset: 10px;
+  border-radius: 50%;
+  border: 8px solid transparent;
+  border-top-color: #22c55e;
+  border-right-color: #22c55e;
+  transform: rotate(-45deg);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.airspeed-yellow-arc {
+  position: absolute;
+  inset: 10px;
+  border-radius: 50%;
+  border: 8px solid transparent;
+  border-bottom-color: #fbbf24;
+  transform: rotate(45deg);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.airspeed-red-arc {
+  position: absolute;
+  inset: 10px;
+  border-radius: 50%;
+  border: 8px solid transparent;
+  border-left-color: #ef4444;
+  transform: rotate(135deg);
+  clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+}
+
+.airspeed-needle {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  width: 4px;
+  height: 55px;
+  background: linear-gradient(to top, #fff, #ffbd59);
+  transform-origin: bottom center;
+  margin-left: -2px;
+  border-radius: 2px 2px 0 0;
+  transition: transform 0.5s ease-out;
+  z-index: 3;
+}
+
+.airspeed-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  background: #222;
+  border: 2px solid #ffbd59;
+  border-radius: 50%;
+  z-index: 4;
+}
+
+/* ============================================
+   Vertical Speed Indicator
+   ============================================ */
+.vsi {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
+  border: 3px solid #333;
+  position: relative;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.vsi-scale {
+  position: absolute;
+  inset: 15px;
+}
+
+.vsi-tick {
+  position: absolute;
+  left: 50%;
+  transform-origin: center 55px;
+  width: 2px;
+  background: #666;
+}
+
+.vsi-tick.major {
+  height: 12px;
+  background: #fff;
+}
+
+.vsi-tick.minor {
+  height: 6px;
+}
+
+.vsi-label {
+  position: absolute;
+  font-size: 10px;
+  font-weight: 600;
+  color: #999;
+}
+
+.vsi-needle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 60px;
+  background: #fff;
+  transform-origin: top center;
+  margin-left: -1.5px;
+  transition: transform 0.5s ease-out;
+  z-index: 3;
+}
+
+.vsi-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: #333;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  z-index: 4;
+}
+
+.vsi-zero-line {
+  position: absolute;
+  left: 15px;
+  right: 15px;
+  top: 50%;
+  height: 2px;
+  background: rgba(255,255,255,0.2);
+  transform: translateY(-50%);
+}
+
+/* ============================================
+   Heading Indicator (Compass)
+   ============================================ */
+.heading-indicator {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
+  border: 3px solid #333;
+  position: relative;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+
+.heading-compass-card {
+  position: absolute;
+  inset: 15px;
+  border-radius: 50%;
+  background: #0d0d0d;
+  transition: transform 0.5s ease-out;
+}
+
+.heading-cardinal {
+  position: absolute;
+  font-size: 14px;
+  font-weight: 700;
+  transform: translate(-50%, -50%);
+}
+
+.heading-cardinal.n { top: 15%; left: 50%; color: #ffbd59; }
+.heading-cardinal.e { top: 50%; right: 10%; color: #fff; }
+.heading-cardinal.s { bottom: 10%; left: 50%; color: #fff; }
+.heading-cardinal.w { top: 50%; left: 10%; color: #fff; }
+
+.heading-tick {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  width: 2px;
+  transform-origin: bottom center;
+  background: #666;
+}
+
+.heading-tick.major {
+  height: 12px;
+  background: #fff;
+}
+
+.heading-tick.minor {
+  height: 6px;
+}
+
+.heading-aircraft-symbol {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 16px solid #ffbd59;
+  z-index: 5;
+}
+
+.heading-bug {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  width: 6px;
+  height: 10px;
+  background: #3b82f6;
+  margin-left: -3px;
+  z-index: 4;
+  transform-origin: center 58px;
+  border-radius: 2px;
+}
+
+/* ============================================
+   Engine Health Gauges
+   ============================================ */
+.engine-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: linear-gradient(135deg, #0d0d0d 0%, #151515 100%);
+  border: 1px solid #222;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.engine-panel-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.engine-gauge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 8px;
+}
+
+.engine-gauge.warning {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.engine-gauge.critical {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.engine-gauge-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.engine-gauge-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.engine-gauge-icon.fuel { background: rgba(59, 130, 246, 0.2); }
+.engine-gauge-icon.fuel svg { fill: #60a5fa; }
+
+.engine-gauge-icon.stress { background: rgba(239, 68, 68, 0.2); }
+.engine-gauge-icon.stress svg { fill: #f87171; }
+
+.engine-gauge-icon.friction { background: rgba(245, 158, 11, 0.2); }
+.engine-gauge-icon.friction svg { fill: #fbbf24; }
+
+.engine-gauge-icon.rpm { background: rgba(34, 197, 94, 0.2); }
+.engine-gauge-icon.rpm svg { fill: #4ade80; }
+
+.engine-gauge-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.engine-gauge-label {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.engine-gauge-bar {
+  height: 6px;
+  background: #222;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.engine-gauge-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease-out;
+}
+
+.engine-gauge-fill.fuel { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.engine-gauge-fill.stress { background: linear-gradient(90deg, #22c55e, #fbbf24, #ef4444); }
+.engine-gauge-fill.friction { background: linear-gradient(90deg, #22c55e, #fbbf24, #ef4444); }
+.engine-gauge-fill.rpm { background: linear-gradient(90deg, #3b82f6, #22c55e); }
+
+.engine-gauge-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  min-width: 45px;
+  text-align: right;
+}
+
+/* ============================================
+   Alerts Panel
+   ============================================ */
+.alerts-panel {
+  background: linear-gradient(135deg, #0d0d0d 0%, #151515 100%);
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.alerts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.alerts-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.alerts-count {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.alert-item.warning {
+  background: rgba(245, 158, 11, 0.1);
+  border-left: 3px solid #fbbf24;
+}
+
+.alert-item.critical {
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 3px solid #ef4444;
+}
+
+.alert-item.info {
+  background: rgba(59, 130, 246, 0.1);
+  border-left: 3px solid #3b82f6;
+}
+
+.alert-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.alert-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.alert-item.warning .alert-icon svg { fill: #fbbf24; }
+.alert-item.critical .alert-icon svg { fill: #ef4444; }
+.alert-item.info .alert-icon svg { fill: #60a5fa; }
+
+.alert-content {
+  flex: 1;
+}
+
+.alert-message {
+  font-size: 12px;
+  color: #ccc;
+  margin-bottom: 4px;
+}
+
+.alert-recommendation {
+  font-size: 11px;
+  color: #888;
+}
+
+.no-alerts {
+  text-align: center;
+  padding: 20px;
+  color: #555;
+  font-size: 13px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+  .instruments-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .primary-instruments {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1000px) {
+  .primary-instruments {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .primary-instruments {
+    grid-template-columns: 1fr;
+  }
+
+  .gauge-container {
+    min-height: 250px;
+  }
+}

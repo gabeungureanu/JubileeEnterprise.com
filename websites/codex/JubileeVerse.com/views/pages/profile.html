@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Your Profile - JubileeVerse">
+  <title>Profile - JubileeVerse</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header -->
+  <div id="header-container"></div>
+
+  <main id="main-content" class="page-content">
+    <section class="section">
+      <div class="container container--md">
+        <!-- Profile Header -->
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <div class="avatar avatar--xl" id="profile-avatar">U</div>
+            <button class="btn btn--ghost btn--sm" id="change-avatar-btn">Change Photo</button>
+          </div>
+          <div class="profile-info">
+            <h1 id="profile-name">User Name</h1>
+            <p id="profile-email">user@example.com</p>
+            <p class="profile-member-since">Member since <span id="member-since">January 2024</span></p>
+          </div>
+        </div>
+
+        <!-- Profile Form -->
+        <div class="card">
+          <div class="card__header">
+            <h2>Personal Information</h2>
+          </div>
+          <div class="card__body">
+            <form id="profile-form" class="form">
+              <div class="form-group">
+                <label class="form-label" for="name">Full Name</label>
+                <input type="text" id="name" class="form-input" placeholder="Your name">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" id="email" class="form-input" placeholder="your@email.com" readonly>
+                <span class="form-help">Email cannot be changed</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="preferred-language">Preferred Language</label>
+                <select id="preferred-language" class="form-input">
+                  <option value="en">English</option>
+                  <option value="es">Spanish (Español)</option>
+                  <option value="fr">French (Français)</option>
+                  <option value="de">German (Deutsch)</option>
+                  <option value="pt">Portuguese (Português)</option>
+                  <option value="zh">Chinese (中文)</option>
+                  <option value="ja">Japanese (日本語)</option>
+                  <option value="ko">Korean (한국어)</option>
+                  <option value="ar">Arabic (العربية)</option>
+                  <option value="he">Hebrew (עברית)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="bio">Bio</label>
+                <textarea id="bio" class="form-textarea" placeholder="Tell us a bit about yourself..."></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn--primary" id="save-profile-btn">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Statistics Card -->
+        <div class="card" style="margin-top: var(--spacing-6);">
+          <div class="card__header">
+            <h2>Your Activity</h2>
+          </div>
+          <div class="card__body">
+            <div class="profile-stats">
+              <div class="profile-stat">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                <div>
+                  <span class="profile-stat__value" id="stat-conversations">0</span>
+                  <span class="profile-stat__label">Conversations</span>
+                </div>
+              </div>
+              <div class="profile-stat">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+                <div>
+                  <span class="profile-stat__value" id="stat-translations">0</span>
+                  <span class="profile-stat__label">Translations</span>
+                </div>
+              </div>
+              <div class="profile-stat">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                <div>
+                  <span class="profile-stat__value" id="stat-personas">0</span>
+                  <span class="profile-stat__label">Personas Used</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="card card--danger" style="margin-top: var(--spacing-6);">
+          <div class="card__header">
+            <h2>Danger Zone</h2>
+          </div>
+          <div class="card__body">
+            <div class="danger-item">
+              <div>
+                <h3>Delete Account</h3>
+                <p>Permanently delete your account and all associated data. This action cannot be undone.</p>
+              </div>
+              <button class="btn" style="background: var(--color-error); color: white;" id="delete-account-btn">
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer-container"></div>
+
+  <!-- Scripts -->
+  <script src="/js/modules/components.js"></script>
+  <script src="/js/modules/auth.js"></script>
+  <script src="/js/services/api.js"></script>
+  <script src="/js/app.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      const profileForm = document.getElementById('profile-form');
+      const saveBtn = document.getElementById('save-profile-btn');
+
+      // Load user data
+      async function loadUserData() {
+        try {
+          const [userResponse, statsResponse] = await Promise.all([
+            fetch('/auth/me'),
+            fetch('/api/stats')
+          ]);
+
+          const userData = await userResponse.json();
+          const statsData = await statsResponse.json();
+
+          if (userData.user) {
+            const user = userData.user;
+            document.getElementById('profile-name').textContent = user.name;
+            document.getElementById('profile-email').textContent = user.email;
+            document.getElementById('profile-avatar').textContent = getInitials(user.name);
+            document.getElementById('name').value = user.name;
+            document.getElementById('email').value = user.email;
+            document.getElementById('preferred-language').value = user.preferredLanguage || 'en';
+
+            const memberDate = new Date(user.createdAt);
+            document.getElementById('member-since').textContent = memberDate.toLocaleDateString([], { month: 'long', year: 'numeric' });
+          }
+
+          if (statsData.stats) {
+            document.getElementById('stat-conversations').textContent = statsData.stats.totalConversations;
+            document.getElementById('stat-translations').textContent = statsData.stats.translationsCompleted;
+            document.getElementById('stat-personas').textContent = statsData.stats.languagesUsed?.length || 0;
+          }
+        } catch (error) {
+          console.error('Failed to load user data:', error);
+        }
+      }
+
+      // Save profile
+      profileForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner"></span> Saving...';
+
+        try {
+          const response = await fetch('/api/user/preferences', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: document.getElementById('name').value,
+              preferredLanguage: document.getElementById('preferred-language').value,
+              bio: document.getElementById('bio').value
+            })
+          });
+
+          if (response.ok) {
+            alert('Profile updated successfully!');
+          } else {
+            alert('Failed to update profile. Please try again.');
+          }
+        } catch (error) {
+          console.error('Save error:', error);
+          alert('An error occurred. Please try again.');
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save Changes';
+        }
+      });
+
+      // Delete account
+      document.getElementById('delete-account-btn').addEventListener('click', function() {
+        if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+          if (confirm('This will permanently delete all your conversations, translations, and data. Type "DELETE" to confirm.')) {
+            // In production, implement account deletion
+            alert('Account deletion is not implemented in this demo.');
+          }
+        }
+      });
+
+      function getInitials(name) {
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      }
+
+      loadUserData();
+    });
+  </script>
+
+  <style>
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-6);
+      margin-bottom: var(--spacing-8);
+      padding: var(--spacing-6);
+      background: var(--color-neutral-0);
+      border: 1px solid var(--color-neutral-200);
+      border-radius: var(--radius-xl);
+    }
+
+    .profile-avatar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+
+    .profile-info h1 {
+      font-size: var(--font-size-2xl);
+      margin-bottom: var(--spacing-1);
+    }
+
+    .profile-info p {
+      color: var(--color-neutral-500);
+      margin: 0;
+    }
+
+    .profile-member-since {
+      font-size: var(--font-size-sm);
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: var(--spacing-4);
+    }
+
+    .profile-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--spacing-4);
+    }
+
+    .profile-stat {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      padding: var(--spacing-4);
+      background: var(--color-neutral-50);
+      border-radius: var(--radius-lg);
+    }
+
+    .profile-stat svg {
+      color: var(--color-primary-500);
+    }
+
+    .profile-stat__value {
+      display: block;
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-bold);
+    }
+
+    .profile-stat__label {
+      font-size: var(--font-size-sm);
+      color: var(--color-neutral-500);
+    }
+
+    .card--danger {
+      border-color: var(--color-error-light);
+    }
+
+    .card--danger .card__header {
+      background: var(--color-error-light);
+    }
+
+    .card--danger .card__header h2 {
+      color: var(--color-error);
+    }
+
+    .danger-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--spacing-4);
+    }
+
+    .danger-item h3 {
+      font-size: var(--font-size-base);
+      margin-bottom: var(--spacing-1);
+    }
+
+    .danger-item p {
+      font-size: var(--font-size-sm);
+      color: var(--color-neutral-600);
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .profile-header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .profile-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .danger-item {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+</body>
+</html>

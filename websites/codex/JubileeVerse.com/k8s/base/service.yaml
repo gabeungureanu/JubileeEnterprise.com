@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jubileeverse-service
+  namespace: jubileeverse
+  labels:
+    app.kubernetes.io/name: jubileeverse
+    app.kubernetes.io/component: app
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: jubileeverse
+    app.kubernetes.io/component: app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: jubileeverse
+  labels:
+    app.kubernetes.io/name: jubileeverse
+    app.kubernetes.io/component: postgres
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+  selector:
+    app.kubernetes.io/name: jubileeverse
+    app.kubernetes.io/component: postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: jubileeverse
+  labels:
+    app.kubernetes.io/name: jubileeverse
+    app.kubernetes.io/component: redis
+spec:
+  type: ClusterIP
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+  selector:
+    app.kubernetes.io/name: jubileeverse
+    app.kubernetes.io/component: redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant-service
+  namespace: jubileeverse
+  labels:
+    app.kubernetes.io/name: jubileeverse
+    app.kubernetes.io/component: qdrant
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 6333
+      targetPort: 6333
+    - name: grpc
+      port: 6334
+      targetPort: 6334
+  selector:
+    app.kubernetes.io/name: jubileeverse
+    app.kubernetes.io/component: qdrant

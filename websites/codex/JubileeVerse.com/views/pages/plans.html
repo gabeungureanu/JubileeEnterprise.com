@@ -1,0 +1,2288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="JubileeVerse Pricing Plans - Choose the right plan for your needs">
+  <title>Plans & Pricing - JubileeVerse</title>
+  <link rel="icon" type="image/png" href="/images/personas/jubilee.png">
+  <link rel="apple-touch-icon" href="/images/personas/jubilee.png">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/top-header.css">
+  <link rel="stylesheet" href="/css/sidebar.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #0a0a0a;
+      color: #fff;
+    }
+
+    /* Custom scrollbar styles */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #1a1a1a;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #666;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #888;
+    }
+
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #666 #1a1a1a;
+    }
+
+    .app-container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    /* Sticky Header Bar - Flush with top header */
+    .sticky-header-bar {
+      position: sticky;
+      top: 0;
+      z-index: 101;
+      background: #1a1a1a;
+      border-bottom: 1px solid #333;
+      padding: 10px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .back-btn:hover {
+      color: #fbbf24;
+    }
+
+    .back-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* Admin-only elements - hidden by default */
+    .admin-only-element {
+      display: none;
+    }
+
+    body.is-admin .admin-only-element {
+      display: inline-block;
+    }
+
+    /* Admin Row - inside plans-page, scrolls with content, NOT sticky */
+    .admin-control-row {
+      display: none;
+      background: #0d0d0d;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 6px 16px;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 16px;
+      /* Explicitly NOT sticky */
+      position: static;
+    }
+
+    body.is-admin .admin-control-row {
+      display: flex;
+    }
+
+    .admin-row-label {
+      color: #fff;
+      font-weight: 700;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+      margin-left: -5px;
+    }
+
+    /* Task List Admin Link - Dark Green Theme, compact */
+    .task-list-link {
+      color: #15803d;
+      text-decoration: none;
+      font-size: 9px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border: 1px solid #15803d;
+      border-radius: 3px;
+      transition: all 0.2s;
+    }
+
+    .task-list-link:hover {
+      background: #15803d;
+      color: #fff;
+    }
+
+    .task-list-link.active {
+      background: #15803d;
+      color: #fff;
+      animation: pulse-glow-green 2s ease-in-out infinite;
+    }
+
+    /* Pulsing animation for Published List mode - Dark Green */
+    @keyframes pulse-glow-green {
+      0%, 100% {
+        box-shadow: 0 0 5px rgba(21, 128, 61, 0.5);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 20px rgba(21, 128, 61, 0.8), 0 0 30px rgba(21, 128, 61, 0.4);
+        transform: scale(1.02);
+      }
+    }
+
+    /* Task List Checkbox Styles */
+    .task-checkbox {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #fbbf24;
+      flex-shrink: 0;
+      margin-right: 12px;
+    }
+
+    /* First column content wrapper for checkbox + text layout */
+    .feature-content-wrapper {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .feature-text-wrapper {
+      flex: 1;
+    }
+
+    /* Increased font size for first column content */
+    .feature-row td:first-child .feature-label {
+      font-size: 14px;
+    }
+
+    .feature-row td:first-child .feature-desc {
+      font-size: 13px;
+    }
+
+    .feature-row.unpublished {
+      opacity: 0.5;
+    }
+
+    .feature-row.unpublished td:first-child .feature-label {
+      text-decoration: line-through;
+    }
+
+    /* Inline editing styles */
+    .editable-field {
+      cursor: text;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .editable-field:hover {
+      background: rgba(251, 191, 36, 0.1);
+    }
+
+    .editable-field.editing {
+      outline: 2px solid #fbbf24;
+      background: rgba(251, 191, 36, 0.15);
+      min-width: 100px;
+    }
+
+    .editable-field[contenteditable="true"] {
+      outline: 2px solid #fbbf24;
+      background: rgba(251, 191, 36, 0.15);
+    }
+
+    /* Billing Toggle */
+    .billing-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .billing-toggle span {
+      font-size: 14px;
+      font-weight: 600;
+      color: #888;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .billing-toggle span.active {
+      color: #fff;
+    }
+
+    .annual-label {
+      margin-right: 8px;
+      color: #c0c0c0 !important;
+    }
+
+    .toggle-switch {
+      width: 50px;
+      height: 26px;
+      background: #333;
+      border-radius: 13px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      border: 1px solid #fbbf24;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #fbbf24;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.3s ease;
+    }
+
+    .toggle-switch.annual::after {
+      transform: translateX(24px);
+    }
+
+    .save-badge {
+      background: #fbbf24;
+      color: #000 !important;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800 !important;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-left: 12px;
+      border: 2px solid #fbbf24;
+      width: 145px;
+      text-align: center;
+      box-sizing: border-box;
+      display: inline-block;
+    }
+
+    .save-badge.active {
+      background: #000;
+      color: #fbbf24 !important;
+      font-weight: 800 !important;
+      border: 2px solid #fbbf24;
+    }
+
+    /* Plans Page Content */
+    .plans-page {
+      flex: 1;
+      overflow-y: auto;
+      padding: 30px 40px;
+      padding-top: 20px;
+      background: #0a0a0a;
+    }
+
+    /* Section Header */
+    .section-header {
+      margin-bottom: 0px;
+    }
+
+    .section-header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .section-header p {
+      font-size: 14px;
+      color: #fff;
+      line-height: 1.5;
+      max-width: 600px;
+    }
+
+    /* Pricing Table Wrapper */
+    .pricing-table-wrapper {
+      overflow-x: auto;
+      min-width: 800px;
+      position: relative;
+      padding-top: 35px;
+    }
+
+    /* Recommended Badge - Positioned above table, aligned with column */
+    .recommended-badge-container {
+      position: absolute;
+      top: 2px;
+      left: 0;
+      right: 0;
+      height: 35px;
+      display: flex;
+      pointer-events: none;
+    }
+
+    .recommended-badge {
+      position: absolute;
+      background: #fbbf24;
+      color: #000;
+      padding: 8px 0;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-radius: 6px 6px 0 0;
+      white-space: nowrap;
+      text-align: center;
+      box-sizing: border-box;
+      /* Will be positioned by JavaScript */
+    }
+
+    /* Pricing Table - Gold outer border with 2px padding */
+    .pricing-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: #111;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #fbbf24;
+      padding: 2px;
+    }
+
+    .pricing-table th,
+    .pricing-table td {
+      padding: 14px 8px;
+      text-align: center;
+      border-bottom: 1px solid #333;
+      vertical-align: middle;
+      font-size: 13px;
+      color: #fff;
+    }
+
+    /* First row corners */
+    .pricing-table thead tr:first-child th:first-child {
+      border-top-left-radius: 10px;
+    }
+
+    .pricing-table thead tr:first-child th:last-child {
+      border-top-right-radius: 10px;
+    }
+
+    /* Last row corners */
+    .pricing-table tbody tr:last-child td:first-child {
+      border-bottom-left-radius: 10px;
+    }
+
+    .pricing-table tbody tr:last-child td:last-child {
+      border-bottom-right-radius: 10px;
+    }
+
+    /* Last row - no bottom border */
+    .pricing-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .pricing-table th {
+      background: #0d0d0d;
+    }
+
+    .pricing-table td:first-child,
+    .pricing-table th:first-child {
+      text-align: left;
+      padding-left: 20px;
+      width: 44%;
+      min-width: 350px;
+    }
+
+    .pricing-table td:not(:first-child),
+    .pricing-table th:not(:first-child) {
+      width: 14%;
+      min-width: 130px;
+    }
+
+    /* Recommended Column - Gold styling without side borders */
+    .pricing-table th.recommended-col,
+    .pricing-table td.recommended-col {
+      background: #fbbf24;
+      color: #000;
+    }
+
+    /* Plan Header Cells */
+    .plan-header {
+      padding: 20px 8px !important;
+      position: relative;
+      vertical-align: top;
+      border-bottom: none !important;
+      height: 90px;
+    }
+
+    .plan-header .plan-name {
+      /* Ensure all plan names start at the same vertical position */
+      display: block;
+      margin-top: 0;
+      height: 20px;
+      line-height: 20px;
+    }
+
+    .plan-header .plan-description {
+      /* Fixed height for descriptions to ensure consistent alignment */
+      display: block;
+      height: 44px;
+      overflow: hidden;
+    }
+
+    /* Remove border on first column between header and price row */
+    .pricing-table thead tr th:first-child {
+      border-bottom: none !important;
+    }
+
+    .plan-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .recommended-col .plan-name {
+      color: #000;
+      font-weight: 700;
+    }
+
+    .plan-description {
+      font-size: 11px;
+      color: #fff;
+      line-height: 1.4;
+      font-weight: 400;
+    }
+
+    .recommended-col .plan-description {
+      color: #000;
+      font-weight: 700;
+    }
+
+    /* Price Row - Increased height, tighter spacing */
+    .price-row td {
+      padding: 24px 8px !important;
+      background: #0d0d0d;
+      vertical-align: middle;
+      border-bottom: 1px solid #333;
+    }
+
+    .price-row td:first-child {
+      border-bottom: none !important;
+    }
+
+    .price-row td.recommended-col {
+      background: #fbbf24;
+    }
+
+    .price-amount {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .price-row td.recommended-col .price-amount {
+      color: #000;
+    }
+
+    .price-period {
+      font-size: 10px;
+      color: #fff;
+      margin-top: -1px;
+      text-transform: uppercase;
+    }
+
+    .recommended-col .price-period {
+      color: #000;
+      font-weight: 700;
+    }
+
+    /* CTA Row */
+    .cta-row td {
+      padding: 14px 8px !important;
+      border-bottom: 1px solid #333;
+      vertical-align: middle;
+    }
+
+    .cta-row td.recommended-col {
+      background: #fbbf24;
+    }
+
+    /* Buttons */
+    .plan-cta {
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 110px;
+      height: 38px;
+      line-height: 18px;
+      box-sizing: border-box;
+    }
+
+    /* Yellow button with black text (Get Started for Ministry, Business) - Bold */
+    .plan-cta.yellow-btn {
+      background: #fbbf24;
+      color: #000;
+      border: 2px solid #fbbf24;
+      font-weight: 700;
+      padding: 8px 20px;
+    }
+
+    .plan-cta.yellow-btn:hover {
+      background: #fcd34d;
+      border-color: #fcd34d;
+    }
+
+    /* Yellow button with black border (Get Started in recommended column) */
+    .plan-cta.black-btn {
+      background: #fbbf24;
+      color: #000;
+      border: 2px solid #000;
+      font-weight: 700;
+    }
+
+    .plan-cta.black-btn:hover {
+      background: #fcd34d;
+    }
+
+    /* Current plan button (Free Plan) - Yellow border, black bg, yellow text */
+    .plan-cta.current {
+      background: #000;
+      color: #fbbf24;
+      border: 2px solid #fbbf24;
+      cursor: default;
+    }
+
+    /* Feature Rows */
+    .feature-row td {
+      padding: 14px 8px !important;
+      font-size: 12px;
+      vertical-align: middle;
+      border-bottom: 1px solid #333;
+    }
+
+    .feature-row td.recommended-col {
+      background: #fbbf24;
+      color: #000;
+      font-weight: 700;
+    }
+
+    .feature-row td:first-child {
+      color: #fff;
+      text-align: left;
+      padding-left: 20px !important;
+    }
+
+    .feature-label {
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .feature-desc {
+      font-size: 11px;
+      color: #fff;
+      line-height: 1.4;
+    }
+
+    /* Persona Count Display */
+    .persona-count {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .persona-number {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fbbf24;
+    }
+
+    .recommended-col .persona-number {
+      color: #000;
+    }
+
+    .persona-label {
+      font-size: 10px;
+      font-weight: 400;
+      color: #fff;
+    }
+
+    .recommended-col .persona-label {
+      color: #000;
+      font-weight: 700;
+    }
+
+    /* Checkmark Icons - Yellow circle with black check on dark bg */
+    .check-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .check-yes {
+      background: #fbbf24;
+      color: #000;
+    }
+
+    /* In recommended column - Black circle with yellow check */
+    .recommended-col .check-yes {
+      background: #000;
+      color: #fbbf24;
+    }
+
+    /* Plan checkbox toggle - clickable in Task List mode */
+    .plan-toggle-checkbox {
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      accent-color: #fbbf24;
+      appearance: none;
+      -webkit-appearance: none;
+      border: 2px solid #fbbf24;
+      border-radius: 50%;
+      background: transparent;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .plan-toggle-checkbox:checked {
+      background: #fbbf24;
+    }
+
+    .plan-toggle-checkbox:checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #000;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .plan-toggle-checkbox:hover {
+      border-color: #fcd34d;
+      box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+    }
+
+    /* In recommended column - invert colors */
+    .recommended-col .plan-toggle-checkbox {
+      border-color: #000;
+    }
+
+    .recommended-col .plan-toggle-checkbox:checked {
+      background: #000;
+    }
+
+    .recommended-col .plan-toggle-checkbox:checked::after {
+      color: #fbbf24;
+    }
+
+    .recommended-col .plan-toggle-checkbox:hover {
+      border-color: #333;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Section Divider Rows - Vertically centered */
+    .section-divider td {
+      padding: 16px 8px !important;
+      background: #0a0a0a !important;
+      border-bottom: 1px solid #333 !important;
+      vertical-align: middle;
+    }
+
+    .section-divider td:first-child {
+      text-align: left;
+      padding-left: 20px !important;
+    }
+
+    .section-divider td.recommended-col {
+      background: #e5a800 !important;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fbbf24;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+
+    .section-divider td.recommended-col .section-title {
+      color: #000;
+    }
+
+    /* Standard Edition - Extra bold styling */
+    .section-title.standard-edition-title {
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+    }
+
+    /* Bottom Price Row - Mirrors top pricing */
+    .bottom-price-row td {
+      padding: 20px 8px !important;
+      background: #0d0d0d;
+      border-bottom: 1px solid #333;
+      border-top: 1px solid #333;
+      vertical-align: middle;
+    }
+
+    .bottom-price-row td.recommended-col {
+      background: #fbbf24;
+    }
+
+    .bottom-price-row td.recommended-col .price-amount {
+      color: #000;
+    }
+
+    .bottom-price-row td.recommended-col .price-period {
+      color: #000;
+      font-weight: 700;
+    }
+
+    /* Final CTA Row */
+    .final-cta-row td {
+      padding: 20px 8px 24px !important;
+      background: #0d0d0d;
+      border-bottom: none;
+      vertical-align: middle;
+    }
+
+    .final-cta-row td.recommended-col {
+      background: #fbbf24;
+      padding-bottom: 28px !important;
+    }
+
+    /* Bottom corners for final row */
+    .final-cta-row td:first-child {
+      border-bottom-left-radius: 10px;
+    }
+
+    .final-cta-row td:last-child {
+      border-bottom-right-radius: 10px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1400px) {
+      .pricing-table {
+        font-size: 11px;
+      }
+
+      .plan-name {
+        font-size: 13px;
+      }
+
+      .price-amount {
+        font-size: 24px;
+      }
+    }
+
+    @media (max-width: 1200px) {
+      .plans-page {
+        padding: 20px;
+      }
+
+      .sticky-header-bar {
+        padding: 10px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <div class="main-content">
+      <!-- Sticky Header Bar with Back and Billing Toggle -->
+      <div class="sticky-header-bar">
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <a href="javascript:history.back()" class="back-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            Back
+          </a>
+        </div>
+        <div class="billing-toggle">
+          <span class="monthly-label active">MONTH</span>
+          <div class="toggle-switch" id="billingToggle"></div>
+          <span class="annual-label">YEAR</span>
+          <span class="save-badge">2 MONTHS FREE</span>
+        </div>
+      </div>
+
+      <!-- Plans Content -->
+      <div class="plans-page">
+        <!-- Admin Control Row - Only visible to admins, scrolls with page content -->
+        <div class="admin-control-row">
+          <span class="admin-row-label">ADMIN:</span>
+          <a href="#" id="taskListToggle" class="task-list-link">
+            JQA: Task List
+          </a>
+        </div>
+
+        <!-- Section Header -->
+        <div class="section-header">
+          <h1>Subscription Plans</h1>
+          <p>Whether you're a passionate student of the Scriptures or a thriving faith-based business, we've got the perfect plan tailored just for you!</p>
+        </div>
+
+        <!-- Pricing Table -->
+        <div class="pricing-table-wrapper">
+          <!-- Recommended Badge Above Table -->
+          <div class="recommended-badge-container">
+            <span class="recommended-badge">RECOMMENDED</span>
+          </div>
+
+          <table class="pricing-table">
+            <!-- Plan Headers -->
+            <thead>
+              <tr>
+                <th></th>
+                <th class="plan-header">
+                  <div class="plan-name">Free Plan</div>
+                  <div class="plan-description">Try out the most advanced AI Bible personalities and get real answers.</div>
+                </th>
+                <th class="plan-header recommended-col">
+                  <div class="plan-name">Standard Edition</div>
+                  <div class="plan-description">Resources for mentoring, group studies, and teaching.</div>
+                </th>
+                <th class="plan-header">
+                  <div class="plan-name">Ministry Edition</div>
+                  <div class="plan-description">Tools for churches, sermons, teams, and outreach.</div>
+                </th>
+                <th class="plan-header">
+                  <div class="plan-name">Business Edition</div>
+                  <div class="plan-description">AI-powered tools for faith-based organizations. (Business Coaching)</div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Price Row -->
+              <tr class="price-row">
+                <td></td>
+                <td>
+                  <div class="price-amount monthly-price">$0.00</div>
+                  <div class="price-amount annual-price" style="display:none;">$0.00</div>
+                  <div class="price-period monthly-price">per month</div>
+                  <div class="price-period annual-price" style="display:none;">per year</div>
+                </td>
+                <td class="recommended-col">
+                  <div class="price-amount monthly-price">$19.95</div>
+                  <div class="price-amount annual-price" style="display:none;">$199.95</div>
+                  <div class="price-period monthly-price">per month</div>
+                  <div class="price-period annual-price" style="display:none;">per year</div>
+                </td>
+                <td>
+                  <div class="price-amount monthly-price">$49.95</div>
+                  <div class="price-amount annual-price" style="display:none;">$499.95</div>
+                  <div class="price-period monthly-price">per month</div>
+                  <div class="price-period annual-price" style="display:none;">per year</div>
+                </td>
+                <td>
+                  <div class="price-amount monthly-price">$99.95</div>
+                  <div class="price-amount annual-price" style="display:none;">$999.95</div>
+                  <div class="price-period monthly-price">per month</div>
+                  <div class="price-period annual-price" style="display:none;">per year</div>
+                </td>
+              </tr>
+
+              <!-- CTA Row -->
+              <tr class="cta-row">
+                <td></td>
+                <td></td>
+                <td class="recommended-col"><button class="plan-cta black-btn" data-plan="standard">GET STARTED</button></td>
+                <td><button class="plan-cta yellow-btn" data-plan="ministry">GET STARTED</button></td>
+                <td><button class="plan-cta yellow-btn" data-plan="business">GET STARTED</button></td>
+              </tr>
+
+              <!-- Section: Core Features -->
+              <tr class="section-divider">
+                <td><span class="section-title">Core Features</span></td>
+                <td></td><td class="recommended-col"></td><td></td><td></td>
+              </tr>
+
+              <!-- AI Personas Count -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Personalized AI Bible Personalities</div>
+                  <div class="feature-desc">Experience our AI companions with 98% "Simulated Sentient" rating</div>
+                </td>
+                <td>
+                  <div class="persona-count">
+                    <div class="persona-number">12 AI Bible Personas</div>
+                  </div>
+                </td>
+                <td class="recommended-col">
+                  <div class="persona-count">
+                    <div class="persona-number">12 AI Bible Personas</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="persona-count">
+                    <div class="persona-number">12 AI Bible Personas</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="persona-count">
+                    <div class="persona-number">12 AI Bible Personas</div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Interactive Bible -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Interactive Bible Verse Exploration</div>
+                  <div class="feature-desc">Search verses and get powerful passages tailored to your questions</div>
+                </td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Multi-Language -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Multi-Language Bible Translations</div>
+                  <div class="feature-desc">95+ written languages, 57 spoken languages</div>
+                </td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Prayer Support -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">AI-Assisted Personalized Prayer Support</div>
+                  <div class="feature-desc">AI-crafted prayers for your spiritual needs</div>
+                </td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Section: Standard Edition Features -->
+              <tr class="section-divider">
+                <td><span class="section-title">Standard Edition Features</span></td>
+                <td></td><td class="recommended-col"></td><td></td><td></td>
+              </tr>
+
+              <!-- Daily Verses -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Inspirational Daily Bible Verses & Reflection</div>
+                  <div class="feature-desc">Daily verse and reflection to uplift your spirit</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Hebrew & Greek -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Hebrew & Greek Word Study</div>
+                  <div class="feature-desc">Explore meanings rooted in original Hebrew, Greek, and Aramaic</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Daily Devotionals -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Interactive Daily Devotionals</div>
+                  <div class="feature-desc">Bite-sized reflections with Scripture and action steps</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Journaling -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">AI-Assisted Journaling</div>
+                  <div class="feature-desc">Deepen your faith and track spiritual growth</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Faith Challenges -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Faith-Building Challenges</div>
+                  <div class="feature-desc">Weekly challenges to strengthen key disciplines</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Prayer Suggestions -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Personalized Prayer Suggestions</div>
+                  <div class="feature-desc">Tailored prayer suggestions for your unique journey</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Reading Plans -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Thematic Bible Reading Plans</div>
+                  <div class="feature-desc">Curated plans on grace, forgiveness, leadership, prophecy</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Verse Application -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Verse-to-Life Application</div>
+                  <div class="feature-desc">Practical steps to apply biblical truths daily</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Memorization -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Scripture Memorization Assistant</div>
+                  <div class="feature-desc">Personalized memory techniques for your learning style</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Character Profiles -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Biblical Character Profiles</div>
+                  <div class="feature-desc">Explore journeys, challenges, and triumphs of biblical figures</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Community Engagement -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Community Engagement Tools</div>
+                  <div class="feature-desc">Foster meaningful connections in your church community</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Historical Context -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Historical Event Contextualizer</div>
+                  <div class="feature-desc">Detailed historical and cultural backdrop of biblical events</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Prophetic Insights -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Prophetic Insights Exploration</div>
+                  <div class="feature-desc">Uncover meanings behind prophetic messages</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Bedtime Stories -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Faith-Based Bed-Time Stories</div>
+                  <div class="feature-desc">Personalized bedtime stories rooted in biblical values</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Family Devotionals -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Family Devotional Ideas</div>
+                  <div class="feature-desc">Transform family time into meaningful faith moments</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Music Recommendations -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Faith-Inspired Music Recommendations</div>
+                  <div class="feature-desc">Curated hymns, worship songs tailored to you</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Reflection Questions -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Weekly Reflection Questions</div>
+                  <div class="feature-desc">Thoughtfully crafted questions to strengthen understanding</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Goal Setting -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Spiritual Goal Setting</div>
+                  <div class="feature-desc">Define and achieve meaningful spiritual goals</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Discipleship Pathway -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Discipleship Pathway Builder</div>
+                  <div class="feature-desc">Customized discipleship journeys with milestones</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Section: Ministry Edition Features -->
+              <tr class="section-divider">
+                <td><span class="section-title">Ministry Edition Features</span></td>
+                <td></td><td class="recommended-col"></td><td></td><td></td>
+              </tr>
+
+              <!-- Parables Explorer -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Parables Explorer & Generator</div>
+                  <div class="feature-desc">Contextual insights on Jesus' parables for modern life</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Sermon Inspiration -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Sermon Inspiration Hub</div>
+                  <div class="feature-desc">Generate sermon outlines, talking points, and Scripture</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Volunteer Management -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Volunteer Management Tools</div>
+                  <div class="feature-desc">Schedule tasks, assign responsibilities, send encouragement</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Bible Study Tools -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Bible Study Design Tools</div>
+                  <div class="feature-desc">Create themed studies tailored to your group's needs</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Leadership Development -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Faith-Based Leadership Development</div>
+                  <div class="feature-desc">Tailored workshops and team-building resources</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Prayer Chain -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Prayer Chain Organizer</div>
+                  <div class="feature-desc">Create, manage prayer chains and track requests</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Counseling Insights -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Counseling Insights</div>
+                  <div class="feature-desc">AI-driven pastoral care support rooted in Scripture</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Ministry Analytics -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Ministry Growth Analytics</div>
+                  <div class="feature-desc">Insights into engagement, sermon feedback, attendance</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Resource Library -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Custom Faith Resource Library</div>
+                  <div class="feature-desc">Personalized faith-focused materials for your ministry</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Section: Business Edition Features -->
+              <tr class="section-divider">
+                <td><span class="section-title">Business Edition Features</span></td>
+                <td></td><td class="recommended-col"></td><td></td><td></td>
+              </tr>
+
+              <!-- Marketing Strategies -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Values-Driven Marketing Strategies</div>
+                  <div class="feature-desc">AI-powered marketing reflecting faith-based values</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Team Building -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Inspirational Team-Building Activities</div>
+                  <div class="feature-desc">Engaging exercises rooted in faith-based principles</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Customer Engagement -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Faith-Centered Customer Engagement</div>
+                  <div class="feature-desc">Personalized outreach with compassion and integrity</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Branding -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Mission-Driven Branding Assistance</div>
+                  <div class="feature-desc">Develop a powerful purpose-driven brand identity</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Leadership Training -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Faith-Based Leadership Training</div>
+                  <div class="feature-desc">Transformative tools grounded in biblical principles</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Community Impact -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Community Impact Campaigns</div>
+                  <div class="feature-desc">AI-guided planning for meaningful service projects</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Ethical Framework -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Ethical Decision-Making Framework</div>
+                  <div class="feature-desc">Navigate business decisions with faith-based integrity</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Workplace Devotionals -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Workplace Devotional Resources</div>
+                  <div class="feature-desc">Transform your workplace with spiritual growth tools</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Content Creation -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Faith-Inspired Content Creation</div>
+                  <div class="feature-desc">Generate captivating blogs, newsletters, social posts</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Networking -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Personalized Networking Strategies</div>
+                  <div class="feature-desc">Connect with like-minded faith-inspired professionals</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Business Insights -->
+              <tr class="feature-row">
+                <td>
+                  <div class="feature-label">Scripture-Based Business Insights</div>
+                  <div class="feature-desc">Biblical wisdom for stewardship and customer relations</div>
+                </td>
+                <td></td>
+                <td class="recommended-col"></td>
+                <td></td>
+                <td><span class="check-icon check-yes">&#10003;</span></td>
+              </tr>
+
+              <!-- Bottom Price Row - Mirrors top pricing -->
+              <tr class="bottom-price-row">
+                <td></td>
+                <td>
+                  <div class="price-amount monthly-price">$0.00</div>
+                  <div class="price-amount annual-price" style="display:none;">$0.00</div>
+                  <div class="price-period monthly-price">per month</div>
+                  <div class="price-period annual-price" style="display:none;">per year</div>
+                </td>
+                <td class="recommended-col">
+                  <div class="price-amount monthly-price">$19.95</div>
+                  <div class="price-amount annual-price" style="display:none;">$199.95</div>
+                  <div class="price-period monthly-price">per month</div>
+                  <div class="price-period annual-price" style="display:none;">per year</div>
+                </td>
+                <td>
+                  <div class="price-amount monthly-price">$49.95</div>
+                  <div class="price-amount annual-price" style="display:none;">$499.95</div>
+                  <div class="price-period monthly-price">per month</div>
+                  <div class="price-period annual-price" style="display:none;">per year</div>
+                </td>
+                <td>
+                  <div class="price-amount monthly-price">$99.95</div>
+                  <div class="price-amount annual-price" style="display:none;">$999.95</div>
+                  <div class="price-period monthly-price">per month</div>
+                  <div class="price-period annual-price" style="display:none;">per year</div>
+                </td>
+              </tr>
+
+              <!-- Final CTA Row -->
+              <tr class="final-cta-row">
+                <td></td>
+                <td></td>
+                <td class="recommended-col"><button class="plan-cta black-btn" data-plan="standard">GET STARTED</button></td>
+                <td><button class="plan-cta yellow-btn" data-plan="ministry">GET STARTED</button></td>
+                <td><button class="plan-cta yellow-btn" data-plan="business">GET STARTED</button></td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Billing Toggle Functionality
+    const billingToggle = document.getElementById('billingToggle');
+    const monthlyLabel = document.querySelector('.monthly-label');
+    const annualLabel = document.querySelector('.annual-label');
+    const saveBadge = document.querySelector('.save-badge');
+
+    let isAnnual = false;
+
+    function updatePricingDisplay() {
+      if (billingToggle) billingToggle.classList.toggle('annual', isAnnual);
+      if (monthlyLabel) monthlyLabel.classList.toggle('active', !isAnnual);
+      if (annualLabel) annualLabel.classList.toggle('active', isAnnual);
+      if (saveBadge) {
+        saveBadge.classList.toggle('active', isAnnual);
+        saveBadge.textContent = isAnnual ? 'MONTHLY' : '2 MONTHS FREE';
+      }
+
+      // Query fresh each time since the table may be dynamically rebuilt
+      const monthlyPrices = document.querySelectorAll('.monthly-price');
+      const annualPrices = document.querySelectorAll('.annual-price');
+      monthlyPrices.forEach(el => el.style.display = isAnnual ? 'none' : 'block');
+      annualPrices.forEach(el => el.style.display = isAnnual ? 'block' : 'none');
+    }
+
+    if (billingToggle) {
+      billingToggle.addEventListener('click', () => {
+        isAnnual = !isAnnual;
+        updatePricingDisplay();
+      });
+    }
+
+    // Allow clicking on labels to toggle
+    if (monthlyLabel) {
+      monthlyLabel.addEventListener('click', () => {
+        if (isAnnual) {
+          isAnnual = false;
+          updatePricingDisplay();
+        }
+      });
+    }
+
+    if (annualLabel) {
+      annualLabel.addEventListener('click', () => {
+        if (!isAnnual) {
+          isAnnual = true;
+          updatePricingDisplay();
+        }
+      });
+    }
+
+    // Badge button - toggles between monthly and yearly
+    if (saveBadge) {
+      saveBadge.addEventListener('click', () => {
+        isAnnual = !isAnnual;
+        updatePricingDisplay();
+      });
+    }
+
+    // Navigate to payment page with plan and billing info
+    function goToPayment(planId) {
+      const billing = isAnnual ? 'yearly' : 'monthly';
+      // Go directly to payment page - it requires auth and will redirect to login if needed
+      window.location.href = '/payment?plan=' + planId + '&billing=' + billing;
+    }
+
+    // Attach click handlers to all plan CTA buttons
+    // Called after DOM updates since CSP blocks inline onclick handlers
+    function attachPlanButtonHandlers() {
+      document.querySelectorAll('.plan-cta[data-plan]').forEach(btn => {
+        // Remove existing listener to prevent duplicates
+        btn.removeEventListener('click', handlePlanButtonClick);
+        btn.addEventListener('click', handlePlanButtonClick);
+      });
+    }
+
+    function handlePlanButtonClick(e) {
+      const planId = e.currentTarget.dataset.plan;
+      if (planId) {
+        goToPayment(planId);
+      }
+    }
+
+    // Position the Recommended badge to align with the Standard Edition column
+    function positionRecommendedBadge() {
+      const badge = document.querySelector('.recommended-badge');
+      const recommendedCol = document.querySelector('th.recommended-col');
+      const tableWrapper = document.querySelector('.pricing-table-wrapper');
+
+      if (badge && recommendedCol && tableWrapper) {
+        const wrapperRect = tableWrapper.getBoundingClientRect();
+        const colRect = recommendedCol.getBoundingClientRect();
+
+        // Calculate position relative to the wrapper
+        const leftOffset = colRect.left - wrapperRect.left;
+        const colWidth = colRect.width;
+
+        badge.style.left = leftOffset + 'px';
+        badge.style.width = colWidth + 'px';
+      }
+    }
+
+    // Position on load and resize
+    window.addEventListener('load', positionRecommendedBadge);
+    window.addEventListener('resize', positionRecommendedBadge);
+    // Also position after a short delay to ensure table has rendered
+    setTimeout(positionRecommendedBadge, 100);
+
+    // =====================================================
+    // Translation & Internationalization
+    // =====================================================
+
+    let currentLanguage = 'en';
+    let staticTranslations = {};
+    let contentVersions = {};
+
+    // Get user's preferred language
+    function getUserLanguage() {
+      // Check jv_selected_language first (used by search, chat pages)
+      try {
+        const jvSelected = localStorage.getItem('jv_selected_language');
+        if (jvSelected) {
+          const parsed = JSON.parse(jvSelected);
+          if (parsed && parsed.code) {
+            console.log('Language from jv_selected_language:', parsed.code);
+            return parsed.code;
+          }
+        }
+      } catch (e) {}
+
+      // Check preferredLanguage (simple string format)
+      const stored = localStorage.getItem('preferredLanguage');
+      if (stored) {
+        console.log('Language from preferredLanguage:', stored);
+        return stored;
+      }
+
+      // Check browser language as fallback
+      const browserLang = navigator.language?.split('-')[0] || 'en';
+      console.log('Language from browser:', browserLang);
+      return browserLang;
+    }
+
+    // Load translated content for the plans page
+    async function loadTranslatedContent(languageCode) {
+      try {
+        const response = await fetch(`/api/plan-features?lang=${languageCode}`, {
+          credentials: 'include',
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          currentLanguage = data.languageCode;
+          staticTranslations = data.staticContent || {};
+          contentVersions = data.versions || {};
+
+          // Apply static translations to the page
+          applyStaticTranslations();
+
+          return data.categories || [];
+        }
+      } catch (error) {
+        console.error('Error loading translated content:', error);
+      }
+      return [];
+    }
+
+    // Apply static translations to page elements
+    function applyStaticTranslations() {
+      // Page title and description
+      const pageTitle = document.querySelector('.section-header h1');
+      const pageDesc = document.querySelector('.section-header p');
+      if (pageTitle && staticTranslations.page_title) {
+        pageTitle.textContent = staticTranslations.page_title;
+      }
+      if (pageDesc && staticTranslations.page_description) {
+        pageDesc.textContent = staticTranslations.page_description;
+      }
+
+      // Plan names in headers
+      const planHeaders = document.querySelectorAll('.plan-header');
+      if (planHeaders.length >= 4) {
+        // Free Plan
+        const freeName = planHeaders[0].querySelector('.plan-name');
+        const freeDesc = planHeaders[0].querySelector('.plan-description');
+        if (freeName && staticTranslations.free_plan_name) freeName.textContent = staticTranslations.free_plan_name;
+        if (freeDesc && staticTranslations.free_plan_description) freeDesc.textContent = staticTranslations.free_plan_description;
+
+        // Standard Plan
+        const stdName = planHeaders[1].querySelector('.plan-name');
+        const stdDesc = planHeaders[1].querySelector('.plan-description');
+        if (stdName && staticTranslations.standard_plan_name) stdName.textContent = staticTranslations.standard_plan_name;
+        if (stdDesc && staticTranslations.standard_plan_description) stdDesc.textContent = staticTranslations.standard_plan_description;
+
+        // Ministry Plan
+        const minName = planHeaders[2].querySelector('.plan-name');
+        const minDesc = planHeaders[2].querySelector('.plan-description');
+        if (minName && staticTranslations.ministry_plan_name) minName.textContent = staticTranslations.ministry_plan_name;
+        if (minDesc && staticTranslations.ministry_plan_description) minDesc.textContent = staticTranslations.ministry_plan_description;
+
+        // Business Plan
+        const bizName = planHeaders[3].querySelector('.plan-name');
+        const bizDesc = planHeaders[3].querySelector('.plan-description');
+        if (bizName && staticTranslations.business_plan_name) bizName.textContent = staticTranslations.business_plan_name;
+        if (bizDesc && staticTranslations.business_plan_description) bizDesc.textContent = staticTranslations.business_plan_description;
+      }
+
+      // Price periods
+      document.querySelectorAll('.price-period.monthly-price').forEach(el => {
+        if (staticTranslations.per_month) el.textContent = staticTranslations.per_month;
+      });
+      document.querySelectorAll('.price-period.annual-price').forEach(el => {
+        if (staticTranslations.per_year) el.textContent = staticTranslations.per_year;
+      });
+
+      // Buttons
+      document.querySelectorAll('.plan-cta').forEach(btn => {
+        if (btn.textContent.includes('GET STARTED') && staticTranslations.get_started) {
+          btn.textContent = staticTranslations.get_started;
+        }
+      });
+
+      // Recommended badge
+      const recommendedBadge = document.querySelector('.recommended-badge');
+      if (recommendedBadge && staticTranslations.recommended) {
+        recommendedBadge.textContent = staticTranslations.recommended;
+      }
+
+      // Billing toggle labels
+      const monthLabel = document.querySelector('.monthly-label');
+      const yearLabel = document.querySelector('.annual-label');
+      if (monthLabel && staticTranslations.month) monthLabel.textContent = staticTranslations.month;
+      if (yearLabel && staticTranslations.year) yearLabel.textContent = staticTranslations.year;
+
+      // Save badge
+      const saveBadgeEl = document.querySelector('.save-badge');
+      if (saveBadgeEl) {
+        if (!isAnnual && staticTranslations.two_months_free) {
+          saveBadgeEl.textContent = staticTranslations.two_months_free;
+        } else if (isAnnual && staticTranslations.monthly) {
+          saveBadgeEl.textContent = staticTranslations.monthly;
+        }
+      }
+
+      // Back button
+      const backBtn = document.querySelector('.back-btn');
+      if (backBtn && staticTranslations.back) {
+        const svg = backBtn.querySelector('svg');
+        backBtn.textContent = '';
+        if (svg) backBtn.appendChild(svg);
+        backBtn.appendChild(document.createTextNode(' ' + staticTranslations.back));
+      }
+    }
+
+    // =====================================================
+    // Admin Task List Feature Management
+    // =====================================================
+
+    let isAdmin = false;
+    let isTaskListMode = false;
+    let originalTableContent = null;
+
+    // Check if user is admin and get language preference
+    async function checkAdminStatus() {
+      try {
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include'
+        });
+        console.log('Auth response status:', response.status);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Auth data:', data);
+          // Check both possible response structures
+          const user = data.user || data;
+          isAdmin = user && user.role === 'admin';
+          console.log('Is admin:', isAdmin, 'User role:', user?.role);
+          if (isAdmin) {
+            // Add is-admin class to body to show admin-only elements via CSS
+            document.body.classList.add('is-admin');
+            console.log('Added is-admin class to body');
+          }
+
+          // Only use database language if no active localStorage selection exists
+          // The localStorage jv_selected_language is the user's active choice (from search page)
+          // and should NOT be overridden by database preference
+          const hasActiveLocalStorageSelection = localStorage.getItem('jv_selected_language') || localStorage.getItem('preferredLanguage');
+          if (!hasActiveLocalStorageSelection && user?.preferredLanguage && user.preferredLanguage !== currentLanguage) {
+            const oldLang = currentLanguage;
+            currentLanguage = user.preferredLanguage;
+            localStorage.setItem('preferredLanguage', currentLanguage);
+            console.log('Language updated from session (no localStorage):', oldLang, '->', currentLanguage);
+
+            // If language changed, reload with correct translation
+            if (oldLang !== currentLanguage) {
+              await renderFeaturesFromDatabase('published');
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+      }
+    }
+
+    // Load features from database
+    // For public view (publishedOnly=true), use public API
+    // For admin task list (publishedOnly=false), use admin API
+    async function loadFeaturesFromDatabase(publishedOnly = true) {
+      try {
+        // Use public API for published features (accessible to all users)
+        // Use admin API only for task list mode (requires admin auth)
+        const endpoint = publishedOnly
+          ? `/api/plan-features?lang=${currentLanguage}`
+          : '/api/admin/plan-features/all';
+        const response = await fetch(endpoint, {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        console.log('Load features response:', response.status);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Loaded categories:', data.categories?.length || 0);
+
+          // For public API, also get static translations
+          if (publishedOnly && data.staticContent) {
+            staticTranslations = data.staticContent;
+            applyStaticTranslations();
+          }
+
+          return data.categories || [];
+        } else {
+          console.error('Failed to load features:', response.status, response.statusText);
+        }
+      } catch (error) {
+        console.error('Error loading features:', error);
+      }
+      return [];
+    }
+
+    // Toggle feature publish status
+    async function toggleFeaturePublish(featureId, isPublished) {
+      try {
+        const response = await fetch(`/api/admin/plan-features/${featureId}/publish`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ isPublished })
+        });
+        if (!response.ok) {
+          throw new Error('Failed to update feature');
+        }
+        return true;
+      } catch (error) {
+        console.error('Error toggling feature publish:', error);
+        return false;
+      }
+    }
+
+    // Generate check icon HTML (static display mode)
+    function getCheckIcon(hasFeature, isRecommended) {
+      if (!hasFeature) return '';
+      return `<span class="check-icon check-yes">&#10003;</span>`;
+    }
+
+    // Generate clickable checkbox for plan column (Task List edit mode)
+    function getPlanCheckbox(featureId, planType, isChecked) {
+      return `<input type="checkbox" class="plan-toggle-checkbox"
+        data-feature-id="${featureId}"
+        data-plan-type="${planType}"
+        ${isChecked ? 'checked' : ''} />`;
+    }
+
+    // Update plan availability via API
+    async function updatePlanAvailability(featureId, planType, isEnabled) {
+      try {
+        const data = {};
+        data[planType] = isEnabled;
+        const response = await fetch(`/api/admin/plan-features/${featureId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+          throw new Error('Failed to update plan availability');
+        }
+        console.log(`Updated ${planType} to ${isEnabled} for feature ${featureId}`);
+        return true;
+      } catch (error) {
+        console.error('Error updating plan availability:', error);
+        return false;
+      }
+    }
+
+    // Update feature text via API
+    async function updateFeatureText(featureId, field, value) {
+      try {
+        const data = {};
+        data[field] = value;
+        const response = await fetch(`/api/admin/plan-features/${featureId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+          throw new Error('Failed to update feature');
+        }
+        console.log(`Updated ${field} for feature ${featureId}`);
+        return true;
+      } catch (error) {
+        console.error('Error updating feature:', error);
+        return false;
+      }
+    }
+
+    // Generate feature row HTML
+    function generateFeatureRow(feature, showCheckbox = false) {
+      const rowClass = showCheckbox && !feature.isPublished ? 'feature-row unpublished' : 'feature-row';
+      const checkboxHtml = showCheckbox
+        ? `<input type="checkbox" class="task-checkbox" data-feature-id="${feature.id}" ${feature.isPublished ? 'checked' : ''} />`
+        : '';
+
+      // Wrapper for proper checkbox + text layout
+      const editableClass = showCheckbox ? 'editable-field' : '';
+      const firstCellContent = showCheckbox
+        ? `<div class="feature-content-wrapper">
+             ${checkboxHtml}
+             <div class="feature-text-wrapper">
+               <div class="feature-label ${editableClass}" data-field="name" data-feature-id="${feature.id}">${feature.name}</div>
+               <div class="feature-desc ${editableClass}" data-field="description" data-feature-id="${feature.id}">${feature.description || ''}</div>
+             </div>
+           </div>`
+        : `<div class="feature-label">${feature.name}</div>
+           <div class="feature-desc">${feature.description || ''}</div>`;
+
+      // Handle persona count feature differently
+      if (feature.slug === 'personalized-ai-personas') {
+        return `
+          <tr class="${rowClass}" data-feature-id="${feature.id}">
+            <td>${firstCellContent}</td>
+            <td>
+              <div class="persona-count">
+                <div class="persona-number">${feature.freeValue || '12 AI Bible Personas'}</div>
+              </div>
+            </td>
+            <td class="recommended-col">
+              <div class="persona-count">
+                <div class="persona-number">${feature.standardValue || '12 AI Bible Personas'}</div>
+              </div>
+            </td>
+            <td>
+              <div class="persona-count">
+                <div class="persona-number">${feature.ministryValue || '12 AI Bible Personas'}</div>
+              </div>
+            </td>
+            <td>
+              <div class="persona-count">
+                <div class="persona-number">${feature.businessValue || '12 AI Bible Personas'}</div>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+
+      // In Task List mode, show clickable checkboxes for plan columns
+      // In Published mode, show static check icons
+      const freeCell = showCheckbox
+        ? getPlanCheckbox(feature.id, 'freePlan', feature.freePlan)
+        : getCheckIcon(feature.freePlan, false);
+      const standardCell = showCheckbox
+        ? getPlanCheckbox(feature.id, 'standardPlan', feature.standardPlan)
+        : getCheckIcon(feature.standardPlan, true);
+      const ministryCell = showCheckbox
+        ? getPlanCheckbox(feature.id, 'ministryPlan', feature.ministryPlan)
+        : getCheckIcon(feature.ministryPlan, false);
+      const businessCell = showCheckbox
+        ? getPlanCheckbox(feature.id, 'businessPlan', feature.businessPlan)
+        : getCheckIcon(feature.businessPlan, false);
+
+      return `
+        <tr class="${rowClass}" data-feature-id="${feature.id}">
+          <td>${firstCellContent}</td>
+          <td>${freeCell}</td>
+          <td class="recommended-col">${standardCell}</td>
+          <td>${ministryCell}</td>
+          <td>${businessCell}</td>
+        </tr>
+      `;
+    }
+
+    // Generate section divider HTML
+    function generateSectionDivider(category) {
+      // Add special styling for Standard Edition
+      const isStandardEdition = category.slug === 'standard-edition';
+      const titleClass = isStandardEdition ? 'section-title standard-edition-title' : 'section-title';
+
+      return `
+        <tr class="section-divider">
+          <td><span class="${titleClass}">${category.name}</span></td>
+          <td></td><td class="recommended-col"></td><td></td><td></td>
+        </tr>
+      `;
+    }
+
+    // Render features table body (features only, not header/price/cta rows)
+    function renderFeaturesBody(categories, showCheckboxes = false) {
+      let html = '';
+
+      for (const category of categories) {
+        // Add section divider for each category
+        html += generateSectionDivider(category);
+
+        // Add features for this category
+        for (const feature of category.features || []) {
+          html += generateFeatureRow(feature, showCheckboxes);
+        }
+      }
+
+      return html;
+    }
+
+    // Render features from database
+    // mode: 'task' = all features with checkboxes, 'published' = published only without checkboxes
+    // preloadedCategories: optional pre-loaded categories (for translations)
+    async function renderFeaturesFromDatabase(mode, preloadedCategories = null) {
+      const tbody = document.querySelector('.pricing-table tbody');
+      if (!tbody) return;
+
+      // Store original content on first toggle
+      if (originalTableContent === null) {
+        originalTableContent = tbody.innerHTML;
+      }
+
+      // Load features from database or use preloaded
+      const publishedOnly = (mode === 'published');
+      const showCheckboxes = (mode === 'task');
+      const categories = preloadedCategories || await loadFeaturesFromDatabase(publishedOnly);
+
+      console.log(`Rendering ${mode} mode: ${categories.length} categories, publishedOnly=${publishedOnly}, showCheckboxes=${showCheckboxes}`);
+
+      if (categories.length === 0) {
+        console.error('No categories loaded from database');
+        return;
+      }
+
+      // Keep header rows (price-row and cta-row) and rebuild feature sections
+      const priceRow = tbody.querySelector('.price-row');
+      const ctaRow = tbody.querySelector('.cta-row');
+      const bottomPriceRow = tbody.querySelector('.bottom-price-row');
+      const finalCtaRow = tbody.querySelector('.final-cta-row');
+
+      // Build new tbody content
+      let newHtml = '';
+
+      // Keep price row
+      if (priceRow) newHtml += priceRow.outerHTML;
+
+      // Keep CTA row
+      if (ctaRow) newHtml += ctaRow.outerHTML;
+
+      // Add dynamically loaded features
+      newHtml += renderFeaturesBody(categories, showCheckboxes);
+
+      // Keep bottom price row
+      if (bottomPriceRow) newHtml += bottomPriceRow.outerHTML;
+
+      // Keep final CTA row
+      if (finalCtaRow) newHtml += finalCtaRow.outerHTML;
+
+      tbody.innerHTML = newHtml;
+
+      // Add event listeners to publish checkboxes (first column)
+      tbody.querySelectorAll('.task-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', async (e) => {
+          const featureId = e.target.dataset.featureId;
+          const isPublished = e.target.checked;
+          const row = e.target.closest('.feature-row');
+
+          const success = await toggleFeaturePublish(featureId, isPublished);
+          if (success) {
+            row.classList.toggle('unpublished', !isPublished);
+          } else {
+            // Revert checkbox on failure
+            e.target.checked = !isPublished;
+          }
+        });
+      });
+
+      // Add event listeners to plan toggle checkboxes (plan columns)
+      tbody.querySelectorAll('.plan-toggle-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', async (e) => {
+          const featureId = e.target.dataset.featureId;
+          const planType = e.target.dataset.planType;
+          const isEnabled = e.target.checked;
+
+          const success = await updatePlanAvailability(featureId, planType, isEnabled);
+          if (!success) {
+            // Revert checkbox on failure
+            e.target.checked = !isEnabled;
+          }
+        });
+      });
+
+      // Add double-click event listeners for inline editing
+      tbody.querySelectorAll('.editable-field').forEach(field => {
+        field.addEventListener('dblclick', (e) => {
+          e.preventDefault();
+          const element = e.target;
+
+          // Already editing, don't re-trigger
+          if (element.getAttribute('contenteditable') === 'true') return;
+
+          // Store original value
+          const originalValue = element.textContent;
+          const featureId = element.dataset.featureId;
+          const fieldName = element.dataset.field;
+
+          // Make editable
+          element.setAttribute('contenteditable', 'true');
+          element.focus();
+
+          // Select all text
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          const selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+
+          // Handle blur (save on click outside)
+          const handleBlur = async () => {
+            element.removeAttribute('contenteditable');
+            const newValue = element.textContent.trim();
+
+            if (newValue !== originalValue && newValue !== '') {
+              const success = await updateFeatureText(featureId, fieldName, newValue);
+              if (!success) {
+                // Revert on failure
+                element.textContent = originalValue;
+              }
+            } else if (newValue === '') {
+              // Don't allow empty, revert
+              element.textContent = originalValue;
+            }
+
+            element.removeEventListener('blur', handleBlur);
+            element.removeEventListener('keydown', handleKeydown);
+          };
+
+          // Handle keyboard events
+          const handleKeydown = (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              element.blur();
+            } else if (e.key === 'Escape') {
+              element.textContent = originalValue;
+              element.blur();
+            }
+          };
+
+          element.addEventListener('blur', handleBlur);
+          element.addEventListener('keydown', handleKeydown);
+        });
+      });
+
+      // Attach click handlers to plan buttons after DOM update
+      attachPlanButtonHandlers();
+    }
+
+    // Initialize Task List toggle
+    // Default state: shows static HTML (not in database mode yet)
+    // First click: enters Task List mode (all features with checkboxes)
+    // Second click: enters Published List mode (published features only, no checkboxes)
+    // Third click: back to Task List mode, etc.
+    let databaseModeActive = false;
+
+    document.getElementById('taskListToggle').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const link = e.currentTarget;
+
+      if (!databaseModeActive) {
+        // First click - enter Task List mode (all features with checkboxes)
+        databaseModeActive = true;
+        isTaskListMode = true;
+        link.classList.add('active');
+        link.textContent = 'JQA: Published List';
+        await renderFeaturesFromDatabase('task');
+      } else if (isTaskListMode) {
+        // Currently in Task List mode - switch to Published List mode (UI mode)
+        isTaskListMode = false;
+        link.classList.remove('active'); // Return to outline style
+        link.textContent = 'JQA: Task List';
+        await renderFeaturesFromDatabase('published');
+      } else {
+        // Currently in Published List mode - switch back to Task List mode
+        isTaskListMode = true;
+        link.classList.add('active'); // Add active style
+        link.textContent = 'JQA: Published List';
+        await renderFeaturesFromDatabase('task');
+      }
+    });
+
+    // Initialize page with translations and admin status
+    async function initializePage() {
+      // Attach button handlers immediately for initial DOM buttons
+      attachPlanButtonHandlers();
+
+      // First, check user language and set currentLanguage
+      currentLanguage = getUserLanguage();
+      console.log('User language:', currentLanguage);
+
+      // Always load features from database for public view
+      // This ensures all published categories (Trust & Safety, Prayer & Devotion, etc.) appear
+      // The loadFeaturesFromDatabase function will use the public API which includes translations
+      await renderFeaturesFromDatabase('published');
+
+      // Then check admin status
+      await checkAdminStatus();
+    }
+
+    // Check admin status on page load - wait for DOM to be ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializePage);
+    } else {
+      initializePage();
+    }
+  </script>
+
+  <!-- Component Loader for header and sidebar -->
+  <script src="/js/modules/components.js"></script>
+</body>
+</html>
