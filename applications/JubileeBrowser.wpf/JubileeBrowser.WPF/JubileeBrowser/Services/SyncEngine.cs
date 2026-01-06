@@ -76,7 +76,7 @@ public class SyncEngine : INotifyPropertyChanged, IDisposable
         _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
 
         // Get API base URL from environment (same as MainWindow uses)
-        var apiBaseUrl = Environment.GetEnvironmentVariable("API_BASE_URL") ?? "http://localhost:3100";
+        var apiBaseUrl = Environment.GetEnvironmentVariable("API_BASE_URL") ?? "https://api.inspirecodex.com";
         _syncApiBaseUrl = $"{apiBaseUrl}/api/sync";
 
         _authService.AuthStateChanged += OnAuthStateChanged;
