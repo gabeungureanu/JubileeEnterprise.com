@@ -379,6 +379,35 @@ img {
   margin-right: auto;
 }
 
+.hero-subtitle-tagline {
+  font-size: 1.35rem;
+  font-weight: 600;
+  opacity: 0.95;
+  margin-bottom: var(--spacing-md);
+  color: #d4a843;
+  letter-spacing: 0.5px;
+}
+
+.hero-fullimage .hero-subtitle-tagline {
+  max-width: 480px;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.hero-reassurance {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-top: var(--spacing-lg);
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 450px;
+}
+
+.hero-fullimage .hero-reassurance {
+  margin-left: 0;
+  margin-right: 0;
+}
+
 .hero-buttons {
   display: flex;
   gap: var(--spacing-md);
@@ -926,6 +955,24 @@ img {
     max-width: 100%;
     margin-left: auto;
     margin-right: auto;
+  }
+
+  .hero-fullimage .hero-subtitle-tagline {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1.1rem;
+  }
+
+  .hero-fullimage .hero-reassurance {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+  }
+
+  .hero-reassurance {
+    font-size: 0.85rem;
   }
 
   .hero-fullimage .hero-buttons {
