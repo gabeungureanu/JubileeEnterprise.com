@@ -12,23 +12,17 @@
  * The database is the source of truth; YAML serves as backup/export.
  *
  * Run with: node server.js
- * Default port: 3847
+ * Default port: 3847 (or process.env.PORT for iisnode)
  */
 
-import http from 'http';
-import fs from 'fs';
-import path from 'path';
-import url from 'url';
-import { fileURLToPath } from 'url';
-import YAML from 'yaml';
-import pg from 'pg';
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const url = require('url');
+const YAML = require('yaml');
+const { Pool } = require('pg');
 
-const { Pool } = pg;
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const PORT = 3847;
+const PORT = process.env.PORT || 3847;
 const BASE_DIR = __dirname; // The directory where this script is located
 const CONFIG_FILE = path.join(BASE_DIR, 'idns.yaml');
 
@@ -118,6 +112,7 @@ function handleGetFolders(req, res) {
         const folders = items
             .filter(item => item.isDirectory())
             .filter(item => !item.name.startsWith('.')) // Exclude hidden folders
+            .filter(item => item.name !== 'node_modules') // Exclude node_modules
             .map(item => {
                 const folderPath = path.join(BASE_DIR, item.name);
                 const subfolderCount = countSubfolders(folderPath);
