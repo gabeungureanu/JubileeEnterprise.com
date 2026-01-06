@@ -1,0 +1,13 @@
+{
+  "name": "wwbibleweb-folder-management",
+  "version": "1.0.0",
+  "description": "Worldwide Bible Web folder management server",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "yaml": "^2.3.4"
+  }
+}

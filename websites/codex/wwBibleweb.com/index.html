@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>wwBibleweb.com - Folder Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+
+        h1 {
+            font-size: 18px;
+            font-weight: 500;
+            color: #888;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .folder-count {
+            font-size: 12px;
+            color: #666;
+            margin-right: 10px;
+        }
+
+        .btn {
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            padding: 8px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .btn:hover {
+            background-color: #333;
+            border-color: #555;
+        }
+
+        .btn-primary {
+            background-color: #2d4a3e;
+            border-color: #3d6a5e;
+        }
+
+        .btn-primary:hover {
+            background-color: #3d5a4e;
+        }
+
+        .btn-refresh {
+            padding: 8px 12px;
+        }
+
+        .folder-grid {
+            background-color: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 150px);
+            min-height: 300px;
+        }
+
+        .folder-header {
+            display: grid;
+            grid-template-columns: 30px 40px 15px 1fr 1fr 1fr 50px 60px;
+            padding: 8px 12px;
+            background-color: #2a2a2a;
+            border-bottom: 1px solid #333;
+            font-size: 11px;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            flex-shrink: 0;
+        }
+
+        #folderList {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: auto;
+            scrollbar-width: auto;
+            scrollbar-color: #666 #2a2a2a;
+        }
+
+        /* Enhanced scrollbar styling for WebKit browsers */
+        #folderList::-webkit-scrollbar {
+            width: 14px;
+            height: 14px;
+        }
+
+        #folderList::-webkit-scrollbar-track {
+            background: #2a2a2a;
+            border-radius: 7px;
+            border: 2px solid #222;
+        }
+
+        #folderList::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+            border-radius: 7px;
+            border: 2px solid #2a2a2a;
+            min-height: 40px;
+        }
+
+        #folderList::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #707070 0%, #606060 100%);
+        }
+
+        #folderList::-webkit-scrollbar-thumb:active {
+            background: linear-gradient(180deg, #808080 0%, #707070 100%);
+        }
+
+        #folderList::-webkit-scrollbar-corner {
+            background: #2a2a2a;
+        }
+
+        .folder-row {
+            display: grid;
+            grid-template-columns: 30px 40px 15px 1fr 1fr 1fr 50px 60px;
+            padding: 0 12px;
+            height: 24px;
+            align-items: center;
+            border-bottom: 1px solid #2a2a2a;
+            font-size: 13px;
+            transition: background-color 0.1s ease;
+            cursor: pointer;
+            background-color: #222;
+        }
+
+        .folder-row.managed .folder-index,
+        .folder-row.managed .folder-name,
+        .folder-row.managed .inspire-domain,
+        .folder-row.managed .subfolder-count,
+        .folder-row.managed .folder-icon {
+            font-weight: bold;
+        }
+
+        .folder-row:last-child {
+            border-bottom: none;
+        }
+
+        .folder-row:hover {
+            background-color: #2a2a2a;
+        }
+
+        .folder-row:hover .managed-indicator {
+            background-color: #2a2a2a;
+        }
+
+        .folder-row.selected {
+            background-color: #2d3a4a;
+            border-left: 2px solid #6a9fb5;
+            padding-left: 10px;
+        }
+
+        .folder-row.selected .managed-indicator {
+            background-color: #2d3a4a;
+        }
+
+        .folder-row.subfolder {
+            background-color: #1e1e1e;
+        }
+
+        .folder-row.subfolder .managed-indicator {
+            background-color: #1e1e1e;
+        }
+
+        .folder-row.subfolder:hover {
+            background-color: #252525;
+        }
+
+        .folder-row.subfolder:hover .managed-indicator {
+            background-color: #252525;
+        }
+
+        .folder-row.subfolder.selected {
+            background-color: #253545;
+        }
+
+        .folder-row.subfolder.selected .managed-indicator {
+            background-color: #253545;
+        }
+
+        .expand-btn {
+            color: #c0c0c0;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 2px;
+            transition: all 0.15s ease;
+            user-select: none;
+            margin-right: 4px;
+        }
+
+        .expand-btn:hover {
+            background-color: #3a3a3a;
+            color: #fff;
+        }
+
+        .expand-btn.expanded {
+            color: #d4a800;
+        }
+
+        .new-subfolder-row {
+            display: grid;
+            grid-template-columns: 30px 40px 15px 1fr 1fr 1fr 50px 60px;
+            padding: 0 12px;
+            height: 24px;
+            align-items: center;
+            border-bottom: 1px solid #2a2a2a;
+            font-size: 13px;
+            background-color: #1e1e1e;
+        }
+
+        .new-subfolder-row > span:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background-color: #1e1e1e;
+        }
+
+        .managed-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background-color: #222;
+        }
+
+        /* Fixed first column styling for header */
+        .folder-header > span:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 11;
+            background-color: #2a2a2a;
+        }
+
+        .managed-indicator-icon {
+            color: #d4a800;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .managed-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+
+        .managed-toggle {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            border: 1px solid #444;
+            background-color: #2a2a2a;
+            transition: all 0.15s ease;
+        }
+
+        .managed-toggle:hover {
+            border-color: #d4a800;
+            background-color: #333;
+        }
+
+        .managed-toggle.active {
+            background-color: #d4a800;
+            border-color: #d4a800;
+            color: #000;
+        }
+
+        .btn-save {
+            background-color: #2d4a3e;
+            border-color: #3d6a5e;
+        }
+
+        .btn-save:hover {
+            background-color: #3d5a4e;
+        }
+
+        .btn-save.has-changes {
+            background-color: #d4a800;
+            border-color: #d4a800;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .btn-save.has-changes:hover {
+            background-color: #e5b900;
+        }
+
+        .subfolder-count {
+            color: #ffffff;
+            font-size: 12px;
+            font-family: monospace;
+            text-align: right;
+            padding-right: 8px;
+        }
+
+        .new-subfolder-link {
+            color: #6a9fb5;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .new-subfolder-link:hover {
+            color: #8abfd5;
+            text-decoration: underline;
+        }
+
+        .folder-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+        }
+
+        .folder-icon svg {
+            width: 14px;
+            height: 14px;
+            fill: #d4a800;
+        }
+
+        .folder-name {
+            cursor: default;
+            user-select: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 10px;
+        }
+
+        .folder-name.editable {
+            cursor: text;
+        }
+
+        .folder-name-input {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            border: 2px solid #d4a800;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 13px;
+            font-family: inherit;
+            width: calc(100% - 10px);
+            outline: none;
+        }
+
+        .folder-name-input:focus {
+            border-color: #f0c000;
+            box-shadow: 0 0 0 2px rgba(212, 168, 0, 0.2);
+        }
+
+        .folder-index {
+            color: #ffffff;
+            font-size: 11px;
+            font-family: monospace;
+            font-weight: 500;
+        }
+
+        .folder-name-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow: hidden;
+        }
+
+        .inspire-domain {
+            color: #d4a800;
+            font-size: 12px;
+            font-family: monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .masked-resolution {
+            color: #8ab4f8;
+            font-size: 12px;
+            font-family: monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            min-height: 18px;
+        }
+
+        .masked-resolution:hover {
+            background-color: rgba(138, 180, 248, 0.1);
+        }
+
+        .masked-resolution.empty {
+            color: #555;
+            font-style: italic;
+        }
+
+        .masked-resolution-input {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            border: 2px solid #8ab4f8;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-family: monospace;
+            width: calc(100% - 10px);
+            outline: none;
+        }
+
+        .masked-resolution-input:focus {
+            border-color: #a0c4ff;
+            box-shadow: 0 0 0 2px rgba(138, 180, 248, 0.2);
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 8px;
+            border-radius: 3px;
+            transition: all 0.15s ease;
+        }
+
+        .delete-btn:hover {
+            color: #c45;
+            background-color: rgba(204, 68, 85, 0.1);
+        }
+
+        .actions-cell {
+            display: flex;
+            justify-content: center;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #c45;
+            background-color: #2a1a1a;
+            border: 1px solid #433;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+
+        .status-bar {
+            margin-top: 15px;
+            padding: 8px 12px;
+            background-color: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-message {
+            color: #6a9;
+        }
+
+        .status-message.error {
+            color: #c45;
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 20px;
+            min-width: 350px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal h2 {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: #ccc;
+        }
+
+        .modal input[type="text"] {
+            width: 100%;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 10px 12px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        .modal input[type="text"]:focus,
+        .modal input[type="password"]:focus {
+            border-color: #d4a800;
+        }
+
+        .modal input[type="password"] {
+            width: 100%;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 10px 12px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        .modal label {
+            display: block;
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .password-error {
+            color: #c45;
+            font-size: 12px;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .password-error.visible {
+            display: block;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .modal .btn-cancel {
+            background-color: transparent;
+            border-color: #444;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #555;
+        }
+
+        .empty-state p {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 style="color: #d4a800;">Worldwide Bible Web (WWBW)</h1>
+            <div class="header-actions">
+                <span class="folder-count" id="folderCount">Loading...</span>
+                <button class="btn btn-save" id="saveBtn" onclick="saveConfig()" title="Save Changes">Save</button>
+                <button class="btn btn-refresh" onclick="loadFolders()" title="Refresh">&#x21BB;</button>
+                <button class="btn" onclick="showNewFolderModal()" style="background-color: #d4a800; color: #000; font-weight: bold; border-color: #d4a800;">+ New Inspire DNS Name</button>
+            </div>
+        </header>
+
+        <div class="folder-grid" id="folderGrid">
+            <div class="folder-header">
+                <span></span>
+                <span>#</span>
+                <span>WS</span>
+                <span>DNS Entries (Folders)</span>
+                <span>Inspire Domain Names</span>
+                <span>Masked Resolution</span>
+                <span title="Managed Status">Mgd</span>
+                <span>Delete</span>
+            </div>
+            <div id="folderList">
+                <div class="loading">Loading folders...</div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span id="statusMessage">Ready</span>
+            <span id="lastUpdate">-</span>
+        </div>
+    </div>
+
+    <!-- New Folder Modal -->
+    <div class="modal-overlay" id="newFolderModal">
+        <div class="modal">
+            <h2>Create New Top-Level Domain Name</h2>
+            <input type="text" id="newFolderName" placeholder="Enter Inspire DNS name..." autocomplete="off">
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="hideNewFolderModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createFolder()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal (Step 1) -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <h2>Delete Folder</h2>
+            <p style="color: #aaa; margin-bottom: 15px;">Are you sure you want to delete "<span id="deleteFolderName" style="color: #e0e0e0;"></span>"?</p>
+            <p style="color: #c45; font-size: 12px; margin-bottom: 15px;">This action cannot be undone. All contents will be permanently deleted.</p>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="hideDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="showPasswordModal()" style="background-color: #8b3a3a; border-color: #a54a4a;">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Verification Modal (Step 2) -->
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal">
+            <h2>Security Verification</h2>
+            <p style="color: #aaa; margin-bottom: 15px;">Enter the security password to confirm deletion of "<span id="passwordFolderName" style="color: #e0e0e0;"></span>".</p>
+            <label for="securityPassword">Security Password</label>
+            <input type="password" id="securityPassword" placeholder="Enter password..." autocomplete="off">
+            <p class="password-error" id="passwordError">Incorrect password. Deletion aborted.</p>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="hidePasswordModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="verifyPasswordAndDelete()" style="background-color: #8b3a3a; border-color: #a54a4a;">Confirm Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Subfolder Modal -->
+    <div class="modal-overlay" id="newSubfolderModal">
+        <div class="modal">
+            <h2>Create New DNS Entry</h2>
+            <p style="color: #aaa; margin-bottom: 15px;">Creating DNS entry in: <span id="parentFolderPath" style="color: #d4a800;"></span></p>
+            <input type="text" id="newSubfolderName" placeholder="Enter subfolder name..." autocomplete="off">
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="hideNewSubfolderModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createSubfolder()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        const STORAGE_KEY_PENDING = 'wwbw_pending_changes';
+        const STORAGE_KEY_EXPANDED = 'wwbw_expanded_folders';
+
+        let folders = [];
+        let editingFolder = null;
+        let selectedRow = null;
+        let expandedFolders = new Set(); // Track which folders are expanded
+        let subfolderCache = new Map(); // Cache subfolder data
+        let parentForNewSubfolder = null; // Track parent for new subfolder creation
+
+        // IDNS configuration
+        let foldersConfig = { version: '1.0', lastModified: null, idns: {} };
+        let pendingManagedChanges = new Map(); // Track unsaved managed changes
+        let pendingMaskedResolutions = new Map(); // Track unsaved masked resolution changes
+        let hasUnsavedChanges = false;
+        let editingMaskedResolution = null; // Track which cell is being edited
+
+        // localStorage helper functions
+        function savePendingChangesToStorage() {
+            const data = {
+                managed: Array.from(pendingManagedChanges.entries()),
+                maskedResolutions: Array.from(pendingMaskedResolutions.entries())
+            };
+            localStorage.setItem(STORAGE_KEY_PENDING, JSON.stringify(data));
+        }
+
+        function loadPendingChangesFromStorage() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY_PENDING);
+                if (stored) {
+                    const data = JSON.parse(stored);
+                    if (data.managed && data.managed.length > 0) {
+                        pendingManagedChanges = new Map(data.managed);
+                        hasUnsavedChanges = true;
+                    }
+                    if (data.maskedResolutions && data.maskedResolutions.length > 0) {
+                        pendingMaskedResolutions = new Map(data.maskedResolutions);
+                        hasUnsavedChanges = true;
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading pending changes from storage:', e);
+            }
+        }
+
+        function clearPendingChangesFromStorage() {
+            localStorage.removeItem(STORAGE_KEY_PENDING);
+        }
+
+        function saveExpandedFoldersToStorage() {
+            localStorage.setItem(STORAGE_KEY_EXPANDED, JSON.stringify(Array.from(expandedFolders)));
+        }
+
+        function loadExpandedFoldersFromStorage() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY_EXPANDED);
+                if (stored) {
+                    const data = JSON.parse(stored);
+                    expandedFolders = new Set(data);
+                }
+            } catch (e) {
+                console.error('Error loading expanded folders from storage:', e);
+            }
+        }
+
+        // Page exit protection
+        window.addEventListener('beforeunload', (e) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = 'You have unsaved changes. Do you want to leave without saving?';
+                return e.returnValue;
+            }
+        });
+
+        // Load folders and config on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Restore expanded folders state first
+            loadExpandedFoldersFromStorage();
+            // Load config from server
+            await loadConfig();
+            // Restore any cached pending changes
+            loadPendingChangesFromStorage();
+            if (hasUnsavedChanges) {
+                updateSaveButton();
+            }
+            // Load folders and expand any previously expanded ones
+            await loadFolders();
+            // Re-expand previously expanded folders
+            await restoreExpandedState();
+        });
+
+        // Load the folders configuration from server
+        async function loadConfig() {
+            try {
+                const response = await fetch(`${API_BASE}/api/config`);
+                if (!response.ok) throw new Error('Failed to load config');
+                foldersConfig = await response.json();
+                // Don't clear pending changes here - they will be restored from localStorage
+            } catch (error) {
+                console.error('Error loading config:', error);
+                // Use default config if load fails
+                foldersConfig = { version: '1.0', lastModified: null, idns: {} };
+            }
+        }
+
+        // Restore expanded folder state from localStorage
+        async function restoreExpandedState() {
+            const foldersToExpand = Array.from(expandedFolders);
+            for (const folderPath of foldersToExpand) {
+                // Load subfolders for each expanded folder
+                await loadSubfolders(folderPath);
+            }
+            renderFolders();
+        }
+
+        // Check if a folder is managed (check pending changes first, then saved config)
+        function isFolderManaged(folderPath) {
+            if (pendingManagedChanges.has(folderPath)) {
+                return pendingManagedChanges.get(folderPath);
+            }
+            return foldersConfig.idns[folderPath]?.managed === true;
+        }
+
+        // Get masked resolution value (check pending changes first, then saved config)
+        function getMaskedResolution(folderPath) {
+            if (pendingMaskedResolutions.has(folderPath)) {
+                return pendingMaskedResolutions.get(folderPath);
+            }
+            return foldersConfig.idns[folderPath]?.mres || '';
+        }
+
+        // Toggle managed state for a folder
+        function toggleManaged(folderPath, event) {
+            event.stopPropagation();
+            const currentState = isFolderManaged(folderPath);
+            pendingManagedChanges.set(folderPath, !currentState);
+            hasUnsavedChanges = true;
+            updateSaveButton();
+            savePendingChangesToStorage(); // Cache to localStorage
+            renderFolders();
+        }
+
+        // Update Save button appearance based on unsaved changes
+        function updateSaveButton() {
+            const saveBtn = document.getElementById('saveBtn');
+            if (hasUnsavedChanges) {
+                saveBtn.classList.add('has-changes');
+                saveBtn.title = 'Save Changes (unsaved changes pending)';
+            } else {
+                saveBtn.classList.remove('has-changes');
+                saveBtn.title = 'Save Changes';
+            }
+        }
+
+        // Save configuration to server
+        async function saveConfig() {
+            if (!hasUnsavedChanges) {
+                updateStatus('No changes to save');
+                return;
+            }
+
+            try {
+                // Apply pending managed changes to config
+                for (const [path, managed] of pendingManagedChanges) {
+                    if (!foldersConfig.idns[path]) {
+                        foldersConfig.idns[path] = {};
+                    }
+                    foldersConfig.idns[path].managed = managed;
+                }
+
+                // Apply pending masked resolution changes to config
+                for (const [path, maskedResolution] of pendingMaskedResolutions) {
+                    if (!foldersConfig.idns[path]) {
+                        foldersConfig.idns[path] = {};
+                    }
+                    if (maskedResolution) {
+                        foldersConfig.idns[path].mres = maskedResolution;
+                    } else {
+                        // Remove the field if empty
+                        delete foldersConfig.idns[path].mres;
+                    }
+                }
+
+                const response = await fetch(`${API_BASE}/api/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(foldersConfig)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to save configuration');
+                }
+
+                // Clear pending changes
+                pendingManagedChanges.clear();
+                pendingMaskedResolutions.clear();
+                hasUnsavedChanges = false;
+                updateSaveButton();
+                clearPendingChangesFromStorage(); // Clear localStorage cache
+                updateStatus('Configuration saved successfully');
+            } catch (error) {
+                updateStatus(`Error saving: ${error.message}`, true);
+            }
+        }
+
+        async function loadFolders() {
+            const folderList = document.getElementById('folderList');
+            folderList.innerHTML = '<div class="loading">Loading folders...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/folders`);
+                if (!response.ok) throw new Error('Failed to load folders');
+
+                folders = await response.json();
+                folders.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+
+                renderFolders();
+                updateStatus('<span style="color: #d4a800;">Worldwide Bible Web (WWBW) - Loaded successfully</span>');
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            } catch (error) {
+                folderList.innerHTML = `<div class="error">Error loading folders: ${error.message}<br><br>Make sure the server is running on port 3847.</div>`;
+                updateStatus('Error loading folders', true);
+            }
+        }
+
+        // Reload folder data without clearing expansion state (for updating subfolder counts)
+        async function reloadFolderData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/folders`);
+                if (!response.ok) throw new Error('Failed to load folders');
+
+                folders = await response.json();
+                folders.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            } catch (error) {
+                console.error('Error reloading folder data:', error);
+            }
+        }
+
+        async function loadSubfolders(parentPath) {
+            try {
+                const response = await fetch(`${API_BASE}/api/folders/subfolders?path=${encodeURIComponent(parentPath)}`);
+                if (!response.ok) throw new Error('Failed to load subfolders');
+
+                const subfolders = await response.json();
+                subfolders.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+                subfolderCache.set(parentPath, subfolders);
+                return subfolders;
+            } catch (error) {
+                console.error('Error loading subfolders:', error);
+                return [];
+            }
+        }
+
+        function renderFolders() {
+            const folderList = document.getElementById('folderList');
+            const folderCount = document.getElementById('folderCount');
+
+            if (folders.length === 0) {
+                folderList.innerHTML = '<div class="empty-state"><p>No folders found</p><button class="btn btn-primary" onclick="showNewFolderModal()">Create First Folder</button></div>';
+                folderCount.textContent = '0 folders';
+                return;
+            }
+
+            folderCount.textContent = `${folders.length} folders`;
+
+            folderList.innerHTML = folders.map((folder, index) =>
+                renderFolderRow(folder, index, 0, folder.name)
+            ).join('');
+        }
+
+        function renderFolderRow(folder, index, depth, fullPath) {
+            const isExpanded = expandedFolders.has(fullPath);
+            const indentPx = depth * 20;
+            const expandSymbol = depth === 0 ? (isExpanded ? '−' : '+') : '';
+            const expandClass = isExpanded ? 'expanded' : '';
+            const subfolderClass = depth > 0 ? 'subfolder' : '';
+            const expandBtnStyle = depth > 0 ? 'visibility: hidden;' : '';
+            // Get subfolder count - use cache if available (more up-to-date), otherwise use folder data
+            let subfolderCount = folder.subfolderCount || 0;
+            if (subfolderCache.has(fullPath)) {
+                subfolderCount = subfolderCache.get(fullPath).length;
+            }
+
+            // Check if folder is managed
+            const isManaged = isFolderManaged(fullPath);
+            const managedClass = isManaged ? 'managed' : '';
+            const managedIndicatorIcon = isManaged ? '<span class="managed-indicator-icon" title="Managed">&#x26A0;</span>' : '';
+            const toggleActiveClass = isManaged ? 'active' : '';
+            const toggleCheckmark = isManaged ? '&#10003;' : '';
+
+            // Generate inspire domain based on path depth
+            // Root folder: inspire://*.foldername (where * represents subfolders)
+            // Subfolder: inspire://subfoldername.parentfolder
+            let inspireDomain;
+            if (depth === 0) {
+                inspireDomain = `inspire://*.${folder.name}`;
+            } else {
+                // Get parent folder name from the path
+                const pathParts = fullPath.split('/');
+                const parentName = pathParts[pathParts.length - 2]; // Parent folder
+                inspireDomain = `inspire://${folder.name}.${parentName}`;
+            }
+
+            // Get masked resolution value
+            const maskedResolution = getMaskedResolution(fullPath);
+            const maskedDisplay = maskedResolution || '';
+            const maskedEmptyClass = maskedResolution ? '' : 'empty';
+
+            // Only show index and subfolder count for root-level folders
+            const displayIndex = depth === 0 ? (index + 1).toString().padStart(3, '0') : '';
+            const displaySubfolderCount = depth === 0 ? subfolderCount : '';
+
+            let html = `
+                <div class="folder-row ${subfolderClass} ${managedClass}" data-path="${escapeHtml(fullPath)}" data-depth="${depth}" onclick="selectRow(this, event)" ondblclick="toggleExpand('${escapeHtml(fullPath)}', event)">
+                    <div class="managed-indicator">${managedIndicatorIcon}</div>
+                    <span class="folder-index">${displayIndex}</span>
+                    <span class="subfolder-count">${displaySubfolderCount}</span>
+                    <div class="folder-name-cell" style="padding-left: ${indentPx}px;">
+                        <span class="expand-btn ${expandClass}" style="${expandBtnStyle}" onclick="toggleExpand('${escapeHtml(fullPath)}', event)" ondblclick="event.stopPropagation()">${expandSymbol}</span>
+                        <span class="folder-icon" title="Web Entry"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg></span>
+                        <span class="folder-name" ondblclick="startEdit(this, '${escapeHtml(fullPath)}', event)">${escapeHtml(folder.name)}</span>
+                    </div>
+                    <span class="inspire-domain" style="padding-left: ${depth > 0 ? depth * 20 : 0}px;">${escapeHtml(inspireDomain)}</span>
+                    <span class="masked-resolution ${maskedEmptyClass}" ondblclick="startEditMaskedResolution(this, '${escapeHtml(fullPath)}', event)" title="Double-click to edit">${escapeHtml(maskedDisplay)}</span>
+                    <div class="managed-cell">
+                        <span class="managed-toggle ${toggleActiveClass}" onclick="toggleManaged('${escapeHtml(fullPath)}', event)" title="Toggle managed status">${toggleCheckmark}</span>
+                    </div>
+                    <div class="actions-cell">
+                        <button class="delete-btn" onclick="showDeleteModal('${escapeHtml(fullPath)}', event)" title="Delete folder">&#128465;</button>
+                    </div>
+                </div>
+            `;
+
+            // If expanded, render subfolders
+            if (isExpanded && subfolderCache.has(fullPath)) {
+                const subfolders = subfolderCache.get(fullPath);
+
+                // Render existing subfolders
+                subfolders.forEach((subfolder, subIndex) => {
+                    const subFullPath = fullPath + '/' + subfolder.name;
+                    html += renderFolderRow(subfolder, subIndex, depth + 1, subFullPath);
+                });
+
+                // Always show "New Folder" link for root-level folders (depth 0)
+                // This allows adding entries at the second level only
+                if (depth === 0) {
+                    html += `
+                        <div class="new-subfolder-row">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <div class="folder-name-cell" style="padding-left: ${(depth + 1) * 20}px;">
+                                <span class="expand-btn" style="visibility: hidden;"></span>
+                                <span class="new-subfolder-link" onclick="showNewSubfolderModal('${escapeHtml(fullPath)}')">
+                                    <span style="color: #c0c0c0;">+</span> New Folder
+                                </span>
+                            </div>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    `;
+                }
+            }
+
+            return html;
+        }
+
+        function selectRow(rowElement, event) {
+            // Don't select if clicking on buttons or editing
+            if (event.target.closest('.expand-btn') ||
+                event.target.closest('.delete-btn') ||
+                event.target.closest('.folder-name-input') ||
+                event.target.closest('.new-subfolder-link') ||
+                event.target.closest('.managed-toggle') ||
+                event.target.closest('.masked-resolution-input')) {
+                return;
+            }
+
+            // Remove previous selection
+            if (selectedRow) {
+                selectedRow.classList.remove('selected');
+            }
+
+            // Select new row
+            selectedRow = rowElement;
+            rowElement.classList.add('selected');
+        }
+
+        async function toggleExpand(folderPath, event) {
+            event.stopPropagation();
+
+            // Don't expand if clicking on folder name (for editing)
+            if (event.target.classList.contains('folder-name')) {
+                return;
+            }
+
+            if (expandedFolders.has(folderPath)) {
+                // Collapse
+                expandedFolders.delete(folderPath);
+                // Also collapse all children
+                for (const path of expandedFolders) {
+                    if (path.startsWith(folderPath + '/')) {
+                        expandedFolders.delete(path);
+                    }
+                }
+            } else {
+                // Expand - load subfolders first
+                await loadSubfolders(folderPath);
+                expandedFolders.add(folderPath);
+            }
+
+            saveExpandedFoldersToStorage(); // Persist expanded state
+            renderFolders();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        }
+
+        function startEdit(element, folderPath, event) {
+            event.stopPropagation();
+
+            if (editingFolder) {
+                cancelEdit();
+            }
+
+            const originalName = folderPath.split('/').pop();
+            editingFolder = { element, folderPath, originalName };
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'folder-name-input';
+            input.value = originalName;
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    finishEdit(input.value);
+                } else if (e.key === 'Escape') {
+                    cancelEdit();
+                }
+                e.stopPropagation();
+            });
+
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (editingFolder && editingFolder.element === element) {
+                        finishEdit(input.value);
+                    }
+                }, 100);
+            });
+
+            input.addEventListener('click', (e) => e.stopPropagation());
+            input.addEventListener('dblclick', (e) => e.stopPropagation());
+
+            element.innerHTML = '';
+            element.appendChild(input);
+            input.focus();
+            input.select();
+        }
+
+        function cancelEdit() {
+            if (!editingFolder) return;
+
+            editingFolder.element.textContent = editingFolder.originalName;
+            editingFolder = null;
+        }
+
+        async function finishEdit(newName) {
+            if (!editingFolder) return;
+
+            const { element, folderPath, originalName } = editingFolder;
+            newName = newName.trim();
+
+            if (newName === originalName || !newName) {
+                cancelEdit();
+                return;
+            }
+
+            if (!isValidFolderName(newName)) {
+                updateStatus('Invalid folder name. Avoid special characters: \\ / : * ? " < > |', true);
+                cancelEdit();
+                return;
+            }
+
+            editingFolder = null;
+            element.textContent = newName;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/folders/rename`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ oldPath: folderPath, newName: newName })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to rename folder');
+                }
+
+                updateStatus(`Renamed: ${originalName} -> ${newName}`);
+
+                // Clear cache and reload
+                subfolderCache.clear();
+                expandedFolders.clear();
+                loadFolders();
+            } catch (error) {
+                element.textContent = originalName;
+                updateStatus(`Error: ${error.message}`, true);
+            }
+        }
+
+        function isValidFolderName(name) {
+            const invalidChars = /[\\/:*?"<>|]/;
+            return name.length > 0 && name.length <= 255 && !invalidChars.test(name);
+        }
+
+        // Masked Resolution editing functions
+        function startEditMaskedResolution(element, folderPath, event) {
+            event.stopPropagation();
+
+            if (editingMaskedResolution) {
+                cancelEditMaskedResolution();
+            }
+
+            const originalValue = getMaskedResolution(folderPath);
+            editingMaskedResolution = { element, folderPath, originalValue };
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'masked-resolution-input';
+            input.value = originalValue;
+            input.placeholder = 'Enter URL...';
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    finishEditMaskedResolution(input.value);
+                } else if (e.key === 'Escape') {
+                    cancelEditMaskedResolution();
+                }
+                e.stopPropagation();
+            });
+
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (editingMaskedResolution && editingMaskedResolution.element === element) {
+                        finishEditMaskedResolution(input.value);
+                    }
+                }, 100);
+            });
+
+            input.addEventListener('click', (e) => e.stopPropagation());
+            input.addEventListener('dblclick', (e) => e.stopPropagation());
+
+            element.innerHTML = '';
+            element.appendChild(input);
+            input.focus();
+            input.select();
+        }
+
+        function cancelEditMaskedResolution() {
+            if (!editingMaskedResolution) return;
+
+            const { element, originalValue } = editingMaskedResolution;
+            element.textContent = originalValue || '';
+            element.classList.toggle('empty', !originalValue);
+            editingMaskedResolution = null;
+        }
+
+        function finishEditMaskedResolution(newValue) {
+            if (!editingMaskedResolution) return;
+
+            const { element, folderPath, originalValue } = editingMaskedResolution;
+            newValue = newValue.trim();
+
+            editingMaskedResolution = null;
+
+            // Update display
+            element.textContent = newValue || '';
+            element.classList.toggle('empty', !newValue);
+
+            // Only mark as changed if value actually changed
+            if (newValue !== originalValue) {
+                pendingMaskedResolutions.set(folderPath, newValue);
+                hasUnsavedChanges = true;
+                updateSaveButton();
+                savePendingChangesToStorage(); // Cache to localStorage
+                updateStatus('Masked resolution updated (unsaved)');
+            }
+        }
+
+        function showNewFolderModal() {
+            document.getElementById('newFolderModal').classList.add('active');
+            const input = document.getElementById('newFolderName');
+            input.value = '';
+            input.focus();
+        }
+
+        function hideNewFolderModal() {
+            document.getElementById('newFolderModal').classList.remove('active');
+        }
+
+        async function createFolder() {
+            const input = document.getElementById('newFolderName');
+            const name = input.value.trim();
+
+            if (!name) {
+                updateStatus('Please enter a folder name', true);
+                return;
+            }
+
+            if (!isValidFolderName(name)) {
+                updateStatus('Invalid folder name. Avoid special characters: \\ / : * ? " < > |', true);
+                return;
+            }
+
+            if (folders.some(f => f.name.toLowerCase() === name.toLowerCase())) {
+                updateStatus('A folder with this name already exists', true);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/folders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to create folder');
+                }
+
+                hideNewFolderModal();
+                updateStatus(`Created folder: ${name}`);
+                loadFolders();
+            } catch (error) {
+                updateStatus(`Error: ${error.message}`, true);
+            }
+        }
+
+        // Subfolder creation
+        function showNewSubfolderModal(parentPath) {
+            parentForNewSubfolder = parentPath;
+            document.getElementById('parentFolderPath').textContent = parentPath;
+            document.getElementById('newSubfolderModal').classList.add('active');
+            const input = document.getElementById('newSubfolderName');
+            input.value = '';
+            input.focus();
+        }
+
+        function hideNewSubfolderModal() {
+            document.getElementById('newSubfolderModal').classList.remove('active');
+            parentForNewSubfolder = null;
+        }
+
+        async function createSubfolder() {
+            if (!parentForNewSubfolder) return;
+
+            const input = document.getElementById('newSubfolderName');
+            const name = input.value.trim();
+
+            if (!name) {
+                updateStatus('Please enter a folder name', true);
+                return;
+            }
+
+            if (!isValidFolderName(name)) {
+                updateStatus('Invalid folder name. Avoid special characters: \\ / : * ? " < > |', true);
+                return;
+            }
+
+            // Save parent path before hiding modal (which sets parentForNewSubfolder to null)
+            const parentPath = parentForNewSubfolder;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/folders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name, parentPath: parentPath })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to create subfolder');
+                }
+
+                hideNewSubfolderModal();
+                updateStatus(`Created DNS entry: ${name}`);
+
+                // Reload folder data to update subfolder counts (preserves expansion state)
+                await reloadFolderData();
+
+                // Reload all expanded folders to update their subfolder counts
+                for (const expandedPath of expandedFolders) {
+                    await loadSubfolders(expandedPath);
+                }
+
+                // Also reload the parent's subfolders to include the new entry
+                await loadSubfolders(parentPath);
+                renderFolders();
+            } catch (error) {
+                updateStatus(`Error: ${error.message}`, true);
+            }
+        }
+
+        function updateStatus(message, isError = false) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.innerHTML = message;
+            statusEl.className = isError ? 'status-message error' : 'status-message';
+
+            if (isError) {
+                setTimeout(() => {
+                    statusEl.innerHTML = 'Ready';
+                    statusEl.className = 'status-message';
+                }, 5000);
+            }
+        }
+
+        // Delete folder functionality - Two-step process
+        let folderToDelete = null;
+
+        function showDeleteModal(folderPath, event) {
+            if (event) event.stopPropagation();
+            folderToDelete = folderPath;
+            document.getElementById('deleteFolderName').textContent = folderPath;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function hideDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+        }
+
+        function showPasswordModal() {
+            if (!folderToDelete) return;
+
+            hideDeleteModal();
+            document.getElementById('passwordFolderName').textContent = folderToDelete;
+            document.getElementById('securityPassword').value = '';
+            document.getElementById('passwordError').classList.remove('visible');
+            document.getElementById('passwordModal').classList.add('active');
+            document.getElementById('securityPassword').focus();
+        }
+
+        function hidePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+            document.getElementById('securityPassword').value = '';
+            document.getElementById('passwordError').classList.remove('visible');
+            folderToDelete = null;
+        }
+
+        async function verifyPasswordAndDelete() {
+            if (!folderToDelete) return;
+
+            const password = document.getElementById('securityPassword').value;
+            const validPasswords = ['askgabe4e!', 'cornell4e!'];
+
+            if (!validPasswords.includes(password)) {
+                document.getElementById('passwordError').classList.add('visible');
+                document.getElementById('securityPassword').value = '';
+                document.getElementById('securityPassword').focus();
+                updateStatus('Incorrect password. Deletion aborted.', true);
+                return;
+            }
+
+            const pathToDelete = folderToDelete;
+            hidePasswordModal();
+
+            try {
+                const response = await fetch(`${API_BASE}/api/folders`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: pathToDelete })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to delete folder');
+                }
+
+                updateStatus(`Deleted folder: ${pathToDelete}`);
+
+                // Clear cache and reload
+                subfolderCache.clear();
+                expandedFolders.delete(pathToDelete);
+                loadFolders();
+            } catch (error) {
+                updateStatus(`Error: ${error.message}`, true);
+            }
+        }
+
+        // Event listeners for modals
+        document.getElementById('newFolderName').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                createFolder();
+            } else if (e.key === 'Escape') {
+                hideNewFolderModal();
+            }
+        });
+
+        document.getElementById('newSubfolderName').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                createSubfolder();
+            } else if (e.key === 'Escape') {
+                hideNewSubfolderModal();
+            }
+        });
+
+        document.getElementById('newFolderModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                hideNewFolderModal();
+            }
+        });
+
+        document.getElementById('newSubfolderModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                hideNewSubfolderModal();
+            }
+        });
+
+        document.getElementById('deleteModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                hideDeleteModal();
+                folderToDelete = null;
+            }
+        });
+
+        document.getElementById('passwordModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                hidePasswordModal();
+            }
+        });
+
+        document.getElementById('securityPassword').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                verifyPasswordAndDelete();
+            } else if (e.key === 'Escape') {
+                hidePasswordModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (document.getElementById('passwordModal').classList.contains('active')) {
+                    hidePasswordModal();
+                } else if (document.getElementById('deleteModal').classList.contains('active')) {
+                    hideDeleteModal();
+                    folderToDelete = null;
+                } else if (document.getElementById('newSubfolderModal').classList.contains('active')) {
+                    hideNewSubfolderModal();
+                } else if (document.getElementById('newFolderModal').classList.contains('active')) {
+                    hideNewFolderModal();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
