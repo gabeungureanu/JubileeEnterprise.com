@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jubilee Platform - Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: #58a6ff;
+        }
+
+        .env-badge {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .env-development {
+            background-color: #238636;
+            color: #ffffff;
+        }
+
+        .env-production {
+            background-color: #da3633;
+            color: #ffffff;
+        }
+
+        .timestamp {
+            color: #8b949e;
+            font-size: 0.85rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            color: #58a6ff;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-connected, .status-healthy, .status-online {
+            background-color: #3fb950;
+            box-shadow: 0 0 8px #3fb950;
+        }
+
+        .status-degraded {
+            background-color: #d29922;
+            box-shadow: 0 0 8px #d29922;
+        }
+
+        .status-error, .status-offline, .status-timeout {
+            background-color: #f85149;
+            box-shadow: 0 0 8px #f85149;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #21262d;
+        }
+
+        .item-row:last-child {
+            border-bottom: none;
+        }
+
+        .item-name {
+            font-weight: 500;
+        }
+
+        .item-details {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .item-meta {
+            color: #8b949e;
+            font-size: 0.85rem;
+        }
+
+        .badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-tables {
+            background-color: #1f6feb33;
+            color: #58a6ff;
+        }
+
+        .badge-views {
+            background-color: #8957e533;
+            color: #a371f7;
+        }
+
+        .badge-size {
+            background-color: #23863633;
+            color: #3fb950;
+        }
+
+        .badge-port {
+            background-color: #d2992233;
+            color: #d29922;
+        }
+
+        .badge-ms {
+            background-color: #8b949e33;
+            color: #8b949e;
+        }
+
+        .expandable {
+            cursor: pointer;
+        }
+
+        .expandable:hover {
+            background-color: #21262d;
+        }
+
+        .table-list {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #0d1117;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .table-list.expanded {
+            display: block;
+        }
+
+        .table-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 0.85rem;
+            color: #8b949e;
+        }
+
+        .table-item span:first-child {
+            color: #c9d1d9;
+        }
+
+        .error-message {
+            color: #f85149;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #30363d;
+            border-top-color: #58a6ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .refresh-btn {
+            background-color: #21262d;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background-color 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background-color: #30363d;
+        }
+
+        .refresh-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .system-info {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .system-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .system-stat-label {
+            font-size: 0.75rem;
+            color: #8b949e;
+            text-transform: uppercase;
+        }
+
+        .system-stat-value {
+            font-size: 1rem;
+            color: #c9d1d9;
+        }
+
+        .collection-item {
+            display: inline-block;
+            padding: 4px 8px;
+            background-color: #1f6feb33;
+            color: #58a6ff;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin: 4px 4px 4px 0;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #30363d;
+            text-align: center;
+            color: #8b949e;
+            font-size: 0.85rem;
+        }
+
+        .query-time {
+            color: #8b949e;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>Jubilee Platform - System Health Dashboard</h1>
+            <span class="timestamp" id="timestamp">Loading...</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span class="env-badge" id="env-badge">Loading</span>
+            <button class="refresh-btn" onclick="refreshData()">Refresh</button>
+        </div>
+    </div>
+
+    <div id="content">
+        <div class="loading">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>InspireCodex Admin Dashboard | Query time: <span id="query-time">-</span>ms</p>
+    </div>
+
+    <script>
+        let healthData = null;
+
+        async function fetchHealth() {
+            try {
+                const response = await fetch('/api/v1/admin/health');
+                healthData = await response.json();
+                renderDashboard();
+            } catch (error) {
+                document.getElementById('content').innerHTML = `
+                    <div class="card">
+                        <div class="error-message">Failed to fetch health data: ${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderDashboard() {
+            const data = healthData;
+
+            // Update header
+            document.getElementById('timestamp').textContent = new Date(data.timestamp).toLocaleString();
+            const envBadge = document.getElementById('env-badge');
+            envBadge.textContent = data.environment;
+            envBadge.className = `env-badge env-${data.environment}`;
+            document.getElementById('query-time').textContent = data.queryTime;
+
+            // Build HTML
+            let html = '<div class="grid">';
+
+            // PostgreSQL Databases Section
+            html += `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">PostgreSQL Databases</span>
+                    </div>
+                    ${renderDatabases(data.databases)}
+                </div>
+            `;
+
+            // Vector Databases Section
+            html += `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Vector Databases</span>
+                    </div>
+                    ${renderVectorDatabases(data.vectorDatabases)}
+                </div>
+            `;
+
+            // API Services Section
+            html += `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">API Services</span>
+                    </div>
+                    ${renderApiServices(data.apiServices)}
+                </div>
+            `;
+
+            // Websites Section
+            html += `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Platform Websites</span>
+                    </div>
+                    ${renderWebsites(data.websites)}
+                </div>
+            `;
+
+            // Codex Services Section
+            html += `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Codex Services</span>
+                    </div>
+                    ${renderCodexServices(data.codexServices)}
+                </div>
+            `;
+
+            // System Info Section
+            html += `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">System Information</span>
+                    </div>
+                    ${renderSystemInfo(data.system, data.uptime)}
+                </div>
+            `;
+
+            html += '</div>';
+            document.getElementById('content').innerHTML = html;
+        }
+
+        function renderDatabases(databases) {
+            let html = '';
+            for (const [name, db] of Object.entries(databases)) {
+                const isLegacy = name === 'JubileeVerse';
+                html += `
+                    <div class="item-row expandable" onclick="toggleTableList('${name}')">
+                        <div>
+                            <span class="item-name">${name}</span>
+                            ${isLegacy ? '<span style="color: #8b949e; font-size: 0.75rem;"> (legacy)</span>' : ''}
+                            ${db.status === 'error' ? `<div class="error-message">${db.error}</div>` : ''}
+                        </div>
+                        <div class="item-details">
+                            ${db.status === 'connected' ? `
+                                <span class="badge badge-tables">${db.tables} tables</span>
+                                <span class="badge badge-views">${db.views} views</span>
+                                <span class="badge badge-size">${db.size}</span>
+                            ` : ''}
+                            <span class="status-indicator status-${db.status}"></span>
+                        </div>
+                    </div>
+                    ${db.tableList ? `
+                        <div class="table-list" id="tables-${name}">
+                            ${db.tableList.map(t => `
+                                <div class="table-item">
+                                    <span>${t.table_name}</span>
+                                    <span>${t.row_count} rows</span>
+                                </div>
+                            `).join('')}
+                            ${db.tables > 20 ? `<div class="table-item"><span style="color: #8b949e;">... and ${db.tables - 20} more tables</span></div>` : ''}
+                        </div>
+                    ` : ''}
+                `;
+            }
+            return html;
+        }
+
+        function renderVectorDatabases(vectorDbs) {
+            let html = '';
+            for (const [name, db] of Object.entries(vectorDbs)) {
+                html += `
+                    <div class="item-row">
+                        <div>
+                            <span class="item-name">${name.charAt(0).toUpperCase() + name.slice(1)}</span>
+                            ${db.status === 'error' || db.status === 'offline' ? `<div class="error-message">${db.error || 'Offline'}</div>` : ''}
+                            ${db.collections && db.collections.length > 0 ? `
+                                <div style="margin-top: 8px;">
+                                    ${db.collections.map(c => `<span class="collection-item">${c.name}</span>`).join('')}
+                                </div>
+                            ` : db.status === 'connected' ? '<div style="margin-top: 8px; color: #8b949e; font-size: 0.85rem;">No collections</div>' : ''}
+                        </div>
+                        <div class="item-details">
+                            ${db.collections ? `<span class="item-meta">${db.collections.length} collections</span>` : ''}
+                            <span class="status-indicator status-${db.status}"></span>
+                        </div>
+                    </div>
+                `;
+            }
+            return html || '<div class="item-row"><span class="item-meta">No vector databases configured</span></div>';
+        }
+
+        function renderApiServices(services) {
+            let html = '';
+            for (const [name, service] of Object.entries(services)) {
+                html += `
+                    <div class="item-row">
+                        <div>
+                            <span class="item-name">${name}</span>
+                            ${service.status === 'error' || service.status === 'offline' ? `<div class="error-message">${service.error || 'Offline'}</div>` : ''}
+                        </div>
+                        <div class="item-details">
+                            <span class="badge badge-port">:${service.port}</span>
+                            ${service.statusCode ? `<span class="item-meta">${service.statusCode}</span>` : ''}
+                            <span class="status-indicator status-${service.status}"></span>
+                        </div>
+                    </div>
+                `;
+            }
+            return html;
+        }
+
+        function renderWebsites(websites) {
+            let html = '';
+            for (const site of websites) {
+                html += `
+                    <div class="item-row">
+                        <div>
+                            <span class="item-name">${site.name}</span>
+                            ${site.status === 'error' || site.status === 'offline' ? `<div class="error-message">${site.error || 'Offline'}</div>` : ''}
+                        </div>
+                        <div class="item-details">
+                            ${site.responseTime ? `<span class="badge badge-ms">${site.responseTime}ms</span>` : ''}
+                            ${site.statusCode ? `<span class="item-meta">${site.statusCode}</span>` : ''}
+                            <span class="status-indicator status-${site.status}"></span>
+                        </div>
+                    </div>
+                `;
+            }
+            return html;
+        }
+
+        function renderCodexServices(services) {
+            if (!services) {
+                return '<div class="item-row"><span class="item-meta">No services data available</span></div>';
+            }
+
+            let html = '';
+
+            // IDNS Service
+            if (services.idns) {
+                const idns = services.idns;
+                const isActive = idns.status === 'active';
+
+                html += `
+                    <div class="item-row">
+                        <div>
+                            <span class="item-name">iDNS (Inspire Domain Name System)</span>
+                            ${!isActive ? `<div class="error-message">${idns.error || 'Not configured'}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+
+                // Type breakdown as separate lines with green dots
+                if (isActive && idns.byType) {
+                    const typeLabels = {
+                        'country': 'Countries',
+                        'denomination': 'Denominations',
+                        'ministry': 'Ministries',
+                        'webspace': 'Webspaces'
+                    };
+                    for (const [type, count] of Object.entries(idns.byType)) {
+                        const label = typeLabels[type] || type.charAt(0).toUpperCase() + type.slice(1);
+                        html += `
+                            <div class="item-row" style="padding: 4px 0; padding-left: 20px;">
+                                <span class="item-meta">${label}</span>
+                                <div class="item-details">
+                                    <span class="item-meta">${count}</span>
+                                    <span class="status-indicator status-connected" style="margin-left: 8px;"></span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            }
+
+            // JubileeSSO Service
+            if (services.sso) {
+                const sso = services.sso;
+                const isActive = sso.status === 'active';
+
+                html += `
+                    <div class="item-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #21262d;">
+                        <div>
+                            <span class="item-name">JubileeSSO (Single Sign-On)</span>
+                            ${!isActive ? `<div class="error-message">${sso.error || 'Not configured'}</div>` : ''}
+                        </div>
+                        <div class="item-details">
+                            ${isActive ? `
+                                <span class="badge badge-tables">${sso.accounts} accounts</span>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                if (isActive) {
+                    html += `
+                        <div class="item-row" style="padding: 4px 0; padding-left: 20px;">
+                            <span class="item-meta">Active Sessions</span>
+                            <div class="item-details">
+                                <span class="item-meta">${sso.activeSessions}</span>
+                                <span class="status-indicator status-connected" style="margin-left: 8px;"></span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            return html || '<div class="item-row"><span class="item-meta">No Codex services configured</span></div>';
+        }
+
+        function renderSystemInfo(system, uptime) {
+            const formatUptime = (seconds) => {
+                const days = Math.floor(seconds / 86400);
+                const hours = Math.floor((seconds % 86400) / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+                if (hours > 0) return `${hours}h ${minutes}m`;
+                return `${minutes}m`;
+            };
+
+            const formatBytes = (bytes) => {
+                const mb = bytes / 1024 / 1024;
+                return `${mb.toFixed(1)} MB`;
+            };
+
+            return `
+                <div class="system-info">
+                    <div class="system-stat">
+                        <span class="system-stat-label">Node Version</span>
+                        <span class="system-stat-value">${system.nodeVersion}</span>
+                    </div>
+                    <div class="system-stat">
+                        <span class="system-stat-label">Platform</span>
+                        <span class="system-stat-value">${system.platform}</span>
+                    </div>
+                    <div class="system-stat">
+                        <span class="system-stat-label">Uptime</span>
+                        <span class="system-stat-value">${formatUptime(uptime)}</span>
+                    </div>
+                    <div class="system-stat">
+                        <span class="system-stat-label">Heap Used</span>
+                        <span class="system-stat-value">${formatBytes(system.memoryUsage.heapUsed)}</span>
+                    </div>
+                    <div class="system-stat">
+                        <span class="system-stat-label">Heap Total</span>
+                        <span class="system-stat-value">${formatBytes(system.memoryUsage.heapTotal)}</span>
+                    </div>
+                    <div class="system-stat">
+                        <span class="system-stat-label">RSS</span>
+                        <span class="system-stat-value">${formatBytes(system.memoryUsage.rss)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleTableList(dbName) {
+            const tableList = document.getElementById(`tables-${dbName}`);
+            if (tableList) {
+                tableList.classList.toggle('expanded');
+            }
+        }
+
+        async function refreshData() {
+            const btn = document.querySelector('.refresh-btn');
+            btn.disabled = true;
+            btn.textContent = 'Refreshing...';
+
+            await fetchHealth();
+
+            btn.disabled = false;
+            btn.textContent = 'Refresh';
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(fetchHealth, 30000);
+
+        // Initial load
+        fetchHealth();
+    </script>
+</body>
+</html>

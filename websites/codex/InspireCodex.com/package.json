@@ -1,0 +1,43 @@
+{
+  "name": "inspire-codex-api",
+  "version": "1.0.0",
+  "description": "InspireCodex API Service - Backend for Codex and Inspire databases",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "db:migrate": "node scripts/database-migration.js migrate-all",
+    "db:create-codex": "node scripts/database-migration.js create-codex",
+    "db:create-inspire": "node scripts/database-migration.js create-inspire",
+    "db:create-continuum": "node scripts/database-migration.js create-continuum",
+    "db:validate": "node scripts/database-migration.js validate",
+    "db:status": "node scripts/database-migration.js status"
+  },
+  "keywords": [
+    "jubilee",
+    "codex",
+    "inspire",
+    "api",
+    "bible",
+    "ministry"
+  ],
+  "author": "Jubilee Enterprise",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "pg": "^8.11.3",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

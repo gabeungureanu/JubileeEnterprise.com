@@ -8,6 +8,9 @@
  * - Renaming existing folders (including nested paths)
  * - Deleting folders (including nested paths)
  *
+ * IDNS Configuration is now synced with the Codex PostgreSQL database.
+ * The database is the source of truth; YAML serves as backup/export.
+ *
  * Run with: node server.js
  * Default port: 3847
  */
@@ -18,6 +21,9 @@ import path from 'path';
 import url from 'url';
 import { fileURLToPath } from 'url';
 import YAML from 'yaml';
+import pg from 'pg';
+
+const { Pool } = pg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,6 +31,32 @@ const __dirname = path.dirname(__filename);
 const PORT = 3847;
 const BASE_DIR = __dirname; // The directory where this script is located
 const CONFIG_FILE = path.join(BASE_DIR, 'idns.yaml');
+
+// Database configuration
+const DB_CONFIG = {
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432'),
+    database: process.env.DB_NAME || 'Codex',
+    user: process.env.DB_USER || 'guardian',
+    password: process.env.DB_PASSWORD || 'askShaddai4e!',
+    max: 10,
+    idleTimeoutMillis: 30000
+};
+
+// Database pool (lazy initialization)
+let dbPool = null;
+let dbEnabled = true;
+
+function getDbPool() {
+    if (!dbPool && dbEnabled) {
+        dbPool = new Pool(DB_CONFIG);
+        dbPool.on('error', (err) => {
+            console.error('Database pool error:', err.message);
+            dbEnabled = false;
+        });
+    }
+    return dbPool;
+}
 
 // MIME types for serving static files
 const MIME_TYPES = {
@@ -348,15 +380,50 @@ function handleRenameFolder(req, res) {
 }
 
 /**
- * Get the IDNS configuration file
+ * Get the IDNS configuration - from database (primary) or YAML (fallback)
  */
-function handleGetConfig(req, res) {
+async function handleGetConfig(req, res) {
     try {
-        // Check if config file exists, create default if not
+        const pool = getDbPool();
+
+        // Try database first
+        if (pool && dbEnabled) {
+            try {
+                const result = await pool.query(`
+                    SELECT domain_key, mres, managed, metadata
+                    FROM idns_domains
+                    WHERE is_active = true
+                    ORDER BY domain_key
+                `);
+
+                const idns = {};
+                for (const row of result.rows) {
+                    const data = {};
+                    if (row.mres) data.mres = row.mres;
+                    if (row.managed) data.managed = true;
+                    idns[row.domain_key] = data;
+                }
+
+                const config = {
+                    version: '1.0',
+                    lastModified: new Date().toISOString(),
+                    source: 'database',
+                    idns
+                };
+
+                sendJson(res, 200, config);
+                return;
+            } catch (dbError) {
+                console.error('Database read failed, falling back to YAML:', dbError.message);
+            }
+        }
+
+        // Fallback to YAML file
         if (!fs.existsSync(CONFIG_FILE)) {
             const defaultConfig = {
                 version: '1.0',
                 lastModified: null,
+                source: 'yaml',
                 idns: {}
             };
             fs.writeFileSync(CONFIG_FILE, YAML.stringify(defaultConfig));
@@ -364,6 +431,7 @@ function handleGetConfig(req, res) {
 
         const configData = fs.readFileSync(CONFIG_FILE, 'utf8');
         const config = YAML.parse(configData);
+        config.source = 'yaml';
         sendJson(res, 200, config);
     } catch (error) {
         console.error('Error reading config:', error);
@@ -372,12 +440,12 @@ function handleGetConfig(req, res) {
 }
 
 /**
- * Save the IDNS configuration file
+ * Save the IDNS configuration - to database (primary) and YAML (backup)
  */
 function handleSaveConfig(req, res) {
     let body = '';
     req.on('data', chunk => body += chunk);
-    req.on('end', () => {
+    req.on('end', async () => {
         try {
             // Request body is still JSON from frontend
             const config = JSON.parse(body);
@@ -407,18 +475,148 @@ function handleSaveConfig(req, res) {
                 });
             config.idns = sortedIdns;
 
-            // Write to YAML file atomically (write to temp file, then rename)
+            const pool = getDbPool();
+            let savedToDb = false;
+
+            // Save to database first
+            if (pool && dbEnabled) {
+                try {
+                    // Use transaction for consistency
+                    const client = await pool.connect();
+                    try {
+                        await client.query('BEGIN');
+
+                        // Get current domain keys in database
+                        const existingResult = await client.query('SELECT domain_key FROM idns_domains');
+                        const existingKeys = new Set(existingResult.rows.map(r => r.domain_key));
+
+                        // Upsert all entries from config
+                        for (const [domainKey, data] of Object.entries(config.idns)) {
+                            const domainType = inferDomainType(domainKey);
+                            const displayName = generateDisplayName(domainKey);
+                            const parentDomain = domainKey.includes('/') ? domainKey.split('/')[0] : null;
+
+                            await client.query(`
+                                INSERT INTO idns_domains (domain_key, domain_type, display_name, mres, managed, parent_domain, metadata, is_active)
+                                VALUES ($1, $2, $3, $4, $5, $6, $7, true)
+                                ON CONFLICT (domain_key) DO UPDATE SET
+                                    mres = EXCLUDED.mres,
+                                    managed = EXCLUDED.managed,
+                                    metadata = EXCLUDED.metadata,
+                                    is_active = true,
+                                    updated_at = CURRENT_TIMESTAMP
+                            `, [
+                                domainKey,
+                                domainType,
+                                displayName,
+                                data.mres || null,
+                                data.managed || false,
+                                parentDomain,
+                                JSON.stringify(data)
+                            ]);
+
+                            existingKeys.delete(domainKey);
+                        }
+
+                        // Mark removed entries as inactive (soft delete)
+                        for (const removedKey of existingKeys) {
+                            await client.query(
+                                'UPDATE idns_domains SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE domain_key = $1',
+                                [removedKey]
+                            );
+                        }
+
+                        await client.query('COMMIT');
+                        savedToDb = true;
+                        console.log('Configuration saved to database');
+                    } catch (txError) {
+                        await client.query('ROLLBACK');
+                        throw txError;
+                    } finally {
+                        client.release();
+                    }
+                } catch (dbError) {
+                    console.error('Database save failed:', dbError.message);
+                }
+            }
+
+            // Always save to YAML as backup
             const tempFile = CONFIG_FILE + '.tmp';
             fs.writeFileSync(tempFile, YAML.stringify(config));
             fs.renameSync(tempFile, CONFIG_FILE);
+            console.log('Configuration saved to YAML');
 
-            console.log('Configuration saved successfully to YAML');
-            sendJson(res, 200, { success: true, lastModified: config.lastModified });
+            sendJson(res, 200, {
+                success: true,
+                lastModified: config.lastModified,
+                savedToDatabase: savedToDb,
+                savedToYaml: true
+            });
         } catch (error) {
             console.error('Error saving config:', error);
             sendJson(res, 500, { error: 'Failed to save configuration: ' + error.message });
         }
     });
+}
+
+/**
+ * Determine domain type based on the domain key
+ */
+function inferDomainType(domainKey) {
+    const countries = [
+        'afghanistan', 'albania', 'algeria', 'andorra', 'angola', 'argentina', 'armenia',
+        'australia', 'austria', 'azerbaijan', 'bahamas', 'bahrain', 'bangladesh', 'barbados',
+        'belarus', 'belgium', 'belize', 'benin', 'bhutan', 'bolivia', 'botswana', 'brazil',
+        'brunei', 'bulgaria', 'cambodia', 'cameroon', 'canada', 'chad', 'chile', 'china',
+        'colombia', 'comoros', 'croatia', 'cuba', 'cyprus', 'denmark', 'djibouti', 'dominica',
+        'ecuador', 'egypt', 'eritrea', 'estonia', 'ethiopia', 'fiji', 'finland', 'france',
+        'gabon', 'gambia', 'georgia', 'germany', 'ghana', 'greece', 'grenada', 'guatemala',
+        'guinea', 'guyana', 'haiti', 'honduras', 'hungary', 'iceland', 'india', 'indonesia',
+        'iran', 'iraq', 'ireland', 'israel', 'italy', 'jamaica', 'japan', 'jordan',
+        'kazakhstan', 'kenya', 'kiribati', 'kosovo', 'kuwait', 'kyrgyzstan', 'laos', 'latvia',
+        'lebanon', 'lesotho', 'liberia', 'libya', 'liechtenstein', 'lithuania', 'luxembourg',
+        'madagascar', 'malawi', 'malaysia', 'maldives', 'mali', 'malta', 'mauritania',
+        'mauritius', 'mexico', 'micronesia', 'moldova', 'monaco', 'mongolia', 'montenegro',
+        'morocco', 'mozambique', 'myanmar', 'namibia', 'nauru', 'nepal', 'netherlands',
+        'newzealand', 'nicaragua', 'nigeria', 'norway', 'oman', 'pakistan', 'palau',
+        'palestine', 'panama', 'paraguay', 'peru', 'philippines', 'poland', 'portugal',
+        'qatar', 'romania', 'russia', 'rwanda', 'samoa', 'senegal', 'serbia', 'seychelles',
+        'singapore', 'slovakia', 'slovenia', 'somalia', 'spain', 'sudan', 'suriname',
+        'sweden', 'switzerland', 'taiwan', 'tajikistan', 'tanzania', 'thailand', 'togo',
+        'tonga', 'tunisia', 'turkey', 'turkmenistan', 'tuvalu', 'uganda', 'ukraine',
+        'uruguay', 'uzbekistan', 'vanuatu', 'venezuela', 'vietnam', 'yemen', 'zambia',
+        'zimbabwe', 'unitedstates', 'unitedkingdom', 'unitedarabemirates', 'southafrica',
+        'southkorea', 'northkorea', 'saudiarabia', 'srilanka', 'papuanewguinea', 'hongkong'
+    ];
+
+    const ministryTopics = [
+        'academy', 'bible', 'biblical', 'charity', 'children', 'church', 'coaching',
+        'community', 'conference', 'discipleship', 'events', 'family', 'fellowship',
+        'group', 'healing', 'inspire', 'kids', 'library', 'marriage', 'men', 'ministry',
+        'mission', 'music', 'news', 'pastor', 'podcast', 'praise', 'prayer', 'prophet',
+        'recovery', 'retreat', 'school', 'scriptural', 'sermon', 'serve', 'shepherd',
+        'teacher', 'testimony', 'women', 'worship', 'youth', 'apostle', 'evangelist'
+    ];
+
+    const lowerKey = domainKey.toLowerCase();
+    if (domainKey.includes('/')) return 'webspace';
+    if (countries.includes(lowerKey)) return 'country';
+    if (ministryTopics.includes(lowerKey)) return 'ministry';
+    return 'denomination';
+}
+
+/**
+ * Generate display name from domain key
+ */
+function generateDisplayName(domainKey) {
+    if (domainKey.includes('/')) {
+        const parts = domainKey.split('/');
+        return parts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' / ');
+    }
+    const spaced = domainKey.replace(/([a-z])([A-Z])/g, '$1 $2');
+    return spaced.split(' ').map(word =>
+        word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
 }
 
 /**
@@ -494,7 +692,7 @@ function isValidFolderName(name) {
 }
 
 // Start the server
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
     console.log('');
     console.log('='.repeat(50));
     console.log('  wwBibleweb.com Folder Management Server');
@@ -503,6 +701,20 @@ server.listen(PORT, () => {
     console.log(`  Port:    ${PORT}`);
     console.log(`  URL:     http://localhost:${PORT}`);
     console.log(`  Dir:     ${BASE_DIR}`);
+
+    // Test database connection
+    try {
+        const pool = getDbPool();
+        if (pool) {
+            await pool.query('SELECT 1');
+            const countResult = await pool.query('SELECT COUNT(*) FROM idns_domains WHERE is_active = true');
+            console.log(`  DB:      Connected (Codex - ${countResult.rows[0].count} IDNS entries)`);
+        }
+    } catch (err) {
+        console.log(`  DB:      Not connected (${err.message})`);
+        dbEnabled = false;
+    }
+
     console.log('='.repeat(50));
     console.log('');
     console.log('Press Ctrl+C to stop the server');
@@ -510,8 +722,12 @@ server.listen(PORT, () => {
 });
 
 // Handle graceful shutdown
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
     console.log('\nShutting down server...');
+    if (dbPool) {
+        await dbPool.end();
+        console.log('Database pool closed.');
+    }
     server.close(() => {
         console.log('Server stopped.');
         process.exit(0);

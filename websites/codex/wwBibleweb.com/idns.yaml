@@ -1,5 +1,6 @@
 version: "1.0"
-lastModified: 2026-01-06T08:54:29.295Z
+lastModified: 2026-01-06T11:29:19.821Z
+source: database
 idns:
   academy: {}
   adventist: {}
@@ -329,6 +330,8 @@ idns:
   vineyard: {}
   webspace/jubileebrowser:
     mres: http://www.jubileebrowser.com
+  webspace/jubileeinternet:
+    mres: http://www.jubileeinternet.com
   webspace/jubileeverse:
     mres: https://www.jubileeverse.com
   wesleyan: {}
