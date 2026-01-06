@@ -9,20 +9,16 @@
  * - Deleting folders (including nested paths)
  *
  * Run with: node server.js
- * Default port: 3847
+ * Default port: 3847 (or process.env.PORT for iisnode)
  */
 
-import http from 'http';
-import fs from 'fs';
-import path from 'path';
-import url from 'url';
-import { fileURLToPath } from 'url';
-import YAML from 'yaml';
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const url = require('url');
+const YAML = require('yaml');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const PORT = 3847;
+const PORT = process.env.PORT || 3847;
 const BASE_DIR = __dirname; // The directory where this script is located
 const CONFIG_FILE = path.join(BASE_DIR, 'idns.yaml');
 
@@ -86,6 +82,7 @@ function handleGetFolders(req, res) {
         const folders = items
             .filter(item => item.isDirectory())
             .filter(item => !item.name.startsWith('.')) // Exclude hidden folders
+            .filter(item => item.name !== 'node_modules') // Exclude node_modules
             .map(item => {
                 const folderPath = path.join(BASE_DIR, item.name);
                 const subfolderCount = countSubfolders(folderPath);
