@@ -68,7 +68,8 @@
       "Bash(xargs:*)",
       "Bash(for dir in */)",
       "Bash(do touch \"$dir/.gitkeep\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(find:*)"
     ]
   }
 }
