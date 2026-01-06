@@ -65,7 +65,10 @@
       "Bash(cmd /c \"copy \"\"c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\JubileeVerse.com\\\\website\\\\images\\\\personas\\\\jubilee.png\"\" \"\"c:\\\\data\\\\JubileeEnterprise.com\\\\mobile\\\\JubileeInspire.ios\\\\assets\\\\jubilee-profile.png\"\"\")",
       "Bash(cmd /c \"dir c:\\\\data\\\\JubileeEnterprise.com\\\\mobile\\\\JubileeInspire.ios\\\\assets\"\")",
       "Bash(cmd /c \"dir c:\\\\data\\\\JubileeEnterprise.com\\\\mobile\\\\JubileeInspire.ios\\\\assets\")",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(for dir in */)",
+      "Bash(do touch \"$dir/.gitkeep\")",
+      "Bash(done)"
     ]
   }
 }
