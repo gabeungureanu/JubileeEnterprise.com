@@ -1,0 +1,50 @@
+name: Deploy InspireCodex.com
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'websites/codex/InspireCodex.com/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Pull latest changes on server
+        run: |
+          cd C:/data/JubileeEnterprise.com
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Restart InspireCodex service
+        run: |
+          # Stop existing InspireCodex process if running
+          $process = Get-Process -Name "node" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*InspireCodex*" }
+          if ($process) {
+            Stop-Process -Id $process.Id -Force
+            Start-Sleep -Seconds 2
+          }
+
+          # Start InspireCodex server
+          cd C:/data/JubileeEnterprise.com/websites/codex/InspireCodex.com
+          Start-Process -FilePath "node" -ArgumentList "server.js" -NoNewWindow
+        shell: pwsh
+
+      - name: Verify deployment
+        run: |
+          Start-Sleep -Seconds 5
+          $response = Invoke-WebRequest -Uri "http://localhost:3100/health" -UseBasicParsing -TimeoutSec 10
+          if ($response.StatusCode -eq 200) {
+            Write-Host "InspireCodex.com deployment successful!"
+          } else {
+            throw "Deployment verification failed"
+          }
+        shell: pwsh

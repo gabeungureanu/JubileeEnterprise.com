@@ -1,0 +1,29 @@
+name: Deploy via SSH
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'websites/codex/InspireCodex.com/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Production Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          password: ${{ secrets.DEPLOY_PASSWORD }}
+          script: |
+            cd C:/data/JubileeEnterprise.com
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Restart InspireCodex service via PM2 or IISNode
+            cd websites/codex/InspireCodex.com
+            pm2 restart inspirecodex || node server.js &
