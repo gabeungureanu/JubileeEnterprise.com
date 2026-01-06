@@ -31,7 +31,7 @@ public partial class MainWindow : Window
     private readonly SyncEngine _syncEngine;
     private readonly CredentialManager _credentialManager;
     private OpenAIChatService? _openAIChatService;
-    private string _apiBaseUrl = "https://api.jubileebrowser.com";
+    private string _apiBaseUrl = "http://localhost:3100";
 
     private readonly Dictionary<string, WebView2> _webViews = new();
     private BrowserMode _currentMode = BrowserMode.Internet;

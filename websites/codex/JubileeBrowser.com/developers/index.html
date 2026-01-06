@@ -125,7 +125,7 @@
     <div class="container">
       <h2 class="section-title">Source Code</h2>
       <p class="section-subtitle">
-        Jubilee Browser is built with Electron and TypeScript.
+        Jubilee Browser is built with .NET 8 WPF and WebView2.
       </p>
       <div class="cards-grid" style="max-width: 900px; margin: 0 auto;">
         <a href="https://github.com/jubileebrowser/jubilee" class="card">
@@ -155,28 +155,32 @@
       <div class="card mb-3">
         <table style="width: 100%; border-collapse: collapse;">
           <tr>
-            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-weight: 600;">Runtime</td>
-            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">Electron 28.x (Chromium 120)</td>
+            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-weight: 600;">Framework</td>
+            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">.NET 8 WPF (Windows Presentation Foundation)</td>
+          </tr>
+          <tr>
+            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-weight: 600;">Web Engine</td>
+            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">WebView2 (Microsoft Edge/Chromium)</td>
           </tr>
           <tr>
             <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-weight: 600;">Language</td>
-            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">TypeScript 5.x</td>
-          </tr>
-          <tr>
-            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-weight: 600;">Build Tool</td>
-            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">electron-builder</td>
+            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">C# 12</td>
           </tr>
           <tr>
             <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-weight: 600;">Installer</td>
-            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">NSIS (Windows)</td>
+            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">MSI (Windows Installer)</td>
           </tr>
           <tr>
             <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-weight: 600;">Auto-Update</td>
-            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">electron-updater</td>
+            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">Built-in with SHA256 verification</td>
           </tr>
           <tr>
-            <td style="padding: 0.75rem; font-weight: 600;">Package Manager</td>
-            <td style="padding: 0.75rem;">npm</td>
+            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-weight: 600;">API Backend</td>
+            <td style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb;">InspireCodex.com REST API</td>
+          </tr>
+          <tr>
+            <td style="padding: 0.75rem; font-weight: 600;">Deployment</td>
+            <td style="padding: 0.75rem;">Self-contained (no .NET installation required)</td>
           </tr>
         </table>
       </div>
@@ -192,14 +196,14 @@
 git clone https://github.com/jubileebrowser/jubilee.git
 cd jubilee
 
-# Install dependencies
-npm install
+# Restore NuGet packages
+dotnet restore
 
 # Run in development mode
-npm start
+dotnet run
 
-# Build installer
-npm run package</pre>
+# Build release
+dotnet publish -c Release</pre>
       </div>
       <div class="text-center mt-3">
         <a href="/docs/building.html" class="btn btn-primary">Full Build Guide</a>

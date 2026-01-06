@@ -1,0 +1,14 @@
+{
+  "name": "jubilee-qdrant-infrastructure",
+  "version": "1.0.0",
+  "description": "Qdrant vector database infrastructure scripts for Jubilee Enterprise",
+  "scripts": {
+    "create-containers": "node create-containers.js",
+    "create-containers:prod": "node create-containers.js --host qdrant.jubileeenterprise.com --port 6333",
+    "status": "node status.js",
+    "delete-container": "node delete-container.js"
+  },
+  "dependencies": {
+    "@qdrant/js-client-rest": "^1.7.0"
+  }
+}

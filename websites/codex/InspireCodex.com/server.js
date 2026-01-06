@@ -843,6 +843,359 @@ app.get('/api/v1/inspire/knowledge/:id', async (req, res) => {
 });
 
 // =============================================================================
+// AUTHENTICATION API ROUTES - JubileeSSO
+// =============================================================================
+
+const crypto = require('crypto');
+
+// Helper function to hash password (matches JubileeVerse AuthService)
+function hashPassword(password, salt = null) {
+    if (!salt) {
+        salt = crypto.randomBytes(32).toString('hex');
+    }
+    const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
+    return `${salt}:${hash}`;
+}
+
+// Helper function to verify password (matches JubileeVerse AuthService format: salt:hash)
+function verifyPassword(password, storedHash) {
+    const [salt, hash] = storedHash.split(':');
+    const inputHash = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
+    return hash === inputHash;
+}
+
+// Helper function to generate JWT-like token (simple implementation)
+function generateToken(userId) {
+    const payload = {
+        userId,
+        iat: Date.now(),
+        exp: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
+    };
+    const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64');
+    const signature = crypto.createHmac('sha256', process.env.JWT_SECRET || 'jubilee-secret-key')
+        .update(base64Payload)
+        .digest('hex');
+    return `${base64Payload}.${signature}`;
+}
+
+// Login endpoint
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, password, rememberMe } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email and password are required'
+            });
+        }
+
+        // Find user by email
+        const result = await codexPool.query(
+            'SELECT id, email, password_hash, display_name, avatar_url, role, is_active FROM users WHERE email = $1',
+            [email.toLowerCase()]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({
+                success: false,
+                error: 'Invalid email or password'
+            });
+        }
+
+        const user = result.rows[0];
+
+        if (!user.is_active) {
+            return res.status(401).json({
+                success: false,
+                error: 'Account is disabled'
+            });
+        }
+
+        // Verify password
+        if (!verifyPassword(password, user.password_hash)) {
+            return res.status(401).json({
+                success: false,
+                error: 'Invalid email or password'
+            });
+        }
+
+        // Generate tokens
+        const accessToken = generateToken(user.id);
+        const refreshToken = generateToken(user.id + '-refresh');
+
+        // Update last login
+        await codexPool.query(
+            'UPDATE users SET last_login_at = NOW() WHERE id = $1',
+            [user.id]
+        );
+
+        // Create session record
+        await codexPool.query(
+            `INSERT INTO session (sid, sess, expire)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (sid) DO UPDATE SET sess = $2, expire = $3`,
+            [
+                user.id,
+                JSON.stringify({ userId: user.id, email: user.email }),
+                new Date(Date.now() + (rememberMe ? 30 : 7) * 24 * 60 * 60 * 1000)
+            ]
+        );
+
+        res.json({
+            success: true,
+            user: {
+                id: user.id,
+                email: user.email,
+                displayName: user.display_name,
+                avatarUrl: user.avatar_url,
+                role: user.role
+            },
+            tokens: {
+                accessToken,
+                refreshToken,
+                expiresIn: 7 * 24 * 60 * 60 // 7 days in seconds
+            }
+        });
+
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'An error occurred during login'
+        });
+    }
+});
+
+// Register endpoint
+app.post('/api/auth/register', async (req, res) => {
+    try {
+        const { email, password, displayName, username } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email and password are required'
+            });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({
+                success: false,
+                error: 'Password must be at least 8 characters'
+            });
+        }
+
+        // Check if user already exists
+        const existingUser = await codexPool.query(
+            'SELECT id FROM users WHERE email = $1',
+            [email.toLowerCase()]
+        );
+
+        if (existingUser.rows.length > 0) {
+            return res.status(409).json({
+                success: false,
+                error: 'An account with this email already exists'
+            });
+        }
+
+        // Hash password
+        const passwordHash = hashPassword(password);
+
+        // Create user
+        const result = await codexPool.query(
+            `INSERT INTO users (id, email, password_hash, display_name, role, is_active, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, 'user', true, NOW(), NOW())
+             RETURNING id, email, display_name, role`,
+            [
+                crypto.randomUUID(),
+                email.toLowerCase(),
+                passwordHash,
+                displayName || email.split('@')[0]
+            ]
+        );
+
+        const user = result.rows[0];
+
+        // Generate tokens
+        const accessToken = generateToken(user.id);
+        const refreshToken = generateToken(user.id + '-refresh');
+
+        res.status(201).json({
+            success: true,
+            user: {
+                id: user.id,
+                email: user.email,
+                displayName: user.display_name,
+                role: user.role
+            },
+            tokens: {
+                accessToken,
+                refreshToken,
+                expiresIn: 7 * 24 * 60 * 60
+            }
+        });
+
+    } catch (err) {
+        console.error('Registration error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'An error occurred during registration'
+        });
+    }
+});
+
+// Logout endpoint
+app.post('/api/auth/logout', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.substring(7);
+            // Decode token to get user ID
+            try {
+                const [base64Payload] = token.split('.');
+                const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString());
+                // Delete session
+                await codexPool.query('DELETE FROM session WHERE sid = $1', [payload.userId]);
+            } catch (e) {
+                // Token invalid, ignore
+            }
+        }
+
+        res.json({ success: true, message: 'Logged out successfully' });
+    } catch (err) {
+        console.error('Logout error:', err);
+        res.status(500).json({ success: false, error: 'An error occurred during logout' });
+    }
+});
+
+// Refresh token endpoint
+app.post('/api/auth/refresh', async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+
+        if (!refreshToken) {
+            return res.status(400).json({ success: false, error: 'Refresh token required' });
+        }
+
+        // Verify refresh token
+        try {
+            const [base64Payload, signature] = refreshToken.split('.');
+            const expectedSignature = crypto.createHmac('sha256', process.env.JWT_SECRET || 'jubilee-secret-key')
+                .update(base64Payload)
+                .digest('hex');
+
+            if (signature !== expectedSignature) {
+                return res.status(401).json({ success: false, error: 'Invalid refresh token' });
+            }
+
+            const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString());
+
+            if (payload.exp < Date.now()) {
+                return res.status(401).json({ success: false, error: 'Refresh token expired' });
+            }
+
+            const userId = payload.userId.replace('-refresh', '');
+
+            // Get user
+            const result = await codexPool.query(
+                'SELECT id, email, display_name, avatar_url, role FROM users WHERE id = $1 AND is_active = true',
+                [userId]
+            );
+
+            if (result.rows.length === 0) {
+                return res.status(401).json({ success: false, error: 'User not found' });
+            }
+
+            const user = result.rows[0];
+
+            // Generate new tokens
+            const newAccessToken = generateToken(user.id);
+            const newRefreshToken = generateToken(user.id + '-refresh');
+
+            res.json({
+                success: true,
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    displayName: user.display_name,
+                    avatarUrl: user.avatar_url,
+                    role: user.role
+                },
+                tokens: {
+                    accessToken: newAccessToken,
+                    refreshToken: newRefreshToken,
+                    expiresIn: 7 * 24 * 60 * 60
+                }
+            });
+
+        } catch (e) {
+            return res.status(401).json({ success: false, error: 'Invalid refresh token' });
+        }
+
+    } catch (err) {
+        console.error('Token refresh error:', err);
+        res.status(500).json({ success: false, error: 'An error occurred' });
+    }
+});
+
+// Get current user endpoint
+app.get('/api/auth/me', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ success: false, error: 'No token provided' });
+        }
+
+        const token = authHeader.substring(7);
+
+        // Verify token
+        const [base64Payload, signature] = token.split('.');
+        const expectedSignature = crypto.createHmac('sha256', process.env.JWT_SECRET || 'jubilee-secret-key')
+            .update(base64Payload)
+            .digest('hex');
+
+        if (signature !== expectedSignature) {
+            return res.status(401).json({ success: false, error: 'Invalid token' });
+        }
+
+        const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString());
+
+        if (payload.exp < Date.now()) {
+            return res.status(401).json({ success: false, error: 'Token expired' });
+        }
+
+        // Get user
+        const result = await codexPool.query(
+            'SELECT id, email, display_name, avatar_url, role, preferred_language FROM users WHERE id = $1 AND is_active = true',
+            [payload.userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({ success: false, error: 'User not found' });
+        }
+
+        const user = result.rows[0];
+
+        res.json({
+            success: true,
+            user: {
+                id: user.id,
+                email: user.email,
+                displayName: user.display_name,
+                avatarUrl: user.avatar_url,
+                role: user.role,
+                preferredLanguage: user.preferred_language
+            }
+        });
+
+    } catch (err) {
+        console.error('Get user error:', err);
+        res.status(500).json({ success: false, error: 'An error occurred' });
+    }
+});
+
+// =============================================================================
 // ERROR HANDLING
 // =============================================================================
 
@@ -854,6 +1207,13 @@ app.use((req, res) => {
         available_endpoints: {
             health: 'GET /health',
             status: 'GET /api/v1/status',
+            auth: {
+                login: 'POST /api/auth/login',
+                register: 'POST /api/auth/register',
+                logout: 'POST /api/auth/logout',
+                refresh: 'POST /api/auth/refresh',
+                me: 'GET /api/auth/me'
+            },
             codex: {
                 users: 'GET /api/v1/codex/users',
                 personas: 'GET /api/v1/codex/personas',

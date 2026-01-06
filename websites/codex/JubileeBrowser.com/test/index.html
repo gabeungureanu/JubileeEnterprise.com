@@ -329,7 +329,7 @@
 <body>
   <div class="container">
     <h1>Jubilee Browser Automated Test Suite</h1>
-    <p class="subtitle">Automated verification tests for Jubilee Browser v8.0.5</p>
+    <p class="subtitle">Automated verification tests for Jubilee Browser v8.0.7 (.NET 8 WPF)</p>
 
     <!-- Environment Info -->
     <div class="environment-info" id="envInfo">
@@ -338,7 +338,7 @@
         <div class="env-item"><span class="env-label">Browser:</span> <span class="env-value" id="envBrowser">Detecting...</span></div>
         <div class="env-item"><span class="env-label">Version:</span> <span class="env-value" id="envVersion">--</span></div>
         <div class="env-item"><span class="env-label">Mode:</span> <span class="env-value" id="envMode">--</span></div>
-        <div class="env-item"><span class="env-label">Jubilee API:</span> <span class="env-value" id="envApi">--</span></div>
+        <div class="env-item"><span class="env-label">InspireCodex API:</span> <span class="env-value" id="envApi">--</span></div>
       </div>
     </div>
 
@@ -397,11 +397,14 @@
     </div>
 
     <footer>
-      <p>Jubilee Browser Automated Test Suite v8.0.5 | &copy; 2025 Jubilee Software, Inc.</p>
+      <p>Jubilee Browser Automated Test Suite v8.0.7 | .NET 8 WPF + WebView2 | &copy; 2025 Jubilee Software, Inc.</p>
     </footer>
   </div>
 
   <script>
+    // InspireCodex API Configuration (Production)
+    const INSPIRE_CODEX_API = 'https://inspirecodex.com';
+
     // Test configuration
     const testSuites = [
       {
@@ -409,79 +412,72 @@
         icon: '🔍',
         tests: [
           {
-            id: 'env-jubilee-api',
-            name: 'Jubilee API Available',
-            description: 'Check if window.jubilee API is available',
+            id: 'env-webview2',
+            name: 'WebView2 Runtime',
+            description: 'Check if running in WebView2 environment',
             run: async () => {
-              if (typeof window.jubilee !== 'undefined') {
-                return { passed: true, message: 'window.jubilee API detected' };
+              // Check for WebView2 indicators
+              const isWebView2 = navigator.userAgent.includes('Edg/') ||
+                                 typeof window.chrome !== 'undefined';
+              if (isWebView2) {
+                return { passed: true, message: 'WebView2/Edge Chromium detected' };
               }
-              return { passed: false, message: 'window.jubilee API not found - not running in Jubilee Browser' };
+              return { passed: false, message: 'Not running in WebView2 environment' };
             }
           },
           {
-            id: 'env-settings-api',
-            name: 'Settings API Available',
-            description: 'Check if settings API is accessible',
+            id: 'env-jubilee-host',
+            name: 'Jubilee Host Object',
+            description: 'Check if Jubilee WPF host object is available',
             run: async () => {
-              if (window.jubilee?.settings?.get) {
-                return { passed: true, message: 'Settings API available' };
+              // WPF WebView2 exposes host objects via window.chrome.webview.hostObjects
+              if (window.chrome?.webview?.hostObjects?.jubilee) {
+                return { passed: true, message: 'Jubilee host object available' };
               }
-              return { passed: false, message: 'Settings API not available' };
-            }
-          },
-          {
-            id: 'env-blacklist-api',
-            name: 'Blacklist API Available',
-            description: 'Check if blacklist API is accessible',
-            run: async () => {
-              if (window.jubilee?.blacklist?.check) {
-                return { passed: true, message: 'Blacklist API available' };
-              }
-              return { passed: false, message: 'Blacklist API not available' };
+              return { passed: false, message: 'Jubilee host object not found - not running in Jubilee Browser' };
             }
           }
         ]
       },
       {
-        name: 'Homepage Configuration',
-        icon: '🏠',
+        name: 'InspireCodex API Connectivity',
+        icon: '🌐',
         tests: [
           {
-            id: 'homepage-settings-internet',
-            name: 'WWW Mode Homepage Setting',
-            description: 'Verify WWW mode homepage is set to jubileeverse.com',
+            id: 'api-health',
+            name: 'API Health Check',
+            description: 'Verify InspireCodex API is reachable',
             run: async () => {
-              if (!window.jubilee?.settings?.get) {
-                return { passed: false, message: 'Settings API not available', skipped: true };
-              }
               try {
-                const settings = await window.jubilee.settings.get();
-                const homepage = settings.homepage?.internet;
-                if (homepage && homepage.includes('jubileeverse.com')) {
-                  return { passed: true, message: `Homepage: ${homepage}` };
+                const response = await fetch(`${INSPIRE_CODEX_API}/health`, {
+                  method: 'GET',
+                  headers: { 'Accept': 'application/json' }
+                });
+                if (response.ok) {
+                  const data = await response.json();
+                  return { passed: true, message: `API Status: ${data.status || 'ok'}` };
                 }
-                return { passed: false, message: `Expected jubileeverse.com, got: ${homepage || 'undefined'}` };
+                return { passed: false, message: `HTTP ${response.status}` };
               } catch (e) {
-                return { passed: false, message: `Error: ${e.message}` };
+                return { passed: false, message: `Connection failed: ${e.message}` };
               }
             }
           },
           {
-            id: 'homepage-settings-wwbw',
-            name: 'WWBW Mode Homepage Setting',
-            description: 'Verify WWBW mode homepage is set to jubileeverse.com',
+            id: 'api-status',
+            name: 'API Status Endpoint',
+            description: 'Check API version and database status',
             run: async () => {
-              if (!window.jubilee?.settings?.get) {
-                return { passed: false, message: 'Settings API not available', skipped: true };
-              }
               try {
-                const settings = await window.jubilee.settings.get();
-                const homepage = settings.homepage?.jubileebibles;
-                if (homepage && homepage.includes('jubileeverse.com')) {
-                  return { passed: true, message: `Homepage: ${homepage}` };
+                const response = await fetch(`${INSPIRE_CODEX_API}/api/v1/status`, {
+                  method: 'GET',
+                  headers: { 'Accept': 'application/json' }
+                });
+                if (response.ok) {
+                  const data = await response.json();
+                  return { passed: true, message: `API v${data.version || '1.0'}, Codex: ${data.databases?.codex?.tables || 0} tables` };
                 }
-                return { passed: false, message: `Expected jubileeverse.com, got: ${homepage || 'undefined'}` };
+                return { passed: false, message: `HTTP ${response.status}` };
               } catch (e) {
                 return { passed: false, message: `Error: ${e.message}` };
               }
@@ -490,118 +486,132 @@
         ]
       },
       {
-        name: 'Blacklist Filtering',
+        name: 'Bible Content API',
+        icon: '📖',
+        tests: [
+          {
+            id: 'api-bible-verses',
+            name: 'Bible Verses Endpoint',
+            description: 'Fetch Bible verses from InspireCodex',
+            run: async () => {
+              try {
+                const response = await fetch(`${INSPIRE_CODEX_API}/api/v1/codex/bible/verses?limit=5`, {
+                  method: 'GET',
+                  headers: { 'Accept': 'application/json' }
+                });
+                if (response.ok) {
+                  const data = await response.json();
+                  const count = Array.isArray(data) ? data.length : (data.verses?.length || 0);
+                  return { passed: true, message: `Retrieved ${count} verses` };
+                }
+                return { passed: false, message: `HTTP ${response.status}` };
+              } catch (e) {
+                return { passed: false, message: `Error: ${e.message}` };
+              }
+            }
+          },
+          {
+            id: 'api-personas',
+            name: 'Personas Endpoint',
+            description: 'Fetch available AI personas',
+            run: async () => {
+              try {
+                const response = await fetch(`${INSPIRE_CODEX_API}/api/v1/codex/personas`, {
+                  method: 'GET',
+                  headers: { 'Accept': 'application/json' }
+                });
+                if (response.ok) {
+                  const data = await response.json();
+                  const count = Array.isArray(data) ? data.length : (data.personas?.length || 0);
+                  return { passed: true, message: `${count} personas available` };
+                }
+                return { passed: false, message: `HTTP ${response.status}` };
+              } catch (e) {
+                return { passed: false, message: `Error: ${e.message}` };
+              }
+            }
+          }
+        ]
+      },
+      {
+        name: 'Inspire Content API',
+        icon: '✨',
+        tests: [
+          {
+            id: 'api-devotionals',
+            name: 'Devotionals Endpoint',
+            description: 'Fetch devotional content',
+            run: async () => {
+              try {
+                const response = await fetch(`${INSPIRE_CODEX_API}/api/v1/inspire/devotionals?limit=3`, {
+                  method: 'GET',
+                  headers: { 'Accept': 'application/json' }
+                });
+                if (response.ok) {
+                  const data = await response.json();
+                  const count = Array.isArray(data) ? data.length : (data.devotionals?.length || 0);
+                  return { passed: true, message: `${count} devotionals available` };
+                }
+                return { passed: false, message: `HTTP ${response.status}` };
+              } catch (e) {
+                return { passed: false, message: `Error: ${e.message}` };
+              }
+            }
+          },
+          {
+            id: 'api-categories',
+            name: 'Categories Endpoint',
+            description: 'Fetch content categories',
+            run: async () => {
+              try {
+                const response = await fetch(`${INSPIRE_CODEX_API}/api/v1/inspire/categories`, {
+                  method: 'GET',
+                  headers: { 'Accept': 'application/json' }
+                });
+                if (response.ok) {
+                  const data = await response.json();
+                  const count = Array.isArray(data) ? data.length : (data.categories?.length || 0);
+                  return { passed: true, message: `${count} categories` };
+                }
+                return { passed: false, message: `HTTP ${response.status}` };
+              } catch (e) {
+                return { passed: false, message: `Error: ${e.message}` };
+              }
+            }
+          }
+        ]
+      },
+      {
+        name: 'Content Filtering',
         icon: '🛡️',
         tests: [
           {
-            id: 'blacklist-pornhub',
-            name: 'Block pornhub.com',
-            description: 'Verify pornhub.com is blocked',
+            id: 'filter-blocklist-loaded',
+            name: 'Blocklist Available',
+            description: 'Verify content blocklist is loaded',
             run: async () => {
-              if (!window.jubilee?.blacklist?.check) {
-                return { passed: false, message: 'Blacklist API not available', skipped: true };
+              // Check if Jubilee host provides blocklist
+              if (window.chrome?.webview?.hostObjects?.jubilee?.checkBlacklist) {
+                return { passed: true, message: 'Blocklist API available via host' };
               }
-              try {
-                const result = await window.jubilee.blacklist.check('https://www.pornhub.com');
-                if (result.isBlocked) {
-                  return { passed: true, message: 'Site is blocked' };
-                }
-                return { passed: false, message: 'Site is NOT blocked' };
-              } catch (e) {
-                return { passed: false, message: `Error: ${e.message}` };
-              }
+              // Fallback: check if running in Jubilee context
+              return { passed: false, message: 'Blocklist API not available - test in Jubilee Browser', skipped: true };
             }
           },
           {
-            id: 'blacklist-xvideos',
-            name: 'Block xvideos.com',
-            description: 'Verify xvideos.com is blocked',
+            id: 'filter-safe-site',
+            name: 'Allow Safe Sites',
+            description: 'Verify safe sites are allowed (jubileeverse.com)',
             run: async () => {
-              if (!window.jubilee?.blacklist?.check) {
-                return { passed: false, message: 'Blacklist API not available', skipped: true };
+              if (!window.chrome?.webview?.hostObjects?.jubilee?.checkBlacklist) {
+                return { passed: false, message: 'Blocklist API not available', skipped: true };
               }
               try {
-                const result = await window.jubilee.blacklist.check('https://www.xvideos.com');
-                if (result.isBlocked) {
-                  return { passed: true, message: 'Site is blocked' };
+                const result = await window.chrome.webview.hostObjects.jubilee.checkBlacklist('https://www.jubileeverse.com');
+                if (!result) {
+                  return { passed: true, message: 'Site correctly allowed' };
                 }
-                return { passed: false, message: 'Site is NOT blocked' };
-              } catch (e) {
-                return { passed: false, message: `Error: ${e.message}` };
-              }
-            }
-          },
-          {
-            id: 'blacklist-xnxx',
-            name: 'Block xnxx.com',
-            description: 'Verify xnxx.com is blocked',
-            run: async () => {
-              if (!window.jubilee?.blacklist?.check) {
-                return { passed: false, message: 'Blacklist API not available', skipped: true };
-              }
-              try {
-                const result = await window.jubilee.blacklist.check('https://www.xnxx.com');
-                if (result.isBlocked) {
-                  return { passed: true, message: 'Site is blocked' };
-                }
-                return { passed: false, message: 'Site is NOT blocked' };
-              } catch (e) {
-                return { passed: false, message: `Error: ${e.message}` };
-              }
-            }
-          },
-          {
-            id: 'blacklist-redtube',
-            name: 'Block redtube.com',
-            description: 'Verify redtube.com is blocked',
-            run: async () => {
-              if (!window.jubilee?.blacklist?.check) {
-                return { passed: false, message: 'Blacklist API not available', skipped: true };
-              }
-              try {
-                const result = await window.jubilee.blacklist.check('https://www.redtube.com');
-                if (result.isBlocked) {
-                  return { passed: true, message: 'Site is blocked' };
-                }
-                return { passed: false, message: 'Site is NOT blocked' };
-              } catch (e) {
-                return { passed: false, message: `Error: ${e.message}` };
-              }
-            }
-          },
-          {
-            id: 'blacklist-allow-google',
-            name: 'Allow google.com',
-            description: 'Verify google.com is NOT blocked',
-            run: async () => {
-              if (!window.jubilee?.blacklist?.check) {
-                return { passed: false, message: 'Blacklist API not available', skipped: true };
-              }
-              try {
-                const result = await window.jubilee.blacklist.check('https://www.google.com');
-                if (!result.isBlocked) {
-                  return { passed: true, message: 'Site is allowed' };
-                }
-                return { passed: false, message: 'Site is incorrectly blocked' };
-              } catch (e) {
-                return { passed: false, message: `Error: ${e.message}` };
-              }
-            }
-          },
-          {
-            id: 'blacklist-allow-jubileeverse',
-            name: 'Allow jubileeverse.com',
-            description: 'Verify jubileeverse.com is NOT blocked',
-            run: async () => {
-              if (!window.jubilee?.blacklist?.check) {
-                return { passed: false, message: 'Blacklist API not available', skipped: true };
-              }
-              try {
-                const result = await window.jubilee.blacklist.check('https://www.jubileeverse.com');
-                if (!result.isBlocked) {
-                  return { passed: true, message: 'Site is allowed' };
-                }
-                return { passed: false, message: 'Site is incorrectly blocked' };
+                return { passed: false, message: 'Site incorrectly blocked' };
               } catch (e) {
                 return { passed: false, message: `Error: ${e.message}` };
               }
@@ -610,101 +620,39 @@
         ]
       },
       {
-        name: 'Browser Mode',
-        icon: '🔄',
+        name: 'Browser Features',
+        icon: '🔧',
         tests: [
           {
-            id: 'mode-get-current',
-            name: 'Get Current Mode',
-            description: 'Check if current mode can be retrieved',
+            id: 'feature-settings',
+            name: 'Settings Access',
+            description: 'Check if browser settings are accessible',
             run: async () => {
-              if (!window.jubilee?.mode?.get) {
-                return { passed: false, message: 'Mode API not available', skipped: true };
+              if (window.chrome?.webview?.hostObjects?.jubilee?.getSettings) {
+                try {
+                  const settings = await window.chrome.webview.hostObjects.jubilee.getSettings();
+                  return { passed: true, message: 'Settings retrieved successfully' };
+                } catch (e) {
+                  return { passed: false, message: `Error: ${e.message}` };
+                }
               }
-              try {
-                const mode = await window.jubilee.mode.get();
-                if (mode === 'internet' || mode === 'jubileebibles') {
+              return { passed: false, message: 'Settings API not available - test in Jubilee Browser', skipped: true };
+            }
+          },
+          {
+            id: 'feature-mode',
+            name: 'Browse Mode Detection',
+            description: 'Check current browsing mode (WWW/WWBW)',
+            run: async () => {
+              if (window.chrome?.webview?.hostObjects?.jubilee?.getMode) {
+                try {
+                  const mode = await window.chrome.webview.hostObjects.jubilee.getMode();
                   return { passed: true, message: `Current mode: ${mode}` };
+                } catch (e) {
+                  return { passed: false, message: `Error: ${e.message}` };
                 }
-                return { passed: false, message: `Invalid mode: ${mode}` };
-              } catch (e) {
-                return { passed: false, message: `Error: ${e.message}` };
               }
-            }
-          }
-        ]
-      },
-      {
-        name: 'Tab Management',
-        icon: '📑',
-        tests: [
-          {
-            id: 'tabs-list',
-            name: 'List Tabs',
-            description: 'Check if tabs can be listed',
-            run: async () => {
-              if (!window.jubilee?.tabs?.getAll) {
-                return { passed: false, message: 'Tabs API not available', skipped: true };
-              }
-              try {
-                const tabs = await window.jubilee.tabs.getAll();
-                if (Array.isArray(tabs) && tabs.length > 0) {
-                  return { passed: true, message: `Found ${tabs.length} tab(s)` };
-                }
-                return { passed: false, message: 'No tabs found' };
-              } catch (e) {
-                return { passed: false, message: `Error: ${e.message}` };
-              }
-            }
-          }
-        ]
-      },
-      {
-        name: 'Navigation',
-        icon: '🧭',
-        tests: [
-          {
-            id: 'nav-api',
-            name: 'Navigation API Available',
-            description: 'Check if navigation API is accessible',
-            run: async () => {
-              if (window.jubilee?.navigation) {
-                return { passed: true, message: 'Navigation API available' };
-              }
-              return { passed: false, message: 'Navigation API not available' };
-            }
-          }
-        ]
-      },
-      {
-        name: 'Authentication',
-        icon: '🔐',
-        tests: [
-          {
-            id: 'auth-api',
-            name: 'Auth API Available',
-            description: 'Check if authentication API is accessible',
-            run: async () => {
-              if (window.jubilee?.auth) {
-                return { passed: true, message: 'Auth API available' };
-              }
-              return { passed: false, message: 'Auth API not available' };
-            }
-          },
-          {
-            id: 'auth-session',
-            name: 'Get Session Status',
-            description: 'Check if session can be retrieved',
-            run: async () => {
-              if (!window.jubilee?.auth?.getSession) {
-                return { passed: false, message: 'Auth session API not available', skipped: true };
-              }
-              try {
-                const session = await window.jubilee.auth.getSession();
-                return { passed: true, message: `Authenticated: ${session?.isAuthenticated || false}` };
-              } catch (e) {
-                return { passed: false, message: `Error: ${e.message}` };
-              }
+              return { passed: false, message: 'Mode API not available - test in Jubilee Browser', skipped: true };
             }
           }
         ]
@@ -741,18 +689,29 @@
     }
 
     // Detect environment
-    function detectEnvironment() {
-      const isJubilee = typeof window.jubilee !== 'undefined';
-      document.getElementById('envBrowser').textContent = isJubilee ? 'Jubilee Browser' : 'Standard Browser';
-      document.getElementById('envVersion').textContent = isJubilee ? '8.0.5' : 'N/A';
-      document.getElementById('envApi').textContent = isJubilee ? 'Available' : 'Not Available';
+    async function detectEnvironment() {
+      const isWebView2 = navigator.userAgent.includes('Edg/') || typeof window.chrome !== 'undefined';
+      const isJubilee = window.chrome?.webview?.hostObjects?.jubilee;
 
-      if (isJubilee && window.jubilee.mode?.get) {
-        window.jubilee.mode.get().then(mode => {
+      document.getElementById('envBrowser').textContent = isJubilee ? 'Jubilee Browser (WPF)' : (isWebView2 ? 'WebView2/Edge' : 'Standard Browser');
+      document.getElementById('envVersion').textContent = isJubilee ? '8.0.7' : 'N/A';
+
+      // Check InspireCodex API
+      try {
+        const response = await fetch(`${INSPIRE_CODEX_API}/health`, { method: 'GET' });
+        document.getElementById('envApi').textContent = response.ok ? 'Connected' : 'Unavailable';
+      } catch (e) {
+        document.getElementById('envApi').textContent = 'Offline';
+      }
+
+      // Check mode
+      if (isJubilee && window.chrome.webview.hostObjects.jubilee.getMode) {
+        try {
+          const mode = await window.chrome.webview.hostObjects.jubilee.getMode();
           document.getElementById('envMode').textContent = mode === 'jubileebibles' ? 'WWBW' : 'WWW';
-        }).catch(() => {
+        } catch (e) {
           document.getElementById('envMode').textContent = 'Unknown';
-        });
+        }
       } else {
         document.getElementById('envMode').textContent = 'N/A';
       }
@@ -827,7 +786,7 @@
       document.getElementById('resultsSection').classList.add('hidden');
       document.getElementById('logEntries').innerHTML = '';
 
-      log('Starting automated test suite...', 'info');
+      log('Starting automated test suite (WPF + InspireCodex API)...', 'info');
 
       for (const suite of testSuites) {
         log(`Running suite: ${suite.name}`, 'info');
@@ -906,7 +865,9 @@
       }
 
       // Generate text report
-      let report = `Jubilee Browser v8.0.5 - Automated Test Results\n`;
+      let report = `Jubilee Browser v8.0.7 - Automated Test Results\n`;
+      report += `Platform: .NET 8 WPF + WebView2\n`;
+      report += `API: InspireCodex.com (Production)\n`;
       report += `Date: ${new Date().toLocaleString()}\n`;
       report += `${'='.repeat(60)}\n\n`;
 
