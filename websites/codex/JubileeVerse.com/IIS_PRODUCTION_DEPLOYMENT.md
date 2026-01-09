@@ -396,6 +396,49 @@ Creates/updates test user:
 - Run create-test-user.js script
 - Verify password is hashed correctly (pbkdf2, 100000 iterations)
 
+### Issue 6: Session Store Column Error (500 Error)
+
+**Symptoms:**
+- All requests return 500 Internal Server Error
+- Logs show: `column "sess" of relation "user_sessions" does not exist`
+
+**Cause:**
+- The `connect-pg-simple` session store expects a table with columns: `sid`, `sess`, `expire`
+- The existing `user_sessions` table has different columns (used for session metadata)
+
+**Solution:**
+1. Create the proper session store table:
+```sql
+CREATE TABLE IF NOT EXISTS session_store (
+    sid VARCHAR NOT NULL COLLATE "default",
+    sess JSON NOT NULL,
+    expire TIMESTAMP(6) NOT NULL,
+    CONSTRAINT session_store_pkey PRIMARY KEY (sid)
+);
+CREATE INDEX IF NOT EXISTS session_store_expire_idx ON session_store (expire);
+```
+
+2. Update [src/middleware/session.js](src/middleware/session.js) to use `tableName: 'session_store'`
+
+3. Restart IIS: `iisreset`
+
+### Issue 7: Session Cookies Not Persisting (Logged Out After Refresh)
+
+**Symptoms:**
+- Login appears successful but user is logged out on page refresh
+- Session cookie not being saved by browser
+
+**Cause:**
+- Session cookies set with `secure: true` require HTTPS
+- IISNode serves HTTP, with IIS potentially handling HTTPS termination
+
+**Solution:**
+The session middleware automatically detects IISNode and disables secure cookies. If needed, override with:
+```env
+SESSION_SECURE=false  # Allow HTTP cookies (for development)
+SESSION_SECURE=true   # Require HTTPS (for production with SSL)
+```
+
 ## Monitoring and Logs
 
 ### IISNode Logs

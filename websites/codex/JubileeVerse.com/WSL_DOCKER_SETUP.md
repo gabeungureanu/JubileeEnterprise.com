@@ -341,7 +341,7 @@ wsl
 ## Data Storage
 
 All persistent data is stored at:
-- **Windows path**: `C:\Data\JubileeVerse\.datastore\`
+- **Windows path**: `C:\Data\JubileeVerse.com\.datastore\`
 - **WSL path**: `/mnt/c/Data/JubileeVerse/.datastore/`
 
 Subdirectories:

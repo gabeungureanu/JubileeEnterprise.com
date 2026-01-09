@@ -1,0 +1,6 @@
+(node:11272) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Failed to obtain server version. Unable to check client-server compatibility. Set checkCompatibility=false to skip version check.
+{"timestamp":"2026-01-02T20:56:56.993Z","level":"warn","message":"Could not connect to Qdrant, falling back to mock mode","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","error":"fetch failed","host":"localhost","port":6333}
+{"timestamp":"2026-01-02T20:56:57.114Z","level":"warn","message":"Worker ai-response: Using mock worker (no Redis)","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-02T20:56:57.178Z","level":"warn","message":"Request completed","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","traceId":"6e910f0c8cd94ea68268cc09b9d0310b","requestId":"c3b6bf43","method":"GET","path":"/SignUp","route":"/SignUp","statusCode":404,"durationMs":24,"userAgent":"Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)"}

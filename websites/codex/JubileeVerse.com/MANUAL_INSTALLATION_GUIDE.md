@@ -77,7 +77,7 @@
 
 2. **Create data directory**:
    ```powershell
-   New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse\.datastore\qdrant"
+   New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse.com\.datastore\qdrant"
    ```
 
 3. **Start Qdrant** (in a separate PowerShell window):

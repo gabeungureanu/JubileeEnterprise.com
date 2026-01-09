@@ -1,0 +1,230 @@
+<UserControl x:Class="JubileeVibes.Views.Pages.LibraryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             mc:Ignorable="d"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             d:DesignHeight="700" d:DesignWidth="1000"
+             Background="Transparent">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0"
+                   Text="Your Library"
+                   Style="{StaticResource HeadingXLarge}"
+                   Margin="32,24,32,16"/>
+
+        <!-- Tab Buttons -->
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    Margin="32,0,32,24">
+            <Button Content="Playlists"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding SelectTabCommand}"
+                    CommandParameter="playlists"
+                    Margin="0,0,8,0"/>
+            <Button Content="Albums"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding SelectTabCommand}"
+                    CommandParameter="albums"
+                    Margin="0,0,8,0"/>
+            <Button Content="Artists"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding SelectTabCommand}"
+                    CommandParameter="artists"
+                    Margin="0,0,8,0"/>
+            <Button Content="Local Files"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Command="{Binding SelectTabCommand}"
+                    CommandParameter="local"/>
+        </StackPanel>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="2"
+                      Style="{StaticResource VibesScrollViewerStyle}"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="32,0">
+
+                <!-- Liked Songs Card (always visible in playlists tab) -->
+                <Border Visibility="{Binding SelectedTab, Converter={StaticResource StringToVisibilityConverter}, ConverterParameter=playlists}"
+                        Background="{StaticResource CardBackgroundBrush}"
+                        CornerRadius="8"
+                        Margin="0,0,0,24"
+                        Cursor="Hand"
+                        Height="80">
+                    <Border.InputBindings>
+                        <MouseBinding MouseAction="LeftClick"
+                                      Command="{Binding NavigateToLikedSongsCommand}"/>
+                    </Border.InputBindings>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Width="80" Height="80" CornerRadius="8,0,0,8">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#450AF0" Offset="0"/>
+                                    <GradientStop Color="#8E8EE5" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Path Data="{StaticResource HeartIcon}"
+                                  Fill="White"
+                                  Width="32" Height="32"
+                                  Stretch="Uniform"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"/>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0">
+                            <TextBlock Text="Liked Songs"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       FontWeight="Bold"
+                                       FontSize="16"/>
+                            <TextBlock Foreground="{StaticResource TextSecondaryBrush}"
+                                       FontSize="14">
+                                <Run Text="{Binding LikedSongsCount, Mode=OneWay}"/>
+                                <Run Text=" songs"/>
+                            </TextBlock>
+                        </StackPanel>
+
+                        <Button Grid.Column="2"
+                                Style="{StaticResource LargePlayButtonStyle}"
+                                Command="{Binding PlayAllLikedSongsCommand}"
+                                Margin="0,0,24,0">
+                            <Path Data="{StaticResource PlayIcon}"
+                                  Fill="{StaticResource BackgroundPrimaryBrush}"
+                                  Width="24" Height="24"
+                                  Stretch="Uniform"/>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Playlists Grid -->
+                <ItemsControl ItemsSource="{Binding Playlists}"
+                              Visibility="{Binding SelectedTab, Converter={StaticResource StringToVisibilityConverter}, ConverterParameter=playlists}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource CardBackgroundBrush}"
+                                    CornerRadius="8" Padding="16" Width="180"
+                                    Margin="0,0,16,16" Cursor="Hand">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick"
+                                                  Command="{Binding DataContext.NavigateToPlaylistCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  CommandParameter="{Binding}"/>
+                                </Border.InputBindings>
+                                <StackPanel>
+                                    <Border Width="148" Height="148" CornerRadius="4"
+                                            Background="{StaticResource BackgroundTertiaryBrush}">
+                                        <Image Source="{Binding CoverImageUrl}" Stretch="UniformToFill"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding Name}"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               FontWeight="SemiBold" FontSize="14"
+                                               TextTrimming="CharacterEllipsis"
+                                               Margin="0,12,0,4"/>
+                                    <TextBlock Text="{Binding TrackCountFormatted}"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               FontSize="12"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Albums Grid -->
+                <ItemsControl ItemsSource="{Binding SavedAlbums}"
+                              Visibility="{Binding SelectedTab, Converter={StaticResource StringToVisibilityConverter}, ConverterParameter=albums}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource CardBackgroundBrush}"
+                                    CornerRadius="8" Padding="16" Width="180"
+                                    Margin="0,0,16,16" Cursor="Hand">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick"
+                                                  Command="{Binding DataContext.NavigateToAlbumCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  CommandParameter="{Binding}"/>
+                                </Border.InputBindings>
+                                <StackPanel>
+                                    <Border Width="148" Height="148" CornerRadius="4"
+                                            Background="{StaticResource BackgroundTertiaryBrush}">
+                                        <Image Source="{Binding CoverArtUrl}" Stretch="UniformToFill"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding Title}"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               FontWeight="SemiBold" FontSize="14"
+                                               TextTrimming="CharacterEllipsis"
+                                               Margin="0,12,0,4"/>
+                                    <TextBlock Text="{Binding ArtistName}"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               FontSize="12"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Artists Grid -->
+                <ItemsControl ItemsSource="{Binding FollowedArtists}"
+                              Visibility="{Binding SelectedTab, Converter={StaticResource StringToVisibilityConverter}, ConverterParameter=artists}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource CardBackgroundBrush}"
+                                    CornerRadius="8" Padding="16" Width="180"
+                                    Margin="0,0,16,16" Cursor="Hand">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick"
+                                                  Command="{Binding DataContext.NavigateToArtistCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  CommandParameter="{Binding}"/>
+                                </Border.InputBindings>
+                                <StackPanel HorizontalAlignment="Center">
+                                    <Border Width="148" Height="148" CornerRadius="74"
+                                            Background="{StaticResource BackgroundTertiaryBrush}">
+                                        <Border.Clip>
+                                            <EllipseGeometry Center="74,74" RadiusX="74" RadiusY="74"/>
+                                        </Border.Clip>
+                                        <Image Source="{Binding ImageUrl}" Stretch="UniformToFill"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding Name}"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               FontWeight="SemiBold" FontSize="14"
+                                               TextTrimming="CharacterEllipsis"
+                                               HorizontalAlignment="Center"
+                                               Margin="0,12,0,4"/>
+                                    <TextBlock Text="Artist"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               FontSize="12"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

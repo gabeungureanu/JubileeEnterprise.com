@@ -262,7 +262,7 @@ docker-compose -f docker-compose.production.yml stop
 
 All persistent data is stored at:
 ```
-C:\Data\JubileeVerse\.datastore\
+C:\Data\JubileeVerse.com\.datastore\
 ├── postgres\    # Database files
 ├── qdrant\      # Vector database
 └── redis\       # Cache/queue data
@@ -275,7 +275,7 @@ docker exec JubileeVerse-postgres pg_dump -U guardian JubileeVerse > backup.sql
 
 # Full backup (stop containers first)
 docker-compose -f docker-compose.production.yml stop
-Copy-Item -Recurse "C:\Data\JubileeVerse\.datastore" "C:\Backups\backup-$(Get-Date -Format 'yyyy-MM-dd')"
+Copy-Item -Recurse "C:\Data\JubileeVerse.com\.datastore" "C:\Backups\backup-$(Get-Date -Format 'yyyy-MM-dd')"
 docker-compose -f docker-compose.production.yml start
 ```
 

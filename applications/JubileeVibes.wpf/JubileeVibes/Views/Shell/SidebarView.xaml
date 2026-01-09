@@ -1,0 +1,156 @@
+<UserControl x:Class="JubileeVibes.Views.Shell.SidebarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="72"
+             Background="Transparent">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Main Navigation Icons -->
+        <StackPanel Grid.Row="0" Margin="0,16,0,0" HorizontalAlignment="Center">
+            <!-- Home -->
+            <Button x:Name="HomeButton"
+                    Style="{StaticResource IconButtonStyle}"
+                    Width="48" Height="48"
+                    Margin="0,4"
+                    Command="{Binding NavigateHomeCommand}"
+                    ToolTip="Home">
+                <Path Data="{StaticResource HomeIcon}"
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                      Width="24" Height="24"
+                      Stretch="Uniform"/>
+            </Button>
+
+            <!-- Search -->
+            <Button x:Name="SearchButton"
+                    Style="{StaticResource IconButtonStyle}"
+                    Width="48" Height="48"
+                    Margin="0,4"
+                    Command="{Binding NavigateSearchCommand}"
+                    ToolTip="Search">
+                <Path Data="{StaticResource SearchIcon}"
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                      Width="24" Height="24"
+                      Stretch="Uniform"/>
+            </Button>
+
+            <!-- Library -->
+            <Button Style="{StaticResource IconButtonStyle}"
+                    Width="48" Height="48"
+                    Margin="0,4"
+                    Command="{Binding NavigateLibraryCommand}"
+                    ToolTip="Your Library">
+                <Path Data="{StaticResource LibraryIcon}"
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                      Width="24" Height="24"
+                      Stretch="Uniform"/>
+            </Button>
+
+            <!-- Create Playlist -->
+            <Button Style="{StaticResource IconButtonStyle}"
+                    Width="48" Height="48"
+                    Margin="0,4"
+                    Command="{Binding CreatePlaylistCommand}"
+                    ToolTip="Create Playlist">
+                <Path Data="{StaticResource AddIcon}"
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                      Width="24" Height="24"
+                      Stretch="Uniform"/>
+            </Button>
+
+            <!-- Liked Songs -->
+            <Button Style="{StaticResource IconButtonStyle}"
+                    Width="48" Height="48"
+                    Margin="0,4"
+                    Command="{Binding NavigateLikedSongsCommand}"
+                    ToolTip="Liked Songs">
+                <Border Width="32" Height="32"
+                        CornerRadius="4">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#450AF0" Offset="0"/>
+                            <GradientStop Color="#8E8EE5" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Path Data="{StaticResource HeartIcon}"
+                          Fill="White"
+                          Width="16" Height="16"
+                          Stretch="Uniform"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"/>
+                </Border>
+            </Button>
+        </StackPanel>
+
+        <!-- Playlist Thumbnails (scrollable) -->
+        <ScrollViewer Grid.Row="1"
+                      Style="{StaticResource VibesScrollViewerStyle}"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Margin="0,8,0,0">
+            <ItemsControl ItemsSource="{Binding Playlists}" HorizontalAlignment="Center">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Style="{StaticResource IconButtonStyle}"
+                                Width="48" Height="48"
+                                Margin="0,4"
+                                Command="{Binding DataContext.NavigatePlaylistCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding Id}"
+                                ToolTip="{Binding Name}">
+                            <Border Width="32" Height="32"
+                                    CornerRadius="4"
+                                    Background="{StaticResource BackgroundTertiaryBrush}">
+                                <Border.Clip>
+                                    <RectangleGeometry Rect="0,0,32,32" RadiusX="4" RadiusY="4"/>
+                                </Border.Clip>
+                                <Image Source="{Binding CoverImageUrl}"
+                                       Stretch="UniformToFill"/>
+                            </Border>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Bottom Icons -->
+        <StackPanel Grid.Row="2" Margin="0,8,0,16" HorizontalAlignment="Center">
+            <!-- Settings -->
+            <Button Style="{StaticResource IconButtonStyle}"
+                    Width="48" Height="48"
+                    Margin="0,4"
+                    Command="{Binding NavigateSettingsCommand}"
+                    ToolTip="Settings">
+                <Path Data="{StaticResource SettingsIcon}"
+                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                      Width="20" Height="20"
+                      Stretch="Uniform"/>
+            </Button>
+
+            <!-- Account -->
+            <Button Style="{StaticResource IconButtonStyle}"
+                    Width="48" Height="48"
+                    Margin="0,4"
+                    Command="{Binding NavigateAccountCommand}"
+                    ToolTip="Account">
+                <Border Width="32" Height="32"
+                        CornerRadius="16"
+                        Background="{StaticResource BackgroundTertiaryBrush}">
+                    <Path Data="{StaticResource AccountIcon}"
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                          Width="16" Height="16"
+                          Stretch="Uniform"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"/>
+                </Border>
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>

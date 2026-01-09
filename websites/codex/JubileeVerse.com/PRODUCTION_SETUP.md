@@ -71,7 +71,7 @@ cd C:\Data\JubileeVerse.com
 ```
 
 This script will:
-- Create data storage directories at `C:\Data\JubileeVerse\.datastore\`
+- Create data storage directories at `C:\Data\JubileeVerse.com\.datastore\`
 - Start PostgreSQL, Qdrant, and Redis containers
 - Run health checks
 - Display connection information
@@ -113,9 +113,9 @@ If you prefer to set up manually without the PowerShell script:
 cd C:\Data\JubileeVerse.com
 
 # Create data directories
-New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse\.datastore\postgres"
-New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse\.datastore\qdrant"
-New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse\.datastore\redis"
+New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse.com\.datastore\postgres"
+New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse.com\.datastore\qdrant"
+New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse.com\.datastore\redis"
 
 # Start containers
 docker-compose -f docker-compose.production.yml up -d
@@ -167,7 +167,7 @@ docker-compose -f docker-compose.production.yml restart
 docker-compose -f docker-compose.production.yml down
 ```
 
-**Note**: This does NOT delete your data. Data is persisted in `C:\Data\JubileeVerse\.datastore\`
+**Note**: This does NOT delete your data. Data is persisted in `C:\Data\JubileeVerse.com\.datastore\`
 
 ---
 
@@ -249,7 +249,7 @@ EXIT
 
 All persistent data is stored in:
 ```
-C:\Data\JubileeVerse\.datastore\
+C:\Data\JubileeVerse.com\.datastore\
 ├── postgres\     # PostgreSQL database files
 ├── qdrant\       # Qdrant vector database files
 └── redis\        # Redis AOF and RDB files
@@ -268,7 +268,7 @@ docker exec JubileeVerse-postgres pg_dump -U guardian JubileeVerse > backup.sql
 docker-compose -f docker-compose.production.yml stop
 
 # Copy entire datastore
-Copy-Item -Path "C:\Data\JubileeVerse\.datastore" -Destination "C:\Backups\JubileeVerse-backup-$(Get-Date -Format 'yyyy-MM-dd')" -Recurse
+Copy-Item -Path "C:\Data\JubileeVerse.com\.datastore" -Destination "C:\Backups\JubileeVerse-backup-$(Get-Date -Format 'yyyy-MM-dd')" -Recurse
 
 # Restart containers
 docker-compose -f docker-compose.production.yml start

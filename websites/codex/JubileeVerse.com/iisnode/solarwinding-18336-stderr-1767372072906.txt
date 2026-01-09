@@ -1,0 +1,6 @@
+(node:18336) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Failed to obtain server version. Unable to check client-server compatibility. Set checkCompatibility=false to skip version check.
+{"timestamp":"2026-01-02T16:41:14.270Z","level":"warn","message":"Could not connect to Qdrant, falling back to mock mode","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","error":"fetch failed","host":"localhost","port":6333}
+{"timestamp":"2026-01-02T16:41:14.394Z","level":"warn","message":"Worker ai-response: Using mock worker (no Redis)","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-02T16:41:14.500Z","level":"warn","message":"Request completed","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","traceId":"5793ba4697f44f6795c79942ef68d467","requestId":"a97e8f9f","method":"GET","path":"/robots.txt","route":"/robots.txt","statusCode":404,"durationMs":34,"userAgent":"Mozilla/5.0 (compatible; MJ12bot/v2.0.4; http://mj12bot.com/)"}

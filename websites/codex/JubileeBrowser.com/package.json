@@ -4,8 +4,8 @@
   "description": "Marketing website for Jubilee Browser",
   "private": true,
   "scripts": {
-    "start": "npx serve -l 3002 .",
-    "dev": "npx serve -l 3002 .",
+    "start": "npx serve -l 3200 .",
+    "dev": "npx serve -l 3200 .",
     "build": "echo 'Static site - no build required'",
     "clean": "echo 'Static site - no clean required'"
   },

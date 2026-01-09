@@ -1,0 +1,62 @@
+{"timestamp":"2026-01-02T18:19:48.872Z","level":"info","message":"Starting JubileeVerse under IISNode","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-02T18:19:48.881Z","level":"info","message":"Using mock Redis client (development mode)","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-02T18:19:48.888Z","level":"info","message":"Cache initialized","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","mock":true}
+{"timestamp":"2026-01-02T18:19:49.097Z","level":"info","message":"PostgreSQL connection initialized","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","host":"localhost","port":5432,"database":"jubileeverse"}
+{"timestamp":"2026-01-02T18:19:49.135Z","level":"info","message":"Qdrant connection initialized (mock mode)","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-02T18:19:49.136Z","level":"info","message":"All database connections established","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-02T18:19:49.137Z","level":"info","message":"Database initialized","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-02T18:19:49.139Z","level":"info","message":"Session store configured with PostgreSQL","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-02T18:19:49.149Z","level":"info","message":"Session: Using non-secure cookies (HTTP allowed)","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-02T18:19:49.150Z","level":"info","message":"Session: Using PostgreSQL store","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-02T18:19:49.260Z","level":"info","message":"AI Response Worker initialized","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","concurrency":10,"limiter":{"max":50,"duration":1000}}
+{"timestamp":"2026-01-02T18:19:49.261Z","level":"info","message":"Queue workers initialized","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-02T18:19:49.263Z","level":"info","message":"Starting attachment cleanup job scheduler","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","intervalMs":86400000}
+{"timestamp":"2026-01-02T18:19:49.264Z","level":"info","message":"Starting attachment cleanup job","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-02T18:19:49.265Z","level":"info","message":"Starting expired attachments cleanup","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-02T18:19:49.267Z","level":"info","message":"Starting analytics aggregation job scheduler","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","intervalMs":86400000}
+{"timestamp":"2026-01-02T18:19:49.268Z","level":"info","message":"Background jobs started","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-02T18:19:49.269Z","level":"info","message":"JubileeVerse fully initialized for IISNode","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding"}
+{"timestamp":"2026-01-02T18:19:49.270Z","level":"info","message":"JubileeVerse listening for IISNode","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","port":"\\\\.\\pipe\\57602cc4-f5ef-4db5-a6b0-f240e2f772cc"}
+{"timestamp":"2026-01-02T18:19:49.280Z","level":"info","message":"Expired attachments cleanup completed","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","totalExpired":0,"deleted":0,"errors":0}
+{"timestamp":"2026-01-02T18:19:49.281Z","level":"info","message":"Attachment cleanup job completed","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","totalExpired":0,"deleted":0,"errors":0}
+- - - [02/Jan/2026:18:19:49 +0000] "GET /wp-content/plugins/hellopress/wp_filemanager.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:49 +0000] "GET /lisa.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:49 +0000] "GET /000.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:49 +0000] "GET /xxxx.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:50 +0000] "GET /bless14.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:50 +0000] "GET /ws35.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:50 +0000] "GET /87.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:50 +0000] "GET /nox.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:50 +0000] "GET /mini.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:50 +0000] "GET /acwfihfh.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:50 +0000] "GET /f8.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:51 +0000] "GET /bras.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:51 +0000] "GET /an8.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:51 +0000] "GET /esp.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:51 +0000] "GET /21x.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:52 +0000] "GET /out.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:52 +0000] "GET /flower2.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:52 +0000] "GET /family.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:52 +0000] "GET /s1.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:52 +0000] "GET /ma.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:52 +0000] "GET /asf.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:52 +0000] "GET /lanz.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:52 +0000] "GET /xeeex.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:53 +0000] "GET /tons.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:53 +0000] "GET /wpup.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:53 +0000] "GET /xa.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:53 +0000] "GET /f2f.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:53 +0000] "GET /ths.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:53 +0000] "GET /amax.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:53 +0000] "GET /990.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:53 +0000] "GET /d996699999.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:54 +0000] "GET /ierne.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:54 +0000] "GET /xde.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:54 +0000] "GET /1yade.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:54 +0000] "GET /gettest.php HTTP/1.1" 404 2590 "-" "-"
+- - - [02/Jan/2026:18:19:54 +0000] "GET /bjfl.php HTTP/1.1" 404 2590 "-" "-"
+{"timestamp":"2026-01-02T18:24:27.300Z","level":"info","message":"Request completed","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","traceId":"cb377f227af0472a82a4645faef666c2","requestId":"1c2f4baf","method":"GET","path":"/","route":"/","statusCode":200,"durationMs":9,"userAgent":"Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)"}
+- - - [02/Jan/2026:18:24:27 +0000] "GET / HTTP/1.1" 200 - "-" "Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)"
+{"timestamp":"2026-01-02T18:24:29.966Z","level":"info","message":"Request completed","service":"jubileeverse","version":"8.0.0","env":"production","hostname":"solarwinding","traceId":"4a3f565b98274d8baaa620376e1171fd","requestId":"052ab96e","method":"GET","path":"/images/personas/jubilee.png","route":"/images/personas/jubilee.png","statusCode":200,"durationMs":10,"contentLength":990171,"userAgent":"Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)"}
+- - - [02/Jan/2026:18:24:29 +0000] "GET /images/personas/jubilee.png HTTP/1.1" 200 990171 "-" "Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)"
+- - - [02/Jan/2026:18:24:35 +0000] "GET /favicon.ico HTTP/1.1" 404 - "-" "Mozilla/5.0 (compatible; CensysInspect/1.1; +https://about.censys.io/)"

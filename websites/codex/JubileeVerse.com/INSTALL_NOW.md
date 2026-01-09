@@ -81,9 +81,9 @@ This will automatically:
 
 ### 4.1 Create Data Directories
 ```powershell
-New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse\.datastore\postgres"
-New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse\.datastore\qdrant"
-New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse\.datastore\redis"
+New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse.com\.datastore\postgres"
+New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse.com\.datastore\qdrant"
+New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse.com\.datastore\redis"
 ```
 
 ### 4.2 Start Docker Containers

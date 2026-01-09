@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>JubileeVibes</AssemblyName>
+    <RootNamespace>JubileeVibes</RootNamespace>
+    <Version>1.0.0</Version>
+    <Authors>Jubilee Enterprise</Authors>
+    <Company>Jubilee Enterprise</Company>
+    <Product>JubileeVibes</Product>
+    <Description>A Spotify-like music player for the Jubilee ecosystem</Description>
+    <ApplicationIcon>Resources\Icons\app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.122" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\JubileeVibes.Core\JubileeVibes.Core.csproj" />
+    <ProjectReference Include="..\JubileeVibes.Infrastructure\JubileeVibes.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Icons\*.ico" Condition="Exists('Resources\Icons')" />
+    <Resource Include="Resources\Icons\*.png" Condition="Exists('Resources\Icons')" />
+  </ItemGroup>
+
+</Project>

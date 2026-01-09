@@ -260,7 +260,13 @@
       "Bash(cmd /c \"\"C:Program FilesPostgreSQL17binpsql.exe\" -h localhost -p 5433 -U guardian -d codex -c \"SELECT id, email, username FROM users)",
       "Bash(\"\")",
       "Bash(start:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd jubilee://settings internal page with WebUI bridge and heartbeat tracking\n\n- Implement comprehensive jubilee://settings page with Chrome/Edge-style UI\n- Add JavaScript-to-C# WebView2 bridge for settings communication\n- Implement settings persistence with SettingsManager integration\n- Add heartbeat mechanism for InspireContinuum session tracking\n- Update Settings page typography: white primary text, gold \\(#E6AC00\\) accents\n- Add custom scrollbar styling for Settings page\n- Fix InspireContinuum heartbeat endpoint with proper upsert handling\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push)",
+      "Bash(npm run build:*)",
+      "Bash(pkill:*)",
+      "Bash(exit 0)",
+      "Bash(where caddy:*)"
     ]
   }
 }

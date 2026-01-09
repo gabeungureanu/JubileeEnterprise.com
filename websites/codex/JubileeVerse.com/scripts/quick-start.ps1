@@ -47,9 +47,9 @@ if ($containersExist) {
     Write-Host "      No containers found, creating new containers..." -ForegroundColor Cyan
 
     # Create data directories
-    New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse\.datastore\postgres" | Out-Null
-    New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse\.datastore\qdrant" | Out-Null
-    New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse\.datastore\redis" | Out-Null
+    New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse.com\.datastore\postgres" | Out-Null
+    New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse.com\.datastore\qdrant" | Out-Null
+    New-Item -ItemType Directory -Force -Path "C:\Data\JubileeVerse.com\.datastore\redis" | Out-Null
 
     docker-compose -f docker-compose.production.yml up -d
     Start-Sleep -Seconds 10

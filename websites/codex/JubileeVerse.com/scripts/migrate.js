@@ -171,7 +171,7 @@ async function main() {
         await pool.query(`
           DROP SCHEMA public CASCADE;
           CREATE SCHEMA public;
-          GRANT ALL ON SCHEMA public TO ${config.user};
+          GRANT ALL ON SCHEMA public TO postgres;
           GRANT ALL ON SCHEMA public TO public;
         `);
         console.log('✅ Database reset complete');

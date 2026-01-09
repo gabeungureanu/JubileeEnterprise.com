@@ -1,0 +1,37 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:converters="clr-namespace:JubileeVibes.Converters">
+
+    <!-- Visibility Converters -->
+    <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    <converters:BoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" Invert="True"/>
+    <converters:BoolToVisibilityConverter x:Key="BoolToHiddenConverter" UseHidden="True"/>
+    <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+    <converters:NullToVisibilityConverter x:Key="NullToCollapsedConverter" Invert="True"/>
+    <converters:EqualityToVisibilityConverter x:Key="EqualityToVisibilityConverter"/>
+    <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+    <converters:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
+    <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+
+    <!-- Bool Converters -->
+    <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+    <converters:BoolToOpacityConverter x:Key="BoolToOpacityConverter"/>
+    <converters:BoolToOpacityConverter x:Key="BoolToHalfOpacityConverter" TrueOpacity="1.0" FalseOpacity="0.5"/>
+    <converters:StringToBoolConverter x:Key="StringToBoolConverter"/>
+
+    <!-- Text Converters -->
+    <converters:BoolToFollowTextConverter x:Key="BoolToFollowTextConverter"/>
+
+    <!-- Formatting Converters -->
+    <converters:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter"/>
+    <converters:NumberFormatConverter x:Key="NumberFormatConverter"/>
+
+    <!-- Icon Converters -->
+    <converters:PlayStateToIconConverter x:Key="PlayStateToIconConverter"/>
+    <converters:VolumeToIconConverter x:Key="VolumeToIconConverter"/>
+    <converters:LikedToIconConverter x:Key="LikedToIconConverter"/>
+
+    <!-- Slider Converters -->
+    <converters:SliderTrackWidthConverter x:Key="SliderTrackWidthConverter"/>
+
+</ResourceDictionary>

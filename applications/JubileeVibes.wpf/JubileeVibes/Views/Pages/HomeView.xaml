@@ -1,0 +1,250 @@
+<UserControl x:Class="JubileeVibes.Views.Pages.HomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1000"
+             Background="Transparent">
+
+    <ScrollViewer Style="{StaticResource VibesScrollViewerStyle}"
+                  VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="32,24">
+
+            <!-- Greeting -->
+            <TextBlock Text="{Binding Greeting}"
+                       Style="{StaticResource HeadingXLarge}"
+                       Margin="0,0,0,24"/>
+
+            <!-- Recently Played Section -->
+            <Grid Margin="0,0,0,32" Visibility="{Binding RecentlyPlayed.Count, Converter={StaticResource CountToVisibilityConverter}, Mode=OneWay}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"
+                           Text="Recently played"
+                           Style="{StaticResource HeadingMedium}"
+                           Margin="0,0,0,16"/>
+
+                <ItemsControl Grid.Row="1"
+                              ItemsSource="{Binding RecentlyPlayed}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource NavButtonStyle}"
+                                    Command="{Binding DataContext.PlayTrackCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}"
+                                    Margin="0,0,8,8">
+                                <Grid Width="300" Height="64">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="64"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Grid.Column="0"
+                                            Width="64" Height="64"
+                                            CornerRadius="4,0,0,4"
+                                            Background="{StaticResource BackgroundTertiaryBrush}">
+                                        <Image Source="{Binding AlbumArtUrl}"
+                                               Stretch="UniformToFill"/>
+                                    </Border>
+
+                                    <Border Grid.Column="1"
+                                            Background="{StaticResource BackgroundTertiaryBrush}"
+                                            CornerRadius="0,4,4,0"
+                                            Padding="12,0">
+                                        <TextBlock Text="{Binding Title}"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                                   FontWeight="SemiBold"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                    </Border>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+
+            <!-- Featured Tracks Section -->
+            <Grid Margin="0,0,0,32">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"
+                           Text="Made for you"
+                           Style="{StaticResource HeadingMedium}"
+                           Margin="0,0,0,16"/>
+
+                <ItemsControl Grid.Row="1"
+                              ItemsSource="{Binding FeaturedTracks}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource CardBackgroundBrush}"
+                                    CornerRadius="8"
+                                    Padding="16"
+                                    Width="180"
+                                    Margin="0,0,16,16"
+                                    Cursor="Hand">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick"
+                                                  Command="{Binding DataContext.PlayTrackCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  CommandParameter="{Binding}"/>
+                                </Border.InputBindings>
+                                <StackPanel>
+                                    <Border Width="148" Height="148"
+                                            CornerRadius="4"
+                                            Background="{StaticResource BackgroundTertiaryBrush}">
+                                        <Image Source="{Binding AlbumArtUrl}"
+                                               Stretch="UniformToFill"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding Title}"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               FontWeight="SemiBold"
+                                               FontSize="14"
+                                               TextTrimming="CharacterEllipsis"
+                                               Margin="0,12,0,4"/>
+                                    <TextBlock Text="{Binding ArtistName}"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               FontSize="12"
+                                               TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+
+            <!-- New Releases Section -->
+            <Grid Margin="0,0,0,32">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"
+                           Text="New releases"
+                           Style="{StaticResource HeadingMedium}"
+                           Margin="0,0,0,16"/>
+
+                <ItemsControl Grid.Row="1"
+                              ItemsSource="{Binding NewReleases}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource CardBackgroundBrush}"
+                                    CornerRadius="8"
+                                    Padding="16"
+                                    Width="180"
+                                    Margin="0,0,16,16"
+                                    Cursor="Hand">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick"
+                                                  Command="{Binding DataContext.NavigateToAlbumCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  CommandParameter="{Binding}"/>
+                                </Border.InputBindings>
+                                <StackPanel>
+                                    <Border Width="148" Height="148"
+                                            CornerRadius="4"
+                                            Background="{StaticResource BackgroundTertiaryBrush}">
+                                        <Image Source="{Binding CoverArtUrl}"
+                                               Stretch="UniformToFill"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding Title}"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               FontWeight="SemiBold"
+                                               FontSize="14"
+                                               TextTrimming="CharacterEllipsis"
+                                               Margin="0,12,0,4"/>
+                                    <TextBlock Text="{Binding ArtistName}"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               FontSize="12"
+                                               TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+
+            <!-- Top Artists Section -->
+            <Grid Margin="0,0,0,32">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"
+                           Text="Popular artists"
+                           Style="{StaticResource HeadingMedium}"
+                           Margin="0,0,0,16"/>
+
+                <ItemsControl Grid.Row="1"
+                              ItemsSource="{Binding TopArtists}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource CardBackgroundBrush}"
+                                    CornerRadius="8"
+                                    Padding="16"
+                                    Width="180"
+                                    Margin="0,0,16,16"
+                                    Cursor="Hand">
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftClick"
+                                                  Command="{Binding DataContext.NavigateToArtistCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  CommandParameter="{Binding}"/>
+                                </Border.InputBindings>
+                                <StackPanel HorizontalAlignment="Center">
+                                    <Border Width="148" Height="148"
+                                            CornerRadius="74"
+                                            Background="{StaticResource BackgroundTertiaryBrush}">
+                                        <Border.Clip>
+                                            <EllipseGeometry Center="74,74" RadiusX="74" RadiusY="74"/>
+                                        </Border.Clip>
+                                        <Image Source="{Binding ImageUrl}"
+                                               Stretch="UniformToFill"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding Name}"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               FontWeight="SemiBold"
+                                               FontSize="14"
+                                               TextTrimming="CharacterEllipsis"
+                                               HorizontalAlignment="Center"
+                                               Margin="0,12,0,4"/>
+                                    <TextBlock Text="Artist"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               FontSize="12"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

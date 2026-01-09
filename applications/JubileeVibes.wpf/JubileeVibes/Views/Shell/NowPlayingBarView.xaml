@@ -1,0 +1,234 @@
+<UserControl x:Class="JubileeVibes.Views.Shell.NowPlayingBarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="90" d:DesignWidth="1400"
+             Background="{StaticResource NowPlayingBarBrush}">
+
+    <Border BorderBrush="{StaticResource NowPlayingBarBorderBrush}"
+            BorderThickness="0,1,0,0">
+        <Grid Margin="16,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="200"/>
+                <ColumnDefinition Width="2*" MaxWidth="720"/>
+                <ColumnDefinition Width="*" MinWidth="200"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: Current Track Info -->
+            <Grid Grid.Column="0" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Album Art -->
+                <Border Grid.Column="0"
+                        Width="56" Height="56"
+                        CornerRadius="4"
+                        Background="{StaticResource BackgroundTertiaryBrush}"
+                        Visibility="{Binding HasCurrentTrack, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Collapsed}">
+                    <Image Source="{Binding CurrentTrack.AlbumArtUrl}"
+                           Stretch="UniformToFill"/>
+                </Border>
+
+                <!-- Track Info -->
+                <StackPanel Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Margin="12,0"
+                            Visibility="{Binding HasCurrentTrack, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Collapsed}">
+                    <TextBlock Text="{Binding CurrentTrack.Title}"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               FontSize="14"
+                               TextTrimming="CharacterEllipsis"
+                               MaxWidth="180"/>
+                    <TextBlock Text="{Binding CurrentTrack.ArtistName}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="12"
+                               TextTrimming="CharacterEllipsis"
+                               MaxWidth="180"
+                               Cursor="Hand">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="TextDecorations" Value="Underline"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+
+                <!-- Like Button -->
+                <ToggleButton Grid.Column="2"
+                              Style="{StaticResource ToggleIconButtonStyle}"
+                              IsChecked="{Binding CurrentTrack.IsLiked}"
+                              Visibility="{Binding HasCurrentTrack, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Collapsed}"
+                              ToolTip="Save to Your Library">
+                    <Path Data="{Binding CurrentTrack.IsLiked, Converter={StaticResource LikedToIconConverter}, FallbackValue={StaticResource HeartOutlineIcon}}"
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
+                          Width="16" Height="16"
+                          Stretch="Uniform"/>
+                </ToggleButton>
+            </Grid>
+
+            <!-- Center: Playback Controls -->
+            <StackPanel Grid.Column="1"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center">
+
+                <!-- Control Buttons -->
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            Margin="0,0,0,8">
+                    <!-- Shuffle -->
+                    <ToggleButton Style="{StaticResource ToggleIconButtonStyle}"
+                                  IsChecked="{Binding IsShuffleEnabled}"
+                                  ToolTip="Enable shuffle">
+                        <Path Data="{StaticResource ShuffleIcon}"
+                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
+                              Width="16" Height="16"
+                              Stretch="Uniform"/>
+                    </ToggleButton>
+
+                    <!-- Previous -->
+                    <Button Style="{StaticResource IconButtonStyle}"
+                            Command="{Binding PreviousCommand}"
+                            ToolTip="Previous"
+                            Margin="8,0">
+                        <Path Data="{StaticResource PreviousIcon}"
+                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              Width="16" Height="16"
+                              Stretch="Uniform"/>
+                    </Button>
+
+                    <!-- Play/Pause -->
+                    <Button Style="{StaticResource PlayButtonStyle}"
+                            Command="{Binding TogglePlayPauseCommand}"
+                            ToolTip="{Binding PlayPauseTooltip}">
+                        <Path Data="{Binding PlayPauseIcon}"
+                              Fill="{StaticResource BackgroundPrimaryBrush}"
+                              Width="16" Height="16"
+                              Stretch="Uniform"/>
+                    </Button>
+
+                    <!-- Next -->
+                    <Button Style="{StaticResource IconButtonStyle}"
+                            Command="{Binding NextCommand}"
+                            ToolTip="Next"
+                            Margin="8,0">
+                        <Path Data="{StaticResource NextIcon}"
+                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              Width="16" Height="16"
+                              Stretch="Uniform"/>
+                    </Button>
+
+                    <!-- Repeat -->
+                    <ToggleButton Style="{StaticResource ToggleIconButtonStyle}"
+                                  IsChecked="{Binding IsRepeatEnabled}"
+                                  Command="{Binding CycleRepeatCommand}"
+                                  ToolTip="{Binding RepeatTooltip}">
+                        <Path Data="{Binding RepeatIcon}"
+                              Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}"
+                              Width="16" Height="16"
+                              Stretch="Uniform"/>
+                    </ToggleButton>
+                </StackPanel>
+
+                <!-- Progress Bar -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="40"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="40"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Current Time -->
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding PositionFormatted}"
+                               Foreground="{StaticResource TextSubduedBrush}"
+                               FontSize="11"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"/>
+
+                    <!-- Seek Slider -->
+                    <Slider Grid.Column="1"
+                            Style="{StaticResource SeekSliderStyle}"
+                            Value="{Binding PositionPercent}"
+                            Minimum="0"
+                            Maximum="100"
+                            Margin="8,0"
+                            PreviewMouseLeftButtonUp="SeekSlider_MouseUp"/>
+
+                    <!-- Duration -->
+                    <TextBlock Grid.Column="2"
+                               Text="{Binding DurationFormatted}"
+                               Foreground="{StaticResource TextSubduedBrush}"
+                               FontSize="11"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"/>
+                </Grid>
+            </StackPanel>
+
+            <!-- Right: Volume and Extra Controls -->
+            <StackPanel Grid.Column="2"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center">
+
+                <!-- Queue -->
+                <Button Style="{StaticResource IconButtonStyle}"
+                        Command="{Binding ShowQueueCommand}"
+                        ToolTip="Queue">
+                    <Path Data="{StaticResource QueueIcon}"
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                          Width="16" Height="16"
+                          Stretch="Uniform"/>
+                </Button>
+
+                <!-- Devices -->
+                <Button Style="{StaticResource IconButtonStyle}"
+                        Command="{Binding ShowDevicesCommand}"
+                        ToolTip="Connect to a device"
+                        Margin="4,0">
+                    <Path Data="{StaticResource DevicesIcon}"
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                          Width="16" Height="16"
+                          Stretch="Uniform"/>
+                </Button>
+
+                <!-- Volume -->
+                <Button Style="{StaticResource IconButtonStyle}"
+                        Command="{Binding ToggleMuteCommand}"
+                        ToolTip="{Binding VolumeTooltip}">
+                    <Path Data="{Binding VolumeIcon}"
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                          Width="16" Height="16"
+                          Stretch="Uniform"/>
+                </Button>
+
+                <!-- Volume Slider -->
+                <Slider Style="{StaticResource VolumeSliderStyle}"
+                        Value="{Binding Volume}"
+                        Minimum="0"
+                        Maximum="1"
+                        Width="100"
+                        Margin="4,0,0,0"/>
+
+                <!-- Fullscreen -->
+                <Button Style="{StaticResource IconButtonStyle}"
+                        Command="{Binding ToggleFullscreenCommand}"
+                        ToolTip="Full screen"
+                        Margin="8,0,0,0">
+                    <Path Data="{StaticResource FullscreenIcon}"
+                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                          Width="16" Height="16"
+                          Stretch="Uniform"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

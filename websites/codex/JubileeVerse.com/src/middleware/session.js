@@ -32,10 +32,28 @@ function createPgSessionMiddleware() {
   try {
     const pgSession = require('connect-pg-simple')(session);
 
+    // Determine if we should use secure cookies
+    // In IISNode environment, we may be behind a proxy handling HTTPS
+    // Use secure cookies only if explicitly configured or if we detect HTTPS
+    const isIISNode = !!process.env.IISNODE_VERSION;
+    const forceSecure = process.env.SESSION_SECURE === 'true';
+    const forceInsecure = process.env.SESSION_SECURE === 'false';
+
+    // Default: secure in production unless running under IISNode without explicit HTTPS config
+    // This allows HTTP access in IISNode development scenarios
+    let useSecureCookie = !config.server.isDev;
+    if (forceSecure) {
+      useSecureCookie = true;
+    } else if (forceInsecure || isIISNode) {
+      // IISNode typically handles HTTP, with IIS handling HTTPS termination
+      // Allow non-secure cookies unless explicitly configured otherwise
+      useSecureCookie = false;
+    }
+
     const sessionConfig = {
       store: new pgSession({
         pool: pgPool,
-        tableName: 'user_sessions',
+        tableName: 'session_store',
         createTableIfMissing: true,
         pruneSessionInterval: 60 * 15 // Prune expired sessions every 15 minutes
       }),
@@ -44,12 +62,18 @@ function createPgSessionMiddleware() {
       saveUninitialized: false,
       name: 'jv.sid',
       cookie: {
-        secure: !config.server.isDev,
+        secure: useSecureCookie,
         httpOnly: true,
         maxAge: config.session.maxAge,
         sameSite: 'lax'
       }
     };
+
+    if (useSecureCookie) {
+      logger.info('Session: Using secure cookies (HTTPS required)');
+    } else {
+      logger.info('Session: Using non-secure cookies (HTTP allowed)');
+    }
 
     logger.info('Session: Using PostgreSQL store');
     return session(sessionConfig);
@@ -63,6 +87,18 @@ function createPgSessionMiddleware() {
  * Create session middleware with memory store
  */
 function createMemorySessionMiddleware() {
+  // Same secure cookie logic as PostgreSQL store
+  const isIISNode = !!process.env.IISNODE_VERSION;
+  const forceSecure = process.env.SESSION_SECURE === 'true';
+  const forceInsecure = process.env.SESSION_SECURE === 'false';
+
+  let useSecureCookie = !config.server.isDev;
+  if (forceSecure) {
+    useSecureCookie = true;
+  } else if (forceInsecure || isIISNode) {
+    useSecureCookie = false;
+  }
+
   logger.info('Session: Using memory store');
   return session({
     secret: config.session.secret,
@@ -70,7 +106,7 @@ function createMemorySessionMiddleware() {
     saveUninitialized: false,
     name: 'jv.sid',
     cookie: {
-      secure: !config.server.isDev,
+      secure: useSecureCookie,
       httpOnly: true,
       maxAge: config.session.maxAge,
       sameSite: 'lax'
@@ -82,13 +118,25 @@ function createMemorySessionMiddleware() {
  * Create session middleware with Redis store (production)
  */
 function createRedisSessionMiddleware(redisClient) {
+  // Same secure cookie logic as other stores
+  const isIISNode = !!process.env.IISNODE_VERSION;
+  const forceSecure = process.env.SESSION_SECURE === 'true';
+  const forceInsecure = process.env.SESSION_SECURE === 'false';
+
+  let useSecureCookie = !config.server.isDev;
+  if (forceSecure) {
+    useSecureCookie = true;
+  } else if (forceInsecure || isIISNode) {
+    useSecureCookie = false;
+  }
+
   const sessionConfig = {
     secret: config.session.secret,
     resave: false,
     saveUninitialized: false,
     name: 'jv.sid',
     cookie: {
-      secure: !config.server.isDev,
+      secure: useSecureCookie,
       httpOnly: true,
       maxAge: config.session.maxAge,
       sameSite: 'lax'

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>JubileeVibes.Core</AssemblyName>
+    <RootNamespace>JubileeVibes.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\JubileeVibes.Shared\JubileeVibes.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

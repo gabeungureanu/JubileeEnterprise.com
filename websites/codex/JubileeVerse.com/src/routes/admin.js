@@ -118,12 +118,6 @@ router.get('/collections/:collectionIdOrSlug/categories/:categoryIdOrSlug/items'
 router.get('/capacity/overview', requireAuth, requireAdmin, AdminController.getCollectionsCapacityOverview);
 router.get('/collections/:idOrSlug/capacity', requireAuth, requireAdmin, AdminController.getCollectionCapacity);
 
-// Flywheel collections (admin only)
-router.get('/flywheel/sections', requireAuth, requireAdmin, AdminController.getFlywheelSections);
-router.get('/flywheel/collections', requireAuth, requireAdmin, AdminController.getFlywheelCollections);
-router.get('/flywheel/collections/:slug/roots', requireAuth, requireAdmin, AdminController.getFlywheelCollectionRoots);
-router.get('/flywheel/collections/:idOrSlug', requireAuth, requireAdmin, AdminController.getFlywheelCollection);
-
 // Bible verses (admin only)
 router.get('/bible/verses/:bookId/:chapter', requireAuth, requireAdmin, AdminController.getBibleVerses);
 router.get('/bible/books/:bookId/chapters', requireAuth, requireAdmin, AdminController.getBibleChapters);

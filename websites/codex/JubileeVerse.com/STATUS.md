@@ -29,7 +29,7 @@
 - **Status**: Ready to initialize once containers are running
 
 ### 4. Data Storage ✓
-- **Location**: `C:\Data\JubileeVerse\.datastore\`
+- **Location**: `C:\Data\JubileeVerse.com\.datastore\`
 - **Directories Created**:
   - ✓ `postgres/` - PostgreSQL data files
   - ✓ `qdrant/` - Vector database storage
@@ -99,7 +99,7 @@
 | **Server IP** | ✓ Configured | 10.0.0.4 |
 | **Docker Desktop** | ⏳ Pending | Needs to be started |
 | **Node.js** | ⏳ Pending | Requires installation/PATH configuration |
-| **Data Directories** | ✓ Created | C:\Data\JubileeVerse\.datastore\ |
+| **Data Directories** | ✓ Created | C:\Data\JubileeVerse.com\.datastore\ |
 | **Configuration** | ✓ Ready | .env file configured |
 
 ---
@@ -113,7 +113,7 @@ Image: postgres:16-alpine
 Port: 5432
 Database: JubileeVerse
 User: guardian
-Volume: C:/Data/JubileeVerse/.datastore/postgres
+Volume: C:/Data/JubileeVerse.com/.datastore/postgres
 ```
 
 ### Qdrant Container
@@ -122,7 +122,7 @@ Name: JubileeVerse-qdrant
 Image: qdrant/qdrant:latest
 Ports: 6333 (HTTP), 6334 (gRPC)
 Collection: inspire_knowledge
-Volume: C:/Data/JubileeVerse/.datastore/qdrant
+Volume: C:/Data/JubileeVerse.com/.datastore/qdrant
 Dashboard: http://localhost:6333/dashboard
 ```
 
@@ -132,7 +132,7 @@ Name: JubileeVerse-redis
 Image: redis:7-alpine
 Port: 6379
 Persistence: AOF enabled
-Volume: C:/Data/JubileeVerse/.datastore/redis
+Volume: C:/Data/JubileeVerse.com/.datastore/redis
 Max Memory: 2GB
 ```
 

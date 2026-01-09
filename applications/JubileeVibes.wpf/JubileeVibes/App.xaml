@@ -1,0 +1,30 @@
+<Application x:Class="JubileeVibes.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             ShutdownMode="OnMainWindowClose">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Theme -->
+                <ResourceDictionary Source="Resources/Themes/Colors.xaml"/>
+                <ResourceDictionary Source="Resources/Themes/Brushes.xaml"/>
+                <ResourceDictionary Source="Resources/Themes/DarkTheme.xaml"/>
+
+                <!-- Converters -->
+                <ResourceDictionary Source="Resources/Converters.xaml"/>
+
+                <!-- Styles -->
+                <ResourceDictionary Source="Resources/Styles/ButtonStyles.xaml"/>
+                <ResourceDictionary Source="Resources/Styles/SliderStyles.xaml"/>
+                <ResourceDictionary Source="Resources/Styles/ScrollBarStyles.xaml"/>
+                <ResourceDictionary Source="Resources/Styles/ControlStyles.xaml"/>
+
+                <!-- Icons -->
+                <ResourceDictionary Source="Resources/Icons/AppIcons.xaml"/>
+
+                <!-- Templates -->
+                <ResourceDictionary Source="Resources/Templates/DataTemplates.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

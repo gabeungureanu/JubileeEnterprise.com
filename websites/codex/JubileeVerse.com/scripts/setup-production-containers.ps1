@@ -29,7 +29,7 @@ Write-Host ""
 
 # Create data directories if they don't exist
 Write-Host "Creating data storage directories..." -ForegroundColor Cyan
-$dataDir = "C:\Data\JubileeVerse\.datastore"
+$dataDir = "C:\Data\JubileeVerse.com\.datastore"
 $postgresDIr = "$dataDir\postgres"
 $qdrantDir = "$dataDir\qdrant"
 $redisDir = "$dataDir\redis"

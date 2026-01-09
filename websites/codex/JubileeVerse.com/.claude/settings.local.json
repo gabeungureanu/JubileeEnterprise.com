@@ -156,19 +156,8 @@
       "Bash(git push:*)",
       "Bash(git pull:*)",
       "Bash(git commit:*)",
-      "Bash(Get-ChildItem -Path \"c:\\\\data\\\\JubileeVerse.com\" -Filter \"*.md\" -File)",
-      "Bash(Select-Object -ExpandProperty Name)",
-      "Bash(taskkill //F //PID 26488)",
-      "Bash(docker start:*)",
-      "Bash(docker info:*)",
-      "Bash(docker context ls:*)",
-      "Bash(docker context use:*)",
-      "Bash(docker stop:*)",
-      "Bash(taskkill //F //PID 520316)",
-      "Bash(taskkill //F //PID 288628)",
-      "Bash(taskkill //F //PID 169160)",
-      "Bash(taskkill //F //PID 298704)",
-      "Bash(ping:*)"
+      "Bash(powershell.exe -Command \"iisreset\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem ''C:\\\\Data\\\\JubileeVerse.com\\\\iisnode\\\\'' | Sort-Object LastWriteTime -Descending | Select-Object -First 2 | ForEach-Object { Write-Host ''=== '' $_Name '' ==='' -ForegroundColor Cyan; Get-Content $_FullName -Tail 50 }\")"
     ]
   }
 }
