@@ -1,4 +1,5 @@
-using Npgsql;
+using System.Net.Http;
+using System.Text.Json;
 using JubileeBrowser.Models;
 
 namespace JubileeBrowser.Services;
@@ -6,10 +7,12 @@ namespace JubileeBrowser.Services;
 /// <summary>
 /// DNS Resolver for the World Wide Bible Web (WWBW) private protocol system.
 /// Resolves private protocol URLs (e.g., inspire://home.inspire) to public URLs.
+/// Uses the InspireCodex API for iDNS resolution.
 /// </summary>
 public class WWBWDnsResolver
 {
-    private readonly string _connectionString;
+    private readonly HttpClient _httpClient;
+    private readonly string _apiBaseUrl;
     private readonly Dictionary<string, DnsResolutionResult> _cache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, DnsResolutionResult> _reverseCache = new(StringComparer.OrdinalIgnoreCase);
     private DateTime _cacheLastRefresh = DateTime.MinValue;
@@ -27,7 +30,7 @@ public class WWBWDnsResolver
         { ".prop", ".prophet" },
     };
 
-    // Fallback DNS mappings when database is unavailable
+    // Fallback DNS mappings when API is unavailable
     // All WWBW URLs use the inspire:// protocol only
     private static readonly Dictionary<string, (string PublicUrl, string? ThirdPartyOverride)> FallbackMappings = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -58,27 +61,39 @@ public class WWBWDnsResolver
         "inspire"
     };
 
-    public WWBWDnsResolver(string? connectionString = null)
+    public WWBWDnsResolver(string? apiBaseUrl = null)
     {
-        // Default connection string - can be overridden via settings
-        _connectionString = connectionString ??
-            "Host=localhost;Port=5432;Database=WorldWideBibleWeb;Username=postgres;Password=postgres";
+        _apiBaseUrl = apiBaseUrl ?? "https://inspirecodex.com";
+        _httpClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(10)
+        };
     }
 
     public async Task InitializeAsync()
     {
         try
         {
-            await RefreshCacheAsync();
-            _isInitialized = true;
-            _useFallbackOnly = false;
-            System.Diagnostics.Debug.WriteLine($"WWBW DNS Resolver initialized with {_cache.Count} entries from database");
+            // Test API connectivity
+            var testUrl = "inspire://jubileeverse.webspace";
+            var result = await ResolveFromApiAsync(testUrl);
+
+            if (result != null)
+            {
+                _isInitialized = true;
+                _useFallbackOnly = false;
+                System.Diagnostics.Debug.WriteLine($"WWBW DNS Resolver initialized with API at {_apiBaseUrl}");
+            }
+            else
+            {
+                throw new Exception("API returned null for test URL");
+            }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"WWBW DNS Resolver database unavailable: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"WWBW DNS Resolver API unavailable: {ex.Message}");
             System.Diagnostics.Debug.WriteLine("Using fallback DNS mappings");
-            // Continue without database - use fallback resolution
+            // Continue without API - use fallback resolution
             _useFallbackOnly = true;
             _isInitialized = true; // Mark as initialized so we can use fallback mappings
             LoadFallbackMappings();
@@ -198,51 +213,123 @@ public class WWBWDnsResolver
         if (!IsPrivateProtocol(privateUrl))
             return null;
 
-        // Check cache first (includes fallback mappings if in fallback mode)
+        // Check cache first
+        if (_cache.TryGetValue(privateUrl, out var cached) &&
+            DateTime.UtcNow - _cacheLastRefresh < _cacheExpiry)
+        {
+            return cached;
+        }
+
+        // If using fallback only, try local fallback
+        if (_useFallbackOnly)
+        {
+            return TryResolveFallback(privateUrl);
+        }
+
+        // Try to resolve from API
+        try
+        {
+            var result = await ResolveFromApiAsync(privateUrl);
+            if (result != null)
+            {
+                _cache[privateUrl] = result;
+                if (!string.IsNullOrEmpty(result.ResolvedUrl))
+                {
+                    _reverseCache[result.ResolvedUrl] = result;
+                }
+                return result;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"API DNS resolution error: {ex.Message}");
+        }
+
+        // Fall back to local mappings
+        return TryResolveFallback(privateUrl);
+    }
+
+    /// <summary>
+    /// Resolves a private URL using the InspireCodex API.
+    /// </summary>
+    private async Task<DnsResolutionResult?> ResolveFromApiAsync(string privateUrl)
+    {
+        try
+        {
+            var encodedUrl = Uri.EscapeDataString(privateUrl);
+            var apiUrl = $"{_apiBaseUrl}/api/v1/idns/resolve?url={encodedUrl}";
+
+            var response = await _httpClient.GetAsync(apiUrl);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResult = JsonSerializer.Deserialize<IdnsApiResponse>(content, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (apiResult?.Success == true && !string.IsNullOrEmpty(apiResult.ResolvedUrl))
+                {
+                    var result = new DnsResolutionResult
+                    {
+                        PrivateProtocolUrl = privateUrl,
+                        ShortPrivateUrl = null,
+                        PublicUrl = apiResult.ResolvedUrl,
+                        ThirdPartyOverrideUrl = null,
+                        WebSpaceType = apiResult.DomainType ?? "unknown",
+                        DomainName = apiResult.DomainKey ?? "unknown",
+                        Priority = 1,
+                        ResolvedUrl = apiResult.ResolvedUrl
+                    };
+
+                    return result;
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine($"API resolution failed for {privateUrl}: {content}");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"API call failed: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Tries to resolve using local fallback mappings.
+    /// </summary>
+    private DnsResolutionResult? TryResolveFallback(string privateUrl)
+    {
+        // Check cache
         if (_cache.TryGetValue(privateUrl, out var cached))
         {
             return cached;
         }
 
-        // If using fallback only, try to create a dynamic fallback mapping
-        if (_useFallbackOnly)
+        // Try fallback mappings
+        if (FallbackMappings.TryGetValue(privateUrl, out var fallback))
         {
-            return TryCreateFallbackMapping(privateUrl);
-        }
-
-        // Try to resolve from database
-        try
-        {
-            if (DateTime.UtcNow - _cacheLastRefresh > _cacheExpiry)
-            {
-                await RefreshCacheAsync();
-            }
-
-            if (_cache.TryGetValue(privateUrl, out cached))
-            {
-                return cached;
-            }
-
-            // Try parsing and resolving by components
             var parsed = ParsePrivateUrl(privateUrl);
-            if (parsed != null)
+            var result = new DnsResolutionResult
             {
-                var result = await ResolveByTypeAndDomainAsync(parsed.Value.Type, parsed.Value.Domain);
-                if (result != null)
-                {
-                    _cache[privateUrl] = result;
-                    return result;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"DNS resolution error: {ex.Message}");
-            // Fall back to dynamic mapping if database fails
-            return TryCreateFallbackMapping(privateUrl);
+                PrivateProtocolUrl = privateUrl,
+                ShortPrivateUrl = null,
+                PublicUrl = fallback.PublicUrl,
+                ThirdPartyOverrideUrl = fallback.ThirdPartyOverride,
+                WebSpaceType = parsed?.Type ?? "unknown",
+                DomainName = parsed?.Domain ?? "unknown",
+                Priority = 1,
+                ResolvedUrl = fallback.ThirdPartyOverride ?? fallback.PublicUrl
+            };
+
+            _cache[privateUrl] = result;
+            return result;
         }
 
-        return null;
+        // Try creating dynamic fallback
+        return TryCreateFallbackMapping(privateUrl);
     }
 
     /// <summary>
@@ -303,15 +390,36 @@ public class WWBWDnsResolver
             return cached.PrivateProtocolUrl;
         }
 
-        // Refresh cache if needed
-        if (DateTime.UtcNow - _cacheLastRefresh > _cacheExpiry)
+        // Also try matching just by the host (for cases where the path changes)
+        if (Uri.TryCreate(publicUrl, UriKind.Absolute, out var uri))
         {
-            await RefreshCacheAsync();
-        }
+            var hostOnly = $"{uri.Scheme}://{uri.Host}";
+            var hostWithSlash = $"{uri.Scheme}://{uri.Host}/";
+            var wwwHost = uri.Host.StartsWith("www.") ? uri.Host : $"www.{uri.Host}";
+            var nonWwwHost = uri.Host.StartsWith("www.") ? uri.Host[4..] : uri.Host;
 
-        if (_reverseCache.TryGetValue(publicUrl, out cached))
-        {
-            return cached.PrivateProtocolUrl;
+            var variations = new[]
+            {
+                publicUrl,
+                hostOnly,
+                hostWithSlash,
+                $"https://{wwwHost}",
+                $"https://{wwwHost}/",
+                $"https://{nonWwwHost}",
+                $"https://{nonWwwHost}/",
+                $"http://{wwwHost}",
+                $"http://{wwwHost}/",
+                $"http://{nonWwwHost}",
+                $"http://{nonWwwHost}/"
+            };
+
+            foreach (var variation in variations)
+            {
+                if (_reverseCache.TryGetValue(variation, out var result))
+                {
+                    return result.PrivateProtocolUrl;
+                }
+            }
         }
 
         return null;
@@ -330,179 +438,58 @@ public class WWBWDnsResolver
             var colonIndex = privateUrl.IndexOf("://", StringComparison.Ordinal);
             if (colonIndex <= 0) return null;
 
-            var scheme = privateUrl[..colonIndex];
             var rest = privateUrl[(colonIndex + 3)..];
+            var dotIndex = rest.LastIndexOf('.');
+            if (dotIndex <= 0) return null;
 
-            // Split the domain part (e.g., "home.inspire" -> ["home", "inspire"])
-            var parts = rest.Split('.');
-            if (parts.Length >= 2)
+            var domain = rest[..dotIndex];
+            var type = rest[(dotIndex + 1)..];
+
+            // Expand abbreviated types
+            foreach (var abbrev in DomainAbbreviations)
             {
-                var domain = parts[0];
-                var typeSuffix = parts[^1]; // Last part
-                return (typeSuffix, domain);
-            }
-            else if (parts.Length == 1)
-            {
-                // Just domain, use scheme as type
-                return (scheme, parts[0]);
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error parsing private URL: {ex.Message}");
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Gets all known web space types.
-    /// </summary>
-    public IReadOnlyCollection<string> GetKnownProtocols() => PrivateProtocols;
-
-    private async Task RefreshCacheAsync()
-    {
-        try
-        {
-            await using var connection = new NpgsqlConnection(_connectionString);
-            await connection.OpenAsync();
-
-            // Query the DNS resolution cache view
-            const string query = @"
-                SELECT
-                    ""PrivateProtocolURL"",
-                    ""ShortPrivateURL"",
-                    ""PublicURL"",
-                    ""ThirdPartyOverrideURL"",
-                    ""WebSpaceType"",
-                    ""DomainName"",
-                    ""Priority"",
-                    COALESCE(""ThirdPartyOverrideURL"", ""PublicURL"") AS ""ResolvedURL""
-                FROM ""DNS_ResolutionCache""
-                WHERE ""IsActive"" = TRUE
-                ORDER BY ""Priority"" ASC";
-
-            await using var cmd = new NpgsqlCommand(query, connection);
-            await using var reader = await cmd.ExecuteReaderAsync();
-
-            _cache.Clear();
-            _reverseCache.Clear();
-
-            while (await reader.ReadAsync())
-            {
-                var result = new DnsResolutionResult
+                if (type.Equals(abbrev.Key.TrimStart('.'), StringComparison.OrdinalIgnoreCase))
                 {
-                    PrivateProtocolUrl = reader.GetString(0),
-                    ShortPrivateUrl = reader.IsDBNull(1) ? null : reader.GetString(1),
-                    PublicUrl = reader.GetString(2),
-                    ThirdPartyOverrideUrl = reader.IsDBNull(3) ? null : reader.GetString(3),
-                    WebSpaceType = reader.GetString(4),
-                    DomainName = reader.GetString(5),
-                    Priority = reader.GetInt32(6),
-                    ResolvedUrl = reader.GetString(7)
-                };
-
-                // Add to forward cache
-                _cache[result.PrivateProtocolUrl] = result;
-                if (!string.IsNullOrEmpty(result.ShortPrivateUrl))
-                {
-                    _cache[result.ShortPrivateUrl] = result;
-                }
-
-                // Add to reverse cache
-                _reverseCache[result.PublicUrl] = result;
-                if (!string.IsNullOrEmpty(result.ThirdPartyOverrideUrl))
-                {
-                    _reverseCache[result.ThirdPartyOverrideUrl] = result;
+                    type = abbrev.Value.TrimStart('.');
+                    break;
                 }
             }
 
-            _cacheLastRefresh = DateTime.UtcNow;
-            System.Diagnostics.Debug.WriteLine($"WWBW DNS cache refreshed: {_cache.Count} entries");
+            return (type, domain);
         }
-        catch (Exception ex)
+        catch
         {
-            System.Diagnostics.Debug.WriteLine($"Error refreshing DNS cache: {ex.Message}");
-            throw;
+            return null;
         }
     }
-
-    private async Task<DnsResolutionResult?> ResolveByTypeAndDomainAsync(string type, string domain)
-    {
-        try
-        {
-            await using var connection = new NpgsqlConnection(_connectionString);
-            await connection.OpenAsync();
-
-            const string query = @"
-                SELECT
-                    ""PrivateProtocolURL"",
-                    ""ShortPrivateURL"",
-                    ""PublicURL"",
-                    ""ThirdPartyOverrideURL"",
-                    ""WebSpaceType"",
-                    ""DomainName"",
-                    ""Priority"",
-                    COALESCE(""ThirdPartyOverrideURL"", ""PublicURL"") AS ""ResolvedURL""
-                FROM ""DNS_ResolutionCache""
-                WHERE (""WebSpaceType"" = @type OR ""WebSpaceTypeAbbrev"" = @type)
-                  AND ""DomainName"" = @domain
-                  AND ""IsActive"" = TRUE
-                ORDER BY ""Priority"" ASC
-                LIMIT 1";
-
-            await using var cmd = new NpgsqlCommand(query, connection);
-            cmd.Parameters.AddWithValue("@type", type);
-            cmd.Parameters.AddWithValue("@domain", domain);
-
-            await using var reader = await cmd.ExecuteReaderAsync();
-
-            if (await reader.ReadAsync())
-            {
-                return new DnsResolutionResult
-                {
-                    PrivateProtocolUrl = reader.GetString(0),
-                    ShortPrivateUrl = reader.IsDBNull(1) ? null : reader.GetString(1),
-                    PublicUrl = reader.GetString(2),
-                    ThirdPartyOverrideUrl = reader.IsDBNull(3) ? null : reader.GetString(3),
-                    WebSpaceType = reader.GetString(4),
-                    DomainName = reader.GetString(5),
-                    Priority = reader.GetInt32(6),
-                    ResolvedUrl = reader.GetString(7)
-                };
-            }
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Error resolving by type/domain: {ex.Message}");
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Forces a cache refresh.
-    /// </summary>
-    public async Task RefreshAsync()
-    {
-        await RefreshCacheAsync();
-    }
-
-    public bool IsInitialized => _isInitialized;
-    public int CacheCount => _cache.Count;
 }
 
 /// <summary>
-/// Result of a DNS resolution lookup.
+/// Response model for the iDNS API.
+/// </summary>
+internal class IdnsApiResponse
+{
+    public bool Success { get; set; }
+    public string? PrivateUrl { get; set; }
+    public string? ResolvedUrl { get; set; }
+    public string? DomainKey { get; set; }
+    public string? DomainType { get; set; }
+    public string? DisplayName { get; set; }
+    public bool Managed { get; set; }
+    public string? Error { get; set; }
+}
+
+/// <summary>
+/// Result of a DNS resolution operation.
 /// </summary>
 public class DnsResolutionResult
 {
-    public required string PrivateProtocolUrl { get; init; }
-    public string? ShortPrivateUrl { get; init; }
-    public required string PublicUrl { get; init; }
-    public string? ThirdPartyOverrideUrl { get; init; }
-    public required string WebSpaceType { get; init; }
-    public required string DomainName { get; init; }
-    public int Priority { get; init; }
-    public required string ResolvedUrl { get; init; }
+    public string? PrivateProtocolUrl { get; set; }
+    public string? ShortPrivateUrl { get; set; }
+    public string? PublicUrl { get; set; }
+    public string? ThirdPartyOverrideUrl { get; set; }
+    public string? WebSpaceType { get; set; }
+    public string? DomainName { get; set; }
+    public int Priority { get; set; }
+    public string? ResolvedUrl { get; set; }
 }

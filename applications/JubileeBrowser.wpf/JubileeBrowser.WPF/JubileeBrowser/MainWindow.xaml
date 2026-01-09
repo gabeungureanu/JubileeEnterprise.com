@@ -1218,10 +1218,19 @@
                 <Button x:Name="BookmarkButton"
                         Style="{StaticResource BookmarkButtonStyle}"
                         HorizontalAlignment="Right"
-                        Margin="0,0,4,0"
+                        Margin="0,-1,28,0"
                         Click="BookmarkButton_Click"
                         ToolTip="Add Bookmark (Ctrl+D)">
                     <TextBlock x:Name="BookmarkIcon" Text="&#xE734;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
+                </Button>
+                <!-- Spiritual Nutrition Icon - positioned inside the textbox on the right -->
+                <Button x:Name="SpiritualNutritionButton"
+                        Style="{StaticResource BookmarkButtonStyle}"
+                        HorizontalAlignment="Right"
+                        Margin="0,-1,4,0"
+                        Click="SpiritualNutritionButton_Click"
+                        ToolTip="Spiritual Nutrition">
+                    <TextBlock x:Name="SpiritualNutritionIcon" Text="&#xECAD;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
                 </Button>
             </Grid>
 
@@ -1679,33 +1688,27 @@
                     <!-- Top Bar -->
                     <Border Grid.Row="0" Background="#000000" Padding="8,8,8,4">
                         <Grid>
-                            <!-- Left side: Language Icon -->
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                <!-- Language Selector -->
-                                <Border Width="32" Height="32" CornerRadius="6" Background="#1a1a1a" Cursor="Hand" ToolTip="Select Language">
-                                    <TextBlock Text="&#xE774;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="#888888" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-                            </StackPanel>
-                            <!-- Close Button on Right -->
-                            <Button x:Name="ChatCloseButton"
+                            <!-- Close Button on Right - Using Border with MouseLeftButtonDown for reliable click handling -->
+                            <Border x:Name="ChatCloseButton"
                                     Width="32" Height="32"
                                     HorizontalAlignment="Right"
-                                    Click="ChatCloseButton_Click"
+                                    Background="#222222"
+                                    CornerRadius="6"
                                     Cursor="Hand"
-                                    ToolTip="Close Chat">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border x:Name="border" Background="Transparent" CornerRadius="6">
-                                            <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="#888888" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="#333333"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                            </Button>
+                                    ToolTip="Close Chat"
+                                    Panel.ZIndex="200"
+                                    MouseLeftButtonDown="ChatCloseButton_MouseLeftButtonDown"
+                                    MouseEnter="ChatCloseButton_MouseEnter"
+                                    MouseLeave="ChatCloseButton_MouseLeave">
+                                <TextBlock x:Name="ChatCloseIcon"
+                                           Text="&#xE711;"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="16"
+                                           Foreground="#888888"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False"/>
+                            </Border>
                             <!-- Hidden elements kept for compatibility -->
                             <TextBlock x:Name="ChatProfileIcon" Visibility="Collapsed"/>
                             <Ellipse x:Name="ChatUserAvatar" Visibility="Collapsed">
@@ -1980,22 +1983,23 @@
                             </Button.Style>
                             <TextBlock Text="Sign In" FontWeight="Bold" FontSize="14" Foreground="Black"/>
                         </Button>
-                        <TextBlock Text="Create a Jubilee account to sync bookmarks, history, passwords, and settings across all your devices."
-                                  TextWrapping="Wrap" FontSize="11" Foreground="White" Margin="0,8,0,0" TextAlignment="Center"/>
+                        <TextBlock Text="Sign in with your Jubilee account to sync bookmarks, history, passwords, and settings across all your devices. Don't have an account? You can create one during sign-in."
+                                  TextWrapping="Wrap" FontSize="11" Foreground="White" Margin="0,8,0,0" TextAlignment="Justify"/>
                     </StackPanel>
 
                     <!-- Signed In State -->
                     <StackPanel x:Name="ProfileSignedInPanel" Visibility="Collapsed">
                         <!-- Profile Header -->
-                        <StackPanel Orientation="Horizontal" Margin="20,20,20,12">
+                        <StackPanel Orientation="Horizontal" Margin="20,20,20,8">
                             <Ellipse x:Name="ProfilePopupAvatar" Width="48" Height="48" Margin="0,0,16,0">
                                 <Ellipse.Fill>
                                     <ImageBrush x:Name="ProfilePopupAvatarImage" Stretch="UniformToFill"/>
                                 </Ellipse.Fill>
                             </Ellipse>
-                            <StackPanel VerticalAlignment="Center">
+                            <StackPanel VerticalAlignment="Center" MaxWidth="200">
                                 <TextBlock x:Name="ProfilePopupName" Text="User Name" FontSize="16" FontWeight="SemiBold" Foreground="White"/>
-                                <TextBlock x:Name="ProfilePopupEmail" Text="user@example.com" FontSize="12" Foreground="#808080" Margin="0,2,0,0"/>
+                                <TextBlock x:Name="ProfilePopupEmail" Text="user@example.com" FontSize="12" Foreground="White" Margin="0,2,0,0"/>
+                                <TextBlock x:Name="ProfileSignedInLabel" Text="Signed in to your Jubilee account" FontSize="10" Foreground="#22c55e" Margin="0,4,0,0"/>
                             </StackPanel>
                             <Button Style="{StaticResource NavButtonStyle}"
                                     Width="28" Height="28"
@@ -2003,84 +2007,111 @@
                                     HorizontalAlignment="Right"
                                     Click="ProfileSettings_Click"
                                     ToolTip="Profile settings"
-                                    Margin="20,0,0,0">
+                                    Margin="12,0,0,0">
                                 <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
                             </Button>
                         </StackPanel>
 
-                        <!-- Sync Status -->
+                        <!-- Unified Sync Status Banner (shows different states) -->
                         <Border x:Name="ProfileSyncStatusBorder"
                                 Background="#1a3a1a"
                                 CornerRadius="6"
-                                Margin="16,0,16,12"
-                                Padding="12,8">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Name="ProfileSyncStatusIcon"
-                                          Text="&#xE895;"
-                                          FontFamily="Segoe MDL2 Assets"
-                                          FontSize="14"
-                                          Foreground="#22c55e"
-                                          VerticalAlignment="Center"
-                                          Margin="0,0,8,0"/>
-                                <StackPanel>
-                                    <TextBlock x:Name="ProfileSyncStatusText" Text="Syncing is on" FontSize="12" Foreground="#22c55e"/>
-                                    <TextBlock x:Name="ProfileSyncLastTime" Text="Last synced: just now" FontSize="10" Foreground="#606060" Margin="0,2,0,0"/>
+                                Margin="16,8,16,12"
+                                Padding="12,10">
+                            <Grid>
+                                <!-- Success State (Syncing is on) -->
+                                <StackPanel x:Name="ProfileSyncSuccessState" Orientation="Horizontal">
+                                    <TextBlock x:Name="ProfileSyncStatusIcon"
+                                              Text="&#xE895;"
+                                              FontFamily="Segoe MDL2 Assets"
+                                              FontSize="16"
+                                              Foreground="#22c55e"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,10,0"/>
+                                    <StackPanel>
+                                        <TextBlock x:Name="ProfileSyncStatusText" Text="Syncing is on" FontSize="12" FontWeight="SemiBold" Foreground="#22c55e"/>
+                                        <TextBlock x:Name="ProfileSyncLastTime" Text="Last synced: just now" FontSize="10" Foreground="#606060" Margin="0,2,0,0"/>
+                                    </StackPanel>
                                 </StackPanel>
-                            </StackPanel>
+
+                                <!-- Action Required State (Auth needed or sync error) -->
+                                <StackPanel x:Name="ProfileSyncActionRequiredState" Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock x:Name="ProfileSyncAlertIcon"
+                                                  Text="&#xE7BA;"
+                                                  FontFamily="Segoe MDL2 Assets"
+                                                  FontSize="16"
+                                                  Foreground="#f59e0b"
+                                                  VerticalAlignment="Center"
+                                                  Margin="0,0,10,0"/>
+                                        <StackPanel>
+                                            <TextBlock Text="Action Required" FontSize="12" FontWeight="SemiBold" Foreground="#f59e0b"/>
+                                            <TextBlock x:Name="ProfileSyncErrorText" Text="Re-authenticate to resume syncing" FontSize="10" Foreground="#a0a0a0" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <!-- Fix Sync Button -->
+                                    <Button x:Name="ProfileFixSyncButton"
+                                            Click="ProfileRetrySync_Click"
+                                            Background="#f59e0b"
+                                            Margin="0,10,0,0"
+                                            Padding="12,8"
+                                            Cursor="Hand"
+                                            HorizontalAlignment="Stretch">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Button.Style>
+                                        <TextBlock Text="Fix sync" FontWeight="SemiBold" FontSize="12" Foreground="#1a1a1a"/>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
                         </Border>
 
-                        <!-- Sync Error Banner (hidden by default) -->
-                        <Border x:Name="ProfileSyncErrorBanner"
-                                Background="#3a1a1a"
-                                CornerRadius="6"
-                                Margin="16,0,16,12"
-                                Padding="12,8"
-                                Visibility="Collapsed">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE7BA;"
-                                          FontFamily="Segoe MDL2 Assets"
-                                          FontSize="14"
-                                          Foreground="#ef4444"
-                                          VerticalAlignment="Center"
-                                          Margin="0,0,8,0"/>
-                                <StackPanel>
-                                    <TextBlock x:Name="ProfileSyncErrorText" Text="Sync error" FontSize="12" Foreground="#ef4444"/>
-                                    <Button Style="{StaticResource ProfileLinkButtonStyle}"
-                                            Content="Retry sync"
-                                            Click="ProfileRetrySync_Click"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
+                        <!-- Soft divider -->
+                        <Border Height="1" Background="#2a2a3a" Margin="16,4,16,12" Opacity="0.5"/>
 
-                        <Border Style="{StaticResource MainMenuSeparatorStyle}" Margin="16,4"/>
-
-                        <!-- Actions -->
+                        <!-- Account Management Group -->
                         <Button Style="{StaticResource MainMenuItemStyle}" Click="ProfileManageAccount_Click" Margin="4,0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE716;" FontFamily="Segoe MDL2 Assets" FontSize="14" Width="24"/>
+                                <TextBlock Text="&#xE716;" FontFamily="Segoe MDL2 Assets" FontSize="14" Width="24" Foreground="#a0a0a0"/>
                                 <TextBlock Text="Manage your Jubilee account" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                         <Button Style="{StaticResource MainMenuItemStyle}" Click="ProfileSwitchProfile_Click" Margin="4,0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE748;" FontFamily="Segoe MDL2 Assets" FontSize="14" Width="24"/>
+                                <TextBlock Text="&#xE748;" FontFamily="Segoe MDL2 Assets" FontSize="14" Width="24" Foreground="#a0a0a0"/>
                                 <TextBlock Text="Switch profile" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
+
+                        <!-- Soft divider -->
+                        <Border Height="1" Background="#2a2a3a" Margin="16,8,16,8" Opacity="0.5"/>
+
+                        <!-- Sync Settings -->
                         <Button Style="{StaticResource MainMenuItemStyle}" Click="ProfileSyncSettings_Click" Margin="4,0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="14" Width="24"/>
+                                <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="14" Width="24" Foreground="#a0a0a0"/>
                                 <TextBlock Text="Sync settings" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
 
-                        <Border Style="{StaticResource MainMenuSeparatorStyle}" Margin="16,4"/>
+                        <!-- Soft divider -->
+                        <Border Height="1" Background="#2a2a3a" Margin="16,8,16,8" Opacity="0.5"/>
 
                         <!-- Sign Out -->
-                        <Button Style="{StaticResource MainMenuItemStyle}" Click="ProfileSignOut_Click" Margin="4,0,4,8">
+                        <Button Style="{StaticResource MainMenuItemStyle}" Click="ProfileSignOut_Click" Margin="4,0,4,12">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xF3B1;" FontFamily="Segoe MDL2 Assets" FontSize="14" Width="24" Foreground="#ef4444"/>
-                                <TextBlock Text="Sign out" VerticalAlignment="Center" Foreground="#ef4444"/>
+                                <TextBlock Text="&#xF3B1;" FontFamily="Segoe MDL2 Assets" FontSize="14" Width="24" Foreground="#FFD700"/>
+                                <TextBlock Text="Sign out" VerticalAlignment="Center" Foreground="#FFD700"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>

@@ -128,4 +128,9 @@ public class BrowserSettings
     public StartupSettings Startup { get; set; } = new();
     public AdvancedSettings Advanced { get; set; } = new();
     public MobileEmulationSettings MobileEmulation { get; set; } = new();
+
+    /// <summary>
+    /// Last active tab ID to restore when the browser reopens.
+    /// </summary>
+    public string? LastActiveTabId { get; set; }
 }

@@ -265,8 +265,8 @@ app.get('/api/v1/admin/health', async (req, res) => {
         }
     };
 
-    // PostgreSQL Databases
-    const databases = ['Codex', 'Inspire', 'Continuum', 'JubileeVerse'];
+    // PostgreSQL Databases (lowercase names match actual PostgreSQL database names)
+    const databases = ['codex', 'inspire', 'continuum'];
 
     for (const dbName of databases) {
         try {
@@ -401,11 +401,18 @@ app.get('/api/v1/admin/health', async (req, res) => {
     }
 
     // Website Availability Checks (HTTP HEAD requests)
+    // All Jubilee Enterprise platform websites organized by category
     const websites = [
-        { name: 'JubileeVerse.com', url: 'http://localhost:3000' },
-        { name: 'InspireCodex.com', url: 'http://localhost:3100' },
-        { name: 'InspireContinuum.com', url: 'http://localhost:3101' },
-        { name: 'wwBibleweb.com', url: 'http://localhost:3847' },
+        // Codex Category - Core Infrastructure & APIs
+        { name: 'JubileeVerse.com', url: 'http://localhost:3000', category: 'codex', type: 'app', description: 'AI Chat Platform' },
+        { name: 'InspireCodex.com', url: 'http://localhost:3100', category: 'codex', type: 'api', description: 'Central API & Health Dashboard' },
+        { name: 'InspireContinuum.com', url: 'http://localhost:3101', category: 'codex', type: 'api', description: 'User Activity & Admin Dashboard' },
+        { name: 'JubileeBrowser.com', url: 'http://localhost:3200', category: 'codex', type: 'static', description: 'Browser Download Portal' },
+        { name: 'wwBibleweb.com', url: 'http://localhost:3847', category: 'codex', type: 'static', description: 'IDNS Registry & Bible Web' },
+
+        // Inspire Category - Ministry & Content Sites
+        { name: 'JubileeInspire.com', url: 'http://localhost:3001', category: 'inspire', type: 'static', description: 'Ministry Landing Page' },
+        { name: 'CelestialPaths.com', url: 'http://localhost:3300', category: 'inspire', type: 'static', description: 'Spiritual Journey Platform' },
     ];
 
     for (const site of websites) {
@@ -416,6 +423,9 @@ app.get('/api/v1/admin/health', async (req, res) => {
                     resolve({
                         name: site.name,
                         url: site.url,
+                        category: site.category,
+                        type: site.type,
+                        description: site.description,
                         status: res.statusCode < 400 ? 'online' : 'error',
                         statusCode: res.statusCode,
                         responseTime: Date.now() - startMs
@@ -424,6 +434,9 @@ app.get('/api/v1/admin/health', async (req, res) => {
                 req.on('error', (err) => resolve({
                     name: site.name,
                     url: site.url,
+                    category: site.category,
+                    type: site.type,
+                    description: site.description,
                     status: 'offline',
                     error: err.message
                 }));
@@ -432,6 +445,9 @@ app.get('/api/v1/admin/health', async (req, res) => {
                     resolve({
                         name: site.name,
                         url: site.url,
+                        category: site.category,
+                        type: site.type,
+                        description: site.description,
                         status: 'timeout',
                         error: 'Connection timed out'
                     });
@@ -443,6 +459,9 @@ app.get('/api/v1/admin/health', async (req, res) => {
             health.websites.push({
                 name: site.name,
                 url: site.url,
+                category: site.category,
+                type: site.type,
+                description: site.description,
                 status: 'error',
                 error: err.message
             });
@@ -457,7 +476,7 @@ app.get('/api/v1/admin/health', async (req, res) => {
         const tempPool = new Pool({
             host: process.env.CODEX_DB_HOST || 'localhost',
             port: parseInt(process.env.CODEX_DB_PORT || '5432'),
-            database: 'Codex',
+            database: 'codex',
             user: process.env.CODEX_DB_USER || 'guardian',
             password: process.env.CODEX_DB_PASSWORD,
             max: 1,
@@ -721,6 +740,164 @@ app.get('/api/v1/codex/bible/verses', async (req, res) => {
 });
 
 // =============================================================================
+// iDNS (Inspire Domain Name System) API ROUTES
+// =============================================================================
+
+// Resolve inspire:// URL to public URL
+app.get('/api/v1/idns/resolve', async (req, res) => {
+    try {
+        const { url } = req.query;
+
+        if (!url) {
+            return res.status(400).json({ success: false, error: 'URL parameter is required' });
+        }
+
+        // Parse the inspire:// URL
+        // Format: inspire://domain.type (e.g., inspire://jubileeverse.webspace)
+        const urlLower = url.toLowerCase().trim();
+
+        if (!urlLower.startsWith('inspire://')) {
+            return res.status(400).json({ success: false, error: 'Invalid URL format. Must start with inspire://' });
+        }
+
+        const domainPart = urlLower.replace('inspire://', '');
+
+        // Split domain and type (e.g., "jubileeverse.webspace" -> domain="jubileeverse", type="webspace")
+        const lastDotIndex = domainPart.lastIndexOf('.');
+        if (lastDotIndex === -1) {
+            return res.status(400).json({ success: false, error: 'Invalid URL format. Expected format: inspire://domain.type' });
+        }
+
+        const domain = domainPart.substring(0, lastDotIndex);
+        const type = domainPart.substring(lastDotIndex + 1);
+
+        // Build the domain_key for lookup
+        // For webspace: "webspace/jubileeverse"
+        // For other types: just the domain (e.g., "apostle", "baptist")
+        let domainKey;
+        if (type === 'webspace' || type === 'webs') {
+            domainKey = `webspace/${domain}`;
+        } else {
+            domainKey = domain;
+        }
+
+        // Look up in idns_domains table
+        const result = await codexPool.query(`
+            SELECT domain_key, domain_type, display_name, mres, managed
+            FROM idns_domains
+            WHERE domain_key = $1 AND is_active = true
+        `, [domainKey]);
+
+        if (result.rows.length === 0) {
+            // Try abbreviated type lookup (webs -> webspace, insp -> inspire, etc.)
+            const typeAbbreviations = {
+                'webs': 'webspace',
+                'insp': 'inspire',
+                'chur': 'church',
+                'apos': 'apostle',
+                'prop': 'prophet'
+            };
+
+            const expandedType = typeAbbreviations[type] || type;
+            if (expandedType !== type && (expandedType === 'webspace')) {
+                const expandedKey = `webspace/${domain}`;
+                const expandedResult = await codexPool.query(`
+                    SELECT domain_key, domain_type, display_name, mres, managed
+                    FROM idns_domains
+                    WHERE domain_key = $1 AND is_active = true
+                `, [expandedKey]);
+
+                if (expandedResult.rows.length > 0) {
+                    const entry = expandedResult.rows[0];
+                    return res.json({
+                        success: true,
+                        privateUrl: url,
+                        resolvedUrl: entry.mres || `https://www.worldwidebibleweb.com/${entry.domain_type}/${domain}/`,
+                        domainKey: entry.domain_key,
+                        domainType: entry.domain_type,
+                        displayName: entry.display_name,
+                        managed: entry.managed
+                    });
+                }
+            }
+
+            return res.status(404).json({
+                success: false,
+                error: 'Domain not found in iDNS registry',
+                privateUrl: url,
+                domainKey: domainKey
+            });
+        }
+
+        const entry = result.rows[0];
+
+        res.json({
+            success: true,
+            privateUrl: url,
+            resolvedUrl: entry.mres || `https://www.worldwidebibleweb.com/${entry.domain_type}/${domain}/`,
+            domainKey: entry.domain_key,
+            domainType: entry.domain_type,
+            displayName: entry.display_name,
+            managed: entry.managed
+        });
+    } catch (err) {
+        console.error('iDNS resolve error:', err);
+        res.status(500).json({ success: false, error: 'Failed to resolve URL', message: err.message });
+    }
+});
+
+// Get all iDNS domain types
+app.get('/api/v1/idns/types', async (req, res) => {
+    try {
+        const result = await codexPool.query(`
+            SELECT DISTINCT domain_type, COUNT(*) as count
+            FROM idns_domains
+            WHERE is_active = true
+            GROUP BY domain_type
+            ORDER BY count DESC
+        `);
+
+        res.json({ types: result.rows });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch domain types', message: err.message });
+    }
+});
+
+// Get all iDNS domains (for browsing)
+app.get('/api/v1/idns/domains', async (req, res) => {
+    try {
+        const { type, managed, limit = 100, offset = 0 } = req.query;
+
+        let query = `
+            SELECT domain_key, domain_type, display_name, mres, managed, description
+            FROM idns_domains
+            WHERE is_active = true
+        `;
+        const params = [];
+        let paramIndex = 1;
+
+        if (type) {
+            query += ` AND domain_type = $${paramIndex++}`;
+            params.push(type);
+        }
+
+        if (managed !== undefined) {
+            query += ` AND managed = $${paramIndex++}`;
+            params.push(managed === 'true');
+        }
+
+        query += ` ORDER BY display_name LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+        params.push(parseInt(limit), parseInt(offset));
+
+        const result = await codexPool.query(query, params);
+
+        res.json({ domains: result.rows, count: result.rows.length });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch domains', message: err.message });
+    }
+});
+
+// =============================================================================
 // INSPIRE API ROUTES - Ministry Content
 // =============================================================================
 
@@ -939,7 +1116,7 @@ function generateToken(userId) {
 // Login endpoint
 app.post('/api/auth/login', async (req, res) => {
     try {
-        const { email, password, rememberMe } = req.body;
+        const { email, password, rememberMe, deviceInfo } = req.body;
 
         if (!email || !password) {
             return res.status(400).json({
@@ -988,6 +1165,57 @@ app.post('/api/auth/login', async (req, res) => {
             [user.id]
         );
 
+        // Track device if deviceInfo is provided
+        if (deviceInfo && deviceInfo.deviceId) {
+            const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+                            req.connection?.remoteAddress ||
+                            req.socket?.remoteAddress || null;
+
+            try {
+                await codexPool.query(`
+                    INSERT INTO user_devices (
+                        user_id, device_id, device_name, device_type, platform, platform_version,
+                        browser, browser_version, app_name, app_version, ip_address, last_ip_address,
+                        is_current, login_count
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11, TRUE, 1)
+                    ON CONFLICT (user_id, device_id) DO UPDATE SET
+                        device_name = COALESCE(EXCLUDED.device_name, user_devices.device_name),
+                        platform = COALESCE(EXCLUDED.platform, user_devices.platform),
+                        platform_version = COALESCE(EXCLUDED.platform_version, user_devices.platform_version),
+                        browser = COALESCE(EXCLUDED.browser, user_devices.browser),
+                        browser_version = COALESCE(EXCLUDED.browser_version, user_devices.browser_version),
+                        app_name = COALESCE(EXCLUDED.app_name, user_devices.app_name),
+                        app_version = COALESCE(EXCLUDED.app_version, user_devices.app_version),
+                        last_ip_address = EXCLUDED.ip_address,
+                        last_seen_at = NOW(),
+                        is_current = TRUE,
+                        login_count = user_devices.login_count + 1,
+                        updated_at = NOW()
+                `, [
+                    user.id,
+                    deviceInfo.deviceId,
+                    deviceInfo.deviceName || null,
+                    deviceInfo.deviceType || 'desktop',
+                    deviceInfo.platform || null,
+                    deviceInfo.platformVersion || null,
+                    deviceInfo.browser || null,
+                    deviceInfo.browserVersion || null,
+                    deviceInfo.appName || 'JubileeBrowser',
+                    deviceInfo.appVersion || null,
+                    clientIp
+                ]);
+
+                // Mark other devices as not current for this user
+                await codexPool.query(
+                    'UPDATE user_devices SET is_current = FALSE WHERE user_id = $1 AND device_id != $2',
+                    [user.id, deviceInfo.deviceId]
+                );
+            } catch (deviceErr) {
+                console.error('Device tracking error (non-fatal):', deviceErr.message);
+                // Don't fail login if device tracking fails
+            }
+        }
+
         // Create session record
         await codexPool.query(
             `INSERT INTO session (sid, sess, expire)
@@ -1021,6 +1249,77 @@ app.post('/api/auth/login', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'An error occurred during login'
+        });
+    }
+});
+
+// Get user devices endpoint
+app.get('/api/auth/devices', async (req, res) => {
+    try {
+        // Get user ID from authorization header (simplified for now)
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({
+                success: false,
+                error: 'Authorization required'
+            });
+        }
+
+        const token = authHeader.substring(7);
+        // Simple token validation - extract user ID from payload
+        let userId;
+        try {
+            const payload = JSON.parse(Buffer.from(token.split('.')[0], 'base64').toString());
+            userId = payload.sub;
+        } catch {
+            return res.status(401).json({
+                success: false,
+                error: 'Invalid token'
+            });
+        }
+
+        const result = await codexPool.query(`
+            SELECT
+                device_id,
+                device_name,
+                device_type,
+                platform,
+                platform_version,
+                app_name,
+                app_version,
+                is_trusted,
+                is_current,
+                first_seen_at,
+                last_seen_at,
+                login_count
+            FROM user_devices
+            WHERE user_id = $1
+            ORDER BY last_seen_at DESC
+        `, [userId]);
+
+        res.json({
+            success: true,
+            devices: result.rows.map(d => ({
+                deviceId: d.device_id,
+                deviceName: d.device_name,
+                deviceType: d.device_type,
+                platform: d.platform,
+                platformVersion: d.platform_version,
+                appName: d.app_name,
+                appVersion: d.app_version,
+                isTrusted: d.is_trusted,
+                isCurrent: d.is_current,
+                firstSeenAt: d.first_seen_at,
+                lastSeenAt: d.last_seen_at,
+                loginCount: d.login_count
+            }))
+        });
+
+    } catch (err) {
+        console.error('Get devices error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'An error occurred while fetching devices'
         });
     }
 });
@@ -1254,6 +1553,1102 @@ app.get('/api/auth/me', async (req, res) => {
 });
 
 // =============================================================================
+// BROWSER SYNC API ROUTES
+// =============================================================================
+
+// Middleware to verify token and get user ID
+async function authenticateToken(req, res, next) {
+    console.log('[AUTH] Authenticating request to:', req.path);
+    // Support both Authorization header and query parameter (for clients behind proxies)
+    let token = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
+        console.log('[AUTH] Token from Authorization header');
+    } else if (req.query.access_token) {
+        token = req.query.access_token;
+        console.log('[AUTH] Token from query parameter');
+    }
+
+    if (!token) {
+        console.log('[AUTH] No Authorization header, Bearer prefix, or access_token query parameter');
+        return res.status(401).json({ success: false, error: 'Authorization required' });
+    }
+
+    console.log('[AUTH] Token received (first 30 chars):', token.substring(0, 30) + '...');
+
+    try {
+        const [base64Payload, signature] = token.split('.');
+        if (!base64Payload || !signature) {
+            console.log('[AUTH] Invalid token format - missing parts');
+            return res.status(401).json({ success: false, error: 'Invalid token format' });
+        }
+
+        const expectedSignature = crypto.createHmac('sha256', process.env.JWT_SECRET || 'jubilee-secret-key')
+            .update(base64Payload)
+            .digest('hex');
+
+        console.log('[AUTH] Expected sig:', expectedSignature.substring(0, 20) + '...');
+        console.log('[AUTH] Received sig:', signature.substring(0, 20) + '...');
+
+        if (signature !== expectedSignature) {
+            console.log('[AUTH] Signature mismatch!');
+            return res.status(401).json({ success: false, error: 'Invalid token' });
+        }
+
+        const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString());
+        console.log('[AUTH] Token payload:', JSON.stringify(payload));
+
+        if (payload.exp < Date.now()) {
+            console.log('[AUTH] Token expired. exp:', payload.exp, 'now:', Date.now());
+            return res.status(401).json({ success: false, error: 'Token expired' });
+        }
+
+        req.userId = payload.userId;
+        console.log('[AUTH] Authenticated user:', req.userId);
+        next();
+    } catch (e) {
+        console.log('[AUTH] Token parse error:', e.message);
+        return res.status(401).json({ success: false, error: 'Invalid token' });
+    }
+}
+
+// Push sync changes from client
+app.post('/api/sync/push', authenticateToken, async (req, res) => {
+    try {
+        const { deviceId, timestamp, changes } = req.body;
+        const userId = req.userId;
+
+        if (!deviceId || !changes || !Array.isArray(changes)) {
+            return res.status(400).json({
+                success: false,
+                error: 'deviceId and changes array are required'
+            });
+        }
+
+        let processed = 0;
+        let failed = 0;
+
+        for (const change of changes) {
+            try {
+                const { entityType, entityId, changeType, data, timestamp: clientTimestamp } = change;
+
+                if (changeType === 'delete') {
+                    // Mark as deleted
+                    await codexPool.query(`
+                        INSERT INTO browser_sync_data (user_id, device_id, entity_type, entity_id, change_type, data, client_timestamp, is_deleted)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE)
+                        ON CONFLICT (user_id, entity_type, entity_id) DO UPDATE SET
+                            device_id = EXCLUDED.device_id,
+                            change_type = EXCLUDED.change_type,
+                            data = EXCLUDED.data,
+                            client_timestamp = EXCLUDED.client_timestamp,
+                            is_deleted = TRUE,
+                            version = browser_sync_data.version + 1,
+                            updated_at = NOW()
+                    `, [userId, deviceId, entityType, entityId, changeType, data ? JSON.stringify(data) : null, clientTimestamp || Date.now()]);
+                } else {
+                    // Create or update
+                    await codexPool.query(`
+                        INSERT INTO browser_sync_data (user_id, device_id, entity_type, entity_id, change_type, data, client_timestamp)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7)
+                        ON CONFLICT (user_id, entity_type, entity_id) DO UPDATE SET
+                            device_id = EXCLUDED.device_id,
+                            change_type = EXCLUDED.change_type,
+                            data = EXCLUDED.data,
+                            client_timestamp = EXCLUDED.client_timestamp,
+                            is_deleted = FALSE,
+                            version = browser_sync_data.version + 1,
+                            updated_at = NOW()
+                    `, [userId, deviceId, entityType, entityId, changeType, data ? JSON.stringify(data) : null, clientTimestamp || Date.now()]);
+                }
+                processed++;
+            } catch (err) {
+                console.error('Sync push error for change:', change, err);
+                failed++;
+            }
+        }
+
+        // Update last sync time in preferences
+        await codexPool.query(`
+            INSERT INTO browser_sync_preferences (user_id, last_sync_at)
+            VALUES ($1, NOW())
+            ON CONFLICT (user_id) DO UPDATE SET last_sync_at = NOW()
+        `, [userId]);
+
+        res.json({
+            success: true,
+            processed,
+            failed,
+            serverTimestamp: Date.now()
+        });
+
+    } catch (err) {
+        console.error('Sync push error:', err);
+        res.status(500).json({ success: false, error: 'Failed to push sync data' });
+    }
+});
+
+// Pull sync changes for client
+app.get('/api/sync/pull', authenticateToken, async (req, res) => {
+    console.log('[SYNC PULL] Request received for user:', req.userId, 'since:', req.query.since, 'device:', req.query.device_id);
+    try {
+        const { since, device_id: deviceId } = req.query;
+        const userId = req.userId;
+
+        const sinceTimestamp = since ? new Date(parseInt(since)) : new Date(0);
+
+        // Get changes since the given timestamp, excluding changes from the requesting device
+        const result = await codexPool.query(`
+            SELECT
+                entity_type as "entityType",
+                entity_id as "entityId",
+                change_type as "changeType",
+                data,
+                client_timestamp as "timestamp",
+                is_deleted as "isDeleted",
+                version
+            FROM browser_sync_data
+            WHERE user_id = $1
+              AND server_timestamp > $2
+              AND (device_id != $3 OR $3 IS NULL)
+            ORDER BY server_timestamp ASC
+            LIMIT 1000
+        `, [userId, sinceTimestamp, deviceId || null]);
+
+        // Parse JSON data for each row
+        const changes = result.rows.map(row => ({
+            ...row,
+            data: row.data ? (typeof row.data === 'string' ? JSON.parse(row.data) : row.data) : null
+        }));
+
+        res.json({
+            success: true,
+            changes,
+            serverTimestamp: Date.now()
+        });
+
+    } catch (err) {
+        console.error('Sync pull error:', err);
+        res.status(500).json({ success: false, error: 'Failed to pull sync data' });
+    }
+});
+
+// Get sync preferences
+app.get('/api/sync/preferences', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+
+        const result = await codexPool.query(`
+            SELECT
+                sync_bookmarks as "syncBookmarks",
+                sync_history as "syncHistory",
+                sync_passwords as "syncPasswords",
+                sync_autofill as "syncAutofill",
+                sync_extensions as "syncExtensions",
+                sync_themes as "syncThemes",
+                sync_settings as "syncSettings",
+                last_sync_at as "lastSyncAt"
+            FROM browser_sync_preferences
+            WHERE user_id = $1
+        `, [userId]);
+
+        if (result.rows.length === 0) {
+            // Return defaults
+            return res.json({
+                success: true,
+                preferences: {
+                    syncBookmarks: true,
+                    syncHistory: true,
+                    syncPasswords: false,
+                    syncAutofill: false,
+                    syncExtensions: false,
+                    syncThemes: true,
+                    syncSettings: true,
+                    lastSyncAt: null
+                }
+            });
+        }
+
+        res.json({
+            success: true,
+            preferences: result.rows[0]
+        });
+
+    } catch (err) {
+        console.error('Get sync preferences error:', err);
+        res.status(500).json({ success: false, error: 'Failed to get sync preferences' });
+    }
+});
+
+// Update sync preferences
+app.put('/api/sync/preferences', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const {
+            syncBookmarks = true,
+            syncHistory = true,
+            syncPasswords = false,
+            syncAutofill = false,
+            syncExtensions = false,
+            syncThemes = true,
+            syncSettings = true
+        } = req.body;
+
+        await codexPool.query(`
+            INSERT INTO browser_sync_preferences (user_id, sync_bookmarks, sync_history, sync_passwords, sync_autofill, sync_extensions, sync_themes, sync_settings)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            ON CONFLICT (user_id) DO UPDATE SET
+                sync_bookmarks = EXCLUDED.sync_bookmarks,
+                sync_history = EXCLUDED.sync_history,
+                sync_passwords = EXCLUDED.sync_passwords,
+                sync_autofill = EXCLUDED.sync_autofill,
+                sync_extensions = EXCLUDED.sync_extensions,
+                sync_themes = EXCLUDED.sync_themes,
+                sync_settings = EXCLUDED.sync_settings,
+                updated_at = NOW()
+        `, [userId, syncBookmarks, syncHistory, syncPasswords, syncAutofill, syncExtensions, syncThemes, syncSettings]);
+
+        res.json({
+            success: true,
+            message: 'Sync preferences updated'
+        });
+
+    } catch (err) {
+        console.error('Update sync preferences error:', err);
+        res.status(500).json({ success: false, error: 'Failed to update sync preferences' });
+    }
+});
+
+// Get sync status
+app.get('/api/sync/status', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+
+        // Get counts by entity type
+        const countsResult = await codexPool.query(`
+            SELECT
+                entity_type,
+                COUNT(*) as count,
+                MAX(server_timestamp) as last_updated
+            FROM browser_sync_data
+            WHERE user_id = $1 AND is_deleted = FALSE
+            GROUP BY entity_type
+        `, [userId]);
+
+        // Get last sync time
+        const prefsResult = await codexPool.query(`
+            SELECT last_sync_at FROM browser_sync_preferences WHERE user_id = $1
+        `, [userId]);
+
+        const counts = {};
+        countsResult.rows.forEach(row => {
+            counts[row.entity_type] = {
+                count: parseInt(row.count),
+                lastUpdated: row.last_updated
+            };
+        });
+
+        res.json({
+            success: true,
+            status: {
+                entityCounts: counts,
+                lastSyncAt: prefsResult.rows[0]?.last_sync_at || null,
+                serverTime: new Date().toISOString()
+            }
+        });
+
+    } catch (err) {
+        console.error('Get sync status error:', err);
+        res.status(500).json({ success: false, error: 'Failed to get sync status' });
+    }
+});
+
+// =============================================================================
+// CHROMIUM-STYLE SYNC API V2 - Collection-based versioned sync
+// =============================================================================
+
+// Register/update device for sync
+app.post('/api/sync/v2/devices/register', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { deviceId, deviceName, deviceType, platform, platformVersion, appName, appVersion } = req.body;
+
+        if (!deviceId) {
+            return res.status(400).json({ success: false, error: 'deviceId is required' });
+        }
+
+        const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+                        req.connection?.remoteAddress ||
+                        req.socket?.remoteAddress || null;
+
+        // Upsert device
+        const result = await codexPool.query(`
+            INSERT INTO user_devices (
+                user_id, device_id, device_name, device_type, platform, platform_version,
+                app_name, app_version, ip_address, last_ip_address, is_current
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9, TRUE)
+            ON CONFLICT (user_id, device_id) DO UPDATE SET
+                device_name = COALESCE(EXCLUDED.device_name, user_devices.device_name),
+                device_type = COALESCE(EXCLUDED.device_type, user_devices.device_type),
+                platform = COALESCE(EXCLUDED.platform, user_devices.platform),
+                platform_version = COALESCE(EXCLUDED.platform_version, user_devices.platform_version),
+                app_name = COALESCE(EXCLUDED.app_name, user_devices.app_name),
+                app_version = COALESCE(EXCLUDED.app_version, user_devices.app_version),
+                last_ip_address = $9,
+                last_seen_at = NOW(),
+                is_current = TRUE,
+                login_count = user_devices.login_count + 1,
+                updated_at = NOW()
+            RETURNING id, device_id, device_name, created_at
+        `, [userId, deviceId, deviceName || 'Unknown Device', deviceType || 'desktop',
+            platform, platformVersion, appName || 'JubileeBrowser', appVersion, clientIp]);
+
+        const device = result.rows[0];
+
+        // Initialize sync collections for this user if they don't exist
+        const collectionTypes = ['bookmarks', 'history', 'passwords', 'autofill', 'settings', 'tabs'];
+        for (const collType of collectionTypes) {
+            await codexPool.query(`
+                INSERT INTO sync_collections (user_id, collection_type, is_enabled)
+                VALUES ($1, $2, $3)
+                ON CONFLICT (user_id, collection_type) DO NOTHING
+            `, [userId, collType, collType !== 'passwords']); // passwords disabled by default
+        }
+
+        // Get all collections for this user
+        const collections = await codexPool.query(`
+            SELECT id, collection_type, current_version, is_enabled
+            FROM sync_collections WHERE user_id = $1
+        `, [userId]);
+
+        res.json({
+            success: true,
+            device: {
+                id: device.id,
+                deviceId: device.device_id,
+                deviceName: device.device_name,
+                registeredAt: device.created_at
+            },
+            collections: collections.rows.map(c => ({
+                id: c.id,
+                type: c.collection_type,
+                currentVersion: parseInt(c.current_version),
+                enabled: c.is_enabled
+            }))
+        });
+
+    } catch (err) {
+        console.error('Device registration error:', err);
+        res.status(500).json({ success: false, error: 'Failed to register device' });
+    }
+});
+
+// Get collection versions (for initial sync handshake)
+app.get('/api/sync/v2/collections', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+
+        const result = await codexPool.query(`
+            SELECT id, collection_type, current_version, is_enabled, encryption_key_id, updated_at
+            FROM sync_collections WHERE user_id = $1
+        `, [userId]);
+
+        res.json({
+            success: true,
+            collections: result.rows.map(c => ({
+                id: c.id,
+                type: c.collection_type,
+                currentVersion: parseInt(c.current_version),
+                enabled: c.is_enabled,
+                encryptionKeyId: c.encryption_key_id,
+                updatedAt: c.updated_at
+            })),
+            serverTime: Date.now()
+        });
+
+    } catch (err) {
+        console.error('Get collections error:', err);
+        res.status(500).json({ success: false, error: 'Failed to get collections' });
+    }
+});
+
+// Commit changes to a collection (push)
+app.post('/api/sync/v2/collections/:collectionType/commit', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { collectionType } = req.params;
+        const { deviceId, items, baseVersion } = req.body;
+
+        if (!deviceId || !items || !Array.isArray(items)) {
+            return res.status(400).json({ success: false, error: 'deviceId and items array are required' });
+        }
+
+        // Get collection
+        const collResult = await codexPool.query(`
+            SELECT id, current_version FROM sync_collections
+            WHERE user_id = $1 AND collection_type = $2
+        `, [userId, collectionType]);
+
+        if (collResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Collection not found' });
+        }
+
+        const collection = collResult.rows[0];
+        const currentVersion = parseInt(collection.current_version);
+
+        // Check for conflicts (if baseVersion is provided and doesn't match)
+        if (baseVersion !== undefined && baseVersion < currentVersion) {
+            // There are newer changes - return them for conflict resolution
+            const newerItems = await codexPool.query(`
+                SELECT client_id, server_version, payload, is_deleted
+                FROM sync_items
+                WHERE collection_id = $1 AND server_version > $2
+                ORDER BY server_version ASC
+            `, [collection.id, baseVersion]);
+
+            return res.status(409).json({
+                success: false,
+                error: 'Conflict detected',
+                currentVersion,
+                baseVersion,
+                conflictingItems: newerItems.rows.map(i => ({
+                    clientId: i.client_id,
+                    serverVersion: parseInt(i.server_version),
+                    payload: i.payload,
+                    isDeleted: i.is_deleted
+                }))
+            });
+        }
+
+        // Get device ID from database
+        const deviceResult = await codexPool.query(`
+            SELECT id FROM user_devices WHERE user_id = $1 AND device_id = $2
+        `, [userId, deviceId]);
+
+        const deviceDbId = deviceResult.rows.length > 0 ? deviceResult.rows[0].id : null;
+
+        // Process items
+        const committedItems = [];
+        for (const item of items) {
+            const { clientId, payload, isDeleted = false, isEncrypted = false } = item;
+
+            if (!clientId) continue;
+
+            // Use the upsert function
+            const insertResult = await codexPool.query(`
+                SELECT * FROM upsert_sync_item($1, $2, $3, $4, $5, $6)
+            `, [collection.id, clientId, payload || {}, deviceDbId, isEncrypted, isDeleted]);
+
+            committedItems.push({
+                clientId,
+                serverVersion: parseInt(insertResult.rows[0].new_version),
+                itemId: insertResult.rows[0].item_id
+            });
+        }
+
+        // Get new collection version
+        const newVersionResult = await codexPool.query(`
+            SELECT current_version FROM sync_collections WHERE id = $1
+        `, [collection.id]);
+
+        res.json({
+            success: true,
+            collectionType,
+            newVersion: parseInt(newVersionResult.rows[0].current_version),
+            committedItems,
+            serverTime: Date.now()
+        });
+
+    } catch (err) {
+        console.error('Commit error:', err);
+        res.status(500).json({ success: false, error: 'Failed to commit changes' });
+    }
+});
+
+// Get updates from a collection (pull)
+app.get('/api/sync/v2/collections/:collectionType/updates', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { collectionType } = req.params;
+        const { sinceVersion = 0, limit = 100 } = req.query;
+
+        // Get collection
+        const collResult = await codexPool.query(`
+            SELECT id, current_version FROM sync_collections
+            WHERE user_id = $1 AND collection_type = $2
+        `, [userId, collectionType]);
+
+        if (collResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Collection not found' });
+        }
+
+        const collection = collResult.rows[0];
+
+        // Get items since version
+        const result = await codexPool.query(`
+            SELECT * FROM get_sync_items_since_version($1, $2, $3)
+        `, [collection.id, parseInt(sinceVersion), parseInt(limit)]);
+
+        const hasMore = result.rows.length === parseInt(limit);
+
+        res.json({
+            success: true,
+            collectionType,
+            currentVersion: parseInt(collection.current_version),
+            sinceVersion: parseInt(sinceVersion),
+            items: result.rows.map(i => ({
+                itemId: i.item_id,
+                clientId: i.client_id,
+                serverVersion: parseInt(i.server_version),
+                payload: i.payload,
+                isEncrypted: i.is_encrypted,
+                isDeleted: i.is_deleted,
+                modifiedAt: i.client_modified_at
+            })),
+            hasMore,
+            serverTime: Date.now()
+        });
+
+    } catch (err) {
+        console.error('Get updates error:', err);
+        res.status(500).json({ success: false, error: 'Failed to get updates' });
+    }
+});
+
+// Acknowledge sync progress
+app.post('/api/sync/v2/collections/:collectionType/acknowledge', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { collectionType } = req.params;
+        const { deviceId, acknowledgedVersion } = req.body;
+
+        if (!deviceId || acknowledgedVersion === undefined) {
+            return res.status(400).json({ success: false, error: 'deviceId and acknowledgedVersion are required' });
+        }
+
+        // Get collection and device
+        const collResult = await codexPool.query(`
+            SELECT id FROM sync_collections WHERE user_id = $1 AND collection_type = $2
+        `, [userId, collectionType]);
+
+        const deviceResult = await codexPool.query(`
+            SELECT id FROM user_devices WHERE user_id = $1 AND device_id = $2
+        `, [userId, deviceId]);
+
+        if (collResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Collection not found' });
+        }
+
+        if (deviceResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Device not found' });
+        }
+
+        // Update or insert sync progress
+        await codexPool.query(`
+            INSERT INTO sync_progress (device_id, collection_id, last_acknowledged_version, last_sync_at)
+            VALUES ($1, $2, $3, NOW())
+            ON CONFLICT (device_id, collection_id) DO UPDATE SET
+                last_acknowledged_version = GREATEST(sync_progress.last_acknowledged_version, EXCLUDED.last_acknowledged_version),
+                last_sync_at = NOW(),
+                updated_at = NOW()
+        `, [deviceResult.rows[0].id, collResult.rows[0].id, acknowledgedVersion]);
+
+        res.json({
+            success: true,
+            collectionType,
+            acknowledgedVersion: parseInt(acknowledgedVersion),
+            serverTime: Date.now()
+        });
+
+    } catch (err) {
+        console.error('Acknowledge error:', err);
+        res.status(500).json({ success: false, error: 'Failed to acknowledge sync' });
+    }
+});
+
+// Get sync progress for a device
+app.get('/api/sync/v2/devices/:deviceId/progress', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { deviceId } = req.params;
+
+        // Get device
+        const deviceResult = await codexPool.query(`
+            SELECT id FROM user_devices WHERE user_id = $1 AND device_id = $2
+        `, [userId, deviceId]);
+
+        if (deviceResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Device not found' });
+        }
+
+        // Get progress for all collections
+        const result = await codexPool.query(`
+            SELECT
+                sc.collection_type,
+                sc.current_version,
+                COALESCE(sp.last_acknowledged_version, 0) as last_acknowledged_version,
+                sp.last_sync_at
+            FROM sync_collections sc
+            LEFT JOIN sync_progress sp ON sp.collection_id = sc.id AND sp.device_id = $1
+            WHERE sc.user_id = $2
+        `, [deviceResult.rows[0].id, userId]);
+
+        res.json({
+            success: true,
+            deviceId,
+            progress: result.rows.map(p => ({
+                collectionType: p.collection_type,
+                currentVersion: parseInt(p.current_version),
+                lastAcknowledgedVersion: parseInt(p.last_acknowledged_version),
+                pendingUpdates: parseInt(p.current_version) - parseInt(p.last_acknowledged_version),
+                lastSyncAt: p.last_sync_at
+            })),
+            serverTime: Date.now()
+        });
+
+    } catch (err) {
+        console.error('Get progress error:', err);
+        res.status(500).json({ success: false, error: 'Failed to get sync progress' });
+    }
+});
+
+// Full sync endpoint - get all data for a collection
+app.get('/api/sync/v2/collections/:collectionType/full', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { collectionType } = req.params;
+
+        // Get collection
+        const collResult = await codexPool.query(`
+            SELECT id, current_version FROM sync_collections
+            WHERE user_id = $1 AND collection_type = $2
+        `, [userId, collectionType]);
+
+        if (collResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Collection not found' });
+        }
+
+        const collection = collResult.rows[0];
+
+        // Get all non-deleted items
+        const result = await codexPool.query(`
+            SELECT
+                id as item_id,
+                client_id,
+                server_version,
+                payload,
+                is_encrypted,
+                client_modified_at
+            FROM sync_items
+            WHERE collection_id = $1 AND is_deleted = FALSE
+            ORDER BY server_version ASC
+        `, [collection.id]);
+
+        res.json({
+            success: true,
+            collectionType,
+            currentVersion: parseInt(collection.current_version),
+            items: result.rows.map(i => ({
+                itemId: i.item_id,
+                clientId: i.client_id,
+                serverVersion: parseInt(i.server_version),
+                payload: i.payload,
+                isEncrypted: i.is_encrypted,
+                modifiedAt: i.client_modified_at
+            })),
+            totalCount: result.rows.length,
+            serverTime: Date.now()
+        });
+
+    } catch (err) {
+        console.error('Full sync error:', err);
+        res.status(500).json({ success: false, error: 'Failed to get full sync data' });
+    }
+});
+
+// =============================================================================
+// ACCOUNT MANAGEMENT API ROUTES
+// =============================================================================
+
+// Get full account details with devices and sync info
+app.get('/api/account', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+
+        // Get user info
+        const userResult = await codexPool.query(`
+            SELECT id, email, display_name, avatar_url, role, preferred_language, created_at, last_login_at
+            FROM users WHERE id = $1 AND is_active = true
+        `, [userId]);
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const user = userResult.rows[0];
+
+        // Get devices
+        const devicesResult = await codexPool.query(`
+            SELECT id, device_id, device_name, device_type, platform, platform_version,
+                   browser, browser_version, app_name, app_version, is_trusted, is_current,
+                   first_seen_at, last_seen_at, login_count
+            FROM user_devices
+            WHERE user_id = $1
+            ORDER BY last_seen_at DESC
+        `, [userId]);
+
+        // Get sync preferences
+        const prefsResult = await codexPool.query(`
+            SELECT sync_bookmarks, sync_history, sync_passwords, sync_autofill,
+                   sync_extensions, sync_themes, sync_settings, last_sync_at
+            FROM browser_sync_preferences WHERE user_id = $1
+        `, [userId]);
+
+        // Get sync status per collection
+        const syncStatusResult = await codexPool.query(`
+            SELECT collection_type, server_version, updated_at
+            FROM sync_collections WHERE user_id = $1
+        `, [userId]);
+
+        res.json({
+            success: true,
+            account: {
+                id: user.id,
+                email: user.email,
+                displayName: user.display_name,
+                avatarUrl: user.avatar_url,
+                role: user.role,
+                preferredLanguage: user.preferred_language,
+                createdAt: user.created_at,
+                lastLoginAt: user.last_login_at
+            },
+            devices: devicesResult.rows.map(d => ({
+                id: d.id,
+                deviceId: d.device_id,
+                deviceName: d.device_name,
+                deviceType: d.device_type,
+                platform: d.platform,
+                platformVersion: d.platform_version,
+                browser: d.browser,
+                browserVersion: d.browser_version,
+                appName: d.app_name,
+                appVersion: d.app_version,
+                isTrusted: d.is_trusted,
+                isCurrent: d.is_current,
+                firstSeenAt: d.first_seen_at,
+                lastSeenAt: d.last_seen_at,
+                loginCount: d.login_count
+            })),
+            syncPreferences: prefsResult.rows.length > 0 ? {
+                syncBookmarks: prefsResult.rows[0].sync_bookmarks,
+                syncHistory: prefsResult.rows[0].sync_history,
+                syncPasswords: prefsResult.rows[0].sync_passwords,
+                syncAutofill: prefsResult.rows[0].sync_autofill,
+                syncExtensions: prefsResult.rows[0].sync_extensions,
+                syncThemes: prefsResult.rows[0].sync_themes,
+                syncSettings: prefsResult.rows[0].sync_settings,
+                lastSyncAt: prefsResult.rows[0].last_sync_at
+            } : {
+                syncBookmarks: true,
+                syncHistory: true,
+                syncPasswords: false,
+                syncAutofill: false,
+                syncExtensions: false,
+                syncThemes: true,
+                syncSettings: true,
+                lastSyncAt: null
+            },
+            syncCollections: syncStatusResult.rows.map(c => ({
+                collectionType: c.collection_type,
+                serverVersion: c.server_version,
+                updatedAt: c.updated_at
+            }))
+        });
+
+    } catch (err) {
+        console.error('Get account error:', err);
+        res.status(500).json({ success: false, error: 'Failed to get account details' });
+    }
+});
+
+// Update account profile
+app.put('/api/account/profile', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { displayName, avatarUrl, preferredLanguage } = req.body;
+
+        const updates = [];
+        const values = [];
+        let paramIndex = 1;
+
+        if (displayName !== undefined) {
+            updates.push(`display_name = $${paramIndex++}`);
+            values.push(displayName);
+        }
+        if (avatarUrl !== undefined) {
+            updates.push(`avatar_url = $${paramIndex++}`);
+            values.push(avatarUrl);
+        }
+        if (preferredLanguage !== undefined) {
+            updates.push(`preferred_language = $${paramIndex++}`);
+            values.push(preferredLanguage);
+        }
+
+        if (updates.length === 0) {
+            return res.status(400).json({ success: false, error: 'No fields to update' });
+        }
+
+        updates.push(`updated_at = NOW()`);
+        values.push(userId);
+
+        await codexPool.query(
+            `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex}`,
+            values
+        );
+
+        res.json({ success: true, message: 'Profile updated' });
+
+    } catch (err) {
+        console.error('Update profile error:', err);
+        res.status(500).json({ success: false, error: 'Failed to update profile' });
+    }
+});
+
+// Change password
+app.put('/api/account/password', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ success: false, error: 'Current and new password required' });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({ success: false, error: 'Password must be at least 8 characters' });
+        }
+
+        // Verify current password
+        const userResult = await codexPool.query(
+            'SELECT password_hash FROM users WHERE id = $1',
+            [userId]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const isValid = await bcrypt.compare(currentPassword, userResult.rows[0].password_hash);
+        if (!isValid) {
+            return res.status(401).json({ success: false, error: 'Current password is incorrect' });
+        }
+
+        // Hash and update new password
+        const newHash = await bcrypt.hash(newPassword, 12);
+        await codexPool.query(
+            'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+            [newHash, userId]
+        );
+
+        res.json({ success: true, message: 'Password changed successfully' });
+
+    } catch (err) {
+        console.error('Change password error:', err);
+        res.status(500).json({ success: false, error: 'Failed to change password' });
+    }
+});
+
+// Get connected devices
+app.get('/api/account/devices', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+
+        const result = await codexPool.query(`
+            SELECT id, device_id, device_name, device_type, platform, platform_version,
+                   browser, browser_version, app_name, app_version, is_trusted, is_current,
+                   first_seen_at, last_seen_at, login_count, last_ip_address
+            FROM user_devices
+            WHERE user_id = $1
+            ORDER BY last_seen_at DESC
+        `, [userId]);
+
+        res.json({
+            success: true,
+            devices: result.rows.map(d => ({
+                id: d.id,
+                deviceId: d.device_id,
+                deviceName: d.device_name || `${d.platform || 'Unknown'} ${d.device_type}`,
+                deviceType: d.device_type,
+                platform: d.platform,
+                platformVersion: d.platform_version,
+                browser: d.browser,
+                browserVersion: d.browser_version,
+                appName: d.app_name,
+                appVersion: d.app_version,
+                isTrusted: d.is_trusted,
+                isCurrent: d.is_current,
+                firstSeenAt: d.first_seen_at,
+                lastSeenAt: d.last_seen_at,
+                loginCount: d.login_count,
+                lastIpAddress: d.last_ip_address
+            }))
+        });
+
+    } catch (err) {
+        console.error('Get devices error:', err);
+        res.status(500).json({ success: false, error: 'Failed to get devices' });
+    }
+});
+
+// Remove a device
+app.delete('/api/account/devices/:deviceId', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { deviceId } = req.params;
+
+        // Delete the device (cascades to sync_progress, etc.)
+        const result = await codexPool.query(
+            'DELETE FROM user_devices WHERE user_id = $1 AND id = $2 RETURNING id',
+            [userId, deviceId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Device not found' });
+        }
+
+        res.json({ success: true, message: 'Device removed' });
+
+    } catch (err) {
+        console.error('Remove device error:', err);
+        res.status(500).json({ success: false, error: 'Failed to remove device' });
+    }
+});
+
+// Trust/untrust a device
+app.put('/api/account/devices/:deviceId/trust', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { deviceId } = req.params;
+        const { trusted } = req.body;
+
+        const result = await codexPool.query(
+            'UPDATE user_devices SET is_trusted = $1, updated_at = NOW() WHERE user_id = $2 AND id = $3 RETURNING id',
+            [trusted === true, userId, deviceId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Device not found' });
+        }
+
+        res.json({ success: true, message: trusted ? 'Device trusted' : 'Device untrusted' });
+
+    } catch (err) {
+        console.error('Trust device error:', err);
+        res.status(500).json({ success: false, error: 'Failed to update device trust' });
+    }
+});
+
+// Rename a device
+app.put('/api/account/devices/:deviceId/name', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { deviceId } = req.params;
+        const { name } = req.body;
+
+        if (!name || name.trim().length === 0) {
+            return res.status(400).json({ success: false, error: 'Device name required' });
+        }
+
+        const result = await codexPool.query(
+            'UPDATE user_devices SET device_name = $1, updated_at = NOW() WHERE user_id = $2 AND id = $3 RETURNING id',
+            [name.trim(), userId, deviceId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Device not found' });
+        }
+
+        res.json({ success: true, message: 'Device renamed' });
+
+    } catch (err) {
+        console.error('Rename device error:', err);
+        res.status(500).json({ success: false, error: 'Failed to rename device' });
+    }
+});
+
+// Sign out from all devices
+app.post('/api/account/signout-all', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { exceptCurrent } = req.body;
+        const currentDeviceId = req.query.device_id;
+
+        if (exceptCurrent && currentDeviceId) {
+            // Delete all devices except the current one
+            await codexPool.query(
+                'DELETE FROM user_devices WHERE user_id = $1 AND device_id != $2',
+                [userId, currentDeviceId]
+            );
+        } else {
+            // Delete all devices
+            await codexPool.query(
+                'DELETE FROM user_devices WHERE user_id = $1',
+                [userId]
+            );
+        }
+
+        res.json({ success: true, message: 'Signed out from all devices' });
+
+    } catch (err) {
+        console.error('Sign out all error:', err);
+        res.status(500).json({ success: false, error: 'Failed to sign out from devices' });
+    }
+});
+
+// Delete account
+app.delete('/api/account', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { password } = req.body;
+
+        if (!password) {
+            return res.status(400).json({ success: false, error: 'Password required to delete account' });
+        }
+
+        // Verify password
+        const userResult = await codexPool.query(
+            'SELECT password_hash FROM users WHERE id = $1',
+            [userId]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        const isValid = await bcrypt.compare(password, userResult.rows[0].password_hash);
+        if (!isValid) {
+            return res.status(401).json({ success: false, error: 'Invalid password' });
+        }
+
+        // Soft delete - set is_active to false
+        await codexPool.query(
+            'UPDATE users SET is_active = false, updated_at = NOW() WHERE id = $1',
+            [userId]
+        );
+
+        // Delete all devices
+        await codexPool.query('DELETE FROM user_devices WHERE user_id = $1', [userId]);
+
+        res.json({ success: true, message: 'Account deleted' });
+
+    } catch (err) {
+        console.error('Delete account error:', err);
+        res.status(500).json({ success: false, error: 'Failed to delete account' });
+    }
+});
+
+// =============================================================================
 // ERROR HANDLING
 // =============================================================================
 
@@ -1287,6 +2682,21 @@ app.use((req, res) => {
                 devotionals: 'GET /api/v1/inspire/devotionals',
                 series: 'GET /api/v1/inspire/series',
                 knowledge: 'GET /api/v1/inspire/knowledge'
+            },
+            sync: {
+                push: 'POST /api/sync/push',
+                pull: 'GET /api/sync/pull',
+                preferences: 'GET/PUT /api/sync/preferences',
+                status: 'GET /api/sync/status'
+            },
+            'sync-v2': {
+                registerDevice: 'POST /api/sync/v2/devices/register',
+                getCollections: 'GET /api/sync/v2/collections',
+                commit: 'POST /api/sync/v2/collections/:type/commit',
+                getUpdates: 'GET /api/sync/v2/collections/:type/updates',
+                acknowledge: 'POST /api/sync/v2/collections/:type/acknowledge',
+                getProgress: 'GET /api/sync/v2/devices/:deviceId/progress',
+                fullSync: 'GET /api/sync/v2/collections/:type/full'
             }
         }
     });

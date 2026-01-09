@@ -19,6 +19,7 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const { Pool } = require('pg');
 const { v4: uuidv4 } = require('uuid');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3101;
@@ -175,6 +176,201 @@ app.get('/api/v1/status', async (req, res) => {
         });
     } catch (err) {
         res.status(500).json({ error: 'Failed to get status', message: err.message });
+    }
+});
+
+// =============================================================================
+// ADMIN DASHBOARD API
+// =============================================================================
+
+// Dashboard data endpoint - aggregates user data from Codex and metrics from Continuum
+app.get('/api/v1/admin/dashboard', async (req, res) => {
+    try {
+        // Get all users from Codex (read-only)
+        const usersResult = await codexPool.query(`
+            SELECT id, email, display_name, avatar_url, role, is_active,
+                   last_login_at, created_at
+            FROM users
+            ORDER BY last_login_at DESC NULLS LAST, created_at DESC
+        `);
+
+        // Get active sessions from Codex
+        const sessionsResult = await codexPool.query(`
+            SELECT sid, sess, expire
+            FROM session
+            WHERE expire > NOW()
+        `);
+
+        // Parse sessions to determine active users
+        const activeSessions = sessionsResult.rows.map(row => {
+            const sessData = typeof row.sess === 'string' ? JSON.parse(row.sess) : row.sess;
+            return {
+                user_id: sessData.userId || row.sid,
+                is_active: true,
+                last_heartbeat: row.expire,
+                client_type: sessData.client_type || 'web'
+            };
+        });
+
+        // Get activity sessions from Continuum (if any)
+        let continuumSessions = [];
+        try {
+            const continuumSessionsResult = await continuumPool.query(`
+                SELECT user_id, session_token, client_type, browser_id,
+                       started_at, ended_at, last_heartbeat, is_active
+                FROM activity_sessions
+                WHERE is_active = true
+                   OR last_heartbeat > NOW() - INTERVAL '5 minutes'
+                ORDER BY last_heartbeat DESC
+            `);
+            continuumSessions = continuumSessionsResult.rows;
+        } catch (err) {
+            // Table may not exist yet, ignore
+        }
+
+        // Merge session data
+        const allSessions = [...activeSessions, ...continuumSessions];
+
+        // Calculate browser sessions (Jubilee Browser)
+        const browserSessions = allSessions.filter(s =>
+            s.client_type === 'jubilee_browser' || s.browser_id
+        ).length;
+
+        // Get Continuum metrics
+        let metrics = {
+            sessions: 0,
+            events: 0,
+            conversations: 0,
+            messages: 0,
+            userContent: 0,
+            annotations: 0,
+            readingProgress: 0,
+            analytics: 0
+        };
+
+        try {
+            const metricsResult = await continuumPool.query(`
+                SELECT
+                    (SELECT COUNT(*) FROM activity_sessions) as sessions,
+                    (SELECT COUNT(*) FROM activity_events) as events,
+                    (SELECT COUNT(*) FROM chat_conversations) as conversations,
+                    (SELECT COUNT(*) FROM chat_messages) as messages,
+                    (SELECT COUNT(*) FROM user_content) as user_content,
+                    (SELECT COUNT(*) FROM user_annotations) as annotations,
+                    (SELECT COUNT(*) FROM reading_progress) as reading_progress,
+                    (SELECT COUNT(*) FROM analytics_events) as analytics
+            `);
+
+            if (metricsResult.rows[0]) {
+                metrics = {
+                    sessions: parseInt(metricsResult.rows[0].sessions || 0),
+                    events: parseInt(metricsResult.rows[0].events || 0),
+                    conversations: parseInt(metricsResult.rows[0].conversations || 0),
+                    messages: parseInt(metricsResult.rows[0].messages || 0),
+                    userContent: parseInt(metricsResult.rows[0].user_content || 0),
+                    annotations: parseInt(metricsResult.rows[0].annotations || 0),
+                    readingProgress: parseInt(metricsResult.rows[0].reading_progress || 0),
+                    analytics: parseInt(metricsResult.rows[0].analytics || 0)
+                };
+            }
+        } catch (err) {
+            // Tables may not exist yet
+        }
+
+        // Get recent activity events
+        let recentActivity = [];
+        try {
+            const activityResult = await continuumPool.query(`
+                SELECT event_type, event_category, created_at
+                FROM activity_events
+                ORDER BY created_at DESC
+                LIMIT 20
+            `);
+            recentActivity = activityResult.rows;
+        } catch (err) {
+            // Table may not exist
+        }
+
+        // Calculate active users (users with non-expired sessions)
+        const activeUserIds = new Set(allSessions.map(s => s.user_id));
+        const activeUsers = activeUserIds.size;
+
+        res.json({
+            timestamp: new Date().toISOString(),
+            summary: {
+                totalUsers: usersResult.rows.length,
+                activeUsers: activeUsers,
+                browserSessions: browserSessions
+            },
+            users: usersResult.rows,
+            sessions: allSessions,
+            metrics: metrics,
+            recentActivity: recentActivity
+        });
+
+    } catch (err) {
+        console.error('Dashboard error:', err);
+        res.status(500).json({
+            error: 'Failed to fetch dashboard data',
+            message: err.message
+        });
+    }
+});
+
+// Heartbeat endpoint for tracking active browser sessions
+app.post('/api/v1/admin/heartbeat', async (req, res) => {
+    try {
+        const { user_id, session_id, client_type, browser_id, device_info } = req.body;
+
+        if (!user_id) {
+            return res.status(400).json({ error: 'user_id is required' });
+        }
+
+        if (!browser_id) {
+            return res.status(400).json({ error: 'browser_id is required for browser sessions' });
+        }
+
+        // Upsert session - use browser_id as unique identifier for the session
+        const result = await continuumPool.query(`
+            INSERT INTO activity_sessions (user_id, session_token, client_type, browser_id, device_info, last_heartbeat, is_active, started_at)
+            VALUES ($1, $2, $3, $4, $5, NOW(), true, NOW())
+            ON CONFLICT (user_id, browser_id) WHERE browser_id IS NOT NULL
+            DO UPDATE SET
+                last_heartbeat = NOW(),
+                is_active = true,
+                device_info = COALESCE($5, activity_sessions.device_info)
+            RETURNING id
+        `, [user_id, session_id || uuidv4(), client_type || 'jubilee_browser', browser_id, device_info || {}]);
+
+        res.json({
+            success: true,
+            session_id: result.rows[0]?.id,
+            timestamp: new Date().toISOString()
+        });
+    } catch (err) {
+        console.error('Heartbeat error:', err);
+        res.status(500).json({ error: 'Failed to record heartbeat', message: err.message });
+    }
+});
+
+// Endpoint to end a browser session (on sign out)
+app.post('/api/v1/admin/session/end', async (req, res) => {
+    try {
+        const { user_id, browser_id } = req.body;
+
+        if (!user_id || !browser_id) {
+            return res.status(400).json({ error: 'user_id and browser_id are required' });
+        }
+
+        await continuumPool.query(`
+            UPDATE activity_sessions
+            SET is_active = false, ended_at = NOW()
+            WHERE user_id = $1 AND browser_id = $2
+        `, [user_id, browser_id]);
+
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to end session', message: err.message });
     }
 });
 
@@ -665,26 +861,44 @@ app.post('/api/v1/analytics', async (req, res) => {
 });
 
 // =============================================================================
+// STATIC FILE SERVING (Dashboard UI)
+// =============================================================================
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve index.html for root path
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// =============================================================================
 // ERROR HANDLING
 // =============================================================================
 
 app.use((req, res) => {
-    res.status(404).json({
-        error: 'Not Found',
-        message: `Endpoint ${req.method} ${req.path} does not exist`,
-        available_endpoints: {
-            health: 'GET /health',
-            status: 'GET /api/v1/status',
-            sessions: 'POST /api/v1/sessions, GET /api/v1/sessions',
-            events: 'POST /api/v1/events, POST /api/v1/events/batch',
-            conversations: 'GET/POST /api/v1/conversations',
-            messages: 'GET/POST /api/v1/conversations/:id/messages',
-            content: 'GET/POST /api/v1/content',
-            annotations: 'GET/POST /api/v1/annotations',
-            progress: 'GET/POST /api/v1/progress',
-            analytics: 'POST /api/v1/analytics'
-        }
-    });
+    // For API routes, return JSON error
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({
+            error: 'Not Found',
+            message: `Endpoint ${req.method} ${req.path} does not exist`,
+            available_endpoints: {
+                health: 'GET /health',
+                status: 'GET /api/v1/status',
+                dashboard: 'GET /api/v1/admin/dashboard',
+                heartbeat: 'POST /api/v1/admin/heartbeat',
+                sessions: 'POST /api/v1/sessions, GET /api/v1/sessions',
+                events: 'POST /api/v1/events, POST /api/v1/events/batch',
+                conversations: 'GET/POST /api/v1/conversations',
+                messages: 'GET/POST /api/v1/conversations/:id/messages',
+                content: 'GET/POST /api/v1/content',
+                annotations: 'GET/POST /api/v1/annotations',
+                progress: 'GET/POST /api/v1/progress',
+                analytics: 'POST /api/v1/analytics'
+            }
+        });
+    }
+    // For non-API routes, serve the dashboard
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.use((err, req, res, next) => {

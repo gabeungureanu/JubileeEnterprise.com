@@ -4,12 +4,13 @@ using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
 using JubileeBrowser.Models;
+using JubileeBrowser.Shared.Models;
 
 namespace JubileeBrowser.Services;
 
 public class AuthenticationManager
 {
-    private const string AuthEndpoint = "https://auth.jubileebrowser.com";
+    private const string AuthEndpoint = "https://inspirecodex.com/api/auth";
     private const int TokenRefreshBufferMinutes = 5;
 
     private readonly SecureTokenStorage _tokenStorage;
@@ -64,10 +65,10 @@ public class AuthenticationManager
             {
                 email,
                 password,
-                grant_type = password == null ? "magic_link" : "password"
+                rememberMe = true
             };
 
-            var response = await _httpClient.PostAsync("/oauth/token",
+            var response = await _httpClient.PostAsync("/login",
                 new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json"));
 
             if (!response.IsSuccessStatusCode)
@@ -77,12 +78,40 @@ public class AuthenticationManager
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            var tokens = JsonConvert.DeserializeObject<TokenSet>(content);
+            var loginResponse = JsonConvert.DeserializeObject<LoginResponse>(content);
 
-            if (tokens != null)
+            if (loginResponse?.Success == true && loginResponse.Tokens != null)
             {
+                var tokens = new TokenSet
+                {
+                    AccessToken = loginResponse.Tokens.AccessToken,
+                    RefreshToken = loginResponse.Tokens.RefreshToken,
+                    ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(loginResponse.Tokens.ExpiresIn).ToUnixTimeMilliseconds()
+                };
                 await _tokenStorage.SaveTokensAsync(tokens);
-                await RefreshSessionAsync(tokens);
+
+                // Set profile from login response
+                if (loginResponse.User != null)
+                {
+                    _session = new AuthSession
+                    {
+                        State = AuthenticationState.SignedIn,
+                        Profile = new JubileeUserProfile
+                        {
+                            UserId = loginResponse.User.Id,
+                            Email = loginResponse.User.Email,
+                            DisplayName = loginResponse.User.DisplayName ?? loginResponse.User.Email,
+                            AccountStatus = AccountStatus.Active,
+                            AvatarUrl = loginResponse.User.AvatarUrl
+                        }
+                    };
+                    StartTokenRefreshTimer(tokens);
+                    OnSessionChanged();
+                }
+            }
+            else
+            {
+                throw new Exception(loginResponse?.Error ?? "Login failed");
             }
 
             return _session;
@@ -103,16 +132,16 @@ public class AuthenticationManager
             var tokens = await _tokenStorage.LoadTokensAsync();
             if (tokens != null)
             {
-                // Revoke token on server
+                // Logout on server
                 _httpClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
 
-                await _httpClient.PostAsync("/oauth/revoke", null);
+                await _httpClient.PostAsync("/logout", null);
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error revoking token: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error logging out: {ex.Message}");
         }
         finally
         {
@@ -142,11 +171,10 @@ public class AuthenticationManager
 
             var request = new
             {
-                grant_type = "refresh_token",
-                refresh_token = refreshToken
+                refreshToken
             };
 
-            var response = await _httpClient.PostAsync("/oauth/token",
+            var response = await _httpClient.PostAsync("/refresh",
                 new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json"));
 
             if (!response.IsSuccessStatusCode)
@@ -157,12 +185,35 @@ public class AuthenticationManager
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            var newTokens = JsonConvert.DeserializeObject<TokenSet>(content);
+            var refreshResponse = JsonConvert.DeserializeObject<LoginResponse>(content);
 
-            if (newTokens != null)
+            if (refreshResponse?.Success == true && refreshResponse.Tokens != null)
             {
+                var newTokens = new TokenSet
+                {
+                    AccessToken = refreshResponse.Tokens.AccessToken,
+                    RefreshToken = refreshResponse.Tokens.RefreshToken,
+                    ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(refreshResponse.Tokens.ExpiresIn).ToUnixTimeMilliseconds()
+                };
                 await _tokenStorage.SaveTokensAsync(newTokens);
-                await RefreshSessionAsync(newTokens);
+
+                if (refreshResponse.User != null)
+                {
+                    _session = new AuthSession
+                    {
+                        State = AuthenticationState.SignedIn,
+                        Profile = new JubileeUserProfile
+                        {
+                            UserId = refreshResponse.User.Id,
+                            Email = refreshResponse.User.Email,
+                            DisplayName = refreshResponse.User.DisplayName ?? refreshResponse.User.Email,
+                            AccountStatus = AccountStatus.Active,
+                            AvatarUrl = refreshResponse.User.AvatarUrl
+                        }
+                    };
+                    StartTokenRefreshTimer(newTokens);
+                    OnSessionChanged();
+                }
                 return true;
             }
 
@@ -185,20 +236,35 @@ public class AuthenticationManager
             _httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
 
-            var response = await _httpClient.GetAsync("/userinfo");
+            var response = await _httpClient.GetAsync("/me");
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                var profile = JsonConvert.DeserializeObject<JubileeUserProfile>(content);
+                var meResponse = JsonConvert.DeserializeObject<MeResponse>(content);
 
-                _session = new AuthSession
+                if (meResponse?.Success == true && meResponse.User != null)
                 {
-                    State = AuthenticationState.SignedIn,
-                    Profile = profile
-                };
+                    _session = new AuthSession
+                    {
+                        State = AuthenticationState.SignedIn,
+                        Profile = new JubileeUserProfile
+                        {
+                            UserId = meResponse.User.Id,
+                            Email = meResponse.User.Email,
+                            DisplayName = meResponse.User.DisplayName ?? meResponse.User.Email,
+                            AccountStatus = AccountStatus.Active,
+                            AvatarUrl = meResponse.User.AvatarUrl
+                        }
+                    };
 
-                StartTokenRefreshTimer(tokens);
-                OnSessionChanged();
+                    StartTokenRefreshTimer(tokens);
+                    OnSessionChanged();
+                }
+                else
+                {
+                    _session.State = AuthenticationState.TokenExpired;
+                    OnSessionChanged();
+                }
             }
             else
             {

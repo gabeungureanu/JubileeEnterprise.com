@@ -7,15 +7,19 @@ public partial class App : Application
 {
     protected override void OnStartup(StartupEventArgs e)
     {
-        base.OnStartup(e);
+        // SUPER-FAST LAUNCH: Minimize startup overhead
+        // Don't call base.OnStartup until after critical setup - it triggers XAML resource loading
 
-        // Handle unhandled exceptions
+        // Handle unhandled exceptions (fast, synchronous)
         DispatcherUnhandledException += App_DispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
-        // Set up app data directory
-        EnsureAppDataDirectory();
+        // Defer app data directory creation to background (non-blocking)
+        Task.Run(EnsureAppDataDirectory);
+
+        // Now call base to load XAML resources and show main window
+        base.OnStartup(e);
     }
 
     private void EnsureAppDataDirectory()

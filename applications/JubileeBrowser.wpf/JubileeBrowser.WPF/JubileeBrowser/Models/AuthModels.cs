@@ -65,3 +65,19 @@ public class PermissionCheckResult
     public string? Reason { get; set; }
     public bool RequiresSignIn { get; set; }
 }
+
+// InspireCodex API Response Model for /me endpoint
+public class MeResponse
+{
+    public bool Success { get; set; }
+    public string? Error { get; set; }
+    public JubileeBrowser.Shared.Models.UserInfo? User { get; set; }
+}
+
+// Saved sign-in credentials for "Keep me signed in" feature
+public class SavedSignInCredentials
+{
+    public string? Email { get; set; }
+    public string? EncryptedPassword { get; set; }
+    public bool RememberMe { get; set; }
+}

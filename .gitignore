@@ -106,3 +106,7 @@ release/
 # Archived/Legacy folders
 _archive_*/
 websites/_archive_*
+nul
+websites/codex/InspireCodex.com/nul
+websites/codex/JubileeVerse.com/nul
+websites/codex/wwBibleweb.com/nul

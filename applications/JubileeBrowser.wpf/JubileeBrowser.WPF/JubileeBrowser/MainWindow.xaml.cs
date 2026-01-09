@@ -30,8 +30,10 @@ public partial class MainWindow : Window
     private readonly ProfileAuthService _profileAuthService;
     private readonly SyncEngine _syncEngine;
     private readonly CredentialManager _credentialManager;
+    private readonly InternalPageHandler _internalPageHandler;
     private OpenAIChatService? _openAIChatService;
-    private string _apiBaseUrl = "https://api.inspirecodex.com";
+    private SpiritualNutritionService? _spiritualNutritionService;
+    private string _apiBaseUrl = "https://inspirecodex.com";
 
     private readonly Dictionary<string, WebView2> _webViews = new();
     private BrowserMode _currentMode = BrowserMode.Internet;
@@ -134,28 +136,33 @@ public partial class MainWindow : Window
     public MainWindow(BrowserMode? startupMode)
     {
         _startupMode = startupMode;
+
+        // SUPER-FAST LAUNCH: Initialize XAML first to show window immediately
         InitializeComponent();
 
-        // Initialize managers
+        // Initialize only critical managers synchronously (needed for basic functionality)
         _settingsManager = new SettingsManager();
+        _sessionStateManager = new SessionStateManager();
+        _tabManager = new TabManager();
+
+        // Initialize remaining managers (lightweight constructors, no I/O)
         _historyManager = new HistoryManager();
         _bookmarkManager = new BookmarkManager();
-        _sessionStateManager = new SessionStateManager();
         _blacklistManager = new BlacklistManager();
         _dnsResolver = new WWBWDnsResolver();
         _hitCountService = new HitCountService();
         _zoomSettingsManager = new ZoomSettingsManager();
         _recentlyClosedTabsManager = new RecentlyClosedTabsManager();
-        _tabManager = new TabManager();
         _mobileEmulationManager = new MobileEmulationManager();
 
-        // Initialize profile and sync services
+        // Initialize profile and sync services (lightweight constructors)
         _profileAuthService = new ProfileAuthService();
         _syncEngine = new SyncEngine(_profileAuthService);
         _credentialManager = new CredentialManager(_syncEngine);
+        _internalPageHandler = new InternalPageHandler();
 
-        // Initialize OpenAI chat service with API keys from .env
-        InitializeOpenAIChatService();
+        // Defer OpenAI service initialization to background (involves file I/O for .env)
+        Task.Run(InitializeOpenAIChatService);
 
         // Subscribe to auth state changes
         _profileAuthService.AuthStateChanged += OnAuthStateChanged;
@@ -203,6 +210,7 @@ public partial class MainWindow : Window
             if (!string.IsNullOrEmpty(primaryKey))
             {
                 _openAIChatService = new OpenAIChatService(primaryKey, backupKey ?? string.Empty);
+                _spiritualNutritionService = new SpiritualNutritionService(primaryKey, backupKey ?? string.Empty);
             }
         }
         catch (Exception ex)
@@ -375,89 +383,84 @@ public partial class MainWindow : Window
     {
         try
         {
-            // Initialize managers
-            await _settingsManager.InitializeAsync();
-            await _historyManager.InitializeAsync();
-            await _bookmarkManager.InitializeAsync();
-            await _blacklistManager.InitializeAsync();
-            await _dnsResolver.InitializeAsync();
-            await _hitCountService.InitializeAsync();
-            await _zoomSettingsManager.LoadAsync();
+            // SUPER-FAST LAUNCH: Show window immediately, defer heavy initialization
+            // Phase 1: Critical path - get the window visible ASAP
 
-            // Initialize profile and sync services
-            await _profileAuthService.InitializeAsync();
-            await _syncEngine.InitializeAsync();
-            await _credentialManager.InitializeAsync();
-            UpdateProfileUI();
+            // Bring window to front on launch, then disable Topmost so it doesn't stay on top
+            Topmost = true;
+            Activate();
+            Focus();
+            _ = Task.Delay(500).ContinueWith(_ => Dispatcher.Invoke(() => Topmost = false));
+
+            // Apply initial mode visuals immediately (no async)
+            UpdateModeRadioButtons();
+            UpdateModeVisuals();
+
+            // Start loading settings in parallel (needed for homepage)
+            var settingsTask = _settingsManager.InitializeAsync();
+            var sessionTask = _sessionStateManager.LoadAsync();
+
+            // Wait only for settings (fast, needed for homepage URL)
+            await settingsTask;
+
+            // Get session state to restore window position quickly
+            var sessionState = await sessionTask;
+
+            // Restore window position immediately
+            if (!_startupMode.HasValue)
+            {
+                RestoreWindowState(sessionState);
+            }
 
             // Apply settings - use startup mode if specified, otherwise use settings default
             var settings = _settingsManager.Settings;
             if (_startupMode.HasValue)
             {
-                // Override with the specified startup mode
                 _currentMode = _startupMode.Value;
+            }
+            else if (sessionState != null)
+            {
+                _currentMode = sessionState.CurrentMode;
             }
             else
             {
                 _currentMode = settings?.DefaultMode ?? BrowserMode.Internet;
             }
             UpdateModeRadioButtons();
-
-            // Apply initial mode visuals
             UpdateModeVisuals();
 
-            // If startup mode is specified, skip session restoration and create fresh window
+            // Phase 2: Create the first tab immediately (user sees content fast)
             if (_startupMode.HasValue)
             {
-                // Create initial tab in the specified mode
                 await CreateTabAsync(GetHomepage(), _startupMode.Value);
+            }
+            else if (sessionState != null && sessionState.Tabs != null && sessionState.Tabs.Count > 0)
+            {
+                // Restore first tab immediately for fast perceived launch
+                var firstTab = sessionState.Tabs[0];
+                await CreateTabAsync(firstTab.Url, firstTab.Mode);
+
+                // Restore remaining tabs in background
+                if (sessionState.Tabs.Count > 1)
+                {
+                    _ = RestoreRemainingTabsAsync(sessionState);
+                }
             }
             else
             {
-                // Restore session or create new tab
-                var sessionState = await _sessionStateManager.LoadAsync();
-
-                // Restore window position and size
-                RestoreWindowState(sessionState);
-
-                if (sessionState != null && sessionState.Tabs != null && sessionState.Tabs.Count > 0)
-                {
-                    // Restore mode from session
-                    _currentMode = sessionState.CurrentMode;
-                    UpdateModeRadioButtons();
-                    UpdateModeVisuals();
-
-                    // Restore tabs
-                    foreach (var tabState in sessionState.Tabs)
-                    {
-                        await CreateTabAsync(tabState.Url, tabState.Mode);
-                    }
-
-                    // Switch to active tab
-                    if (!string.IsNullOrEmpty(sessionState.ActiveTabId))
-                    {
-                        var activeTab = Tabs.FirstOrDefault(t => t.Id == sessionState.ActiveTabId);
-                        if (activeTab != null)
-                        {
-                            SwitchToTab(activeTab.Id);
-                        }
-                    }
-                }
-                else
-                {
-                    // Create initial tab
-                    await CreateTabAsync(GetHomepage());
-                }
+                await CreateTabAsync(GetHomepage());
             }
 
             _isInitialized = true;
             _hasRestoredWindowState = true;
             UpdateWelcomePanel();
+
+            // Phase 3: Initialize remaining services in background (non-blocking)
+            _ = InitializeBackgroundServicesAsync();
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error during initialization: {ex.Message}");
-            // Try to recover by creating a default tab
             try
             {
                 await CreateTabAsync("about:blank");
@@ -467,10 +470,73 @@ public partial class MainWindow : Window
             }
             catch
             {
-                // Last resort - just mark as initialized
                 _isInitialized = true;
                 _hasRestoredWindowState = true;
             }
+        }
+    }
+
+    /// <summary>
+    /// Restores remaining tabs from session in background (after first tab is shown)
+    /// </summary>
+    private async Task RestoreRemainingTabsAsync(SessionState sessionState)
+    {
+        try
+        {
+            // Small delay to let UI render first tab
+            await Task.Delay(100);
+
+            for (int i = 1; i < sessionState.Tabs!.Count; i++)
+            {
+                var tabState = sessionState.Tabs[i];
+                await CreateTabAsync(tabState.Url, tabState.Mode);
+            }
+
+            // Switch to the originally active tab
+            if (!string.IsNullOrEmpty(sessionState.ActiveTabId))
+            {
+                var activeTab = Tabs.FirstOrDefault(t => t.Id == sessionState.ActiveTabId);
+                if (activeTab != null)
+                {
+                    SwitchToTab(activeTab.Id);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error restoring tabs: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Initializes non-critical services in background after window is visible
+    /// </summary>
+    private async Task InitializeBackgroundServicesAsync()
+    {
+        try
+        {
+            // Initialize all services in parallel for speed
+            var tasks = new List<Task>
+            {
+                _historyManager.InitializeAsync(),
+                _bookmarkManager.InitializeAsync(),
+                _blacklistManager.InitializeAsync(),
+                _dnsResolver.InitializeAsync(),
+                _hitCountService.InitializeAsync(),
+                _zoomSettingsManager.LoadAsync(),
+                _profileAuthService.InitializeAsync(),
+                _syncEngine.InitializeAsync(),
+                _credentialManager.InitializeAsync()
+            };
+
+            await Task.WhenAll(tasks);
+
+            // Update profile UI after auth services are ready
+            await Dispatcher.InvokeAsync(() => UpdateProfileUI());
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error initializing background services: {ex.Message}");
         }
     }
 
@@ -608,6 +674,12 @@ public partial class MainWindow : Window
     {
         // Save session state with current window position
         SaveSessionState(true);
+
+        // Save the last active tab ID for restoration
+        if (_activeTabId != null)
+        {
+            await _settingsManager.UpdateAsync(s => s.LastActiveTabId = _activeTabId);
+        }
 
         // Save zoom settings
         await _zoomSettingsManager.FlushAsync();
@@ -1047,6 +1119,73 @@ public partial class MainWindow : Window
 
         // Setup message bridge for JavaScript communication
         webView.CoreWebView2.WebMessageReceived += (s, e) => OnWebMessageReceived(tabState.Id, e);
+
+        // Inject the Jubilee bridge script for all pages
+        await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(GetJubileeBridgeScript());
+    }
+
+    private static string GetJubileeBridgeScript()
+    {
+        return @"
+(function() {
+    if (window.jubilee) return;
+
+    const pendingRequests = new Map();
+
+    window.jubilee = {
+        invoke: function(channel, args) {
+            return new Promise((resolve, reject) => {
+                const id = Math.random().toString(36).substr(2, 9);
+                pendingRequests.set(id, { resolve, reject });
+
+                window.chrome.webview.postMessage(JSON.stringify({
+                    channel: channel,
+                    args: args || {},
+                    id: id
+                }));
+
+                setTimeout(() => {
+                    if (pendingRequests.has(id)) {
+                        pendingRequests.delete(id);
+                        reject(new Error('Request timeout'));
+                    }
+                }, 30000);
+            });
+        },
+
+        send: function(channel, args) {
+            window.chrome.webview.postMessage(JSON.stringify({
+                channel: channel,
+                args: args || {}
+            }));
+        },
+
+        on: function(channel, callback) {
+            window.addEventListener('jubilee-message', function(e) {
+                if (e.detail && e.detail.channel === channel) {
+                    callback(e.detail.data);
+                }
+            });
+        }
+    };
+
+    window.addEventListener('jubilee-response', function(e) {
+        const response = e.detail;
+        if (response.id && pendingRequests.has(response.id)) {
+            const { resolve, reject } = pendingRequests.get(response.id);
+            pendingRequests.delete(response.id);
+
+            if (response.error) {
+                reject(new Error(response.error));
+            } else {
+                resolve(response.result);
+            }
+        }
+    });
+
+    console.log('Jubilee Bridge initialized');
+})();
+";
     }
 
     private void SwitchToTab(string tabId)
@@ -1611,6 +1750,21 @@ public partial class MainWindow : Window
 
         try
         {
+            // Handle internal jubilee:// URLs
+            if (_internalPageHandler.CanHandle(url))
+            {
+                var content = _internalPageHandler.GetPageContent(url);
+                webView.NavigateToString(content);
+                AddressBar.Text = url;
+                var tab = Tabs.FirstOrDefault(t => t.Id == _activeTabId);
+                if (tab != null)
+                {
+                    tab.Url = url;
+                    tab.Title = GetInternalPageTitle(url);
+                }
+                return;
+            }
+
             // Check if URL is valid for current mode
             if (!_dnsResolver.IsValidForMode(url, _currentMode))
             {
@@ -2622,6 +2776,18 @@ public partial class MainWindow : Window
             : Path.Combine(baseFolder, "WebView2_Internet");
     }
 
+    private string GetDeviceId()
+    {
+        var secureStorage = new SecureStorageService();
+        var deviceId = secureStorage.RetrieveAsync<string>("device_id").Result;
+        if (string.IsNullOrEmpty(deviceId))
+        {
+            deviceId = Guid.NewGuid().ToString();
+            _ = secureStorage.StoreAsync("device_id", deviceId);
+        }
+        return deviceId;
+    }
+
     #endregion
 
     #region Bookmarks & History
@@ -2629,6 +2795,102 @@ public partial class MainWindow : Window
     private void BookmarkButton_Click(object sender, RoutedEventArgs e)
     {
         BookmarkCurrentPage();
+    }
+
+    private void PageStatsButton_Click(object sender, RoutedEventArgs e)
+    {
+        ShowPageStats();
+    }
+
+    private void SpiritualNutritionButton_Click(object sender, RoutedEventArgs e)
+    {
+        _ = ShowSpiritualNutritionAsync();
+    }
+
+    private async Task ShowSpiritualNutritionAsync()
+    {
+        if (_activeTabId == null) return;
+        if (_spiritualNutritionService == null)
+        {
+            MessageBox.Show("Spiritual Nutrition service is not available. Please check your API configuration.",
+                "Service Unavailable", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var tab = Tabs.FirstOrDefault(t => t.Id == _activeTabId);
+        if (tab == null) return;
+
+        if (!_webViews.TryGetValue(_activeTabId, out var webView) || webView.CoreWebView2 == null)
+        {
+            MessageBox.Show("Unable to access page content.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        try
+        {
+            // Create and show the window immediately with loading state
+            var nutritionWindow = new SpiritualNutritionWindow(_spiritualNutritionService)
+            {
+                Owner = this
+            };
+            nutritionWindow.PositionOnRightSide(this);
+            nutritionWindow.Show();
+
+            // Extract readable text content from the page using JavaScript
+            var script = @"
+                (function() {
+                    // Remove script and style elements
+                    var clone = document.body.cloneNode(true);
+                    var scripts = clone.querySelectorAll('script, style, noscript, iframe, svg, canvas');
+                    scripts.forEach(function(el) { el.remove(); });
+
+                    // Get text content
+                    var text = clone.innerText || clone.textContent || '';
+
+                    // Clean up excessive whitespace
+                    text = text.replace(/\s+/g, ' ').trim();
+
+                    return text;
+                })();
+            ";
+
+            var pageContent = await webView.CoreWebView2.ExecuteScriptAsync(script);
+
+            // The result is JSON-encoded, so we need to unescape it
+            if (pageContent.StartsWith("\"") && pageContent.EndsWith("\""))
+            {
+                pageContent = System.Text.Json.JsonSerializer.Deserialize<string>(pageContent) ?? string.Empty;
+            }
+
+            // Evaluate the content
+            await nutritionWindow.EvaluateContentAsync(pageContent, tab.Url, tab.Title);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to show spiritual nutrition: {ex.Message}");
+            MessageBox.Show($"Unable to analyze page content: {ex.Message}",
+                "Analysis Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void ShowPageStats()
+    {
+        if (_activeTabId == null) return;
+
+        var tab = Tabs.FirstOrDefault(t => t.Id == _activeTabId);
+        if (tab == null) return;
+
+        // Show page statistics in side panel
+        SidePanelTitle.Text = "Page Statistics";
+        var stats = new List<object>
+        {
+            new { Title = "URL", Display = tab.Url },
+            new { Title = "Title", Display = tab.Title },
+            new { Title = "Mode", Display = tab.Mode.ToString() },
+            new { Title = "Status", Display = "Loaded" }
+        };
+        SidePanelList.ItemsSource = stats;
+        ShowSidePanel();
     }
 
     private void BookmarkCurrentPage()
@@ -2747,9 +3009,8 @@ public partial class MainWindow : Window
     private void MainMenu_Profile_Click(object sender, RoutedEventArgs e)
     {
         MainMenuPopup.IsOpen = false;
-        // TODO: Implement SSO sign-in flow
-        MessageBox.Show("Sign in to sync your bookmarks, history, and settings across devices.\n\nThis feature is coming soon!",
-            "Sign In", MessageBoxButton.OK, MessageBoxImage.Information);
+        // Open the sign-in dialog
+        ProfileSignIn_Click(sender, e);
     }
 
     private void MainMenu_NewTab_Click(object sender, RoutedEventArgs e)
@@ -3355,11 +3616,298 @@ public partial class MainWindow : Window
 
     #region WebView Message Bridge
 
-    private void OnWebMessageReceived(string tabId, CoreWebView2WebMessageReceivedEventArgs e)
+    private async void OnWebMessageReceived(string tabId, CoreWebView2WebMessageReceivedEventArgs e)
     {
-        // Handle messages from JavaScript
-        var message = e.WebMessageAsJson;
-        // TODO: Parse and handle messages for IPC-like communication
+        try
+        {
+            var json = e.WebMessageAsJson;
+            if (string.IsNullOrEmpty(json)) return;
+
+            var message = System.Text.Json.JsonDocument.Parse(json);
+            var root = message.RootElement;
+
+            var channel = root.TryGetProperty("channel", out var channelProp) ? channelProp.GetString() : null;
+            var id = root.TryGetProperty("id", out var idProp) ? idProp.GetString() : null;
+            var args = root.TryGetProperty("args", out var argsProp) ? argsProp : default;
+
+            if (string.IsNullOrEmpty(channel)) return;
+
+            object? result = null;
+            string? error = null;
+
+            try
+            {
+                result = await HandleBridgeMessage(channel, args, tabId);
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+            }
+
+            // Send response if there was an id
+            if (!string.IsNullOrEmpty(id) && _webViews.TryGetValue(tabId, out var webView))
+            {
+                var response = System.Text.Json.JsonSerializer.Serialize(new { id, result, error });
+                var script = $"window.dispatchEvent(new CustomEvent('jubilee-response', {{ detail: {response} }}));";
+                await webView.CoreWebView2.ExecuteScriptAsync(script);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error handling web message: {ex.Message}");
+        }
+    }
+
+    private async Task<object?> HandleBridgeMessage(string channel, System.Text.Json.JsonElement args, string tabId)
+    {
+        switch (channel)
+        {
+            case "settings:getAll":
+                return GetAllSettings();
+
+            case "settings:update":
+                {
+                    var path = args.TryGetProperty("path", out var pathProp) ? pathProp.GetString() : null;
+                    var value = args.TryGetProperty("value", out var valueProp) ? valueProp : default;
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        await UpdateSettingAsync(path, value);
+                    }
+                    return new { success = true };
+                }
+
+            case "settings:reset":
+                await _settingsManager.ResetAsync();
+                return new { success = true };
+
+            case "profile:getInfo":
+                return GetProfileInfo();
+
+            case "sync:getPreferences":
+                return GetSyncPreferences();
+
+            case "account:manage":
+                await Dispatcher.InvokeAsync(() => ShowAccountManagementWindowAsync());
+                return null;
+
+            case "auth:signOut":
+                await Dispatcher.InvokeAsync(async () => await _profileAuthService.SignOutAsync());
+                return null;
+
+            case "privacy:clearData":
+                // TODO: Implement clear browsing data
+                return new { success = true };
+
+            default:
+                return null;
+        }
+    }
+
+    private object GetAllSettings()
+    {
+        var s = _settingsManager.Settings;
+        return new
+        {
+            defaultMode = (int)s.DefaultMode,
+            homepage = new
+            {
+                internet = s.Homepage.Internet,
+                jubileeBibles = s.Homepage.JubileeBibles
+            },
+            appearance = new
+            {
+                theme = s.Appearance.Theme,
+                fontSize = s.Appearance.FontSize,
+                zoomLevel = s.Appearance.ZoomLevel,
+                showBookmarksBar = s.Appearance.ShowBookmarksBar
+            },
+            search = new
+            {
+                defaultEngine = s.Search.DefaultEngine,
+                suggestionsEnabled = s.Search.SuggestionsEnabled
+            },
+            privacy = new
+            {
+                clearOnExit = s.Privacy.ClearOnExit,
+                doNotTrack = s.Privacy.DoNotTrack,
+                trackingProtection = s.Privacy.TrackingProtection,
+                safeBrowsing = s.Privacy.SafeBrowsing
+            },
+            permissions = new
+            {
+                camera = s.Permissions.Camera,
+                microphone = s.Permissions.Microphone,
+                location = s.Permissions.Location,
+                notifications = s.Permissions.Notifications,
+                popups = s.Permissions.Popups
+            },
+            startup = new
+            {
+                internet = s.Startup.Internet,
+                jubileeBibles = s.Startup.JubileeBibles
+            },
+            advanced = new
+            {
+                downloadPath = s.Advanced.DownloadPath,
+                askDownloadLocation = s.Advanced.AskDownloadLocation,
+                hardwareAcceleration = s.Advanced.HardwareAcceleration,
+                spellcheck = s.Advanced.Spellcheck
+            }
+        };
+    }
+
+    private async Task UpdateSettingAsync(string path, System.Text.Json.JsonElement value)
+    {
+        await _settingsManager.UpdateAsync(s =>
+        {
+            switch (path)
+            {
+                // Homepage
+                case "homepage.internet":
+                    s.Homepage.Internet = value.GetString() ?? s.Homepage.Internet;
+                    break;
+                case "homepage.jubileeBibles":
+                    s.Homepage.JubileeBibles = value.GetString() ?? s.Homepage.JubileeBibles;
+                    break;
+
+                // Default mode
+                case "defaultMode":
+                    s.DefaultMode = value.GetBoolean() ? BrowserMode.JubileeBibles : BrowserMode.Internet;
+                    break;
+
+                // Appearance
+                case "appearance.theme":
+                    s.Appearance.Theme = value.GetString() ?? s.Appearance.Theme;
+                    break;
+                case "appearance.fontSize":
+                    if (int.TryParse(value.GetString(), out var fontSize))
+                        s.Appearance.FontSize = fontSize;
+                    break;
+                case "appearance.showBookmarksBar":
+                    s.Appearance.ShowBookmarksBar = value.GetBoolean();
+                    break;
+
+                // Search
+                case "search.defaultEngine":
+                    s.Search.DefaultEngine = value.GetString() ?? s.Search.DefaultEngine;
+                    break;
+                case "search.suggestionsEnabled":
+                    s.Search.SuggestionsEnabled = value.GetBoolean();
+                    break;
+
+                // Privacy
+                case "privacy.trackingProtection":
+                    s.Privacy.TrackingProtection = value.GetBoolean();
+                    break;
+                case "privacy.doNotTrack":
+                    s.Privacy.DoNotTrack = value.GetBoolean();
+                    break;
+                case "privacy.clearOnExit":
+                    s.Privacy.ClearOnExit = value.GetBoolean();
+                    break;
+
+                // Downloads
+                case "advanced.downloadPath":
+                    s.Advanced.DownloadPath = value.GetString() ?? s.Advanced.DownloadPath;
+                    break;
+                case "advanced.askDownloadLocation":
+                    s.Advanced.AskDownloadLocation = value.GetBoolean();
+                    break;
+
+                // Advanced
+                case "advanced.hardwareAcceleration":
+                    s.Advanced.HardwareAcceleration = value.GetBoolean();
+                    break;
+                case "advanced.spellcheck":
+                    s.Advanced.Spellcheck = value.GetBoolean();
+                    break;
+
+                // Permissions
+                case "permissions.camera":
+                    s.Permissions.Camera = value.GetString() ?? s.Permissions.Camera;
+                    break;
+                case "permissions.microphone":
+                    s.Permissions.Microphone = value.GetString() ?? s.Permissions.Microphone;
+                    break;
+                case "permissions.location":
+                    s.Permissions.Location = value.GetString() ?? s.Permissions.Location;
+                    break;
+                case "permissions.notifications":
+                    s.Permissions.Notifications = value.GetString() ?? s.Permissions.Notifications;
+                    break;
+                case "permissions.popups":
+                    s.Permissions.Popups = value.GetString() ?? s.Permissions.Popups;
+                    break;
+
+                // Startup
+                case "startup.internet":
+                    s.Startup.Internet = value.GetString() ?? s.Startup.Internet;
+                    break;
+                case "startup.jubileeBibles":
+                    s.Startup.JubileeBibles = value.GetString() ?? s.Startup.JubileeBibles;
+                    break;
+
+                // Sync preferences
+                case "sync.bookmarks":
+                case "sync.history":
+                case "sync.passwords":
+                case "sync.settings":
+                    _ = UpdateSyncPreferenceAsync(path, value.GetBoolean());
+                    break;
+            }
+        });
+    }
+
+    private async Task UpdateSyncPreferenceAsync(string path, bool value)
+    {
+        var prefs = _syncEngine.Preferences;
+        switch (path)
+        {
+            case "sync.bookmarks":
+                prefs.SyncBookmarks = value;
+                break;
+            case "sync.history":
+                prefs.SyncHistory = value;
+                break;
+            case "sync.passwords":
+                prefs.SyncPasswords = value;
+                break;
+            case "sync.settings":
+                prefs.SyncSettings = value;
+                break;
+        }
+        await _syncEngine.UpdatePreferencesAsync(prefs);
+    }
+
+    private object GetProfileInfo()
+    {
+        var profile = _profileAuthService.CurrentProfile;
+        var isSignedIn = _profileAuthService.IsSignedIn;
+
+        return new
+        {
+            isSignedIn,
+            email = profile?.Email ?? "",
+            displayName = profile?.DisplayName ?? "",
+            userId = profile?.UserId ?? "",
+            syncStatus = _syncEngine.Status.ToString().ToLower(),
+            lastSyncTime = _syncEngine.LastSyncTime?.ToString("g")
+        };
+    }
+
+    private object GetSyncPreferences()
+    {
+        var prefs = _syncEngine.Preferences;
+        return new
+        {
+            syncBookmarks = prefs.SyncBookmarks,
+            syncHistory = prefs.SyncHistory,
+            syncPasswords = prefs.SyncPasswords,
+            syncAutofill = prefs.SyncAutofill,
+            syncExtensions = prefs.SyncExtensions,
+            syncThemes = prefs.SyncThemes,
+            syncSettings = prefs.SyncSettings
+        };
     }
 
     #endregion
@@ -3449,6 +3997,32 @@ public partial class MainWindow : Window
 
         // Treat as search query
         return $"https://www.google.com/search?q={Uri.EscapeDataString(input)}";
+    }
+
+    private static string GetInternalPageTitle(string url)
+    {
+        try
+        {
+            var uri = new Uri(url);
+            var pageName = uri.Host.ToLowerInvariant();
+            return pageName switch
+            {
+                "settings" => "Settings - Jubilee Browser",
+                "about" => "About - Jubilee Browser",
+                "downloads" => "Downloads - Jubilee Browser",
+                "extensions" => "Extensions - Jubilee Browser",
+                "history" => "History - Jubilee Browser",
+                "bookmarks" => "Bookmarks - Jubilee Browser",
+                "welcome" => "Welcome - Jubilee Browser",
+                "blocked" => "Blocked - Jubilee Browser",
+                "error" => "Error - Jubilee Browser",
+                _ => $"{char.ToUpper(pageName[0])}{pageName.Substring(1)} - Jubilee Browser"
+            };
+        }
+        catch
+        {
+            return "Jubilee Browser";
+        }
     }
 
     #endregion
@@ -3901,17 +4475,38 @@ public partial class MainWindow : Window
 
     private void UpdateSyncStatusUI(SyncStatus status)
     {
+        // Colors
+        var greenColor = Color.FromRgb(34, 197, 94);
+        var amberColor = Color.FromRgb(245, 158, 11);
+        var redColor = Color.FromRgb(239, 68, 68);
+        var blueColor = Color.FromRgb(59, 130, 246);
+
         switch (status)
         {
             case SyncStatus.Syncing:
-                ProfileSyncStatusIcon.Text = "\uE895";
+                // Show success state with syncing status
+                ProfileSyncSuccessState.Visibility = Visibility.Visible;
+                ProfileSyncActionRequiredState.Visibility = Visibility.Collapsed;
+                ProfileSyncStatusBorder.Background = new SolidColorBrush(Color.FromRgb(26, 58, 26)); // Green-tinted
+                ProfileSyncStatusIcon.Text = "\uE895"; // Sync icon
+                ProfileSyncStatusIcon.Foreground = new SolidColorBrush(blueColor);
                 ProfileSyncStatusText.Text = "Syncing...";
-                ProfileSyncIndicator.Fill = new SolidColorBrush(Color.FromRgb(59, 130, 246)); // Blue
-                ProfileSyncErrorBanner.Visibility = Visibility.Collapsed;
+                ProfileSyncStatusText.Foreground = new SolidColorBrush(blueColor);
+                ProfileSyncIndicator.Fill = new SolidColorBrush(blueColor);
+                ProfileSignedInLabel.Foreground = new SolidColorBrush(greenColor);
                 break;
 
             case SyncStatus.Idle:
-                ProfileSyncStatusIcon.Text = "\uE73E";
+                // Show success state
+                ProfileSyncSuccessState.Visibility = Visibility.Visible;
+                ProfileSyncActionRequiredState.Visibility = Visibility.Collapsed;
+                ProfileSyncStatusBorder.Background = new SolidColorBrush(Color.FromRgb(26, 58, 26)); // Green-tinted
+                ProfileSyncStatusIcon.Text = "\uE73E"; // Checkmark
+                ProfileSyncStatusIcon.Foreground = new SolidColorBrush(greenColor);
+                ProfileSyncStatusText.Foreground = new SolidColorBrush(greenColor);
+                ProfileSyncIndicator.Fill = new SolidColorBrush(greenColor);
+                ProfileSignedInLabel.Foreground = new SolidColorBrush(greenColor);
+
                 var lastSync = _syncEngine.LastSyncTime;
                 if (lastSync.HasValue)
                 {
@@ -3927,26 +4522,45 @@ public partial class MainWindow : Window
                     ProfileSyncStatusText.Text = "Syncing is on";
                     ProfileSyncLastTime.Text = "Not synced yet";
                 }
-                ProfileSyncIndicator.Fill = new SolidColorBrush(Color.FromRgb(34, 197, 94)); // Green
-                ProfileSyncErrorBanner.Visibility = Visibility.Collapsed;
                 break;
 
             case SyncStatus.Error:
             case SyncStatus.Offline:
-                ProfileSyncStatusIcon.Text = "\uE783";
-                ProfileSyncStatusText.Text = status == SyncStatus.Offline ? "Offline" : "Sync error";
-                ProfileSyncLastTime.Text = "";
-                ProfileSyncIndicator.Fill = new SolidColorBrush(Color.FromRgb(239, 68, 68)); // Red
-                ProfileSyncErrorBanner.Visibility = Visibility.Visible;
-                ProfileSyncErrorText.Text = _syncEngine.LastError ?? "Unable to sync";
+                // Show action required state with amber warning
+                ProfileSyncSuccessState.Visibility = Visibility.Collapsed;
+                ProfileSyncActionRequiredState.Visibility = Visibility.Visible;
+                ProfileSyncStatusBorder.Background = new SolidColorBrush(Color.FromRgb(58, 42, 26)); // Amber-tinted
+                ProfileSyncIndicator.Fill = new SolidColorBrush(amberColor);
+                ProfileSignedInLabel.Foreground = new SolidColorBrush(amberColor);
+
+                // Set appropriate error message
+                var errorMsg = _syncEngine.LastError;
+                if (errorMsg?.Contains("Authentication") == true || errorMsg?.Contains("token") == true)
+                {
+                    ProfileSyncErrorText.Text = "Re-authenticate to resume syncing";
+                }
+                else if (status == SyncStatus.Offline)
+                {
+                    ProfileSyncErrorText.Text = "Check your internet connection";
+                }
+                else
+                {
+                    ProfileSyncErrorText.Text = errorMsg ?? "Unable to sync your data";
+                }
                 break;
 
             case SyncStatus.Paused:
-                ProfileSyncStatusIcon.Text = "\uE769";
+                // Show success state but with paused status
+                ProfileSyncSuccessState.Visibility = Visibility.Visible;
+                ProfileSyncActionRequiredState.Visibility = Visibility.Collapsed;
+                ProfileSyncStatusBorder.Background = new SolidColorBrush(Color.FromRgb(58, 52, 26)); // Yellow-tinted
+                ProfileSyncStatusIcon.Text = "\uE769"; // Pause icon
+                ProfileSyncStatusIcon.Foreground = new SolidColorBrush(amberColor);
                 ProfileSyncStatusText.Text = "Paused";
-                ProfileSyncLastTime.Text = "";
-                ProfileSyncIndicator.Fill = new SolidColorBrush(Color.FromRgb(251, 191, 36)); // Yellow
-                ProfileSyncErrorBanner.Visibility = Visibility.Collapsed;
+                ProfileSyncStatusText.Foreground = new SolidColorBrush(amberColor);
+                ProfileSyncLastTime.Text = "Sync is paused";
+                ProfileSyncIndicator.Fill = new SolidColorBrush(amberColor);
+                ProfileSignedInLabel.Foreground = new SolidColorBrush(greenColor);
                 break;
         }
     }
@@ -3985,22 +4599,38 @@ public partial class MainWindow : Window
         var goldHover = Color.FromRgb(255, 191, 0);       // #FFBF00 - Gold hover
         var cyanGlow = Color.FromRgb(0, 191, 255);        // #00BFFF - Cyan glow for avatar
 
+        // Full-screen overlay window that closes when clicking outside the popup
         var authDialog = new Window
         {
             Title = "JubileeInspire - Authentication",
-            Width = 450,
-            Height = 477,
+            WindowState = WindowState.Maximized,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Owner = this,
-            Background = Brushes.Transparent,
+            Background = new SolidColorBrush(Color.FromArgb(120, 0, 0, 0)), // Semi-transparent dark overlay
             WindowStyle = WindowStyle.None,
             ResizeMode = ResizeMode.NoResize,
             AllowsTransparency = true
         };
 
+        // Create a grid to center the popup content - MUST have background to receive mouse events
+        var overlayGrid = new Grid
+        {
+            Background = Brushes.Transparent // Required for hit testing
+        };
+
+        // Clicking on the overlay (outside the popup) closes it
+        overlayGrid.MouseLeftButtonDown += (s, args) =>
+        {
+            authDialog.Close();
+        };
+
         // Main container with gradient background, 3px yellow border all around, rounded corners
         var mainBorder = new Border
         {
+            Width = 405,
+            Height = 477,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
             Background = new LinearGradientBrush
             {
                 StartPoint = new Point(0, 0),
@@ -4016,6 +4646,9 @@ public partial class MainWindow : Window
             BorderThickness = new Thickness(3),
             CornerRadius = new CornerRadius(12)
         };
+
+        // Prevent clicks on the popup from closing it
+        mainBorder.MouseLeftButtonDown += (s, args) => args.Handled = true;
 
         // ===== MAIN LAYOUT GRID (3 fixed rows: Header, Content, Footer) =====
         var mainLayoutGrid = new Grid { Margin = new Thickness(30, 15, 30, 20) };
@@ -4088,7 +4721,7 @@ public partial class MainWindow : Window
         titleText.Inlines.Add(new System.Windows.Documents.Run(".com") { Foreground = Brushes.White });
         headerPanel.Children.Add(titleText);
 
-        // Subtitle
+        // Subtitle - moved up 5px total with negative top margin
         var subtitleText = new TextBlock
         {
             Text = "A Faith-Based AI Browser for the Worldwide Bible Web",
@@ -4097,7 +4730,7 @@ public partial class MainWindow : Window
             HorizontalAlignment = HorizontalAlignment.Center,
             TextWrapping = TextWrapping.Wrap,
             TextAlignment = TextAlignment.Center,
-            Margin = new Thickness(0, 0, 0, 15)
+            Margin = new Thickness(0, -5, 0, 15) // Moved up 5px with negative top margin
         };
         headerPanel.Children.Add(subtitleText);
 
@@ -4318,31 +4951,52 @@ public partial class MainWindow : Window
         // ===== SIGN IN PANEL (content only - no button) =====
         var signInPanel = new StackPanel { Visibility = showSignIn ? Visibility.Visible : Visibility.Collapsed };
 
-        // "Create an account" link - upper-left corner aligned with content
+        // "Don't have an account? Sign Up." - right aligned with "Sign Up." as link, moved down 5px
         var signUpLinkColor = new SolidColorBrush(Color.FromRgb(180, 180, 180)); // Default gray
         var signUpLinkHoverColor = new SolidColorBrush(goldColor); // Gold hover
-        var signUpLink = new TextBlock
+        var signUpTextBlock = new TextBlock
         {
-            Text = "Create an account",
-            Foreground = signUpLinkColor,
-            FontSize = 13,
-            Cursor = Cursors.Hand,
-            HorizontalAlignment = HorizontalAlignment.Left,
-            Margin = new Thickness(0, 0, 0, 12),
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, 5, 0, 12), // Added 5px top margin to move down
+            FontSize = 13
+        };
+        signUpTextBlock.Inlines.Add(new System.Windows.Documents.Run("Don't have an account? ") { Foreground = signUpLinkColor });
+        var signUpLinkRun = new System.Windows.Documents.Run("Sign Up.") { Foreground = signUpLinkHoverColor };
+        var signUpLink = new System.Windows.Documents.Hyperlink(signUpLinkRun)
+        {
+            Foreground = signUpLinkHoverColor,
+            TextDecorations = null,
             Focusable = true
         };
-        signUpLink.MouseEnter += (s, args) => { signUpLink.Foreground = signUpLinkHoverColor; signUpLink.TextDecorations = TextDecorations.Underline; };
-        signUpLink.MouseLeave += (s, args) => { signUpLink.Foreground = signUpLinkColor; signUpLink.TextDecorations = null; };
-        signUpLink.GotFocus += (s, args) => { signUpLink.Foreground = signUpLinkHoverColor; signUpLink.TextDecorations = TextDecorations.Underline; };
-        signUpLink.LostFocus += (s, args) => { signUpLink.Foreground = signUpLinkColor; signUpLink.TextDecorations = null; };
-        // Click and keyboard handlers are set up later after ShowPanel is defined
-        signInPanel.Children.Add(signUpLink);
+        signUpLink.MouseEnter += (s, args) => { signUpLink.TextDecorations = TextDecorations.Underline; };
+        signUpLink.MouseLeave += (s, args) => { signUpLink.TextDecorations = null; };
+        signUpTextBlock.Inlines.Add(signUpLink);
+        // Click handler is set up later after ShowPanel is defined
+        signInPanel.Children.Add(signUpTextBlock);
 
         var (signInEmailBorder, signInEmailBox) = CreateTextInput("Email Address", 12);
         signInPanel.Children.Add(signInEmailBorder);
 
         var (signInPasswordBorder, signInPasswordBox, _) = CreatePasswordInput("Password", 10);
         signInPanel.Children.Add(signInPasswordBorder);
+
+        // Load saved credentials if "Keep me signed in" was previously checked
+        var secureStorage = new SecureStorageService();
+        _ = Task.Run(async () =>
+        {
+            var savedCreds = await secureStorage.RetrieveAsync<SavedSignInCredentials>("signInCredentials");
+            if (savedCreds != null && savedCreds.RememberMe)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    signInEmailBox.Text = savedCreds.Email ?? "";
+                    if (!string.IsNullOrEmpty(savedCreds.EncryptedPassword))
+                    {
+                        signInPasswordBox.Password = secureStorage.DecryptPassword(savedCreds.EncryptedPassword);
+                    }
+                });
+            }
+        });
 
         // Remember me checkbox and Forgot Password link on the same row
         var rememberForgotRow = new Grid();
@@ -4368,25 +5022,28 @@ public partial class MainWindow : Window
         // ===== CREATE ACCOUNT STEP 1 (content only - no button) =====
         var createStep1Panel = new StackPanel { Visibility = Visibility.Collapsed };
 
-        // "Sign in" link - upper-left corner aligned with content (consistent with sign-in panel)
+        // "Already have an account? Sign In." - right aligned with "Sign In." as link
         var step1SignInLinkColor = new SolidColorBrush(Color.FromRgb(180, 180, 180));
         var step1SignInLinkHoverColor = new SolidColorBrush(goldColor);
-        var step1SignInLink = new TextBlock
+        var step1SignInTextBlock = new TextBlock
         {
-            Text = "Sign in",
-            Foreground = step1SignInLinkColor,
-            FontSize = 13,
-            Cursor = Cursors.Hand,
-            HorizontalAlignment = HorizontalAlignment.Left,
-            Margin = new Thickness(0, 0, 0, 12),
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, 5, 0, 12), // Same 5px top margin as sign-up link
+            FontSize = 13
+        };
+        step1SignInTextBlock.Inlines.Add(new System.Windows.Documents.Run("Already have an account? ") { Foreground = step1SignInLinkColor });
+        var step1SignInLinkRun = new System.Windows.Documents.Run("Sign In.") { Foreground = step1SignInLinkHoverColor };
+        var step1SignInLink = new System.Windows.Documents.Hyperlink(step1SignInLinkRun)
+        {
+            Foreground = step1SignInLinkHoverColor,
+            TextDecorations = null,
             Focusable = true
         };
-        step1SignInLink.MouseEnter += (s, args) => { step1SignInLink.Foreground = step1SignInLinkHoverColor; step1SignInLink.TextDecorations = TextDecorations.Underline; };
-        step1SignInLink.MouseLeave += (s, args) => { step1SignInLink.Foreground = step1SignInLinkColor; step1SignInLink.TextDecorations = null; };
-        step1SignInLink.GotFocus += (s, args) => { step1SignInLink.Foreground = step1SignInLinkHoverColor; step1SignInLink.TextDecorations = TextDecorations.Underline; };
-        step1SignInLink.LostFocus += (s, args) => { step1SignInLink.Foreground = step1SignInLinkColor; step1SignInLink.TextDecorations = null; };
-        // Click and keyboard handlers are set up later after ShowPanel is defined
-        createStep1Panel.Children.Add(step1SignInLink);
+        step1SignInLink.MouseEnter += (s, args) => { step1SignInLink.TextDecorations = TextDecorations.Underline; };
+        step1SignInLink.MouseLeave += (s, args) => { step1SignInLink.TextDecorations = null; };
+        step1SignInTextBlock.Inlines.Add(step1SignInLink);
+        // Click handler is set up later after ShowPanel is defined
+        createStep1Panel.Children.Add(step1SignInTextBlock);
 
         var (fullNameBorder, fullNameBox) = CreateTextInput("Full Name");
         createStep1Panel.Children.Add(fullNameBorder);
@@ -4404,7 +5061,7 @@ public partial class MainWindow : Window
         // ===== CREATE ACCOUNT STEP 2 (content only - no button) =====
         var createStep2Panel = new StackPanel { Visibility = Visibility.Collapsed };
 
-        var step2BackLinkPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 12) };
+        var step2BackLinkPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 12) };
         var step2BackLink = new TextBlock { Text = "← Back", Foreground = new SolidColorBrush(goldColor), FontSize = 13, Cursor = Cursors.Hand };
         step2BackLink.MouseEnter += (s, args) => step2BackLink.TextDecorations = TextDecorations.Underline;
         step2BackLink.MouseLeave += (s, args) => step2BackLink.TextDecorations = null;
@@ -4437,13 +5094,6 @@ public partial class MainWindow : Window
         // ===== FORGOT PASSWORD STEP 1 (content only - no button) =====
         var forgotStep1Panel = new StackPanel { Visibility = Visibility.Collapsed };
 
-        var forgotBackLinkPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 12) };
-        var forgotBackLink = new TextBlock { Text = "← Back to Sign In", Foreground = new SolidColorBrush(goldColor), FontSize = 13, Cursor = Cursors.Hand };
-        forgotBackLink.MouseEnter += (s, args) => forgotBackLink.TextDecorations = TextDecorations.Underline;
-        forgotBackLink.MouseLeave += (s, args) => forgotBackLink.TextDecorations = null;
-        forgotBackLinkPanel.Children.Add(forgotBackLink);
-        forgotStep1Panel.Children.Add(forgotBackLinkPanel);
-
         var forgotInstructionText = new TextBlock
         {
             Text = "Enter your registered email address and we will send you instructions to reset your password.",
@@ -4455,8 +5105,30 @@ public partial class MainWindow : Window
         };
         forgotStep1Panel.Children.Add(forgotInstructionText);
 
-        var (forgotEmailBorder, forgotEmailBox) = CreateTextInput("Email Address", 0);
+        var (forgotEmailBorder, forgotEmailBox) = CreateTextInput("Email Address", 8);
         forgotStep1Panel.Children.Add(forgotEmailBorder);
+
+        // "← Back to Sign In" link - right aligned, under the textbox
+        var forgotBackLinkColor = new SolidColorBrush(Color.FromRgb(180, 180, 180));
+        var forgotBackLinkHoverColor = new SolidColorBrush(goldColor);
+        var forgotBackTextBlock = new TextBlock
+        {
+            HorizontalAlignment = HorizontalAlignment.Right,
+            Margin = new Thickness(0, 0, 0, 0),
+            FontSize = 13
+        };
+        forgotBackTextBlock.Inlines.Add(new System.Windows.Documents.Run("← ") { Foreground = forgotBackLinkColor });
+        var forgotBackLinkRun = new System.Windows.Documents.Run("Back to Sign In") { Foreground = forgotBackLinkHoverColor };
+        var forgotBackLink = new System.Windows.Documents.Hyperlink(forgotBackLinkRun)
+        {
+            Foreground = forgotBackLinkHoverColor,
+            TextDecorations = null,
+            Focusable = true
+        };
+        forgotBackLink.MouseEnter += (s, args) => { forgotBackLink.TextDecorations = TextDecorations.Underline; };
+        forgotBackLink.MouseLeave += (s, args) => { forgotBackLink.TextDecorations = null; };
+        forgotBackTextBlock.Inlines.Add(forgotBackLink);
+        forgotStep1Panel.Children.Add(forgotBackTextBlock);
 
         // ===== FORGOT PASSWORD STEP 2 (content only - no button) =====
         var forgotStep2Panel = new StackPanel { Visibility = Visibility.Collapsed };
@@ -4637,20 +5309,72 @@ public partial class MainWindow : Window
                         bool success = false;
                         string responseJson = "";
                         string? errorMsg = null;
+                        const int maxRetries = 3;
+                        int retryCount = 0;
 
-                        try
+                        while (retryCount < maxRetries)
                         {
-                            using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-                            var loginRequest = new { UsernameOrEmail = signInEmail, Password = signInPassword };
-                            var json = System.Text.Json.JsonSerializer.Serialize(loginRequest);
-                            var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
-                            var response = await client.PostAsync($"{_apiBaseUrl}/api/auth/login", content);
-                            responseJson = await response.Content.ReadAsStringAsync();
-                            success = response.IsSuccessStatusCode;
-                        }
-                        catch (Exception ex)
-                        {
-                            errorMsg = ex.Message;
+                            try
+                            {
+                                using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+
+                                // Collect device info for tracking
+                                var deviceInfo = new
+                                {
+                                    deviceId = GetDeviceId(),
+                                    deviceName = Environment.MachineName,
+                                    deviceType = "desktop",
+                                    platform = "Windows",
+                                    platformVersion = Environment.OSVersion.VersionString,
+                                    appName = "JubileeBrowser",
+                                    appVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0"
+                                };
+
+                                var loginRequest = new
+                                {
+                                    email = signInEmail,
+                                    password = signInPassword,
+                                    rememberMe = signInRemember,
+                                    deviceInfo
+                                };
+                                var json = System.Text.Json.JsonSerializer.Serialize(loginRequest);
+                                var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                                var response = await client.PostAsync($"{_apiBaseUrl}/api/auth/login", content);
+                                responseJson = await response.Content.ReadAsStringAsync();
+                                success = response.IsSuccessStatusCode;
+                                errorMsg = null; // Clear any previous error on success
+                                break; // Success, exit retry loop
+                            }
+                            catch (TaskCanceledException)
+                            {
+                                // Timeout - retry
+                                retryCount++;
+                                errorMsg = $"Connection timed out (attempt {retryCount}/{maxRetries})";
+                                if (retryCount < maxRetries)
+                                {
+                                    await Task.Delay(1000 * retryCount); // Exponential backoff
+                                    continue;
+                                }
+                                errorMsg = "Connection timed out after multiple attempts. Please check your internet connection.";
+                            }
+                            catch (System.Net.Http.HttpRequestException ex)
+                            {
+                                // Network error - retry
+                                retryCount++;
+                                errorMsg = $"Network error (attempt {retryCount}/{maxRetries}): {ex.Message}";
+                                if (retryCount < maxRetries)
+                                {
+                                    await Task.Delay(1000 * retryCount); // Exponential backoff
+                                    continue;
+                                }
+                                errorMsg = $"Network error after multiple attempts: {ex.Message}";
+                            }
+                            catch (Exception ex)
+                            {
+                                // Other errors - don't retry
+                                errorMsg = ex.Message;
+                                break;
+                            }
                         }
 
                         // Now dispatch to UI thread - no async operations inside
@@ -4686,31 +5410,66 @@ public partial class MainWindow : Window
                                 var email = signInEmail;
                                 var accessToken = "";
                                 var refreshToken = "";
-                                var accessTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+                                var accessTokenExpiry = DateTime.UtcNow.AddDays(7); // Default 7 days
 
                                 if (result.TryGetProperty("user", out var userElement))
                                 {
                                     if (userElement.TryGetProperty("displayName", out var displayNameElement))
                                         displayName = displayNameElement.GetString() ?? "User";
-                                    if (userElement.TryGetProperty("userId", out var userIdElement))
+                                    // Server returns "id" not "userId"
+                                    if (userElement.TryGetProperty("id", out var userIdElement))
                                         userId = userIdElement.GetString() ?? "";
                                     if (userElement.TryGetProperty("email", out var emailElement))
                                         email = emailElement.GetString() ?? signInEmail;
                                 }
-                                if (result.TryGetProperty("accessToken", out var accessTokenElement))
-                                    accessToken = accessTokenElement.GetString() ?? "";
-                                if (result.TryGetProperty("refreshToken", out var refreshTokenElement))
-                                    refreshToken = refreshTokenElement.GetString() ?? "";
-                                if (result.TryGetProperty("accessTokenExpiry", out var expiryElement) && expiryElement.ValueKind == System.Text.Json.JsonValueKind.String)
+                                // Tokens are nested under "tokens" object
+                                if (result.TryGetProperty("tokens", out var tokensElement))
                                 {
-                                    if (DateTime.TryParse(expiryElement.GetString(), out var parsedExpiry))
-                                        accessTokenExpiry = parsedExpiry;
+                                    if (tokensElement.TryGetProperty("accessToken", out var accessTokenElement))
+                                        accessToken = accessTokenElement.GetString() ?? "";
+                                    if (tokensElement.TryGetProperty("refreshToken", out var refreshTokenElement))
+                                        refreshToken = refreshTokenElement.GetString() ?? "";
+                                    if (tokensElement.TryGetProperty("expiresIn", out var expiresInElement))
+                                    {
+                                        var expiresInSeconds = expiresInElement.GetInt32();
+                                        accessTokenExpiry = DateTime.UtcNow.AddSeconds(expiresInSeconds);
+                                    }
                                 }
+
+                                System.Diagnostics.Debug.WriteLine($"[MainWindow] Sign-in parsed - userId: {userId}, accessToken length: {accessToken.Length}");
 
                                 // Sign in with the API response tokens - use synchronous version on UI thread
                                 _profileAuthService.SignInWithApiResponse(userId, email, displayName, accessToken, refreshToken, accessTokenExpiry);
+
+                                // Save credentials if "Keep me signed in" is checked
+                                if (signInRemember)
+                                {
+                                    var credsToSave = new SavedSignInCredentials
+                                    {
+                                        Email = signInEmail,
+                                        EncryptedPassword = secureStorage.EncryptPassword(signInPassword),
+                                        RememberMe = true
+                                    };
+                                    _ = secureStorage.StoreAsync("signInCredentials", credsToSave);
+                                }
+                                else
+                                {
+                                    // Clear saved credentials if not checked
+                                    secureStorage.Remove("signInCredentials");
+                                }
+
                                 authDialog.Close();
-                                MessageBox.Show($"Welcome back, {displayName}!", "Sign In Successful", MessageBoxButton.OK, MessageBoxImage.Information);
+                                ShowStyledNotification($"Welcome back,\n{displayName}!", "Success!", NotificationType.Success);
+
+                                // Force sync immediately after sign-in with direct test
+                                var capturedToken = accessToken; // Capture token before async
+                                var capturedApiUrl = _apiBaseUrl;
+                                System.Diagnostics.Debug.WriteLine($"[MainWindow] Sign-in successful - token length: {accessToken?.Length ?? 0}, first 30: {(accessToken?.Length > 30 ? accessToken.Substring(0, 30) : accessToken)}");
+                                // Direct sync test removed - sync is now handled by SyncEngine V2 API
+
+                                // Also trigger via SyncEngine
+                                System.Diagnostics.Debug.WriteLine("[MainWindow] Triggering SyncEngine.SyncNowAsync...");
+                                _ = _syncEngine.SyncNowAsync();
                             }
                             else
                             {
@@ -4795,20 +5554,51 @@ public partial class MainWindow : Window
                         bool success = false;
                         string responseJson = "";
                         string? errorMsg = null;
+                        const int maxRetries = 3;
+                        int retryCount = 0;
 
-                        try
+                        while (retryCount < maxRetries)
                         {
-                            using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-                            var registerRequest = new { FullName = createFullName, Email = createEmail, Password = createPassword, SubscribeNewsletter = subscribeNewsletter };
-                            var json = System.Text.Json.JsonSerializer.Serialize(registerRequest);
-                            var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
-                            var response = await client.PostAsync($"{_apiBaseUrl}/api/auth/register", content);
-                            responseJson = await response.Content.ReadAsStringAsync();
-                            success = response.IsSuccessStatusCode;
-                        }
-                        catch (Exception ex)
-                        {
-                            errorMsg = ex.Message;
+                            try
+                            {
+                                using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+                                var registerRequest = new { displayName = createFullName, email = createEmail, password = createPassword };
+                                var json = System.Text.Json.JsonSerializer.Serialize(registerRequest);
+                                var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                                var response = await client.PostAsync($"{_apiBaseUrl}/api/auth/register", content);
+                                responseJson = await response.Content.ReadAsStringAsync();
+                                success = response.IsSuccessStatusCode;
+                                errorMsg = null; // Clear any previous error on success
+                                break; // Success, exit retry loop
+                            }
+                            catch (TaskCanceledException)
+                            {
+                                // Timeout - retry
+                                retryCount++;
+                                if (retryCount < maxRetries)
+                                {
+                                    await Task.Delay(1000 * retryCount); // Exponential backoff
+                                    continue;
+                                }
+                                errorMsg = "Connection timed out after multiple attempts. Please check your internet connection.";
+                            }
+                            catch (System.Net.Http.HttpRequestException ex)
+                            {
+                                // Network error - retry
+                                retryCount++;
+                                if (retryCount < maxRetries)
+                                {
+                                    await Task.Delay(1000 * retryCount); // Exponential backoff
+                                    continue;
+                                }
+                                errorMsg = $"Network error after multiple attempts: {ex.Message}";
+                            }
+                            catch (Exception ex)
+                            {
+                                // Other errors - don't retry
+                                errorMsg = ex.Message;
+                                break;
+                            }
                         }
 
                         // Now dispatch to UI thread - no async operations inside
@@ -4844,31 +5634,42 @@ public partial class MainWindow : Window
                                 var email = createEmail;
                                 var accessToken = "";
                                 var refreshToken = "";
-                                var accessTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+                                var accessTokenExpiry = DateTime.UtcNow.AddDays(7); // Default 7 days
 
                                 if (result.TryGetProperty("user", out var userElement))
                                 {
                                     if (userElement.TryGetProperty("displayName", out var displayNameElement))
                                         displayName = displayNameElement.GetString() ?? createFullName;
-                                    if (userElement.TryGetProperty("userId", out var userIdElement))
+                                    // Server returns "id" not "userId"
+                                    if (userElement.TryGetProperty("id", out var userIdElement))
                                         userId = userIdElement.GetString() ?? "";
                                     if (userElement.TryGetProperty("email", out var emailElement))
                                         email = emailElement.GetString() ?? createEmail;
                                 }
-                                if (result.TryGetProperty("accessToken", out var accessTokenElement))
-                                    accessToken = accessTokenElement.GetString() ?? "";
-                                if (result.TryGetProperty("refreshToken", out var refreshTokenElement))
-                                    refreshToken = refreshTokenElement.GetString() ?? "";
-                                if (result.TryGetProperty("accessTokenExpiry", out var expiryElement) && expiryElement.ValueKind == System.Text.Json.JsonValueKind.String)
+                                // Tokens are nested under "tokens" object
+                                if (result.TryGetProperty("tokens", out var tokensElement))
                                 {
-                                    if (DateTime.TryParse(expiryElement.GetString(), out var parsedExpiry))
-                                        accessTokenExpiry = parsedExpiry;
+                                    if (tokensElement.TryGetProperty("accessToken", out var accessTokenElement))
+                                        accessToken = accessTokenElement.GetString() ?? "";
+                                    if (tokensElement.TryGetProperty("refreshToken", out var refreshTokenElement))
+                                        refreshToken = refreshTokenElement.GetString() ?? "";
+                                    if (tokensElement.TryGetProperty("expiresIn", out var expiresInElement))
+                                    {
+                                        var expiresInSeconds = expiresInElement.GetInt32();
+                                        accessTokenExpiry = DateTime.UtcNow.AddSeconds(expiresInSeconds);
+                                    }
                                 }
+
+                                System.Diagnostics.Debug.WriteLine($"[MainWindow] Registration - userId: {userId}, accessToken length: {accessToken.Length}");
 
                                 // Sign in with the API response tokens - use synchronous version on UI thread
                                 _profileAuthService.SignInWithApiResponse(userId, email, displayName, accessToken, refreshToken, accessTokenExpiry);
                                 authDialog.Close();
                                 MessageBox.Show($"Welcome to Jubilee, {displayName}!\n\nYour account has been created successfully.", "Account Created", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                                // Force sync immediately after registration
+                                System.Diagnostics.Debug.WriteLine("[MainWindow] Registration successful - triggering sync now");
+                                _ = _syncEngine.SyncNowAsync();
                             }
                             else
                             {
@@ -4939,16 +5740,12 @@ public partial class MainWindow : Window
 
         // ===== NAVIGATION LINK HANDLERS =====
         // Mouse click handlers
-        signUpLink.PreviewMouseLeftButtonDown += (s, args) => { args.Handled = true; ShowPanel("createStep1"); };
-        step1SignInLink.PreviewMouseLeftButtonDown += (s, args) => { args.Handled = true; ShowPanel("signIn"); };
+        signUpLink.Click += (s, args) => { ShowPanel("createStep1"); }; // Hyperlink uses Click event
+        step1SignInLink.Click += (s, args) => { ShowPanel("signIn"); }; // Hyperlink uses Click event
         step2BackLink.PreviewMouseLeftButtonDown += (s, args) => { args.Handled = true; ShowPanel("createStep1"); };
         forgotPasswordLink.PreviewMouseLeftButtonDown += (s, args) => { args.Handled = true; ShowPanel("forgotStep1"); };
-        forgotBackLink.PreviewMouseLeftButtonDown += (s, args) => { args.Handled = true; ShowPanel("signIn"); };
+        forgotBackLink.Click += (s, args) => { ShowPanel("signIn"); }; // Hyperlink uses Click event
         codeBackLink.PreviewMouseLeftButtonDown += (s, args) => { args.Handled = true; ShowPanel("forgotStep1"); };
-
-        // Keyboard accessibility handlers (Enter/Space)
-        signUpLink.PreviewKeyDown += (s, args) => { if (args.Key == Key.Enter || args.Key == Key.Space) { args.Handled = true; ShowPanel("createStep1"); } };
-        step1SignInLink.PreviewKeyDown += (s, args) => { if (args.Key == Key.Enter || args.Key == Key.Space) { args.Handled = true; ShowPanel("signIn"); } };
 
         // ===== ASSEMBLE THE LAYOUT WITH FIXED REGIONS =====
         // Add content panels to content container (Row 1)
@@ -4969,14 +5766,8 @@ public partial class MainWindow : Window
             ShowPanel("createStep1");
 
         mainBorder.Child = mainLayoutGrid;
-        authDialog.Content = mainBorder;
-
-        // Allow window dragging
-        mainBorder.MouseLeftButtonDown += (s, args) =>
-        {
-            if (args.ButtonState == MouseButtonState.Pressed)
-                authDialog.DragMove();
-        };
+        overlayGrid.Children.Add(mainBorder);
+        authDialog.Content = overlayGrid;
 
         authDialog.ShowDialog();
     }
@@ -5345,23 +6136,447 @@ public partial class MainWindow : Window
         await _syncEngine.SyncNowAsync();
     }
 
-    private void ProfileManageAccount_Click(object sender, RoutedEventArgs e)
+    private async void ProfileManageAccount_Click(object sender, RoutedEventArgs e)
     {
         ProfilePopup.IsOpen = false;
-        // Open account management page in WorldWideBibleWeb SSO
+        await ShowAccountManagementWindowAsync();
+    }
+
+    private async Task ShowAccountManagementWindowAsync()
+    {
+        var goldColor = Color.FromRgb(218, 165, 32);
+        var bgColor = Color.FromRgb(30, 30, 46);
+        var cardBgColor = Color.FromRgb(45, 45, 68);
+        var textColor = Color.FromRgb(200, 200, 200);
+
+        var accountWindow = new Window
+        {
+            Title = "Manage your Jubilee Account",
+            Width = 650,
+            Height = 600,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = this,
+            Background = new SolidColorBrush(bgColor),
+            WindowStyle = WindowStyle.SingleBorderWindow,
+            ResizeMode = ResizeMode.CanResize
+        };
+
+        var mainScrollViewer = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        var mainPanel = new StackPanel { Margin = new Thickness(24) };
+
+        // Header
+        var headerPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 24) };
+        var avatarBorder = new Border
+        {
+            Width = 64, Height = 64,
+            CornerRadius = new CornerRadius(32),
+            Background = new SolidColorBrush(Color.FromRgb(100, 100, 100)),
+            Margin = new Thickness(0, 0, 16, 0)
+        };
+        var profileTextPanel = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        var profileNameText = new TextBlock
+        {
+            Text = _profileAuthService.CurrentProfile?.DisplayName ?? "Loading...",
+            FontSize = 20, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White
+        };
+        var profileEmailText = new TextBlock
+        {
+            Text = _profileAuthService.CurrentProfile?.Email ?? "",
+            FontSize = 13, Foreground = new SolidColorBrush(textColor)
+        };
+        profileTextPanel.Children.Add(profileNameText);
+        profileTextPanel.Children.Add(profileEmailText);
+        headerPanel.Children.Add(avatarBorder);
+        headerPanel.Children.Add(profileTextPanel);
+        mainPanel.Children.Add(headerPanel);
+
+        // Loading indicator
+        var loadingText = new TextBlock
+        {
+            Text = "Loading account details...",
+            Foreground = new SolidColorBrush(textColor),
+            FontSize = 14,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 20, 0, 20)
+        };
+        mainPanel.Children.Add(loadingText);
+
+        // Devices section (will be populated)
+        var devicesSection = new StackPanel { Visibility = Visibility.Collapsed };
+        var devicesSectionTitle = new TextBlock
+        {
+            Text = "Connected Devices",
+            FontSize = 16, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White,
+            Margin = new Thickness(0, 0, 0, 12)
+        };
+        devicesSection.Children.Add(devicesSectionTitle);
+        var devicesListPanel = new StackPanel();
+        devicesSection.Children.Add(devicesListPanel);
+        mainPanel.Children.Add(devicesSection);
+
+        // Sync Status section
+        var syncSection = new StackPanel { Visibility = Visibility.Collapsed, Margin = new Thickness(0, 24, 0, 0) };
+        var syncSectionTitle = new TextBlock
+        {
+            Text = "Sync Status",
+            FontSize = 16, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White,
+            Margin = new Thickness(0, 0, 0, 12)
+        };
+        syncSection.Children.Add(syncSectionTitle);
+        var syncStatusPanel = new StackPanel();
+        syncSection.Children.Add(syncStatusPanel);
+        mainPanel.Children.Add(syncSection);
+
+        // Account Actions section
+        var actionsSection = new StackPanel { Visibility = Visibility.Collapsed, Margin = new Thickness(0, 24, 0, 0) };
+        var actionsSectionTitle = new TextBlock
+        {
+            Text = "Account Actions",
+            FontSize = 16, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White,
+            Margin = new Thickness(0, 0, 0, 12)
+        };
+        actionsSection.Children.Add(actionsSectionTitle);
+
+        var signOutAllBtn = new Button
+        {
+            Content = "Sign out from all other devices",
+            Height = 36, Margin = new Thickness(0, 0, 0, 8),
+            Background = new SolidColorBrush(cardBgColor),
+            Foreground = Brushes.White,
+            BorderThickness = new Thickness(1),
+            BorderBrush = new SolidColorBrush(Color.FromRgb(80, 80, 100)),
+            Cursor = Cursors.Hand, HorizontalContentAlignment = HorizontalAlignment.Left,
+            Padding = new Thickness(12, 0, 12, 0)
+        };
+
+        var changePasswordBtn = new Button
+        {
+            Content = "Change password",
+            Height = 36, Margin = new Thickness(0, 0, 0, 8),
+            Background = new SolidColorBrush(cardBgColor),
+            Foreground = Brushes.White,
+            BorderThickness = new Thickness(1),
+            BorderBrush = new SolidColorBrush(Color.FromRgb(80, 80, 100)),
+            Cursor = Cursors.Hand, HorizontalContentAlignment = HorizontalAlignment.Left,
+            Padding = new Thickness(12, 0, 12, 0)
+        };
+
+        actionsSection.Children.Add(signOutAllBtn);
+        actionsSection.Children.Add(changePasswordBtn);
+        mainPanel.Children.Add(actionsSection);
+
+        mainScrollViewer.Content = mainPanel;
+        accountWindow.Content = mainScrollViewer;
+
+        // Show window and load data
+        accountWindow.Show();
+
+        // Load account data from API
         try
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            var token = await _profileAuthService.GetAccessTokenAsync();
+            if (string.IsNullOrEmpty(token))
             {
-                FileName = "https://sso.worldwidebibleweb.org/account",
-                UseShellExecute = true
-            });
+                loadingText.Text = "Authentication required. Please sign in again.";
+                return;
+            }
+
+            using var httpClient = new System.Net.Http.HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await httpClient.GetAsync("https://inspirecodex.com/api/account");
+            if (!response.IsSuccessStatusCode)
+            {
+                loadingText.Text = "Failed to load account details.";
+                return;
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var accountData = System.Text.Json.JsonSerializer.Deserialize<AccountDetailsResponse>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (accountData?.Success != true)
+            {
+                loadingText.Text = "Failed to load account details.";
+                return;
+            }
+
+            // Hide loading, show sections
+            loadingText.Visibility = Visibility.Collapsed;
+            devicesSection.Visibility = Visibility.Visible;
+            syncSection.Visibility = Visibility.Visible;
+            actionsSection.Visibility = Visibility.Visible;
+
+            // Update profile info
+            profileNameText.Text = accountData.Account?.DisplayName ?? "User";
+            profileEmailText.Text = accountData.Account?.Email ?? "";
+
+            // Populate devices
+            if (accountData.Devices != null)
+            {
+                foreach (var device in accountData.Devices)
+                {
+                    var deviceCard = CreateDeviceCard(device, token, devicesListPanel, cardBgColor, textColor);
+                    devicesListPanel.Children.Add(deviceCard);
+                }
+            }
+
+            // Populate sync status
+            if (accountData.SyncPreferences != null)
+            {
+                var syncInfoCard = new Border
+                {
+                    Background = new SolidColorBrush(cardBgColor),
+                    CornerRadius = new CornerRadius(8),
+                    Padding = new Thickness(16),
+                    Margin = new Thickness(0, 0, 0, 8)
+                };
+                var syncInfoPanel = new StackPanel();
+                syncInfoPanel.Children.Add(new TextBlock
+                {
+                    Text = $"Last sync: {(accountData.SyncPreferences.LastSyncAt.HasValue ? accountData.SyncPreferences.LastSyncAt.Value.ToLocalTime().ToString("g") : "Never")}",
+                    Foreground = new SolidColorBrush(textColor), FontSize = 13
+                });
+
+                var enabledTypes = new List<string>();
+                if (accountData.SyncPreferences.SyncBookmarks) enabledTypes.Add("Bookmarks");
+                if (accountData.SyncPreferences.SyncHistory) enabledTypes.Add("History");
+                if (accountData.SyncPreferences.SyncPasswords) enabledTypes.Add("Passwords");
+                if (accountData.SyncPreferences.SyncAutofill) enabledTypes.Add("Autofill");
+                if (accountData.SyncPreferences.SyncSettings) enabledTypes.Add("Settings");
+
+                syncInfoPanel.Children.Add(new TextBlock
+                {
+                    Text = $"Syncing: {(enabledTypes.Count > 0 ? string.Join(", ", enabledTypes) : "Nothing")}",
+                    Foreground = new SolidColorBrush(textColor), FontSize = 13, Margin = new Thickness(0, 8, 0, 0),
+                    TextWrapping = TextWrapping.Wrap
+                });
+                syncInfoCard.Child = syncInfoPanel;
+                syncStatusPanel.Children.Add(syncInfoCard);
+            }
+
+            // Wire up action buttons
+            signOutAllBtn.Click += async (s, args) =>
+            {
+                var result = MessageBox.Show(
+                    "This will sign you out from all other devices. Continue?",
+                    "Sign Out All Devices", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        var signOutResponse = await httpClient.PostAsync(
+                            $"https://inspirecodex.com/api/account/signout-all?device_id={_syncEngine.DeviceId}",
+                            new System.Net.Http.StringContent("{\"exceptCurrent\":true}", System.Text.Encoding.UTF8, "application/json"));
+                        if (signOutResponse.IsSuccessStatusCode)
+                        {
+                            MessageBox.Show("Successfully signed out from all other devices.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                            // Refresh devices list
+                            devicesListPanel.Children.Clear();
+                            var refreshResponse = await httpClient.GetAsync("https://inspirecodex.com/api/account/devices");
+                            if (refreshResponse.IsSuccessStatusCode)
+                            {
+                                var refreshJson = await refreshResponse.Content.ReadAsStringAsync();
+                                var devicesData = System.Text.Json.JsonSerializer.Deserialize<DevicesListResponse>(refreshJson, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                                if (devicesData?.Devices != null)
+                                {
+                                    foreach (var device in devicesData.Devices)
+                                    {
+                                        devicesListPanel.Children.Add(CreateDeviceCard(device, token, devicesListPanel, cardBgColor, textColor));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Failed to sign out: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            };
+
+            changePasswordBtn.Click += (s, args) =>
+            {
+                ShowChangePasswordDialog(accountWindow, token);
+            };
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Failed to open account page: {ex.Message}",
-                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            loadingText.Text = $"Error: {ex.Message}";
         }
+    }
+
+    private Border CreateDeviceCard(ConnectedDevice device, string token, StackPanel parentPanel, Color cardBgColor, Color textColor)
+    {
+        var deviceCard = new Border
+        {
+            Background = new SolidColorBrush(cardBgColor),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(16),
+            Margin = new Thickness(0, 0, 0, 8)
+        };
+
+        var devicePanel = new Grid();
+        devicePanel.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        devicePanel.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var deviceInfoPanel = new StackPanel();
+        var deviceNamePanel = new StackPanel { Orientation = Orientation.Horizontal };
+        deviceNamePanel.Children.Add(new TextBlock
+        {
+            Text = device.DisplayName,
+            Foreground = Brushes.White, FontWeight = FontWeights.Medium, FontSize = 14
+        });
+        if (device.IsCurrent)
+        {
+            deviceNamePanel.Children.Add(new TextBlock
+            {
+                Text = " (This device)",
+                Foreground = new SolidColorBrush(Color.FromRgb(0, 180, 0)),
+                FontSize = 12, VerticalAlignment = VerticalAlignment.Center
+            });
+        }
+        deviceInfoPanel.Children.Add(deviceNamePanel);
+        deviceInfoPanel.Children.Add(new TextBlock
+        {
+            Text = $"{device.Platform ?? ""} {device.PlatformVersion ?? ""} • {device.AppName ?? "Browser"} {device.AppVersion ?? ""}",
+            Foreground = new SolidColorBrush(textColor), FontSize = 12, Margin = new Thickness(0, 4, 0, 0)
+        });
+        deviceInfoPanel.Children.Add(new TextBlock
+        {
+            Text = $"Last active: {device.LastSeenDisplay}",
+            Foreground = new SolidColorBrush(textColor), FontSize = 11, Margin = new Thickness(0, 2, 0, 0)
+        });
+
+        Grid.SetColumn(deviceInfoPanel, 0);
+        devicePanel.Children.Add(deviceInfoPanel);
+
+        if (!device.IsCurrent)
+        {
+            var removeBtn = new Button
+            {
+                Content = "Remove",
+                Background = new SolidColorBrush(Color.FromRgb(180, 50, 50)),
+                Foreground = Brushes.White,
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(12, 6, 12, 6),
+                Cursor = Cursors.Hand,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            removeBtn.Click += async (s, args) =>
+            {
+                var result = MessageBox.Show($"Remove device '{device.DisplayName}'?", "Remove Device", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        using var httpClient = new System.Net.Http.HttpClient();
+                        httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                        var response = await httpClient.DeleteAsync($"https://inspirecodex.com/api/account/devices/{device.Id}");
+                        if (response.IsSuccessStatusCode)
+                        {
+                            parentPanel.Children.Remove(deviceCard);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Failed to remove device.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            };
+            Grid.SetColumn(removeBtn, 1);
+            devicePanel.Children.Add(removeBtn);
+        }
+
+        deviceCard.Child = devicePanel;
+        return deviceCard;
+    }
+
+    private void ShowChangePasswordDialog(Window owner, string token)
+    {
+        var dialog = new Window
+        {
+            Title = "Change Password",
+            Width = 400, Height = 280,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = owner,
+            Background = new SolidColorBrush(Color.FromRgb(30, 30, 46)),
+            WindowStyle = WindowStyle.ToolWindow,
+            ResizeMode = ResizeMode.NoResize
+        };
+
+        var panel = new StackPanel { Margin = new Thickness(20) };
+        panel.Children.Add(new TextBlock { Text = "Change Password", FontSize = 18, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White, Margin = new Thickness(0, 0, 0, 16) });
+
+        var currentPwdBox = new PasswordBox { Height = 36, Margin = new Thickness(0, 0, 0, 12) };
+        var newPwdBox = new PasswordBox { Height = 36, Margin = new Thickness(0, 0, 0, 12) };
+        var confirmPwdBox = new PasswordBox { Height = 36, Margin = new Thickness(0, 0, 0, 16) };
+
+        panel.Children.Add(new TextBlock { Text = "Current Password", Foreground = Brushes.White, FontSize = 12, Margin = new Thickness(0, 0, 0, 4) });
+        panel.Children.Add(currentPwdBox);
+        panel.Children.Add(new TextBlock { Text = "New Password", Foreground = Brushes.White, FontSize = 12, Margin = new Thickness(0, 0, 0, 4) });
+        panel.Children.Add(newPwdBox);
+        panel.Children.Add(new TextBlock { Text = "Confirm New Password", Foreground = Brushes.White, FontSize = 12, Margin = new Thickness(0, 0, 0, 4) });
+        panel.Children.Add(confirmPwdBox);
+
+        var buttonPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+        var cancelBtn = new Button { Content = "Cancel", Width = 80, Height = 32, Margin = new Thickness(0, 0, 8, 0) };
+        cancelBtn.Click += (s, args) => dialog.Close();
+
+        var saveBtn = new Button
+        {
+            Content = "Change",
+            Width = 80, Height = 32,
+            Background = new SolidColorBrush(Color.FromRgb(0, 120, 212)),
+            Foreground = Brushes.White
+        };
+        saveBtn.Click += async (s, args) =>
+        {
+            if (newPwdBox.Password != confirmPwdBox.Password)
+            {
+                MessageBox.Show("Passwords do not match.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (newPwdBox.Password.Length < 8)
+            {
+                MessageBox.Show("Password must be at least 8 characters.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                using var httpClient = new System.Net.Http.HttpClient();
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                var payload = System.Text.Json.JsonSerializer.Serialize(new { currentPassword = currentPwdBox.Password, newPassword = newPwdBox.Password });
+                var response = await httpClient.PutAsync("https://inspirecodex.com/api/account/password", new System.Net.Http.StringContent(payload, System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Password changed successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    dialog.Close();
+                }
+                else
+                {
+                    var errorJson = await response.Content.ReadAsStringAsync();
+                    var errorData = System.Text.Json.JsonSerializer.Deserialize<ApiSuccessResponse>(errorJson, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    MessageBox.Show(errorData?.Error ?? "Failed to change password.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        };
+
+        buttonPanel.Children.Add(cancelBtn);
+        buttonPanel.Children.Add(saveBtn);
+        panel.Children.Add(buttonPanel);
+
+        dialog.Content = panel;
+        dialog.ShowDialog();
     }
 
     private void ProfileSwitchProfile_Click(object sender, RoutedEventArgs e)
@@ -5430,7 +6645,13 @@ public partial class MainWindow : Window
             profileBtn.Click += async (s, args) =>
             {
                 switchDialog.Close();
-                await _profileAuthService.SwitchProfileAsync(userId);
+                var success = await _profileAuthService.SwitchProfileAsync(userId);
+                if (success)
+                {
+                    // Reinitialize sync engine with new profile's context
+                    await _syncEngine.InitializeAsync();
+                    UpdateProfileUI();
+                }
             };
 
             panel.Children.Add(profileBtn);
@@ -5849,8 +7070,10 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ChatCloseButton_Click(object sender, RoutedEventArgs e)
+    private void ChatCloseButton_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
+        System.Diagnostics.Debug.WriteLine("ChatCloseButton clicked!");
+
         // Directly close the chat panel without animation for reliability
         _isChatPanelOpen = false;
         ChatActiveIndicator.Visibility = Visibility.Collapsed;
@@ -5863,6 +7086,38 @@ public partial class MainWindow : Window
         ChatPanelColumn.Width = new GridLength(0);
         ChatPanelColumn.MinWidth = 0;
         ChatPanelColumn.MaxWidth = double.PositiveInfinity;
+
+        // Make sure fade overlay is hidden
+        FadeOverlay.Visibility = Visibility.Collapsed;
+        FadeOverlay.IsHitTestVisible = false;
+
+        e.Handled = true;
+    }
+
+    private void ChatCloseButton_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = new SolidColorBrush(Color.FromRgb(0x33, 0x33, 0x33));
+            if (border.Child is TextBlock textBlock)
+            {
+                textBlock.Foreground = new SolidColorBrush(Color.FromRgb(0xE6, 0xAC, 0x00)); // Gold
+                textBlock.FontWeight = FontWeights.Bold;
+            }
+        }
+    }
+
+    private void ChatCloseButton_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = new SolidColorBrush(Color.FromRgb(0x22, 0x22, 0x22));
+            if (border.Child is TextBlock textBlock)
+            {
+                textBlock.Foreground = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88)); // Gray
+                textBlock.FontWeight = FontWeights.Normal;
+            }
+        }
     }
 
     private void UpdateChatPanelAuthState()
@@ -6288,6 +7543,193 @@ public partial class MainWindow : Window
     private void FavoritesCloseButton_Click(object sender, MouseButtonEventArgs e)
     {
         CloseFavoritesBar();
+    }
+
+    #endregion
+
+    #region Styled Notification Popups
+
+    /// <summary>
+    /// Shows a styled success notification popup matching the Jubilee theme
+    /// </summary>
+    private void ShowStyledNotification(string message, string title, NotificationType type = NotificationType.Success)
+    {
+        // Use the same gold color as the Sign In popup buttons (#E6AC00)
+        var goldColor = Color.FromRgb(230, 172, 0);
+        var goldHover = Color.FromRgb(255, 191, 0);
+        var successGreen = Color.FromRgb(76, 175, 80);
+        var infoBlue = Color.FromRgb(33, 150, 243);
+        var warningOrange = Color.FromRgb(255, 152, 0);
+        var errorRed = Color.FromRgb(244, 67, 54);
+
+        var accentColor = type switch
+        {
+            NotificationType.Success => successGreen,
+            NotificationType.Info => infoBlue,
+            NotificationType.Warning => warningOrange,
+            NotificationType.Error => errorRed,
+            _ => successGreen
+        };
+
+        var iconText = type switch
+        {
+            NotificationType.Success => "✓",
+            NotificationType.Info => "ℹ",
+            NotificationType.Warning => "⚠",
+            NotificationType.Error => "✕",
+            _ => "✓"
+        };
+
+        // Full-screen overlay window that closes when clicking outside the popup
+        var notificationDialog = new Window
+        {
+            Title = title,
+            WindowState = WindowState.Maximized,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = this,
+            Background = new SolidColorBrush(Color.FromArgb(120, 0, 0, 0)), // Semi-transparent dark overlay
+            WindowStyle = WindowStyle.None,
+            ResizeMode = ResizeMode.NoResize,
+            AllowsTransparency = true
+        };
+
+        // Create a grid to center the popup content - MUST have a background to receive mouse events
+        var overlayGrid = new Grid
+        {
+            Background = Brushes.Transparent // Required for hit testing - captures mouse clicks
+        };
+
+        // Clicking on the overlay (outside the popup) closes it
+        overlayGrid.MouseLeftButtonDown += (s, args) =>
+        {
+            notificationDialog.Close();
+        };
+
+        // Main container with gradient background (dark theme)
+        var mainBorder = new Border
+        {
+            Width = 245,
+            Height = 380,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Background = new LinearGradientBrush
+            {
+                StartPoint = new Point(0, 0),
+                EndPoint = new Point(0, 1),
+                GradientStops = new GradientStopCollection
+                {
+                    new GradientStop(Color.FromRgb(45, 45, 45), 0),
+                    new GradientStop(Color.FromRgb(35, 35, 35), 0.5),
+                    new GradientStop(Color.FromRgb(28, 28, 28), 1)
+                }
+            },
+            BorderBrush = new SolidColorBrush(goldColor),
+            BorderThickness = new Thickness(2),
+            CornerRadius = new CornerRadius(20)
+        };
+
+        // Prevent clicks on the popup from closing it
+        mainBorder.MouseLeftButtonDown += (s, args) => args.Handled = true;
+
+        // Main vertical layout
+        var mainPanel = new StackPanel
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(30, 40, 30, 30)
+        };
+
+        // Large checkmark icon with subtle background
+        var iconContainer = new Border
+        {
+            Width = 100,
+            Height = 100,
+            CornerRadius = new CornerRadius(20),
+            Background = new SolidColorBrush(Color.FromArgb(40, 76, 175, 80)),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 25)
+        };
+        var iconTextBlock = new TextBlock
+        {
+            Text = iconText,
+            FontSize = 50,
+            FontWeight = FontWeights.Bold,
+            Foreground = new SolidColorBrush(accentColor),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        iconContainer.Child = iconTextBlock;
+        mainPanel.Children.Add(iconContainer);
+
+        // Title text - "Success!" style
+        var titleText = new TextBlock
+        {
+            Text = title,
+            FontSize = 26,
+            FontWeight = FontWeights.Bold,
+            Foreground = new SolidColorBrush(goldColor),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 12)
+        };
+        mainPanel.Children.Add(titleText);
+
+        // Message text - centered, lighter color
+        var messageText = new TextBlock
+        {
+            Text = message,
+            FontSize = 14,
+            Foreground = new SolidColorBrush(Color.FromRgb(160, 160, 160)),
+            TextWrapping = TextWrapping.Wrap,
+            TextAlignment = TextAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 30)
+        };
+        mainPanel.Children.Add(messageText);
+
+        // Full-width gold button at bottom
+        var okButtonText = new TextBlock
+        {
+            Text = "Continue",
+            FontSize = 15,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = new SolidColorBrush(Color.FromRgb(30, 30, 30)),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        var okButton = new Border
+        {
+            Width = 165,
+            Height = 45,
+            CornerRadius = new CornerRadius(10),
+            Background = new SolidColorBrush(goldColor),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Cursor = Cursors.Hand,
+            Child = okButtonText
+        };
+
+        okButton.MouseEnter += (s, args) => okButton.Background = new SolidColorBrush(goldHover);
+        okButton.MouseLeave += (s, args) => okButton.Background = new SolidColorBrush(goldColor);
+        okButton.PreviewMouseLeftButtonDown += (s, args) =>
+        {
+            args.Handled = true;
+            notificationDialog.Close();
+        };
+
+        mainPanel.Children.Add(okButton);
+
+        mainBorder.Child = mainPanel;
+        overlayGrid.Children.Add(mainBorder);
+        notificationDialog.Content = overlayGrid;
+
+        notificationDialog.ShowDialog();
+    }
+
+    private enum NotificationType
+    {
+        Success,
+        Info,
+        Warning,
+        Error
     }
 
     #endregion

@@ -16,14 +16,24 @@ public class LoginRequest
 public class LoginResponse
 {
     public bool Success { get; set; }
-    public string? AccessToken { get; set; }
-    public string? RefreshToken { get; set; }
-    public DateTime? AccessTokenExpiry { get; set; }
-    public DateTime? RefreshTokenExpiry { get; set; }
+    public string? Error { get; set; }
     public UserInfo? User { get; set; }
-    public string? ErrorMessage { get; set; }
-    public bool RequiresTwoFactor { get; set; }
-    public bool RequiresPasswordChange { get; set; }
+    public TokenInfo? Tokens { get; set; }
+
+    // Legacy properties for backwards compatibility
+    public string? AccessToken => Tokens?.AccessToken;
+    public string? RefreshToken => Tokens?.RefreshToken;
+    public string? ErrorMessage => Error;
+}
+
+/// <summary>
+/// Token information from authentication response.
+/// </summary>
+public class TokenInfo
+{
+    public string AccessToken { get; set; } = string.Empty;
+    public string RefreshToken { get; set; } = string.Empty;
+    public int ExpiresIn { get; set; }
 }
 
 /// <summary>
@@ -51,13 +61,16 @@ public class RefreshTokenResponse
 /// </summary>
 public class UserInfo
 {
-    public Guid UserId { get; set; }
-    public string Username { get; set; } = string.Empty;
+    public string Id { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string? DisplayName { get; set; }
-    public string? ProfileImageUrl { get; set; }
-    public List<RoleInfo> Roles { get; set; } = new();
-    public List<string> Permissions { get; set; } = new();
+    public string? AvatarUrl { get; set; }
+    public string? Role { get; set; }
+    public string? PreferredLanguage { get; set; }
+
+    // Legacy properties for backwards compatibility
+    public Guid UserId => Guid.TryParse(Id, out var guid) ? guid : Guid.Empty;
+    public string? ProfileImageUrl => AvatarUrl;
 }
 
 /// <summary>

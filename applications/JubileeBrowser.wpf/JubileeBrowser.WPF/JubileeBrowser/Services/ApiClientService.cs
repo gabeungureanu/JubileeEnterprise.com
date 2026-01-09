@@ -2,6 +2,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using JubileeBrowser.Shared.Models;
 
 namespace JubileeBrowser.Services;
 
@@ -101,8 +102,9 @@ public class ApiClientService : IApiClientService, IDisposable
         {
             var response = await PostAsync<LoginResponse>("api/auth/login", new
             {
-                usernameOrEmail,
-                password
+                email = usernameOrEmail,
+                password,
+                rememberMe = true
             });
 
             if (!response.Success || response.Data == null || !response.Data.Success)
@@ -112,22 +114,23 @@ public class ApiClientService : IApiClientService, IDisposable
 
             var loginResponse = response.Data;
 
-            // Store tokens
-            _accessToken = loginResponse.AccessToken;
-            _refreshToken = loginResponse.RefreshToken;
+            // Store tokens (use new Tokens property or legacy AccessToken)
+            _accessToken = loginResponse.Tokens?.AccessToken ?? loginResponse.AccessToken;
+            _refreshToken = loginResponse.Tokens?.RefreshToken ?? loginResponse.RefreshToken;
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
 
-            // Create session
+            // Create session (adapt to new UserInfo format)
+            var expiresIn = loginResponse.Tokens?.ExpiresIn ?? 604800; // Default 7 days
             _currentSession = new UserSession
             {
                 UserId = loginResponse.User?.UserId ?? Guid.Empty,
-                Username = loginResponse.User?.Username ?? string.Empty,
+                Username = loginResponse.User?.Email ?? string.Empty,
                 Email = loginResponse.User?.Email ?? string.Empty,
                 DisplayName = loginResponse.User?.DisplayName,
-                Roles = loginResponse.User?.Roles?.Select(r => r.RoleName).ToList() ?? new(),
-                Permissions = loginResponse.User?.Permissions ?? new(),
-                AccessTokenExpiry = loginResponse.AccessTokenExpiry ?? DateTime.UtcNow,
-                RefreshTokenExpiry = loginResponse.RefreshTokenExpiry ?? DateTime.UtcNow
+                Roles = !string.IsNullOrEmpty(loginResponse.User?.Role) ? new List<string> { loginResponse.User.Role } : new(),
+                Permissions = new List<string>(),
+                AccessTokenExpiry = DateTime.UtcNow.AddSeconds(expiresIn),
+                RefreshTokenExpiry = DateTime.UtcNow.AddSeconds(expiresIn)
             };
 
             // Cache session data
@@ -199,7 +202,7 @@ public class ApiClientService : IApiClientService, IDisposable
                 return true;
             }
 
-            var response = await SendAsync<RefreshTokenResponse>(HttpMethod.Post, "api/auth/refresh",
+            var response = await SendAsync<LoginResponse>(HttpMethod.Post, "api/auth/refresh",
                 new { refreshToken = _refreshToken });
 
             if (!response.Success || response.Data == null || !response.Data.Success)
@@ -208,13 +211,14 @@ public class ApiClientService : IApiClientService, IDisposable
                 return false;
             }
 
-            _accessToken = response.Data.AccessToken;
-            _refreshToken = response.Data.RefreshToken;
+            _accessToken = response.Data.Tokens?.AccessToken ?? response.Data.AccessToken;
+            _refreshToken = response.Data.Tokens?.RefreshToken ?? response.Data.RefreshToken;
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
 
             if (_currentSession != null)
             {
-                _currentSession.AccessTokenExpiry = response.Data.AccessTokenExpiry ?? DateTime.UtcNow;
+                var expiresIn = response.Data.Tokens?.ExpiresIn ?? 604800;
+                _currentSession.AccessTokenExpiry = DateTime.UtcNow.AddSeconds(expiresIn);
             }
 
             // Update cache
@@ -320,43 +324,5 @@ public class ApiClientService : IApiClientService, IDisposable
     }
 }
 
-// Response DTOs (matching the API models)
-public class LoginResponse
-{
-    public bool Success { get; set; }
-    public string? AccessToken { get; set; }
-    public string? RefreshToken { get; set; }
-    public DateTime? AccessTokenExpiry { get; set; }
-    public DateTime? RefreshTokenExpiry { get; set; }
-    public UserInfo? User { get; set; }
-    public string? ErrorMessage { get; set; }
-    public bool RequiresTwoFactor { get; set; }
-    public bool RequiresPasswordChange { get; set; }
-}
-
-public class RefreshTokenResponse
-{
-    public bool Success { get; set; }
-    public string? AccessToken { get; set; }
-    public string? RefreshToken { get; set; }
-    public DateTime? AccessTokenExpiry { get; set; }
-    public string? ErrorMessage { get; set; }
-}
-
-public class UserInfo
-{
-    public Guid UserId { get; set; }
-    public string Username { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string? DisplayName { get; set; }
-    public string? ProfileImageUrl { get; set; }
-    public List<RoleInfo> Roles { get; set; } = new();
-    public List<string> Permissions { get; set; } = new();
-}
-
-public class RoleInfo
-{
-    public Guid RoleId { get; set; }
-    public string RoleName { get; set; } = string.Empty;
-    public string DisplayName { get; set; } = string.Empty;
-}
+// Response DTOs - Use shared models from JubileeBrowser.Shared.Models
+// LoginResponse, UserInfo, TokenInfo, etc. are defined in Shared project

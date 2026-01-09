@@ -2,8 +2,8 @@
   <PropertyGroup>
     <OutputType>Package</OutputType>
     <Platform>x64</Platform>
-    <DefineConstants>SourceDir=..\..\publish\JubileeBrowser-8.0.7\</DefineConstants>
-    <OutputName>JubileeBrowser-Setup-8.0.7</OutputName>
+    <DefineConstants>SourceDir=..\..\publish\JubileeBrowser-8.0.8\</DefineConstants>
+    <OutputName>JubileeBrowser-Setup-8.0.8</OutputName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,13 +13,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <HarvestDirectory Include="..\..\publish\JubileeBrowser-8.0.7">
+    <HarvestDirectory Include="..\..\publish\JubileeBrowser-8.0.8">
       <ComponentGroupName>HarvestedFiles</ComponentGroupName>
       <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
       <SuppressRootDirectory>true</SuppressRootDirectory>
       <SuppressRegistry>true</SuppressRegistry>
       <PreprocessorVariable>var.SourceDir</PreprocessorVariable>
     </HarvestDirectory>
-    <BindPath Include="..\..\publish\JubileeBrowser-8.0.7" />
+    <BindPath Include="..\..\publish\JubileeBrowser-8.0.8" />
   </ItemGroup>
 </Project>

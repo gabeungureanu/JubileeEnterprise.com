@@ -83,7 +83,7 @@ public class CredentialManager
         _credentials.Add(credential);
         await SaveCredentialsAsync();
 
-        _syncEngine?.QueueChange("password", credential.Id, SyncChangeType.Create, new
+        _syncEngine?.QueueChange("passwords", credential.Id, new
         {
             credential.Id,
             credential.Website,
@@ -91,7 +91,7 @@ public class CredentialManager
             credential.EncryptedPassword, // Already encrypted
             credential.Notes,
             credential.CreatedAt
-        });
+        }, isDeleted: false);
 
         CredentialAdded?.Invoke(this, credential);
         return credential;
@@ -112,7 +112,7 @@ public class CredentialManager
 
         await SaveCredentialsAsync();
 
-        _syncEngine?.QueueChange("password", id, SyncChangeType.Update, new
+        _syncEngine?.QueueChange("passwords", id, new
         {
             credential.Id,
             credential.Website,
@@ -120,7 +120,7 @@ public class CredentialManager
             credential.EncryptedPassword,
             credential.Notes,
             credential.ModifiedAt
-        });
+        }, isDeleted: false);
 
         CredentialUpdated?.Invoke(this, credential);
     }
@@ -136,7 +136,7 @@ public class CredentialManager
         _credentials.Remove(credential);
         await SaveCredentialsAsync();
 
-        _syncEngine?.QueueChange("password", id, SyncChangeType.Delete);
+        _syncEngine?.QueueChange("passwords", id, null, isDeleted: true);
         CredentialRemoved?.Invoke(this, id);
     }
 
@@ -220,7 +220,7 @@ public class CredentialManager
         _autofillEntries.Add(entry);
         await SaveAutofillEntriesAsync();
 
-        _syncEngine?.QueueChange("autofill", entry.Id, SyncChangeType.Create, entry);
+        _syncEngine?.QueueChange("autofill", entry.Id, entry, isDeleted: false);
         AutofillAdded?.Invoke(this, entry);
         return entry;
     }
@@ -239,7 +239,7 @@ public class CredentialManager
 
         await SaveAutofillEntriesAsync();
 
-        _syncEngine?.QueueChange("autofill", entry.Id, SyncChangeType.Update, entry);
+        _syncEngine?.QueueChange("autofill", entry.Id, entry, isDeleted: false);
         AutofillUpdated?.Invoke(this, entry);
     }
 
@@ -254,7 +254,7 @@ public class CredentialManager
         _autofillEntries.Remove(entry);
         await SaveAutofillEntriesAsync();
 
-        _syncEngine?.QueueChange("autofill", id, SyncChangeType.Delete);
+        _syncEngine?.QueueChange("autofill", id, null, isDeleted: true);
         AutofillRemoved?.Invoke(this, id);
     }
 
