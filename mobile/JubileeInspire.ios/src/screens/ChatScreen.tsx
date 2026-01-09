@@ -14,6 +14,9 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Text,
+  Modal,
+  Pressable,
+  ScrollView,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,6 +26,7 @@ import { colors, spacing } from '../config';
 import { ChatMessage, Conversation, RootStackParamList } from '../types';
 import { MessageBubble, TypingIndicator, ChatInput, EmptyChat } from '../components';
 import { storage } from '../services/storage';
+import { useAuth } from '../contexts/AuthContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>;
 
@@ -34,14 +38,26 @@ const sampleResponses = [
   "Great question! The Bible addresses this in several places. Let me walk you through some key passages that relate to your question.\n\nIn the Old Testament, we see...",
 ];
 
+// Available personas (from Codex DB)
+const personas = [
+  { id: 'gabriel', name: 'Gabriel', description: 'Default Inspire persona' },
+  { id: 'michael', name: 'Michael', description: 'Warrior and protector' },
+  { id: 'raphael', name: 'Raphael', description: 'Healer and guide' },
+  { id: 'uriel', name: 'Uriel', description: 'Light and wisdom' },
+];
+
 const ChatScreen: React.FC<Props> = ({ route }) => {
   const navigation = useNavigation();
   const conversationId = route.params?.conversationId;
+  const { user, isAuthenticated, signOut } = useAuth();
 
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  const [showPersonaSelector, setShowPersonaSelector] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [selectedPersona, setSelectedPersona] = useState(personas[0]);
   const flatListRef = useRef<FlatList>(null);
 
   // Load or create conversation
@@ -169,21 +185,138 @@ const ChatScreen: React.FC<Props> = ({ route }) => {
           <Ionicons name="menu" size={24} color={colors.text} />
         </TouchableOpacity>
 
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Jubilee Inspire</Text>
-        </View>
+        <TouchableOpacity
+          style={styles.personaSelector}
+          onPress={() => setShowPersonaSelector(true)}
+        >
+          <Text style={styles.personaText}>{selectedPersona.name}</Text>
+          <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
+        </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => {
-            const newConv = storage.createNewConversation();
-            setConversation(newConv);
-            setMessages([]);
-          }}
+          onPress={() => setShowProfileMenu(true)}
           style={styles.headerButton}
         >
-          <Ionicons name="create-outline" size={24} color={colors.text} />
+          <Ionicons name="person-circle-outline" size={28} color={colors.text} />
         </TouchableOpacity>
       </View>
+
+      {/* Persona Selector Modal */}
+      <Modal
+        visible={showPersonaSelector}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPersonaSelector(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowPersonaSelector(false)}>
+          <View style={styles.personaMenu}>
+            <View style={styles.menuHeader}>
+              <Text style={styles.menuTitle}>Select Persona</Text>
+              <TouchableOpacity onPress={() => setShowPersonaSelector(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView>
+              {personas.map(persona => (
+                <TouchableOpacity
+                  key={persona.id}
+                  style={[
+                    styles.personaItem,
+                    selectedPersona.id === persona.id && styles.personaItemSelected,
+                  ]}
+                  onPress={() => {
+                    setSelectedPersona(persona);
+                    setShowPersonaSelector(false);
+                  }}
+                >
+                  <View style={styles.personaInfo}>
+                    <Text style={styles.personaName}>{persona.name}</Text>
+                    <Text style={styles.personaDescription}>{persona.description}</Text>
+                  </View>
+                  {selectedPersona.id === persona.id && (
+                    <Ionicons name="checkmark" size={24} color={colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </Pressable>
+      </Modal>
+
+      {/* Profile Menu Modal */}
+      <Modal
+        visible={showProfileMenu}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowProfileMenu(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowProfileMenu(false)}>
+          <View style={styles.profileMenu}>
+            <View style={styles.menuHeader}>
+              <Text style={styles.menuTitle}>Account</Text>
+              <TouchableOpacity onPress={() => setShowProfileMenu(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.profileInfo}>
+              <View style={styles.profileAvatar}>
+                <Ionicons name="person" size={40} color={colors.textSecondary} />
+              </View>
+              <Text style={styles.profileName}>
+                {isAuthenticated && user ? user.displayName : 'Guest User'}
+              </Text>
+              <Text style={styles.profileEmail}>
+                {isAuthenticated && user ? user.email : 'Not logged in'}
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.profileItem}
+              onPress={() => {
+                setShowProfileMenu(false);
+                navigation.navigate('Settings');
+              }}
+            >
+              <Ionicons name="settings-outline" size={24} color={colors.text} />
+              <Text style={styles.profileItemText}>Settings</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.profileItem}>
+              <Ionicons name="information-circle-outline" size={24} color={colors.text} />
+              <Text style={styles.profileItemText}>About</Text>
+            </TouchableOpacity>
+
+            {isAuthenticated ? (
+              <TouchableOpacity
+                style={styles.profileItem}
+                onPress={async () => {
+                  setShowProfileMenu(false);
+                  try {
+                    await signOut();
+                  } catch (error) {
+                    console.error('Error signing out:', error);
+                  }
+                }}
+              >
+                <Ionicons name="log-out-outline" size={24} color={colors.text} />
+                <Text style={styles.profileItemText}>Sign Out</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.profileItem}
+                onPress={() => {
+                  setShowProfileMenu(false);
+                  navigation.navigate('Auth');
+                }}
+              >
+                <Ionicons name="log-in-outline" size={24} color={colors.text} />
+                <Text style={styles.profileItemText}>Sign In</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </Pressable>
+      </Modal>
 
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
@@ -219,6 +352,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
@@ -228,13 +362,20 @@ const styles = StyleSheet.create({
   headerButton: {
     padding: spacing.sm,
   },
-  headerCenter: {
-    flex: 1,
+  personaSelector: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: spacing.xs,
   },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '600',
+  personaText: {
+    fontSize: 15,
+    fontWeight: '500',
     color: colors.text,
   },
   keyboardAvoid: {
@@ -242,6 +383,101 @@ const styles = StyleSheet.create({
   },
   messageList: {
     paddingVertical: spacing.sm,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  personaMenu: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '60%',
+    paddingBottom: Platform.OS === 'ios' ? spacing['2xl'] : spacing.lg,
+  },
+  profileMenu: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: Platform.OS === 'ios' ? spacing['2xl'] : spacing.lg,
+  },
+  menuHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  menuTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  personaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  personaItemSelected: {
+    backgroundColor: colors.background,
+  },
+  personaInfo: {
+    flex: 1,
+  },
+  personaName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  personaDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  profileInfo: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  profileAvatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  profileEmail: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  profileItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    gap: spacing.md,
+  },
+  profileItemText: {
+    fontSize: 16,
+    color: colors.text,
   },
 });
 

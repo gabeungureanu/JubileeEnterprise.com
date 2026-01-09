@@ -8,6 +8,7 @@ export type RootStackParamList = {
   Chat: { conversationId?: string };
   Settings: undefined;
   NewChat: undefined;
+  Auth: undefined;
 };
 
 export type DrawerParamList = {
