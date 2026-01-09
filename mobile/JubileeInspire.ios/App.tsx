@@ -7,7 +7,12 @@
 
 import React from 'react';
 import { AppNavigator } from './src/navigation';
+import { AuthProvider } from './src/contexts/AuthContext';
 
 export default function App() {
-  return <AppNavigator />;
+  return (
+    <AuthProvider>
+      <AppNavigator />
+    </AuthProvider>
+  );
 }

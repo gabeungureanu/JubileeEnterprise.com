@@ -18,6 +18,7 @@ import { colors } from '../config';
 // Screens
 import ChatScreen from '../screens/ChatScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import AuthScreen from '../screens/AuthScreen';
 
 // Components
 import { DrawerContent } from '../components';
@@ -45,6 +46,14 @@ const MainStack: React.FC = () => {
       <Stack.Screen
         name="Settings"
         component={SettingsScreen}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
+        name="Auth"
+        component={AuthScreen}
         options={{
           headerShown: false,
           presentation: 'modal',
