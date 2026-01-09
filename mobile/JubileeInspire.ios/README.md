@@ -11,9 +11,12 @@ Jubilee Inspire is a Scripture-centered mobile application that provides an inte
 ## Features
 
 - **AI-Powered Conversations**: Chat with an AI assistant trained to help you understand Scripture
+- **Conversation History**: View, manage, and delete previous conversations with chronological grouping
+- **Voice Input**: Speak your questions using Web Speech API (web browser only)
 - **Scripture Study**: Explore the Bible with guided insights and commentary
 - **Personal Growth**: Track your spiritual journey and save meaningful passages
 - **Cross-Platform Sync**: Your data syncs across devices via the Continuum service
+- **User Authentication**: Secure sign-up and sign-in with JWT tokens
 
 ## Quick Start
 
@@ -80,21 +83,26 @@ JubileeInspire.ios/
 ├── assets/                 # App icons and splash screens
 └── src/
     ├── components/         # Reusable UI components
+    │   ├── ChatInput.tsx
+    │   ├── ConversationItem.tsx
+    │   ├── DrawerContent.tsx
+    │   └── MessageBubble.tsx
     ├── config/             # App configuration
     │   ├── environment.ts
     │   └── index.ts
+    ├── contexts/           # React contexts
+    │   └── AuthContext.tsx
     ├── navigation/         # React Navigation setup
     │   ├── AppNavigator.tsx
     │   └── index.ts
     ├── screens/            # App screens
-    │   ├── HomeScreen.tsx
+    │   ├── AuthScreen.tsx
     │   ├── ChatScreen.tsx
     │   └── index.ts
     ├── services/           # API service layer
     │   ├── httpClient.ts
-    │   ├── codexApi.ts
-    │   ├── inspireApi.ts
-    │   ├── continuumApi.ts
+    │   ├── api.ts
+    │   ├── storage.ts
     │   └── index.ts
     ├── types/              # TypeScript definitions
     │   └── index.ts
@@ -203,25 +211,37 @@ Key settings in `app.json`:
 
 ### Navigation
 
-Uses React Navigation with a native stack navigator:
+Uses React Navigation with a drawer navigator for conversation history:
 
-- **HomeScreen** - Welcome screen with app introduction
-- **ChatScreen** - AI conversation interface
+- **ChatScreen** - AI conversation interface with message history
+- **AuthScreen** - User authentication (sign in/sign up)
+
+The drawer sidebar provides:
+- New chat button
+- Conversation history grouped by date (Today, Yesterday, Previous 7 Days, etc.)
+- Delete conversation functionality with confirmation dialog
+- Settings navigation
 
 ### State Management
 
-Currently uses local React state. Future versions may integrate:
-- React Context for global state
-- AsyncStorage for persistence
-- Redux/Zustand for complex state
+Uses multiple state management approaches:
+- **AuthContext** - Global authentication state with React Context
+- **AsyncStorage** - Local persistence for conversations and auth tokens
+- **Local State** - Component-level state with React hooks
 
 ### API Layer
 
 All API communication goes through the `services/` layer:
 - `httpClient.ts` - Base HTTP client with auth handling
-- `codexApi.ts` - Authentication service
-- `inspireApi.ts` - Chat and Bible service
-- `continuumApi.ts` - User data service
+- `api.ts` - Main API service with authentication endpoints
+- `storage.ts` - AsyncStorage wrapper for data persistence
+
+### Key Components
+
+- **ChatInput** - Message input with voice recognition (Web Speech API), Enter key support, and tooltip hints
+- **MessageBubble** - Chat message display with user/assistant styling
+- **ConversationItem** - Sidebar conversation with delete confirmation (web-compatible modal)
+- **DrawerContent** - Sidebar navigation with conversation history grouping
 
 ## Troubleshooting
 

@@ -4,7 +4,7 @@
  * Message input with send button, plus menu, and microphone - styled like ChatGPT.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,10 +15,19 @@ import {
   KeyboardAvoidingView,
   Modal,
   Pressable,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, typography } from '../config';
+
+// Web Speech API types
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -33,6 +42,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
 }) => {
   const [text, setText] = useState('');
   const [showToolsMenu, setShowToolsMenu] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [showMicTooltip, setShowMicTooltip] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   const handleSend = async () => {
     if (!text.trim() || disabled) return;
@@ -62,12 +74,89 @@ const ChatInput: React.FC<ChatInputProps> = ({
     console.log('Tool selected:', tool);
   };
 
+  // Initialize speech recognition on mount
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.lang = 'en-US';
+
+        recognitionRef.current.onresult = (event: any) => {
+          const transcript = Array.from(event.results)
+            .map((result: any) => result[0])
+            .map((result: any) => result.transcript)
+            .join('');
+
+          setText(transcript);
+        };
+
+        recognitionRef.current.onend = () => {
+          setIsListening(false);
+          console.log('Voice recognition ended');
+        };
+
+        recognitionRef.current.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          setIsListening(false);
+
+          if (event.error === 'not-allowed') {
+            Alert.alert(
+              'Microphone Access Denied',
+              'Please allow microphone access in your browser settings to use voice input.'
+            );
+          } else if (event.error === 'no-speech') {
+            Alert.alert('No Speech Detected', 'Please try speaking again.');
+          }
+        };
+      }
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
   const handleVoiceInput = async () => {
     if (Platform.OS === 'ios') {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    // TODO: Implement voice input
-    console.log('Voice input requested');
+
+    if (Platform.OS !== 'web') {
+      Alert.alert('Not Supported', 'Voice input is currently only supported on web browsers.');
+      return;
+    }
+
+    if (!recognitionRef.current) {
+      Alert.alert(
+        'Not Supported',
+        'Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.'
+      );
+      return;
+    }
+
+    try {
+      if (isListening) {
+        // Stop listening
+        recognitionRef.current.stop();
+        setIsListening(false);
+      } else {
+        // Start listening
+        setText(''); // Clear existing text
+        recognitionRef.current.start();
+        setIsListening(true);
+        console.log('Voice recognition started');
+      }
+    } catch (error) {
+      console.error('Error starting voice recognition:', error);
+      setIsListening(false);
+      Alert.alert('Error', 'Failed to start voice recognition. Please try again.');
+    }
   };
 
   const canSend = text.trim().length > 0 && !disabled;
@@ -94,6 +183,15 @@ const ChatInput: React.FC<ChatInputProps> = ({
           maxLength={4000}
           editable={!disabled}
           returnKeyType="default"
+          onKeyPress={(e) => {
+            // Handle Enter key for web
+            if (Platform.OS === 'web' && e.nativeEvent.key === 'Enter' && !e.nativeEvent.shiftKey) {
+              e.preventDefault();
+              if (text.trim()) {
+                handleSend();
+              }
+            }
+          }}
         />
 
         {/* Microphone or Send Button */}
@@ -107,13 +205,28 @@ const ChatInput: React.FC<ChatInputProps> = ({
             <Ionicons name="arrow-up" size={20} color="#000000" />
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity
-            style={styles.micButton}
-            onPress={handleVoiceInput}
-            disabled={disabled}
-          >
-            <Ionicons name="mic-outline" size={24} color={colors.textSecondary} />
-          </TouchableOpacity>
+          <View style={styles.micButtonContainer}>
+            <TouchableOpacity
+              style={[styles.micButton, isListening && styles.micButtonActive]}
+              onPress={handleVoiceInput}
+              disabled={disabled}
+              onMouseEnter={() => Platform.OS === 'web' && setShowMicTooltip(true)}
+              onMouseLeave={() => Platform.OS === 'web' && setShowMicTooltip(false)}
+            >
+              <Ionicons
+                name={isListening ? "mic" : "mic-outline"}
+                size={24}
+                color={isListening ? "#ef4444" : colors.textSecondary}
+              />
+            </TouchableOpacity>
+            {showMicTooltip && Platform.OS === 'web' && (
+              <View style={styles.tooltip}>
+                <Text style={styles.tooltipText}>
+                  {isListening ? 'Stop listening' : 'Voice input'}
+                </Text>
+              </View>
+            )}
+          </View>
         )}
       </View>
 
@@ -208,7 +321,7 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: 24,
     borderWidth: 1,
@@ -216,27 +329,55 @@ const styles = StyleSheet.create({
     paddingLeft: spacing.xs,
     paddingRight: spacing.xs,
     paddingVertical: spacing.xs,
+    minHeight: 48,
   },
   plusButton: {
     padding: spacing.xs,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 4,
   },
   input: {
     flex: 1,
     fontSize: typography.fontSize.base,
     color: colors.text,
     maxHeight: 120,
-    minHeight: 40,
-    paddingVertical: Platform.OS === 'ios' ? spacing.sm : spacing.xs,
+    paddingVertical: 0,
     paddingHorizontal: spacing.xs,
+    textAlignVertical: 'center',
+    lineHeight: Platform.OS === 'web' ? 20 : undefined,
+  },
+  micButtonContainer: {
+    position: 'relative',
   },
   micButton: {
     padding: spacing.xs,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 4,
+  },
+  micButtonActive: {
+    backgroundColor: '#fee2e2',
+    borderRadius: 20,
+  },
+  tooltip: {
+    position: 'absolute',
+    bottom: '120%',
+    right: -10,
+    backgroundColor: '#1f2937',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: 6,
+    zIndex: 1000,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+      },
+    }),
+  },
+  tooltipText: {
+    color: '#ffffff',
+    fontSize: typography.fontSize.sm,
+    fontWeight: '500',
+    whiteSpace: 'nowrap',
   },
   sendButton: {
     width: 32,
@@ -245,7 +386,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#4f4f4f',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 4,
   },
   sendButtonActive: {
     backgroundColor: '#ffffff',

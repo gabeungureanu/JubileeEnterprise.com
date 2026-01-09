@@ -36,6 +36,7 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSignIn = async () => {
     if (!email.trim() || !password.trim()) {
@@ -83,13 +84,16 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
       // Store authentication in context
       await signIn(user, tokens);
 
-      Alert.alert('Success', 'Signed in successfully!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      console.log('✅ Sign in successful:', user.email);
+      setSuccessMessage('Signed in successfully!');
+
+      // Close the modal after a short delay
+      setTimeout(() => {
+        setSuccessMessage(null);
+        navigation.goBack();
+      }, 2000);
     } catch (error: any) {
+      console.error('❌ Sign in error:', error);
       Alert.alert('Sign In Failed', error.message || 'An error occurred');
     } finally {
       setLoading(false);
@@ -147,13 +151,16 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
       // Store authentication in context
       await signIn(user, tokens);
 
-      Alert.alert('Success', 'Account created successfully!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      console.log('✅ Sign up successful:', user.email);
+      setSuccessMessage('Account created successfully! Welcome to Jubilee Inspire!');
+
+      // Close the modal after a short delay
+      setTimeout(() => {
+        setSuccessMessage(null);
+        navigation.goBack();
+      }, 2500);
     } catch (error: any) {
+      console.error('❌ Sign up error:', error);
       Alert.alert('Sign Up Failed', error.message || 'An error occurred');
     } finally {
       setLoading(false);
@@ -178,6 +185,14 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Success Message Banner */}
+          {successMessage && (
+            <View style={styles.successBanner}>
+              <Ionicons name="checkmark-circle" size={24} color="#10b981" />
+              <Text style={styles.successText}>{successMessage}</Text>
+            </View>
+          )}
+
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
@@ -439,6 +454,41 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     fontSize: typography.fontSize.sm,
     color: colors.primary,
+  },
+  successBanner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#d1fae5',
+    borderBottomWidth: 2,
+    borderBottomColor: '#10b981',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    zIndex: 1000,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      },
+    }),
+  },
+  successText: {
+    fontSize: typography.fontSize.base,
+    fontWeight: '600',
+    color: '#065f46',
+    flex: 1,
   },
 });
 
