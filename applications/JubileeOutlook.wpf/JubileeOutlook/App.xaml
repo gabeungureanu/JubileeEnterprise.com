@@ -1,0 +1,24 @@
+﻿<Application x:Class="JubileeOutlook.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:JubileeOutlook"
+             xmlns:helpers="clr-namespace:JubileeOutlook.Helpers"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Fluent Ribbon Theme (load first) -->
+                <ResourceDictionary Source="pack://application:,,,/Fluent;component/Themes/Generic.xaml"/>
+                <!-- Dark Theme (override Fluent with dark colors) -->
+                <ResourceDictionary Source="Themes/DarkTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Converters -->
+            <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <helpers:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
+            <helpers:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+            <helpers:ReadToWeightConverter x:Key="ReadToWeightConverter"/>
+            <helpers:ListToStringConverter x:Key="ListToStringConverter"/>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
