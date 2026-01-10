@@ -1,0 +1,78 @@
+<UserControl x:Class="JubileeOutlook.Controls.AppRailControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:JubileeOutlook.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="600"
+             d:DesignWidth="48">
+
+    <Border Background="#0D0D0D" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- Menu Button at Top -->
+                <RowDefinition Height="Auto"/>
+                <!-- Module Buttons -->
+                <RowDefinition Height="*"/>
+                <!-- Settings at Bottom -->
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Menu/Hamburger Button at Top -->
+            <Button Grid.Row="0" Style="{StaticResource AppRailMenuButtonStyle}"
+                    Command="{Binding OpenSettingsCommand}" ToolTip="Menu">
+                <TextBlock Text="{StaticResource IconMenu}" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+            </Button>
+
+            <!-- Module Buttons in Middle -->
+            <StackPanel Grid.Row="1" VerticalAlignment="Top" Margin="0,8,0,0">
+                <RadioButton GroupName="AppModules"
+                             Style="{StaticResource AppRailButtonStyle}"
+                             IsChecked="{Binding ActiveModule, Converter={StaticResource AppModuleToBoolConverter}, ConverterParameter=Mail}"
+                             Command="{Binding SwitchToMailCommand}"
+                             ToolTip="Mail">
+                    <TextBlock Text="{StaticResource IconMail}" FontFamily="{StaticResource MaterialIcons}" FontSize="20" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                </RadioButton>
+
+                <RadioButton GroupName="AppModules"
+                             Style="{StaticResource AppRailButtonStyle}"
+                             IsChecked="{Binding ActiveModule, Converter={StaticResource AppModuleToBoolConverter}, ConverterParameter=Calendar}"
+                             Command="{Binding SwitchToCalendarCommand}"
+                             ToolTip="Calendar">
+                    <TextBlock Text="{StaticResource IconCalendar}" FontFamily="{StaticResource MaterialIcons}" FontSize="20" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                </RadioButton>
+
+                <RadioButton GroupName="AppModules"
+                             Style="{StaticResource AppRailButtonStyle}"
+                             IsChecked="{Binding ActiveModule, Converter={StaticResource AppModuleToBoolConverter}, ConverterParameter=People}"
+                             Command="{Binding SwitchToPeopleCommand}"
+                             ToolTip="People">
+                    <TextBlock Text="{StaticResource IconContacts}" FontFamily="{StaticResource MaterialIcons}" FontSize="20" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                </RadioButton>
+
+                <RadioButton GroupName="AppModules"
+                             Style="{StaticResource AppRailButtonStyle}"
+                             IsChecked="{Binding ActiveModule, Converter={StaticResource AppModuleToBoolConverter}, ConverterParameter=Tasks}"
+                             Command="{Binding SwitchToTasksCommand}"
+                             ToolTip="Tasks">
+                    <TextBlock Text="{StaticResource IconTasks}" FontFamily="{StaticResource MaterialIcons}" FontSize="20" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                </RadioButton>
+
+                <RadioButton GroupName="AppModules"
+                             Style="{StaticResource AppRailButtonStyle}"
+                             IsChecked="{Binding ActiveModule, Converter={StaticResource AppModuleToBoolConverter}, ConverterParameter=Apps}"
+                             Command="{Binding SwitchToAppsCommand}"
+                             ToolTip="More Apps">
+                    <TextBlock Text="{StaticResource IconMoreVert}" FontFamily="{StaticResource MaterialIcons}" FontSize="20" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                </RadioButton>
+            </StackPanel>
+
+            <!-- Settings Button at Bottom -->
+            <Button Grid.Row="2" Style="{StaticResource AppRailMenuButtonStyle}"
+                    Command="{Binding OpenSettingsCommand}" ToolTip="Settings" Margin="0,0,0,8">
+                <TextBlock Text="{StaticResource IconSettings}" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+            </Button>
+        </Grid>
+    </Border>
+</UserControl>

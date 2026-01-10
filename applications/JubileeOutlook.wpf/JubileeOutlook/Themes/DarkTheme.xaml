@@ -1,13 +1,98 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=mscorlib">
 
-    <!-- Color Palette - Outlook Black Theme -->
+    <!-- ============== GOOGLE FONTS - Roboto Family ============== -->
+    <FontFamily x:Key="RobotoRegular">pack://application:,,,/Resources/Fonts/#Roboto</FontFamily>
+    <FontFamily x:Key="RobotoMedium">pack://application:,,,/Resources/Fonts/#Roboto Medium</FontFamily>
+    <FontFamily x:Key="RobotoBold">pack://application:,,,/Resources/Fonts/#Roboto</FontFamily>
+    <FontFamily x:Key="RobotoLight">pack://application:,,,/Resources/Fonts/#Roboto Light</FontFamily>
+
+    <!-- Primary Application Font -->
+    <FontFamily x:Key="AppFontFamily">pack://application:,,,/Resources/Fonts/#Roboto</FontFamily>
+
+    <!-- ============== GOOGLE MATERIAL ICONS ============== -->
+    <FontFamily x:Key="MaterialIcons">pack://application:,,,/Resources/Fonts/#Material Symbols Outlined</FontFamily>
+
+    <!-- Material Icon Glyph Characters -->
+    <!-- Folder Icons -->
+    <system:String x:Key="IconInbox">&#xe156;</system:String>
+    <system:String x:Key="IconSend">&#xe163;</system:String>
+    <system:String x:Key="IconDrafts">&#xe151;</system:String>
+    <system:String x:Key="IconDelete">&#xe872;</system:String>
+    <system:String x:Key="IconSpam">&#xe14c;</system:String>
+    <system:String x:Key="IconArchive">&#xe149;</system:String>
+    <system:String x:Key="IconFolder">&#xe2c7;</system:String>
+    <system:String x:Key="IconFolderOpen">&#xe2c8;</system:String>
+    <system:String x:Key="IconEmail">&#xe0be;</system:String>
+    <system:String x:Key="IconMail">&#xe158;</system:String>
+
+    <!-- Navigation Icons -->
+    <system:String x:Key="IconHome">&#xe88a;</system:String>
+    <system:String x:Key="IconCalendar">&#xe935;</system:String>
+    <system:String x:Key="IconContacts">&#xe7fb;</system:String>
+    <system:String x:Key="IconTasks">&#xe8f9;</system:String>
+    <system:String x:Key="IconSettings">&#xe8b8;</system:String>
+    <system:String x:Key="IconMenu">&#xe5d2;</system:String>
+    <system:String x:Key="IconMoreVert">&#xe5d4;</system:String>
+
+    <!-- Action Icons -->
+    <system:String x:Key="IconReply">&#xe15e;</system:String>
+    <system:String x:Key="IconReplyAll">&#xe15f;</system:String>
+    <system:String x:Key="IconForward">&#xe154;</system:String>
+    <system:String x:Key="IconAttach">&#xe226;</system:String>
+    <system:String x:Key="IconFlag">&#xe153;</system:String>
+    <system:String x:Key="IconStar">&#xe838;</system:String>
+    <system:String x:Key="IconSearch">&#xe8b6;</system:String>
+    <system:String x:Key="IconRefresh">&#xe5d5;</system:String>
+    <system:String x:Key="IconSync">&#xe627;</system:String>
+    <system:String x:Key="IconNewMessage">&#xe150;</system:String>
+    <system:String x:Key="IconEdit">&#xe3c9;</system:String>
+    <system:String x:Key="IconPrint">&#xe8ad;</system:String>
+    <system:String x:Key="IconMove">&#xe89e;</system:String>
+    <system:String x:Key="IconLabel">&#xe892;</system:String>
+    <system:String x:Key="IconBlock">&#xe14b;</system:String>
+    <system:String x:Key="IconIgnore">&#xe7f6;</system:String>
+    <system:String x:Key="IconArchiveBox">&#xe149;</system:String>
+    <system:String x:Key="IconTrash">&#xe872;</system:String>
+    <system:String x:Key="IconCreateEmail">&#xe150;</system:String>
+    <system:String x:Key="IconArrowDropDown">&#xe5c5;</system:String>
+    <system:String x:Key="IconMeeting">&#xe7f5;</system:String>
+
+    <!-- Status Icons -->
+    <system:String x:Key="IconUnread">&#xe0e5;</system:String>
+    <system:String x:Key="IconRead">&#xe0e0;</system:String>
+    <system:String x:Key="IconImportant">&#xe838;</system:String>
+    <system:String x:Key="IconNotification">&#xe7f4;</system:String>
+
+    <!-- UI Icons -->
+    <system:String x:Key="IconExpandMore">&#xe5cf;</system:String>
+    <system:String x:Key="IconExpandLess">&#xe5ce;</system:String>
+    <system:String x:Key="IconChevronRight">&#xe5cc;</system:String>
+    <system:String x:Key="IconChevronLeft">&#xe5cb;</system:String>
+    <system:String x:Key="IconClose">&#xe5cd;</system:String>
+    <system:String x:Key="IconCheck">&#xe5ca;</system:String>
+    <system:String x:Key="IconAdd">&#xe145;</system:String>
+    <system:String x:Key="IconRemove">&#xe15b;</system:String>
+    <system:String x:Key="IconPerson">&#xe7fd;</system:String>
+    <system:String x:Key="IconAccount">&#xe853;</system:String>
+    <system:String x:Key="IconLogout">&#xe9ba;</system:String>
+
+    <!-- ============== COLORS AND BRUSHES (must be defined before styles that use them) ============== -->
+
+    <!-- Color Palette - JubileeVerse Dark Theme -->
     <Color x:Key="PrimaryBackgroundColor">#000000</Color>
     <Color x:Key="SecondaryBackgroundColor">#000000</Color>
     <Color x:Key="TertiaryBackgroundColor">#1A1A1A</Color>
     <Color x:Key="HoverBackgroundColor">#2A2A2A</Color>
     <Color x:Key="SelectedBackgroundColor">#094771</Color>
     <Color x:Key="BorderColor">#333333</Color>
+
+    <!-- JubileeVerse Ribbon Bar Colors -->
+    <Color x:Key="RibbonBackgroundColor">#2b2b2b</Color>
+    <Color x:Key="RibbonBorderColor">#3a3a3a</Color>
+    <Color x:Key="RibbonHoverColor">#3a3a3a</Color>
+    <Color x:Key="RibbonActiveColor">#404040</Color>
 
     <Color x:Key="PrimaryTextColor">#FFFFFF</Color>
     <Color x:Key="SecondaryTextColor">#CCCCCC</Color>
@@ -18,6 +103,14 @@
 
     <Color x:Key="UnreadIndicatorColor">#0078D4</Color>
     <Color x:Key="FlaggedColor">#D13438</Color>
+
+    <!-- Gold Brand Color - JubileeVerse Primary -->
+    <Color x:Key="GoldBrandColor">#ffbd59</Color>
+    <Color x:Key="GoldBrandHoverColor">#ffc970</Color>
+    <!-- Gold Highlight Colors (Semi-transparent for hover/selection) -->
+    <Color x:Key="GoldHighlightColor">#80ffbd59</Color>
+    <Color x:Key="GoldHighlightHoverColor">#60ffbd59</Color>
+    <Color x:Key="GoldHighlightBorderColor">#A0ffbd59</Color>
 
     <!-- Brushes -->
     <SolidColorBrush x:Key="PrimaryBackgroundBrush" Color="{StaticResource PrimaryBackgroundColor}"/>
@@ -36,12 +129,86 @@
 
     <SolidColorBrush x:Key="UnreadIndicatorBrush" Color="{StaticResource UnreadIndicatorColor}"/>
     <SolidColorBrush x:Key="FlaggedBrush" Color="{StaticResource FlaggedColor}"/>
+    <SolidColorBrush x:Key="GoldBrandBrush" Color="{StaticResource GoldBrandColor}"/>
+    <SolidColorBrush x:Key="GoldBrandHoverBrush" Color="{StaticResource GoldBrandHoverColor}"/>
+    <SolidColorBrush x:Key="GoldHighlightBrush" Color="{StaticResource GoldHighlightColor}"/>
+    <SolidColorBrush x:Key="GoldHighlightHoverBrush" Color="{StaticResource GoldHighlightHoverColor}"/>
+    <SolidColorBrush x:Key="GoldHighlightBorderBrush" Color="{StaticResource GoldHighlightBorderColor}"/>
+
+    <!-- JubileeVerse Ribbon Brushes -->
+    <SolidColorBrush x:Key="RibbonBackgroundBrush" Color="{StaticResource RibbonBackgroundColor}"/>
+    <SolidColorBrush x:Key="RibbonBorderBrush" Color="{StaticResource RibbonBorderColor}"/>
+    <SolidColorBrush x:Key="RibbonHoverBrush" Color="{StaticResource RibbonHoverColor}"/>
+    <SolidColorBrush x:Key="RibbonActiveBrush" Color="{StaticResource RibbonActiveColor}"/>
 
     <!-- Font Sizes -->
-    <system:Double xmlns:system="clr-namespace:System;assembly=mscorlib" x:Key="HeaderFontSize">16</system:Double>
-    <system:Double xmlns:system="clr-namespace:System;assembly=mscorlib" x:Key="SubHeaderFontSize">14</system:Double>
-    <system:Double xmlns:system="clr-namespace:System;assembly=mscorlib" x:Key="BodyFontSize">12</system:Double>
-    <system:Double xmlns:system="clr-namespace:System;assembly=mscorlib" x:Key="SmallFontSize">10</system:Double>
+    <system:Double x:Key="HeaderFontSize">16</system:Double>
+    <system:Double x:Key="SubHeaderFontSize">14</system:Double>
+    <system:Double x:Key="BodyFontSize">12</system:Double>
+    <system:Double x:Key="SmallFontSize">10</system:Double>
+    <system:Double x:Key="IconFontSize">20</system:Double>
+    <system:Double x:Key="IconFontSizeSmall">16</system:Double>
+    <system:Double x:Key="IconFontSizeLarge">24</system:Double>
+
+    <!-- ============== MATERIAL ICON STYLES (now that brushes are defined) ============== -->
+
+    <!-- Material Icon Text Style (Base) -->
+    <Style x:Key="MaterialIconStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource MaterialIcons}"/>
+        <Setter Property="FontSize" Value="20"/>
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Material Icon in Gold Color (for folder icons) -->
+    <Style x:Key="MaterialIconGoldStyle" TargetType="TextBlock" BasedOn="{StaticResource MaterialIconStyle}">
+        <Setter Property="Foreground" Value="{StaticResource GoldBrandBrush}"/>
+    </Style>
+
+    <!-- Material Icon in White Color -->
+    <Style x:Key="MaterialIconWhiteStyle" TargetType="TextBlock" BasedOn="{StaticResource MaterialIconStyle}">
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <!-- Material Icon Small (16px) -->
+    <Style x:Key="MaterialIconSmallStyle" TargetType="TextBlock" BasedOn="{StaticResource MaterialIconStyle}">
+        <Setter Property="FontSize" Value="16"/>
+    </Style>
+
+    <!-- Material Icon Large (24px) -->
+    <Style x:Key="MaterialIconLargeStyle" TargetType="TextBlock" BasedOn="{StaticResource MaterialIconStyle}">
+        <Setter Property="FontSize" Value="24"/>
+    </Style>
+
+    <!-- Folder Tree Icon Style (Gold, 18px) -->
+    <Style x:Key="FolderIconStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource MaterialIcons}"/>
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="Foreground" Value="{StaticResource GoldBrandBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+    </Style>
+
+    <!-- Ribbon Icon Style (White, 20px) -->
+    <Style x:Key="RibbonIconStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource MaterialIcons}"/>
+        <Setter Property="FontSize" Value="20"/>
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Navigation Rail Icon Style (24px) -->
+    <Style x:Key="NavRailIconStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource MaterialIcons}"/>
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="Foreground" Value="#888888"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- ============== CONTROL STYLES ============== -->
 
     <!-- Button Style -->
     <Style x:Key="OutlookButtonStyle" TargetType="Button">
@@ -50,6 +217,7 @@
         <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}"/>
         <Setter Property="FontSize" Value="{StaticResource BodyFontSize}"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
@@ -86,6 +254,7 @@
         <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}"/>
         <Setter Property="FontSize" Value="{StaticResource BodyFontSize}"/>
         <Setter Property="CaretBrush" Value="{StaticResource PrimaryTextBrush}"/>
     </Style>
@@ -256,5 +425,400 @@
     <!-- Border Brushes -->
     <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.Control.BorderBrush" Color="{StaticResource BorderColor}"/>
     <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.WindowBorderBrush" Color="{StaticResource BorderColor}"/>
+
+
+
+
+    <!-- Window Commands (Min/Max/Close Buttons) - Must be WHITE for dark theme -->
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.WindowCommands.CaptionButton.Foreground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.WindowCommands.CaptionButton.MouseOver.Foreground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.WindowCommands.CaptionButton.MouseOver.Background" Color="#2A2A2A"/>
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.WindowCommands.CaptionButton.Pressed.Foreground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.WindowCommands.CaptionButton.Pressed.Background" Color="#094771"/>
+
+    <!-- Close button specific (red on hover) -->
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.WindowCommands.CloseButton.Foreground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.WindowCommands.CloseButton.MouseOver.Foreground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.WindowCommands.CloseButton.MouseOver.Background" Color="#E81123"/>
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.WindowCommands.CloseButton.Pressed.Foreground" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="Fluent.Ribbon.Brushes.WindowCommands.CloseButton.Pressed.Background" Color="#F1707A"/>
+
+    <!-- ============== CUSTOM WINDOW CHROME STYLES ============== -->
+
+    <!-- Window Control Button Style (Min/Max) -->
+    <Style x:Key="WindowButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Width" Value="46"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border" Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#2A2A2A"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#3A3A3A"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Close Button Style (Red on Hover) -->
+    <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource WindowButtonStyle}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border" Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#E81123"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#F1707A"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Ribbon Tab Button Style - JubileeVerse Design (Black row, Dark Gray active tab) -->
+    <Style x:Key="RibbonTabButtonStyle" TargetType="RadioButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="border" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="4">
+                        <ContentPresenter x:Name="content" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource GoldBrandBrush}"/>
+                            <Setter TargetName="border" Property="Background" Value="#1A1A1A"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter Property="Foreground" Value="{StaticResource GoldBrandBrush}"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter TargetName="border" Property="Background" Value="#1A1A1A"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Ribbon Tab Separator Style -->
+    <Style x:Key="RibbonTabSeparatorStyle" TargetType="TextBlock">
+        <Setter Property="Text" Value="|"/>
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="1,0"/>
+    </Style>
+
+    <!-- Ribbon Group Style - JubileeVerse Design -->
+    <Style x:Key="RibbonGroupStyle" TargetType="Border">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="{StaticResource RibbonBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,1,0"/>
+        <Setter Property="Padding" Value="6,4"/>
+        <Setter Property="Margin" Value="0,0,2,0"/>
+    </Style>
+
+    <!-- Ribbon Group Header Style - JubileeVerse Design -->
+    <Style x:Key="RibbonGroupHeaderStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="#888888"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0,4,0,0"/>
+    </Style>
+
+    <!-- Ribbon Large Button Style - JubileeVerse Design -->
+    <Style x:Key="RibbonLargeButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="6,4"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="MinWidth" Value="44"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="4">
+                        <ContentPresenter x:Name="content" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#0DFFFFFF"/>
+                            <Setter Property="Foreground" Value="{StaticResource GoldBrandBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource RibbonActiveBrush}"/>
+                            <Setter Property="Foreground" Value="{StaticResource GoldBrandBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Ribbon Small Button Style - Gold Highlight Design -->
+    <Style x:Key="RibbonSmallButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Padding" Value="6,4"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="MinWidth" Value="36"/>
+        <Setter Property="MinHeight" Value="36"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}"
+                            CornerRadius="6">
+                        <ContentPresenter x:Name="content" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource GoldHighlightHoverBrush}"/>
+                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource GoldHighlightBorderBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource GoldHighlightBrush}"/>
+                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource GoldBrandBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Gold Primary Action Dropdown Button Style (for "New" button) -->
+    <Style x:Key="GoldDropdownButtonStyle" TargetType="ToggleButton">
+        <Setter Property="Background" Value="{StaticResource GoldBrandBrush}"/>
+        <Setter Property="Foreground" Value="#000000"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="10,4"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="MinHeight" Value="29"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}"
+                            CornerRadius="6">
+                        <ContentPresenter x:Name="content" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource GoldBrandHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#e5a94d"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#e5a94d"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- App Rail Button Style (Vertical Module Switcher) -->
+    <Style x:Key="AppRailButtonStyle" TargetType="RadioButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="#888888"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Width" Value="48"/>
+        <Setter Property="Height" Value="48"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="border" Background="{TemplateBinding Background}" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#2A2A2A"/>
+                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#094771"/>
+                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- App Rail Menu Button Style (Menu/Settings at top/bottom) -->
+    <Style x:Key="AppRailMenuButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="#888888"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Width" Value="48"/>
+        <Setter Property="Height" Value="48"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border" Background="{TemplateBinding Background}" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#2A2A2A"/>
+                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#3A3A3A"/>
+                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Profile Button Style -->
+    <Style x:Key="ProfileButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="16" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#3A3A3A"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#4A4A4A"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Profile Menu Item Style -->
+    <Style x:Key="ProfileMenuItemStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#2A2A4A"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#3A3A5A"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Folder Tree Expand/Collapse Toggle Button Style -->
+    <Style x:Key="FolderExpandToggleStyle" TargetType="ToggleButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="#444444"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Width" Value="18"/>
+        <Setter Property="Height" Value="18"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="border" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="4">
+                        <TextBlock x:Name="icon" Text="+" FontSize="12" FontWeight="Bold"
+                                   Foreground="{StaticResource GoldBrandBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Margin="0,-1,0,0"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="icon" Property="Text" Value="−"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="#2A2A2A"/>
+                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource GoldBrandBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- WWBW Account Root TreeViewItem Style -->
+    <Style x:Key="WwbwAccountTreeViewItemStyle" TargetType="TreeViewItem">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource GoldBrandBrush}"/>
+        <Setter Property="Padding" Value="4"/>
+        <Setter Property="IsExpanded" Value="True"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="{StaticResource SelectedBackgroundBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Folder Search TextBox Style -->
+    <Style x:Key="FolderSearchTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource OutlookTextBoxStyle}">
+        <Setter Property="Background" Value="#1A1A1A"/>
+        <Setter Property="BorderBrush" Value="#444444"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="28,8,8,8"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
 
 </ResourceDictionary>

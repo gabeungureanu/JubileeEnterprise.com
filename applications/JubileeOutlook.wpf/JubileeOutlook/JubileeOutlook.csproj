@@ -13,4 +13,16 @@
     <PackageReference Include="Fluent.Ribbon" Version="10.0.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="Resources\Icons\jubilee-profile.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Fonts\Roboto-Regular.ttf" />
+    <Resource Include="Resources\Fonts\Roboto-Medium.ttf" />
+    <Resource Include="Resources\Fonts\Roboto-Bold.ttf" />
+    <Resource Include="Resources\Fonts\Roboto-Light.ttf" />
+    <Resource Include="Resources\Fonts\MaterialSymbolsOutlined.ttf" />
+  </ItemGroup>
+
 </Project>

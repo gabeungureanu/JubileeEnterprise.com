@@ -15,12 +15,13 @@ public class MockMailService : IMailService
 
     private void InitializeFolders()
     {
+        // Using Material Icons Unicode characters
         _folders.Add(new MailFolder
         {
             Id = "inbox",
             Name = "Inbox",
             Type = FolderType.Inbox,
-            Icon = "📥",
+            Icon = "\uE156", // inbox icon
             UnreadCount = 5,
             TotalCount = 25
         });
@@ -30,7 +31,7 @@ public class MockMailService : IMailService
             Id = "sent",
             Name = "Sent Items",
             Type = FolderType.Sent,
-            Icon = "📤",
+            Icon = "\uE163", // send icon
             UnreadCount = 0,
             TotalCount = 42
         });
@@ -40,7 +41,7 @@ public class MockMailService : IMailService
             Id = "drafts",
             Name = "Drafts",
             Type = FolderType.Drafts,
-            Icon = "📝",
+            Icon = "\uE151", // drafts icon
             UnreadCount = 0,
             TotalCount = 3
         });
@@ -50,7 +51,7 @@ public class MockMailService : IMailService
             Id = "deleted",
             Name = "Deleted Items",
             Type = FolderType.Deleted,
-            Icon = "🗑️",
+            Icon = "\uE872", // delete icon
             UnreadCount = 0,
             TotalCount = 8
         });
@@ -60,7 +61,7 @@ public class MockMailService : IMailService
             Id = "junk",
             Name = "Junk Email",
             Type = FolderType.Junk,
-            Icon = "⚠️",
+            Icon = "\uE14C", // report/spam icon
             UnreadCount = 2,
             TotalCount = 15
         });

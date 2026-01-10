@@ -38,6 +38,12 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _isComposingNewMessage;
 
+    [ObservableProperty]
+    private string _wwbwEmailAddress = string.Empty;
+
+    [ObservableProperty]
+    private MailFolder? _accountRootFolder;
+
     public MainViewModel(IMailService mailService, ICalendarService calendarService)
     {
         _mailService = mailService;
@@ -46,29 +52,90 @@ public partial class MainViewModel : ObservableObject
         InitializeData();
     }
 
+    /// <summary>
+    /// Sets the WWBW email address and rebuilds the folder structure
+    /// </summary>
+    public void SetWwbwEmail(string? wwbwEmail)
+    {
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] SetWwbwEmail called with: '{wwbwEmail}'");
+        WwbwEmailAddress = wwbwEmail ?? string.Empty;
+
+        // If we already have an AccountRootFolder, just update its Name property
+        // This avoids recreating the whole object and ensures binding updates
+        if (AccountRootFolder != null)
+        {
+            var newName = !string.IsNullOrEmpty(WwbwEmailAddress) ? WwbwEmailAddress : "My Account";
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Updating AccountRootFolder.Name to: '{newName}'");
+            AccountRootFolder.Name = newName;
+            AccountRootFolder.WwbwEmailAddress = WwbwEmailAddress;
+        }
+        else
+        {
+            RebuildFolderStructure();
+        }
+    }
+
+    private void RebuildFolderStructure()
+    {
+        // Get the base folders from the mail service
+        var baseFolders = _mailService.GetFolders();
+
+        var folderName = !string.IsNullOrEmpty(WwbwEmailAddress) ? WwbwEmailAddress : "My Account";
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] RebuildFolderStructure - Creating folder with name: '{folderName}'");
+
+        // Create the account root folder with WWBW email
+        var rootFolder = new MailFolder
+        {
+            Id = "account-root",
+            Name = folderName,
+            Type = FolderType.AccountRoot,
+            IsAccountRoot = true,
+            WwbwEmailAddress = WwbwEmailAddress,
+            IsExpanded = true,
+            Icon = "📧",
+            SubFolders = baseFolders
+        };
+
+        // Update parent folder references
+        foreach (var folder in baseFolders)
+        {
+            folder.ParentFolderId = rootFolder.Id;
+        }
+
+        AccountRootFolder = rootFolder;
+        Folders = new ObservableCollection<MailFolder>(new[] { rootFolder });
+    }
+
     private async void InitializeData()
     {
-        // Load folders
-        var folders = _mailService.GetFolders();
-        Folders = new ObservableCollection<MailFolder>(folders);
+        // Build initial folder structure
+        RebuildFolderStructure();
 
-        // Select inbox by default
-        SelectedFolder = Folders.FirstOrDefault(f => f.Type == FolderType.Inbox);
-
-        if (SelectedFolder != null)
+        // Select inbox by default (look in subfolders of root)
+        var inbox = AccountRootFolder?.SubFolders.FirstOrDefault(f => f.Type == FolderType.Inbox);
+        if (inbox != null)
         {
-            await LoadMessagesAsync(SelectedFolder.Id);
+            SelectedFolder = inbox;
+            await LoadMessagesAsync(inbox.Id);
         }
 
         // Load today's events
         await LoadEventsAsync(DateTime.Today, DateTime.Today.AddDays(1));
     }
 
-    partial void OnSelectedFolderChanged(MailFolder? value)
+    partial void OnSelectedFolderChanged(MailFolder? oldValue, MailFolder? newValue)
     {
-        if (value != null)
+        // Clear previous selection
+        if (oldValue != null)
         {
-            _ = LoadMessagesAsync(value.Id);
+            oldValue.IsSelected = false;
+        }
+
+        // Set new selection
+        if (newValue != null)
+        {
+            newValue.IsSelected = true;
+            _ = LoadMessagesAsync(newValue.Id);
         }
     }
 
@@ -215,8 +282,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void RefreshFolders()
     {
-        var folders = _mailService.GetFolders();
-        Folders = new ObservableCollection<MailFolder>(folders);
+        RebuildFolderStructure();
     }
 
     // Home Tab - Move & Organize
