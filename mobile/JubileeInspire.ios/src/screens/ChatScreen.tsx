@@ -46,8 +46,7 @@ const personas = [
   { id: 'uriel', name: 'Uriel', description: 'Light and wisdom' },
 ];
 
-const ChatScreen: React.FC<Props> = ({ route }) => {
-  const navigation = useNavigation();
+const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
   const conversationId = route.params?.conversationId;
   const { user, isAuthenticated, signOut } = useAuth();
 
@@ -60,42 +59,70 @@ const ChatScreen: React.FC<Props> = ({ route }) => {
   const [selectedPersona, setSelectedPersona] = useState(personas[0]);
   const flatListRef = useRef<FlatList>(null);
 
-  // Load or create conversation
+  // Load or create conversation - only triggers when conversationId or timestamp changes
   useEffect(() => {
     const loadConversation = async () => {
+      console.log('[ChatScreen] Loading conversation:', {
+        conversationId,
+        timestamp: route.params?.timestamp,
+      });
+
       if (conversationId) {
         const loaded = await storage.getConversation(conversationId);
         if (loaded) {
+          console.log('[ChatScreen] Loaded existing conversation:', loaded.id);
           setConversation(loaded);
           setMessages(loaded.messages);
+          setIsTyping(false);
+          setStreamingMessageId(null);
           return;
         }
       }
-      // Create new conversation
+      // Create new conversation when conversationId is undefined
       const newConversation = storage.createNewConversation();
+      console.log('[ChatScreen] Created new conversation:', newConversation.id);
+
+      // Save immediately to storage so it appears in sidebar
+      await storage.saveConversation(newConversation);
+      console.log('[ChatScreen] Saved new conversation to storage');
+
       setConversation(newConversation);
       setMessages([]);
+      // Reset streaming state
+      setIsTyping(false);
+      setStreamingMessageId(null);
+
+      // Update navigation params to include the new conversation ID
+      // This allows the drawer to know which conversation is active
+      navigation.setParams({ conversationId: newConversation.id } as any);
     };
 
     loadConversation();
-  }, [conversationId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId, route.params?.timestamp]);
 
-  // Save conversation when messages change
+  // Save conversation when messages change (debounced to reduce saves)
   useEffect(() => {
     if (conversation && messages.length > 0) {
-      const updatedConversation = {
-        ...conversation,
-        messages,
-        updatedAt: new Date(),
-        title:
-          conversation.title === 'New Conversation' && messages.length > 0
-            ? storage.generateTitle(messages[0].content)
-            : conversation.title,
-        preview: messages[messages.length - 1]?.content.substring(0, 50),
-      };
-      storage.saveConversation(updatedConversation);
-      setConversation(updatedConversation);
+      // Debounce the save to avoid saving on every keystroke during streaming
+      const timeoutId = setTimeout(() => {
+        const updatedConversation = {
+          ...conversation,
+          messages,
+          updatedAt: new Date(),
+          title:
+            conversation.title === 'New Conversation' && messages.length > 0
+              ? storage.generateTitle(messages[0].content)
+              : conversation.title,
+          preview: messages[messages.length - 1]?.content.substring(0, 50),
+        };
+        storage.saveConversation(updatedConversation);
+        setConversation(updatedConversation);
+      }, 500); // Wait 500ms after last message change before saving
+
+      return () => clearTimeout(timeoutId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
   const scrollToBottom = useCallback(() => {

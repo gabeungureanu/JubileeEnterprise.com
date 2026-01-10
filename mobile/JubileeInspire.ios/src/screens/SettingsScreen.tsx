@@ -4,7 +4,7 @@
  * User profile and app settings.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,12 +13,14 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, spacing, typography, APP_VERSION } from '../config';
 import { RootStackParamList } from '../types';
 import { storage } from '../services/storage';
+import { ConfirmDialog } from '../components';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
@@ -65,22 +67,50 @@ const SettingsItem: React.FC<SettingsItemProps> = ({
 );
 
 const SettingsScreen: React.FC<Props> = ({ navigation }) => {
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+
   const handleClearHistory = () => {
-    Alert.alert(
-      'Clear All Conversations',
-      'This will permanently delete all your conversation history. This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear All',
-          style: 'destructive',
-          onPress: async () => {
-            await storage.clearAll();
-            Alert.alert('Done', 'All conversations have been cleared.');
-          },
-        },
-      ]
-    );
+    console.log('[SettingsScreen] handleClearHistory called');
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    console.log('[SettingsScreen] Delete confirmed');
+    setShowConfirmDialog(false);
+
+    try {
+      console.log('[SettingsScreen] Starting to clear conversations...');
+      await storage.clearAll();
+      console.log('[SettingsScreen] Storage cleared successfully');
+
+      // Navigate back to close the settings modal
+      console.log('[SettingsScreen] Navigating back...');
+      navigation.goBack();
+
+      // Then navigate to a new chat
+      setTimeout(() => {
+        console.log('[SettingsScreen] Navigating to new chat...');
+        navigation.navigate('Chat', {
+          conversationId: undefined,
+          timestamp: Date.now()
+        } as any);
+
+        // Show success message
+        setTimeout(() => {
+          console.log('[SettingsScreen] Showing success dialog');
+          setShowSuccessDialog(true);
+        }, 300);
+      }, 100);
+    } catch (error) {
+      console.error('[SettingsScreen] Error clearing conversations:', error);
+      Alert.alert('Error', 'Failed to delete conversations. Please try again.');
+    }
+  };
+
+  const handleCancelDelete = () => {
+    console.log('[SettingsScreen] User cancelled deletion');
+    setShowConfirmDialog(false);
   };
 
   return (
@@ -211,6 +241,34 @@ const SettingsScreen: React.FC<Props> = ({ navigation }) => {
           </Text>
         </View>
       </ScrollView>
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        visible={showConfirmDialog}
+        title="Delete All Conversations"
+        message="All chat conversations will be permanently deleted and cannot be recovered. This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmColor={colors.error}
+        icon="trash-outline"
+        iconColor={colors.error}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
+
+      {/* Success Dialog */}
+      <ConfirmDialog
+        visible={showSuccessDialog}
+        title="Success"
+        message="All conversations have been permanently deleted."
+        confirmText="OK"
+        cancelText=""
+        confirmColor={colors.primary}
+        icon="checkmark-circle-outline"
+        iconColor={colors.primary}
+        onConfirm={() => setShowSuccessDialog(false)}
+        onCancel={() => setShowSuccessDialog(false)}
+      />
     </SafeAreaView>
   );
 };

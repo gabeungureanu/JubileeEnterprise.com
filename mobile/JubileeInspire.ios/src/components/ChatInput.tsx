@@ -16,9 +16,11 @@ import {
   Modal,
   Pressable,
   Alert,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import * as DocumentPicker from 'expo-document-picker';
 import { colors, spacing, typography } from '../config';
 
 // Web Speech API types
@@ -44,7 +46,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [showMicTooltip, setShowMicTooltip] = useState(false);
+  const [attachedFile, setAttachedFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
   const recognitionRef = useRef<any>(null);
+  const inputRef = useRef<any>(null);
 
   const handleSend = async () => {
     if (!text.trim() || disabled) return;
@@ -56,6 +60,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
     onSend(text.trim());
     setText('');
+    setAttachedFile(null); // Clear attachment after sending
   };
 
   const handleToolsMenu = async () => {
@@ -65,13 +70,53 @@ const ChatInput: React.FC<ChatInputProps> = ({
     setShowToolsMenu(true);
   };
 
+  const handleFileAttachment = async () => {
+    try {
+      console.log('[ChatInput] Opening file picker');
+      const result = await DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+        console.log('[ChatInput] File selected:', file.name, file.mimeType);
+        setAttachedFile(file);
+
+        // Haptic feedback on successful selection
+        if (Platform.OS === 'ios') {
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+      }
+    } catch (error) {
+      console.error('[ChatInput] Error picking file:', error);
+      Alert.alert('Error', 'Failed to select file. Please try again.');
+    }
+  };
+
+  const handleRemoveAttachment = async () => {
+    if (Platform.OS === 'ios') {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    console.log('[ChatInput] Removing attachment');
+    setAttachedFile(null);
+  };
+
   const handleToolSelect = async (tool: string) => {
     if (Platform.OS === 'ios') {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setShowToolsMenu(false);
-    // TODO: Implement tool actions
-    console.log('Tool selected:', tool);
+
+    console.log('[ChatInput] Tool selected:', tool);
+
+    // Handle different tool actions
+    if (tool === 'file-upload' || tool === 'image-upload') {
+      await handleFileAttachment();
+    } else {
+      // TODO: Implement other tool actions
+      console.log('[ChatInput] Tool not yet implemented:', tool);
+    }
   };
 
   // Initialize speech recognition on mount
@@ -91,12 +136,20 @@ const ChatInput: React.FC<ChatInputProps> = ({
             .map((result: any) => result.transcript)
             .join('');
 
+          console.log('[ChatInput] Voice transcript:', transcript);
           setText(transcript);
         };
 
         recognitionRef.current.onend = () => {
           setIsListening(false);
-          console.log('Voice recognition ended');
+          console.log('[ChatInput] Voice recognition ended');
+          // Focus the input field so user can press Enter to send
+          setTimeout(() => {
+            if (inputRef.current) {
+              console.log('[ChatInput] Focusing input field after voice input');
+              inputRef.current.focus();
+            }
+          }, 100);
         };
 
         recognitionRef.current.onerror = (event: any) => {
@@ -163,6 +216,29 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <View style={styles.container}>
+      {/* Attachment Preview */}
+      {attachedFile && (
+        <View style={styles.attachmentPreview}>
+          <View style={styles.attachmentInfo}>
+            <Ionicons name="document-attach" size={20} color={colors.primary} />
+            <View style={styles.attachmentText}>
+              <Text style={styles.attachmentName} numberOfLines={1}>
+                {attachedFile.name}
+              </Text>
+              <Text style={styles.attachmentSize}>
+                {attachedFile.size ? `${(attachedFile.size / 1024).toFixed(1)} KB` : 'Unknown size'}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.removeAttachmentButton}
+            onPress={handleRemoveAttachment}
+          >
+            <Ionicons name="close-circle" size={22} color={colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+      )}
+
       <View style={styles.inputWrapper}>
         {/* Plus (+) Menu Button */}
         <TouchableOpacity
@@ -174,6 +250,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         </TouchableOpacity>
 
         <TextInput
+          ref={inputRef}
           style={styles.input}
           value={text}
           onChangeText={setText}
@@ -185,7 +262,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           returnKeyType="default"
           onKeyPress={(e) => {
             // Handle Enter key for web
-            if (Platform.OS === 'web' && e.nativeEvent.key === 'Enter' && !e.nativeEvent.shiftKey) {
+            if (Platform.OS === 'web' && e.nativeEvent.key === 'Enter' && !(e.nativeEvent as any).shiftKey) {
               e.preventDefault();
               if (text.trim()) {
                 handleSend();
@@ -210,8 +287,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
               style={[styles.micButton, isListening && styles.micButtonActive]}
               onPress={handleVoiceInput}
               disabled={disabled}
-              onMouseEnter={() => Platform.OS === 'web' && setShowMicTooltip(true)}
-              onMouseLeave={() => Platform.OS === 'web' && setShowMicTooltip(false)}
+              {...(Platform.OS === 'web' ? {
+                onMouseEnter: () => setShowMicTooltip(true),
+                onMouseLeave: () => setShowMicTooltip(false)
+              } as any : {})}
             >
               <Ionicons
                 name={isListening ? "mic" : "mic-outline"}
@@ -254,6 +333,17 @@ const ChatInput: React.FC<ChatInputProps> = ({
               <View style={styles.toolContent}>
                 <Text style={styles.toolTitle}>Bible Search</Text>
                 <Text style={styles.toolDescription}>Search Scripture passages</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.toolItem}
+              onPress={() => handleToolSelect('file-upload')}
+            >
+              <Ionicons name="attach-outline" size={24} color={colors.primary} />
+              <View style={styles.toolContent}>
+                <Text style={styles.toolTitle}>Attach File</Text>
+                <Text style={styles.toolDescription}>Upload documents, images, or files</Text>
               </View>
             </TouchableOpacity>
 
@@ -319,6 +409,40 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderTopWidth: 0,
   },
+  attachmentPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  attachmentInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: spacing.sm,
+  },
+  attachmentText: {
+    flex: 1,
+  },
+  attachmentName: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: '500',
+    color: colors.text,
+    marginBottom: 2,
+  },
+  attachmentSize: {
+    fontSize: typography.fontSize.xs,
+    color: colors.textSecondary,
+  },
+  removeAttachmentButton: {
+    padding: spacing.xs,
+  },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -377,7 +501,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: typography.fontSize.sm,
     fontWeight: '500',
-    whiteSpace: 'nowrap',
+    ...(Platform.OS === 'web' ? { whiteSpace: 'nowrap' } as any : {}),
   },
   sendButton: {
     width: 32,

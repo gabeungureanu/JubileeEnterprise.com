@@ -10,3 +10,4 @@ export { default as ConversationItem } from './ConversationItem';
 export { default as ChatInput } from './ChatInput';
 export { default as EmptyChat } from './EmptyChat';
 export { default as DrawerContent } from './DrawerContent';
+export { default as ConfirmDialog } from './ConfirmDialog';

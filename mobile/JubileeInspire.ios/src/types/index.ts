@@ -5,14 +5,17 @@
 // Navigation Types
 export type RootStackParamList = {
   Main: undefined;
-  Chat: { conversationId?: string };
+  Chat: { conversationId?: string; timestamp?: number };
   Settings: undefined;
   NewChat: undefined;
   Auth: undefined;
 };
 
 export type DrawerParamList = {
-  HomeStack: undefined;
+  HomeStack: {
+    screen: 'Chat' | 'Settings' | 'Auth';
+    params?: { conversationId?: string; timestamp?: number };
+  } | undefined;
 };
 
 // Chat Message Types

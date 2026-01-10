@@ -15,38 +15,103 @@ import {
 } from 'react-native';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 import { colors, spacing, typography } from '../config';
 import { Conversation } from '../types';
 import ConversationItem from './ConversationItem';
 import { storage } from '../services/storage';
 
-const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation }) => {
+const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: drawerNavigation }) => {
+  const navigation = useNavigation();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const loadConversations = async () => {
-    const loaded = await storage.loadConversations();
-    setConversations(loaded);
-  };
+  const loadConversations = useCallback(async () => {
+    if (isLoading) return; // Prevent multiple simultaneous loads
 
-  // Load conversations when drawer opens
+    setIsLoading(true);
+    console.log('[DrawerContent] Loading conversations...');
+    try {
+      const loaded = await storage.loadConversations();
+      console.log('[DrawerContent] Loaded conversations:', loaded.length);
+      setConversations(loaded);
+    } catch (error) {
+      console.error('[DrawerContent] Error loading conversations:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoading]);
+
+  // Load conversations when drawer opens (with debounce)
   useFocusEffect(
     useCallback(() => {
-      loadConversations();
-    }, [])
+      // Small delay to let drawer animation complete
+      const timeoutId = setTimeout(() => {
+        loadConversations();
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }, [loadConversations])
   );
 
+  // Track current conversation from navigation state
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('state', () => {
+      // Get the current route params from navigation state
+      const state = navigation.getState();
+      const routes = state?.routes;
+      if (routes && routes.length > 0) {
+        const homeStackRoute = routes.find((r: any) => r.name === 'HomeStack');
+        if (homeStackRoute && homeStackRoute.state) {
+          const chatRoute = homeStackRoute.state.routes?.find((r: any) => r.name === 'Chat');
+          if (chatRoute && chatRoute.params) {
+            const convId = (chatRoute.params as any).conversationId;
+            if (convId && convId !== currentConversationId) {
+              console.log('[DrawerContent] Active conversation changed to:', convId);
+              setCurrentConversationId(convId);
+              // Only reload conversations when conversation actually changes
+              loadConversations();
+            }
+          }
+        }
+      }
+    });
+
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentConversationId]);
+
   const handleNewChat = () => {
-    navigation.navigate('Chat', { conversationId: undefined });
-    navigation.closeDrawer();
+    // Force navigation by using a unique key for new conversations
+    const timestamp = Date.now();
+    console.log('[DrawerContent] New Chat clicked, timestamp:', timestamp);
+    setCurrentConversationId(null);
+    drawerNavigation.navigate('HomeStack', {
+      screen: 'Chat',
+      params: {
+        conversationId: undefined,
+        // Add timestamp to force re-render - each click gets unique timestamp
+        timestamp
+      }
+    } as any);
+    drawerNavigation.closeDrawer();
+
+    // Reload conversations after a short delay to pick up the new one
+    setTimeout(() => {
+      loadConversations();
+    }, 500);
   };
 
   const handleConversationPress = (conversation: Conversation) => {
+    console.log('[DrawerContent] Conversation clicked:', conversation.id);
     setCurrentConversationId(conversation.id);
-    navigation.navigate('Chat', { conversationId: conversation.id });
-    navigation.closeDrawer();
+    drawerNavigation.navigate('HomeStack', {
+      screen: 'Chat',
+      params: { conversationId: conversation.id }
+    } as any);
+    drawerNavigation.closeDrawer();
   };
 
   const handleDeleteConversation = async (conversationId: string) => {
@@ -58,8 +123,10 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation }) =>
   };
 
   const handleSettings = () => {
-    navigation.navigate('Settings');
-    navigation.closeDrawer();
+    drawerNavigation.navigate('HomeStack', {
+      screen: 'Settings'
+    } as any);
+    drawerNavigation.closeDrawer();
   };
 
   // Group conversations by date
