@@ -8,13 +8,13 @@
     "packages/*",
     "services/*",
     "websites/launcher",
-    "websites/JubileeBrowser.com",
-    "websites/JubileeInspire.com",
-    "websites/JubileeIntelligence.com",
-    "websites/JubileeInternet.com",
-    "websites/JubileePersonas.com",
-    "websites/JubileeVerse.com",
-    "websites/JubileeWebsites.com"
+    "websites/codex/JubileeBrowser.com",
+    "websites/codex/JubileeInspire.com",
+    "websites/codex/JubileeIntelligence.com",
+    "websites/codex/JubileeInternet.com",
+    "websites/codex/JubileePersonas.com",
+    "websites/codex/JubileeVerse.com",
+    "websites/codex/JubileeWebsites.com"
   ],
   "scripts": {
     "---WEBSITES---": "echo 'Website Commands'",

@@ -59,13 +59,14 @@ JubileeEnterprise.com/
 │
 ├── websites/                    # Website projects
 │   ├── launcher/               # Dev navigation hub (Port 3000)
-│   ├── JubileeBrowser.com/     # Marketing site (Port 3002)
-│   ├── JubileeInspire.com/     # Coming soon (Port 3003)
-│   ├── JubileeIntelligence.com/ # AI content generation (Port 3004)
-│   ├── JubileeInternet.com/    # SSO & identity (Port 3005)
-│   ├── JubileePersonas.com/    # AI persona management (Port 3006)
-│   ├── JubileeVerse.com/       # Faith-based AI chat (Port 3007)
-│   └── JubileeWebsites.com/    # AI website generation (Port 3008)
+│   └── codex/                  # Production websites
+│       ├── JubileeBrowser.com/     # Marketing site (Port 3002)
+│       ├── JubileeInspire.com/     # AI Bible chat interface (Port 3003)
+│       ├── JubileeIntelligence.com/ # AI content generation (Port 3004)
+│       ├── JubileeInternet.com/    # SSO & identity (Port 3005)
+│       ├── JubileePersonas.com/    # AI persona management (Port 3006)
+│       ├── JubileeVerse.com/       # Faith-based AI chat (Port 3007)
+│       └── JubileeWebsites.com/    # AI website generation (Port 3008)
 │
 ├── applications/                # Desktop applications
 │   └── JubileeBrowser.wpf/      # Windows browser (.NET 8/WPF)
@@ -282,13 +283,13 @@ The platform uses three separate PostgreSQL databases, each with a dedicated pur
 | Website | Port | Directory | Purpose |
 |---------|------|-----------|---------|
 | Launcher | 3000 | `websites/launcher/` | Development navigation hub |
-| JubileeBrowser.com | 3002 | `websites/JubileeBrowser.com/` | Marketing/landing page |
-| JubileeInspire.com | 3003 | `websites/JubileeInspire.com/` | Coming soon placeholder |
-| JubileeIntelligence.com | 3004 | `websites/JubileeIntelligence.com/` | AI content generation with Qdrant |
-| JubileeInternet.com | 3005 | `websites/JubileeInternet.com/` | SSO & identity services |
-| JubileePersonas.com | 3006 | `websites/JubileePersonas.com/` | AI persona management |
-| JubileeVerse.com | 3007 | `websites/JubileeVerse.com/` | Faith-based AI chat (main app) |
-| JubileeWebsites.com | 3008 | `websites/JubileeWebsites.com/` | AI website generation |
+| JubileeBrowser.com | 3002 | `websites/codex/JubileeBrowser.com/` | Marketing/landing page |
+| JubileeInspire.com | 3003 | `websites/codex/JubileeInspire.com/` | AI Bible chat interface |
+| JubileeIntelligence.com | 3004 | `websites/codex/JubileeIntelligence.com/` | AI content generation with Qdrant |
+| JubileeInternet.com | 3005 | `websites/codex/JubileeInternet.com/` | SSO & identity services |
+| JubileePersonas.com | 3006 | `websites/codex/JubileePersonas.com/` | AI persona management |
+| JubileeVerse.com | 3007 | `websites/codex/JubileeVerse.com/` | Faith-based AI chat (main app) |
+| JubileeWebsites.com | 3008 | `websites/codex/JubileeWebsites.com/` | AI website generation |
 
 ### JubileeVerse.com (Main Application)
 The primary application - a faith-based AI chat platform featuring:

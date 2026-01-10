@@ -1,0 +1,9 @@
+{
+  "public": ".",
+  "rewrites": [
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/login.html", "destination": "/login.html" }
+  ],
+  "trailingSlash": false,
+  "cleanUrls": true
+}

@@ -84,7 +84,9 @@ dotnet publish -c Release      # Publish
 JubileeEnterprise.com/
 ├── packages/           # @jubilee/shared, database, config
 ├── services/           # codex-api, inspire-api, continuum-api
-├── websites/           # 8 web apps
+├── websites/
+│   ├── launcher/       # Development navigation hub
+│   └── codex/          # Production websites (JubileeVerse, JubileeInspire, etc.)
 ├── applications/       # JubileeBrowser.wpf
 ├── infrastructure/     # docker, migrations, nginx
 └── docs/              # Documentation

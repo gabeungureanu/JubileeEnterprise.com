@@ -9,7 +9,7 @@ Each service runs on a unique port to enable simultaneous local development.
 |---------|------|--------------|-------------|
 | **Launcher** | 3000 | @jubilee/launcher | Development navigation hub |
 | **JubileeBrowser.com** | 3002 | @jubilee/browser-site | Marketing website for Jubilee Browser |
-| **JubileeInspire.com** | 3003 | @jubilee/inspire | Jubilee Inspire (Coming Soon) |
+| **JubileeInspire.com** | 3003 | @jubilee/inspire | AI Bible Chat Interface |
 | **JubileeIntelligence.com** | 3004 | @jubilee/intelligence | AI Content Generation System |
 | **JubileeInternet.com** | 3005 | @jubilee/internet | SSO & Identity Services |
 | **JubileePersonas.com** | 3006 | @jubilee/personas | AI Persona Management |

@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat with Jubilee - JubileeInspire.com</title>
+  <link rel="icon" type="image/png" href="https://www.jubileeverse.com/images/personas/jubilee.png">
+  <link rel="apple-touch-icon" href="https://www.jubileeverse.com/images/personas/jubilee.png">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Agency FB';
+      font-weight: bold;
+      font-display: swap;
+      src: url('https://www.jubileeverse.com/fonts/AGENCYB.TTF');
+    }
+    @font-face {
+      font-family: 'Agency FB';
+      font-display: swap;
+      src: url('https://www.jubileeverse.com/fonts/AGENCYR.TTF');
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #000;
+      color: #f2f2f2;
+      overflow: hidden;
+    }
+
+    /* APP CONTAINER */
+    .app-container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* LEFT SIDEBAR */
+    .sidebar {
+      width: 52px;
+      height: 100vh;
+      background-color: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 0;
+      flex-shrink: 0;
+      position: relative;
+      border-right: 1px solid #1e1e1e;
+      z-index: 101;
+    }
+
+    .sidebar-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 1px 0;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+      opacity: 0.9;
+    }
+
+    .sidebar-icon:hover {
+      background-color: rgba(255, 189, 89, 0.1);
+      opacity: 1;
+    }
+
+    .sidebar-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: #777;
+    }
+
+    .sidebar-icon:hover svg {
+      fill: #aaa;
+    }
+
+    .sidebar-icon.is-highlight svg {
+      fill: #ffbd59;
+    }
+
+    .sidebar-spacer {
+      flex: 1;
+    }
+
+    .sidebar-brand-section {
+      position: absolute;
+      bottom: 55px;
+      left: 10px;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+
+    .sidebar-brand-text {
+      font-family: 'Agency FB', Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+      font-size: 22px;
+      font-weight: bold;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-brand-text .inspire {
+      color: #ffbd59;
+    }
+
+    .sidebar-brand-text .dotcom {
+      color: #fff;
+      font-weight: normal;
+    }
+
+    .sidebar-brand-sub {
+      font-family: 'Agency FB', Arial, sans-serif;
+      font-size: 8px;
+      color: #fff;
+      letter-spacing: 1px;
+      margin-top: 16px;
+      margin-right: -4px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-avatar {
+      position: absolute;
+      bottom: 10px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid #3aa0ff;
+      cursor: pointer;
+    }
+
+    .sidebar-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* MESSAGES AREA - Grok style centered */
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .messages-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .messages-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .messages-container::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+
+    .messages-container::-webkit-scrollbar-thumb:hover {
+      background: #444;
+    }
+
+    /* Messages wrapper for centering */
+    .messages-wrapper {
+      max-width: 800px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 40px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* Welcome State */
+    .welcome-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 20px;
+      min-height: 400px;
+    }
+
+    .welcome-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 24px;
+    }
+
+    .welcome-title {
+      font-family: 'Agency FB', Cambria, Georgia, serif;
+      font-size: 36px;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .welcome-title .inspire {
+      color: #ffbd59;
+    }
+
+    .welcome-subtitle {
+      font-size: 15px;
+      color: #666;
+      max-width: 400px;
+      line-height: 1.6;
+    }
+
+    /* Message Row - Grok style */
+    .message-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* User Message - Right aligned, simple bubble */
+    .message-row.user {
+      align-items: flex-end;
+    }
+
+    .user-bubble {
+      background-color: #2a2a2a;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 18px;
+      border-bottom-right-radius: 4px;
+      font-size: 15px;
+      line-height: 1.5;
+      max-width: 70%;
+    }
+
+    .user-time {
+      font-size: 11px;
+      color: #555;
+      padding-right: 4px;
+    }
+
+    /* Assistant Message - Left aligned with avatar */
+    .message-row.assistant {
+      align-items: flex-start;
+    }
+
+    .assistant-content {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      max-width: 100%;
+    }
+
+    .assistant-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .assistant-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .assistant-bubble {
+      color: #e8e8e8;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .assistant-time {
+      font-size: 11px;
+      color: #555;
+    }
+
+    /* Message Actions - Grok style */
+    .message-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: -2px;
+      margin-left: -8px;
+    }
+
+    .action-btn {
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .action-btn:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .action-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: #666;
+    }
+
+    .action-btn:hover svg {
+      fill: #999;
+    }
+
+    .action-btn.liked svg {
+      fill: #4ade80;
+    }
+
+    .action-btn.disliked svg {
+      fill: #f87171;
+    }
+
+    .action-divider {
+      width: 1px;
+      height: 13px;
+      background-color: #333;
+      margin: 0 3px;
+    }
+
+    .response-time {
+      font-size: 9px;
+      color: #555;
+      margin-left: 6px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .response-speed {
+      color: #666;
+    }
+
+    /* Custom Tooltips - appear 10px to the right */
+    .action-btn {
+      position: relative;
+    }
+
+    .action-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: calc(100% + 10px);
+      top: calc(50% + 20px);
+      transform: translateY(-50%);
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.15s ease, visibility 0.15s ease;
+      pointer-events: none;
+      z-index: 1000;
+      border: 1px solid #333;
+    }
+
+    .action-btn:hover::after {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* More Options Dropdown */
+    .more-options-wrapper {
+      position: relative;
+    }
+
+    .more-options-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      background-color: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 6px 0;
+      min-width: 140px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.15s ease, visibility 0.15s ease;
+      z-index: 1001;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .more-options-wrapper.open .more-options-menu {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .more-options-menu button {
+      display: block;
+      width: 100%;
+      padding: 10px 16px;
+      background: transparent;
+      border: none;
+      color: #e0e0e0;
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .more-options-menu button:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Typing Indicator */
+    .typing-row {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 4px;
+      padding: 16px 0;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #555;
+      border-radius: 50%;
+      animation: typingBounce 1.4s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: 0s; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingBounce {
+      0%, 80%, 100% { transform: scale(0.8); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ==================== INPUT AREA - JubileeVerse Home Page Style ==================== */
+    .input-area {
+      padding: 16px 24px 12px;
+      background: linear-gradient(to top, #000 80%, transparent);
+    }
+
+    .input-wrapper {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    /* Search Box - pill shaped rounded input */
+    .search-box {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      background-color: #5a5a5a;
+      border-radius: 8px;
+      padding: 12px 14px;
+      gap: 8px 12px;
+      transition: all 0.2s;
+      border: 1px solid #6a6a6a;
+    }
+
+    .search-box:focus-within {
+      border-color: #ffbd59;
+      box-shadow: 0 0 0 1px #ffbd59;
+      background-color: #616161;
+    }
+
+    .search-input {
+      flex: 1 1 auto;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #f0f0f0;
+      font-size: 15px;
+      font-family: inherit;
+      line-height: 22px;
+      height: 22px;
+      padding: 0;
+      margin: 0;
+      min-width: 200px;
+      resize: none;
+      overflow: hidden;
+    }
+
+    .search-input::placeholder {
+      color: #ffffff;
+    }
+
+    .search-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .action-icon {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+      background-color: #6b6b6b;
+      border: 1px solid #7b7b7b;
+    }
+
+    .action-icon:hover {
+      background-color: rgba(255,255,255,0.1);
+    }
+
+    .action-icon svg {
+      width: 16px;
+      height: 16px;
+      fill: #9a9a9a;
+      transition: fill 0.15s;
+    }
+
+    .action-icon:hover svg {
+      fill: #cfcfcf;
+    }
+
+    .action-icon.active svg,
+    .action-icon.unlocked svg {
+      fill: #ffbd59;
+    }
+
+    /* ==================== INSPIRE DROPDOWN MENU ==================== */
+    .inspire-dropdown-wrapper {
+      position: relative;
+    }
+
+    .inspire-dropdown {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background-color: #6b6b6b;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #ffffff;
+      transition: all 0.15s;
+      border: 1px solid #7b7b7b;
+    }
+
+    .inspire-dropdown:hover {
+      background-color: #757575;
+      color: #fff;
+    }
+
+    .inspire-dropdown svg {
+      width: 10px;
+      height: 10px;
+      fill: #f0f0f0;
+    }
+
+    .inspire-menu {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      margin-bottom: 8px;
+      width: 280px;
+      background-color: #3a3a3a;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      border: 2px solid #ffbd59;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: all 0.2s ease;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .inspire-menu.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .inspire-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 3px 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .inspire-menu-item::before {
+      content: '';
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      background-color: #ffbd59;
+      border-radius: 50%;
+      z-index: 0;
+    }
+
+    .inspire-menu-item:hover {
+      background-color: rgba(255, 189, 89, 0.15);
+    }
+
+    .inspire-menu-item.selected {
+      background-color: #ffbd59;
+      border-radius: 6px;
+      margin: 2px 8px;
+      padding: 3px 6px;
+    }
+
+    .inspire-menu-item.selected::before {
+      background-color: #000000;
+      left: 6px;
+    }
+
+    .inspire-menu-item.selected .inspire-menu-icon {
+      filter: none;
+      -webkit-filter: none;
+    }
+
+    .inspire-menu-item.selected .inspire-menu-title {
+      color: #000000;
+      font-weight: bold;
+    }
+
+    .inspire-menu-item.selected .inspire-menu-subtitle {
+      color: #333333;
+      font-weight: bold;
+    }
+
+    .inspire-menu-item.selected .inspire-menu-check svg {
+      fill: #000000;
+    }
+
+    .inspire-menu-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      background-color: transparent;
+      border-radius: 50%;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+      filter: brightness(0);
+      -webkit-filter: brightness(0);
+    }
+
+    .inspire-menu-content {
+      flex: 1;
+    }
+
+    .inspire-menu-title {
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .inspire-menu-subtitle {
+      color: #c0c0c0;
+      font-size: 11px;
+      margin-top: -2px;
+    }
+
+    .inspire-menu-check {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .inspire-menu-check svg {
+      width: 16px;
+      height: 16px;
+      fill: #ffbd59;
+    }
+
+    /* Voice/Send Button - Orange circular */
+    .voice-button {
+      width: 32px;
+      height: 32px;
+      background-color: #ffbd59;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 2px 8px rgba(255, 189, 89, 0.4);
+      border: none;
+    }
+
+    .voice-button:hover {
+      background-color: #ffc970;
+      transform: scale(1.05);
+    }
+
+    .voice-button svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .voice-button .play-icon {
+      display: block;
+    }
+
+    .voice-button .stop-icon {
+      display: none;
+    }
+
+    .voice-button.is-processing .play-icon {
+      display: none;
+    }
+
+    .voice-button.is-processing .stop-icon {
+      display: block;
+    }
+
+    /* Footer copyright */
+    .search-copyright {
+      text-align: center;
+      padding: 4px 0 0;
+      color: #777;
+      font-size: 11px;
+      line-height: 1.4;
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .search-copyright a {
+      color: #777;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .search-copyright a:hover {
+      color: #aaa;
+    }
+
+    /* ==================== PIN MODAL ==================== */
+    .pin-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, background-color 0.3s ease, visibility 0.3s ease;
+    }
+
+    .pin-modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .pin-modal {
+      background-color: #2b2b2b;
+      border: 2px solid #ffbd59;
+      border-radius: 16px;
+      padding: 32px 40px;
+      text-align: center;
+      max-width: 360px;
+      width: 90%;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+
+    .pin-modal-overlay.open .pin-modal {
+      transform: scale(1);
+    }
+
+    .pin-modal-title {
+      color: #ffbd59;
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .pin-modal-text {
+      color: #ffffff;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+
+    .pin-inputs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .pin-input {
+      width: 56px;
+      height: 64px;
+      background-color: #1a1a1a;
+      border: 2px solid #ffbd59;
+      border-radius: 12px;
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      text-align: center;
+      outline: none;
+      transition: all 0.15s;
+    }
+
+    .pin-input:focus {
+      border-color: #ffc970;
+      box-shadow: 0 0 12px rgba(255, 189, 89, 0.4);
+    }
+
+    .pin-input::placeholder {
+      color: #4a4a4a;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.3s;
+    }
+
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      width: 32px;
+      height: 32px;
+      border: 2px solid #333;
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .messages-wrapper { padding: 24px 16px; }
+      .input-area { padding: 16px; }
+      .user-bubble { max-width: 85%; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- PIN Modal -->
+  <div class="pin-modal-overlay" id="pinModalOverlay">
+    <div class="pin-modal">
+      <div class="pin-modal-title" id="pinModalTitle">Private Chat</div>
+      <div class="pin-modal-text" id="pinModalText">Please enter a four digit pin to encrypt your conversation for privacy.</div>
+      <div class="pin-inputs">
+        <input type="text" class="pin-input" id="pin1" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        <input type="text" class="pin-input" id="pin2" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        <input type="text" class="pin-input" id="pin3" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        <input type="text" class="pin-input" id="pin4" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- LEFT SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <a href="/" class="sidebar-icon is-highlight" title="Home">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      </a>
+      <div class="sidebar-icon" id="newChatBtn" title="New Chat">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      </div>
+      <div class="sidebar-icon" title="History">
+        <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+      </div>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-brand-section">
+        <div class="sidebar-brand-text">Jubilee<span class="inspire">Inspire</span><span class="dotcom">.com</span></div>
+        <div class="sidebar-brand-sub">Jubilee AI Bible Project - Free Plan</div>
+      </div>
+      <div class="sidebar-avatar" id="userAvatarBtn" title="Account">
+        <img src="jubilee-profile.png" alt="Avatar" id="sidebarAvatar">
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+      <!-- Messages Container -->
+      <div class="messages-container" id="messagesContainer">
+        <div class="messages-wrapper" id="messagesWrapper">
+          <!-- Welcome State (shown initially) -->
+          <div class="welcome-state" id="welcomeState">
+            <img src="jubilee-profile.png" alt="Jubilee" class="welcome-avatar">
+            <div class="welcome-title">Jubilee<span class="inspire">Inspire</span></div>
+            <div class="welcome-subtitle">
+              Ask me anything about the Bible, faith, or life. I'm here to help you explore Scripture and grow in your relationship with God.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="input-area">
+        <div class="input-wrapper">
+          <!-- Search Box - JubileeVerse Home Page Style -->
+          <div class="search-box">
+            <textarea class="search-input" id="messageInput" placeholder="Ask Jubilee Anything..." autocomplete="off" rows="1"></textarea>
+            <div class="search-actions">
+              <!-- Attach File Icon -->
+              <div class="action-icon" id="attachIcon" title="Attach File">
+                <svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
+              </div>
+              <!-- Privacy Mode Icon -->
+              <div class="action-icon" id="privacyIcon" title="Privacy Mode">
+                <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+              </div>
+              <!-- Inspire Dropdown -->
+              <div class="inspire-dropdown-wrapper">
+                <div class="inspire-dropdown" id="inspireDropdown">
+                  <span id="inspireDropdownLabel">Inspire 8.0</span>
+                  <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                </div>
+                <div class="inspire-menu" id="inspireMenu">
+                  <div class="inspire-menu-item" data-model="kingdombuilder">
+                    <div class="inspire-menu-icon">👑</div>
+                    <div class="inspire-menu-content">
+                      <div class="inspire-menu-title">Inspire 8.0: Kingdom Builder</div>
+                      <div class="inspire-menu-subtitle">Strategic Vision + Wisdom</div>
+                    </div>
+                    <div class="inspire-menu-check"></div>
+                  </div>
+                  <div class="inspire-menu-item" data-model="creativefire">
+                    <div class="inspire-menu-icon">🔥</div>
+                    <div class="inspire-menu-content">
+                      <div class="inspire-menu-title">Inspire 8.0: Creative Fire</div>
+                      <div class="inspire-menu-subtitle">Poetic + Prophetic</div>
+                    </div>
+                    <div class="inspire-menu-check"></div>
+                  </div>
+                  <div class="inspire-menu-item selected" data-model="gospelpulse">
+                    <div class="inspire-menu-icon">✨</div>
+                    <div class="inspire-menu-content">
+                      <div class="inspire-menu-title">Inspire 8.0: Gospel Pulse</div>
+                      <div class="inspire-menu-subtitle">Gospel Fire + Reach</div>
+                    </div>
+                    <div class="inspire-menu-check">
+                      <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    </div>
+                  </div>
+                  <div class="inspire-menu-item" data-model="shepherdvoice">
+                    <div class="inspire-menu-icon">🛡️</div>
+                    <div class="inspire-menu-content">
+                      <div class="inspire-menu-title">Inspire 8.0: Shepherd Voice</div>
+                      <div class="inspire-menu-subtitle">Pastoral + Healing</div>
+                    </div>
+                    <div class="inspire-menu-check"></div>
+                  </div>
+                  <div class="inspire-menu-item" data-model="hebraicroots">
+                    <div class="inspire-menu-icon">📜</div>
+                    <div class="inspire-menu-content">
+                      <div class="inspire-menu-title">Inspire 8.0: Hebraic Roots</div>
+                      <div class="inspire-menu-subtitle">Academic Depth + Doctrine</div>
+                    </div>
+                    <div class="inspire-menu-check"></div>
+                  </div>
+                </div>
+              </div>
+              <!-- Voice/Send Button -->
+              <button class="voice-button" id="voiceButton" title="Send Message">
+                <svg class="play-icon" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round">
+                  <line x1="4" y1="12" x2="4" y2="12"/>
+                  <line x1="8" y1="8" x2="8" y2="16"/>
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="16" y1="8" x2="16" y2="16"/>
+                  <line x1="20" y1="12" x2="20" y2="12"/>
+                </svg>
+                <svg class="stop-icon" viewBox="0 0 24 24" width="12" height="12">
+                  <rect x="6" y="6" width="12" height="12" fill="#1a1a1a"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <!-- Copyright line -->
+          <div class="search-copyright">
+            Copyright &copy; <span id="currentYear"></span> JubileeVerse.com | All Rights Reserved. JubileeVerse and AI can make mistakes. |
+            <a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Use</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      // API Configuration
+      var AUTH_API = 'https://inspirecodex.com';
+      var CHAT_API = 'https://www.jubileeverse.com';
+
+      // State
+      var accessToken = null;
+      var userData = null;
+      var conversationId = null;
+      var conversationHistory = [];
+      var isProcessing = false;
+      var selectedPersona = 'jubilee';
+      var selectedLang = 'en';
+      var selectedModel = 'gospelpulse';
+
+      // DOM Elements
+      var loadingOverlay = document.getElementById('loadingOverlay');
+      var messagesContainer = document.getElementById('messagesContainer');
+      var messagesWrapper = document.getElementById('messagesWrapper');
+      var welcomeState = document.getElementById('welcomeState');
+      var messageInput = document.getElementById('messageInput');
+      var newChatBtn = document.getElementById('newChatBtn');
+      var sidebarAvatar = document.getElementById('sidebarAvatar');
+      var inspireDropdown = document.getElementById('inspireDropdown');
+      var inspireMenu = document.getElementById('inspireMenu');
+      var inspireDropdownLabel = document.getElementById('inspireDropdownLabel');
+      var voiceButton = document.getElementById('voiceButton');
+      var attachIcon = document.getElementById('attachIcon');
+      var privacyIcon = document.getElementById('privacyIcon');
+
+      // Conversation cache key
+      var CONVERSATION_CACHE_KEY = 'jubileeInspireConversation';
+      var PIN_CACHE_KEY = 'jubileeInspirePrivatePin';
+
+      // PIN Modal Elements
+      var pinModalOverlay = document.getElementById('pinModalOverlay');
+      var pinModalTitle = document.getElementById('pinModalTitle');
+      var pinModalText = document.getElementById('pinModalText');
+      var pinInputs = [
+        document.getElementById('pin1'),
+        document.getElementById('pin2'),
+        document.getElementById('pin3'),
+        document.getElementById('pin4')
+      ];
+      var privateChatPin = null;
+
+      // Check authentication
+      function checkAuth() {
+        var authData = localStorage.getItem('jubileeInspireAuth');
+        if (!authData) {
+          redirectToLogin();
+          return;
+        }
+
+        try {
+          var parsed = JSON.parse(authData);
+          if (!parsed.authenticated || !parsed.tokens || !parsed.tokens.accessToken) {
+            redirectToLogin();
+            return;
+          }
+
+          // Check token age
+          var tokenAge = Date.now() - (parsed.timestamp || 0);
+          var maxAge = (parsed.tokens.expiresIn || 604800) * 1000; // Default 7 days
+          if (tokenAge >= maxAge) {
+            localStorage.removeItem('jubileeInspireAuth');
+            redirectToLogin();
+            return;
+          }
+
+          accessToken = parsed.tokens.accessToken;
+          userData = parsed.user;
+
+          // Verify token with API
+          verifyToken();
+        } catch (e) {
+          redirectToLogin();
+        }
+      }
+
+      function verifyToken() {
+        fetch(AUTH_API + '/api/auth/me', {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + accessToken
+          }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.success && d.user) {
+            userData = d.user;
+            // Update stored user data
+            var storedAuth = JSON.parse(localStorage.getItem('jubileeInspireAuth') || '{}');
+            storedAuth.user = d.user;
+            localStorage.setItem('jubileeInspireAuth', JSON.stringify(storedAuth));
+
+            // Update avatar
+            if (d.user.avatarUrl) {
+              sidebarAvatar.src = d.user.avatarUrl;
+            }
+
+            // Initialize chat
+            initChat();
+          } else {
+            redirectToLogin();
+          }
+        })
+        .catch(function() {
+          // Network error - proceed with local auth
+          initChat();
+        });
+      }
+
+      function redirectToLogin() {
+        var params = new URLSearchParams(window.location.search);
+        var q = params.get('q');
+
+        var returnUrl = '/chat';
+        if (q) {
+          returnUrl += '?q=' + encodeURIComponent(q);
+        }
+
+        window.location.href = '/login?redirect=' + encodeURIComponent(returnUrl);
+      }
+
+      function initChat() {
+        // Hide loading overlay
+        loadingOverlay.classList.add('hidden');
+
+        // Restore private PIN from cache
+        restorePrivatePin();
+
+        // Restore cached conversation
+        restoreConversation();
+
+        // Check for initial query from URL
+        var params = new URLSearchParams(window.location.search);
+        var initialQuery = params.get('q');
+        selectedPersona = params.get('persona') || 'jubilee';
+        selectedLang = params.get('lang') || 'en';
+
+        // If there's an initial query, send it
+        if (initialQuery) {
+          messageInput.value = initialQuery;
+          // Clean URL
+          window.history.replaceState({}, document.title, '/chat');
+          // Send the message
+          sendMessage();
+        }
+
+        // Set current year in footer
+        var currentYearSpan = document.getElementById('currentYear');
+        if (currentYearSpan) {
+          currentYearSpan.textContent = new Date().getFullYear();
+        }
+      }
+
+      // Save conversation to localStorage
+      function saveConversation() {
+        try {
+          var cacheData = {
+            conversationId: conversationId,
+            conversationHistory: conversationHistory,
+            selectedModel: selectedModel,
+            messages: [],
+            timestamp: Date.now()
+          };
+
+          // Capture rendered messages from DOM
+          var messageRows = messagesWrapper.querySelectorAll('.message-row');
+          messageRows.forEach(function(row) {
+            if (row.classList.contains('user')) {
+              var bubble = row.querySelector('.user-bubble');
+              var time = row.querySelector('.user-time');
+              if (bubble) {
+                cacheData.messages.push({
+                  type: 'user',
+                  content: bubble.textContent,
+                  time: time ? time.textContent : ''
+                });
+              }
+            } else if (row.classList.contains('assistant')) {
+              var content = row.dataset.content || '';
+              var time = row.querySelector('.assistant-time');
+              var responseTimeEl = row.querySelector('.response-time span');
+              cacheData.messages.push({
+                type: 'assistant',
+                content: content,
+                time: time ? time.textContent : '',
+                responseMs: responseTimeEl ? parseInt(responseTimeEl.textContent) || 0 : 0
+              });
+            }
+          });
+
+          localStorage.setItem(CONVERSATION_CACHE_KEY, JSON.stringify(cacheData));
+        } catch (e) {
+          console.warn('Failed to save conversation cache:', e);
+        }
+      }
+
+      // Restore conversation from localStorage
+      function restoreConversation() {
+        try {
+          var cached = localStorage.getItem(CONVERSATION_CACHE_KEY);
+          if (!cached) return;
+
+          var cacheData = JSON.parse(cached);
+
+          // Check if cache is not too old (24 hours)
+          var maxAge = 24 * 60 * 60 * 1000;
+          if (Date.now() - cacheData.timestamp > maxAge) {
+            localStorage.removeItem(CONVERSATION_CACHE_KEY);
+            return;
+          }
+
+          // Restore state
+          conversationId = cacheData.conversationId;
+          conversationHistory = cacheData.conversationHistory || [];
+          selectedModel = cacheData.selectedModel || 'gospelpulse';
+
+          // Update model dropdown UI
+          updateModelDropdownUI(selectedModel);
+
+          // Restore messages if any
+          if (cacheData.messages && cacheData.messages.length > 0) {
+            // Hide welcome state
+            if (welcomeState) {
+              welcomeState.style.display = 'none';
+            }
+
+            // Render cached messages
+            cacheData.messages.forEach(function(msg) {
+              if (msg.type === 'user') {
+                var userMsg = createUserMessage(msg.content, msg.time);
+                messagesWrapper.appendChild(userMsg);
+              } else if (msg.type === 'assistant') {
+                var assistantMsg = createAssistantMessage(msg.content, msg.time, msg.responseMs);
+                messagesWrapper.appendChild(assistantMsg);
+              }
+            });
+
+            // Scroll to bottom
+            scrollToBottom();
+          }
+        } catch (e) {
+          console.warn('Failed to restore conversation cache:', e);
+          localStorage.removeItem(CONVERSATION_CACHE_KEY);
+        }
+      }
+
+      // Update model dropdown UI based on selected model
+      function updateModelDropdownUI(model) {
+        // Remove selected class from all items
+        inspireMenu.querySelectorAll('.inspire-menu-item').forEach(function(item) {
+          item.classList.remove('selected');
+          item.querySelector('.inspire-menu-check').innerHTML = '';
+        });
+
+        // Add selected class to matching item
+        var selectedItem = inspireMenu.querySelector('[data-model="' + model + '"]');
+        if (selectedItem) {
+          selectedItem.classList.add('selected');
+          selectedItem.querySelector('.inspire-menu-check').innerHTML = '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+        }
+      }
+
+      function formatTime(date) {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+
+      function createUserMessage(content, time) {
+        var row = document.createElement('div');
+        row.className = 'message-row user';
+        row.innerHTML =
+          '<div class="user-bubble">' + escapeHtml(content) + '</div>' +
+          '<div class="user-time">' + time + '</div>';
+        return row;
+      }
+
+      function createAssistantMessage(content, time, responseMs) {
+        var row = document.createElement('div');
+        row.className = 'message-row assistant';
+        var messageId = 'msg-' + Date.now();
+        var speedLabel = responseMs < 1000 ? 'Fast' : responseMs < 3000 ? 'Normal' : 'Slow';
+        var timeDisplay = responseMs < 1000 ? responseMs + 'ms' : (responseMs / 1000).toFixed(1) + 's';
+
+        row.innerHTML =
+          '<div class="assistant-content">' +
+            '<img src="jubilee-profile.png" alt="Jubilee" class="assistant-avatar">' +
+            '<div class="assistant-text">' +
+              '<div class="assistant-bubble">' + escapeHtml(content) + '</div>' +
+              '<div class="message-actions">' +
+                '<button class="action-btn" data-tooltip="Regenerate" data-action="regenerate">' +
+                  '<svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4c-4.42 0-8 3.58-8 8s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>' +
+                '</button>' +
+                '<button class="action-btn" data-tooltip="Read aloud" data-action="speak">' +
+                  '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>' +
+                '</button>' +
+                '<button class="action-btn" data-tooltip="Copy" data-action="copy" data-message-id="' + messageId + '">' +
+                  '<svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>' +
+                '</button>' +
+                '<button class="action-btn" data-tooltip="Share" data-action="share">' +
+                  '<svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>' +
+                '</button>' +
+                '<div class="action-divider"></div>' +
+                '<button class="action-btn" data-tooltip="Good response" data-action="like">' +
+                  '<svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>' +
+                '</button>' +
+                '<button class="action-btn" data-tooltip="Bad response" data-action="dislike">' +
+                  '<svg viewBox="0 0 24 24"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>' +
+                '</button>' +
+                '<div class="more-options-wrapper">' +
+                  '<button class="action-btn" data-tooltip="More options" data-action="more">' +
+                    '<svg viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>' +
+                  '</button>' +
+                  '<div class="more-options-menu">' +
+                    '<button data-action="report">Report Issue</button>' +
+                    '<button data-action="export-pdf">Export to PDF</button>' +
+                  '</div>' +
+                '</div>' +
+                (responseMs ? '<div class="response-time"><span>' + timeDisplay + '</span><span class="response-speed">' + speedLabel + '</span></div>' : '') +
+              '</div>' +
+            '</div>' +
+          '</div>';
+
+        // Store the raw content for copy functionality
+        row.dataset.content = content;
+        return row;
+      }
+
+      function createTypingIndicator() {
+        var row = document.createElement('div');
+        row.className = 'typing-row';
+        row.id = 'typingIndicator';
+        row.innerHTML =
+          '<img src="jubilee-profile.png" alt="Jubilee" class="assistant-avatar">' +
+          '<div class="typing-dots">' +
+            '<div class="typing-dot"></div>' +
+            '<div class="typing-dot"></div>' +
+            '<div class="typing-dot"></div>' +
+          '</div>';
+        return row;
+      }
+
+      function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML.replace(/\n/g, '<br>');
+      }
+
+      function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      function sendMessage() {
+        var content = messageInput.value.trim();
+        if (!content || isProcessing) return;
+
+        isProcessing = true;
+        messageInput.value = '';
+        autoResizeTextarea();
+
+        // Show processing state on submit button
+        if (voiceButton) {
+          voiceButton.classList.add('is-processing');
+        }
+
+        // Hide welcome state
+        if (welcomeState && welcomeState.parentNode) {
+          welcomeState.style.display = 'none';
+        }
+
+        // Add user message
+        var userTime = formatTime(new Date());
+        var userMsg = createUserMessage(content, userTime);
+        messagesWrapper.appendChild(userMsg);
+        scrollToBottom();
+
+        // Add to history
+        conversationHistory.push({ role: 'user', content: content });
+
+        // Save conversation after user message
+        saveConversation();
+
+        // Show typing indicator
+        var typingIndicator = createTypingIndicator();
+        messagesWrapper.appendChild(typingIndicator);
+        scrollToBottom();
+
+        // Send to API
+        var personaName = selectedPersona.charAt(0).toUpperCase() + selectedPersona.slice(1) + ' Inspire';
+        var requestStartTime = Date.now();
+
+        fetch(CHAT_API + '/Home/ChatWithJubilee', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            message: content,
+            conversationHistory: conversationHistory.slice(-10),
+            personaName: personaName,
+            conversationId: conversationId,
+            inspireModel: selectedModel,
+            responseLanguage: selectedLang
+          })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var responseTime = Date.now() - requestStartTime;
+
+          // Remove typing indicator
+          var indicator = document.getElementById('typingIndicator');
+          if (indicator) indicator.remove();
+
+          if (data.success && data.response) {
+            // Update conversation ID if new
+            if (data.conversation && data.conversation.id) {
+              conversationId = data.conversation.id;
+            }
+
+            // Add to history
+            conversationHistory.push({ role: 'assistant', content: data.response });
+
+            // Add assistant message with response time
+            var assistantTime = formatTime(new Date());
+            var assistantMsg = createAssistantMessage(data.response, assistantTime, responseTime);
+            messagesWrapper.appendChild(assistantMsg);
+            scrollToBottom();
+
+            // Save conversation after assistant response
+            saveConversation();
+          } else {
+            showError('Sorry, I could not process your request. Please try again.');
+          }
+        })
+        .catch(function(err) {
+          console.error('Chat error:', err);
+          // Remove typing indicator
+          var indicator = document.getElementById('typingIndicator');
+          if (indicator) indicator.remove();
+
+          showError('Connection error. Please check your internet and try again.');
+        })
+        .finally(function() {
+          isProcessing = false;
+          // Reset submit button state
+          if (voiceButton) {
+            voiceButton.classList.remove('is-processing');
+          }
+        });
+      }
+
+      function showError(message) {
+        var row = document.createElement('div');
+        row.className = 'message-row assistant';
+        row.innerHTML =
+          '<div class="assistant-content">' +
+            '<img src="jubilee-profile.png" alt="Jubilee" class="assistant-avatar">' +
+            '<div class="assistant-text">' +
+              '<div class="assistant-bubble" style="color: #f87171;">' + message + '</div>' +
+            '</div>' +
+          '</div>';
+        messagesWrapper.appendChild(row);
+        scrollToBottom();
+      }
+
+      function autoResizeTextarea() {
+        messageInput.style.height = 'auto';
+        messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+      }
+
+      function startNewChat() {
+        conversationId = null;
+        conversationHistory = [];
+        messagesWrapper.innerHTML = '';
+
+        // Clear conversation cache
+        localStorage.removeItem(CONVERSATION_CACHE_KEY);
+
+        // Re-add welcome state
+        var newWelcome = document.createElement('div');
+        newWelcome.className = 'welcome-state';
+        newWelcome.id = 'welcomeState';
+        newWelcome.innerHTML =
+          '<img src="jubilee-profile.png" alt="Jubilee" class="welcome-avatar">' +
+          '<div class="welcome-title">Jubilee<span class="inspire">Inspire</span></div>' +
+          '<div class="welcome-subtitle">' +
+            'Ask me anything about the Bible, faith, or life. I\'m here to help you explore Scripture and grow in your relationship with God.' +
+          '</div>';
+        messagesWrapper.appendChild(newWelcome);
+        welcomeState = newWelcome;
+
+        messageInput.focus();
+      }
+
+      // Event Listeners
+      messageInput.addEventListener('input', autoResizeTextarea);
+
+      messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      newChatBtn.addEventListener('click', startNewChat);
+
+      // Submit button click (voice button)
+      if (voiceButton) {
+        voiceButton.addEventListener('click', sendMessage);
+      }
+
+      // Attach icon click - could open file picker in future
+      if (attachIcon) {
+        attachIcon.addEventListener('click', function() {
+          // Placeholder for file attachment functionality
+          console.log('Attach file clicked');
+        });
+      }
+
+      // Privacy icon click - show PIN modal
+      if (privacyIcon) {
+        privacyIcon.addEventListener('click', function() {
+          openPinModal();
+        });
+      }
+
+      // PIN Modal Functions
+      function openPinModal() {
+        // Clear all inputs
+        pinInputs.forEach(function(input) {
+          input.value = '';
+        });
+
+        // Update modal text based on whether PIN exists
+        if (privateChatPin) {
+          pinModalTitle.textContent = 'Private Chat';
+          pinModalText.textContent = 'Enter your PIN to access or update your private chat encryption.';
+        } else {
+          pinModalTitle.textContent = 'Private Chat';
+          pinModalText.textContent = 'Please enter a four digit pin to encrypt your conversation for privacy.';
+        }
+
+        // Show modal
+        pinModalOverlay.classList.add('open');
+
+        // Focus first input
+        setTimeout(function() {
+          pinInputs[0].focus();
+        }, 100);
+      }
+
+      function closePinModal() {
+        pinModalOverlay.classList.remove('open');
+      }
+
+      function handlePinComplete() {
+        var pin = pinInputs.map(function(input) {
+          return input.value;
+        }).join('');
+
+        if (pin.length === 4) {
+          // Save the PIN
+          privateChatPin = pin;
+          localStorage.setItem(PIN_CACHE_KEY, pin);
+
+          // Update privacy icon state
+          privacyIcon.classList.add('active');
+
+          // Close modal after brief delay
+          setTimeout(function() {
+            closePinModal();
+          }, 200);
+        }
+      }
+
+      function restorePrivatePin() {
+        var savedPin = localStorage.getItem(PIN_CACHE_KEY);
+        if (savedPin && savedPin.length === 4) {
+          privateChatPin = savedPin;
+          if (privacyIcon) {
+            privacyIcon.classList.add('active');
+          }
+        }
+      }
+
+      // PIN input event handlers
+      pinInputs.forEach(function(input, index) {
+        // Handle input
+        input.addEventListener('input', function(e) {
+          // Only allow digits
+          this.value = this.value.replace(/[^0-9]/g, '');
+
+          if (this.value.length === 1) {
+            // Move to next input
+            if (index < pinInputs.length - 1) {
+              pinInputs[index + 1].focus();
+            } else {
+              // Last input - check if complete
+              handlePinComplete();
+            }
+          }
+        });
+
+        // Handle keydown for backspace
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Backspace' && this.value === '' && index > 0) {
+            // Move to previous input
+            pinInputs[index - 1].focus();
+            pinInputs[index - 1].value = '';
+          } else if (e.key === 'Escape') {
+            closePinModal();
+          }
+        });
+
+        // Handle paste
+        input.addEventListener('paste', function(e) {
+          e.preventDefault();
+          var pastedData = (e.clipboardData || window.clipboardData).getData('text');
+          var digits = pastedData.replace(/[^0-9]/g, '').slice(0, 4);
+
+          digits.split('').forEach(function(digit, i) {
+            if (pinInputs[i]) {
+              pinInputs[i].value = digit;
+            }
+          });
+
+          // Focus appropriate input and check completion
+          if (digits.length >= 4) {
+            pinInputs[3].focus();
+            handlePinComplete();
+          } else if (digits.length > 0) {
+            pinInputs[Math.min(digits.length, 3)].focus();
+          }
+        });
+      });
+
+      // Close modal when clicking overlay
+      pinModalOverlay.addEventListener('click', function(e) {
+        if (e.target === pinModalOverlay) {
+          closePinModal();
+        }
+      });
+
+      // Inspire dropdown toggle
+      if (inspireDropdown && inspireMenu) {
+        inspireDropdown.addEventListener('click', function(e) {
+          e.stopPropagation();
+          inspireMenu.classList.toggle('open');
+        });
+
+        // Handle model selection
+        inspireMenu.querySelectorAll('.inspire-menu-item').forEach(function(item) {
+          item.addEventListener('click', function() {
+            var model = this.dataset.model;
+            selectedModel = model;
+
+            // Update UI
+            updateModelDropdownUI(model);
+
+            // Close menu
+            inspireMenu.classList.remove('open');
+
+            // Save conversation with new model
+            saveConversation();
+          });
+        });
+      }
+
+      // Close all more-options menus
+      function closeAllMoreMenus() {
+        document.querySelectorAll('.more-options-wrapper.open').forEach(function(wrapper) {
+          wrapper.classList.remove('open');
+        });
+      }
+
+      // Close menus when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.more-options-wrapper')) {
+          closeAllMoreMenus();
+        }
+        // Also close inspire dropdown
+        if (!e.target.closest('.inspire-dropdown-wrapper') && inspireMenu) {
+          inspireMenu.classList.remove('open');
+        }
+      });
+
+      // Action button handlers (event delegation)
+      messagesWrapper.addEventListener('click', function(e) {
+        // Handle more-options-menu button clicks
+        var menuBtn = e.target.closest('.more-options-menu button');
+        if (menuBtn) {
+          var action = menuBtn.dataset.action;
+          var messageRow = menuBtn.closest('.message-row.assistant');
+          var content = messageRow ? messageRow.dataset.content : '';
+
+          if (action === 'report') {
+            // Open report issue dialog/form (placeholder - could open email or form)
+            alert('Report Issue feature coming soon. Thank you for your feedback!');
+          } else if (action === 'export-pdf') {
+            // Export response to PDF
+            if (content) {
+              var printWindow = window.open('', '_blank');
+              printWindow.document.write('<html><head><title>JubileeInspire Response</title>');
+              printWindow.document.write('<style>body{font-family:Arial,sans-serif;padding:40px;line-height:1.6;}</style>');
+              printWindow.document.write('</head><body>');
+              printWindow.document.write('<h2>JubileeInspire Response</h2>');
+              printWindow.document.write('<p>' + content.replace(/\n/g, '<br>') + '</p>');
+              printWindow.document.write('<hr><p style="color:#666;font-size:12px;">Exported from JubileeInspire.com</p>');
+              printWindow.document.write('</body></html>');
+              printWindow.document.close();
+              printWindow.print();
+            }
+          }
+
+          // Close the menu after action
+          closeAllMoreMenus();
+          return;
+        }
+
+        var btn = e.target.closest('.action-btn');
+        if (!btn) return;
+
+        var action = btn.dataset.action;
+        var messageRow = btn.closest('.message-row.assistant');
+        var content = messageRow ? messageRow.dataset.content : '';
+
+        switch (action) {
+          case 'more':
+            // Toggle the more options dropdown
+            var wrapper = btn.closest('.more-options-wrapper');
+            if (wrapper) {
+              // Close other open menus first
+              document.querySelectorAll('.more-options-wrapper.open').forEach(function(w) {
+                if (w !== wrapper) w.classList.remove('open');
+              });
+              wrapper.classList.toggle('open');
+            }
+            break;
+
+          case 'copy':
+            if (content && navigator.clipboard) {
+              navigator.clipboard.writeText(content).then(function() {
+                // Brief visual feedback
+                var originalTooltip = btn.dataset.tooltip;
+                btn.dataset.tooltip = 'Copied!';
+                btn.style.opacity = '1';
+                setTimeout(function() {
+                  btn.dataset.tooltip = originalTooltip;
+                }, 1500);
+              });
+            }
+            break;
+
+          case 'speak':
+            if (content && 'speechSynthesis' in window) {
+              // Stop any current speech
+              window.speechSynthesis.cancel();
+              var utterance = new SpeechSynthesisUtterance(content);
+              utterance.rate = 1.0;
+              utterance.pitch = 1.0;
+              window.speechSynthesis.speak(utterance);
+            }
+            break;
+
+          case 'like':
+            btn.classList.toggle('liked');
+            var dislikeBtn = messageRow.querySelector('[data-action="dislike"]');
+            if (dislikeBtn) dislikeBtn.classList.remove('disliked');
+            break;
+
+          case 'dislike':
+            btn.classList.toggle('disliked');
+            var likeBtn = messageRow.querySelector('[data-action="like"]');
+            if (likeBtn) likeBtn.classList.remove('liked');
+            break;
+
+          case 'share':
+            if (content && navigator.share) {
+              navigator.share({
+                title: 'Jubilee Response',
+                text: content
+              }).catch(function() {});
+            } else if (content && navigator.clipboard) {
+              navigator.clipboard.writeText(content);
+            }
+            break;
+
+          case 'regenerate':
+            // Get the last user message and resend
+            if (conversationHistory.length >= 2) {
+              var lastUserMsg = conversationHistory[conversationHistory.length - 2];
+              if (lastUserMsg && lastUserMsg.role === 'user') {
+                // Remove last assistant message from history
+                conversationHistory.pop();
+                // Remove the message row from DOM
+                messageRow.remove();
+                // Resend the message
+                messageInput.value = lastUserMsg.content;
+                conversationHistory.pop(); // Remove user message too, it will be re-added
+                sendMessage();
+              }
+            }
+            break;
+        }
+      });
+
+      // Initialize
+      checkAuth();
+    })();
+  </script>
+</body>
+</html>

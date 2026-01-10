@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JubileeInspire.com</title>
+  <link rel="icon" type="image/png" href="https://www.jubileeverse.com/images/personas/jubilee.png">
+  <link rel="apple-touch-icon" href="https://www.jubileeverse.com/images/personas/jubilee.png">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Agency FB';
+      font-weight: bold;
+      font-display: swap;
+      src: url('https://www.jubileeverse.com/fonts/AGENCYB.TTF');
+    }
+    @font-face {
+      font-family: 'Agency FB';
+      font-display: swap;
+      src: url('https://www.jubileeverse.com/fonts/AGENCYR.TTF');
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #000;
+      color: #f2f2f2;
+      overflow: hidden;
+    }
+
+    /* APP CONTAINER */
+    .app-container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* LEFT SIDEBAR */
+    #sidebar-container {
+      display: flex;
+      height: 100vh;
+      flex-shrink: 0;
+    }
+
+    .sidebar {
+      width: 52px;
+      height: 100vh;
+      background-color: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 0;
+      flex-shrink: 0;
+      position: relative;
+      border-right: 1px solid #1e1e1e;
+      z-index: 101;
+      transition: background-color 0.3s ease;
+    }
+
+    .sidebar-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 1px 0;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+      opacity: 0.9;
+    }
+
+    .sidebar-icon:hover {
+      background-color: rgba(255, 189, 89, 0.1);
+      opacity: 1;
+    }
+
+    .sidebar-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: #777;
+    }
+
+    .sidebar-icon:hover svg {
+      fill: #aaa;
+    }
+
+    .sidebar-icon.is-highlight svg {
+      fill: #ffbd59;
+    }
+
+    .sidebar-spacer {
+      flex: 1;
+    }
+
+    .sidebar-brand-section {
+      position: absolute;
+      bottom: 55px;
+      left: 10px;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+
+    .sidebar-brand-text {
+      font-family: 'Agency FB', Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+      font-size: 22px;
+      font-weight: bold;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-brand-text .inspire {
+      color: #ffbd59;
+    }
+
+    .sidebar-brand-text .dotcom {
+      color: #fff;
+      font-weight: normal;
+    }
+
+    .sidebar-brand-sub {
+      font-family: 'Agency FB', Arial, sans-serif;
+      font-size: 8px;
+      color: #fff;
+      letter-spacing: 1px;
+      margin-top: 16px;
+      margin-right: -4px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-avatar {
+      position: absolute;
+      bottom: 10px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid #3aa0ff;
+    }
+
+    .sidebar-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* SEARCH RIGHT SIDEBAR */
+    .search-right-rail {
+      position: fixed;
+      right: 12px;
+      top: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+    }
+
+    .search-right-button {
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 8px;
+      border: 1px solid #343434;
+      background-color: #111;
+      transition: all 0.15s ease;
+      padding: 0;
+    }
+
+    .search-right-button:hover {
+      background-color: #1b1b1b;
+      border-color: #ffbd59;
+    }
+
+    .search-right-button.search-language-toggle {
+      background-color: #000;
+      border: 1px solid #ffbd59;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .search-right-button.search-language-toggle img {
+      width: 24px;
+      height: 16px;
+      border-radius: 2px;
+      border: none;
+      object-fit: cover;
+    }
+
+    /* LANGUAGE PANEL */
+    .language-panel {
+      position: fixed;
+      right: 56px;
+      top: 0;
+      width: 0;
+      height: 100vh;
+      background-color: #1a1a1a;
+      border-left: 0 solid #ffbd59;
+      z-index: 20;
+      transition: width 0.3s ease, border-left-width 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .language-panel.open {
+      width: 204px;
+      border-left-width: 2px;
+    }
+
+    .language-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-bottom: 1px solid #2f2f2f;
+    }
+
+    .language-panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffbd59;
+      letter-spacing: 0.3px;
+    }
+
+    .language-panel-content {
+      padding: 10px 12px 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Custom scrollbar for language panel */
+    .language-panel-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .language-panel-content::-webkit-scrollbar-track {
+      background: #1a1a1a;
+      border-radius: 3px;
+    }
+
+    .language-panel-content::-webkit-scrollbar-thumb {
+      background: #ffbd59;
+      border-radius: 3px;
+    }
+
+    .language-panel-content::-webkit-scrollbar-thumb:hover {
+      background: #ffc970;
+    }
+
+    .language-section-title {
+      font-size: 10px;
+      letter-spacing: 0.3px;
+      color: #bdbdbd;
+      margin: 8px 0 4px;
+    }
+
+    .language-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .language-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .language-item:hover {
+      background-color: rgba(255, 189, 89, 0.1);
+    }
+
+    .language-item.selected {
+      background-color: rgba(255, 189, 89, 0.2);
+      border: 2px solid #ffbd59;
+    }
+
+    .language-flag {
+      width: 20px;
+      height: 14px;
+      border-radius: 2px;
+      border: 1px solid #4a4a4a;
+      object-fit: cover;
+    }
+
+    .language-name {
+      font-size: 11px;
+      color: #e0e0e0;
+    }
+
+    .language-item.selected .language-name {
+      color: #ffbd59;
+      font-weight: 600;
+    }
+
+    /* CENTER CONTENT */
+    .center-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .avatar-container {
+      position: relative;
+      margin-bottom: 0;
+    }
+
+    .avatar-wrapper {
+      position: relative;
+      display: inline-block;
+      background-color: #000;
+      border-radius: 50%;
+    }
+
+    .avatar-image {
+      width: 156px;
+      height: 156px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: none;
+      background-color: #000;
+    }
+
+    .beta-badge {
+      position: absolute;
+      right: -62px;
+      bottom: -32px;
+      background: #4b4b4b;
+      color: #cfcfcf;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      padding: 6px 16px;
+      border-radius: 6px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .logo-container {
+      text-align: center;
+      margin-top: 6px;
+      margin-bottom: 8px;
+    }
+
+    .main-logo {
+      font-family: 'Agency FB', Cambria, Georgia, Times, serif;
+      font-size: 88px;
+      color: #fff;
+      font-weight: bold;
+      line-height: 1.0;
+      letter-spacing: -1px;
+    }
+
+    .main-logo .inspire {
+      color: #ffbd59;
+      font-weight: bold;
+    }
+
+    /* Search Box */
+    .search-wrapper {
+      width: 100%;
+      max-width: 760px;
+    }
+
+    .search-box {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      background-color: #5a5a5a;
+      border-radius: 8px;
+      padding: 12px 14px;
+      gap: 8px 12px;
+      transition: all 0.2s;
+      border: 1px solid #6a6a6a;
+    }
+
+    .search-box:focus-within {
+      border-color: #ffbd59;
+      box-shadow: 0 0 0 1px #ffbd59;
+      background-color: #616161;
+    }
+
+    .search-input {
+      flex: 1 1 auto;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #f0f0f0;
+      font-size: 15px;
+      font-family: inherit;
+      line-height: 22px;
+      height: 22px;
+      padding: 0;
+      margin: 0;
+      min-width: 200px;
+      resize: none;
+      overflow: hidden;
+    }
+
+    .search-input::placeholder {
+      color: #ffffff;
+    }
+
+    .search-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .action-icon {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+      background-color: #6b6b6b;
+      border: 1px solid #7b7b7b;
+    }
+
+    .action-icon:hover {
+      background-color: rgba(255,255,255,0.1);
+    }
+
+    .action-icon svg {
+      width: 16px;
+      height: 16px;
+      fill: #9a9a9a;
+      transition: fill 0.15s;
+    }
+
+    .action-icon:hover svg {
+      fill: #cfcfcf;
+    }
+
+    .action-icon.unlocked svg {
+      fill: #ffbd59;
+    }
+
+    /* Voice Button */
+    .voice-button {
+      width: 32px;
+      height: 32px;
+      background-color: #ffbd59;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 2px 8px rgba(255, 189, 89, 0.4);
+    }
+
+    .voice-button:hover {
+      background-color: #ffc970;
+      transform: scale(1.05);
+    }
+
+    .voice-button svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Copyright */
+    .search-copyright {
+      text-align: center;
+      padding: 4px 0 0;
+      color: #777;
+      font-size: 11px;
+      line-height: 1.4;
+      width: 100%;
+      max-width: 760px;
+    }
+
+    .search-copyright a {
+      color: #777;
+      text-decoration: none;
+    }
+
+    .search-copyright a:hover {
+      color: #aaa;
+    }
+
+    /* PIN MODAL */
+    .pin-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, background-color 0.3s ease, visibility 0.3s ease;
+    }
+
+    .pin-modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .pin-modal {
+      background-color: #2b2b2b;
+      border: 2px solid #ffbd59;
+      border-radius: 16px;
+      padding: 32px 40px;
+      text-align: center;
+      max-width: 360px;
+      width: 90%;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+
+    .pin-modal-overlay.open .pin-modal {
+      transform: scale(1);
+    }
+
+    .pin-modal-title {
+      color: #ffbd59;
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .pin-modal-text {
+      color: #ffffff;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+
+    .pin-inputs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .pin-input {
+      width: 56px;
+      height: 64px;
+      background-color: #1a1a1a;
+      border: 2px solid #ffbd59;
+      border-radius: 12px;
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      text-align: center;
+      outline: none;
+    }
+
+    .pin-input:focus {
+      border-color: #ffc970;
+      box-shadow: 0 0 12px rgba(255, 189, 89, 0.4);
+    }
+
+    /* Slide Panel */
+    .slide-panel {
+      width: 0;
+      height: 100vh;
+      background-color: #2b2b2b;
+      transition: width 0.3s ease;
+      overflow: hidden;
+      flex-shrink: 0;
+      border-right: 1px solid #3a3a3a;
+    }
+
+    .slide-panel.open {
+      width: 180px;
+    }
+
+    .slide-panel-inner {
+      width: 180px;
+      padding-top: 38px;
+    }
+
+    .slide-panel-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 12px;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 12px;
+      transition: all 0.15s;
+      cursor: pointer;
+      white-space: nowrap;
+      height: 34px;
+    }
+
+    .slide-panel-item:hover {
+      background-color: rgba(255, 189, 89, 0.1);
+      color: #ffbd59;
+    }
+
+    .slide-panel-item svg {
+      width: 18px;
+      height: 18px;
+      fill: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .slide-panel-item:hover svg {
+      fill: #ffbd59;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .main-logo { font-size: 64px; }
+      .avatar-image { width: 126px; height: 126px; }
+      .beta-badge { font-size: 18px; right: -14px; bottom: 10px; }
+      .search-wrapper { max-width: 90%; }
+    }
+
+    @media (max-width: 600px) {
+      .main-logo { font-size: 48px; }
+      .search-box { padding: 10px; }
+      .search-right-rail { top: 8px; right: 8px; }
+      .sidebar { width: 44px; }
+      .sidebar-icon { width: 28px; height: 28px; }
+      .sidebar-icon svg { width: 18px; height: 18px; }
+      .language-panel { right: 50px; }
+      .language-panel.open { width: 187px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- PIN Modal -->
+  <div class="pin-modal-overlay" id="pinModalOverlay">
+    <div class="pin-modal">
+      <div class="pin-modal-title" id="pinModalTitle">Private Chat</div>
+      <div class="pin-modal-text" id="pinModalText">Please enter a four digit pin to encrypt your conversation for privacy.</div>
+      <div class="pin-inputs">
+        <input type="text" class="pin-input" id="pin1" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        <input type="text" class="pin-input" id="pin2" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        <input type="text" class="pin-input" id="pin3" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        <input type="text" class="pin-input" id="pin4" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- LEFT SIDEBAR -->
+    <div id="sidebar-container">
+      <div class="sidebar" id="sidebar">
+        <div class="sidebar-icon is-highlight" id="menuToggle" title="Menu">
+          <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </div>
+        <div class="sidebar-icon" data-nav="search" title="Search">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        </div>
+        <div class="sidebar-icon" data-nav="chatinbox" title="Chat">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+        </div>
+        <div class="sidebar-icon" data-nav="communities" title="Communities">
+          <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        </div>
+        <div class="sidebar-spacer"></div>
+        <div class="sidebar-brand-section">
+          <div class="sidebar-brand-text">Jubilee<span class="inspire">Inspire</span><span class="dotcom">.com</span></div>
+          <div class="sidebar-brand-sub">Jubilee AI Bible Project - Free Plan</div>
+        </div>
+        <div class="sidebar-avatar">
+          <img src="jubilee-profile.png" alt="Avatar" id="sidebarAvatar">
+        </div>
+      </div>
+      <div class="slide-panel" id="slidePanel">
+        <div class="slide-panel-inner">
+          <a href="https://www.jubileeverse.com/home" class="slide-panel-item">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            Home
+          </a>
+          <a href="https://www.jubileeverse.com/search" class="slide-panel-item">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            Search
+          </a>
+          <a href="https://www.jubileeverse.com/chat" class="slide-panel-item">
+            <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+            Chat Inbox
+          </a>
+          <a href="https://www.jubileeverse.com/community" class="slide-panel-item">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            My Community
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+      <!-- Search Right Sidebar -->
+      <div class="search-right-rail">
+        <button class="search-right-button search-language-toggle" id="languageToggleBtn" type="button" title="English (US)">
+          <img id="currentLanguageFlag" src="https://flagcdn.com/w40/us.png" alt="English (US)">
+        </button>
+      </div>
+
+      <div class="language-panel" id="languagePanel">
+        <div class="language-panel-header">
+          <div class="language-panel-title">LANGUAGES</div>
+        </div>
+        <div class="language-panel-content">
+          <div class="language-section">
+            <div class="language-section-title">RECENTLY USED</div>
+            <div class="language-list" id="recentLanguages"></div>
+          </div>
+          <div class="language-section">
+            <div class="language-section-title">ALL LANGUAGES</div>
+            <div class="language-list" id="allLanguages"></div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- CENTER CONTENT -->
+      <div class="center-content">
+        <div class="avatar-container">
+          <div class="avatar-wrapper">
+            <img src="jubilee-profile.png" alt="Jubilee Inspire" class="avatar-image" id="activePersonaAvatar">
+            <span class="beta-badge">BETA</span>
+          </div>
+        </div>
+
+        <div class="logo-container">
+          <div class="main-logo">Jubilee<span class="inspire">Inspire</span><span class="dotcom">.com</span></div>
+        </div>
+
+        <div class="search-wrapper">
+          <div class="search-box">
+            <textarea class="search-input" id="searchInput" placeholder="Ask Jubilee Anything..." autocomplete="off" rows="1"></textarea>
+            <div class="search-actions">
+              <div class="action-icon" id="attachIcon" title="Attach File">
+                <svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
+              </div>
+              <div class="action-icon" id="lockIcon" title="Privacy Mode">
+                <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+              </div>
+              <div class="voice-button" title="Voice Input">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round">
+                  <line x1="4" y1="12" x2="4" y2="12"/>
+                  <line x1="8" y1="8" x2="8" y2="16"/>
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="16" y1="8" x2="16" y2="16"/>
+                  <line x1="20" y1="12" x2="20" y2="12"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="search-copyright">
+            Copyright &copy; <span id="currentYear"></span> JubileeInspire.com | All Rights Reserved. JubileeVerse and AI can make mistakes. |
+            <a href="https://www.jubileeverse.com/privacy">Privacy Policy</a> | <a href="https://www.jubileeverse.com/terms">Terms of Use</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+      // Use InspireCodex.com API for authentication (independent from JubileeVerse.com)
+      var AUTH_API = 'https://inspirecodex.com';
+      // Local chat page for JubileeInspire.com
+      var CHAT_URL = '/chat';
+      var selectedPersona = 'jubilee';
+      var selectedLang = { code: 'en', name: 'English (US)', flag: 'us' };
+      var sidebar = document.getElementById('sidebar');
+
+      document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+      // Check if user is authenticated from localStorage
+      var isAuthenticated = false;
+      var authData = localStorage.getItem('jubileeInspireAuth');
+      var accessToken = null;
+      if (authData) {
+        try {
+          var parsed = JSON.parse(authData);
+          // Check if auth has tokens and is less than 7 days old (token expiry)
+          if (parsed.authenticated && parsed.tokens && parsed.tokens.accessToken && parsed.timestamp) {
+            var tokenAge = Date.now() - parsed.timestamp;
+            var maxAge = (parsed.tokens.expiresIn || 604800) * 1000; // Default 7 days
+            if (tokenAge < maxAge) {
+              isAuthenticated = true;
+              accessToken = parsed.tokens.accessToken;
+            }
+          }
+        } catch (e) {}
+      }
+
+      // Verify token with InspireCodex.com API
+      if (accessToken) {
+        fetch(AUTH_API + '/api/auth/me', {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + accessToken
+          }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.success && d.user) {
+            isAuthenticated = true;
+            // Update stored user data
+            var storedAuth = JSON.parse(localStorage.getItem('jubileeInspireAuth') || '{}');
+            storedAuth.user = d.user;
+            localStorage.setItem('jubileeInspireAuth', JSON.stringify(storedAuth));
+            // Update avatar if available
+            if (d.user.avatarUrl) {
+              document.getElementById('sidebarAvatar').src = d.user.avatarUrl;
+            }
+          } else {
+            // Token invalid, clear auth
+            isAuthenticated = false;
+            accessToken = null;
+            localStorage.removeItem('jubileeInspireAuth');
+          }
+        }).catch(function() {
+          // Keep local auth state if server check fails
+        }).finally(function() {
+          // Check for return from login with query
+          var urlParams = new URLSearchParams(window.location.search);
+          var returnQuery = urlParams.get('q');
+          var returnPersona = urlParams.get('persona');
+          var returnLang = urlParams.get('lang');
+          if (returnQuery && isAuthenticated) {
+            // User returned from login with a query - auto-redirect to chat
+            var p = new URLSearchParams();
+            p.set('q', returnQuery);
+            p.set('persona', returnPersona || selectedPersona);
+            p.set('lang', returnLang || selectedLang.code);
+            window.location.href = CHAT_URL + '?' + p.toString();
+          }
+        });
+      }
+
+      // Search redirect - check auth first
+      var searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          var q = this.value.trim();
+          if (q) {
+            // Check authentication before proceeding
+            if (!isAuthenticated) {
+              // Redirect to login page with return URL containing the query
+              var returnUrl = encodeURIComponent('/chat?q=' + encodeURIComponent(q) + '&persona=' + selectedPersona + '&lang=' + selectedLang.code);
+              window.location.href = '/login?redirect=' + returnUrl;
+              return;
+            }
+            // Authenticated - go directly to chat
+            var p = new URLSearchParams();
+            p.set('q', q);
+            p.set('persona', selectedPersona);
+            p.set('lang', selectedLang.code);
+            window.location.href = CHAT_URL + '?' + p.toString();
+          }
+        }
+      });
+
+      // Slide panel
+      var menuToggle = document.getElementById('menuToggle');
+      var slidePanel = document.getElementById('slidePanel');
+      menuToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        slidePanel.classList.toggle('open');
+      });
+      document.addEventListener('click', function(e) {
+        if (slidePanel.classList.contains('open') && !slidePanel.contains(e.target) && !sidebar.contains(e.target)) {
+          slidePanel.classList.remove('open');
+        }
+      });
+
+      // Language panel
+      var langBtn = document.getElementById('languageToggleBtn');
+      var langPanel = document.getElementById('languagePanel');
+      var langs = [
+        { code: 'en', name: 'English (US)', flag: 'us' },
+        { code: 'af', name: 'Afrikaans', flag: 'za' },
+        { code: 'sq', name: 'Albanian', flag: 'al' },
+        { code: 'am', name: 'Amharic', flag: 'et' },
+        { code: 'ar', name: 'Arabic', flag: 'sa' },
+        { code: 'hy', name: 'Armenian', flag: 'am' },
+        { code: 'az', name: 'Azerbaijani', flag: 'az' },
+        { code: 'eu', name: 'Basque', flag: 'es' },
+        { code: 'be', name: 'Belarusian', flag: 'by' },
+        { code: 'bn', name: 'Bengali', flag: 'bd' },
+        { code: 'bs', name: 'Bosnian', flag: 'ba' },
+        { code: 'bg', name: 'Bulgarian', flag: 'bg' },
+        { code: 'my', name: 'Burmese', flag: 'mm' },
+        { code: 'ca', name: 'Catalan', flag: 'es' },
+        { code: 'ceb', name: 'Cebuano', flag: 'ph' },
+        { code: 'zh', name: 'Chinese (Mandarin)', flag: 'cn' },
+        { code: 'zh-tw', name: 'Chinese (Traditional)', flag: 'tw' },
+        { code: 'hr', name: 'Croatian', flag: 'hr' },
+        { code: 'cs', name: 'Czech', flag: 'cz' },
+        { code: 'da', name: 'Danish', flag: 'dk' },
+        { code: 'nl', name: 'Dutch', flag: 'nl' },
+        { code: 'et', name: 'Estonian', flag: 'ee' },
+        { code: 'fo', name: 'Faroese', flag: 'fo' },
+        { code: 'fi', name: 'Finnish', flag: 'fi' },
+        { code: 'fr', name: 'French', flag: 'fr' },
+        { code: 'gl', name: 'Galician', flag: 'es' },
+        { code: 'ka', name: 'Georgian', flag: 'ge' },
+        { code: 'de', name: 'German', flag: 'de' },
+        { code: 'el', name: 'Greek', flag: 'gr' },
+        { code: 'gu', name: 'Gujarati', flag: 'in' },
+        { code: 'ht', name: 'Haitian Creole', flag: 'ht' },
+        { code: 'ha', name: 'Hausa', flag: 'ng' },
+        { code: 'he', name: 'Hebrew', flag: 'il' },
+        { code: 'hi', name: 'Hindi', flag: 'in' },
+        { code: 'hu', name: 'Hungarian', flag: 'hu' },
+        { code: 'is', name: 'Icelandic', flag: 'is' },
+        { code: 'ig', name: 'Igbo', flag: 'ng' },
+        { code: 'id', name: 'Indonesian', flag: 'id' },
+        { code: 'ga', name: 'Irish', flag: 'ie' },
+        { code: 'it', name: 'Italian', flag: 'it' },
+        { code: 'ja', name: 'Japanese', flag: 'jp' },
+        { code: 'jv', name: 'Javanese', flag: 'id' },
+        { code: 'kn', name: 'Kannada', flag: 'in' },
+        { code: 'kk', name: 'Kazakh', flag: 'kz' },
+        { code: 'km', name: 'Khmer', flag: 'kh' },
+        { code: 'rw', name: 'Kinyarwanda', flag: 'rw' },
+        { code: 'ko', name: 'Korean', flag: 'kr' },
+        { code: 'ku', name: 'Kurdish', flag: 'iq' },
+        { code: 'ky', name: 'Kyrgyz', flag: 'kg' },
+        { code: 'lo', name: 'Lao', flag: 'la' },
+        { code: 'lv', name: 'Latvian', flag: 'lv' },
+        { code: 'lt', name: 'Lithuanian', flag: 'lt' },
+        { code: 'lb', name: 'Luxembourgish', flag: 'lu' },
+        { code: 'mk', name: 'Macedonian', flag: 'mk' },
+        { code: 'mg', name: 'Malagasy', flag: 'mg' },
+        { code: 'ms', name: 'Malay', flag: 'my' },
+        { code: 'ml', name: 'Malayalam', flag: 'in' },
+        { code: 'mt', name: 'Maltese', flag: 'mt' },
+        { code: 'mi', name: 'Maori', flag: 'nz' },
+        { code: 'mr', name: 'Marathi', flag: 'in' },
+        { code: 'mn', name: 'Mongolian', flag: 'mn' },
+        { code: 'ne', name: 'Nepali', flag: 'np' },
+        { code: 'no', name: 'Norwegian', flag: 'no' },
+        { code: 'ny', name: 'Nyanja (Chichewa)', flag: 'mw' },
+        { code: 'or', name: 'Odia (Oriya)', flag: 'in' },
+        { code: 'ps', name: 'Pashto', flag: 'af' },
+        { code: 'fa', name: 'Persian', flag: 'ir' },
+        { code: 'pl', name: 'Polish', flag: 'pl' },
+        { code: 'pt', name: 'Portuguese', flag: 'pt' },
+        { code: 'pt-br', name: 'Portuguese (Brazil)', flag: 'br' },
+        { code: 'pa', name: 'Punjabi', flag: 'in' },
+        { code: 'ro', name: 'Romanian', flag: 'ro' },
+        { code: 'ru', name: 'Russian', flag: 'ru' },
+        { code: 'sm', name: 'Samoan', flag: 'ws' },
+        { code: 'sr', name: 'Serbian', flag: 'rs' },
+        { code: 'sn', name: 'Shona', flag: 'zw' },
+        { code: 'sd', name: 'Sindhi', flag: 'pk' },
+        { code: 'si', name: 'Sinhala', flag: 'lk' },
+        { code: 'sk', name: 'Slovak', flag: 'sk' },
+        { code: 'sl', name: 'Slovenian', flag: 'si' },
+        { code: 'so', name: 'Somali', flag: 'so' },
+        { code: 'es', name: 'Spanish', flag: 'es' },
+        { code: 'su', name: 'Sundanese', flag: 'id' },
+        { code: 'sw', name: 'Swahili', flag: 'ke' },
+        { code: 'sv', name: 'Swedish', flag: 'se' },
+        { code: 'tl', name: 'Tagalog (Filipino)', flag: 'ph' },
+        { code: 'tg', name: 'Tajik', flag: 'tj' },
+        { code: 'ta', name: 'Tamil', flag: 'in' },
+        { code: 'te', name: 'Telugu', flag: 'in' },
+        { code: 'th', name: 'Thai', flag: 'th' },
+        { code: 'tr', name: 'Turkish', flag: 'tr' },
+        { code: 'tk', name: 'Turkmen', flag: 'tm' },
+        { code: 'uk', name: 'Ukrainian', flag: 'ua' },
+        { code: 'ur', name: 'Urdu', flag: 'pk' },
+        { code: 'uz', name: 'Uzbek', flag: 'uz' },
+        { code: 'vi', name: 'Vietnamese', flag: 'vn' },
+        { code: 'cy', name: 'Welsh', flag: 'gb' },
+        { code: 'xh', name: 'Xhosa', flag: 'za' },
+        { code: 'yi', name: 'Yiddish', flag: 'il' },
+        { code: 'yo', name: 'Yoruba', flag: 'ng' },
+        { code: 'zu', name: 'Zulu', flag: 'za' }
+      ];
+
+      function renderLangs() {
+        var recent = document.getElementById('recentLanguages');
+        var all = document.getElementById('allLanguages');
+        recent.innerHTML = '';
+        all.innerHTML = '';
+        var r = document.createElement('div');
+        r.className = 'language-item selected';
+        r.innerHTML = '<img src="https://flagcdn.com/w40/' + selectedLang.flag + '.png" class="language-flag"><span class="language-name">' + selectedLang.name + '</span>';
+        recent.appendChild(r);
+        langs.forEach(function(l) {
+          var d = document.createElement('div');
+          d.className = 'language-item' + (l.code === selectedLang.code ? ' selected' : '');
+          d.innerHTML = '<img src="https://flagcdn.com/w40/' + l.flag + '.png" class="language-flag"><span class="language-name">' + l.name + '</span>';
+          d.addEventListener('click', function() {
+            selectedLang = l;
+            document.getElementById('currentLanguageFlag').src = 'https://flagcdn.com/w40/' + l.flag + '.png';
+            langBtn.title = l.name;
+            renderLangs();
+            langPanel.classList.remove('open');
+            searchInput.placeholder = 'Ask ' + selectedPersona.charAt(0).toUpperCase() + selectedPersona.slice(1) + ' Anything...';
+          });
+          all.appendChild(d);
+        });
+      }
+      renderLangs();
+      langBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        langPanel.classList.toggle('open');
+      });
+      document.addEventListener('click', function(e) {
+        if (langPanel.classList.contains('open') && !langPanel.contains(e.target) && e.target !== langBtn) {
+          langPanel.classList.remove('open');
+        }
+      });
+
+      // PIN Modal
+      var lockIcon = document.getElementById('lockIcon');
+      var pinModal = document.getElementById('pinModalOverlay');
+      var pinInputs = document.querySelectorAll('.pin-input');
+      var isLocking = true;
+
+      lockIcon.addEventListener('click', function() {
+        isLocking = !this.classList.contains('unlocked');
+        document.getElementById('pinModalTitle').textContent = isLocking ? 'Private Chat' : 'Unlock Private Chat';
+        document.getElementById('pinModalText').textContent = isLocking ? 'Please enter a four digit pin to encrypt your conversation for privacy.' : 'Please enter your four digit pin to unlock and exit private chat mode.';
+        pinInputs.forEach(function(i) { i.value = ''; });
+        pinModal.classList.add('open');
+        setTimeout(function() { pinInputs[0].focus(); }, 100);
+      });
+
+      pinModal.addEventListener('click', function(e) {
+        if (e.target === pinModal) pinModal.classList.remove('open');
+      });
+
+      pinInputs.forEach(function(inp, idx) {
+        inp.addEventListener('input', function() {
+          this.value = this.value.replace(/[^0-9]/g, '');
+          if (this.value.length === 1) {
+            if (idx < 3) pinInputs[idx + 1].focus();
+            else {
+              var done = true;
+              pinInputs.forEach(function(i) { if (!i.value) done = false; });
+              if (done) {
+                pinModal.classList.remove('open');
+                lockIcon.classList.toggle('unlocked', isLocking);
+              }
+            }
+          }
+        });
+        inp.addEventListener('keydown', function(e) {
+          if (e.key === 'Backspace' && !this.value && idx > 0) pinInputs[idx - 1].focus();
+        });
+      });
+
+      // Attach file - check auth first
+      document.getElementById('attachIcon').addEventListener('click', function() {
+        if (!isAuthenticated) {
+          window.location.href = '/login?redirect=' + encodeURIComponent('/chat');
+          return;
+        }
+        var p = new URLSearchParams();
+        if (searchInput.value.trim()) {
+          p.set('q', searchInput.value.trim());
+        }
+        p.set('persona', selectedPersona);
+        p.set('lang', selectedLang.code);
+        p.set('attach', '1');
+        window.location.href = CHAT_URL + '?' + p.toString();
+      });
+
+      // Update sidebar avatar if authenticated
+      if (isAuthenticated && authData) {
+        try {
+          var parsed = JSON.parse(authData);
+          // InspireCodex.com uses avatarUrl, JubileeVerse used avatar
+          var avatarUrl = parsed.user && (parsed.user.avatarUrl || parsed.user.avatar);
+          if (avatarUrl) {
+            document.getElementById('sidebarAvatar').src = avatarUrl;
+          }
+        } catch (e) {}
+      }
+    })();
+  </script>
+</body>
+</html>

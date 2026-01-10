@@ -20,7 +20,7 @@ module.exports = {
       name: 'jubileeinspire.com',
       script: 'C:/Users/elian/AppData/Roaming/npm/node_modules/serve/build/main.js',
       args: '-l 3001 -s .',
-      cwd: 'c:/data/JubileeEnterprise.com/websites/inspire/JubileeInspire.com',
+      cwd: 'c:/data/JubileeEnterprise.com/websites/codex/JubileeInspire.com',
       interpreter: 'node',
       env: {
         NODE_ENV: 'production'

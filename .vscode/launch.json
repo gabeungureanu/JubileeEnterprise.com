@@ -18,7 +18,7 @@
       "name": "JubileeBrowser.com (Port 3002)",
       "type": "node",
       "request": "launch",
-      "cwd": "${workspaceFolder}/websites/JubileeBrowser.com",
+      "cwd": "${workspaceFolder}/websites/codex/JubileeBrowser.com",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["serve", "-l", "3002", "."],
       "console": "integratedTerminal"
@@ -27,7 +27,7 @@
       "name": "JubileeInspire.com (Port 3003)",
       "type": "node",
       "request": "launch",
-      "cwd": "${workspaceFolder}/websites/JubileeInspire.com",
+      "cwd": "${workspaceFolder}/websites/codex/JubileeInspire.com",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "env": {
@@ -40,7 +40,7 @@
       "name": "JubileeIntelligence.com (Port 3004)",
       "type": "node",
       "request": "launch",
-      "cwd": "${workspaceFolder}/websites/JubileeIntelligence.com",
+      "cwd": "${workspaceFolder}/websites/codex/JubileeIntelligence.com",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "env": {
@@ -53,7 +53,7 @@
       "name": "JubileeInternet.com (Port 3005)",
       "type": "node",
       "request": "launch",
-      "cwd": "${workspaceFolder}/websites/JubileeInternet.com",
+      "cwd": "${workspaceFolder}/websites/codex/JubileeInternet.com",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "env": {
@@ -66,7 +66,7 @@
       "name": "JubileePersonas.com (Port 3006)",
       "type": "node",
       "request": "launch",
-      "cwd": "${workspaceFolder}/websites/JubileePersonas.com",
+      "cwd": "${workspaceFolder}/websites/codex/JubileePersonas.com",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "env": {
@@ -79,7 +79,7 @@
       "name": "JubileeVerse.com (Port 3007)",
       "type": "node",
       "request": "launch",
-      "cwd": "${workspaceFolder}/websites/JubileeVerse.com",
+      "cwd": "${workspaceFolder}/websites/codex/JubileeVerse.com",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "env": {
@@ -92,7 +92,7 @@
       "name": "JubileeWebsites.com (Port 3008)",
       "type": "node",
       "request": "launch",
-      "cwd": "${workspaceFolder}/websites/JubileeWebsites.com",
+      "cwd": "${workspaceFolder}/websites/codex/JubileeWebsites.com",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "env": {

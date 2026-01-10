@@ -15,13 +15,14 @@ JubileeEnterprise.com/
 │   └── shared/                  # @jubilee/shared - Common utilities
 ├── websites/                    # Website projects
 │   ├── launcher/                # Development navigation hub
-│   ├── JubileeBrowser.com/      # Browser marketing site
-│   ├── JubileeInspire.com/      # Coming soon
-│   ├── JubileeIntelligence.com/ # AI content generation
-│   ├── JubileeInternet.com/     # SSO & identity services
-│   ├── JubileePersonas.com/     # AI persona management
-│   ├── JubileeVerse.com/        # Faith-based AI chat
-│   └── JubileeWebsites.com/     # AI website generation
+│   └── codex/                   # Production websites
+│       ├── JubileeBrowser.com/      # Browser marketing site
+│       ├── JubileeInspire.com/      # AI Bible chat interface
+│       ├── JubileeIntelligence.com/ # AI content generation
+│       ├── JubileeInternet.com/     # SSO & identity services
+│       ├── JubileePersonas.com/     # AI persona management
+│       ├── JubileeVerse.com/        # Faith-based AI chat
+│       └── JubileeWebsites.com/     # AI website generation
 ├── applications/                # Desktop applications
 │   └── JubileeBrowser.wpf/      # Windows browser (.NET/WPF)
 ├── infrastructure/              # Shared infrastructure configs
@@ -124,7 +125,7 @@ Each website is deployed independently. See individual project directories for d
 
 ```bash
 # Build a specific website for production
-cd websites/JubileeVerse.com
+cd websites/codex/JubileeVerse.com
 docker build -t jubilee-verse .
 
 # Run the container
@@ -173,7 +174,7 @@ npm run lint:fix
 
 ## Adding a New Website
 
-1. Create a new directory under `websites/`
+1. Create a new directory under `websites/codex/`
 2. Add a `package.json` with a unique `@jubilee/` scoped name
 3. Assign the next available port (see PORTS.md)
 4. Add the workspace to the root `package.json`

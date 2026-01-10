@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>JubileeInspire - Sign In</title>
+  <link rel="icon" type="image/png" href="jubilee-profile.png">
+  <link rel="apple-touch-icon" href="jubilee-profile.png">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Agency FB';
+      font-weight: bold;
+      font-display: swap;
+      src: url('https://www.jubileeverse.com/fonts/AGENCYB.TTF');
+    }
+    @font-face {
+      font-family: 'Agency FB';
+      font-display: swap;
+      src: url('https://www.jubileeverse.com/fonts/AGENCYR.TTF');
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #1a1a1a;
+      color: #ffffff;
+    }
+
+    /* Animated waving yellow bar at top */
+    .wave-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background-color: #555555;
+      z-index: 9999;
+      overflow: hidden;
+    }
+
+    .wave-bar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        #f0ad4e 20%,
+        #ffcc00 50%,
+        #f0ad4e 80%,
+        transparent 100%);
+      animation: yellowWave 2s ease-in-out infinite;
+    }
+
+    @keyframes yellowWave {
+      0% { left: -50%; }
+      100% { left: 100%; }
+    }
+
+    /* Main Container */
+    .login-container {
+      min-height: 100vh;
+      width: 100%;
+    }
+
+    .login-row {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Left Panel - Form */
+    .login-form-panel {
+      width: 33%;
+      min-width: 380px;
+      max-width: 520px;
+      background-color: #2b2b2b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+    }
+
+    .login-form-content {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .login-form-inner {
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 80px);
+    }
+
+    /* Logo */
+    .login-logo {
+      text-align: center;
+      margin-bottom: 0;
+    }
+
+    .login-logo a {
+      text-decoration: none;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    .login-logo-img {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px solid #2fd2ff;
+      box-shadow: 0 0 15px rgba(0, 207, 255, 0.5);
+    }
+
+    .login-logo-text {
+      font-family: 'Agency FB', Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+      font-size: 28px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .login-logo-text .inspire {
+      color: #ffbd59;
+    }
+
+    .login-logo-text .dotcom {
+      color: #ffffff;
+    }
+
+    /* Welcome Text */
+    .login-welcome {
+      text-align: center;
+      margin-bottom: 48px;
+      margin-top: -8px;
+    }
+
+    .login-welcome p {
+      font-size: 16px;
+      color: #ffffff;
+    }
+
+    .login-welcome a {
+      color: #ffbd59;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .login-welcome a:hover {
+      text-decoration: underline;
+    }
+
+    /* Alert Messages */
+    .auth-alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+    }
+
+    .auth-alert--success {
+      background-color: rgba(74, 222, 128, 0.15);
+      border: 1px solid #4ade80;
+      color: #4ade80;
+    }
+
+    .auth-alert--error {
+      background-color: rgba(248, 113, 113, 0.15);
+      border: 1px solid #f87171;
+      color: #f87171;
+    }
+
+    /* Form Styles */
+    .login-form {
+      flex: 1;
+    }
+
+    /* Floating Label Group */
+    .floating-label-group {
+      position: relative;
+      margin-bottom: -8px;
+    }
+
+    .floating-label {
+      position: absolute;
+      top: 6px;
+      left: 14px;
+      color: #c0c0c0;
+      font-size: 12px;
+      font-weight: 500;
+      pointer-events: none;
+      z-index: 5;
+      transition: all 0.2s ease;
+    }
+
+    /* Form Control */
+    .form-control {
+      width: 100%;
+      background-color: rgba(80, 80, 80, 0.7);
+      border: 2px solid #f0ad4e;
+      border-radius: 8px;
+      color: #ffffff;
+      padding: 28px 14px 10px 14px;
+      height: 58px;
+      font-size: 16px;
+      font-family: inherit;
+      outline: none;
+      transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-control:focus {
+      background-color: rgba(80, 80, 80, 0.9);
+      border-color: #ffcc00;
+      box-shadow: 0 0 0 3px rgba(240, 173, 78, 0.25);
+    }
+
+    .form-control::placeholder {
+      color: transparent;
+    }
+
+    .form-control.is-error {
+      border-color: #f87171;
+    }
+
+    .form-control.is-error:focus {
+      box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.25);
+    }
+
+    /* Field Error */
+    .field-error {
+      display: block;
+      font-size: 12px;
+      color: #f87171;
+      margin-top: 4px;
+      min-height: 16px;
+    }
+
+    /* Password Input */
+    .password-div {
+      position: relative;
+    }
+
+    .password-input-wrapper {
+      position: relative;
+    }
+
+    .password-input-wrapper .floating-label {
+      position: absolute;
+      top: 6px;
+      left: 14px;
+      z-index: 5;
+    }
+
+    /* Password input yellow dots */
+    input[type="password"] {
+      color: #f0ad4e;
+    }
+
+    /* Eye Button */
+    .btn-eye {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: #f0ad4e;
+      cursor: pointer;
+      z-index: 10;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-eye:hover {
+      color: #ffffff;
+    }
+
+    .btn-eye svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    /* Forgot Password */
+    .forgot-password-row {
+      text-align: right;
+      margin-top: 4px;
+      margin-bottom: 8px;
+    }
+
+    .forgot-password-link {
+      font-size: 12px;
+      color: #ffbd59;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .forgot-password-link:hover {
+      color: #ffffff;
+    }
+
+    /* Remember Me Checkbox */
+    .remember-row {
+      margin-bottom: 20px;
+    }
+
+    .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-wrapper input[type="checkbox"] {
+      display: none;
+    }
+
+    .checkmark {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #f0ad4e;
+      border-radius: 4px;
+      margin-right: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox-wrapper input[type="checkbox"]:checked + .checkmark {
+      background-color: #f0ad4e;
+    }
+
+    .checkbox-wrapper input[type="checkbox"]:checked + .checkmark::after {
+      content: '';
+      width: 5px;
+      height: 10px;
+      border: solid #1a1a1a;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+      margin-bottom: 2px;
+    }
+
+    .checkbox-label {
+      font-size: 14px;
+      color: #cccccc;
+    }
+
+    /* Submit Button */
+    .btn-login {
+      width: 100%;
+      background: linear-gradient(135deg, #f0ad4e 0%, #ec971f 100%);
+      border: none;
+      border-radius: 8px;
+      color: #000000;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 14px 24px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(240, 173, 78, 0.3);
+    }
+
+    .btn-login:hover {
+      background: linear-gradient(135deg, #ec971f 0%, #d58512 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(240, 173, 78, 0.4);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0, 0, 0, 0.3);
+      border-radius: 50%;
+      border-top-color: #000000;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Footer */
+    .login-footer {
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      width: 33%;
+      min-width: 380px;
+      max-width: 520px;
+      text-align: center;
+      padding: 0 30px;
+    }
+
+    .copyright {
+      font-size: 12px;
+      color: #ffffff;
+    }
+
+    .copyright a {
+      color: #ffbd59;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .copyright a:hover {
+      color: #ffffff;
+    }
+
+    /* Right Panel - Background */
+    .login-bg-panel {
+      flex: 1;
+      position: relative;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .bg-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    /* Bubble Animation */
+    .bg-bubbles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      list-style: none;
+    }
+
+    .bg-bubbles li {
+      position: absolute;
+      display: block;
+      width: 40px;
+      height: 40px;
+      background-color: rgba(255, 189, 89, 0.1);
+      bottom: -160px;
+      border-radius: 50%;
+      animation: floatUp 25s infinite;
+    }
+
+    .bg-bubbles li:nth-child(1) {
+      left: 10%;
+      width: 80px;
+      height: 80px;
+      animation-delay: 0s;
+      animation-duration: 18s;
+    }
+
+    .bg-bubbles li:nth-child(2) {
+      left: 20%;
+      width: 40px;
+      height: 40px;
+      animation-delay: 2s;
+      animation-duration: 22s;
+    }
+
+    .bg-bubbles li:nth-child(3) {
+      left: 25%;
+      width: 60px;
+      height: 60px;
+      animation-delay: 4s;
+      animation-duration: 20s;
+    }
+
+    .bg-bubbles li:nth-child(4) {
+      left: 40%;
+      width: 80px;
+      height: 80px;
+      animation-delay: 0s;
+      animation-duration: 24s;
+    }
+
+    .bg-bubbles li:nth-child(5) {
+      left: 70%;
+      width: 50px;
+      height: 50px;
+      animation-delay: 0s;
+      animation-duration: 19s;
+    }
+
+    .bg-bubbles li:nth-child(6) {
+      left: 80%;
+      width: 100px;
+      height: 100px;
+      animation-delay: 3s;
+      animation-duration: 26s;
+    }
+
+    .bg-bubbles li:nth-child(7) {
+      left: 32%;
+      width: 120px;
+      height: 120px;
+      animation-delay: 7s;
+      animation-duration: 28s;
+    }
+
+    .bg-bubbles li:nth-child(8) {
+      left: 55%;
+      width: 50px;
+      height: 50px;
+      animation-delay: 15s;
+      animation-duration: 30s;
+    }
+
+    .bg-bubbles li:nth-child(9) {
+      left: 5%;
+      width: 40px;
+      height: 40px;
+      animation-delay: 2s;
+      animation-duration: 32s;
+    }
+
+    .bg-bubbles li:nth-child(10) {
+      left: 90%;
+      width: 80px;
+      height: 80px;
+      animation-delay: 11s;
+      animation-duration: 20s;
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0.2;
+      }
+      50% {
+        opacity: 0.4;
+      }
+      100% {
+        transform: translateY(-1500px) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    /* Background Content */
+    .bg-content {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1;
+      text-align: center;
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+    }
+
+    .bg-quote blockquote {
+      font-family: 'Georgia', serif;
+      font-size: 28px;
+      font-style: italic;
+      color: #ffffff;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .bg-quote cite {
+      font-family: 'Open Sans', sans-serif;
+      font-size: 16px;
+      font-style: normal;
+      color: #ffbd59;
+      display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .login-row {
+        flex-direction: column;
+      }
+
+      .login-form-panel {
+        max-width: 100%;
+        min-height: auto;
+        padding: 30px 20px;
+      }
+
+      .login-form-inner {
+        min-height: auto;
+      }
+
+      .login-bg-panel {
+        display: none;
+      }
+
+      .login-footer {
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        min-width: auto;
+        margin-top: 30px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-logo-img {
+        width: 60px;
+        height: 60px;
+      }
+
+      .login-logo-text {
+        font-size: 26px;
+      }
+
+      .login-welcome h1 {
+        font-size: 22px;
+      }
+
+      .form-control {
+        height: 54px;
+        padding: 26px 14px 8px 14px;
+      }
+    }
+
+    /* Hide browser extensions */
+    input::-webkit-credentials-auto-fill-button,
+    input::-webkit-caps-lock-indicator,
+    input::-ms-reveal,
+    input::-ms-clear {
+      display: none !important;
+      visibility: hidden !important;
+    }
+
+    /* Hide any extension-injected elements and popups */
+    input ~ div[data-lastpass-root],
+    input ~ div[data-dashlanecreated],
+    div[data-norton-safeweb],
+    [class*="norton"],
+    [id*="norton"],
+    [class*="Norton"],
+    [id*="Norton"],
+    [class*="lastpass"],
+    [id*="lastpass"],
+    [class*="dashlane"],
+    [id*="dashlane"],
+    div[data-google-oa],
+    div[class*="credential"],
+    iframe[src*="accounts.google"],
+    div[id*="credential_picker"] {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
+    /* Autofill styling */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus {
+      -webkit-box-shadow: 0 0 0px 1000px rgba(80, 80, 80, 0.9) inset !important;
+      -webkit-text-fill-color: #fff !important;
+      border: 2px solid #f0ad4e !important;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+
+    /* Validation Modal */
+    .success-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+
+    .success-modal {
+      background-color: #2b2b2b;
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .success-icon {
+      margin-bottom: 20px;
+    }
+
+    .success-icon svg {
+      filter: drop-shadow(0 0 10px rgba(74, 222, 128, 0.5));
+    }
+
+    .success-modal h2 {
+      color: #ffffff;
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .success-modal p {
+      color: #cccccc;
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    /* Terms/Validation Error Modal */
+    .terms-error-modal {
+      padding: 30px 40px;
+      max-width: 480px;
+    }
+
+    .terms-error-modal .success-icon svg {
+      filter: drop-shadow(0 0 10px rgba(240, 173, 78, 0.5));
+    }
+
+    .terms-error-modal p {
+      margin-bottom: 0;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Animated waving yellow bar -->
+  <div class="wave-bar"></div>
+
+  <div class="login-container">
+    <div class="login-row">
+      <!-- Left Panel - Form -->
+      <div class="login-form-panel">
+        <div class="login-form-content">
+          <div class="login-form-inner">
+            <!-- Logo -->
+            <div class="login-logo">
+              <a href="/">
+                <img src="jubilee-profile.png" alt="JubileeInspire" class="login-logo-img">
+                <div class="login-logo-text">
+                  Jubilee<span class="inspire">Inspire</span><span class="dotcom">.com</span>
+                </div>
+              </a>
+            </div>
+
+            <!-- Welcome Text -->
+            <div class="login-welcome">
+              <p>Don't have an account? <a href="https://www.jubileeverse.com/register">Sign Up</a>.</p>
+            </div>
+
+            <!-- Alert container -->
+            <div id="auth-alert" class="auth-alert" style="display: none;"></div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="login-form" novalidate>
+              <!-- Email Field -->
+              <div class="floating-label-group">
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email"
+                  name="email"
+                  autocomplete="email"
+                  tabindex="1"
+                  placeholder=" "
+                  required
+                >
+                <label class="floating-label">Email Address</label>
+                <span class="field-error" id="email-error"></span>
+              </div>
+
+              <!-- Password Field -->
+              <div class="floating-label-group password-div">
+                <div class="password-input-wrapper">
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="password"
+                    name="password"
+                    autocomplete="current-password"
+                    data-form-type="other"
+                    tabindex="2"
+                    placeholder=" "
+                    required
+                  >
+                  <label class="floating-label">Password</label>
+                  <button class="btn-eye" type="button" id="password-toggle" tabindex="3">
+                    <svg class="eye-open" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <svg class="eye-closed" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  </button>
+                </div>
+                <div class="forgot-password-row">
+                  <a href="https://www.jubileeverse.com/forgot-password" class="forgot-password-link">Forgot Password?</a>
+                </div>
+                <span class="field-error" id="password-error"></span>
+              </div>
+
+              <!-- Remember Me -->
+              <div class="remember-row">
+                <label class="checkbox-wrapper">
+                  <input type="checkbox" id="remember" name="remember" checked>
+                  <span class="checkmark"></span>
+                  <span class="checkbox-label">Remember me</span>
+                </label>
+              </div>
+
+              <!-- Submit Button -->
+              <button type="submit" class="btn-login" id="submit-btn" tabindex="4">
+                Sign In
+              </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="login-footer">
+              <p class="copyright">
+                &copy; <span id="currentYear"></span> JubileeInspire.com |
+                <a href="https://www.jubileeverse.com/terms">Terms of Use</a> |
+                <a href="https://www.jubileeverse.com/privacy">Privacy Policy</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel - Background Image -->
+      <div class="login-bg-panel" id="backgroundImageContainer">
+        <div class="bg-overlay"></div>
+        <ul class="bg-bubbles">
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+        </ul>
+        <div class="bg-content">
+          <div class="bg-quote">
+            <blockquote>
+              "All Scripture is God-breathed and is useful for teaching, rebuking, correcting and training in righteousness."
+            </blockquote>
+            <cite>2 Timothy 3:16</cite>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Validation Error Modal -->
+  <div class="success-modal-overlay" id="validationModal" style="display: none;">
+    <div class="success-modal terms-error-modal">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24" width="60" height="60" fill="none" stroke="#f0ad4e" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M15 9l-6 6M9 9l6 6"/>
+        </svg>
+      </div>
+      <p id="validationMessage">Please fill in all required fields.</p>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Use InspireCodex.com API for authentication (independent from JubileeVerse.com)
+      var API = 'https://inspirecodex.com';
+
+      // Set current year
+      document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+      // Background image rotation
+      var backgroundImages = [
+        '/images/slider/login-bg.jpg',
+        '/images/slider/slider-bg-2.jpg',
+        '/images/slider/slider-bg-3.jpg',
+        '/images/slider/slider-bg-4.jpg',
+        '/images/slider/slider-bg-5.jpg'
+      ];
+      var bgContainer = document.getElementById('backgroundImageContainer');
+
+      function changeBackgroundImage() {
+        var randomIndex = Math.floor(Math.random() * backgroundImages.length);
+        bgContainer.style.backgroundImage = "url('" + backgroundImages[randomIndex] + "')";
+      }
+
+      // Set initial background and rotate every 4 seconds
+      changeBackgroundImage();
+      setInterval(changeBackgroundImage, 4000);
+
+      // Generate a unique device ID for this browser
+      function getDeviceId() {
+        var deviceId = localStorage.getItem('jubileeInspireDeviceId');
+        if (!deviceId) {
+          deviceId = 'web-' + Date.now() + '-' + Math.random().toString(36).substring(2, 15);
+          localStorage.setItem('jubileeInspireDeviceId', deviceId);
+        }
+        return deviceId;
+      }
+
+      // Get device info for login tracking
+      function getDeviceInfo() {
+        var ua = navigator.userAgent;
+        var browser = 'Unknown';
+        var browserVersion = '';
+
+        if (ua.indexOf('Chrome') > -1) {
+          browser = 'Chrome';
+          browserVersion = ua.match(/Chrome\/(\d+)/)?.[1] || '';
+        } else if (ua.indexOf('Firefox') > -1) {
+          browser = 'Firefox';
+          browserVersion = ua.match(/Firefox\/(\d+)/)?.[1] || '';
+        } else if (ua.indexOf('Safari') > -1) {
+          browser = 'Safari';
+          browserVersion = ua.match(/Version\/(\d+)/)?.[1] || '';
+        } else if (ua.indexOf('Edge') > -1) {
+          browser = 'Edge';
+          browserVersion = ua.match(/Edge\/(\d+)/)?.[1] || '';
+        }
+
+        return {
+          deviceId: getDeviceId(),
+          deviceName: browser + ' on ' + navigator.platform,
+          deviceType: 'desktop',
+          platform: navigator.platform,
+          browser: browser,
+          browserVersion: browserVersion,
+          appName: 'JubileeInspire',
+          appVersion: '1.0.0'
+        };
+      }
+
+      // Form elements
+      var form = document.getElementById('login-form');
+      var emailInput = document.getElementById('email');
+      var passwordInput = document.getElementById('password');
+      var submitBtn = document.getElementById('submit-btn');
+      var alertEl = document.getElementById('auth-alert');
+      var passwordToggle = document.getElementById('password-toggle');
+      var validationModal = document.getElementById('validationModal');
+      var validationMessage = document.getElementById('validationMessage');
+
+      // Password visibility toggle
+      passwordToggle.addEventListener('click', function() {
+        var type = passwordInput.type === 'password' ? 'text' : 'password';
+        passwordInput.type = type;
+
+        var eyeOpen = this.querySelector('.eye-open');
+        var eyeClosed = this.querySelector('.eye-closed');
+
+        if (type === 'text') {
+          eyeOpen.style.display = 'none';
+          eyeClosed.style.display = 'block';
+        } else {
+          eyeOpen.style.display = 'block';
+          eyeClosed.style.display = 'none';
+        }
+      });
+
+      // Form submission
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Clear previous errors
+        clearErrors();
+
+        // Validate - check for first error to display in modal
+        var errorMessage = null;
+
+        if (!emailInput.value.trim()) {
+          errorMessage = 'Email is required.';
+          emailInput.classList.add('is-error');
+        } else if (!isValidEmail(emailInput.value)) {
+          errorMessage = 'Please enter a valid email.';
+          emailInput.classList.add('is-error');
+        } else if (!passwordInput.value) {
+          errorMessage = 'Password is required.';
+          passwordInput.classList.add('is-error');
+        }
+
+        if (errorMessage) {
+          validationMessage.textContent = errorMessage;
+          validationModal.style.display = 'flex';
+          return;
+        }
+
+        // Submit
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner"></span> Signing in...';
+
+        try {
+          var response = await fetch(API + '/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              email: emailInput.value,
+              password: passwordInput.value,
+              rememberMe: document.getElementById('remember').checked,
+              deviceInfo: getDeviceInfo()
+            })
+          });
+
+          var data = await response.json();
+
+          if (response.ok && data.success) {
+            // Store auth tokens and user data in localStorage for JubileeInspire
+            localStorage.setItem('jubileeInspireAuth', JSON.stringify({
+              authenticated: true,
+              user: data.user,
+              tokens: data.tokens,
+              timestamp: Date.now()
+            }));
+
+            // Redirect immediately
+            var params = new URLSearchParams(window.location.search);
+            var redirect = params.get('redirect');
+            window.location.href = redirect || '/';
+          } else {
+            // Show error in popup modal
+            validationMessage.textContent = data.error || 'Invalid email or password.';
+            validationModal.style.display = 'flex';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Sign In';
+          }
+        } catch (error) {
+          // Show error in popup modal
+          validationMessage.textContent = 'An error occurred. Please try again.';
+          validationModal.style.display = 'flex';
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Sign In';
+        }
+      });
+
+      function showFieldError(field, message) {
+        var input = document.getElementById(field);
+        var error = document.getElementById(field + '-error');
+        input.classList.add('is-error');
+        if (error) error.textContent = message;
+      }
+
+      function clearErrors() {
+        document.querySelectorAll('.form-control').forEach(function(input) {
+          input.classList.remove('is-error');
+        });
+        document.querySelectorAll('.field-error').forEach(function(error) {
+          error.textContent = '';
+        });
+        alertEl.style.display = 'none';
+      }
+
+      function showAlert(type, message) {
+        alertEl.className = 'auth-alert auth-alert--' + type;
+        alertEl.textContent = message;
+        alertEl.style.display = 'flex';
+      }
+
+      function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      }
+
+      // Enter key on inputs
+      emailInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          passwordInput.focus();
+        }
+      });
+
+      passwordInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          form.dispatchEvent(new Event('submit'));
+        }
+      });
+
+      // Block extension popups by preventing their injection
+      (function() {
+        var observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+              if (node.nodeType === 1) {
+                // Check for common password manager and popup elements
+                var shouldHide = false;
+                if (node.id && (node.id.toLowerCase().includes('norton') ||
+                                node.id.toLowerCase().includes('lastpass') ||
+                                node.id.toLowerCase().includes('dashlane') ||
+                                node.id.toLowerCase().includes('credential'))) {
+                  shouldHide = true;
+                }
+                if (node.className && typeof node.className === 'string' &&
+                    (node.className.toLowerCase().includes('norton') ||
+                     node.className.toLowerCase().includes('lastpass') ||
+                     node.className.toLowerCase().includes('dashlane') ||
+                     node.className.toLowerCase().includes('credential'))) {
+                  shouldHide = true;
+                }
+                if (node.tagName === 'IFRAME' && node.src && node.src.includes('accounts.google')) {
+                  shouldHide = true;
+                }
+                if (shouldHide) {
+                  node.style.display = 'none';
+                  node.style.visibility = 'hidden';
+                }
+              }
+            });
+          });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+      })();
+
+      // Close validation modal when clicking outside or on the modal
+      validationModal.addEventListener('click', function(e) {
+        validationModal.style.display = 'none';
+      });
+    });
+  </script>
+</body>
+</html>
