@@ -16,6 +16,8 @@ public partial class ApplicationViewModel : ObservableObject
     [ObservableProperty]
     private MainViewModel? _mainViewModel;
 
+    public event EventHandler? ToggleFolderPaneRequested;
+
     public ApplicationViewModel()
     {
     }
@@ -75,6 +77,7 @@ public partial class ApplicationViewModel : ObservableObject
     [RelayCommand]
     private void OpenSettings()
     {
-        // Settings panel logic - can be expanded
+        // Trigger folder pane toggle
+        ToggleFolderPaneRequested?.Invoke(this, EventArgs.Empty);
     }
 }

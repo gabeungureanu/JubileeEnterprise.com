@@ -1,3 +1,5 @@
+using System.Windows.Media;
+
 namespace JubileeOutlook.Models;
 
 public class CalendarEvent
@@ -16,6 +18,40 @@ public class CalendarEvent
     public bool IsRecurring { get; set; }
     public RecurrencePattern? Recurrence { get; set; }
     public EventStatus Status { get; set; } = EventStatus.Free;
+    public string CalendarName { get; set; } = "My Calendar";
+    public Brush EventColor { get; set; } = new SolidColorBrush(Color.FromRgb(0, 120, 212));
+
+    public double GetTopPosition(DateTime dayStart)
+    {
+        var duration = StartTime - dayStart;
+        return duration.TotalHours * 60; // 60px per hour
+    }
+
+    public double GetHeight()
+    {
+        var duration = EndTime - StartTime;
+        return Math.Max(duration.TotalHours * 60, 30); // Minimum 30px height
+    }
+
+    public string GetTimeRange()
+    {
+        if (IsAllDay)
+            return "All day";
+
+        return $"{StartTime:h:mm tt} - {EndTime:h:mm tt}";
+    }
+
+    public Brush GetCategoryColor()
+    {
+        return Category switch
+        {
+            EventCategory.Business => new SolidColorBrush(Color.FromRgb(0, 120, 212)),
+            EventCategory.Personal => new SolidColorBrush(Color.FromRgb(16, 124, 16)),
+            EventCategory.Holiday => new SolidColorBrush(Color.FromRgb(209, 52, 56)),
+            EventCategory.Birthday => new SolidColorBrush(Color.FromRgb(255, 189, 89)),
+            _ => new SolidColorBrush(Color.FromRgb(136, 136, 136))
+        };
+    }
 }
 
 public class RecurrencePattern
@@ -63,4 +99,20 @@ public enum EventStatus
     Tentative,
     Busy,
     OutOfOffice
+}
+
+public class Calendar
+{
+    public string Name { get; set; } = string.Empty;
+    public bool IsVisible { get; set; } = true;
+    public Brush Color { get; set; } = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 120, 212));
+    public string Owner { get; set; } = string.Empty;
+}
+
+public enum CalendarViewMode
+{
+    Day,
+    WorkWeek,
+    Week,
+    Month
 }

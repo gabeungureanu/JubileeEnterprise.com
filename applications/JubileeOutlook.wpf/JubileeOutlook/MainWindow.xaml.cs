@@ -30,6 +30,7 @@ public partial class MainWindow : Window
     private readonly SecureStorageService _secureStorage;
     private readonly MainViewModel _mainViewModel;
     private bool _isLoaded;
+    private ViewModels.ComposeMailViewModel? _composeMailViewModel;
 
     // Window state persistence file path
     private static readonly string WindowStateFilePath = IOPath.Combine(
@@ -123,6 +124,9 @@ public partial class MainWindow : Window
 
         // Subscribe to module changes to update UI
         _appViewModel.PropertyChanged += AppViewModel_PropertyChanged;
+
+        // Subscribe to folder pane toggle event
+        _appViewModel.ToggleFolderPaneRequested += (s, e) => HamburgerMenu_Click(s ?? this, new RoutedEventArgs());
 
         // Set the DataContext to a composite object containing both view models
         DataContext = new WindowDataContext
@@ -737,23 +741,151 @@ public partial class MainWindow : Window
         }
     }
 
+    private bool _isFolderPaneCollapsed = false;
+
+    private void HamburgerMenu_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            _isFolderPaneCollapsed = !_isFolderPaneCollapsed;
+
+            // Animate the folder pane column width
+            var widthAnimation = new DoubleAnimation
+            {
+                Duration = TimeSpan.FromMilliseconds(300),
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
+            };
+
+            if (_isFolderPaneCollapsed)
+            {
+                // Collapse to 0 width - completely hide the panel
+                widthAnimation.To = 0;
+                widthAnimation.From = FolderPaneColumn?.Width.Value ?? 250;
+            }
+            else
+            {
+                // Expand to full width (250px)
+                widthAnimation.To = 250;
+                widthAnimation.From = 0;
+            }
+
+            // Apply animation to the folder pane column
+            if (FolderPaneColumn != null)
+            {
+                FolderPaneColumn.BeginAnimation(ColumnDefinition.WidthProperty, widthAnimation);
+            }
+
+            // Also animate the grid splitter visibility
+            AnimateGridSplitter();
+        }
+        catch (Exception ex)
+        {
+            // Log error but don't crash
+            System.Diagnostics.Debug.WriteLine($"Error in HamburgerMenu_Click: {ex.Message}");
+        }
+    }
+
+    private void AnimateGridSplitter()
+    {
+        // Find the grid splitter next to the folder pane
+        if (MailModuleContent != null)
+        {
+            // Grid splitter is at column 1
+            foreach (var child in MailModuleContent.Children)
+            {
+                if (child is GridSplitter splitter && Grid.GetColumn(splitter) == 1)
+                {
+                    var opacityAnimation = new DoubleAnimation
+                    {
+                        To = _isFolderPaneCollapsed ? 0 : 1,
+                        Duration = TimeSpan.FromMilliseconds(300),
+                        EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
+                    };
+                    splitter.BeginAnimation(UIElement.OpacityProperty, opacityAnimation);
+
+                    // After animation completes, set visibility
+                    if (_isFolderPaneCollapsed)
+                    {
+                        System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer
+                        {
+                            Interval = TimeSpan.FromMilliseconds(300)
+                        };
+                        timer.Tick += (s, e) =>
+                        {
+                            splitter.Visibility = Visibility.Collapsed;
+                            timer.Stop();
+                        };
+                        timer.Start();
+                    }
+                    else
+                    {
+                        splitter.Visibility = Visibility.Visible;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
     #endregion
 
     #region New Message Split Button
 
     private void NewMailPrimaryButton_Click(object sender, RoutedEventArgs e)
     {
-        // Execute the new message command directly (primary action)
-        var dataContext = DataContext as WindowDataContext;
-        dataContext?.MainViewModel?.NewMessageCommand?.Execute(null);
+        // Show the compose panel
+        ShowComposePanel();
     }
 
     private void NewMailMenuItem_Click(object sender, RoutedEventArgs e)
     {
         NewDropdownButton.IsChecked = false;
-        // Execute the new message command
-        var dataContext = DataContext as WindowDataContext;
-        dataContext?.MainViewModel?.NewMessageCommand?.Execute(null);
+        // Show the compose panel
+        ShowComposePanel();
+    }
+
+    private void ShowComposePanel()
+    {
+        // Create a new compose view model if needed
+        if (_composeMailViewModel == null)
+        {
+            _composeMailViewModel = new ViewModels.ComposeMailViewModel();
+            _composeMailViewModel.MailSent += OnMailSent;
+            _composeMailViewModel.ComposeCancelled += OnComposeCancelled;
+        }
+
+        // Reset the form and start composing
+        _composeMailViewModel.StartComposing();
+
+        // Set the DataContext for the compose panel
+        if (ComposeMailPanel != null)
+        {
+            ComposeMailPanel.DataContext = _composeMailViewModel;
+        }
+
+        // Hide reading pane, show compose panel
+        if (ReadingPane != null) ReadingPane.Visibility = Visibility.Collapsed;
+        if (ComposeMailPanel != null) ComposeMailPanel.Visibility = Visibility.Visible;
+    }
+
+    private void HideComposePanel()
+    {
+        // Show reading pane, hide compose panel
+        if (ReadingPane != null) ReadingPane.Visibility = Visibility.Visible;
+        if (ComposeMailPanel != null) ComposeMailPanel.Visibility = Visibility.Collapsed;
+    }
+
+    private void OnMailSent(object? sender, EventArgs e)
+    {
+        // Mail was sent successfully
+        HideComposePanel();
+        MessageBox.Show("Mail sent successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void OnComposeCancelled(object? sender, EventArgs e)
+    {
+        // User cancelled composition
+        HideComposePanel();
     }
 
     private void NewMeetingMenuItem_Click(object sender, RoutedEventArgs e)

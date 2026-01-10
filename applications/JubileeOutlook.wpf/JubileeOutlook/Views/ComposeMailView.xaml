@@ -1,0 +1,431 @@
+<UserControl x:Class="JubileeOutlook.Views.ComposeMailView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewmodels="clr-namespace:JubileeOutlook.ViewModels"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="500"
+             Background="#1A1A1A">
+
+    <UserControl.DataContext>
+        <viewmodels:ComposeMailViewModel/>
+    </UserControl.DataContext>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header with Send Button -->
+        <Border Grid.Row="0" Background="#252525" BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="16,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Send Button with Send Icon -->
+                <Button Grid.Column="0" Command="{Binding SendCommand}" Margin="0,0,12,0">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="{StaticResource GoldBrandBrush}"/>
+                            <Setter Property="Foreground" Value="#000000"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Padding" Value="20,8"/>
+                            <Setter Property="FontSize" Value="13"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                               CornerRadius="4"
+                                               Padding="{TemplateBinding Padding}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="&#xe163;" FontFamily="{StaticResource MaterialIcons}" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
+                                                <TextBlock Text="Send" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#C9A961"/>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter Property="Background" Value="#B89850"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <!-- Toolbar Icons -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Command="{Binding AttachCommand}" ToolTip="Attach file" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
+                        <TextBlock Text="&#xe226;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
+                    </Button>
+                    <Button x:Name="FormattingButton" ToolTip="Formatting" Click="FormattingButton_Click" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
+                        <TextBlock Text="&#xe8d2;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
+                    </Button>
+                    <Button Command="{Binding CancelCommand}" ToolTip="Discard" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
+                        <TextBlock Text="&#xe872;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
+                    </Button>
+                    <Button Command="{Binding CancelCommand}" ToolTip="Close" Style="{StaticResource IconButtonStyle}">
+                        <TextBlock Text="&#xe5cd;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- From Field (Editable TextBox) -->
+        <Border Grid.Row="1" BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="16,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="From:" FontSize="13" Foreground="#999999" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="1"
+                         Text="{Binding From, UpdateSourceTrigger=PropertyChanged}"
+                         FontSize="13"
+                         Background="Transparent"
+                         Foreground="#EEEEEE"
+                         BorderThickness="0"
+                         Padding="0,4"
+                         VerticalAlignment="Center"
+                         CaretBrush="#0078D4">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <Grid>
+                                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Enter sender address"
+                                                      Foreground="#666666"
+                                                      FontSize="13"
+                                                      IsHitTestVisible="False"
+                                                      VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding From}" Value="">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+            </Grid>
+        </Border>
+
+        <!-- To, Cc, Bcc Fields -->
+        <Border Grid.Row="2" BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="16,0">
+            <StackPanel>
+                <!-- To Field -->
+                <Grid Margin="0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="60"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="To:" FontSize="13" Foreground="#999999" VerticalAlignment="Center"/>
+
+                    <TextBox Grid.Column="1"
+                             Text="{Binding To, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="13"
+                             Background="Transparent"
+                             Foreground="#EEEEEE"
+                             BorderThickness="0"
+                             Padding="0,4"
+                             VerticalAlignment="Center"
+                             CaretBrush="#0078D4">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="TextBox">
+                                            <Grid>
+                                                <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Enter recipients"
+                                                          Foreground="#666666"
+                                                          FontSize="13"
+                                                          IsHitTestVisible="False"
+                                                          VerticalAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding To}" Value="">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <Button Content="Cc" Command="{Binding ShowCcFieldCommand}"
+                                Visibility="{Binding ShowCc, Converter={StaticResource InverseBoolToVisibilityConverter}}"
+                                Style="{StaticResource LinkButtonStyle}" Margin="0,0,8,0"/>
+                        <Button Content="Bcc" Command="{Binding ShowBccFieldCommand}"
+                                Visibility="{Binding ShowBcc, Converter={StaticResource InverseBoolToVisibilityConverter}}"
+                                Style="{StaticResource LinkButtonStyle}"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Cc Field -->
+                <Grid Margin="0,0,0,12" Visibility="{Binding ShowCc, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="60"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="Cc:" FontSize="13" Foreground="#999999" VerticalAlignment="Center"/>
+
+                    <TextBox Grid.Column="1"
+                             Text="{Binding Cc, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="13"
+                             Background="Transparent"
+                             Foreground="#EEEEEE"
+                             BorderThickness="0"
+                             Padding="0,4"
+                             VerticalAlignment="Center"
+                             CaretBrush="#0078D4"/>
+                </Grid>
+
+                <!-- Bcc Field -->
+                <Grid Margin="0,0,0,12" Visibility="{Binding ShowBcc, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="60"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="Bcc:" FontSize="13" Foreground="#999999" VerticalAlignment="Center"/>
+
+                    <TextBox Grid.Column="1"
+                             Text="{Binding Bcc, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="13"
+                             Background="Transparent"
+                             Foreground="#EEEEEE"
+                             BorderThickness="0"
+                             Padding="0,4"
+                             VerticalAlignment="Center"
+                             CaretBrush="#0078D4"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- Subject Field -->
+        <Border Grid.Row="3" BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="16,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="Subject:" FontSize="13" Foreground="#999999" VerticalAlignment="Center"/>
+
+                <TextBox Grid.Column="1"
+                         Text="{Binding Subject, UpdateSourceTrigger=PropertyChanged}"
+                         FontSize="13"
+                         Background="Transparent"
+                         Foreground="#EEEEEE"
+                         BorderThickness="0"
+                         Padding="0,4"
+                         VerticalAlignment="Center"
+                         CaretBrush="#0078D4">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <Grid>
+                                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Add a subject"
+                                                      Foreground="#666666"
+                                                      FontSize="13"
+                                                      IsHitTestVisible="False"
+                                                      VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Subject}" Value="">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+            </Grid>
+        </Border>
+
+        <!-- Attachments Section -->
+        <Border Grid.Row="4" BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="16,8"
+                x:Name="AttachmentsSection"
+                Visibility="Collapsed">
+            <StackPanel>
+                <TextBlock Text="Attachments:" FontSize="12" Foreground="#999999" Margin="0,0,0,8"/>
+                <ItemsControl x:Name="AttachmentsList" ItemsSource="{Binding Attachments}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="#252525"
+                                   BorderBrush="#444444"
+                                   BorderThickness="1"
+                                   CornerRadius="4"
+                                   Padding="8,6"
+                                   Margin="0,0,8,8"
+                                   HorizontalAlignment="Left">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Column="0"
+                                              Text="&#xe226;"
+                                              FontFamily="{StaticResource MaterialIcons}"
+                                              FontSize="16"
+                                              Foreground="#0078D4"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,8,0"/>
+
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding FileName}"
+                                                  FontSize="12"
+                                                  Foreground="#EEEEEE"
+                                                  TextTrimming="CharacterEllipsis"
+                                                  MaxWidth="300"/>
+                                        <TextBlock Text="{Binding FileSize}"
+                                                  FontSize="10"
+                                                  Foreground="#999999"/>
+                                    </StackPanel>
+
+                                    <Button Grid.Column="2"
+                                           ToolTip="Remove attachment"
+                                           Command="{Binding DataContext.RemoveAttachmentCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                           CommandParameter="{Binding}"
+                                           Style="{StaticResource IconButtonStyle}"
+                                           Margin="8,0,0,0">
+                                        <TextBlock Text="&#xe5cd;"
+                                                  FontFamily="{StaticResource MaterialIcons}"
+                                                  FontSize="14"
+                                                  Foreground="#999999"/>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- Message Body -->
+        <Border Grid.Row="5" Padding="16">
+            <RichTextBox x:Name="MessageBodyEditor"
+                        Background="Transparent"
+                        Foreground="#EEEEEE"
+                        BorderThickness="0"
+                        FontSize="13"
+                        CaretBrush="#0078D4"
+                        VerticalScrollBarVisibility="Auto"
+                        AcceptsReturn="True">
+                <FlowDocument>
+                    <Paragraph>
+                        <Run Text="" Foreground="#EEEEEE"/>
+                    </Paragraph>
+                </FlowDocument>
+            </RichTextBox>
+        </Border>
+
+        <!-- Formatting Toolbar -->
+        <Border x:Name="FormattingToolbar" Grid.Row="6" Background="#252525" BorderBrush="#333333" BorderThickness="0,1,0,0" Padding="12,8" Visibility="Visible">
+            <StackPanel Orientation="Horizontal">
+                <!-- Text Formatting -->
+                <Button x:Name="BoldButton" ToolTip="Bold (Ctrl+B)" Click="BoldButton_Click" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
+                    <TextBlock Text="&#xe238;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
+                </Button>
+                <Button x:Name="ItalicButton" ToolTip="Italic (Ctrl+I)" Click="ItalicButton_Click" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
+                    <TextBlock Text="&#xe23f;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
+                </Button>
+                <Button x:Name="UnderlineButton" ToolTip="Underline (Ctrl+U)" Click="UnderlineButton_Click" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
+                    <TextBlock Text="&#xe249;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
+                </Button>
+
+                <Rectangle Width="1" Height="20" Fill="#444444" Margin="8,0"/>
+
+                <!-- Text Alignment -->
+                <Button x:Name="AlignLeftButton" ToolTip="Align Left" Click="AlignLeftButton_Click" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
+                    <TextBlock Text="&#xe236;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
+                </Button>
+                <Button x:Name="AlignCenterButton" ToolTip="Align Center" Click="AlignCenterButton_Click" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
+                    <TextBlock Text="&#xe234;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
+                </Button>
+                <Button x:Name="AlignRightButton" ToolTip="Align Right" Click="AlignRightButton_Click" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
+                    <TextBlock Text="&#xe237;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
+                </Button>
+
+                <Rectangle Width="1" Height="20" Fill="#444444" Margin="8,0"/>
+
+                <!-- Lists -->
+                <Button x:Name="BulletListButton" ToolTip="Bullet list" Click="BulletListButton_Click" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
+                    <TextBlock Text="&#xe241;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
+                </Button>
+                <Button x:Name="NumberedListButton" ToolTip="Numbered list" Click="NumberedListButton_Click" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
+                    <TextBlock Text="&#xe242;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
+                </Button>
+
+                <Rectangle Width="1" Height="20" Fill="#444444" Margin="8,0"/>
+
+                <!-- Insert Options -->
+                <Button x:Name="InsertLinkButton" ToolTip="Insert link" Click="InsertLinkButton_Click" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
+                    <TextBlock Text="&#xe157;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
+                </Button>
+                <Button x:Name="InsertImageButton" ToolTip="Insert image" Click="InsertImageButton_Click" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
+                    <TextBlock Text="&#xe3f4;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

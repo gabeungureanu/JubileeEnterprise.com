@@ -1,0 +1,442 @@
+<UserControl x:Class="JubileeOutlook.Views.CalendarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:viewmodels="clr-namespace:JubileeOutlook.ViewModels"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="1200"
+             Background="{StaticResource PrimaryBackgroundBrush}">
+
+    <UserControl.DataContext>
+        <viewmodels:CalendarViewModel/>
+    </UserControl.DataContext>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top Navigation Header -->
+        <Border Grid.Row="0" Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="16,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Date Navigation -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Previous Button -->
+                    <Button Command="{Binding PreviousPeriodCommand}"
+                            Style="{StaticResource RibbonSmallButtonStyle}"
+                            Width="36" Height="36" Margin="0,0,8,0"
+                            ToolTip="Previous">
+                        <TextBlock Text="&#xe5cb;" FontFamily="{StaticResource MaterialIcons}"
+                                   FontSize="20" Foreground="#CCCCCC"/>
+                    </Button>
+
+                    <!-- Next Button -->
+                    <Button Command="{Binding NextPeriodCommand}"
+                            Style="{StaticResource RibbonSmallButtonStyle}"
+                            Width="36" Height="36" Margin="0,0,16,0"
+                            ToolTip="Next">
+                        <TextBlock Text="&#xe5cc;" FontFamily="{StaticResource MaterialIcons}"
+                                   FontSize="20" Foreground="#CCCCCC"/>
+                    </Button>
+
+                    <!-- Today Button -->
+                    <Button Command="{Binding GoToTodayCommand}"
+                            Style="{StaticResource OutlookButtonStyle}"
+                            Content="Today" Padding="16,6" Margin="0,0,24,0"/>
+
+                    <!-- Date Range Display -->
+                    <TextBlock Text="{Binding DateRangeText}"
+                               FontSize="18" FontWeight="SemiBold"
+                               Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- View Selection Controls -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                    <RadioButton Content="Day" GroupName="ViewMode"
+                                 Command="{Binding SetViewModeCommand}" CommandParameter="Day"
+                                 Style="{StaticResource RibbonTabButtonStyle}" Margin="0,0,4,0"/>
+                    <RadioButton Content="Work Week" GroupName="ViewMode"
+                                 Command="{Binding SetViewModeCommand}" CommandParameter="WorkWeek"
+                                 Style="{StaticResource RibbonTabButtonStyle}" Margin="0,0,4,0"
+                                 IsChecked="True"/>
+                    <RadioButton Content="Week" GroupName="ViewMode"
+                                 Command="{Binding SetViewModeCommand}" CommandParameter="Week"
+                                 Style="{StaticResource RibbonTabButtonStyle}" Margin="0,0,4,0"/>
+                    <RadioButton Content="Month" GroupName="ViewMode"
+                                 Command="{Binding SetViewModeCommand}" CommandParameter="Month"
+                                 Style="{StaticResource RibbonTabButtonStyle}"/>
+                </StackPanel>
+
+                <!-- New Event Button -->
+                <Button Grid.Column="3" Command="{Binding NewEventCommand}"
+                        Background="{StaticResource GoldBrandBrush}"
+                        Foreground="#000000"
+                        BorderThickness="0"
+                        Padding="20,8" Height="36"
+                        Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="{StaticResource GoldBrandBrush}"/>
+                            <Setter Property="Foreground" Value="#000000"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="border"
+                                                Background="{TemplateBinding Background}"
+                                                Padding="{TemplateBinding Padding}"
+                                                CornerRadius="6">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="border" Property="Background" Value="{StaticResource GoldBrandHoverBrush}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="border" Property="Background" Value="#e5a94d"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xe145;" FontFamily="{StaticResource MaterialIcons}"
+                                   FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="New Event" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Main Calendar Content -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Sidebar -->
+            <Border Grid.Column="0" Background="#0A0A0A" BorderBrush="#333333" BorderThickness="0,0,1,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="16">
+
+                        <!-- Mini Calendar -->
+                        <Border Background="#1A1A1A" CornerRadius="8" Padding="12" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="January 2026" FontSize="14" FontWeight="SemiBold"
+                                           Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+
+                                <!-- Mini Calendar Grid -->
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Day Headers -->
+                                    <UniformGrid Grid.Row="0" Rows="1" Columns="7" Margin="0,0,0,8">
+                                        <TextBlock Text="Su" Style="{StaticResource MiniCalendarDayHeaderStyle}"/>
+                                        <TextBlock Text="Mo" Style="{StaticResource MiniCalendarDayHeaderStyle}"/>
+                                        <TextBlock Text="Tu" Style="{StaticResource MiniCalendarDayHeaderStyle}"/>
+                                        <TextBlock Text="We" Style="{StaticResource MiniCalendarDayHeaderStyle}"/>
+                                        <TextBlock Text="Th" Style="{StaticResource MiniCalendarDayHeaderStyle}"/>
+                                        <TextBlock Text="Fr" Style="{StaticResource MiniCalendarDayHeaderStyle}"/>
+                                        <TextBlock Text="Sa" Style="{StaticResource MiniCalendarDayHeaderStyle}"/>
+                                    </UniformGrid>
+
+                                    <!-- Calendar Days -->
+                                    <UniformGrid Grid.Row="1" Rows="5" Columns="7">
+                                        <!-- Week 1 -->
+                                        <TextBlock Style="{StaticResource MiniCalendarDayOtherMonthStyle}"/>
+                                        <TextBlock Style="{StaticResource MiniCalendarDayOtherMonthStyle}"/>
+                                        <TextBlock Style="{StaticResource MiniCalendarDayOtherMonthStyle}"/>
+                                        <TextBlock Text="1" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="2" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="3" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="4" Style="{StaticResource MiniCalendarDayStyle}"/>
+
+                                        <!-- Week 2 -->
+                                        <TextBlock Text="5" Style="{StaticResource MiniCalendarDaySelectedStyle}"/>
+                                        <TextBlock Text="6" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="7" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="8" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="9" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="10" Style="{StaticResource MiniCalendarDayTodayStyle}"/>
+                                        <TextBlock Text="11" Style="{StaticResource MiniCalendarDayStyle}"/>
+
+                                        <!-- Week 3 -->
+                                        <TextBlock Text="12" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="13" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="14" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="15" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="16" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="17" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="18" Style="{StaticResource MiniCalendarDayStyle}"/>
+
+                                        <!-- Week 4 -->
+                                        <TextBlock Text="19" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="20" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="21" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="22" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="23" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="24" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="25" Style="{StaticResource MiniCalendarDayStyle}"/>
+
+                                        <!-- Week 5 -->
+                                        <TextBlock Text="26" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="27" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="28" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="29" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="30" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Text="31" Style="{StaticResource MiniCalendarDayStyle}"/>
+                                        <TextBlock Style="{StaticResource MiniCalendarDayOtherMonthStyle}"/>
+                                    </UniformGrid>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- My Calendars Section -->
+                        <StackPanel Margin="0,0,0,16">
+                            <Button Command="{Binding AddCalendarCommand}"
+                                    Style="{StaticResource OutlookButtonStyle}"
+                                    HorizontalAlignment="Stretch" Margin="0,0,0,12">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xe145;" FontFamily="{StaticResource MaterialIcons}"
+                                               FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Add Calendar" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <TextBlock Text="My Calendars" FontSize="12" FontWeight="SemiBold"
+                                       Foreground="#888888" Margin="0,0,0,8"/>
+
+                            <!-- Calendar List -->
+                            <ItemsControl ItemsSource="{Binding Calendars}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.ToggleCalendarVisibilityCommand,
+                                                         RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource CalendarListItemStyle}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Visibility Checkbox -->
+                                                <Border Grid.Column="0" Width="16" Height="16"
+                                                        Background="Transparent"
+                                                        BorderBrush="{Binding Color}" BorderThickness="2"
+                                                        CornerRadius="3" Margin="0,0,8,0">
+                                                    <TextBlock Text="&#xe5ca;" FontFamily="{StaticResource MaterialIcons}"
+                                                               FontSize="12" Foreground="{Binding Color}"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                               Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                </Border>
+
+                                                <!-- Color Indicator -->
+                                                <Ellipse Grid.Column="1" Width="12" Height="12"
+                                                         Fill="{Binding Color}" Margin="0,0,8,0"/>
+
+                                                <!-- Calendar Name -->
+                                                <TextBlock Grid.Column="2" Text="{Binding Name}"
+                                                           Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Main Calendar View -->
+            <Border Grid.Column="1" Background="{StaticResource PrimaryBackgroundBrush}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Day Headers -->
+                    <Border Grid.Row="0" Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0,0,0,1">
+                        <Grid Margin="60,0,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Monday -->
+                            <StackPanel Grid.Column="0" Margin="8,12">
+                                <TextBlock Text="MON" FontSize="11" Foreground="#888888"
+                                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                <TextBlock Text="6" FontSize="24" FontWeight="Light"
+                                           Foreground="#CCCCCC" HorizontalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Tuesday -->
+                            <StackPanel Grid.Column="1" Margin="8,12">
+                                <TextBlock Text="TUE" FontSize="11" Foreground="#888888"
+                                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                <TextBlock Text="7" FontSize="24" FontWeight="Light"
+                                           Foreground="#CCCCCC" HorizontalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Wednesday -->
+                            <StackPanel Grid.Column="2" Margin="8,12">
+                                <TextBlock Text="WED" FontSize="11" Foreground="#888888"
+                                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                <TextBlock Text="8" FontSize="24" FontWeight="Light"
+                                           Foreground="#CCCCCC" HorizontalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Thursday -->
+                            <StackPanel Grid.Column="3" Margin="8,12">
+                                <TextBlock Text="THU" FontSize="11" Foreground="#888888"
+                                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                <TextBlock Text="9" FontSize="24" FontWeight="Light"
+                                           Foreground="#CCCCCC" HorizontalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Friday (Today) -->
+                            <StackPanel Grid.Column="4" Margin="8,12" Background="#094771">
+                                <TextBlock Text="FRI" FontSize="11" Foreground="#FFFFFF"
+                                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                <TextBlock Text="10" FontSize="24" FontWeight="Light"
+                                           Foreground="#FFFFFF" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Time Grid -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="60"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Time Labels -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="12 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="1 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="2 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="3 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="4 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="5 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="6 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="7 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="8 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="9 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="10 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="11 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="12 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="1 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="2 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="3 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="4 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="5 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="6 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="7 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="8 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="9 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="10 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                                <TextBlock Text="11 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                            </StackPanel>
+
+                            <!-- Day Columns with Time Slots -->
+                            <Border Grid.Column="1" Style="{StaticResource DayColumnStyle}">
+                                <Canvas>
+                                    <!-- Sample Event: Team Standup 9:00 AM -->
+                                    <Border Canvas.Top="540" Height="30" Width="160"
+                                            Style="{StaticResource CalendarEventBlockStyle}"
+                                            Background="#D93438" Margin="4,0">
+                                        <StackPanel Margin="6,4">
+                                            <TextBlock Text="Team Standup" FontSize="11"
+                                                       FontWeight="SemiBold" Foreground="White"/>
+                                            <TextBlock Text="9:00 AM - 9:30 AM" FontSize="9"
+                                                       Foreground="#DDDDDD"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Canvas>
+                            </Border>
+
+                            <Border Grid.Column="2" Style="{StaticResource DayColumnStyle}">
+                                <Canvas>
+                                    <!-- Sample Event: Project Review 2:00 PM -->
+                                    <Border Canvas.Top="840" Height="90" Width="160"
+                                            Style="{StaticResource CalendarEventBlockStyle}"
+                                            Background="#D93438" Margin="4,0">
+                                        <StackPanel Margin="6,4">
+                                            <TextBlock Text="Project Review" FontSize="11"
+                                                       FontWeight="SemiBold" Foreground="White"/>
+                                            <TextBlock Text="2:00 PM - 3:30 PM" FontSize="9"
+                                                       Foreground="#DDDDDD"/>
+                                            <TextBlock Text="Virtual - Teams" FontSize="9"
+                                                       Foreground="#DDDDDD" Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Canvas>
+                            </Border>
+
+                            <Border Grid.Column="3" Style="{StaticResource DayColumnStyle}">
+                                <Canvas>
+                                    <!-- Sample Event: Lunch with Sarah 12:00 PM -->
+                                    <Border Canvas.Top="720" Height="60" Width="160"
+                                            Style="{StaticResource CalendarEventBlockStyle}"
+                                            Background="#107C10" Margin="4,0">
+                                        <StackPanel Margin="6,4">
+                                            <TextBlock Text="Lunch with Sarah" FontSize="11"
+                                                       FontWeight="SemiBold" Foreground="White"/>
+                                            <TextBlock Text="12:00 PM - 1:00 PM" FontSize="9"
+                                                       Foreground="#DDDDDD"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Canvas>
+                            </Border>
+
+                            <Border Grid.Column="4" Style="{StaticResource DayColumnStyle}">
+                                <Canvas>
+                                    <!-- Sample Event: Dentist 10:00 AM -->
+                                    <Border Canvas.Top="600" Height="60" Width="160"
+                                            Style="{StaticResource CalendarEventBlockStyle}"
+                                            Background="#107C10" Margin="4,0">
+                                        <StackPanel Margin="6,4">
+                                            <TextBlock Text="Dentist Appointment" FontSize="11"
+                                                       FontWeight="SemiBold" Foreground="White"/>
+                                            <TextBlock Text="10:00 AM - 11:00 AM" FontSize="9"
+                                                       Foreground="#DDDDDD"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Canvas>
+                            </Border>
+
+                            <Border Grid.Column="5" Style="{StaticResource DayColumnStyle}"/>
+                        </Grid>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

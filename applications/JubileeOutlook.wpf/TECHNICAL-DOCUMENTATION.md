@@ -620,6 +620,209 @@ partial void OnSelectedFolderChanged(MailFolder? oldValue, MailFolder? newValue)
 
 ---
 
+## Recent Feature Implementations (v1.1.0)
+
+### Email Composition System
+
+#### ComposeMailView Architecture
+- **Location**: `Views/ComposeMailView.xaml` and `Views/ComposeMailView.xaml.cs`
+- **ViewModel**: `ViewModels/ComposeMailViewModel.cs`
+- **Theme**: Dark theme with #1A1A1A background, #EEEEEE text
+
+**Key Features**:
+1. **RichTextBox Editor** with FlowDocument support for rich text editing
+2. **Formatting Toolbar**:
+   - `ToggleBold()`, `ToggleItalic()`, `ToggleUnderline()` methods
+   - Keyboard shortcuts: Ctrl+B, Ctrl+I, Ctrl+U
+   - `SetTextAlignment()` for Left, Center, Right alignment
+   - `ToggleList()` for bullet and numbered lists
+   - Toggleable toolbar visibility via `FormattingButton_Click()`
+
+3. **Hyperlink Insertion**:
+   ```csharp
+   private void InsertLinkButton_Click(object sender, RoutedEventArgs e)
+   {
+       // Creates dark-themed input dialog
+       // Validates URL format
+       // Converts selected text to Hyperlink with NavigateUri
+       // Applies blue color (#4A9EFF) for visibility
+   }
+   ```
+
+4. **Image Insertion**:
+   ```csharp
+   private void InsertImageButton_Click(object sender, RoutedEventArgs e)
+   {
+       // OpenFileDialog with image file filters
+       // Creates Image control with BitmapImage source
+       // MaxWidth: 600px with Stretch.Uniform
+       // Wraps in InlineUIContainer for inline display
+       // Adds LineBreak for formatting
+   }
+   ```
+
+5. **Attachment Management**:
+   ```csharp
+   public class AttachmentInfo
+   {
+       public string FileName { get; set; }
+       public string FilePath { get; set; }
+       public string FileSize { get; set; }  // Formatted: B, KB, MB, GB
+   }
+
+   public ObservableCollection<AttachmentInfo> Attachments { get; }
+
+   [RelayCommand] private void Attach()  // Triggers file picker
+   [RelayCommand] private void RemoveAttachment(AttachmentInfo attachment)
+   public void AddAttachment(string filePath)  // Adds with size formatting
+   ```
+
+6. **Gold Send Button**: Background set to `{StaticResource GoldBrandBrush}` (#B8860B) matching New Mail button
+
+### Hamburger Menu Navigation
+
+#### Collapsible Folder Panel Implementation
+- **Trigger**: Existing hamburger icon in `AppRailControl.xaml`
+- **Event Flow**: `ApplicationViewModel.ToggleFolderPaneRequested` → `MainWindow.HamburgerMenu_Click()`
+
+**Animation Logic**:
+```csharp
+private bool _isFolderPaneCollapsed = false;
+
+private void HamburgerMenu_Click(object sender, RoutedEventArgs e)
+{
+    _isFolderPaneCollapsed = !_isFolderPaneCollapsed;
+
+    var widthAnimation = new DoubleAnimation
+    {
+        Duration = TimeSpan.FromMilliseconds(300),
+        EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut },
+        To = _isFolderPaneCollapsed ? 0 : 250
+    };
+
+    FolderPaneColumn.BeginAnimation(ColumnDefinition.WidthProperty, widthAnimation);
+    AnimateGridSplitter();  // Fades splitter in/out
+}
+```
+
+**Features**:
+- Width transitions: 250px ↔ 0px
+- Duration: 300ms with CubicEase
+- Grid splitter opacity animation (1 ↔ 0)
+- Automatic content area expansion via Grid column definitions
+- Try-catch error handling for robustness
+
+### Email Reading Enhancements
+
+#### Selection and Reading Pane
+**Auto-selection Logic**:
+```csharp
+partial void OnSelectedMessageChanged(EmailMessage? value)
+{
+    if (value != null && !value.IsRead)
+    {
+        _ = _mailService.MarkAsReadAsync(value.Id, true);
+        value.IsRead = true;
+    }
+}
+```
+
+**Unread Indicator Fix**:
+- Moved from overlay StackPanel to dedicated Grid column
+- Column 0: Unread dot (8px × 8px Ellipse)
+- Margin: `0,4,8,0` for proper spacing
+- No text overlap with `VerticalAlignment="Top"`
+
+**Gold Inbox Heading**:
+```xaml
+<TextBlock Text="{Binding MainViewModel.SelectedFolder.Name}"
+           Foreground="{StaticResource GoldBrandBrush}"/>
+```
+
+### Calendar and Event Management
+
+#### NewEventViewModel Architecture
+**Core Collections**:
+```csharp
+public ObservableCollection<ShowAsStatusItem> ShowAsStatusOptions { get; }
+public ObservableCollection<string> ReminderOptions { get; }
+public ObservableCollection<CategoryItem> CategoryOptions { get; }
+```
+
+**Status Options** (5 items with color bars):
+```csharp
+private void InitializeStatusOptions()
+{
+    ShowAsStatusOptions.Add(new ShowAsStatusItem { Name = "Free", Color = "#FFFFFF" });
+    ShowAsStatusOptions.Add(new ShowAsStatusItem { Name = "Working elsewhere", Color = "#9370DB" });
+    ShowAsStatusOptions.Add(new ShowAsStatusItem { Name = "Tentative", Color = "#6495ED" });
+    ShowAsStatusOptions.Add(new ShowAsStatusItem { Name = "Busy", Color = "#DC143C" });
+    ShowAsStatusOptions.Add(new ShowAsStatusItem { Name = "Out of office", Color = "#9B30FF" });
+
+    ShowAsStatus = ShowAsStatusOptions[3];  // Default: Busy
+}
+```
+
+**Reminder Options** (10 items):
+- Don't remind me, At time of event, 5/15/30 minutes, 1/2/12 hours, 1 day, 1 week before
+- Default: "15 minutes before"
+
+**Category Options** (8 items with colored tag icons):
+```csharp
+CategoryOptions.Add(new CategoryItem { Name = "Blue category", Color = "#5B9BD5" });
+// ... (Green, Orange, Purple, Red, Yellow, New, Manage)
+SelectedCategory = CategoryOptions[0];  // Default: Blue
+```
+
+#### ComboBox Template Optimization
+**Scrollbar Removal**:
+```xaml
+<!-- Before -->
+<ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
+    <ItemsPresenter/>
+</ScrollViewer>
+
+<!-- After -->
+<ItemsPresenter/>  <!-- Direct rendering, no scrollbar -->
+```
+
+**Icon Management**:
+- Status dropdown: Color-coded vertical rectangles (4px × 16px)
+- Category dropdown: Color-coded tag icons from Material Design
+- Fixed duplicate icon issue by removing hardcoded icon from button template
+
+**DataTemplate for Categories**:
+```xaml
+<StackPanel Orientation="Horizontal">
+    <TextBlock Text="&#xe892;" FontFamily="{StaticResource MaterialIcons}"
+               Foreground="{Binding Color}"/>
+    <TextBlock Text="{Binding Name}"/>
+</StackPanel>
+```
+
+### UI/UX Polish
+
+#### Dark Theme Consistency
+- Compose Window: #1A1A1A background, #252525 panels
+- Event Window: #252525 secondary, #2A2A2A tertiary
+- Text colors: #EEEEEE primary, #999999 labels, #666666 placeholders
+- Borders: #333333, #3A3A3A for various elements
+- Dropdown background: #2b2b2b with #3a3a3a borders
+- DropShadowEffect: 10px blur, 3px depth, 0.5 opacity
+
+#### Hover and Selection States
+```xaml
+<Trigger Property="IsMouseOver" Value="True">
+    <Setter Property="Background" Value="#3A3A3A"/>
+</Trigger>
+<Trigger Property="IsSelected" Value="True">
+    <Setter Property="Background" Value="#B8860B"/>  <!-- Gold -->
+    <Setter Property="Foreground" Value="#000000"/>
+</Trigger>
+```
+
+---
+
 ## Future Enhancements
 
 ### Planned Features

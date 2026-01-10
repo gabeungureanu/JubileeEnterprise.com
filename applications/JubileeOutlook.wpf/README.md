@@ -16,14 +16,37 @@ JubileeOutlook.wpf is an enterprise-grade desktop email client designed for Wind
 - **Color-Coded Action Icons**: Visually distinct icons for different actions (blue, red, green, cyan, yellow, purple)
 
 ### Email Management
-- **Folder Navigation**: Hierarchical folder structure with inbox, sent items, drafts, deleted items, junk, and archive
+- **Collapsible Folder Navigation**: Hierarchical folder structure with hamburger menu toggle for expanding/collapsing
+  - Smooth 300ms sliding animation
+  - Automatic content area width adjustment
+  - Persistent selection highlighting in both states
 - **Message List**: Sortable message list with sender, subject, preview, and metadata
-- **Reading Pane**: Full message viewing with formatted headers and body content
-- **Unread Indicators**: Visual badges showing unread counts per folder
+  - Properly aligned unread indicator dots (8px spacing)
+  - No text overlap with visual indicators
+- **Reading Pane**: Full message viewing with formatted headers, body content, and attachments
+  - Gold-colored folder heading for visual consistency
+  - Attachment section with file details and download options
+- **Email Selection**: Click any email to instantly display in reading pane with automatic read marking
+- **Unread Indicators**: Visual badges showing unread counts per folder with proper positioning
 - **Message Indicators**: Icons for unread status, attachments, and flags
 
+### Email Composition
+- **New Mail Compose Window**: Full-featured email composition with dark theme (#1A1A1A background)
+  - Editable From, To, Cc, Bcc, and Subject fields with placeholder text
+  - Gold-colored Send button matching New Mail button for consistency
+  - RichTextBox message editor with FlowDocument support
+  - **Rich Text Formatting Toolbar**:
+    - Text formatting: Bold (Ctrl+B), Italic (Ctrl+I), Underline (Ctrl+U)
+    - Text alignment: Left, Center, Right
+    - Lists: Bullet and numbered lists with toggle functionality
+    - Toggleable toolbar visibility via formatting icon
+  - **Hyperlink Insertion**: Dark-themed dialog for converting selected text to clickable hyperlinks
+  - **Image Insertion**: File picker for adding inline images (max 600px width with aspect ratio preservation)
+  - **File Attachments**: Multi-file selection with visual cards showing filename, size, and remove option
+  - Cancel and minimize buttons for window management
+
 ### Core Actions (Home Tab)
-- **New**: Compose new email messages
+- **New**: Compose new email messages with full formatting capabilities
 - **Delete Group**: Ignore, Block, Delete, Archive, and Report actions
 - **Respond**: Reply, Reply All, Forward, and Meeting creation
 - **Move**: Sweep, Move to folder, and Rules management
@@ -51,6 +74,32 @@ JubileeOutlook.wpf is an enterprise-grade desktop email client designed for Wind
 - **Arrangement**: Conversation view, sorting, and filtering
 - **Window**: Save and reset view configurations
 
+### Calendar & Events
+- **New Event Window**: Comprehensive event creation with dark theme
+  - Event title with visual event icon
+  - Attendee invitation (optional)
+  - Date and time selection with DatePicker and time dropdowns
+  - All-day event toggle
+  - Location field with in-person event toggle
+  - **Show As Status Dropdown**:
+    - Free (White), Working elsewhere (Purple), Tentative (Blue)
+    - Busy (Red - default), Out of office (Violet)
+    - Color-coded vertical bars for each status
+  - **Reminder Dropdown** (no scrollbar):
+    - Don't remind me, At time of event
+    - 5/15/30 minutes before, 1/2/12 hours before
+    - 1 day before, 1 week before
+    - Default: 15 minutes before
+  - **Category Dropdown** (no scrollbar):
+    - Blue, Green, Orange, Purple, Red, Yellow categories
+    - Color-coded tag icons matching category colors
+    - New category and Manage categories options
+    - Default: Blue category
+  - **Rich Text Description Editor**: Notes, links, and attachments section
+  - **Recurring Event**: Make recurring option
+  - **Private Event Toggle**: Mark events as private
+  - **Live Calendar Preview**: Right panel showing time grid with draggable event block
+
 ## Technical Architecture
 
 ### Technology Stack
@@ -71,7 +120,19 @@ JubileeOutlook.wpf/
 │   │   ├── CalendarEvent.cs       # Calendar event entity
 │   │   └── MailAccount.cs         # Account configuration
 │   ├── ViewModels/                # MVVM view models
-│   │   └── MainViewModel.cs       # Main application view model
+│   │   ├── MainViewModel.cs       # Main application view model
+│   │   ├── ApplicationViewModel.cs # App-level view model with folder toggle
+│   │   ├── CalendarViewModel.cs   # Calendar view management
+│   │   ├── ComposeMailViewModel.cs # Email composition with attachments
+│   │   └── NewEventViewModel.cs   # Event creation with status/categories
+│   ├── Views/                     # User controls and windows
+│   │   ├── ComposeMailView.xaml   # Email composition window
+│   │   ├── ComposeMailView.xaml.cs # Composition logic & formatting
+│   │   ├── NewEventWindow.xaml    # Event creation dialog
+│   │   └── NewEventWindow.xaml.cs # Event window code-behind
+│   ├── Controls/                  # Custom controls
+│   │   ├── AppRailControl.xaml    # Left navigation rail with hamburger
+│   │   └── AppRailControl.xaml.cs # App rail code-behind
 │   ├── Services/                  # Business logic and data access
 │   │   ├── IMailService.cs        # Mail service contract
 │   │   ├── MockMailService.cs     # Mock implementation
@@ -81,8 +142,8 @@ JubileeOutlook.wpf/
 │   │   └── Converters.cs          # Value converters for data binding
 │   ├── Themes/                    # UI styling
 │   │   └── DarkTheme.xaml         # Pure black theme resources
-│   ├── MainWindow.xaml            # Main window layout (652 lines)
-│   ├── MainWindow.xaml.cs         # Main window code-behind
+│   ├── MainWindow.xaml            # Main window layout with collapsible panels
+│   ├── MainWindow.xaml.cs         # Main window with hamburger toggle logic
 │   ├── App.xaml                   # Application resources
 │   ├── App.xaml.cs                # Application startup
 │   └── JubileeOutlook.csproj      # Project configuration
@@ -105,7 +166,32 @@ JubileeOutlook implements a clean separation of concerns through MVVM:
   - Current view (Mail, Calendar, People, Tasks)
   - Search query binding
   - All command implementations using RelayCommand
-  - Automatic message marking as read on selection
+  - Automatic message marking as read on selection (OnSelectedMessageChanged)
+
+- **ApplicationViewModel**: App-level management:
+  - Active module tracking (Mail, Calendar, People, Apps)
+  - Folder pane toggle event (ToggleFolderPaneRequested)
+  - Module switching commands (SwitchToMail, SwitchToCalendar, etc.)
+
+- **ComposeMailViewModel**: Email composition management:
+  - From, To, Cc, Bcc, Subject, Body properties with two-way binding
+  - Show/Hide Cc and Bcc toggle state
+  - ObservableCollection<AttachmentInfo> for file attachments
+  - AttachmentRequested event for file picker integration
+  - AddAttachment/RemoveAttachment commands
+  - File size formatting helper
+  - MailSent and ComposeCancelled events
+
+- **NewEventViewModel**: Event creation management:
+  - Event properties: Title, Attendees, Date, StartTime, EndTime, Location, Description
+  - TimeOptions collection (00:00 to 23:30 in 30-min intervals)
+  - ShowAsStatusOptions with color-coded status items (Free, Working elsewhere, Tentative, Busy, Out of office)
+  - ReminderOptions (10 time options from "Don't remind me" to "1 week before")
+  - CategoryOptions with color-coded category items (Blue, Green, Orange, Purple, Red, Yellow + management options)
+  - IsAllDay, IsInPerson, IsBusy, IsPrivate toggle properties
+  - EventTopPosition and EventHeight for calendar preview
+  - SaveEventCommand with validation
+  - Helper classes: ShowAsStatusItem, CategoryItem, TimeSlot
 
 #### Services
 - **IMailService**: Contract for email operations
@@ -139,13 +225,20 @@ The [DarkTheme.xaml](applications/JubileeOutlook.wpf/JubileeOutlook/Themes/DarkT
 
 #### Core Colors
 - **Primary Background**: Pure Black (#000000)
-- **Secondary Background**: Dark Gray (#0A0A0A)
-- **Tertiary Background**: Medium Gray (#151515)
-- **Primary Text**: White (#FFFFFF)
-- **Secondary Text**: Gray (#B0B0B0)
-- **Accent**: Blue (#4A9EFF)
+- **Secondary Background**: Dark Gray (#0A0A0A, #1A1A1A for compose windows)
+- **Tertiary Background**: Medium Gray (#151515, #252525 for panels)
+- **Primary Text**: White (#FFFFFF, #EEEEEE for compose)
+- **Secondary Text**: Gray (#B0B0B0, #999999 for labels, #666666 for placeholders)
+- **Accent**: Blue (#4A9EFF, #0078D4 for focus states)
+- **Brand Gold**: #B8860B (New Mail button, Send button, selections)
 - **Unread Indicator**: Cyan (#4FC3F7)
-- **Borders**: Dark Gray (#2A2A2A)
+- **Borders**: Dark Gray (#2A2A2A, #333333, #3A3A3A for various elements)
+- **Status Colors**:
+  - Free (#FFFFFF), Working elsewhere (#9370DB), Tentative (#6495ED)
+  - Busy (#DC143C), Out of office (#9B30FF)
+- **Category Colors**:
+  - Blue (#5B9BD5), Green (#70AD47), Orange (#ED7D31)
+  - Purple (#9966CC), Red (#E74856), Yellow (#FFC000)
 
 #### Fluent.Ribbon Color Overrides
 The theme extensively overrides Fluent.Ribbon color keys to ensure consistent pure black appearance:
@@ -397,10 +490,64 @@ This application is part of the Jubilee Enterprise suite. Refer to the root repo
 - Value converters for UI formatting
 - Theme fixes for white text on ribbon buttons and labels
 
-### Recent Updates
-- Added comprehensive Fluent.Ribbon text color overrides
-- Fixed ribbon button label visibility (white text)
-- Enhanced theme consistency across all UI elements
+### Version 1.1.0 (2026-01-10)
+- **Email Composition Window**:
+  - Full-featured compose mail view with dark theme
+  - RichTextBox with rich text formatting (Bold, Italic, Underline, Alignment, Lists)
+  - Keyboard shortcuts (Ctrl+B, Ctrl+I, Ctrl+U)
+  - Hyperlink insertion with dark-themed dialog
+  - Inline image insertion from file system
+  - Multi-file attachment support with visual cards
+  - Gold Send button matching brand colors
+  - Toggleable formatting toolbar
+
+- **Hamburger Menu Navigation**:
+  - Collapsible folder panel with smooth 300ms sliding animation
+  - Animated width transition from 250px to 0px
+  - Automatic content area width adjustment
+  - Grid splitter fade in/out animation
+  - Triggered from existing hamburger icon in app rail
+
+- **Email Reading Enhancements**:
+  - Click-to-select email with instant reading pane update
+  - Automatic read status marking on selection
+  - Gold-colored Inbox heading for visual consistency
+  - Properly aligned unread indicator dots (8px spacing, no overlap)
+  - Attachment section in reading pane with download buttons
+
+- **Calendar & Event Management**:
+  - New Event window with comprehensive options
+  - Show As Status dropdown with 5 color-coded status options
+  - Reminder dropdown with 10 time options (no scrollbar)
+  - Category dropdown with 6 color categories + management (no scrollbar)
+  - Color-coded tag icons for categories
+  - All-day and in-person event toggles
+  - Live calendar preview panel with time grid
+  - Default selections: Busy status, 15 minutes before, Blue category
+
+- **UI/UX Improvements**:
+  - Removed scrollbars from dropdowns for cleaner appearance
+  - Fixed duplicate icon display in category selection
+  - Enhanced dropdown styling with hover and selection states
+  - Consistent dark theme across all new windows and dialogs
+  - Material Design icons throughout
+
+### Version 1.0.0 (Initial Release - 2026-01-09)
+- Full Outlook-style WPF application implementation
+- Complete ribbon UI with all tabs (Home, Send/Receive, Folder, View)
+- 3-pane layout: folder navigation, message list, reading pane
+- MVVM architecture with MainViewModel and mock services
+- Pure black theme (#000000) with comprehensive Fluent.Ribbon overrides
+- Color-coded action icons throughout ribbon
+- Hierarchical folder structure with icons and unread counts
+- Message list with indicators for unread, flagged, and attachments
+- Reading pane with formatted message headers and body
+- Status bar with item count and connection status
+- Resizable panes with grid splitters
+- All command structures defined and bound
+- Mock data services with realistic sample data
+- Value converters for UI formatting
+- Theme fixes for white text on ribbon buttons and labels
 
 ## Support and Contact
 

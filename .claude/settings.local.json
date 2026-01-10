@@ -266,7 +266,19 @@
       "Bash(npm run build:*)",
       "Bash(pkill:*)",
       "Bash(exit 0)",
-      "Bash(where caddy:*)"
+      "Bash(where caddy:*)",
+      "Bash(Set PGPASSWORD=askShaddai4e!)",
+      "Bash(\"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -h localhost -p 5432 -U postgres -f scripts/create_databases.sql -v ON_ERROR_STOP=1)",
+      "Bash(PGPASSWORD='askShaddai4e!' \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U postgres -f scripts/create_databases.sql -v ON_ERROR_STOP=1)",
+      "Bash(PGPASSWORD='askShaddai4e!' \"/c/Program Files/PostgreSQL/18/bin/psql.exe\" -h localhost -p 5432 -U guardian -d postgres -f scripts/create_databases_as_guardian.sql)",
+      "Bash(npm run dev:*)",
+      "Bash(test:*)",
+      "Bash(npm run web:*)",
+      "Bash(cmd.exe /c \"start http://localhost:19007\")",
+      "Bash(cmd.exe /c \"dir \"\"C:\\\\Program Files\\\\PostgreSQL\"\" /s /b 2>nul | findstr psql.exe\")",
+      "Bash(\"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -f \"d:\\\\data\\\\JubileeEnterprise.com\\\\scripts\\\\create_databases.sql\")",
+      "Bash(cmd.exe /c \"d:\\\\data\\\\JubileeEnterprise.com\\\\scripts\\\\setup-databases.bat\")",
+      "Bash(tee:*)"
     ]
   }
 }
