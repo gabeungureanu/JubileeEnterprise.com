@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 3001;
 const BASE_DIR = __dirname;
 
 // MIME types for serving static files
