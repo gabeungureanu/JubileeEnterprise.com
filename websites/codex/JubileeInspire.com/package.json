@@ -1,14 +1,13 @@
 {
   "name": "@jubilee/inspire",
   "version": "0.1.0",
-  "description": "Jubilee Inspire - Coming Soon",
+  "description": "JubileeInspire.com - AI Bible Chat Platform",
   "private": true,
-  "type": "module",
   "scripts": {
-    "start": "PORT=3003 node server.js",
-    "dev": "PORT=3003 node --watch server.js",
-    "build": "echo 'No build configured yet'",
-    "clean": "echo 'No clean configured yet'"
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "build": "echo 'Static site - no build required'",
+    "clean": "echo 'Static site - no clean required'"
   },
   "dependencies": {},
   "devDependencies": {},
