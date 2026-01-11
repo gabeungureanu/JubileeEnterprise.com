@@ -15,9 +15,21 @@
  */
 
 // ============================================================================
-// GLOBAL STATE
+// GLOBAL STATE - SINGLE SOURCE OF TRUTH
+// All state is stored on window for global access
 // ============================================================================
 
+// Initialize global state on window object to avoid scope conflicts
+window.siteData = window.siteData || null;
+window.categoriesData = window.categoriesData || null;
+window.currentMode = 'home';
+window.currentCategory = null;
+window.currentArticle = null;
+window.heroSlideIndex = 0;
+window.heroInterval = null;
+window.dataLoaded = false;
+
+// Local references for convenience
 let siteData = null;
 let categoriesData = null;
 let currentMode = 'home';
@@ -25,8 +37,6 @@ let currentCategory = null;
 let currentArticle = null;
 let heroSlideIndex = 0;
 let heroInterval = null;
-// Caching disabled for development
-// let portalPageCache = {};
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -129,6 +139,16 @@ function stripMarkdown(text) {
 }
 
 /**
+ * Truncate text to specified length with ellipsis
+ */
+function truncateText(text, maxLength) {
+  if (!text) return '';
+  const stripped = stripMarkdown(text);
+  if (stripped.length <= maxLength) return stripped;
+  return stripped.substring(0, maxLength).trim() + '...';
+}
+
+/**
  * Get today's date formatted as YY-MMDD for history file
  */
 function getTodayHistoryFileName() {
@@ -195,27 +215,39 @@ function ensureMinimumArticles(primaryArticles, currentCategorySlug, minCount, e
 
 /**
  * Load all site data from JSON files
+ * This is the SINGLE source of truth for data loading
  */
 async function loadSiteData() {
+  console.log('=== loadSiteData: Starting data load ===');
+
   try {
     const webstorePath = getWebstorePath();
+    console.log('loadSiteData: webstorePath =', webstorePath);
 
     // Load categories first
     const categoriesResponse = await fetch(webstorePath + 'web_categories.json');
     if (categoriesResponse.ok) {
       categoriesData = await categoriesResponse.json();
-      console.log('Loaded categories:', categoriesData.categories.length);
+      window.categoriesData = categoriesData; // Global access
+      console.log('loadSiteData: Loaded categories:', categoriesData.categories.length);
     }
 
     // Load today's history file
     const historyFile = getTodayHistoryFileName();
+    console.log('loadSiteData: Loading history file:', historyFile);
     const historyResponse = await fetch(webstorePath + 'history/' + historyFile);
     if (historyResponse.ok) {
       siteData = await historyResponse.json();
-      console.log('Loaded site data from history:', historyFile);
+      window.siteData = siteData; // Global access - CRITICAL for portal pages
+      console.log('loadSiteData: Loaded site data from history:', historyFile);
+      console.log('loadSiteData: portalPages available:', Object.keys(siteData.portalPages || {}));
     } else {
-      console.warn('History file not found:', historyFile);
+      console.warn('loadSiteData: History file not found:', historyFile);
     }
+
+    // Mark data as loaded BEFORE initializing components
+    window.dataLoaded = true;
+    console.log('loadSiteData: Data loading complete, window.dataLoaded = true');
 
     // Initialize components
     buildNavigation();
@@ -226,10 +258,17 @@ async function loadSiteData() {
     // Populate dynamic sections
     setTimeout(populateFeaturedSections, 500);
 
+    // Handle initial path navigation NOW that data is loaded
+    console.log('loadSiteData: Checking for path navigation...');
+    handlePathNavigation();
+
   } catch (error) {
-    console.error('Error loading site data:', error);
+    console.error('loadSiteData: Error loading site data:', error);
+    window.dataLoaded = true; // Mark as loaded even on error to prevent infinite waits
     // Fallback: just start the carousel with server-rendered content
     startHeroCarousel();
+    // Still try path navigation
+    handlePathNavigation();
   }
 }
 
@@ -256,16 +295,29 @@ async function loadCategoryArticles(categorySlug) {
 
 /**
  * Build navigation with ALL categories
+ * Returns true if nav was rebuilt, false otherwise
  */
-async function buildNavigation() {
+function buildNavigation() {
   const navList = document.getElementById('nav-list');
-  if (!navList) return;
+  if (!navList) return false;
 
   // Use loaded categories or fallback to siteData
   const categories = categoriesData?.categories || siteData?.categories || [];
   if (categories.length === 0) {
     console.log('No categories available, keeping server-rendered nav');
-    return;
+    // Still add data-category attributes to existing server-rendered links
+    const existingLinks = navList.querySelectorAll('li:not(.home-link) a');
+    existingLinks.forEach(link => {
+      const onclickAttr = link.getAttribute('onclick');
+      if (onclickAttr) {
+        const match = onclickAttr.match(/openPortal\(['"]([^'"]+)['"]\)/);
+        if (match) {
+          link.setAttribute('data-category', match[1]);
+        }
+      }
+    });
+    console.log('Added data-category to', existingLinks.length, 'existing nav links');
+    return true;
   }
 
   // SVG Home Icon
@@ -277,11 +329,67 @@ async function buildNavigation() {
 
   categories.forEach(cat => {
     const categoryHref = buildCategoryHref(cat.slug);
-    navHtml += '<li><a href="' + categoryHref + '" onclick="openPortal(\'' + cat.slug + '\'); return false;">' + cat.name + '</a></li>';
+    navHtml += '<li><a href="' + categoryHref + '" data-category="' + cat.slug + '" onclick="openPortal(\'' + cat.slug + '\'); return false;">' + cat.name + '</a></li>';
   });
 
   navList.innerHTML = navHtml;
   console.log('Navigation built with', categories.length, 'categories');
+  return true;
+}
+
+/**
+ * Update active state on navigation links
+ * @param {string|null} categorySlug - The category slug to mark as active, or null for home
+ */
+function updateActiveNavLink(categorySlug) {
+  console.log('=== updateActiveNavLink called with:', categorySlug, '===');
+
+  const navList = document.getElementById('nav-list');
+  if (!navList) {
+    console.log('updateActiveNavLink: nav-list not found');
+    return;
+  }
+
+  // Remove active class from all links
+  const allLinks = navList.querySelectorAll('a');
+  allLinks.forEach(link => link.classList.remove('active'));
+  console.log('updateActiveNavLink: Removed active class from', allLinks.length, 'links');
+
+  if (!categorySlug) {
+    // Home is active - no yellow line for home (just remove all active states)
+    console.log('updateActiveNavLink: No category, home is active');
+    return;
+  }
+
+  // First try data-category attribute
+  let activeLink = navList.querySelector('a[data-category="' + categorySlug + '"]');
+
+  // Fallback: search by onclick attribute if data-category not found
+  if (!activeLink) {
+    console.log('updateActiveNavLink: data-category not found, trying onclick fallback');
+    const links = navList.querySelectorAll('li:not(.home-link) a');
+    for (let i = 0; i < links.length; i++) {
+      const onclick = links[i].getAttribute('onclick') || '';
+      if (onclick.includes("openPortal('" + categorySlug + "')") ||
+          onclick.includes('openPortal("' + categorySlug + '")')) {
+        activeLink = links[i];
+        // Also add the data-category for future use
+        activeLink.setAttribute('data-category', categorySlug);
+        break;
+      }
+    }
+  }
+
+  if (activeLink) {
+    activeLink.classList.add('active');
+    console.log('updateActiveNavLink: Added active class to:', activeLink.textContent);
+  } else {
+    console.log('updateActiveNavLink: Could not find link for category:', categorySlug);
+    // Debug: log all links
+    allLinks.forEach((link, i) => {
+      console.log('  Link', i, ':', link.getAttribute('data-category'), link.textContent.trim());
+    });
+  }
 }
 
 /**
@@ -472,6 +580,9 @@ function goHome(skipUrlUpdate) {
   currentCategory = null;
   currentArticle = null;
 
+  // Clear active nav state when going home
+  updateActiveNavLink(null);
+
   document.getElementById('homePage').style.display = 'block';
   document.getElementById('portalPage').style.display = 'none';
 
@@ -512,8 +623,18 @@ function renderHomePage() {
 // ============================================================================
 
 async function openPortal(categorySlug, skipUrlUpdate) {
+  console.log('=== openPortal: Opening category:', categorySlug, '===');
+
+  // Stop any running carousel to prevent interference with portal's single-slide hero
+  stopHeroCarousel();
+
+  // Update nav to show active category
+  updateActiveNavLink(categorySlug);
+
   currentMode = 'portal';
   currentCategory = categorySlug;
+  window.currentMode = 'portal';
+  window.currentCategory = categorySlug;
 
   document.getElementById('homePage').style.display = 'none';
 
@@ -537,10 +658,17 @@ async function openPortal(categorySlug, skipUrlUpdate) {
   portalPage.innerHTML = '<div style="padding: 40px; text-align: center;">Loading...</div>';
 
   try {
-    const portalData = siteData?.portalPages?.[categorySlug];
+    // Use window.siteData as the single source of truth
+    const sd = window.siteData || siteData;
+    console.log('openPortal: siteData available:', !!sd);
+    console.log('openPortal: portalPages:', sd ? Object.keys(sd.portalPages || {}) : 'none');
+
+    const portalData = sd?.portalPages?.[categorySlug];
     if (!portalData) {
-      throw new Error('Portal not found');
+      console.error('openPortal: Portal not found for category:', categorySlug);
+      throw new Error('Portal not found for: ' + categorySlug);
     }
+    console.log('openPortal: Found portal data with', portalData.articles?.length, 'articles');
 
     // Deduplicate articles
     const seenIds = new Set();
@@ -1260,11 +1388,20 @@ window.addEventListener('popstate', function(event) {
  * Parse URL path to determine current page
  * Supports: /pentecostal/home/index.html (home)
  *           /pentecostal/home/category-slug.html (category)
+ *           /pentecostal/home/category-slug/index.html (category folder)
  *           /pentecostal/home/category-slug/article-slug.html (article)
+ *
+ * CRITICAL: This function is called AFTER data is loaded from loadSiteData()
  */
 function handlePathNavigation() {
   const path = window.location.pathname;
   const parts = path.split('/').filter(p => p);
+
+  console.log('=== handlePathNavigation ===');
+  console.log('Path:', path);
+  console.log('Parts:', parts);
+  console.log('window.dataLoaded:', window.dataLoaded);
+  console.log('window.siteData available:', !!window.siteData);
 
   // Check for hash fallback (legacy URLs)
   if (window.location.hash) {
@@ -1277,54 +1414,54 @@ function handlePathNavigation() {
   // or    ['pentecostal', 'home', 'spiritual-growth', 'index.html'] (category folder)
   // or    ['pentecostal', 'home', 'spiritual-growth', 'article-title.html']
 
-  if (parts.length < 3) return; // Not enough parts for our URL structure
+  if (parts.length < 3) {
+    console.log('handlePathNavigation: Not enough parts, staying on home');
+    return; // Not enough parts for our URL structure
+  }
 
   const lastPart = parts[parts.length - 1];
 
   // If path is exactly /group/subsite/index.html (3 parts ending in index.html), it's home
   if (parts.length === 3 && lastPart === 'index.html') {
+    console.log('handlePathNavigation: Home page detected');
     return; // Already on home page
   }
+
+  // Use window.siteData as single source of truth
+  const sd = window.siteData || siteData;
 
   // If path is /group/subsite/category/index.html (4 parts ending in index.html), it's a category
   // e.g., /pentecostal/home/faith-in-action/index.html
   if (parts.length === 4 && lastPart === 'index.html') {
     const categorySlug = parts[2]; // e.g., 'faith-in-action'
-    console.log('Path navigation: Detected category folder URL:', categorySlug);
+    console.log('handlePathNavigation: Category folder URL detected:', categorySlug);
 
-    // Wait for siteData to be available, then open portal
-    // Use window.siteData which is populated by inline script's loadSiteData
-    const tryOpenPortal = () => {
-      const sd = window.siteData || siteData;
-      if (sd && sd.portalPages && sd.portalPages[categorySlug]) {
-        console.log('Path navigation: Opening category portal', categorySlug);
+    if (sd && sd.portalPages && sd.portalPages[categorySlug]) {
+      console.log('handlePathNavigation: Opening portal for', categorySlug);
+      openPortal(categorySlug, true);
+    } else {
+      // Known categories fallback
+      const knownCategories = ['spiritual-growth', 'faith-in-action', 'worship-and-praise', 'prayer-and-devotion', 'holy-spirit'];
+      if (knownCategories.includes(categorySlug)) {
+        console.log('handlePathNavigation: Opening known category portal', categorySlug);
         openPortal(categorySlug, true);
-      } else if (!sd) {
-        // siteData still loading, retry after a short delay
-        console.log('Path navigation: Waiting for siteData...');
-        setTimeout(tryOpenPortal, 200);
       } else {
-        // siteData loaded but category not found - could be a known category
-        const knownCategories = ['spiritual-growth', 'faith-in-action', 'worship-and-praise', 'prayer-and-devotion', 'holy-spirit'];
-        if (knownCategories.includes(categorySlug)) {
-          console.log('Path navigation: Opening known category portal', categorySlug);
-          openPortal(categorySlug, true);
-        }
+        console.warn('handlePathNavigation: Category not found:', categorySlug);
       }
-    };
-    tryOpenPortal();
+    }
     return;
   }
 
-  // If path has 4 parts and ends with .html, it's an article
+  // If path has 4 parts and ends with .html (not index.html), it's an article
   // e.g., /pentecostal/home/spiritual-growth/article-title.html
-  if (parts.length >= 4 && lastPart.endsWith('.html')) {
+  if (parts.length >= 4 && lastPart.endsWith('.html') && lastPart !== 'index.html') {
     const categorySlug = parts[parts.length - 2];
     const articleSlug = lastPart.replace('.html', '');
+    console.log('handlePathNavigation: Article URL detected - category:', categorySlug, 'slug:', articleSlug);
 
     // Find article by matching slug
-    if (siteData && siteData.allArticles) {
-      const article = siteData.allArticles.find(a => {
+    if (sd && sd.allArticles) {
+      const article = sd.allArticles.find(a => {
         const aSlug = (a.title || '')
           .toLowerCase()
           .replace(/[^a-z0-9\s-]/g, '')
@@ -1335,6 +1472,7 @@ function handlePathNavigation() {
       });
 
       if (article) {
+        console.log('handlePathNavigation: Found article, opening:', article.articleId);
         openArticle(categorySlug, article.articleId || article.id, true);
         return;
       }
@@ -1345,13 +1483,24 @@ function handlePathNavigation() {
   // e.g., /pentecostal/home/spiritual-growth.html
   if (parts.length >= 3 && lastPart.endsWith('.html') && lastPart !== 'index.html') {
     const categorySlug = lastPart.replace('.html', '');
-    const categories = siteData?.categories || categoriesData?.categories || [];
+    console.log('handlePathNavigation: Category .html URL detected:', categorySlug);
+
+    // CRITICAL: Only proceed if portalPages are loaded
+    if (!sd?.portalPages) {
+      console.log('handlePathNavigation: Waiting for portalPages to load...');
+      return;
+    }
+
+    const categories = sd?.categories || window.categoriesData?.categories || [];
     const category = categories.find(c => c.slug === categorySlug);
     if (category) {
+      console.log('handlePathNavigation: Opening category portal', categorySlug);
       openPortal(categorySlug, true);
       return;
     }
   }
+
+  console.log('handlePathNavigation: No special navigation needed');
 }
 
 // Legacy hash navigation support for backwards compatibility
@@ -1384,10 +1533,8 @@ function handleHashNavigation() {
 
 window.addEventListener('hashchange', handleHashNavigation);
 
-// Handle initial page load based on URL path
-setTimeout(function() {
-  handlePathNavigation();
-}, 500);
+// NOTE: handlePathNavigation is now called directly from loadSiteData() AFTER data is loaded
+// This eliminates the race condition where navigation happened before data was available
 
 // Export functions for global access
 window.goHome = goHome;
@@ -1412,3 +1559,10 @@ window.buildCategoryHref = buildCategoryHref;
 window.buildHomeHref = buildHomeHref;
 window.getBasePath = getBasePath;
 window.initializeNavigationLinks = initializeNavigationLinks;
+// Helper functions
+window.truncateText = truncateText;
+window.stripMarkdown = stripMarkdown;
+window.getImagePath = getImagePath;
+window.getWebstorePath = getWebstorePath;
+window.getLumiatosPath = getLumiatosPath;
+window.updateActiveNavLink = updateActiveNavLink;
