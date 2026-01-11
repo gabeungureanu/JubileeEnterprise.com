@@ -25,11 +25,95 @@ let currentCategory = null;
 let currentArticle = null;
 let heroSlideIndex = 0;
 let heroInterval = null;
-let portalPageCache = {};
+// Caching disabled for development
+// let portalPageCache = {};
 
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
+
+/**
+ * Convert title to URL-safe slug
+ */
+function titleToSlug(title) {
+  if (!title) return '';
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .substring(0, 80);
+}
+
+/**
+ * Get the base path for the current site (e.g., /pentecostal/home)
+ * This is defined early so other functions can use it
+ */
+function getBasePath() {
+  const path = window.location.pathname;
+  // Match /pentecostal/home or similar two-level paths
+  const match = path.match(/^(\/[^\/]+\/[^\/]+)/);
+  return match ? match[1] : '/pentecostal/home';
+}
+
+/**
+ * Build href for an article link
+ * Returns SEO-friendly URL: /pentecostal/home/category-slug/article-slug.html
+ */
+function buildArticleHref(categorySlug, articleTitle) {
+  const basePath = getBasePath();
+  const articleSlug = (articleTitle || 'article')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .substring(0, 80);
+  return basePath + '/' + categorySlug + '/' + articleSlug + '.html';
+}
+
+/**
+ * Build href for a category link
+ * Returns SEO-friendly URL: /pentecostal/home/category-slug.html
+ */
+function buildCategoryHref(categorySlug) {
+  const basePath = getBasePath();
+  return basePath + '/' + categorySlug + '.html';
+}
+
+/**
+ * Build href for home link
+ * Returns SEO-friendly URL: /pentecostal/home/index.html
+ */
+function buildHomeHref() {
+  const basePath = getBasePath();
+  return basePath + '/index.html';
+}
+
+/**
+ * Get image path - uses absolute path from base to work in subdirectories
+ */
+function getImagePath(articleId) {
+  const basePath = getBasePath();
+  return basePath + '/images/' + articleId + '.jpg';
+}
+
+/**
+ * Get the path for .webstore files
+ */
+function getWebstorePath() {
+  // Get base path for webstore - handles both home page and category pages
+  const basePath = getBasePath();
+  return basePath + '/.webstore/';
+}
+
+/**
+ * Get the path for .lumiatos files
+ */
+function getLumiatosPath() {
+  // Get base path for lumiatos - handles both home page and category pages
+  const basePath = getBasePath();
+  return basePath + '/.lumiatos/';
+}
 
 /**
  * Strip markdown formatting (* and #) from content
@@ -114,8 +198,10 @@ function ensureMinimumArticles(primaryArticles, currentCategorySlug, minCount, e
  */
 async function loadSiteData() {
   try {
+    const webstorePath = getWebstorePath();
+
     // Load categories first
-    const categoriesResponse = await fetch('.webstore/web_categories.json');
+    const categoriesResponse = await fetch(webstorePath + 'web_categories.json');
     if (categoriesResponse.ok) {
       categoriesData = await categoriesResponse.json();
       console.log('Loaded categories:', categoriesData.categories.length);
@@ -123,7 +209,7 @@ async function loadSiteData() {
 
     // Load today's history file
     const historyFile = getTodayHistoryFileName();
-    const historyResponse = await fetch('.webstore/history/' + historyFile);
+    const historyResponse = await fetch(webstorePath + 'history/' + historyFile);
     if (historyResponse.ok) {
       siteData = await historyResponse.json();
       console.log('Loaded site data from history:', historyFile);
@@ -152,7 +238,8 @@ async function loadSiteData() {
  */
 async function loadCategoryArticles(categorySlug) {
   try {
-    const response = await fetch(categorySlug + '/web_articles.json');
+    const articlesPath = categorySlug + '/web_articles.json';
+    const response = await fetch(articlesPath);
     if (response.ok) {
       const data = await response.json();
       return data.articles || [];
@@ -184,11 +271,13 @@ async function buildNavigation() {
   // SVG Home Icon
   const homeSvg = '<svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>';
 
-  // Build navigation: Home + ALL categories
-  let navHtml = '<li class="home-link"><a href="#" onclick="goHome(); return false;">' + homeSvg + '</a></li>';
+  // Build navigation: Home + ALL categories with SEO-friendly URLs
+  const homeHref = buildHomeHref();
+  let navHtml = '<li class="home-link"><a href="' + homeHref + '" onclick="goHome(); return false;">' + homeSvg + '</a></li>';
 
   categories.forEach(cat => {
-    navHtml += '<li><a href="#' + cat.slug + '" onclick="openPortal(\'' + cat.slug + '\'); return false;">' + cat.name + '</a></li>';
+    const categoryHref = buildCategoryHref(cat.slug);
+    navHtml += '<li><a href="' + categoryHref + '" onclick="openPortal(\'' + cat.slug + '\'); return false;">' + cat.name + '</a></li>';
   });
 
   navList.innerHTML = navHtml;
@@ -236,8 +325,9 @@ function buildTicker() {
   let tickerHtml = '';
   [...finalTickerArticles, ...finalTickerArticles].forEach(article => {
     const catName = categories.find(c => c.slug === article.categorySlug)?.name || article.categorySlug;
+    const articleHref = buildArticleHref(article.categorySlug, article.title);
     tickerHtml += '<span class="ticker-item"><span class="cat-label">' + catName + ':</span> ';
-    tickerHtml += '<a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></span>';
+    tickerHtml += '<a href="' + articleHref + '" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></span>';
   });
 
   tickerContent.innerHTML = tickerHtml;
@@ -258,17 +348,19 @@ function updateFooterCategories() {
   // Update footer categories column
   const footerCategoriesList = document.getElementById('footer-categories-list');
   if (footerCategoriesList) {
-    footerCategoriesList.innerHTML = categories.map(cat =>
-      '<li><a href="#" onclick="openPortal(\'' + cat.slug + '\'); return false;">' + cat.name + '</a></li>'
-    ).join('');
+    footerCategoriesList.innerHTML = categories.map(cat => {
+      const categoryHref = buildCategoryHref(cat.slug);
+      return '<li><a href="' + categoryHref + '" onclick="openPortal(\'' + cat.slug + '\'); return false;">' + cat.name + '</a></li>';
+    }).join('');
   }
 
   // Update footer bottom category links
   const footerCategoryLinks = document.getElementById('footer-category-links');
   if (footerCategoryLinks) {
-    footerCategoryLinks.innerHTML = categories.map(cat =>
-      '<a href="#" onclick="openPortal(\'' + cat.slug + '\'); return false;">' + cat.name + '</a>'
-    ).join(' | ');
+    footerCategoryLinks.innerHTML = categories.map(cat => {
+      const categoryHref = buildCategoryHref(cat.slug);
+      return '<a href="' + categoryHref + '" onclick="openPortal(\'' + cat.slug + '\'); return false;">' + cat.name + '</a>';
+    }).join(' | ');
   }
 }
 
@@ -375,14 +467,28 @@ function initSmoothTicker() {
 // HOME PAGE
 // ============================================================================
 
-function goHome() {
+function goHome(skipUrlUpdate) {
   currentMode = 'home';
   currentCategory = null;
   currentArticle = null;
 
   document.getElementById('homePage').style.display = 'block';
   document.getElementById('portalPage').style.display = 'none';
-  document.getElementById('articleDetailPage').style.display = 'none';
+
+  // Hide both article page containers
+  const articleDetailPage = document.getElementById('articleDetailPage');
+  if (articleDetailPage) articleDetailPage.style.display = 'none';
+  const articlePage = document.getElementById('articlePage');
+  if (articlePage) {
+    articlePage.style.display = 'none';
+    articlePage.classList.add('hidden');
+  }
+
+  // Update URL to home page (unless we're just doing internal state change)
+  if (!skipUrlUpdate && window.history && window.history.pushState) {
+    const homeUrl = buildHomeHref();
+    window.history.pushState({ type: 'home' }, '', homeUrl);
+  }
 
   window.scrollTo(0, 0);
 }
@@ -390,19 +496,41 @@ function goHome() {
 function renderHomePage() {
   document.getElementById('homePage').style.display = 'block';
   document.getElementById('portalPage').style.display = 'none';
-  document.getElementById('articleDetailPage').style.display = 'none';
+
+  // Hide both article page containers
+  const articleDetailPage = document.getElementById('articleDetailPage');
+  if (articleDetailPage) articleDetailPage.style.display = 'none';
+  const articlePage = document.getElementById('articlePage');
+  if (articlePage) {
+    articlePage.style.display = 'none';
+    articlePage.classList.add('hidden');
+  }
 }
 
 // ============================================================================
 // PORTAL MODE (Category Page)
 // ============================================================================
 
-async function openPortal(categorySlug) {
+async function openPortal(categorySlug, skipUrlUpdate) {
   currentMode = 'portal';
   currentCategory = categorySlug;
 
   document.getElementById('homePage').style.display = 'none';
-  document.getElementById('articleDetailPage').style.display = 'none';
+
+  // Hide both article page containers
+  const articleDetailPage = document.getElementById('articleDetailPage');
+  if (articleDetailPage) articleDetailPage.style.display = 'none';
+  const articlePageEl = document.getElementById('articlePage');
+  if (articlePageEl) {
+    articlePageEl.style.display = 'none';
+    articlePageEl.classList.add('hidden');
+  }
+
+  // Update URL to category page
+  if (!skipUrlUpdate && window.history && window.history.pushState) {
+    const categoryUrl = buildCategoryHref(categorySlug);
+    window.history.pushState({ type: 'category', categorySlug }, '', categoryUrl);
+  }
 
   const portalPage = document.getElementById('portalPage');
   portalPage.style.display = 'block';
@@ -427,7 +555,8 @@ async function openPortal(categorySlug) {
     const usedArticleIds = new Set();
 
     // Build portal HTML
-    const categoryName = categoriesData?.categories?.find(c => c.slug === categorySlug)?.name || categorySlug;
+    const categories = siteData?.categories || categoriesData?.categories || [];
+    const categoryName = categories.find(c => c.slug === categorySlug)?.name || categorySlug;
     let html = buildPortalHTML(categorySlug, categoryName, uniqueArticles, otherCategoryArticles, usedArticleIds);
 
     portalPage.innerHTML = html;
@@ -440,71 +569,212 @@ async function openPortal(categorySlug) {
 }
 
 function buildPortalHTML(categorySlug, categoryName, articles, otherArticles, usedIds) {
-  let html = '<main class="main-content"><div class="content-grid"><div class="main-column">';
+  const categories = siteData?.categories || categoriesData?.categories || [];
 
-  // Hero
+  // Helper to build article link with proper href
+  function articleLink(cat, id, title, className, content) {
+    const href = buildArticleHref(cat, title);
+    return '<a href="' + href + '" onclick="openArticle(\'' + cat + '\', \'' + id + '\'); return false;"' + (className ? ' class="' + className + '"' : '') + '>' + content + '</a>';
+  }
+
+  // Build HTML that matches home page layout EXACTLY
+  let html = '<main class="main-content">';
+  html += '<div class="content-grid">';
+  html += '<div class="main-column">';
+
+  // Hero Section - single image (matches home page hero structure)
   const heroArticle = articles[0];
   if (heroArticle) {
     usedIds.add(heroArticle.articleId);
     html += '<section class="hero-section">';
-    html += '<div class="hero-image">';
-    html += '<img src="' + (heroArticle.image || 'images/' + heroArticle.articleId + '.jpg') + '" alt="' + heroArticle.title + '">';
+    html += '<div class="hero-carousel">';
+    html += '<div class="hero-slide active" data-index="0">';
+    html += '<div class="hero-image" onclick="openArticle(\'' + categorySlug + '\', \'' + heroArticle.articleId + '\');" style="cursor: pointer;">';
+    html += '<img src="' + getImagePath(heroArticle.articleId) + '" alt="' + heroArticle.title + '" onerror="this.parentElement.style.background=\'linear-gradient(135deg, #667eea 0%, #764ba2 100%)\'">';
     html += '<div class="hero-overlay">';
-    html += '<h2 class="hero-title"><a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + heroArticle.articleId + '\'); return false;">' + heroArticle.title + '</a></h2>';
-    html += '</div></div></section>';
+    html += '<span class="hero-category">' + categoryName + '</span>';
+    html += '<h2 class="hero-title">' + articleLink(categorySlug, heroArticle.articleId, heroArticle.title, '', heroArticle.title) + '</h2>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '</section>';
   }
 
-  // Featured Articles (from current category)
+  // Featured & Spotlight - Two Column Layout (matches home page exactly)
+  html += '<div class="section-row">';
+
+  // FEATURED Column (Left) - Stacked Cards
+  html += '<div class="section-block">';
+  html += '<div class="section-header">Featured</div>';
+  html += '<div class="section-content">';
+
+  // Use articles 1-8 for featured (article 0 is hero)
   const featuredArticles = articles.slice(1, 9);
-  if (featuredArticles.length > 0) {
-    html += '<section class="featured-section"><h3 class="section-title">Featured in ' + categoryName + '</h3>';
-    html += '<div class="featured-grid">';
-    featuredArticles.forEach(article => {
-      usedIds.add(article.articleId);
-      html += '<div class="featured-item">';
-      html += '<img src="images/' + article.articleId + '.jpg" alt="' + article.title + '">';
-      html += '<div class="featured-title"><a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></div>';
-      html += '</div>';
-    });
-    html += '</div></section>';
+  featuredArticles.forEach(article => {
+    const articleCat = article.categorySlug || categorySlug;
+    usedIds.add(article.articleId);
+    html += '<div class="featured-card">';
+    html += articleLink(articleCat, article.articleId, article.title, 'featured-card-image', '<img src="' + getImagePath(article.articleId) + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">');
+    html += '<h3 class="featured-card-title">' + articleLink(articleCat, article.articleId, article.title, '', article.title) + '</h3>';
+    html += '<p class="featured-card-excerpt">' + truncateText(article.excerpt || '', 120) + '</p>';
+    html += '</div>';
+  });
+
+  html += '</div>'; // End section-content
+  html += '</div>'; // End section-block (featured)
+
+  // IN THE SPOTLIGHT Column (Right) - matches home page exactly
+  html += '<div class="section-block">';
+  html += '<div class="section-header">In The Spotlight</div>';
+  html += '<div class="section-content">';
+
+  // Main Spotlight Article - from OTHER categories
+  const spotlightMain = otherArticles.find(a => !usedIds.has(a.articleId));
+  if (spotlightMain) {
+    usedIds.add(spotlightMain.articleId);
+    html += '<div class="spotlight-main">';
+    html += articleLink(spotlightMain.categorySlug, spotlightMain.articleId, spotlightMain.title, 'spotlight-main-image', '<img src="' + getImagePath(spotlightMain.articleId) + '" alt="' + spotlightMain.title + '" onerror="this.parentElement.style.background=\'#ddd\'">');
+    html += '<h3 class="spotlight-main-title">' + articleLink(spotlightMain.categorySlug, spotlightMain.articleId, spotlightMain.title, '', spotlightMain.title) + '</h3>';
+    html += '<p class="spotlight-main-excerpt">' + truncateText(spotlightMain.excerpt || '', 150) + '</p>';
+    html += '</div>';
   }
 
-  // Spotlight (from OTHER categories)
-  const spotlightArticles = otherArticles.filter(a => !usedIds.has(a.articleId)).slice(0, 3);
-  if (spotlightArticles.length > 0) {
-    html += '<section class="spotlight-section"><h3 class="section-title">In The Spotlight</h3>';
-    html += '<div class="spotlight-grid">';
-    spotlightArticles.forEach(article => {
-      const catName = categoriesData?.categories?.find(c => c.slug === article.categorySlug)?.name || article.categorySlug;
-      html += '<div class="spotlight-item">';
-      html += '<span class="spotlight-category">' + catName + '</span>';
-      html += '<img src="images/' + article.articleId + '.jpg" alt="' + article.title + '">';
-      html += '<div class="spotlight-title"><a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></div>';
-      html += '</div>';
-    });
-    html += '</div></section>';
-  }
+  // Spotlight List Items - 2 items from OTHER categories
+  const spotlightList = otherArticles.filter(a => !usedIds.has(a.articleId)).slice(0, 2);
+  spotlightList.forEach(article => {
+    usedIds.add(article.articleId);
+    html += '<div class="spotlight-list-item">';
+    html += articleLink(article.categorySlug, article.articleId, article.title, 'spotlight-list-image', '<img src="' + getImagePath(article.articleId) + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">');
+    html += '<div class="spotlight-list-content">';
+    html += '<h4 class="spotlight-list-title">' + articleLink(article.categorySlug, article.articleId, article.title, '', article.title) + '</h4>';
+    html += '<p class="spotlight-list-excerpt">' + truncateText(article.excerpt || '', 80) + '</p>';
+    html += '</div>';
+    html += '</div>';
+  });
 
-  html += '</div>'; // end main-column
+  // Related Information Section - 4 cards from OTHER categories
+  html += '<div class="related-info-header">Related Information</div>';
+  html += '<div class="related-info-grid">';
+  const relatedArticles = otherArticles.filter(a => !usedIds.has(a.articleId)).slice(0, 4);
+  relatedArticles.forEach(article => {
+    usedIds.add(article.articleId);
+    html += '<div class="related-info-card">';
+    html += articleLink(article.categorySlug, article.articleId, article.title, 'related-info-image', '<img src="' + getImagePath(article.articleId) + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">');
+    html += '<h4 class="related-info-title">' + articleLink(article.categorySlug, article.articleId, article.title, '', article.title) + '</h4>';
+    html += '</div>';
+  });
+  html += '</div>';
 
-  // Sidebar
+  // Recommended Section - matches home page
+  html += '<div class="section-header" style="margin-top: 20px;">Recommended</div>';
+  html += '<div class="recommended-list">';
+  const recommendedArticles = otherArticles.filter(a => !usedIds.has(a.articleId)).slice(0, 10);
+  recommendedArticles.forEach(article => {
+    usedIds.add(article.articleId);
+    html += '<div class="recommended-item">';
+    html += articleLink(article.categorySlug, article.articleId, article.title, 'recommended-image', '<img src="' + getImagePath(article.articleId) + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">');
+    html += '<div class="recommended-content">';
+    html += '<h4 class="recommended-title">' + articleLink(article.categorySlug, article.articleId, article.title, '', article.title) + '</h4>';
+    html += '<p class="recommended-excerpt">' + truncateText(article.excerpt || '', 100) + '</p>';
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  html += '</div>'; // End section-content
+  html += '</div>'; // End section-block (spotlight)
+  html += '</div>'; // End section-row
+
+  html += '</div>'; // End main-column
+
+  // Sidebar - matches home page layout EXACTLY
   html += '<aside class="sidebar">';
 
-  // Related Information (from OTHER categories)
-  const relatedArticles = otherArticles.filter(a => !usedIds.has(a.articleId)).slice(3, 7);
-  if (relatedArticles.length > 0) {
-    html += '<div class="sidebar-section"><h4 class="sidebar-title">Related Information</h4>';
-    html += '<div class="sidebar-content">';
-    relatedArticles.forEach(article => {
-      html += '<div class="sidebar-item">';
-      html += '<img src="images/' + article.articleId + '.jpg" alt="' + article.title + '">';
-      html += '<a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a>';
-      html += '</div>';
-    });
-    html += '</div></div>';
+  // 1. Promo Box - matches home page
+  html += '<div class="promo-box">';
+  html += '<div class="promo-title">' + categoryName + '</div>';
+  html += '<div class="promo-subtitle">Explore Faith-Building Content</div>';
+  html += '<a href="' + buildHomeHref() + '" class="promo-btn" onclick="goHome(); return false;">Browse All</a>';
+  html += '</div>';
+
+  // 2. Most Popular section - matches home page with 7 items from current category
+  html += '<div class="sidebar-section">';
+  html += '<div class="sidebar-header">MOST POPULAR</div>';
+  html += '<div class="sidebar-content">';
+
+  // Use articles from current category for Most Popular
+  const popularArticles = articles.slice(0, 7);
+  popularArticles.forEach(article => {
+    const articleCat = article.categorySlug || categorySlug;
+    html += '<div class="popular-item">';
+    html += '<div class="popular-image">';
+    html += articleLink(articleCat, article.articleId, article.title, '', '<img src="' + getImagePath(article.articleId) + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">');
+    html += '</div>';
+    html += '<div class="popular-content">';
+    html += articleLink(articleCat, article.articleId, article.title, 'popular-title', article.title);
+    html += '</div>';
+    html += '</div>';
+  });
+
+  html += '</div>'; // End sidebar-content
+  html += '</div>'; // End sidebar-section
+
+  // 3. 300x600 Skyscraper Ad - matches home page
+  const lumiatosPath = getLumiatosPath();
+  html += '<div class="skyscraper-ad-unit">';
+  html += '<a href="https://jubileeverse.com?utm_source=lumiatos&utm_campaign=CAMP-003&utm_ad=AD-003-B" target="_blank" rel="noopener" onclick="handleAdClick(\'AD-003-B\', \'CAMP-003\', this.href);">';
+  html += '<img src="' + lumiatosPath + 'images/jubileeverse-300x600.jpg" alt="JubileeVerse.com - Beyond Artificial Intelligence">';
+  html += '</a>';
+  html += '<div class="skyscraper-ad-label">Advertisement</div>';
+  html += '</div>';
+
+  // 4. Must Read section - from OTHER categories (cross-category discovery)
+  html += '<div class="sidebar-section">';
+  html += '<div class="sidebar-header">Must Read</div>';
+  html += '<div class="sidebar-content">';
+
+  const mustReadArticles = otherArticles.filter(a => !usedIds.has(a.articleId)).slice(0, 7);
+  mustReadArticles.forEach(article => {
+    usedIds.add(article.articleId);
+    html += '<div class="popular-item">';
+    html += '<a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;" class="popular-image">';
+    html += '<img src="' + getImagePath(article.articleId) + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
+    html += '</a>';
+    html += '<div class="popular-content">';
+    html += '<a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;" class="popular-title">' + article.title + '</a>';
+    html += '</div>';
+    html += '</div>';
+  });
+
+  html += '</div>'; // End sidebar-content
+  html += '</div>'; // End sidebar-section
+
+  // 5. 300x250 Ad Unit - matches home page
+  html += '<div class="home-ad-unit">';
+  html += '<a href="https://jubileeverse.com?utm_source=lumiatos&utm_campaign=CAMP-003&utm_ad=AD-003-A" target="_blank" rel="noopener" onclick="handleAdClick(\'AD-003-A\', \'CAMP-003\', this.href);">';
+  html += '<img src="' + lumiatosPath + 'images/jubileeverse-300x250.jpg" alt="JubileeVerse.com - Beyond Artificial Intelligence: Smarter Today, Stronger Tomorrow">';
+  html += '</a>';
+  html += '<div class="home-ad-label">Advertisement</div>';
+  html += '</div>';
+
+  // 6. You Might Like section - matches home page
+  if (articles.length > 0) {
+    const randomArticle = articles[Math.floor(Math.random() * articles.length)];
+    html += '<div class="random-article">';
+    html += '<div class="random-article-header">You Might Like</div>';
+    html += articleLink(categorySlug, randomArticle.articleId, randomArticle.title, 'random-article-image', '<img src="' + getImagePath(randomArticle.articleId) + '" alt="' + randomArticle.title + '" onerror="this.parentElement.style.background=\'#ddd\'">');
+    html += '<div class="random-article-content">';
+    html += '<h4 class="random-article-title">' + articleLink(categorySlug, randomArticle.articleId, randomArticle.title, '', randomArticle.title) + '</h4>';
+    html += '<p class="random-article-excerpt">' + truncateText(randomArticle.excerpt || '', 100) + '</p>';
+    html += '</div>';
+    html += '</div>';
   }
 
-  html += '</aside></div></main>';
+  html += '</aside>';
+
+  html += '</div>'; // End content-grid
+  html += '</main>'; // End main-content
 
   return html;
 }
@@ -517,17 +787,21 @@ function closePortal() {
 // ARTICLE DETAIL PAGE
 // ============================================================================
 
-async function openArticle(categorySlug, articleId) {
+async function openArticle(categorySlug, articleId, skipUrlUpdate) {
   currentMode = 'article';
   currentCategory = categorySlug;
   currentArticle = articleId;
 
+  // Hide other pages
   document.getElementById('homePage').style.display = 'none';
   document.getElementById('portalPage').style.display = 'none';
+  const articleDetailPage = document.getElementById('articleDetailPage');
+  if (articleDetailPage) articleDetailPage.style.display = 'none';
 
-  const articlePage = document.getElementById('articleDetailPage');
+  // Show the original article page section
+  const articlePage = document.getElementById('articlePage');
+  articlePage.classList.remove('hidden');
   articlePage.style.display = 'block';
-  articlePage.innerHTML = '<div style="padding: 40px; text-align: center;">Loading article...</div>';
 
   try {
     // Load article content from category JSON
@@ -538,9 +812,74 @@ async function openArticle(categorySlug, articleId) {
       throw new Error('Article not found');
     }
 
-    const categoryName = categoriesData?.categories?.find(c => c.slug === categorySlug)?.name || categorySlug;
-    const html = buildArticleHTML(article, categorySlug, categoryName);
-    articlePage.innerHTML = html;
+    // Update URL to article page
+    if (!skipUrlUpdate && window.history && window.history.pushState) {
+      const articleUrl = buildArticleHref(categorySlug, article.title);
+      window.history.pushState({ type: 'article', categorySlug, articleId }, '', articleUrl);
+    }
+
+    // Use siteData.categories (populated by inline script) or categoriesData (if app.js loaded it)
+    const categories = siteData?.categories || categoriesData?.categories || [];
+    const categoryName = categories.find(c => c.slug === categorySlug)?.name || categorySlug;
+
+    // Populate the existing article page elements
+    document.getElementById('articleTitle').textContent = article.title;
+    document.getElementById('articleCategory').textContent = categoryName;
+    document.getElementById('articleAuthor').textContent = article.author ? 'By ' + article.author : 'By Editorial';
+    document.getElementById('articleDate').textContent = 'Updated today';
+
+    // Update breadcrumbs with proper hrefs
+    const homeHref = buildHomeHref();
+    const categoryHref = buildCategoryHref(categorySlug);
+    document.getElementById('articleBreadcrumbs').innerHTML = '<a href="' + homeHref + '" onclick="goHome(); return false;">Home</a> | <a href="' + categoryHref + '" onclick="openPortal(\'' + categorySlug + '\'); return false;">' + categoryName + '</a>';
+
+    // Set hero image
+    const heroImg = document.getElementById('articleHero');
+    if (heroImg) {
+      heroImg.src = getImagePath(articleId);
+      heroImg.alt = article.title;
+      heroImg.onerror = function() { this.src = getImagePath('placeholder').replace('.jpg', '.jpg'); };
+    }
+
+    // Set caption if available
+    const captionEl = document.getElementById('articleCaption');
+    if (captionEl) {
+      captionEl.textContent = article.caption || '';
+      captionEl.style.display = article.caption ? 'block' : 'none';
+    }
+
+    // Format and set article body content
+    const content = stripMarkdown(article.content || '');
+    const paragraphs = content.split('\n\n').filter(p => p.trim());
+    let bodyHtml = '';
+    paragraphs.forEach(p => {
+      bodyHtml += '<p>' + p.trim() + '</p>';
+    });
+    document.getElementById('articleBody').innerHTML = bodyHtml;
+
+    // Populate Read Next section with related articles
+    const readNextSection = document.getElementById('readNextSection');
+    const readNextList = document.getElementById('readNextList');
+    if (readNextSection && readNextList) {
+      const relatedArticles = getArticlesFromOtherCategories(categorySlug, 4);
+      if (relatedArticles.length > 0) {
+        let readNextHtml = '';
+        relatedArticles.forEach(related => {
+          const relCatName = categories.find(c => c.slug === related.categorySlug)?.name || related.categorySlug;
+          const readNextHref = buildArticleHref(related.categorySlug, related.title);
+          readNextHtml += '<div class="read-next-item">';
+          readNextHtml += '<a href="' + readNextHref + '" onclick="openArticle(\'' + related.categorySlug + '\', \'' + related.articleId + '\'); return false;">';
+          readNextHtml += '<img src="' + getImagePath(related.articleId) + '" alt="' + related.title + '" onerror="this.style.display=\'none\'">';
+          readNextHtml += '<span>' + related.title + '</span>';
+          readNextHtml += '</a></div>';
+        });
+        readNextList.innerHTML = readNextHtml;
+        readNextSection.style.display = 'block';
+      } else {
+        readNextSection.style.display = 'none';
+      }
+    }
+
     window.scrollTo(0, 0);
 
     // Track view
@@ -550,7 +889,7 @@ async function openArticle(categorySlug, articleId) {
 
   } catch (error) {
     console.error('Error loading article:', error);
-    articlePage.innerHTML = '<div style="padding: 40px; text-align: center; color: red;">Error loading article. Please try again.</div>';
+    document.getElementById('articleBody').innerHTML = '<p style="color: red;">Error loading article. Please try again.</p>';
   }
 }
 
@@ -569,7 +908,7 @@ function buildArticleHTML(article, categorySlug, categoryName) {
   html += '</div></header>';
 
   html += '<div class="article-image">';
-  html += '<img src="images/' + article.id + '.jpg" alt="' + article.title + '">';
+  html += '<img src="' + getImagePath(article.id) + '" alt="' + article.title + '">';
   html += '</div>';
 
   html += '<div class="article-content">';
@@ -579,16 +918,18 @@ function buildArticleHTML(article, categorySlug, categoryName) {
   html += '</div>';
 
   // Related articles
+  const artCategories = siteData?.categories || categoriesData?.categories || [];
   const relatedArticles = getArticlesFromOtherCategories(categorySlug, 4);
   if (relatedArticles.length > 0) {
     html += '<section class="related-articles"><h3>Related Articles</h3>';
     html += '<div class="related-grid">';
     relatedArticles.forEach(related => {
-      const relCatName = categoriesData?.categories?.find(c => c.slug === related.categorySlug)?.name || related.categorySlug;
+      const relCatName = artCategories.find(c => c.slug === related.categorySlug)?.name || related.categorySlug;
+      const relatedHref = buildArticleHref(related.categorySlug, related.title);
       html += '<div class="related-item">';
-      html += '<img src="images/' + related.articleId + '.jpg" alt="' + related.title + '">';
+      html += '<img src="' + getImagePath(related.articleId) + '" alt="' + related.title + '">';
       html += '<span class="related-category">' + relCatName + '</span>';
-      html += '<a href="#" onclick="openArticle(\'' + related.categorySlug + '\', \'' + related.articleId + '\'); return false;">' + related.title + '</a>';
+      html += '<a href="' + relatedHref + '" onclick="openArticle(\'' + related.categorySlug + '\', \'' + related.articleId + '\'); return false;">' + related.title + '</a>';
       html += '</div>';
     });
     html += '</div></section>';
@@ -674,15 +1015,17 @@ async function populateFeaturedSections() {
       const moreLinksHTML = articlesWithContent.map(a => {
         const cleanContent = stripMarkdown(a.fullContent || '');
         const words = cleanContent.split(/\s+/).slice(0, 15).join(' ');
-        return `<a href="#" class="more-link" onclick="showContentPage('${a.articleId}', '${categorySlug}'); return false;">${words}...</a>`;
+        const moreHref = buildArticleHref(categorySlug, a.title || '');
+        return `<a href="${moreHref}" class="more-link" onclick="showContentPage('${a.articleId}', '${categorySlug}'); return false;">${words}...</a>`;
       }).join('');
 
+      const featCardHref = buildArticleHref(categorySlug, article.title);
       return `
         <div class="featured-category-card">
           <div class="featured-category-header">${categoryName}</div>
-          <img src="images/${article.articleId}.jpg" alt="${article.title}" class="featured-category-image">
+          <img src="${getImagePath(article.articleId)}" alt="${article.title}" class="featured-category-image">
           <div class="featured-category-title">
-            <a href="#" onclick="showContentPage('${article.articleId}', '${categorySlug}'); return false;">${article.title}</a>
+            <a href="${featCardHref}" onclick="showContentPage('${article.articleId}', '${categorySlug}'); return false;">${article.title}</a>
           </div>
           <div class="featured-category-excerpt">${excerpt}</div>
           ${moreLinksHTML ? `<div class="featured-category-more-links">${moreLinksHTML}</div>` : ''}
@@ -701,12 +1044,13 @@ async function populateFeaturedSections() {
   if (brandsGrid && brandArticles.length > 0) {
     brandsGrid.innerHTML = brandArticles.map(article => {
       const categoryName = categories.find(c => c.slug === article.categorySlug)?.name || article.categorySlug;
+      const brandHref = buildArticleHref(article.categorySlug, article.title);
       return `
         <div class="brand-card">
-          <img src="images/${article.articleId}.jpg" alt="${article.title}" class="brand-card-image">
+          <img src="${getImagePath(article.articleId)}" alt="${article.title}" class="brand-card-image">
           <div class="brand-card-label">${categoryName}</div>
           <div class="brand-card-title">
-            <a href="#" onclick="showContentPage('${article.articleId}', '${article.categorySlug}'); return false;">${article.title}</a>
+            <a href="${brandHref}" onclick="showContentPage('${article.articleId}', '${article.categorySlug}'); return false;">${article.title}</a>
           </div>
         </div>
       `;
@@ -739,12 +1083,15 @@ function closeSubscribeModal() {
 // ============================================================================
 
 const ViewTracker = {
-  trackerPath: '.webstore/web_tracker.json',
   trackerData: null,
+
+  getTrackerPath() {
+    return getWebstorePath() + 'web_tracker.json';
+  },
 
   async init() {
     try {
-      const response = await fetch(this.trackerPath);
+      const response = await fetch(this.getTrackerPath());
       if (response.ok) {
         this.trackerData = await response.json();
       }
@@ -770,7 +1117,59 @@ const ViewTracker = {
 // INITIALIZATION
 // ============================================================================
 
+/**
+ * Initialize all navigation links to use dynamic base path
+ * This allows the same code to work in any folder structure
+ */
+function initializeNavigationLinks() {
+  const basePath = getBasePath();
+  const homeUrl = basePath + '/index.html';
+
+  // Update <base> tag
+  const baseTag = document.querySelector('base');
+  if (baseTag) {
+    baseTag.href = basePath + '/';
+  }
+
+  // Update header home link
+  const siteHomeLink = document.getElementById('siteHomeLink');
+  if (siteHomeLink) {
+    siteHomeLink.href = homeUrl;
+  }
+
+  // Update home icon link in navigation
+  const homeIconLink = document.querySelector('#category-nav .home-link a');
+  if (homeIconLink) {
+    homeIconLink.href = homeUrl;
+  }
+
+  // Update Back to Home link
+  const backToHome = document.getElementById('backToHome');
+  if (backToHome) {
+    backToHome.href = homeUrl;
+  }
+
+  // Update category navigation links
+  const categoryLinks = document.querySelectorAll('#category-nav ul li:not(.home-link) a');
+  categoryLinks.forEach(function(link) {
+    const onclickAttr = link.getAttribute('onclick');
+    if (onclickAttr) {
+      // Extract category slug from onclick: openPortal('category-slug')
+      const match = onclickAttr.match(/openPortal\(['"]([^'"]+)['"]\)/);
+      if (match) {
+        const categorySlug = match[1];
+        link.href = basePath + '/' + categorySlug + '.html';
+      }
+    }
+  });
+
+  console.log('Navigation links initialized with base path:', basePath);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+  // Initialize navigation links first (before any navigation happens)
+  initializeNavigationLinks();
+
   // Load all site data
   loadSiteData();
 
@@ -819,8 +1218,112 @@ document.addEventListener('DOMContentLoaded', function() {
   ViewTracker.init();
 });
 
-// Handle hash navigation for SEO-friendly URLs
-// Supports: #article/{categorySlug}/{articleId} and #{categorySlug}
+// ============================================================================
+// LEGACY NAVIGATION FUNCTIONS (kept for backward compatibility)
+// ============================================================================
+
+// These functions are now integrated into openArticle, openPortal, and goHome
+// but kept here for any external code that might call them
+
+function navigateToArticle(categorySlug, articleId, articleTitle) {
+  openArticle(categorySlug, articleId);
+}
+
+function navigateToCategory(categorySlug) {
+  openPortal(categorySlug);
+}
+
+function navigateToHome() {
+  goHome();
+}
+
+/**
+ * Handle browser back/forward navigation
+ */
+window.addEventListener('popstate', function(event) {
+  if (event.state) {
+    // Use skipUrlUpdate=true since we're navigating from history
+    if (event.state.type === 'article') {
+      openArticle(event.state.categorySlug, event.state.articleId, true);
+    } else if (event.state.type === 'category') {
+      openPortal(event.state.categorySlug, true);
+    } else if (event.state.type === 'home') {
+      goHome(true);
+    }
+  } else {
+    // Check URL path to determine what to show
+    handlePathNavigation();
+  }
+});
+
+/**
+ * Parse URL path to determine current page
+ * Supports: /pentecostal/home/index.html (home)
+ *           /pentecostal/home/category-slug.html (category)
+ *           /pentecostal/home/category-slug/article-slug.html (article)
+ */
+function handlePathNavigation() {
+  const path = window.location.pathname;
+  const parts = path.split('/').filter(p => p);
+
+  // Check for hash fallback (legacy URLs)
+  if (window.location.hash) {
+    handleHashNavigation();
+    return;
+  }
+
+  // Get the last few parts of the path
+  // e.g., ['pentecostal', 'home', 'spiritual-growth.html']
+  // or    ['pentecostal', 'home', 'spiritual-growth', 'article-title.html']
+
+  if (parts.length < 3) return; // Not enough parts for our URL structure
+
+  const lastPart = parts[parts.length - 1];
+
+  // If it's index.html, show home
+  if (lastPart === 'index.html') {
+    return; // Already on home page
+  }
+
+  // If path has 4 parts and ends with .html, it's an article
+  // e.g., /pentecostal/home/spiritual-growth/article-title.html
+  if (parts.length >= 4 && lastPart.endsWith('.html')) {
+    const categorySlug = parts[parts.length - 2];
+    const articleSlug = lastPart.replace('.html', '');
+
+    // Find article by matching slug
+    if (siteData && siteData.allArticles) {
+      const article = siteData.allArticles.find(a => {
+        const aSlug = (a.title || '')
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .substring(0, 80);
+        return aSlug === articleSlug && (a.categorySlug === categorySlug);
+      });
+
+      if (article) {
+        openArticle(categorySlug, article.articleId || article.id, true);
+        return;
+      }
+    }
+  }
+
+  // If path has 3 parts and ends with .html, it's a category
+  // e.g., /pentecostal/home/spiritual-growth.html
+  if (parts.length >= 3 && lastPart.endsWith('.html') && lastPart !== 'index.html') {
+    const categorySlug = lastPart.replace('.html', '');
+    const categories = siteData?.categories || categoriesData?.categories || [];
+    const category = categories.find(c => c.slug === categorySlug);
+    if (category) {
+      openPortal(categorySlug, true);
+      return;
+    }
+  }
+}
+
+// Legacy hash navigation support for backwards compatibility
 function handleHashNavigation() {
   const hash = window.location.hash.slice(1);
   if (!hash) return;
@@ -832,28 +1335,28 @@ function handleHashNavigation() {
       const categorySlug = parts[1];
       const articleId = parts[2];
       console.log('Hash navigation: Opening article', articleId, 'in category', categorySlug);
-      openArticle(categorySlug, articleId);
+      openArticle(categorySlug, articleId, true);
       return;
     }
   }
 
   // Check for category URL format: {categorySlug}
-  if (categoriesData) {
-    const category = categoriesData.categories.find(c => c.slug === hash);
+  const categories = siteData?.categories || categoriesData?.categories || [];
+  if (categories.length > 0) {
+    const category = categories.find(c => c.slug === hash);
     if (category) {
       console.log('Hash navigation: Opening category portal', hash);
-      openPortal(hash);
+      openPortal(hash, true);
     }
   }
 }
 
 window.addEventListener('hashchange', handleHashNavigation);
 
-// Also handle initial page load with hash
-if (window.location.hash) {
-  // Delay to ensure data is loaded
-  setTimeout(handleHashNavigation, 500);
-}
+// Handle initial page load based on URL path
+setTimeout(function() {
+  handlePathNavigation();
+}, 500);
 
 // Export functions for global access
 window.goHome = goHome;
@@ -869,3 +1372,12 @@ window.goToSlide = goToSlide;
 window.openSubscribeModal = openSubscribeModal;
 window.closeSubscribeModal = closeSubscribeModal;
 window.ViewTracker = ViewTracker;
+// SEO-friendly URL functions
+window.navigateToArticle = navigateToArticle;
+window.navigateToCategory = navigateToCategory;
+window.navigateToHome = navigateToHome;
+window.buildArticleHref = buildArticleHref;
+window.buildCategoryHref = buildCategoryHref;
+window.buildHomeHref = buildHomeHref;
+window.getBasePath = getBasePath;
+window.initializeNavigationLinks = initializeNavigationLinks;

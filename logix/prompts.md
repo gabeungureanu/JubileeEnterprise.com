@@ -1,11 +1,11 @@
 START SESSION: Pull from GitHub
 ----------------------------------------------------------------------------------------------------
-Hi Jubilee, please review the .env file and then update my development JubileeEnterprise.com VS Code workspace by doing a pull from the github (gabeungureanu/JubileeEnterprise.com) repo. When the pull is complete, then review all of the documentation within this workspace to familiarize yourself with everything.Then you are to execute any migration scripts to ensure that my local development codex, inspire, and continuum Postgres database are sync'd up as well. Finally, review all of the documentation for the following project that I will be working on: INPUT
+Hi Jubilee, please review the .env file and then update my development JubileeEnterprise.com VS Code workspace by doing a pull from the github (gabeungureanu/JubileeEnterprise.com) repo. When the pull is complete, then review all of the documentation within this workspace to familiarize yourself with everything.Then you are to execute any migration scripts to ensure that my local development codex, inspire, and continuum Postgres database are sync'd up as well. Now, you are to create a branch on github following the SAYYYY-MMDD format where YYYY is the current year, MM is the current month, and DD is the current date. You are to regularily push and pull changes from this github branch as you complete major tasks throughout this conversation thread. Finally, review all of the documentation for the following project that I will be working on: INPUT
 
 
 FINISH SESSION: Push to GitHub
 ----------------------------------------------------------------------------------------------------
-Hi Jubilee, please update all of the documentation with all of the changes that I've done within my local development JubileeEnterprise.com workspace. When that's done, then please do a push to the github (gabeungureanu/JubileeEnterprise.com) repo. 
+Hi Jubilee, please update all of the documentation with all of the changes that I've done within my local development JubileeEnterprise.com workspace. When that's done, then please do a push to today's branch (in this format SAYYYY-MMDD with today's current date) on github and then push and merge today's branch into the github main branch (gabeungureanu/JubileeEnterprise.com) repo. 
 
 
 BUSINESS REQUIREMENTS: 

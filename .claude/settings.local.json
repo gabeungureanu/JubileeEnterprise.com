@@ -322,7 +322,27 @@
       "Bash(cmd /c \"dir c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home\\\\images\")",
       "Bash(ls -la \"c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home\\\\.webstore\\\\history\"\" 2>/dev/null || dir \"c:dataJubileeEnterprise.comwebsitescodexwwBibleweb.compentecostalhome.webstorehistory\"\")",
       "Bash(cmd /c \"taskkill /IM JubileeBrowser.exe /F\")",
-      "Bash(cmd /c del \"c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home\\\\generate-holy-spirit.cjs\")"
+      "Bash(cmd /c del \"c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home\\\\generate-holy-spirit.cjs\")",
+      "Bash(cmd /c \"dir c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home\\\\.lumiatos\\\\images\")",
+      "Bash(timeout /t 3 /nobreak)",
+      "Bash(cmd /c \"dir c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home\\\\*.html\")",
+      "Bash(cmd /c \"dir c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home /AD /B\")",
+      "Bash(if not exist c:temp mkdir c:temp)",
+      "Bash(cmd /c \"if not exist c:\\\\temp mkdir c:\\\\temp\")",
+      "Bash(cmd /c \"dir c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home\\\\.webstore\\\\history\")",
+      "Bash(del \"c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home\\\\.webstore\\\\history\\\\26-0111.json\")",
+      "Bash(cmd /c del \"c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home\\\\.webstore\\\\history\\\\26-0111.json\")",
+      "Bash(cmd /c del \"c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\backoffice\\\\create_websites\\\\.datastore\\\\websites\\\\home.pentecostal\\\\.webstore\\\\history\\\\26-0111.json\")",
+      "Bash(cmd /c \"dir /AD /B c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\backoffice\\\\create_websites\\\\.datastore\\\\websites\\\\home.pentecostal\")",
+      "Bash(cmd /c \"del /q c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\backoffice\\\\create_websites\\\\.datastore\\\\websites\\\\home.pentecostal\\\\.webstore\\\\history\\\\26-0111.json\")",
+      "Bash(cmd /c \"del /q c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home\\\\.webstore\\\\history\\\\26-0111.json\")",
+      "Bash(cmd /c \"dir c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\backoffice\\\\create_websites\\\\.datastore\\\\websites\\\\home.pentecostal /B\")",
+      "Bash(cmd /c \"dir c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home /B\")",
+      "Bash(timeout /t 5 /nobreak)",
+      "Bash(cmd /c \"cd /d c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\backoffice\\\\create_websites && node scripts\\\\generateDailyHistory.js home.pentecostal 2>&1\")",
+      "Bash(cmd /c \"dir c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home\\\\images /B\")",
+      "Bash(cmd /c \"dir c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home\\\\.webstore\\\\history /B\")",
+      "Bash(del:*)"
     ]
   }
 }

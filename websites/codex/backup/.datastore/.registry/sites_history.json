@@ -1,0 +1,225 @@
+{
+  "sites": [
+    {
+      "siteCode": "WEB-FAIT-186265",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step1_complete",
+      "createdAt": "2025-12-17T06:49:49.306Z"
+    },
+    {
+      "siteCode": "WEB-FAIT-592685",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step1_complete",
+      "createdAt": "2025-12-17T06:56:37.175Z"
+    },
+    {
+      "siteCode": "WEB-FAIT-942779",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step1_complete",
+      "createdAt": "2025-12-17T07:02:26.325Z"
+    },
+    {
+      "siteCode": "WEB-FAIT-162491",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step1_complete",
+      "createdAt": "2025-12-17T07:06:05.438Z"
+    },
+    {
+      "siteCode": "WEB-FAIT-591911",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step1_complete",
+      "createdAt": "2025-12-17T07:13:13.567Z"
+    },
+    {
+      "siteCode": "WEB-FAIT-254372",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step1_complete",
+      "createdAt": "2025-12-17T07:24:17.271Z"
+    },
+    {
+      "siteCode": "WEB-BUSI-290984",
+      "domain": "BusinessMoney.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "BB",
+      "status": "step1_complete",
+      "createdAt": "2025-12-17T07:25:11.140Z"
+    },
+    {
+      "siteCode": "WEB-FAIT-510106",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step1_complete",
+      "createdAt": "2025-12-17T07:28:32.334Z"
+    },
+    {
+      "siteCode": "WEB-FAIT-568595",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step1_complete",
+      "createdAt": "2025-12-17T07:29:30.062Z"
+    },
+    {
+      "siteCode": "WEB-FAIT-096271",
+      "domain": "FaithChurch.com",
+      "categoryCount": 7,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step3_complete",
+      "createdAt": "2025-12-17T07:38:17.879Z"
+    },
+    {
+      "siteCode": "WEB-FAIT-303384",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step3_complete",
+      "createdAt": "2025-12-17T07:41:45.858Z"
+    },
+    {
+      "siteCode": "WEB-FAIT-542386",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step3_complete",
+      "createdAt": "2025-12-17T07:45:43.870Z"
+    },
+    {
+      "siteCode": "WEB-FAIT-442044",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step4_complete",
+      "createdAt": "2025-12-17T08:00:44.549Z",
+      "totalArticles": 36
+    },
+    {
+      "siteCode": "WEB-FAIT-527052",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step4_complete",
+      "createdAt": "2025-12-17T10:15:29.515Z",
+      "totalArticles": 36
+    },
+    {
+      "siteCode": "WEB-FAIT-195840",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step5_complete",
+      "createdAt": "2025-12-17T10:26:38.440Z",
+      "totalArticles": 36,
+      "contentGeneratedAt": "2025-12-17T10:33:38.679Z"
+    },
+    {
+      "siteCode": "WEB-FAIT-987253",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step5_complete",
+      "createdAt": "2025-12-17T10:56:29.289Z",
+      "totalArticles": 36,
+      "contentGeneratedAt": "2025-12-17T11:02:53.157Z"
+    },
+    {
+      "siteCode": "WEB-FAIT-598199",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step4_complete",
+      "createdAt": "2025-12-17T11:06:39.725Z",
+      "totalArticles": 36
+    },
+    {
+      "siteCode": "WEB-FAIT-962110",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step5_complete",
+      "createdAt": "2025-12-17T11:12:44.468Z",
+      "totalArticles": 36,
+      "contentGeneratedAt": "2025-12-17T11:18:15.650Z"
+    },
+    {
+      "siteCode": "WEB-FAIT-314773",
+      "domain": "FaithChurch.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step6_complete",
+      "createdAt": "2025-12-17T11:35:17.042Z",
+      "totalArticles": 36,
+      "contentGeneratedAt": "2025-12-17T11:38:08.174Z",
+      "websiteBuiltAt": "2025-12-17T11:38:08.226Z"
+    },
+    {
+      "siteCode": "WEB-GODS-660650",
+      "domain": "GodsGreatGrace.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step6_complete",
+      "createdAt": "2025-12-17T11:41:03.138Z",
+      "totalArticles": 36,
+      "contentGeneratedAt": "2025-12-17T11:44:50.407Z",
+      "websiteBuiltAt": "2025-12-17T11:44:50.412Z"
+    },
+    {
+      "siteCode": "WEB-GODS-070312",
+      "domain": "GodsGrace.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step6_complete",
+      "createdAt": "2025-12-17T12:04:33.888Z",
+      "totalArticles": 36,
+      "contentGeneratedAt": "2025-12-17T12:08:08.974Z",
+      "websiteBuiltAt": "2025-12-17T12:08:08.979Z"
+    },
+    {
+      "siteCode": "WEB-GODS-897082",
+      "domain": "GodsGoodGrace.com",
+      "categoryCount": 3,
+      "quickMode": false,
+      "contentType": "FB",
+      "status": "step6_complete",
+      "createdAt": "2025-12-17T18:41:40.676Z",
+      "totalArticles": 36,
+      "contentGeneratedAt": "2025-12-17T18:45:37.962Z",
+      "websiteBuiltAt": "2025-12-17T18:45:37.971Z"
+    }
+  ],
+  "count": 22,
+  "lastUpdated": "2025-12-17T18:45:37.971Z"
+}

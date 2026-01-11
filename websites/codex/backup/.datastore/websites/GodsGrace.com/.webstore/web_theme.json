@@ -1,0 +1,18 @@
+{
+  "domain": "GodsGrace.com",
+  "siteCode": "WEB-GODS-070312",
+  "contentType": "FB",
+  "generatedAt": "2025-12-17T12:05:25.718Z",
+  "theme": {
+    "colors": {
+      "primary": "#4A5568",
+      "secondary": "#718096",
+      "accent": "#D69E2E"
+    },
+    "fonts": {
+      "heading": "Inter, sans-serif",
+      "body": "Inter, sans-serif"
+    },
+    "layout": "modern"
+  }
+}

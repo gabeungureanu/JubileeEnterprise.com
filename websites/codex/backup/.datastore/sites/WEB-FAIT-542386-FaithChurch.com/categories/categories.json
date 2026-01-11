@@ -1,0 +1,52 @@
+{
+  "domain": "FaithChurch.com",
+  "siteCode": "WEB-FAIT-542386",
+  "contentType": "FB",
+  "niche": "Christianity",
+  "categoryCount": 3,
+  "generatedAt": "2025-12-17T07:46:05.011Z",
+  "categories": [
+    {
+      "rank": 1,
+      "name": "Christian Living",
+      "slug": "christian-living",
+      "description": "Explore practical and inspiring articles on living a Christ-centered life. From daily devotionals to guidance on applying biblical teachings in everyday situations, this category is designed to deepen your faith and enrich your spiritual journey.",
+      "keywords": [
+        "Christian lifestyle",
+        "daily devotionals",
+        "biblical teachings",
+        "faith journey",
+        "spiritual growth"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 2,
+      "name": "Bible Study Insights",
+      "slug": "bible-study-insights",
+      "description": "Dive into in-depth explorations of scripture with our Bible Study Insights. Discover historical contexts, interpretations, and applications of biblical passages to gain a deeper understanding of God's word.",
+      "keywords": [
+        "Bible study",
+        "scripture insights",
+        "biblical interpretation",
+        "faith exploration",
+        "God's word"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 3,
+      "name": "Faith and Family",
+      "slug": "faith-and-family",
+      "description": "Strengthen your family's spiritual foundation with articles focused on faith-based parenting, marriage, and family values. This category provides resources and support for nurturing a godly home.",
+      "keywords": [
+        "faith-based parenting",
+        "Christian family",
+        "marriage guidance",
+        "family values",
+        "godly home"
+      ],
+      "articleCount": 12
+    }
+  ]
+}

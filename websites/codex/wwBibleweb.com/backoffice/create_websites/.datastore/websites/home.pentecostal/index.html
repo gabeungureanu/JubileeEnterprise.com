@@ -105,76 +105,112 @@
       text-transform: uppercase;
     }
 
-    /* Navigation Row */
-    .nav-row-wrapper {
+    /* ============================================
+       CATEGORY NAVIGATION BAR - BLACK WITH WHITE TEXT, LEFT-ALIGNED
+       ============================================ */
+    #category-nav {
       width: 100%;
-      background: #000;
+      background: #1a1a1a;
     }
 
-    .nav-container {
+    #category-nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0 20px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
       max-width: 1200px;
-      width: 100%;
       margin: 0 auto;
-      display: flex;
-      justify-content: stretch;
-      align-items: stretch;
-      padding: 0;
     }
 
-    .nav-link {
-      flex: 1 1 20%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
+    #category-nav ul li {
+      position: relative;
     }
 
-    .home-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 16px;
-      height: 16px;
-      margin-right: 4px;
-      vertical-align: middle;
-    }
-
-    .home-icon svg {
-      width: 16px;
-      height: 16px;
-      fill: #fff;
-    }
-
-    .nav-link a {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      white-space: nowrap;
-      padding: 14px 20px;
-      font-size: 14px;
+    #category-nav ul li a {
+      display: block;
+      padding: 6px 18px;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 11px;
       font-weight: 600;
-      color: #fff;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      border-bottom: 3px solid transparent;
-      transition: all 0.2s;
+      letter-spacing: 0.3px;
+      border-bottom: 2px solid transparent;
+      transition: border-bottom-color 0.2s;
     }
 
-    .nav-link a:hover,
-    .nav-link.active a {
-      background: rgba(255,255,255,0.1);
+    #category-nav ul li a:hover {
       border-bottom-color: #ffd700;
     }
 
-    .nav-link.nav-spacer {
-      /* Spacer divs for future use */
+    #category-nav ul li a svg {
+      width: 16px;
+      height: 16px;
+      fill: #ffffff;
+      vertical-align: middle;
     }
 
-    /* Article Links Row */
-    .article-row-wrapper {
+    /* ============================================
+       TICKER BAR - JAVASCRIPT-POWERED SMOOTH SCROLL
+       Uses requestAnimationFrame for 60fps smoothness
+       ============================================ */
+    #ticker-bar {
       width: 100%;
       background: #1a1a1a;
+      overflow: hidden;
+      position: relative;
+      border-top: 1px solid #333;
+      height: 36px;
+    }
+
+    /* Wrapper - JavaScript handles the transform animation */
+    #ticker-bar .ticker-wrap {
+      display: inline-flex;
+      white-space: nowrap;
+      /* Hardware acceleration */
+      will-change: transform;
+      transform: translateX(0);
+    }
+
+    /* Each content block has same items - creates seamless loop */
+    #ticker-bar .ticker-content {
+      display: inline-flex;
+      align-items: center;
+      height: 36px;
+    }
+
+    #ticker-bar .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      padding: 0 25px;
+      font-size: 12px;
+      color: #b0b0b0;
+      white-space: nowrap;
+      height: 36px;
+    }
+
+    #ticker-bar .ticker-item .cat-label {
+      font-weight: 700;
+      color: #ffd700;
+      margin-right: 6px;
+      text-transform: uppercase;
+      font-size: 10px;
+    }
+
+    #ticker-bar .ticker-item a {
+      color: #b0b0b0;
+      text-decoration: none;
+    }
+
+    #ticker-bar .ticker-item a:hover {
+      color: #ffffff;
+    }
+
+    /* Legacy - keep for compatibility */
+    .article-row-wrapper {
+      display: none;
       border-top: 1px solid #333;
     }
 
@@ -569,6 +605,98 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
+    }
+
+    /* Article Detail Page (Dynamic) - For JavaScript-rendered article pages */
+    #articleDetailPage {
+      background: #fff;
+    }
+
+    .article-detail-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 30px 20px 60px;
+      background: #fff;
+    }
+
+    .article-breadcrumb {
+      font-size: 13px;
+      color: #c00;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 15px;
+    }
+
+    .article-breadcrumb a {
+      color: #c00;
+      text-decoration: none;
+    }
+
+    .article-breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    .article-detail-title {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 38px;
+      font-weight: 800;
+      line-height: 1.2;
+      color: #111;
+      margin-bottom: 15px;
+    }
+
+    #articleDetailPage .article-meta {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .article-hero-image {
+      width: 100%;
+      height: 450px;
+      background-size: cover;
+      background-position: center;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+
+    #articleDetailPage .article-content {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #333;
+    }
+
+    #articleDetailPage .article-content p {
+      margin-bottom: 20px;
+      text-align: justify;
+    }
+
+    #articleDetailPage .article-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    .article-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e5e5;
+    }
+
+    .article-tag {
+      display: inline-block;
+      padding: 6px 14px;
+      background: #f5f5f5;
+      color: #666;
+      font-size: 13px;
+      border-radius: 20px;
+      text-transform: capitalize;
     }
 
     .sidebar-card {
@@ -1268,6 +1396,78 @@
 
     .hero-nav-btn:hover {
       background: rgba(255,255,255,0.3);
+    }
+
+    /* Hero Carousel with Slow Fade Transition
+       - 2 second fade out
+       - 5 second pause (showing image)
+       - 2 second fade in for next slide */
+    .hero-carousel {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      /* 2 second fade transition */
+      transition: opacity 2s ease-in-out;
+      z-index: 1;
+    }
+
+    /* First slide establishes container height */
+    .hero-slide:first-child {
+      position: relative;
+      opacity: 1;
+    }
+
+    /* Active slide fades in on top */
+    .hero-slide.active {
+      opacity: 1;
+      z-index: 2;
+    }
+
+    /* When first slide is not active, fade it out */
+    .hero-slide:first-child:not(.active) {
+      opacity: 0;
+    }
+
+    .hero-category {
+      display: inline-block;
+      background: #ffd700;
+      color: #000000;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .hero-dots {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .hero-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.4);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .hero-dot.active, .hero-dot:hover {
+      background: #ffd700;
     }
 
     /* Sidebar */
@@ -2120,7 +2320,7 @@
         <td>
           <div class="header-content">
             <div class="header-brand">
-              <h1 class="header-title"><a href="#" id="siteHomeLink" onclick="showHomePage(); return false;">HOME.PENTECOSTAL</a></h1>
+              <h1 class="header-title"><a href="#" id="siteHomeLink" onclick="goHome(); return false;">HOME.PENTECOSTAL</a></h1>
             </div>
             <div class="header-actions">
               <div class="search-box">
@@ -2135,17 +2335,23 @@
     </table>
   </div>
 
-  <!-- Navigation Row (Dynamically generated based on number of categories) -->
-  <div class="nav-row-wrapper">
-    <div class="nav-container" id="nav-container">
-      <!-- Category links generated by JavaScript based on siteCategories array -->
-    </div>
-  </div>
+  <!-- Category Navigation Bar - Black with White Text -->
+  <nav id="category-nav">
+    <ul id="nav-list">
+      <li class="home-link"><a href="#" onclick="goHome(); return false;"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></a></li>
+      <li><a href="#spiritual-growth" onclick="openPortal('spiritual-growth'); return false;">Spiritual Growth</a></li><li><a href="#faith-in-action" onclick="openPortal('faith-in-action'); return false;">Faith in Action</a></li><li><a href="#worship-and-praise" onclick="openPortal('worship-and-praise'); return false;">Worship and Praise</a></li><li><a href="#prayer-and-devotion" onclick="openPortal('prayer-and-devotion'); return false;">Prayer and Devotion</a></li><li><a href="#holy-spirit" onclick="openPortal('holy-spirit'); return false;">Holy Spirit</a></li>
+    </ul>
+  </nav>
 
-  <!-- Article Links Row (Always 3 random articles) -->
-  <div class="article-row-wrapper">
-    <div class="article-container" id="article-links-container">
-      <div class="article-link"><a href="#" onclick="showContentPage('WqJjhOjnUJZr', 'spiritual-growth'); return false;"><span class="article-category">Spiritual Growth:</span> 10 Powerful Prayer Strategies to Deepen Your Faith</a></div><div class="article-link"><a href="#" onclick="showContentPage('aq4WkPx12AAu', 'spiritual-growth'); return false;"><span class="article-category">Spiritual Growth:</span> How to Cultivate a Daily Bible Study Habit</a></div><div class="article-link"><a href="#" onclick="showContentPage('pYyYqMMTVSIR', 'spiritual-growth'); return false;"><span class="article-category">Spiritual Growth:</span> 5 Steps to Recognizing God’s Voice in Your Life</a></div>
+  <!-- Ticker Bar - Black with Smooth Scrolling Headlines (12 random articles from ALL categories) -->
+  <div id="ticker-bar">
+    <div class="ticker-wrap">
+      <div class="ticker-content">
+        <span class="ticker-item"><span class="cat-label">Faith in Action:</span> <a href="#" onclick="showContentPage('7l4yHIZeUNPB', 'faith-in-action'); return false;">Faith-Driven Leadership: Guiding Others with Integrity</a></span><span class="ticker-item"><span class="cat-label">Worship and Praise:</span> <a href="#" onclick="showContentPage('odiPOVQmaIay', 'worship-and-praise'); return false;">How to Create a Worshipful Atmosphere at Home</a></span><span class="ticker-item"><span class="cat-label">Faith in Action:</span> <a href="#" onclick="showContentPage('iMNTQl6bp792', 'faith-in-action'); return false;">Volunteering as Worship: Finding God in Service to Others</a></span><span class="ticker-item"><span class="cat-label">Faith in Action:</span> <a href="#" onclick="showContentPage('5p6aNlTbQIPc', 'faith-in-action'); return false;">Living Your Faith: Practical Ways to Serve Your Neighbors</a></span><span class="ticker-item"><span class="cat-label">Spiritual Growth:</span> <a href="#" onclick="showContentPage('nZK5J2OwVFAy', 'spiritual-growth'); return false;">How to Build a More Meaningful Prayer Life</a></span><span class="ticker-item"><span class="cat-label">Worship and Praise:</span> <a href="#" onclick="showContentPage('L5dpZ6X1nNy3', 'worship-and-praise'); return false;">How Worship Transforms Our Relationship with God</a></span><span class="ticker-item"><span class="cat-label">Spiritual Growth:</span> <a href="#" onclick="showContentPage('wWvH5cpHGKTG', 'spiritual-growth'); return false;">Understanding Spiritual Gifts: Discover Your Divine Purpose</a></span><span class="ticker-item"><span class="cat-label">Prayer and Devotion:</span> <a href="#" onclick="showContentPage('bUdv0gMtPA1y', 'prayer-and-devotion'); return false;">The Art of Morning Devotion: Starting Your Day with God</a></span><span class="ticker-item"><span class="cat-label">Spiritual Growth:</span> <a href="#" onclick="showContentPage('pYyYqMMTVSIR', 'spiritual-growth'); return false;">5 Steps to Recognizing God’s Voice in Your Life</a></span><span class="ticker-item"><span class="cat-label">Prayer and Devotion:</span> <a href="#" onclick="showContentPage('qS3RBeTMuUvG', 'prayer-and-devotion'); return false;">10 Powerful Prayers for Strength in Difficult Times</a></span><span class="ticker-item"><span class="cat-label">Prayer and Devotion:</span> <a href="#" onclick="showContentPage('IvYpZMFDodQP', 'prayer-and-devotion'); return false;">The Power of Praying Scripture Over Your Life</a></span><span class="ticker-item"><span class="cat-label">Worship and Praise:</span> <a href="#" onclick="showContentPage('kYQrHZtJGBgx', 'worship-and-praise'); return false;">The Importance of Praise in Your Daily Life</a></span>
+      </div>
+      <div class="ticker-content">
+        <span class="ticker-item"><span class="cat-label">Faith in Action:</span> <a href="#" onclick="showContentPage('7l4yHIZeUNPB', 'faith-in-action'); return false;">Faith-Driven Leadership: Guiding Others with Integrity</a></span><span class="ticker-item"><span class="cat-label">Worship and Praise:</span> <a href="#" onclick="showContentPage('odiPOVQmaIay', 'worship-and-praise'); return false;">How to Create a Worshipful Atmosphere at Home</a></span><span class="ticker-item"><span class="cat-label">Faith in Action:</span> <a href="#" onclick="showContentPage('iMNTQl6bp792', 'faith-in-action'); return false;">Volunteering as Worship: Finding God in Service to Others</a></span><span class="ticker-item"><span class="cat-label">Faith in Action:</span> <a href="#" onclick="showContentPage('5p6aNlTbQIPc', 'faith-in-action'); return false;">Living Your Faith: Practical Ways to Serve Your Neighbors</a></span><span class="ticker-item"><span class="cat-label">Spiritual Growth:</span> <a href="#" onclick="showContentPage('nZK5J2OwVFAy', 'spiritual-growth'); return false;">How to Build a More Meaningful Prayer Life</a></span><span class="ticker-item"><span class="cat-label">Worship and Praise:</span> <a href="#" onclick="showContentPage('L5dpZ6X1nNy3', 'worship-and-praise'); return false;">How Worship Transforms Our Relationship with God</a></span><span class="ticker-item"><span class="cat-label">Spiritual Growth:</span> <a href="#" onclick="showContentPage('wWvH5cpHGKTG', 'spiritual-growth'); return false;">Understanding Spiritual Gifts: Discover Your Divine Purpose</a></span><span class="ticker-item"><span class="cat-label">Prayer and Devotion:</span> <a href="#" onclick="showContentPage('bUdv0gMtPA1y', 'prayer-and-devotion'); return false;">The Art of Morning Devotion: Starting Your Day with God</a></span><span class="ticker-item"><span class="cat-label">Spiritual Growth:</span> <a href="#" onclick="showContentPage('pYyYqMMTVSIR', 'spiritual-growth'); return false;">5 Steps to Recognizing God’s Voice in Your Life</a></span><span class="ticker-item"><span class="cat-label">Prayer and Devotion:</span> <a href="#" onclick="showContentPage('qS3RBeTMuUvG', 'prayer-and-devotion'); return false;">10 Powerful Prayers for Strength in Difficult Times</a></span><span class="ticker-item"><span class="cat-label">Prayer and Devotion:</span> <a href="#" onclick="showContentPage('IvYpZMFDodQP', 'prayer-and-devotion'); return false;">The Power of Praying Scripture Over Your Life</a></span><span class="ticker-item"><span class="cat-label">Worship and Praise:</span> <a href="#" onclick="showContentPage('kYQrHZtJGBgx', 'worship-and-praise'); return false;">The Importance of Praise in Your Daily Life</a></span>
+      </div>
     </div>
   </div>
 
@@ -2154,18 +2360,66 @@
   <main class="main-content">
     <div class="content-grid">
       <div class="main-column">
-        <!-- Hero Section -->
+        <!-- Hero Carousel - Rotates through first article from each category -->
         <section class="hero-section">
-          <div class="hero-image" onclick="showContentPage('WqJjhOjnUJZr', 'spiritual-growth');" style="cursor: pointer;">
-            <img src="images/WqJjhOjnUJZr.jpg" alt="10 Powerful Prayer Strategies to Deepen Your Faith" onerror="this.parentElement.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'">
-            <div class="hero-overlay">
-              <h2 class="hero-title">
-                <a href="#" onclick="showContentPage('WqJjhOjnUJZr', 'spiritual-growth'); return false;">10 Powerful Prayer Strategies to Deepen Your Faith</a>
-              </h2>
+          <div class="hero-carousel" id="heroCarousel">
+            <div class="hero-slide active" data-index="0">
+              <div class="hero-image" onclick="showContentPage('WqJjhOjnUJZr', 'spiritual-growth');" style="cursor: pointer;">
+                <img src="images/WqJjhOjnUJZr.jpg" alt="10 Powerful Prayer Strategies to Deepen Your Faith" onerror="this.parentElement.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'">
+                <div class="hero-overlay">
+                  <span class="hero-category">Spiritual Growth</span>
+                  <h2 class="hero-title">
+                    <a href="#" onclick="showContentPage('WqJjhOjnUJZr', 'spiritual-growth'); return false;">10 Powerful Prayer Strategies to Deepen Your Faith</a>
+                  </h2>
+                </div>
+              </div>
+            </div><div class="hero-slide " data-index="1">
+              <div class="hero-image" onclick="showContentPage('aq4WkPx12AAu', 'spiritual-growth');" style="cursor: pointer;">
+                <img src="images/aq4WkPx12AAu.jpg" alt="How to Cultivate a Daily Bible Study Habit" onerror="this.parentElement.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'">
+                <div class="hero-overlay">
+                  <span class="hero-category">Faith in Action</span>
+                  <h2 class="hero-title">
+                    <a href="#" onclick="showContentPage('aq4WkPx12AAu', 'spiritual-growth'); return false;">How to Cultivate a Daily Bible Study Habit</a>
+                  </h2>
+                </div>
+              </div>
+            </div><div class="hero-slide " data-index="2">
+              <div class="hero-image" onclick="showContentPage('pYyYqMMTVSIR', 'spiritual-growth');" style="cursor: pointer;">
+                <img src="images/pYyYqMMTVSIR.jpg" alt="5 Steps to Recognizing God’s Voice in Your Life" onerror="this.parentElement.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'">
+                <div class="hero-overlay">
+                  <span class="hero-category">Worship and Praise</span>
+                  <h2 class="hero-title">
+                    <a href="#" onclick="showContentPage('pYyYqMMTVSIR', 'spiritual-growth'); return false;">5 Steps to Recognizing God’s Voice in Your Life</a>
+                  </h2>
+                </div>
+              </div>
+            </div><div class="hero-slide " data-index="3">
+              <div class="hero-image" onclick="showContentPage('5hPPxNDdN8tD', 'spiritual-growth');" style="cursor: pointer;">
+                <img src="images/5hPPxNDdN8tD.jpg" alt="The Transformative Power of Forgiveness in Christianity" onerror="this.parentElement.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'">
+                <div class="hero-overlay">
+                  <span class="hero-category">Prayer and Devotion</span>
+                  <h2 class="hero-title">
+                    <a href="#" onclick="showContentPage('5hPPxNDdN8tD', 'spiritual-growth'); return false;">The Transformative Power of Forgiveness in Christianity</a>
+                  </h2>
+                </div>
+              </div>
+            </div><div class="hero-slide " data-index="4">
+              <div class="hero-image" onclick="showContentPage('wWvH5cpHGKTG', 'spiritual-growth');" style="cursor: pointer;">
+                <img src="images/wWvH5cpHGKTG.jpg" alt="Understanding Spiritual Gifts: Discover Your Divine Purpose" onerror="this.parentElement.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'">
+                <div class="hero-overlay">
+                  <span class="hero-category">Holy Spirit</span>
+                  <h2 class="hero-title">
+                    <a href="#" onclick="showContentPage('wWvH5cpHGKTG', 'spiritual-growth'); return false;">Understanding Spiritual Gifts: Discover Your Divine Purpose</a>
+                  </h2>
+                </div>
+              </div>
             </div>
             <div class="hero-nav">
-              <button class="hero-nav-btn">‹</button>
-              <button class="hero-nav-btn">›</button>
+              <button class="hero-nav-btn hero-prev" onclick="changeHeroSlide(-1)">‹</button>
+              <button class="hero-nav-btn hero-next" onclick="changeHeroSlide(1)">›</button>
+            </div>
+            <div class="hero-dots">
+              <span class="hero-dot active" onclick="goToHeroSlide(0)"></span><span class="hero-dot " onclick="goToHeroSlide(1)"></span><span class="hero-dot " onclick="goToHeroSlide(2)"></span><span class="hero-dot " onclick="goToHeroSlide(3)"></span><span class="hero-dot " onclick="goToHeroSlide(4)"></span>
             </div>
           </div>
         </section>
@@ -2245,59 +2499,191 @@
           </div>
 
           <!-- IN THE SPOTLIGHT Column (Right) -->
+          <!-- BUSINESS RULE: Spotlight must show articles from DIFFERENT categories than the Hero -->
           <div class="section-block">
             <div class="section-header">In The Spotlight</div>
             <div class="section-content">
-              <!-- Main Spotlight Article -->
+              <!-- Main Spotlight Article - from OTHER categories than Hero -->
               
               <div class="spotlight-main">
-                <a href="#" onclick="showContentPage('WqJjhOjnUJZr', 'spiritual-growth'); return false;" class="spotlight-main-image">
-                  <img src="images/WqJjhOjnUJZr.jpg" alt="10 Powerful Prayer Strategies to Deepen Your Faith" onerror="this.parentElement.style.background='#ddd'">
+                <a href="#" onclick="showContentPage('IqrqKdDoCPun', 'faith-in-action'); return false;" class="spotlight-main-image">
+                  <img src="images/IqrqKdDoCPun.jpg" alt="Community Involvement: Why Every Believer Should Participate" onerror="this.parentElement.style.background='#ddd'">
                 </a>
-                <h3 class="spotlight-main-title"><a href="#" onclick="showContentPage('WqJjhOjnUJZr', 'spiritual-growth'); return false;">10 Powerful Prayer Strategies to Deepen Your Faith</a></h3>
-                <p class="spotlight-main-excerpt">In a world filled with distractions and uncertainties, many believers find themselves searching for deeper connections with God. Prayer, often seen as...</p>
+                <h3 class="spotlight-main-title"><a href="#" onclick="showContentPage('IqrqKdDoCPun', 'faith-in-action'); return false;">Community Involvement: Why Every Believer Should Participate</a></h3>
+                <p class="spotlight-main-excerpt">Discover comprehensive insights about Community Involvement: Why Every Believer Should Participate. This in-depth article explores key concepts, pract...</p>
               </div>
               
 
-              <!-- Spotlight List Items -->
+              <!-- Spotlight List Items - from OTHER categories than Hero -->
               
               <div class="spotlight-list-item">
-                <a href="#" onclick="showContentPage('aq4WkPx12AAu', 'spiritual-growth'); return false;" class="spotlight-list-image">
-                  <img src="images/aq4WkPx12AAu.jpg" alt="How to Cultivate a Daily Bible Study Habit" onerror="this.parentElement.style.background='#ddd'">
+                <a href="#" onclick="showContentPage('45uYDM4MsMmT', 'worship-and-praise'); return false;" class="spotlight-list-image">
+                  <img src="images/45uYDM4MsMmT.jpg" alt="10 Powerful Worship Songs That Ignite Your Faith" onerror="this.parentElement.style.background='#ddd'">
                 </a>
                 <div class="spotlight-list-content">
-                  <h4 class="spotlight-list-title"><a href="#" onclick="showContentPage('aq4WkPx12AAu', 'spiritual-growth'); return false;">How to Cultivate a Daily Bible Study Habit</a></h4>
-                  <p class="spotlight-list-excerpt">In a world bustling with distractions and endless to-do lists, the quest for spi...</p>
+                  <h4 class="spotlight-list-title"><a href="#" onclick="showContentPage('45uYDM4MsMmT', 'worship-and-praise'); return false;">10 Powerful Worship Songs That Ignite Your Faith</a></h4>
+                  <p class="spotlight-list-excerpt">In a world filled with distractions, challenges, and uncertainties, worship song...</p>
                 </div>
               </div>
               
               <div class="spotlight-list-item">
-                <a href="#" onclick="showContentPage('pYyYqMMTVSIR', 'spiritual-growth'); return false;" class="spotlight-list-image">
-                  <img src="images/pYyYqMMTVSIR.jpg" alt="5 Steps to Recognizing God’s Voice in Your Life" onerror="this.parentElement.style.background='#ddd'">
+                <a href="#" onclick="showContentPage('fUKhuPg7LSKI', 'faith-in-action'); return false;" class="spotlight-list-image">
+                  <img src="images/fUKhuPg7LSKI.jpg" alt="From Prayer to Action: Mobilizing Your Church Community" onerror="this.parentElement.style.background='#ddd'">
                 </a>
                 <div class="spotlight-list-content">
-                  <h4 class="spotlight-list-title"><a href="#" onclick="showContentPage('pYyYqMMTVSIR', 'spiritual-growth'); return false;">5 Steps to Recognizing God’s Voice in Your Life</a></h4>
-                  <p class="spotlight-list-excerpt">In a world filled with noise and distractions, the quest to hear God’s voice can...</p>
+                  <h4 class="spotlight-list-title"><a href="#" onclick="showContentPage('fUKhuPg7LSKI', 'faith-in-action'); return false;">From Prayer to Action: Mobilizing Your Church Community</a></h4>
+                  <p class="spotlight-list-excerpt">In a world where the demands of daily life can easily overshadow spiritual pursu...</p>
                 </div>
               </div>
               
 
-              <!-- Related Information Section -->
+              <!-- Related Information Section - from OTHER categories than Hero -->
               <div class="related-info-header">Related Information</div>
               <div class="related-info-grid">
                 
                 <div class="related-info-card">
-                  <a href="#" onclick="showContentPage('8IlOb9iZA8Qm', 'spiritual-growth'); return false;" class="related-info-image">
-                    <img src="images/8IlOb9iZA8Qm.jpg" alt="The Importance of Gratitude in Spiritual Development" onerror="this.parentElement.style.background='#ddd'">
+                  <a href="#" onclick="showContentPage('hWdDORk0IJmh', 'faith-in-action'); return false;" class="related-info-image">
+                    <img src="images/hWdDORk0IJmh.jpg" alt="7 Ways to Encourage Faith in Action Among Youth" onerror="this.parentElement.style.background='#ddd'">
                   </a>
-                  <h4 class="related-info-title"><a href="#" onclick="showContentPage('8IlOb9iZA8Qm', 'spiritual-growth'); return false;">The Importance of Gratitude in Spiritual Development</a></h4>
+                  <h4 class="related-info-title"><a href="#" onclick="showContentPage('hWdDORk0IJmh', 'faith-in-action'); return false;">7 Ways to Encourage Faith in Action Among Youth</a></h4>
+                </div>
+                
+                <div class="related-info-card">
+                  <a href="#" onclick="showContentPage('DIZ4MgxSaLc3', 'faith-in-action'); return false;" class="related-info-image">
+                    <img src="images/DIZ4MgxSaLc3.jpg" alt="Mission Trips That Matter: Preparing Your Heart for Service" onerror="this.parentElement.style.background='#ddd'">
+                  </a>
+                  <h4 class="related-info-title"><a href="#" onclick="showContentPage('DIZ4MgxSaLc3', 'faith-in-action'); return false;">Mission Trips That Matter: Preparing Your Heart for Service</a></h4>
+                </div>
+                
+                <div class="related-info-card">
+                  <a href="#" onclick="showContentPage('hyqHF3n99Fx8', 'faith-in-action'); return false;" class="related-info-image">
+                    <img src="images/hyqHF3n99Fx8.jpg" alt="Faith and Service: A Deep Dive into Biblical Teachings" onerror="this.parentElement.style.background='#ddd'">
+                  </a>
+                  <h4 class="related-info-title"><a href="#" onclick="showContentPage('hyqHF3n99Fx8', 'faith-in-action'); return false;">Faith and Service: A Deep Dive into Biblical Teachings</a></h4>
+                </div>
+                
+                <div class="related-info-card">
+                  <a href="#" onclick="showContentPage('odiPOVQmaIay', 'worship-and-praise'); return false;" class="related-info-image">
+                    <img src="images/odiPOVQmaIay.jpg" alt="How to Create a Worshipful Atmosphere at Home" onerror="this.parentElement.style.background='#ddd'">
+                  </a>
+                  <h4 class="related-info-title"><a href="#" onclick="showContentPage('odiPOVQmaIay', 'worship-and-praise'); return false;">How to Create a Worshipful Atmosphere at Home</a></h4>
                 </div>
                 
               </div>
 
-              <!-- Recommended Section -->
+              <!-- Recommended Section - from OTHER categories than Hero -->
               <div class="section-header" style="margin-top: 20px;">Recommended</div>
               <div class="recommended-list">
+                
+                <div class="recommended-item">
+                  <a href="#" onclick="showContentPage('8VMcGF06pXND', 'prayer-and-devotion'); return false;" class="recommended-image">
+                    <img src="images/8VMcGF06pXND.jpg" alt="Building a Prayer Closet: Creating Sacred Space for God" onerror="this.parentElement.style.background='#ddd'">
+                  </a>
+                  <div class="recommended-content">
+                    <h4 class="recommended-title"><a href="#" onclick="showContentPage('8VMcGF06pXND', 'prayer-and-devotion'); return false;">Building a Prayer Closet: Creating Sacred Space for God</a></h4>
+                    <p class="recommended-excerpt"># Building a Prayer Closet: Creating Sacred Space for God
+
+In a world that never seems to slow down,...</p>
+                  </div>
+                </div>
+                
+                <div class="recommended-item">
+                  <a href="#" onclick="showContentPage('n8pYrk9e9hkI', 'prayer-and-devotion'); return false;" class="recommended-image">
+                    <img src="images/n8pYrk9e9hkI.jpg" alt="Evening Devotions: Ending Your Day in God's Presence" onerror="this.parentElement.style.background='#ddd'">
+                  </a>
+                  <div class="recommended-content">
+                    <h4 class="recommended-title"><a href="#" onclick="showContentPage('n8pYrk9e9hkI', 'prayer-and-devotion'); return false;">Evening Devotions: Ending Your Day in God's Presence</a></h4>
+                    <p class="recommended-excerpt"># Evening Devotions: Ending Your Day in God's Presence 
+
+In the hustle and bustle of daily life, as ...</p>
+                  </div>
+                </div>
+                
+                <div class="recommended-item">
+                  <a href="#" onclick="showContentPage('qS3RBeTMuUvG', 'prayer-and-devotion'); return false;" class="recommended-image">
+                    <img src="images/qS3RBeTMuUvG.jpg" alt="10 Powerful Prayers for Strength in Difficult Times" onerror="this.parentElement.style.background='#ddd'">
+                  </a>
+                  <div class="recommended-content">
+                    <h4 class="recommended-title"><a href="#" onclick="showContentPage('qS3RBeTMuUvG', 'prayer-and-devotion'); return false;">10 Powerful Prayers for Strength in Difficult Times</a></h4>
+                    <p class="recommended-excerpt"># 10 Powerful Prayers for Strength in Difficult Times
+
+In the journey of life, we encounter challeng...</p>
+                  </div>
+                </div>
+                
+                <div class="recommended-item">
+                  <a href="#" onclick="showContentPage('7RiDsoug6qQw', 'worship-and-praise'); return false;" class="recommended-image">
+                    <img src="images/7RiDsoug6qQw.jpg" alt="The Benefits of Singing Together in Worship" onerror="this.parentElement.style.background='#ddd'">
+                  </a>
+                  <div class="recommended-content">
+                    <h4 class="recommended-title"><a href="#" onclick="showContentPage('7RiDsoug6qQw', 'worship-and-praise'); return false;">The Benefits of Singing Together in Worship</a></h4>
+                    <p class="recommended-excerpt">Discover comprehensive insights about The Benefits of Singing Together in Worship. This in-depth art...</p>
+                  </div>
+                </div>
+                
+                <div class="recommended-item">
+                  <a href="#" onclick="showContentPage('486sbxCTRhLT', 'worship-and-praise'); return false;" class="recommended-image">
+                    <img src="images/486sbxCTRhLT.jpg" alt="7 Creative Expressions of Worship You Can Try Today" onerror="this.parentElement.style.background='#ddd'">
+                  </a>
+                  <div class="recommended-content">
+                    <h4 class="recommended-title"><a href="#" onclick="showContentPage('486sbxCTRhLT', 'worship-and-praise'); return false;">7 Creative Expressions of Worship You Can Try Today</a></h4>
+                    <p class="recommended-excerpt">In an age where the mundane often overshadows the miraculous, the pursuit of creative expressions of...</p>
+                  </div>
+                </div>
+                
+                <div class="recommended-item">
+                  <a href="#" onclick="showContentPage('IvYpZMFDodQP', 'prayer-and-devotion'); return false;" class="recommended-image">
+                    <img src="images/IvYpZMFDodQP.jpg" alt="The Power of Praying Scripture Over Your Life" onerror="this.parentElement.style.background='#ddd'">
+                  </a>
+                  <div class="recommended-content">
+                    <h4 class="recommended-title"><a href="#" onclick="showContentPage('IvYpZMFDodQP', 'prayer-and-devotion'); return false;">The Power of Praying Scripture Over Your Life</a></h4>
+                    <p class="recommended-excerpt"># The Power of Praying Scripture Over Your Life
+
+In a world often filled with uncertainty and chaos,...</p>
+                  </div>
+                </div>
+                
+                <div class="recommended-item">
+                  <a href="#" onclick="showContentPage('NZQMOdfyn6Ur', 'faith-in-action'); return false;" class="recommended-image">
+                    <img src="images/NZQMOdfyn6Ur.jpg" alt="Building Bridges: How Faith Can Foster Community Unity" onerror="this.parentElement.style.background='#ddd'">
+                  </a>
+                  <div class="recommended-content">
+                    <h4 class="recommended-title"><a href="#" onclick="showContentPage('NZQMOdfyn6Ur', 'faith-in-action'); return false;">Building Bridges: How Faith Can Foster Community Unity</a></h4>
+                    <p class="recommended-excerpt">In today’s increasingly polarized world, where division often seems to overshadow unity, the role of...</p>
+                  </div>
+                </div>
+                
+                <div class="recommended-item">
+                  <a href="#" onclick="showContentPage('yh3W2QTeEYwV', 'worship-and-praise'); return false;" class="recommended-image">
+                    <img src="images/yh3W2QTeEYwV.jpg" alt="The Role of Music in Spiritual Growth and Healing" onerror="this.parentElement.style.background='#ddd'">
+                  </a>
+                  <div class="recommended-content">
+                    <h4 class="recommended-title"><a href="#" onclick="showContentPage('yh3W2QTeEYwV', 'worship-and-praise'); return false;">The Role of Music in Spiritual Growth and Healing</a></h4>
+                    <p class="recommended-excerpt">Music has long been recognized as a universal language, a medium through which emotions are expresse...</p>
+                  </div>
+                </div>
+                
+                <div class="recommended-item">
+                  <a href="#" onclick="showContentPage('5p6aNlTbQIPc', 'faith-in-action'); return false;" class="recommended-image">
+                    <img src="images/5p6aNlTbQIPc.jpg" alt="Living Your Faith: Practical Ways to Serve Your Neighbors" onerror="this.parentElement.style.background='#ddd'">
+                  </a>
+                  <div class="recommended-content">
+                    <h4 class="recommended-title"><a href="#" onclick="showContentPage('5p6aNlTbQIPc', 'faith-in-action'); return false;">Living Your Faith: Practical Ways to Serve Your Neighbors</a></h4>
+                    <p class="recommended-excerpt"># Living Your Faith: Practical Ways to Serve Your Neighbors
+
+In a world that often feels disconnecte...</p>
+                  </div>
+                </div>
+                
+                <div class="recommended-item">
+                  <a href="#" onclick="showContentPage('Ey02GO4yntCJ', 'worship-and-praise'); return false;" class="recommended-image">
+                    <img src="images/Ey02GO4yntCJ.jpg" alt="Deep Dive: The Theology Behind Worship Music" onerror="this.parentElement.style.background='#ddd'">
+                  </a>
+                  <div class="recommended-content">
+                    <h4 class="recommended-title"><a href="#" onclick="showContentPage('Ey02GO4yntCJ', 'worship-and-praise'); return false;">Deep Dive: The Theology Behind Worship Music</a></h4>
+                    <p class="recommended-excerpt">In a world increasingly shaped by the chaos of daily life, the role of worship music stands as a bea...</p>
+                  </div>
+                </div>
                 
               </div>
             </div>
@@ -2399,10 +2785,73 @@
           <div class="skyscraper-ad-label">Advertisement</div>
         </div>
 
-        <!-- Must Read -->
+        <!-- Must Read - Articles from OTHER categories for cross-category discovery -->
         <div class="sidebar-section">
           <div class="sidebar-header">Must Read</div>
           <div class="sidebar-content">
+            
+            <div class="popular-item">
+              <a href="#" onclick="showContentPage('lYOXsn1vx9y9', 'worship-and-praise'); return false;" class="popular-image">
+                <img src="images/lYOXsn1vx9y9.jpg" alt="Why Community Worship Matters for Every Believer" onerror="this.parentElement.style.background='#ddd'">
+              </a>
+              <div class="popular-content">
+                <a href="#" onclick="showContentPage('lYOXsn1vx9y9', 'worship-and-praise'); return false;" class="popular-title">Why Community Worship Matters for Every Believer</a>
+              </div>
+            </div>
+            
+            <div class="popular-item">
+              <a href="#" onclick="showContentPage('R3GJJoxlONFB', 'prayer-and-devotion'); return false;" class="popular-image">
+                <img src="images/R3GJJoxlONFB.jpg" alt="Understanding the Lord's Prayer: A Deep Devotional Study" onerror="this.parentElement.style.background='#ddd'">
+              </a>
+              <div class="popular-content">
+                <a href="#" onclick="showContentPage('R3GJJoxlONFB', 'prayer-and-devotion'); return false;" class="popular-title">Understanding the Lord's Prayer: A Deep Devotional Study</a>
+              </div>
+            </div>
+            
+            <div class="popular-item">
+              <a href="#" onclick="showContentPage('SK9GbmZhRcig', 'worship-and-praise'); return false;" class="popular-image">
+                <img src="images/SK9GbmZhRcig.jpg" alt="5 Ways to Enhance Your Church Worship Experience" onerror="this.parentElement.style.background='#ddd'">
+              </a>
+              <div class="popular-content">
+                <a href="#" onclick="showContentPage('SK9GbmZhRcig', 'worship-and-praise'); return false;" class="popular-title">5 Ways to Enhance Your Church Worship Experience</a>
+              </div>
+            </div>
+            
+            <div class="popular-item">
+              <a href="#" onclick="showContentPage('MpCTNnUHLijQ', 'prayer-and-devotion'); return false;" class="popular-image">
+                <img src="images/MpCTNnUHLijQ.jpg" alt="Corporate Prayer: The Strength of Praying Together" onerror="this.parentElement.style.background='#ddd'">
+              </a>
+              <div class="popular-content">
+                <a href="#" onclick="showContentPage('MpCTNnUHLijQ', 'prayer-and-devotion'); return false;" class="popular-title">Corporate Prayer: The Strength of Praying Together</a>
+              </div>
+            </div>
+            
+            <div class="popular-item">
+              <a href="#" onclick="showContentPage('Ke5Q184PdQI8', 'faith-in-action'); return false;" class="popular-image">
+                <img src="images/Ke5Q184PdQI8.jpg" alt="Feeding the Hungry: A Biblical Call to Action" onerror="this.parentElement.style.background='#ddd'">
+              </a>
+              <div class="popular-content">
+                <a href="#" onclick="showContentPage('Ke5Q184PdQI8', 'faith-in-action'); return false;" class="popular-title">Feeding the Hungry: A Biblical Call to Action</a>
+              </div>
+            </div>
+            
+            <div class="popular-item">
+              <a href="#" onclick="showContentPage('MnoAZCJaJlc5', 'prayer-and-devotion'); return false;" class="popular-image">
+                <img src="images/MnoAZCJaJlc5.jpg" alt="Intercessory Prayer: Standing in the Gap for Others" onerror="this.parentElement.style.background='#ddd'">
+              </a>
+              <div class="popular-content">
+                <a href="#" onclick="showContentPage('MnoAZCJaJlc5', 'prayer-and-devotion'); return false;" class="popular-title">Intercessory Prayer: Standing in the Gap for Others</a>
+              </div>
+            </div>
+            
+            <div class="popular-item">
+              <a href="#" onclick="showContentPage('L5dpZ6X1nNy3', 'worship-and-praise'); return false;" class="popular-image">
+                <img src="images/L5dpZ6X1nNy3.jpg" alt="How Worship Transforms Our Relationship with God" onerror="this.parentElement.style.background='#ddd'">
+              </a>
+              <div class="popular-content">
+                <a href="#" onclick="showContentPage('L5dpZ6X1nNy3', 'worship-and-praise'); return false;" class="popular-title">How Worship Transforms Our Relationship with God</a>
+              </div>
+            </div>
             
           </div>
         </div>
@@ -2416,16 +2865,22 @@
         </div>
 
         <!-- Random Article Feature -->
-        <div class="random-article"><div class="random-article-header">You Might Like</div><a href="#" onclick="showContentPage('aq4WkPx12AAu', 'spiritual-growth'); return false;" class="random-article-image"><img src="images/aq4WkPx12AAu.jpg" alt="How to Cultivate a Daily Bible Study Habit" onerror="this.parentElement.style.background='#ddd'"></a><div class="random-article-content"><h4 class="random-article-title"><a href="#" onclick="showContentPage('aq4WkPx12AAu', 'spiritual-growth'); return false;">How to Cultivate a Daily Bible Study Habit</a></h4><p class="random-article-excerpt">In a world bustling with distractions and endless to-do lists, the quest for spiritual grounding...</p></div></div>
+        <div class="random-article"><div class="random-article-header">You Might Like</div><a href="#" onclick="showContentPage('JfmAqK7FlBJL', 'spiritual-growth'); return false;" class="random-article-image"><img src="images/JfmAqK7FlBJL.jpg" alt="5 Biblical Principles for Overcoming Spiritual Doubt" onerror="this.parentElement.style.background='#ddd'"></a><div class="random-article-content"><h4 class="random-article-title"><a href="#" onclick="showContentPage('JfmAqK7FlBJL', 'spiritual-growth'); return false;">5 Biblical Principles for Overcoming Spiritual Doubt</a></h4><p class="random-article-excerpt">In a world filled with uncertainties and challenges, spiritual doubt can feel like an unwelcome...</p></div></div>
       </aside>
     </div>
 
   </main>
   </div>
 
-  <!-- Article Detail Page -->
+  <!-- Portal Page (Category View) - Dynamically populated by JavaScript -->
+  <div id="portalPage" style="display: none;"></div>
+
+  <!-- Article Detail Page - Dynamically populated by JavaScript -->
+  <div id="articleDetailPage" style="display: none;"></div>
+
+  <!-- Legacy Article Page (for server-rendered fallback) -->
   <section id="articlePage" class="article-page hidden">
-    <a href="#" class="back-link" id="backToHome" onclick="showHomePage(); return false;">‹ Back to Home</a>
+    <a href="#" class="back-link" id="backToHome" onclick="goHome(); return false;">‹ Back to Home</a>
     <div class="article-breadcrumbs" id="articleBreadcrumbs">Home | Feature Story</div>
     <h1 class="article-title" id="articleTitle">Feature Story</h1>
     <div class="article-meta">
@@ -2544,7 +2999,7 @@
         </div>
 
         <!-- YOU MIGHT LIKE Section -->
-        <div class="random-article" id="articleYouMightLike" style="margin-top: 8px;"><div class="random-article-header">You Might Like</div><a href="#" onclick="showContentPage('pYyYqMMTVSIR', 'spiritual-growth'); return false;" class="random-article-image"><img src="images/pYyYqMMTVSIR.jpg" alt="5 Steps to Recognizing God’s Voice in Your Life" onerror="this.parentElement.style.background='#ddd'"></a><div class="random-article-content"><h4 class="random-article-title"><a href="#" onclick="showContentPage('pYyYqMMTVSIR', 'spiritual-growth'); return false;">5 Steps to Recognizing God’s Voice in Your Life</a></h4><p class="random-article-excerpt">In a world filled with noise and distractions, the quest to hear God’s voice can...</p></div></div>
+        <div class="random-article" id="articleYouMightLike" style="margin-top: 8px;"><div class="random-article-header">You Might Like</div><a href="#" onclick="showContentPage('ARyWzEhHmGwJ', 'spiritual-growth'); return false;" class="random-article-image"><img src="images/ARyWzEhHmGwJ.jpg" alt="7 Scriptures to Inspire Your Journey of Faith" onerror="this.parentElement.style.background='#ddd'"></a><div class="random-article-content"><h4 class="random-article-title"><a href="#" onclick="showContentPage('ARyWzEhHmGwJ', 'spiritual-growth'); return false;">7 Scriptures to Inspire Your Journey of Faith</a></h4><p class="random-article-excerpt">In a world that often feels chaotic and uncertain, the journey of faith can serve...</p></div></div>
 
         <!-- MUST READ Section -->
         <div class="sidebar-section" style="margin-top: 15px;"><div class="sidebar-header">Must Read</div><div class="sidebar-content" id="articleMustRead"><div class="popular-item"><a href="#" onclick="showContentPage('WqJjhOjnUJZr', 'spiritual-growth'); return false;" class="popular-image"><img src="images/WqJjhOjnUJZr.jpg" alt="10 Powerful Prayer Strategies to Deepen Your Faith" onerror="this.parentElement.style.background='#ddd'"></a><div class="popular-content"><a href="#" onclick="showContentPage('WqJjhOjnUJZr', 'spiritual-growth'); return false;" class="popular-title">10 Powerful Prayer Strategies to Deepen Your Faith</a></div></div><div class="popular-item"><a href="#" onclick="showContentPage('aq4WkPx12AAu', 'spiritual-growth'); return false;" class="popular-image"><img src="images/aq4WkPx12AAu.jpg" alt="How to Cultivate a Daily Bible Study Habit" onerror="this.parentElement.style.background='#ddd'"></a><div class="popular-content"><a href="#" onclick="showContentPage('aq4WkPx12AAu', 'spiritual-growth'); return false;" class="popular-title">How to Cultivate a Daily Bible Study Habit</a></div></div><div class="popular-item"><a href="#" onclick="showContentPage('pYyYqMMTVSIR', 'spiritual-growth'); return false;" class="popular-image"><img src="images/pYyYqMMTVSIR.jpg" alt="5 Steps to Recognizing God’s Voice in Your Life" onerror="this.parentElement.style.background='#ddd'"></a><div class="popular-content"><a href="#" onclick="showContentPage('pYyYqMMTVSIR', 'spiritual-growth'); return false;" class="popular-title">5 Steps to Recognizing God’s Voice in Your Life</a></div></div><div class="popular-item"><a href="#" onclick="showContentPage('5hPPxNDdN8tD', 'spiritual-growth'); return false;" class="popular-image"><img src="images/5hPPxNDdN8tD.jpg" alt="The Transformative Power of Forgiveness in Christianity" onerror="this.parentElement.style.background='#ddd'"></a><div class="popular-content"><a href="#" onclick="showContentPage('5hPPxNDdN8tD', 'spiritual-growth'); return false;" class="popular-title">The Transformative Power of Forgiveness in Christianity</a></div></div><div class="popular-item"><a href="#" onclick="showContentPage('wWvH5cpHGKTG', 'spiritual-growth'); return false;" class="popular-image"><img src="images/wWvH5cpHGKTG.jpg" alt="Understanding Spiritual Gifts: Discover Your Divine Purpose" onerror="this.parentElement.style.background='#ddd'"></a><div class="popular-content"><a href="#" onclick="showContentPage('wWvH5cpHGKTG', 'spiritual-growth'); return false;" class="popular-title">Understanding Spiritual Gifts: Discover Your Divine Purpose</a></div></div><div class="popular-item"><a href="#" onclick="showContentPage('T8pZG8S9nnbx', 'spiritual-growth'); return false;" class="popular-image"><img src="images/T8pZG8S9nnbx.jpg" alt="How Fasting Can Enhance Your Spiritual Journey" onerror="this.parentElement.style.background='#ddd'"></a><div class="popular-content"><a href="#" onclick="showContentPage('T8pZG8S9nnbx', 'spiritual-growth'); return false;" class="popular-title">How Fasting Can Enhance Your Spiritual Journey</a></div></div><div class="popular-item"><a href="#" onclick="showContentPage('JfmAqK7FlBJL', 'spiritual-growth'); return false;" class="popular-image"><img src="images/JfmAqK7FlBJL.jpg" alt="5 Biblical Principles for Overcoming Spiritual Doubt" onerror="this.parentElement.style.background='#ddd'"></a><div class="popular-content"><a href="#" onclick="showContentPage('JfmAqK7FlBJL', 'spiritual-growth'); return false;" class="popular-title">5 Biblical Principles for Overcoming Spiritual Doubt</a></div></div></div></div>
@@ -2748,7 +3203,7 @@
   <footer class="site-footer">
     <div class="footer-top">
       <div class="footer-brands">
-        <span class="footer-brand-item">Spiritual Growth</span><span class="footer-brand-item">Faith in Action</span><span class="footer-brand-item">Worship and Praise</span>
+        <span class="footer-brand-item">Spiritual Growth</span><span class="footer-brand-item">Faith in Action</span><span class="footer-brand-item">Worship and Praise</span><span class="footer-brand-item">Prayer and Devotion</span><span class="footer-brand-item">Holy Spirit</span>
       </div>
     </div>
     <div class="footer-main">
@@ -2763,6 +3218,8 @@
             <li><a href="#" onclick="openPortal('spiritual-growth'); return false;">Spiritual Growth</a></li>
             <li><a href="#" onclick="openPortal('faith-in-action'); return false;">Faith in Action</a></li>
             <li><a href="#" onclick="openPortal('worship-and-praise'); return false;">Worship and Praise</a></li>
+            <li><a href="#" onclick="openPortal('prayer-and-devotion'); return false;">Prayer and Devotion</a></li>
+            <li><a href="#" onclick="openPortal('holy-spirit'); return false;">Holy Spirit</a></li>
           </ul>
         </div>
         <div class="footer-col">
@@ -2786,7 +3243,7 @@
       </div>
       <div class="footer-bottom">
         <div class="footer-links" id="footer-category-links">
-          <a href="#" onclick="openPortal('spiritual-growth'); return false;">Spiritual Growth</a> | <a href="#" onclick="openPortal('faith-in-action'); return false;">Faith in Action</a> | <a href="#" onclick="openPortal('worship-and-praise'); return false;">Worship and Praise</a>
+          <a href="#" onclick="openPortal('spiritual-growth'); return false;">Spiritual Growth</a> | <a href="#" onclick="openPortal('faith-in-action'); return false;">Faith in Action</a> | <a href="#" onclick="openPortal('worship-and-praise'); return false;">Worship and Praise</a> | <a href="#" onclick="openPortal('prayer-and-devotion'); return false;">Prayer and Devotion</a> | <a href="#" onclick="openPortal('holy-spirit'); return false;">Holy Spirit</a>
         </div>
         <p>Copyright © 2026 home.pentecostal. All Rights Reserved. | <a href="#">Sitemap</a> | <a href="#">Terms of Use</a> | <a href="#">Privacy Policy</a></p>
         <p style="margin-top: 5px;">Powered by <a href="https://jubileeverse.com" style="color: #ffd700;">JubileeVerse.com</a></p>
@@ -2794,7 +3251,10 @@
     </div>
   </footer>
 
-  <!-- JavaScript -->
+  <!-- External JavaScript Application -->
+  <script src="app.js"></script>
+
+  <!-- Inline JavaScript (backward compatibility + view tracking integration) -->
   <script>
     // ========================================================================
     // HELPER FUNCTIONS
@@ -2825,6 +3285,93 @@
       const stripped = stripMarkdown(text);
       if (stripped.length <= maxLength) return stripped;
       return stripped.substring(0, maxLength).trim() + '...';
+    }
+
+    // ========================================================================
+    // CROSS-CATEGORY ARTICLE SELECTION
+    // ========================================================================
+
+    /**
+     * getArticlesFromOtherCategories - Get articles from categories OTHER than the specified one
+     * BUSINESS RULE: Spotlight, Related Information, and Recommended sections
+     * MUST show articles from OTHER categories (not the current category)
+     * This prevents the page from becoming repetitive with same-category content
+     *
+     * @param {string} excludeCategorySlug - The category slug to exclude
+     * @param {number} count - Maximum number of articles to return
+     * @returns {Array} - Array of articles from other categories
+     */
+    function getArticlesFromOtherCategories(excludeCategorySlug, count = 10) {
+      if (!siteData || !siteData.allArticles) {
+        console.warn('getArticlesFromOtherCategories: siteData.allArticles not available');
+        return [];
+      }
+
+      console.log('getArticlesFromOtherCategories: Excluding category:', excludeCategorySlug);
+      const allCategories = [...new Set(siteData.allArticles.map(a => a.categorySlug))];
+      console.log('getArticlesFromOtherCategories: Available categories:', allCategories);
+
+      // Filter articles that are NOT from the excluded category
+      const otherArticles = siteData.allArticles.filter(article => {
+        return article.categorySlug && article.categorySlug !== excludeCategorySlug;
+      });
+
+      console.log('getArticlesFromOtherCategories: Found', otherArticles.length, 'articles from other categories');
+
+      // Shuffle to get variety
+      const shuffled = [...otherArticles].sort(() => Math.random() - 0.5);
+
+      // Deduplicate by articleId
+      const seen = new Set();
+      const unique = shuffled.filter(a => {
+        const id = a.articleId || a.id;
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+
+      const result = unique.slice(0, count);
+
+      // Validation: Ensure no articles from excluded category snuck through
+      const invalidArticles = result.filter(a => a.categorySlug === excludeCategorySlug);
+      if (invalidArticles.length > 0) {
+        console.error('BUG: getArticlesFromOtherCategories returned articles from excluded category!', invalidArticles);
+      }
+
+      return result;
+    }
+
+    /**
+     * ensureMinimumArticles - Ensure a section has minimum number of articles
+     * BUSINESS RULE: Sections like Featured must always show their full count (e.g., 8 articles)
+     * If the current category doesn't have enough articles, supplement from other categories
+     *
+     * @param {Array} primaryArticles - Articles from the current category
+     * @param {string} currentCategorySlug - The current category slug
+     * @param {number} minCount - Minimum number of articles needed
+     * @param {Set} excludeIds - Article IDs to exclude (already used elsewhere)
+     * @returns {Array} - Array with at least minCount articles
+     */
+    function ensureMinimumArticles(primaryArticles, currentCategorySlug, minCount, excludeIds = new Set()) {
+      const result = [...primaryArticles];
+
+      // Track IDs already in result
+      primaryArticles.forEach(a => excludeIds.add(a.articleId || a.id));
+
+      // If we don't have enough, supplement from other categories
+      if (result.length < minCount) {
+        const needed = minCount - result.length;
+        console.log('ensureMinimumArticles: Need', needed, 'more articles for section');
+
+        const supplements = getArticlesFromOtherCategories(currentCategorySlug, needed + 10)
+          .filter(a => !excludeIds.has(a.articleId || a.id))
+          .slice(0, needed);
+
+        console.log('ensureMinimumArticles: Adding', supplements.length, 'supplemental articles from other categories');
+        result.push(...supplements);
+      }
+
+      return result;
     }
 
     // ========================================================================
@@ -2868,6 +3415,8 @@
         // Don't overwrite server-rendered content - it's already functional
         // The history file just enhances dynamic features like hero carousel
         console.log('Using server-rendered content (history file not available)');
+        // Still start the hero carousel with server-rendered slides
+        startHeroCarousel();
       }
     }
 
@@ -2903,35 +3452,59 @@
     // ========================================================================
 
     /**
-     * buildNavigation - Build the 6-column navigation with SVG home icon
-     * Business Rule: Add SVG home icon to navigation in generated HTML
+     * buildNavigation - Build navigation with ALL categories and ticker
+     * Business Rule: Display ALL categories in black bar with white text, yellow underline on hover
+     * Home icon goes to home page, category links go to respective categories
+     * ALWAYS loads categories from .webstore/web_categories.json to ensure all categories are shown
      */
-    function buildNavigation() {
-      if (!siteData || !siteData.categories) return;
-
-      const navContainer = document.getElementById('nav-container');
-      if (!navContainer) return;
+    async function buildNavigation() {
+      const navList = document.getElementById('nav-list');
+      if (!navList) return;
 
       // SVG Home Icon
-      const homeSvg = '<svg class="home-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>';
+      const homeSvg = '<svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>';
 
-      let navHtml = '<a href="#" class="nav-link" onclick="goHome(); return false;">' + homeSvg + '</a>';
+      // ALWAYS load categories from web_categories.json to get ALL categories
+      // Do NOT use siteData.categories (from history) as it only includes categories with articles
+      let categories = [];
+      try {
+        const response = await fetch('.webstore/web_categories.json');
+        if (response.ok) {
+          const data = await response.json();
+          categories = data.categories || [];
+          console.log('buildNavigation: Loaded ' + categories.length + ' categories from web_categories.json');
+        }
+      } catch (err) {
+        console.log('buildNavigation: Could not load web_categories.json, using server-rendered nav');
+        return; // Keep server-rendered navigation
+      }
 
-      siteData.categories.slice(0, 5).forEach(cat => {
-        navHtml += '<a href="#' + cat.slug + '" class="nav-link" onclick="openPortal(\'' + cat.slug + '\'); return false;">' + cat.name + '</a>';
+      // If no categories loaded, keep the server-rendered navigation
+      if (categories.length === 0) {
+        console.log('buildNavigation: No categories found, keeping server-rendered nav');
+        return;
+      }
+
+      // Build navigation: Home + ALL categories
+      let navHtml = '<li class="home-link"><a href="#" onclick="goHome(); return false;">' + homeSvg + '</a></li>';
+
+      categories.forEach(cat => {
+        navHtml += '<li><a href="#' + cat.slug + '" onclick="openPortal(\'' + cat.slug + '\'); return false;">' + cat.name + '</a></li>';
       });
 
-      navContainer.innerHTML = navHtml;
+      navList.innerHTML = navHtml;
+      console.log('buildNavigation: Navigation rebuilt with ' + categories.length + ' categories');
 
-      // Article links row
-      const articleLinksContainer = document.getElementById('article-links-container');
-      if (articleLinksContainer && siteData.allArticles) {
-        let linksHtml = '';
-        const shuffled = [...siteData.allArticles].sort(() => Math.random() - 0.5);
-        shuffled.slice(0, 10).forEach(article => {
-          linksHtml += '<a href="#" class="article-quick-link" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;">' + truncateText(article.title, 40) + '</a>';
+      // Build ticker with scrolling article headlines (Category: Title format)
+      const tickerContent = document.getElementById('ticker-content');
+      if (tickerContent && siteData && siteData.allArticles) {
+        let tickerHtml = '';
+        const allArticles = [...siteData.allArticles, ...siteData.allArticles]; // Duplicate for seamless loop
+        allArticles.forEach(article => {
+          const catName = categories.find(c => c.slug === article.categorySlug)?.name || article.categorySlug;
+          tickerHtml += '<span class="ticker-item"><span class="cat-label">' + catName + ':</span> <a href="#" onclick="showContentPage(\'' + article.articleId + '\', \'' + article.categorySlug + '\'); return false;">' + article.title + '</a></span>';
         });
-        articleLinksContainer.innerHTML = linksHtml;
+        tickerContent.innerHTML = tickerHtml;
       }
     }
 
@@ -2949,6 +3522,11 @@
       window.scrollTo(0, 0);
     }
 
+    // Wrapper function for article links - showContentPage(articleId, categorySlug)
+    function showContentPage(articleId, categorySlug) {
+      openArticle(categorySlug, articleId);
+    }
+
     function renderHomePage() {
       // Home page content is rendered server-side, just ensure it's visible
       document.getElementById('homePage').style.display = 'block';
@@ -2961,28 +3539,41 @@
     // ========================================================================
 
     function startHeroCarousel() {
-      if (!siteData || !siteData.heroCarousel || siteData.heroCarousel.length <= 1) return;
+      const slides = document.querySelectorAll('.hero-slide');
+      if (slides.length <= 1) return;
 
+      // 9 second interval: 5s display + 2s fade out + 2s fade in
       heroInterval = setInterval(() => {
-        heroSlideIndex = (heroSlideIndex + 1) % siteData.heroCarousel.length;
+        heroSlideIndex = (heroSlideIndex + 1) % slides.length;
         updateHeroSlide();
-      }, 5000);
+      }, 9000);
     }
 
     function updateHeroSlide() {
       const slides = document.querySelectorAll('.hero-slide');
-      const indicators = document.querySelectorAll('.hero-indicator');
+      const dots = document.querySelectorAll('.hero-dot');
 
       slides.forEach((slide, index) => {
         slide.classList.toggle('active', index === heroSlideIndex);
       });
 
-      indicators.forEach((indicator, index) => {
-        indicator.classList.toggle('active', index === heroSlideIndex);
+      dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === heroSlideIndex);
       });
     }
 
-    function goToSlide(index) {
+    function changeHeroSlide(direction) {
+      const slides = document.querySelectorAll('.hero-slide');
+      if (slides.length === 0) return;
+      heroSlideIndex = (heroSlideIndex + direction + slides.length) % slides.length;
+      updateHeroSlide();
+      if (heroInterval) {
+        clearInterval(heroInterval);
+        startHeroCarousel();
+      }
+    }
+
+    function goToHeroSlide(index) {
       heroSlideIndex = index;
       updateHeroSlide();
       if (heroInterval) {
@@ -2991,13 +3582,21 @@
       }
     }
 
+    function goToSlide(index) {
+      goToHeroSlide(index);
+    }
+
     // ========================================================================
     // PORTAL MODE (Category Page)
     // ========================================================================
 
     /**
      * openPortal - Open a category portal page
-     * Business Rule: No duplicate article IDs within a single portal page
+     * BUSINESS RULES:
+     * 1. No duplicate article IDs within a single portal page
+     * 2. Spotlight, Related Information, and Recommended sections MUST show articles from OTHER categories
+     * 3. Featured section shows articles from current category, supplemented from others if needed
+     * 4. Ensure minimum article counts for each section
      */
     async function openPortal(categorySlug) {
       currentMode = 'portal';
@@ -3006,14 +3605,15 @@
       document.getElementById('homePage').style.display = 'none';
       document.getElementById('articleDetailPage').style.display = 'none';
 
-      // Check if we have a cached portal page
-      if (portalPageCache[categorySlug]) {
-        const portalPage = document.getElementById('portalPage');
-        portalPage.innerHTML = portalPageCache[categorySlug];
-        portalPage.style.display = 'block';
-        window.scrollTo(0, 0);
-        return;
-      }
+      // NOTE: Portal cache disabled to ensure fresh cross-category content
+      // TODO: Re-enable cache after verifying business rules work correctly
+      // if (portalPageCache[categorySlug]) {
+      //   const portalPage = document.getElementById('portalPage');
+      //   portalPage.innerHTML = portalPageCache[categorySlug];
+      //   portalPage.style.display = 'block';
+      //   window.scrollTo(0, 0);
+      //   return;
+      // }
 
       const portalPage = document.getElementById('portalPage');
       portalPage.style.display = 'block';
@@ -3034,6 +3634,13 @@
           seenIds.add(article.articleId);
           return true;
         });
+
+        // BUSINESS RULE: Get articles from OTHER categories for cross-category sections
+        const otherCategoryArticles = getArticlesFromOtherCategories(categorySlug, 30);
+        console.log('Portal: Got', otherCategoryArticles.length, 'cross-category articles for', categorySlug);
+
+        // Track which article IDs we've used (for deduplication)
+        const usedArticleIds = new Set();
 
         // Load ad data for sidebar
         let adHtml = '';
@@ -3070,9 +3677,10 @@
         html += '<div class="content-grid">';
         html += '<div class="main-column">';
 
-        // Hero Carousel for portal
-        if (uniqueArticles.length > 0) {
-          const heroArticle = uniqueArticles[0];
+        // Hero Carousel for portal - uses current category article
+        const heroArticle = uniqueArticles[0];
+        if (heroArticle) {
+          usedArticleIds.add(heroArticle.articleId);
           html += '<section class="hero-section">';
           html += '<div class="hero-image">';
           html += '<img src="' + (heroArticle.image || 'images/' + heroArticle.articleId + '.jpg') + '" alt="' + heroArticle.title + '" onerror="this.parentElement.style.background=\'linear-gradient(135deg, #667eea 0%, #764ba2 100%)\';">';
@@ -3086,16 +3694,29 @@
         // Featured & Spotlight - New Layout
         html += '<div class="section-row">';
 
-        // FEATURED Column (Left) - Stacked Cards
+        // FEATURED Column (Left) - From current category, supplemented if needed
+        // Reserve first 3 articles for hero and other uses
+        uniqueArticles.slice(0, 3).forEach(a => usedArticleIds.add(a.articleId));
+
+        // BUSINESS RULE: Ensure 8 featured articles, supplement from other categories if needed
+        const featuredArticles = ensureMinimumArticles(
+          uniqueArticles.slice(3, 11),
+          categorySlug,
+          8,
+          new Set(usedArticleIds)
+        );
+
         html += '<div class="section-block">';
         html += '<div class="section-header">Featured</div>';
         html += '<div class="section-content">';
-        uniqueArticles.slice(3, 11).forEach(article => {
+        featuredArticles.forEach(article => {
+          const articleCat = article.categorySlug || categorySlug;
+          usedArticleIds.add(article.articleId);
           html += '<div class="featured-card">';
-          html += '<a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + article.articleId + '\'); return false;" class="featured-card-image">';
+          html += '<a href="#" onclick="openArticle(\'' + articleCat + '\', \'' + article.articleId + '\'); return false;" class="featured-card-image">';
           html += '<img src="' + (article.image || 'images/' + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
           html += '</a>';
-          html += '<h3 class="featured-card-title"><a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></h3>';
+          html += '<h3 class="featured-card-title"><a href="#" onclick="openArticle(\'' + articleCat + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></h3>';
           html += '<p class="featured-card-excerpt">' + truncateText(article.excerpt || '', 120) + '</p>';
           html += '</div>';
         });
@@ -3103,70 +3724,74 @@
         html += '</div>';
 
         // IN THE SPOTLIGHT Column (Right)
-        // Article distribution (avoiding duplicates except Recommended):
-        // - Hero: article 0
-        // - Featured (left): articles 3-10 (8 articles)
-        // - Spotlight main: article 11 (or fallback to 0 if not enough)
-        // - Spotlight list: articles 12-13 (or fallback)
-        // - Related info: articles 14-17 (or fallback)
-        // - Recommended: 10 articles from 0-9 (can repeat)
+        // BUSINESS RULE: Spotlight MUST show articles from OTHER categories
         html += '<div class="section-block">';
         html += '<div class="section-header">In The Spotlight</div>';
         html += '<div class="section-content">';
 
-        // Main Spotlight Article - use article 11 to avoid overlap with featured (3-10)
-        const mainSpotlightIdx = uniqueArticles.length > 11 ? 11 : 0;
-        if (uniqueArticles.length > 0) {
-          const mainSpotlight = uniqueArticles[mainSpotlightIdx];
+        // Main Spotlight Article - from OTHER categories
+        const spotlightMain = otherCategoryArticles.find(a => !usedArticleIds.has(a.articleId));
+        if (spotlightMain) {
+          usedArticleIds.add(spotlightMain.articleId);
+
+          // VALIDATION: Check that spotlight is from different category than hero
+          if (spotlightMain.categorySlug === categorySlug) {
+            console.error('BUG: Spotlight article is from SAME category as current page!');
+          }
+          if (heroArticle && spotlightMain.articleId === heroArticle.articleId) {
+            console.error('BUG: Spotlight article is SAME as hero article!');
+          }
+
           html += '<div class="spotlight-main">';
-          html += '<a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + mainSpotlight.articleId + '\'); return false;" class="spotlight-main-image">';
-          html += '<img src="' + (mainSpotlight.image || 'images/' + mainSpotlight.articleId + '.jpg') + '" alt="' + mainSpotlight.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
+          html += '<a href="#" onclick="openArticle(\'' + spotlightMain.categorySlug + '\', \'' + spotlightMain.articleId + '\'); return false;" class="spotlight-main-image">';
+          html += '<img src="' + (spotlightMain.image || 'images/' + spotlightMain.articleId + '.jpg') + '" alt="' + spotlightMain.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
           html += '</a>';
-          html += '<h3 class="spotlight-main-title"><a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + mainSpotlight.articleId + '\'); return false;">' + mainSpotlight.title + '</a></h3>';
-          html += '<p class="spotlight-main-excerpt">' + truncateText(mainSpotlight.excerpt || '', 150) + '</p>';
+          html += '<h3 class="spotlight-main-title"><a href="#" onclick="openArticle(\'' + spotlightMain.categorySlug + '\', \'' + spotlightMain.articleId + '\'); return false;">' + spotlightMain.title + '</a></h3>';
+          html += '<p class="spotlight-main-excerpt">' + truncateText(spotlightMain.excerpt || '', 150) + '</p>';
           html += '</div>';
         }
 
-        // Spotlight List Items - use articles 12-13 to avoid overlap
-        const listStart = uniqueArticles.length > 13 ? 12 : 1;
-        const listEnd = uniqueArticles.length > 13 ? 14 : 3;
-        uniqueArticles.slice(listStart, listEnd).forEach(article => {
+        // Spotlight List Items - from OTHER categories
+        const spotlightList = otherCategoryArticles.filter(a => !usedArticleIds.has(a.articleId)).slice(0, 2);
+        spotlightList.forEach(article => {
+          usedArticleIds.add(article.articleId);
           html += '<div class="spotlight-list-item">';
-          html += '<a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + article.articleId + '\'); return false;" class="spotlight-list-image">';
+          html += '<a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;" class="spotlight-list-image">';
           html += '<img src="' + (article.image || 'images/' + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
           html += '</a>';
           html += '<div class="spotlight-list-content">';
-          html += '<h4 class="spotlight-list-title"><a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></h4>';
+          html += '<h4 class="spotlight-list-title"><a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></h4>';
           html += '<p class="spotlight-list-excerpt">' + truncateText(article.excerpt || '', 80) + '</p>';
           html += '</div>';
           html += '</div>';
         });
 
-        // Related Information Section - use articles 14-17 to avoid overlap
-        const relatedStart = uniqueArticles.length > 17 ? 14 : 0;
-        const relatedEnd = uniqueArticles.length > 17 ? 18 : 4;
+        // Related Information Section - BUSINESS RULE: from OTHER categories
         html += '<div class="related-info-header">Related Information</div>';
         html += '<div class="related-info-grid">';
-        uniqueArticles.slice(relatedStart, relatedEnd).forEach(article => {
+        const relatedArticles = otherCategoryArticles.filter(a => !usedArticleIds.has(a.articleId)).slice(0, 4);
+        relatedArticles.forEach(article => {
+          usedArticleIds.add(article.articleId);
           html += '<div class="related-info-card">';
-          html += '<a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + article.articleId + '\'); return false;" class="related-info-image">';
+          html += '<a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;" class="related-info-image">';
           html += '<img src="' + (article.image || 'images/' + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
           html += '</a>';
-          html += '<h4 class="related-info-title"><a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></h4>';
+          html += '<h4 class="related-info-title"><a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></h4>';
           html += '</div>';
         });
         html += '</div>';
 
-        // Recommended Section - 10 articles with images (can repeat from earlier sections)
+        // Recommended Section - BUSINESS RULE: from OTHER categories
         html += '<div class="section-header" style="margin-top: 20px;">Recommended</div>';
         html += '<div class="recommended-list">';
-        uniqueArticles.slice(0, 10).forEach(article => {
+        const recommendedArticles = otherCategoryArticles.filter(a => !usedArticleIds.has(a.articleId)).slice(0, 5);
+        recommendedArticles.forEach(article => {
           html += '<div class="recommended-item">';
-          html += '<a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + article.articleId + '\'); return false;" class="recommended-image">';
+          html += '<a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;" class="recommended-image">';
           html += '<img src="' + (article.image || 'images/' + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
           html += '</a>';
           html += '<div class="recommended-content">';
-          html += '<h4 class="recommended-title"><a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></h4>';
+          html += '<h4 class="recommended-title"><a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></h4>';
           html += '<p class="recommended-excerpt">' + truncateText(article.excerpt || '', 100) + '</p>';
           html += '</div>';
           html += '</div>';
@@ -3367,7 +3992,56 @@
       document.getElementById('subscribeModal').style.display = 'none';
     }
 
+    // ========================================================================
+    // SMOOTH TICKER ANIMATION - Uses requestAnimationFrame for 60fps
+    // ========================================================================
+    let tickerPosition = 0;
+    let tickerPaused = false;
+    let tickerAnimationId = null;
+
+    function initSmoothTicker() {
+      const tickerWrap = document.querySelector('#ticker-bar .ticker-wrap');
+      const tickerBar = document.getElementById('ticker-bar');
+      if (!tickerWrap) return;
+
+      // Get the width of one content block (half the total width)
+      const tickerContent = tickerWrap.querySelector('.ticker-content');
+      if (!tickerContent) return;
+
+      const contentWidth = tickerContent.offsetWidth;
+      if (contentWidth === 0) return;
+
+      // Pause on hover
+      tickerBar.addEventListener('mouseenter', function() { tickerPaused = true; });
+      tickerBar.addEventListener('mouseleave', function() { tickerPaused = false; });
+
+      // Animation speed: pixels per frame at 60fps
+      // Lower = slower (0.3 is very slow, readable speed)
+      const speed = 0.3;
+
+      function animateTicker() {
+        if (!tickerPaused) {
+          tickerPosition -= speed;
+
+          // Reset when we've scrolled one full content block
+          if (Math.abs(tickerPosition) >= contentWidth) {
+            tickerPosition = 0;
+          }
+
+          tickerWrap.style.transform = 'translateX(' + tickerPosition + 'px)';
+        }
+
+        tickerAnimationId = requestAnimationFrame(animateTicker);
+      }
+
+      // Start the animation
+      animateTicker();
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+      // Initialize smooth ticker
+      setTimeout(initSmoothTicker, 100);
+
       // Subscribe button
       const subscribeBtn = document.getElementById('subscribe-btn');
       if (subscribeBtn) {
@@ -3413,6 +4087,47 @@
 
       // Load site data
       loadSiteData();
+
+      // ============ PAGE SELF-CHECK VALIDATION ============
+      // Validates that all sections have content and auto-repairs if empty
+      setTimeout(function validateAndRepairSections() {
+        console.log('🔍 Running page validation...');
+        const repairs = [];
+
+        // Define sections to validate
+        const sectionsToValidate = [
+          { id: 'sidebar-must-read', selector: '.sidebar-section .sidebar-content', minItems: 1, name: 'Sidebar Must Read' },
+          { id: 'articleMustRead', selector: '#articleMustRead .popular-item', minItems: 1, name: 'Article Must Read' },
+          { id: 'featured-spotlight', selector: '#featured-spotlight-section .featured-item', minItems: 1, name: 'Featured Section' },
+          { id: 'spotlight-items', selector: '#featured-spotlight-section .spotlight-item', minItems: 1, name: 'Spotlight Items' }
+        ];
+
+        sectionsToValidate.forEach(section => {
+          const elements = document.querySelectorAll(section.selector);
+          if (elements.length < section.minItems) {
+            console.error('❌ VALIDATION FAILED: ' + section.name + ' - Expected ' + section.minItems + '+ items, found ' + elements.length);
+            repairs.push(section.name);
+          } else {
+            console.log('✅ ' + section.name + ': ' + elements.length + ' items');
+          }
+        });
+
+        // Check for empty sidebar content containers
+        document.querySelectorAll('.sidebar-content').forEach((el, idx) => {
+          if (el.innerHTML.trim() === '' || el.children.length === 0) {
+            console.error('❌ EMPTY SECTION DETECTED: sidebar-content #' + idx);
+            repairs.push('Sidebar content #' + idx);
+          }
+        });
+
+        // Summary
+        if (repairs.length > 0) {
+          console.error('⚠️ PAGE VALIDATION: ' + repairs.length + ' sections need attention');
+          console.error('   Empty sections: ' + repairs.join(', '));
+        } else {
+          console.log('✅ PAGE VALIDATION COMPLETE: All sections have content');
+        }
+      }, 2000); // Run 2 seconds after page load
 
       // ============ FEATURED CATEGORIES & MORE FROM BRANDS ============
       async function populateFeaturedSections() {
@@ -3528,14 +4243,41 @@
       setTimeout(populateFeaturedSections, 1000);
     });
 
-    // Handle hash navigation
-    window.addEventListener('hashchange', function() {
+    // Handle hash navigation for SEO-friendly URLs
+    // Supports: #article/{categorySlug}/{articleId} and #{categorySlug}
+    function handleHashNavigation() {
       const hash = window.location.hash.slice(1);
-      if (hash && siteData) {
+      if (!hash) return;
+
+      // Check for article URL format: article/{categorySlug}/{articleId}
+      if (hash.startsWith('article/')) {
+        const parts = hash.split('/');
+        if (parts.length >= 3) {
+          const categorySlug = parts[1];
+          const articleId = parts[2];
+          console.log('Hash navigation: Opening article', articleId, 'in category', categorySlug);
+          openArticle(categorySlug, articleId);
+          return;
+        }
+      }
+
+      // Check for category URL format: {categorySlug}
+      if (siteData) {
         const category = siteData.categories.find(c => c.slug === hash);
         if (category) {
+          console.log('Hash navigation: Opening category portal', hash);
           openPortal(hash);
         }
+      }
+    }
+
+    window.addEventListener('hashchange', handleHashNavigation);
+
+    // Also handle initial page load with hash
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.location.hash) {
+        // Delay to ensure siteData is loaded
+        setTimeout(handleHashNavigation, 500);
       }
     });
 

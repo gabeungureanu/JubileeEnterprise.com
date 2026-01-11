@@ -1,0 +1,53 @@
+{
+  "domain": "GodsGreatGrace.com",
+  "siteCode": "WEB-GODS-660650",
+  "totalCategories": 3,
+  "generatedAt": "2025-12-17T11:42:32.786Z",
+  "categories": [
+    {
+      "rank": 1,
+      "name": "Grace in Everyday Life",
+      "slug": "grace-in-everyday-life",
+      "description": "Explore how God's grace influences our daily lives through real-world stories, practical advice, and biblical insights. This category provides inspiration and guidance on living a grace-filled life, helping you recognize and embrace divine grace in every moment.",
+      "keywords": [
+        "God's grace",
+        "Christian living",
+        "biblical insights",
+        "daily inspiration",
+        "faith stories"
+      ],
+      "articleCount": 12,
+      "folderPath": "/grace-in-everyday-life"
+    },
+    {
+      "rank": 2,
+      "name": "Understanding God's Grace",
+      "slug": "understanding-gods-grace",
+      "description": "Delve deep into the theological and biblical foundations of God's grace. This category offers a rich exploration of grace as a core tenet of Christianity, featuring scholarly articles, scripture analyses, and reflections on how grace shapes our faith and beliefs.",
+      "keywords": [
+        "theology of grace",
+        "biblical grace",
+        "Christian theology",
+        "grace in Bible",
+        "faith and grace"
+      ],
+      "articleCount": 12,
+      "folderPath": "/understanding-gods-grace"
+    },
+    {
+      "rank": 3,
+      "name": "Grace-Filled Testimonies",
+      "slug": "grace-filled-testimonies",
+      "description": "Discover powerful personal stories of transformation and redemption through God’s grace. This category highlights testimonies from individuals who have experienced life-changing moments of grace, offering hope and encouragement to those seeking divine intervention.",
+      "keywords": [
+        "Christian testimonies",
+        "stories of grace",
+        "redemption stories",
+        "faith journeys",
+        "inspirational testimonies"
+      ],
+      "articleCount": 12,
+      "folderPath": "/grace-filled-testimonies"
+    }
+  ]
+}

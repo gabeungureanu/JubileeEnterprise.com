@@ -3113,6 +3113,10 @@ function generateMorePage(domain, siteName, categories, articles) {
   const currentYear = new Date().getFullYear();
   const generatedDate = new Date().toISOString().split('T')[0];
 
+  // Build base path from domain (e.g., "home.pentecostal" -> "/pentecostal/home/")
+  const domainParts = domain.split('.');
+  const basePath = domainParts.length === 2 ? `/${domainParts[1]}/${domainParts[0]}/` : '/';
+
   // Group articles by category
   const articlesByCategory = {};
   categories.forEach(cat => {
@@ -3158,6 +3162,7 @@ ${articleCardsHtml}
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="${basePath}">
   <title>More Articles - ${siteName} | Complete Article Archive</title>
   <meta name="description" content="Browse all ${totalArticles} articles on ${siteName}. Explore our complete archive of faith-based content organized by category.">
   <meta name="robots" content="index, follow">
@@ -3421,11 +3426,16 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
   console.log(`      - heroSlides: ${heroSlides.length}`);
   console.log(`      - Total articles available: ${articles.length}`);
 
+  // Build base path from domain (e.g., "home.pentecostal" -> "/pentecostal/home/")
+  const domainParts = domain.split('.');
+  const basePath = domainParts.length === 2 ? `/${domainParts[1]}/${domainParts[0]}/` : '/';
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="${basePath}">
   <title>${siteName} - Home</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -6527,7 +6537,14 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
       currentArticle = null;
       document.getElementById('homePage').style.display = 'block';
       document.getElementById('portalPage').style.display = 'none';
-      document.getElementById('articleDetailPage').style.display = 'none';
+      // Hide both article page containers
+      const articleDetailPage = document.getElementById('articleDetailPage');
+      if (articleDetailPage) articleDetailPage.style.display = 'none';
+      const articlePage = document.getElementById('articlePage');
+      if (articlePage) {
+        articlePage.style.display = 'none';
+        articlePage.classList.add('hidden');
+      }
       window.scrollTo(0, 0);
     }
 
@@ -6540,7 +6557,14 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
       // Home page content is rendered server-side, just ensure it's visible
       document.getElementById('homePage').style.display = 'block';
       document.getElementById('portalPage').style.display = 'none';
-      document.getElementById('articleDetailPage').style.display = 'none';
+      // Hide both article page containers
+      const articleDetailPage = document.getElementById('articleDetailPage');
+      if (articleDetailPage) articleDetailPage.style.display = 'none';
+      const articlePage = document.getElementById('articlePage');
+      if (articlePage) {
+        articlePage.style.display = 'none';
+        articlePage.classList.add('hidden');
+      }
     }
 
     // ========================================================================
@@ -6612,7 +6636,14 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
       currentCategory = categorySlug;
 
       document.getElementById('homePage').style.display = 'none';
-      document.getElementById('articleDetailPage').style.display = 'none';
+      // Hide both article page containers
+      const articleDetailPage = document.getElementById('articleDetailPage');
+      if (articleDetailPage) articleDetailPage.style.display = 'none';
+      const articlePageEl = document.getElementById('articlePage');
+      if (articlePageEl) {
+        articlePageEl.style.display = 'none';
+        articlePageEl.classList.add('hidden');
+      }
 
       // NOTE: Portal cache disabled to ensure fresh cross-category content
       // TODO: Re-enable cache after verifying business rules work correctly
@@ -6865,74 +6896,8 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
     }
 
     // ========================================================================
-    // ARTICLE DETAIL MODE
+    // ARTICLE DETAIL MODE - Handled by app.js (uses original articlePage section)
     // ========================================================================
-
-    async function openArticle(categorySlug, articleId) {
-      currentMode = 'article';
-      currentCategory = categorySlug;
-      currentArticle = articleId;
-
-      document.getElementById('homePage').style.display = 'none';
-      document.getElementById('portalPage').style.display = 'none';
-
-      const articlePage = document.getElementById('articleDetailPage');
-      articlePage.style.display = 'block';
-      articlePage.innerHTML = '<div style="padding: 40px; text-align: center;">Loading article...</div>';
-
-      try {
-        // Load article data
-        const articlesPath = siteData.articleDataPaths ? siteData.articleDataPaths[categorySlug] : categorySlug + '/web_articles.json';
-        const response = await fetch(articlesPath);
-        const data = await response.json();
-
-        const article = data.articles.find(a => a.id === articleId);
-
-        if (!article) {
-          throw new Error('Article not found');
-        }
-
-        const categoryName = siteData.categories.find(c => c.slug === categorySlug)?.name || categorySlug;
-
-        let html = '<div class="article-detail-container">';
-        html += '<div class="article-breadcrumb">';
-        html += '<a href="#" onclick="goHome(); return false;">Home</a> &gt; ';
-        html += '<a href="#" onclick="openPortal(\\'' + categorySlug + '\\'); return false;">' + categoryName + '</a> &gt; ';
-        html += '<span>' + article.title + '</span>';
-        html += '</div>';
-
-        html += '<h1 class="article-detail-title">' + article.title + '</h1>';
-
-        html += '<div class="article-meta">';
-        html += '<span class="article-author">By ' + (article.writerName || 'Staff Writer') + '</span>';
-        html += '<span class="article-date">' + new Date(article.createdAt || Date.now()).toLocaleDateString() + '</span>';
-        html += '</div>';
-
-        if (article.id) {
-          html += '<div class="article-hero-image" style="background-image: url(\\'images/' + article.id + '.jpg\\')"></div>';
-        }
-
-        // Business Rule: Strip markdown from displayed content
-        html += '<div class="article-content">' + formatArticleContent(article.content, article.id, siteData.allArticles || []) + '</div>';
-
-        html += '<div class="article-tags">';
-        if (article.keywords) {
-          article.keywords.forEach(keyword => {
-            html += '<span class="article-tag">' + keyword + '</span>';
-          });
-        }
-        html += '</div>';
-
-        html += '</div>';
-
-        articlePage.innerHTML = html;
-        window.scrollTo(0, 0);
-
-      } catch (error) {
-        console.error('Error loading article:', error);
-        articlePage.innerHTML = '<div style="padding: 40px; text-align: center;"><h2>Article Not Found</h2></div>';
-      }
-    }
 
     function formatArticleContent(content, currentArticleId, allArticles) {
       if (!content) return '';

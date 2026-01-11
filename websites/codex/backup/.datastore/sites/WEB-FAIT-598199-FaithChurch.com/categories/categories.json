@@ -1,0 +1,52 @@
+{
+  "domain": "FaithChurch.com",
+  "siteCode": "WEB-FAIT-598199",
+  "contentType": "FB",
+  "niche": "Christian Ministry",
+  "categoryCount": 3,
+  "generatedAt": "2025-12-17T11:08:15.610Z",
+  "categories": [
+    {
+      "rank": 1,
+      "name": "Inspirational Sermons",
+      "slug": "inspirational-sermons",
+      "description": "Dive into a collection of powerful sermons designed to inspire and uplift your faith journey. Each sermon is crafted to provide spiritual nourishment and practical guidance for living a Christ-centered life. Explore themes of hope, love, and perseverance as you deepen your understanding of the Word.",
+      "keywords": [
+        "sermons",
+        "inspirational messages",
+        "faith journey",
+        "Christian preaching",
+        "spiritual guidance"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 2,
+      "name": "Faith Stories",
+      "slug": "faith-stories",
+      "description": "Discover a series of moving stories from individuals who have experienced transformative moments through their faith in Christ. These narratives offer profound insights and encouragement, showing how faith can impact lives in extraordinary ways. Each story is a testament to the power and grace found in a life devoted to God.",
+      "keywords": [
+        "faith stories",
+        "Christian testimonies",
+        "life transformation",
+        "inspirational narratives",
+        "God's grace"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 3,
+      "name": "Bible Study Insights",
+      "slug": "bible-study-insights",
+      "description": "Enhance your biblical knowledge with insightful articles that delve into Scripture. This category offers in-depth analyses, historical contexts, and practical applications of Bible teachings. Perfect for individual study or group discussions, these insights aim to deepen your understanding and connection with God's Word.",
+      "keywords": [
+        "Bible study",
+        "Scripture insights",
+        "Christian teachings",
+        "biblical analysis",
+        "faith education"
+      ],
+      "articleCount": 12
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "siteCode": "WEB-GODS-070312",
+  "domain": "GodsGrace.com",
+  "overview": "General website",
+  "categoryCount": 3,
+  "quickMode": false,
+  "contentType": "FB",
+  "analysis": {
+    "contentType": "FB",
+    "confidence": "high",
+    "reasoning": "The domain name 'GodsGrace.com' contains keywords that are strongly associated with faith-based content, specifically 'God' and 'Grace', which are commonly used in religious and spiritual contexts.",
+    "keywords": [
+      "God",
+      "Grace"
+    ],
+    "niche": "Christian",
+    "tone": "inspirational"
+  },
+  "writersCount": 12,
+  "createdAt": "2025-12-17T12:04:33.888Z",
+  "status": "step6_complete",
+  "categoriesGeneratedAt": "2025-12-17T12:04:54.091Z",
+  "totalArticles": 36,
+  "articlesGeneratedAt": "2025-12-17T12:05:20.447Z",
+  "contentGeneratedAt": "2025-12-17T12:08:08.973Z",
+  "websiteBuiltAt": "2025-12-17T12:08:08.979Z"
+}
