@@ -73,7 +73,15 @@ async function register(userData) {
 
     logger.info('User registered', { userId: user.id, email });
 
-    await CommunityService.ensureDefaultCommunitiesForUser(user);
+    // Community setup is non-critical for registration - don't fail if it fails
+    try {
+      await CommunityService.ensureDefaultCommunitiesForUser(user);
+    } catch (communityError) {
+      logger.warn('Community setup failed during registration (non-fatal)', {
+        userId: user.id,
+        error: communityError.message
+      });
+    }
 
     // Generate verification token
     const verificationToken = generateToken();
@@ -120,7 +128,16 @@ async function login(email, password) {
     logger.info('User logged in', { userId: user.id, email });
 
     const safeUser = sanitizeUser(user);
-    await CommunityService.ensureDefaultCommunitiesForUser(safeUser);
+
+    // Community setup is non-critical for login - don't fail authentication if it fails
+    try {
+      await CommunityService.ensureDefaultCommunitiesForUser(safeUser);
+    } catch (communityError) {
+      logger.warn('Community setup failed during login (non-fatal)', {
+        userId: user.id,
+        error: communityError.message
+      });
+    }
 
     return safeUser;
   } catch (error) {
@@ -308,22 +325,33 @@ async function getUserById(userId) {
 
     const safeUser = sanitizeUser(user);
 
-    // Get subscription plan
-    const subscription = await User.getSubscription(userId);
-    if (subscription) {
-      safeUser.subscriptionPlan = subscription.planSlug || 'free';
-      safeUser.planName = subscription.planName || 'Free';
-      safeUser.planTier = subscription.planTier || 0;
-    } else {
+    // Get subscription plan (gracefully handle missing tables)
+    try {
+      const subscription = await User.getSubscription(userId);
+      if (subscription) {
+        safeUser.subscriptionPlan = subscription.planSlug || 'free';
+        safeUser.planName = subscription.planName || 'Free';
+        safeUser.planTier = subscription.planTier || 0;
+      } else {
+        safeUser.subscriptionPlan = 'free';
+        safeUser.planName = 'Free';
+        safeUser.planTier = 0;
+      }
+    } catch (subError) {
+      // Subscription table may not exist - use defaults
       safeUser.subscriptionPlan = 'free';
       safeUser.planName = 'Free';
       safeUser.planTier = 0;
     }
 
-    // Get default persona if set
-    const defaultPersona = await User.getDefaultPersona(userId);
-    if (defaultPersona) {
-      safeUser.defaultPersona = defaultPersona;
+    // Get default persona if set (gracefully handle missing tables/columns)
+    try {
+      const defaultPersona = await User.getDefaultPersona(userId);
+      if (defaultPersona) {
+        safeUser.defaultPersona = defaultPersona;
+      }
+    } catch (personaError) {
+      // Persona table/column may not exist - skip
     }
 
     return safeUser;

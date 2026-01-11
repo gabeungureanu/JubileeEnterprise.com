@@ -1,15 +1,21 @@
 /**
  * wwBibleweb.com Folder Management Server
  *
- * A simple Node.js server that provides API endpoints for:
+ * A Node.js server that provides API endpoints for:
  * - Listing folders in the directory
  * - Listing subfolders within a folder
  * - Creating new folders (including subfolders)
  * - Renaming existing folders (including nested paths)
  * - Deleting folders (including nested paths)
  *
- * IDNS Configuration is now synced with the Codex PostgreSQL database.
- * The database is the source of truth; YAML serves as backup/export.
+ * TWO-LAYER ARCHITECTURE (v2.0):
+ * - IDNS Layer: Domain registry only (domain names, protocol types, ownership)
+ * - Websites Layer: Actual built websites (references IDNS, publication status, config)
+ *
+ * All operations use the InspireCodex.com API exclusively:
+ * - Domain creation uses /api/v1/websites/create-with-domain (atomic domain+website)
+ * - Domain listing uses /api/v1/websites (shows only domains with active websites)
+ * - YAML file serves only as a local backup/export
  *
  * Run with: node server.js
  * Default port: 3847 (or process.env.PORT for iisnode)
@@ -20,36 +26,40 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 const YAML = require('yaml');
-const { Pool } = require('pg');
 
 const PORT = process.env.PORT || 3847;
 const BASE_DIR = __dirname; // The directory where this script is located
 const CONFIG_FILE = path.join(BASE_DIR, 'idns.yaml');
 
-// Database configuration
-const DB_CONFIG = {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432'),
-    database: process.env.DB_NAME || 'Codex',
-    user: process.env.DB_USER || 'guardian',
-    password: process.env.DB_PASSWORD || 'askShaddai4e!',
-    max: 10,
-    idleTimeoutMillis: 30000
-};
+// InspireCodex API Configuration
+const INSPIRE_CODEX_API = process.env.INSPIRE_CODEX_API || 'http://localhost:3100';
+let apiEnabled = true;
 
-// Database pool (lazy initialization)
-let dbPool = null;
-let dbEnabled = true;
+// Helper function to make HTTP requests to InspireCodex API
+async function apiRequest(endpoint, options = {}) {
+    const fetch = (await import('node-fetch')).default;
+    const url = `${INSPIRE_CODEX_API}${endpoint}`;
 
-function getDbPool() {
-    if (!dbPool && dbEnabled) {
-        dbPool = new Pool(DB_CONFIG);
-        dbPool.on('error', (err) => {
-            console.error('Database pool error:', err.message);
-            dbEnabled = false;
+    try {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
         });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || `API request failed: ${response.status}`);
+        }
+
+        return data;
+    } catch (err) {
+        console.error(`API request to ${endpoint} failed:`, err.message);
+        throw err;
     }
-    return dbPool;
 }
 
 // MIME types for serving static files
@@ -375,41 +385,68 @@ function handleRenameFolder(req, res) {
 }
 
 /**
- * Get the IDNS configuration - from database (primary) or YAML (fallback)
+ * Get the IDNS configuration - from InspireCodex API (primary) or YAML (fallback)
+ * Now uses the two-layer architecture: fetches from Websites API for live sites
  */
 async function handleGetConfig(req, res) {
     try {
-        const pool = getDbPool();
-
-        // Try database first
-        if (pool && dbEnabled) {
+        // Try InspireCodex Websites API first (two-layer architecture)
+        if (apiEnabled) {
             try {
-                const result = await pool.query(`
-                    SELECT domain_key, mres, managed, metadata
-                    FROM idns_domains
-                    WHERE is_active = true
-                    ORDER BY domain_key
-                `);
+                // Fetch websites with their domain information
+                const data = await apiRequest('/api/v1/websites?environment=WWBW&limit=1000');
 
                 const idns = {};
-                for (const row of result.rows) {
-                    const data = {};
-                    if (row.mres) data.mres = row.mres;
-                    if (row.managed) data.managed = true;
-                    idns[row.domain_key] = data;
+                for (const website of data.websites) {
+                    const entry = {};
+                    if (website.masked_resolution) entry.mres = website.masked_resolution;
+                    // Check if managed from domain data
+                    const domainData = await apiRequest(`/api/v1/idns/domains/${website.domain_name}`).catch(() => null);
+                    if (domainData && domainData.managed) entry.managed = true;
+                    // Add website status info
+                    entry.website_id = website.id;
+                    entry.status = website.status;
+                    idns[website.domain_name] = entry;
                 }
 
                 const config = {
-                    version: '1.0',
+                    version: '2.0', // Updated version for two-layer architecture
                     lastModified: new Date().toISOString(),
-                    source: 'database',
+                    source: 'api',
+                    architecture: 'two-layer',
                     idns
                 };
 
                 sendJson(res, 200, config);
                 return;
-            } catch (dbError) {
-                console.error('Database read failed, falling back to YAML:', dbError.message);
+            } catch (apiError) {
+                console.error('InspireCodex Websites API read failed, trying legacy IDNS:', apiError.message);
+                // Try legacy IDNS API as fallback
+                try {
+                    const data = await apiRequest('/api/v1/idns/domains?limit=1000');
+
+                    const idns = {};
+                    for (const domain of data.domains) {
+                        const entry = {};
+                        if (domain.mres) entry.mres = domain.mres;
+                        if (domain.managed) entry.managed = true;
+                        idns[domain.domain_key] = entry;
+                    }
+
+                    const config = {
+                        version: '1.0',
+                        lastModified: new Date().toISOString(),
+                        source: 'api',
+                        architecture: 'legacy',
+                        idns
+                    };
+
+                    sendJson(res, 200, config);
+                    return;
+                } catch (legacyError) {
+                    console.error('Legacy IDNS API also failed, falling back to YAML:', legacyError.message);
+                    apiEnabled = false;
+                }
             }
         }
 
@@ -435,7 +472,8 @@ async function handleGetConfig(req, res) {
 }
 
 /**
- * Save the IDNS configuration - to database (primary) and YAML (backup)
+ * Save the IDNS configuration - uses two-layer architecture
+ * Creates domain+website entries atomically via InspireCodex API
  */
 function handleSaveConfig(req, res) {
     let body = '';
@@ -459,7 +497,7 @@ function handleSaveConfig(req, res) {
 
             // Update lastModified timestamp
             config.lastModified = new Date().toISOString();
-            config.version = config.version || '1.0';
+            config.version = config.version || '2.0';
 
             // Sort idns entries alphabetically (A-Z)
             const sortedIdns = {};
@@ -470,68 +508,88 @@ function handleSaveConfig(req, res) {
                 });
             config.idns = sortedIdns;
 
-            const pool = getDbPool();
-            let savedToDb = false;
+            let savedToApi = false;
+            let created = 0;
+            let updated = 0;
+            let errors = [];
 
-            // Save to database first
-            if (pool && dbEnabled) {
+            // Save to InspireCodex API using two-layer architecture
+            if (apiEnabled) {
                 try {
-                    // Use transaction for consistency
-                    const client = await pool.connect();
-                    try {
-                        await client.query('BEGIN');
+                    // Get existing websites to determine what needs to be created vs updated
+                    const existingData = await apiRequest('/api/v1/websites?environment=WWBW&limit=1000');
+                    const existingDomains = new Set(existingData.websites.map(w => w.domain_name));
 
-                        // Get current domain keys in database
-                        const existingResult = await client.query('SELECT domain_key FROM idns_domains');
-                        const existingKeys = new Set(existingResult.rows.map(r => r.domain_key));
-
-                        // Upsert all entries from config
-                        for (const [domainKey, data] of Object.entries(config.idns)) {
-                            const domainType = inferDomainType(domainKey);
-                            const displayName = generateDisplayName(domainKey);
-                            const parentDomain = domainKey.includes('/') ? domainKey.split('/')[0] : null;
-
-                            await client.query(`
-                                INSERT INTO idns_domains (domain_key, domain_type, display_name, mres, managed, parent_domain, metadata, is_active)
-                                VALUES ($1, $2, $3, $4, $5, $6, $7, true)
-                                ON CONFLICT (domain_key) DO UPDATE SET
-                                    mres = EXCLUDED.mres,
-                                    managed = EXCLUDED.managed,
-                                    metadata = EXCLUDED.metadata,
-                                    is_active = true,
-                                    updated_at = CURRENT_TIMESTAMP
-                            `, [
-                                domainKey,
-                                domainType,
-                                displayName,
-                                data.mres || null,
-                                data.managed || false,
-                                parentDomain,
-                                JSON.stringify(data)
-                            ]);
-
-                            existingKeys.delete(domainKey);
+                    for (const [domainName, data] of Object.entries(config.idns)) {
+                        try {
+                            if (existingDomains.has(domainName)) {
+                                // Update existing - find website ID and update
+                                const website = existingData.websites.find(w => w.domain_name === domainName);
+                                if (website) {
+                                    await apiRequest(`/api/v1/websites/${website.id}`, {
+                                        method: 'PUT',
+                                        body: JSON.stringify({
+                                            config: data
+                                        })
+                                    });
+                                    updated++;
+                                }
+                            } else {
+                                // Create new domain+website atomically
+                                await apiRequest('/api/v1/websites/create-with-domain', {
+                                    method: 'POST',
+                                    body: JSON.stringify({
+                                        domain_name: domainName,
+                                        protocol_type: 'WWBW',
+                                        site_title: domainName,
+                                        content_source: domainName,
+                                        content_type: 'folder',
+                                        status: 'PUBLISHED',
+                                        config: data
+                                    })
+                                });
+                                created++;
+                            }
+                        } catch (itemError) {
+                            // Domain may already exist - try just updating IDNS
+                            if (itemError.message.includes('already exists')) {
+                                try {
+                                    await apiRequest(`/api/v1/idns/domains/${domainName}`, {
+                                        method: 'PUT',
+                                        body: JSON.stringify({
+                                            mres: data.mres,
+                                            managed: data.managed
+                                        })
+                                    });
+                                    updated++;
+                                } catch (updateError) {
+                                    errors.push({ domain: domainName, error: updateError.message });
+                                }
+                            } else {
+                                errors.push({ domain: domainName, error: itemError.message });
+                            }
                         }
-
-                        // Mark removed entries as inactive (soft delete)
-                        for (const removedKey of existingKeys) {
-                            await client.query(
-                                'UPDATE idns_domains SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE domain_key = $1',
-                                [removedKey]
-                            );
-                        }
-
-                        await client.query('COMMIT');
-                        savedToDb = true;
-                        console.log('Configuration saved to database');
-                    } catch (txError) {
-                        await client.query('ROLLBACK');
-                        throw txError;
-                    } finally {
-                        client.release();
                     }
-                } catch (dbError) {
-                    console.error('Database save failed:', dbError.message);
+
+                    savedToApi = true;
+                    console.log(`Configuration saved to API (two-layer): ${created} created, ${updated} updated, ${errors.length} errors`);
+                } catch (apiError) {
+                    console.error('InspireCodex API save failed:', apiError.message);
+
+                    // Fallback to legacy sync endpoint
+                    try {
+                        const result = await apiRequest('/api/v1/idns/sync', {
+                            method: 'POST',
+                            body: JSON.stringify({ domains: config.idns })
+                        });
+                        savedToApi = result.success;
+                        created = result.created;
+                        updated = result.updated;
+                        console.log(`Configuration saved via legacy sync: ${created} created, ${updated} updated`);
+                    } catch (legacyError) {
+                        console.error('Legacy sync also failed:', legacyError.message);
+                        apiEnabled = false;
+                    }
                 }
             }
 
@@ -539,13 +597,16 @@ function handleSaveConfig(req, res) {
             const tempFile = CONFIG_FILE + '.tmp';
             fs.writeFileSync(tempFile, YAML.stringify(config));
             fs.renameSync(tempFile, CONFIG_FILE);
-            console.log('Configuration saved to YAML');
+            console.log('Configuration saved to YAML backup');
 
             sendJson(res, 200, {
                 success: true,
                 lastModified: config.lastModified,
-                savedToDatabase: savedToDb,
-                savedToYaml: true
+                savedToApi: savedToApi,
+                savedToYaml: true,
+                created,
+                updated,
+                errors: errors.length > 0 ? errors : undefined
             });
         } catch (error) {
             console.error('Error saving config:', error);
@@ -616,6 +677,7 @@ function generateDisplayName(domainKey) {
 
 /**
  * Serve static files (index.html, etc.)
+ * Supports SPA-style routing for clean URLs
  */
 function serveStaticFile(req, res, pathname) {
     // Default to index.html
@@ -625,7 +687,7 @@ function serveStaticFile(req, res, pathname) {
 
     // Security: prevent directory traversal
     const safePath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
-    const filePath = path.join(BASE_DIR, safePath);
+    let filePath = path.join(BASE_DIR, safePath);
 
     // Make sure we're still within the base directory
     if (!filePath.startsWith(BASE_DIR)) {
@@ -634,8 +696,45 @@ function serveStaticFile(req, res, pathname) {
         return;
     }
 
+    // Check if file exists and is not a directory
+    let fileExists = fs.existsSync(filePath);
+    let isDirectory = fileExists && fs.statSync(filePath).isDirectory();
+
+    // SPA routing: For clean URLs like:
+    //   /pentecostal/home/spiritual-growth/index.html (category page)
+    //   /pentecostal/home/spiritual-growth/article-slug.html (article page)
+    // serve the parent /pentecostal/home/index.html if it exists
+    const pathParts = safePath.split(/[\/\\]/).filter(p => p);
+
+    // SPA routing for paths with .html extension that don't exist as actual files
+    if ((!fileExists || isDirectory) && safePath.endsWith('.html') && pathParts.length >= 3) {
+        // Try to find /group/subsite/index.html (e.g., /pentecostal/home/index.html)
+        const groupSubsitePath = path.join(BASE_DIR, pathParts[0], pathParts[1], 'index.html');
+        if (fs.existsSync(groupSubsitePath)) {
+            const stat = fs.statSync(groupSubsitePath);
+            if (!stat.isDirectory()) {
+                filePath = groupSubsitePath;
+                fileExists = true;
+                isDirectory = false;
+            }
+        }
+    }
+
+    // If it's a directory, try to serve index.html from that directory
+    if (isDirectory) {
+        const indexPath = path.join(filePath, 'index.html');
+        if (fs.existsSync(indexPath)) {
+            filePath = indexPath;
+            isDirectory = false;
+        } else {
+            res.writeHead(404);
+            res.end('Not Found');
+            return;
+        }
+    }
+
     // Check if file exists
-    if (!fs.existsSync(filePath)) {
+    if (!fileExists && !fs.existsSync(filePath)) {
         res.writeHead(404);
         res.end('Not Found');
         return;
@@ -696,18 +795,15 @@ server.listen(PORT, async () => {
     console.log(`  Port:    ${PORT}`);
     console.log(`  URL:     http://localhost:${PORT}`);
     console.log(`  Dir:     ${BASE_DIR}`);
+    console.log(`  API:     ${INSPIRE_CODEX_API}`);
 
-    // Test database connection
+    // Test InspireCodex API connection
     try {
-        const pool = getDbPool();
-        if (pool) {
-            await pool.query('SELECT 1');
-            const countResult = await pool.query('SELECT COUNT(*) FROM idns_domains WHERE is_active = true');
-            console.log(`  DB:      Connected (Codex - ${countResult.rows[0].count} IDNS entries)`);
-        }
+        const data = await apiRequest('/api/v1/idns/domains?limit=1');
+        console.log(`  Codex:   Connected via InspireCodex API`);
     } catch (err) {
-        console.log(`  DB:      Not connected (${err.message})`);
-        dbEnabled = false;
+        console.log(`  Codex:   Not connected (${err.message})`);
+        apiEnabled = false;
     }
 
     console.log('='.repeat(50));
@@ -719,10 +815,6 @@ server.listen(PORT, async () => {
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
     console.log('\nShutting down server...');
-    if (dbPool) {
-        await dbPool.end();
-        console.log('Database pool closed.');
-    }
     server.close(() => {
         console.log('Server stopped.');
         process.exit(0);

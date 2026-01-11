@@ -1,0 +1,1194 @@
+{
+  "buildDate": "2025-12-17",
+  "buildTimestamp": "2025-12-17T12:15:00.000Z",
+  "domain": "GodsGrace.com",
+  "siteCode": "WEB-GODS-070312",
+  "siteName": "God's Grace",
+  "siteTagline": "Faith, Hope, and Divine Inspiration",
+  "categories": [
+    {
+      "name": "Divine Inspirations",
+      "slug": "divine-inspirations",
+      "articleCount": 12
+    },
+    {
+      "name": "Prayer & Worship",
+      "slug": "prayer-worship",
+      "articleCount": 12
+    },
+    {
+      "name": "Biblical Teachings",
+      "slug": "biblical-teachings",
+      "articleCount": 12
+    },
+    {
+      "name": "Family & Relationships",
+      "slug": "family-relationships",
+      "articleCount": 12
+    },
+    {
+      "name": "Christian Living",
+      "slug": "christian-living",
+      "articleCount": 12
+    }
+  ],
+  "heroCarousel": [
+    {
+      "categorySlug": "divine-inspirations",
+      "categoryName": "Divine Inspirations",
+      "articleId": "ePUFEsoLRy7F",
+      "title": "10 Everyday Miracles That Prove God's Grace",
+      "slug": "10-everyday-miracles-that-prove-gods-grace",
+      "excerpt": "Discover the small wonders that reveal divine presence in our daily lives.",
+      "image": "images/ePUFEsoLRy7F.jpg"
+    },
+    {
+      "categorySlug": "prayer-worship",
+      "categoryName": "Prayer & Worship",
+      "articleId": "GvxGmVh5iAw1",
+      "title": "Unlocking the Power of Prayer: A Comprehensive Guide",
+      "slug": "unlocking-the-power-of-prayer-a-comprehensive-guide",
+      "excerpt": "Transform your prayer life with practical strategies and biblical wisdom.",
+      "image": "images/GvxGmVh5iAw1.jpg"
+    },
+    {
+      "categorySlug": "biblical-teachings",
+      "categoryName": "Biblical Teachings",
+      "articleId": "aBnPJuEnTUJ3",
+      "title": "Unlocking Biblical Wisdom for Modern Challenges",
+      "slug": "unlocking-biblical-wisdom-for-modern-challenges",
+      "excerpt": "Apply timeless Scripture to navigate today's complex world with faith.",
+      "image": "images/aBnPJuEnTUJ3.jpg"
+    },
+    {
+      "categorySlug": "family-relationships",
+      "categoryName": "Family & Relationships",
+      "articleId": "ivdIJRx3I4vM",
+      "title": "Building a Christ-Centered Marriage: A Complete Guide",
+      "slug": "building-a-christ-centered-marriage-a-complete-guide",
+      "excerpt": "When Sarah and Michael exchanged vows at their church wedding five years ago, they knew they wanted ...",
+      "image": "images/ivdIJRx3I4vM.jpg"
+    },
+    {
+      "categorySlug": "christian-living",
+      "categoryName": "Christian Living",
+      "articleId": "tPbZ7muebKX2",
+      "title": "Faith at Work: Honoring God in Your Career",
+      "slug": "faith-at-work-honoring-god-in-your-career",
+      "excerpt": "For many believers, the Monday morning alarm brings a familiar tension. As we transition from Sunday...",
+      "image": "images/tPbZ7muebKX2.jpg"
+    }
+  ],
+  "featuredArticles": {
+    "divine-inspirations": {
+      "main": {
+        "articleId": "ePUFEsoLRy7F",
+        "title": "10 Everyday Miracles That Prove God's Grace",
+        "slug": "10-everyday-miracles-that-prove-gods-grace",
+        "excerpt": "Sometimes the most profound evidence of God's love is found in the ordinary moments.",
+        "image": "images/ePUFEsoLRy7F.jpg"
+      },
+      "sidebar": [
+        {
+          "articleId": "QTIFGOT0UGTS",
+          "title": "How to Strengthen Your Faith Through Adversity",
+          "slug": "how-to-strengthen-your-faith-through-adversity"
+        },
+        {
+          "articleId": "YQRXpNohCYEc",
+          "title": "Unveiling Divine Intervention: Real-Life Testimonies",
+          "slug": "unveiling-divine-intervention-real-life-testimonies"
+        },
+        {
+          "articleId": "qXbgtxjQ7HEb",
+          "title": "The Power of Prayer: Inspiring Stories of Hope",
+          "slug": "the-power-of-prayer-inspiring-stories-of-hope"
+        },
+        {
+          "articleId": "t4cS1mty4pxr",
+          "title": "7 Bible Verses That Illuminate God's Presence",
+          "slug": "7-bible-verses-that-illuminate-gods-presence"
+        }
+      ]
+    },
+    "prayer-worship": {
+      "main": {
+        "articleId": "GvxGmVh5iAw1",
+        "title": "Unlocking the Power of Prayer: A Comprehensive Guide",
+        "slug": "unlocking-the-power-of-prayer-a-comprehensive-guide",
+        "excerpt": "Prayer is the lifeline connecting humanity to the divine—learn to harness its power.",
+        "image": "images/GvxGmVh5iAw1.jpg"
+      },
+      "sidebar": [
+        {
+          "articleId": "uBak8fXDBhY8",
+          "title": "10 Inspiring Worship Songs to Elevate Your Spirit",
+          "slug": "10-inspiring-worship-songs-to-elevate-your-spirit"
+        },
+        {
+          "articleId": "D9miTZjlCVPq",
+          "title": "How to Deepen Your Daily Prayer Routine",
+          "slug": "how-to-deepen-your-daily-prayer-routine"
+        },
+        {
+          "articleId": "Ylf9VcU3Hoy1",
+          "title": "The Transformative Impact of Group Worship",
+          "slug": "the-transformative-impact-of-group-worship"
+        },
+        {
+          "articleId": "qC5jtfxCxiXw",
+          "title": "Exploring Ancient Prayer Practices for Modern Life",
+          "slug": "exploring-ancient-prayer-practices-for-modern-life"
+        }
+      ]
+    },
+    "biblical-teachings": {
+      "main": {
+        "articleId": "aBnPJuEnTUJ3",
+        "title": "Unlocking Biblical Wisdom for Modern Challenges",
+        "slug": "unlocking-biblical-wisdom-for-modern-challenges",
+        "excerpt": "The timeless wisdom found in Scripture remains as relevant as it was thousands of years ago.",
+        "image": "images/aBnPJuEnTUJ3.jpg"
+      },
+      "sidebar": [
+        {
+          "articleId": "Kr6yxwyVzEN0",
+          "title": "10 Commandments: Deep Dive into Divine Guidance",
+          "slug": "10-commandments-deep-dive-into-divine-guidance"
+        },
+        {
+          "articleId": "jXJLHuY6eU3E",
+          "title": "How to Live a Christ-Centered Life Daily",
+          "slug": "how-to-live-a-christ-centered-life-daily"
+        },
+        {
+          "articleId": "wmlygW0Mr31E",
+          "title": "Understanding Parables: Unearth Hidden Biblical Lessons",
+          "slug": "understanding-parables-unearth-hidden-biblical-lessons"
+        },
+        {
+          "articleId": "UjSL4fU79Rt7",
+          "title": "Faith in Action: Applying Scripture to Everyday Life",
+          "slug": "faith-in-action-applying-scripture-to-everyday-life"
+        }
+      ]
+    },
+    "family-relationships": {
+      "main": {
+        "articleId": "ivdIJRx3I4vM",
+        "title": "Building a Christ-Centered Marriage: A Complete Guide",
+        "slug": "building-a-christ-centered-marriage-a-complete-guide",
+        "excerpt": "When Sarah and Michael exchanged vows at their church wedding five years ago, they knew they wanted Christ at the center...",
+        "image": "images/ivdIJRx3I4vM.jpg"
+      },
+      "sidebar": [
+        {
+          "articleId": "jTd3DLSbARyY",
+          "title": "Raising Children in Faith: Biblical Parenting Principles",
+          "slug": "raising-children-in-faith-biblical-parenting-principles"
+        },
+        {
+          "articleId": "Etmd4r2Edaf0",
+          "title": "The Power of Forgiveness in Family Relationships",
+          "slug": "the-power-of-forgiveness-in-family-relationships"
+        },
+        {
+          "articleId": "s4GLVcMRjjXH",
+          "title": "Creating Family Devotional Time: Practical Ideas",
+          "slug": "creating-family-devotional-time-practical-ideas"
+        },
+        {
+          "articleId": "nzyj83GU2DDt",
+          "title": "Navigating Conflict with Grace: A Biblical Approach",
+          "slug": "navigating-conflict-with-grace-a-biblical-approach"
+        }
+      ]
+    },
+    "christian-living": {
+      "main": {
+        "articleId": "tPbZ7muebKX2",
+        "title": "Faith at Work: Honoring God in Your Career",
+        "slug": "faith-at-work-honoring-god-in-your-career",
+        "excerpt": "For many believers, the Monday morning alarm brings a familiar tension. As we transition from Sunday worship to weekday ...",
+        "image": "images/tPbZ7muebKX2.jpg"
+      },
+      "sidebar": [
+        {
+          "articleId": "2fJIUEhleZ9S",
+          "title": "Biblical Financial Stewardship: Managing Money God's Way",
+          "slug": "biblical-financial-stewardship-managing-money-gods-way"
+        },
+        {
+          "articleId": "d7fmYD2abNJH",
+          "title": "Finding Peace in Anxious Times: A Christian Perspective",
+          "slug": "finding-peace-in-anxious-times-a-christian-perspective"
+        },
+        {
+          "articleId": "PcL9GMePTFFn",
+          "title": "Digital Discipleship: Using Technology for God's Glory",
+          "slug": "digital-discipleship-using-technology-for-gods-glory"
+        },
+        {
+          "articleId": "OL5mPtT6Mosx",
+          "title": "The Christian's Guide to Rest and Sabbath",
+          "slug": "the-christians-guide-to-rest-and-sabbath"
+        }
+      ]
+    }
+  },
+  "spotlightArticle": {
+    "articleId": "WEouy9bSsmi1",
+    "title": "Finding God's Grace in Daily Life: A Guide",
+    "slug": "finding-gods-grace-in-daily-life-a-guide",
+    "categorySlug": "divine-inspirations",
+    "categoryName": "Divine Inspirations",
+    "excerpt": "Grace infuses every aspect of the believer's daily life, available in each moment to those who know how to recognize and receive it.",
+    "image": "images/WEouy9bSsmi1.jpg"
+  },
+  "popularArticles": [
+    {
+      "articleId": "EmnD2dDp7BWm",
+      "title": "From Doubt to Faith: Transformational Journeys",
+      "categorySlug": "divine-inspirations"
+    },
+    {
+      "articleId": "pKpe2QN0r53i",
+      "title": "Finding Solace in Prayer During Difficult Times",
+      "categorySlug": "prayer-worship"
+    },
+    {
+      "articleId": "avHEef8JRMOG",
+      "title": "The Beatitudes Explained: Pathway to True Happiness",
+      "categorySlug": "biblical-teachings"
+    },
+    {
+      "articleId": "KMGOn7qr8B64",
+      "title": "Understanding God's Plan: Reflections on Trust",
+      "categorySlug": "divine-inspirations"
+    },
+    {
+      "articleId": "qXSwsb0H1BwS",
+      "title": "How Worship Shapes Our Relationship with God",
+      "categorySlug": "prayer-worship"
+    }
+  ],
+  "readNextArticles": [
+    {
+      "articleId": "GvxGmVh5iAw1",
+      "title": "Unlocking the Power of Prayer: A Comprehensive Guide",
+      "slug": "unlocking-the-power-of-prayer-a-comprehensive-guide",
+      "excerpt": "Practical steps to deepen your prayer life and experience daily breakthroughs.",
+      "image": "images/GvxGmVh5iAw1.jpg"
+    },
+    {
+      "articleId": "WEouy9bSsmi1",
+      "title": "Finding God's Grace in Daily Life: A Guide",
+      "slug": "finding-gods-grace-in-daily-life-a-guide",
+      "excerpt": "Simple rhythms to notice and celebrate grace in the ordinary moments.",
+      "image": "images/WEouy9bSsmi1.jpg"
+    },
+    {
+      "articleId": "aBnPJuEnTUJ3",
+      "title": "Unlocking Biblical Wisdom for Modern Challenges",
+      "slug": "unlocking-biblical-wisdom-for-modern-challenges",
+      "excerpt": "How timeless truths apply to the pressures and opportunities we face today.",
+      "image": "images/aBnPJuEnTUJ3.jpg"
+    }
+  ],
+  "allArticles": [
+    {
+      "articleId": "ePUFEsoLRy7F",
+      "title": "10 Everyday Miracles That Prove God's Grace",
+      "slug": "10-everyday-miracles-that-prove-gods-grace",
+      "categorySlug": "divine-inspirations",
+      "categoryName": "Divine Inspirations"
+    },
+    {
+      "articleId": "QTIFGOT0UGTS",
+      "title": "How to Strengthen Your Faith Through Adversity",
+      "slug": "how-to-strengthen-your-faith-through-adversity",
+      "categorySlug": "divine-inspirations",
+      "categoryName": "Divine Inspirations"
+    },
+    {
+      "articleId": "YQRXpNohCYEc",
+      "title": "Unveiling Divine Intervention: Real-Life Testimonies",
+      "slug": "unveiling-divine-intervention-real-life-testimonies",
+      "categorySlug": "divine-inspirations",
+      "categoryName": "Divine Inspirations"
+    },
+    {
+      "articleId": "qXbgtxjQ7HEb",
+      "title": "The Power of Prayer: Inspiring Stories of Hope",
+      "slug": "the-power-of-prayer-inspiring-stories-of-hope",
+      "categorySlug": "divine-inspirations",
+      "categoryName": "Divine Inspirations"
+    },
+    {
+      "articleId": "t4cS1mty4pxr",
+      "title": "7 Bible Verses That Illuminate God's Presence",
+      "slug": "7-bible-verses-that-illuminate-gods-presence",
+      "categorySlug": "divine-inspirations",
+      "categoryName": "Divine Inspirations"
+    },
+    {
+      "articleId": "WEouy9bSsmi1",
+      "title": "Finding God's Grace in Daily Life: A Guide",
+      "slug": "finding-gods-grace-in-daily-life-a-guide",
+      "categorySlug": "divine-inspirations",
+      "categoryName": "Divine Inspirations"
+    },
+    {
+      "articleId": "EmnD2dDp7BWm",
+      "title": "From Doubt to Faith: Transformational Journeys",
+      "slug": "from-doubt-to-faith-transformational-journeys",
+      "categorySlug": "divine-inspirations",
+      "categoryName": "Divine Inspirations"
+    },
+    {
+      "articleId": "KMGOn7qr8B64",
+      "title": "Understanding God's Plan: Reflections on Trust",
+      "slug": "understanding-gods-plan-reflections-on-trust",
+      "categorySlug": "divine-inspirations",
+      "categoryName": "Divine Inspirations"
+    },
+    {
+      "articleId": "p3o9OKBQ6qVe",
+      "title": "5 Inspirational Quotes to Elevate Your Spirit",
+      "slug": "5-inspirational-quotes-to-elevate-your-spirit",
+      "categorySlug": "divine-inspirations",
+      "categoryName": "Divine Inspirations"
+    },
+    {
+      "articleId": "LmVqBwmgQp9F",
+      "title": "Discovering Joy in God's Promises: A Study",
+      "slug": "discovering-joy-in-gods-promises-a-study",
+      "categorySlug": "divine-inspirations",
+      "categoryName": "Divine Inspirations"
+    },
+    {
+      "articleId": "FWiHTJoPcp9h",
+      "title": "Miracles in Modern Times: A Closer Look",
+      "slug": "miracles-in-modern-times-a-closer-look",
+      "categorySlug": "divine-inspirations",
+      "categoryName": "Divine Inspirations"
+    },
+    {
+      "articleId": "idYudeonBsXD",
+      "title": "Embracing God's Love: Personal Stories of Renewal",
+      "slug": "embracing-gods-love-personal-stories-of-renewal",
+      "categorySlug": "divine-inspirations",
+      "categoryName": "Divine Inspirations"
+    },
+    {
+      "articleId": "GvxGmVh5iAw1",
+      "title": "Unlocking the Power of Prayer: A Comprehensive Guide",
+      "slug": "unlocking-the-power-of-prayer-a-comprehensive-guide",
+      "categorySlug": "prayer-worship",
+      "categoryName": "Prayer & Worship"
+    },
+    {
+      "articleId": "uBak8fXDBhY8",
+      "title": "10 Inspiring Worship Songs to Elevate Your Spirit",
+      "slug": "10-inspiring-worship-songs-to-elevate-your-spirit",
+      "categorySlug": "prayer-worship",
+      "categoryName": "Prayer & Worship"
+    },
+    {
+      "articleId": "D9miTZjlCVPq",
+      "title": "How to Deepen Your Daily Prayer Routine",
+      "slug": "how-to-deepen-your-daily-prayer-routine",
+      "categorySlug": "prayer-worship",
+      "categoryName": "Prayer & Worship"
+    },
+    {
+      "articleId": "Ylf9VcU3Hoy1",
+      "title": "The Transformative Impact of Group Worship",
+      "slug": "the-transformative-impact-of-group-worship",
+      "categorySlug": "prayer-worship",
+      "categoryName": "Prayer & Worship"
+    },
+    {
+      "articleId": "qC5jtfxCxiXw",
+      "title": "Exploring Ancient Prayer Practices for Modern Life",
+      "slug": "exploring-ancient-prayer-practices-for-modern-life",
+      "categorySlug": "prayer-worship",
+      "categoryName": "Prayer & Worship"
+    },
+    {
+      "articleId": "pKpe2QN0r53i",
+      "title": "Finding Solace in Prayer During Difficult Times",
+      "slug": "finding-solace-in-prayer-during-difficult-times",
+      "categorySlug": "prayer-worship",
+      "categoryName": "Prayer & Worship"
+    },
+    {
+      "articleId": "qXSwsb0H1BwS",
+      "title": "How Worship Shapes Our Relationship with God",
+      "slug": "how-worship-shapes-our-relationship-with-god",
+      "categorySlug": "prayer-worship",
+      "categoryName": "Prayer & Worship"
+    },
+    {
+      "articleId": "Gd0QYwVFV4a0",
+      "title": "5 Ways to Cultivate a Heart of Worship",
+      "slug": "5-ways-to-cultivate-a-heart-of-worship",
+      "categorySlug": "prayer-worship",
+      "categoryName": "Prayer & Worship"
+    },
+    {
+      "articleId": "fJTtuafjdpY8",
+      "title": "The Role of Silence and Stillness in Prayer",
+      "slug": "the-role-of-silence-and-stillness-in-prayer",
+      "categorySlug": "prayer-worship",
+      "categoryName": "Prayer & Worship"
+    },
+    {
+      "articleId": "bqoYigPKzqeU",
+      "title": "How to Create a Sacred Space for Worship",
+      "slug": "how-to-create-a-sacred-space-for-worship",
+      "categorySlug": "prayer-worship",
+      "categoryName": "Prayer & Worship"
+    },
+    {
+      "articleId": "Pc1ajSciReYA",
+      "title": "Understanding the Biblical Foundations of Worship",
+      "slug": "understanding-the-biblical-foundations-of-worship",
+      "categorySlug": "prayer-worship",
+      "categoryName": "Prayer & Worship"
+    },
+    {
+      "articleId": "z9YBcTk2Cp2v",
+      "title": "A Beginner's Guide to Prayer Journaling",
+      "slug": "a-beginners-guide-to-prayer-journaling",
+      "categorySlug": "prayer-worship",
+      "categoryName": "Prayer & Worship"
+    },
+    {
+      "articleId": "aBnPJuEnTUJ3",
+      "title": "Unlocking Biblical Wisdom for Modern Challenges",
+      "slug": "unlocking-biblical-wisdom-for-modern-challenges",
+      "categorySlug": "biblical-teachings",
+      "categoryName": "Biblical Teachings"
+    },
+    {
+      "articleId": "Kr6yxwyVzEN0",
+      "title": "10 Commandments: Deep Dive into Divine Guidance",
+      "slug": "10-commandments-deep-dive-into-divine-guidance",
+      "categorySlug": "biblical-teachings",
+      "categoryName": "Biblical Teachings"
+    },
+    {
+      "articleId": "jXJLHuY6eU3E",
+      "title": "How to Live a Christ-Centered Life Daily",
+      "slug": "how-to-live-a-christ-centered-life-daily",
+      "categorySlug": "biblical-teachings",
+      "categoryName": "Biblical Teachings"
+    },
+    {
+      "articleId": "wmlygW0Mr31E",
+      "title": "Understanding Parables: Unearth Hidden Biblical Lessons",
+      "slug": "understanding-parables-unearth-hidden-biblical-lessons",
+      "categorySlug": "biblical-teachings",
+      "categoryName": "Biblical Teachings"
+    },
+    {
+      "articleId": "UjSL4fU79Rt7",
+      "title": "Faith in Action: Applying Scripture to Everyday Life",
+      "slug": "faith-in-action-applying-scripture-to-everyday-life",
+      "categorySlug": "biblical-teachings",
+      "categoryName": "Biblical Teachings"
+    },
+    {
+      "articleId": "avHEef8JRMOG",
+      "title": "The Beatitudes Explained: Pathway to True Happiness",
+      "slug": "the-beatitudes-explained-pathway-to-true-happiness",
+      "categorySlug": "biblical-teachings",
+      "categoryName": "Biblical Teachings"
+    },
+    {
+      "articleId": "Yu4w0UTlDct3",
+      "title": "Bible Study Essentials: Tools for Scripture Mastery",
+      "slug": "bible-study-essentials-tools-for-scripture-mastery",
+      "categorySlug": "biblical-teachings",
+      "categoryName": "Biblical Teachings"
+    },
+    {
+      "articleId": "NHTn6JvwLj2P",
+      "title": "7 Biblical Steps to Strengthen Your Faith",
+      "slug": "7-biblical-steps-to-strengthen-your-faith",
+      "categorySlug": "biblical-teachings",
+      "categoryName": "Biblical Teachings"
+    },
+    {
+      "articleId": "ni50umCjPZip",
+      "title": "Exploring God's Grace Through Biblical Stories",
+      "slug": "exploring-gods-grace-through-biblical-stories",
+      "categorySlug": "biblical-teachings",
+      "categoryName": "Biblical Teachings"
+    },
+    {
+      "articleId": "TSnGg3NYqCuf",
+      "title": "Prophets of the Bible: Their Messages Today",
+      "slug": "prophets-of-the-bible-their-messages-today",
+      "categorySlug": "biblical-teachings",
+      "categoryName": "Biblical Teachings"
+    },
+    {
+      "articleId": "JgYBRWxP5r8c",
+      "title": "Scripture and Science: Harmonizing Faith and Reason",
+      "slug": "scripture-and-science-harmonizing-faith-and-reason",
+      "categorySlug": "biblical-teachings",
+      "categoryName": "Biblical Teachings"
+    },
+    {
+      "articleId": "aUpbZbtDTItk",
+      "title": "The Role of Prayer in Biblical Teachings",
+      "slug": "the-role-of-prayer-in-biblical-teachings",
+      "categorySlug": "biblical-teachings",
+      "categoryName": "Biblical Teachings"
+    },
+    {
+      "articleId": "ivdIJRx3I4vM",
+      "title": "Building a Christ-Centered Marriage: A Complete Guide",
+      "slug": "building-a-christ-centered-marriage-a-complete-guide",
+      "categorySlug": "family-relationships",
+      "categoryName": "Family & Relationships"
+    },
+    {
+      "articleId": "jTd3DLSbARyY",
+      "title": "Raising Children in Faith: Biblical Parenting Principles",
+      "slug": "raising-children-in-faith-biblical-parenting-principles",
+      "categorySlug": "family-relationships",
+      "categoryName": "Family & Relationships"
+    },
+    {
+      "articleId": "Etmd4r2Edaf0",
+      "title": "The Power of Forgiveness in Family Relationships",
+      "slug": "the-power-of-forgiveness-in-family-relationships",
+      "categorySlug": "family-relationships",
+      "categoryName": "Family & Relationships"
+    },
+    {
+      "articleId": "s4GLVcMRjjXH",
+      "title": "Creating Family Devotional Time: Practical Ideas",
+      "slug": "creating-family-devotional-time-practical-ideas",
+      "categorySlug": "family-relationships",
+      "categoryName": "Family & Relationships"
+    },
+    {
+      "articleId": "nzyj83GU2DDt",
+      "title": "Navigating Conflict with Grace: A Biblical Approach",
+      "slug": "navigating-conflict-with-grace-a-biblical-approach",
+      "categorySlug": "family-relationships",
+      "categoryName": "Family & Relationships"
+    },
+    {
+      "articleId": "ygcR2rymNZfE",
+      "title": "Honoring Parents: Understanding the Fifth Commandment",
+      "slug": "honoring-parents-understanding-the-fifth-commandment",
+      "categorySlug": "family-relationships",
+      "categoryName": "Family & Relationships"
+    },
+    {
+      "articleId": "ROUMQ9Rc6Cfl",
+      "title": "Single and Faithful: Finding Purpose in Singleness",
+      "slug": "single-and-faithful-finding-purpose-in-singleness",
+      "categorySlug": "family-relationships",
+      "categoryName": "Family & Relationships"
+    },
+    {
+      "articleId": "N8qECIE9sP7F",
+      "title": "Blending Families with Faith: A Guide for Stepparents",
+      "slug": "blending-families-with-faith-a-guide-for-stepparents",
+      "categorySlug": "family-relationships",
+      "categoryName": "Family & Relationships"
+    },
+    {
+      "articleId": "vz2KlA6gbsHH",
+      "title": "Teaching Children to Pray: Age-Appropriate Methods",
+      "slug": "teaching-children-to-pray-age-appropriate-methods",
+      "categorySlug": "family-relationships",
+      "categoryName": "Family & Relationships"
+    },
+    {
+      "articleId": "GnGMMpLZNhmV",
+      "title": "Marriage Communication: Speaking Life to Your Spouse",
+      "slug": "marriage-communication-speaking-life-to-your-spouse",
+      "categorySlug": "family-relationships",
+      "categoryName": "Family & Relationships"
+    },
+    {
+      "articleId": "5UOcfTAJ6kK0",
+      "title": "Grandparenting as Ministry: Leaving a Legacy of Faith",
+      "slug": "grandparenting-as-ministry-leaving-a-legacy-of-faith",
+      "categorySlug": "family-relationships",
+      "categoryName": "Family & Relationships"
+    },
+    {
+      "articleId": "RoCrV4rQUTS3",
+      "title": "When Family Members Don't Share Your Faith",
+      "slug": "when-family-members-dont-share-your-faith",
+      "categorySlug": "family-relationships",
+      "categoryName": "Family & Relationships"
+    },
+    {
+      "articleId": "tPbZ7muebKX2",
+      "title": "Faith at Work: Honoring God in Your Career",
+      "slug": "faith-at-work-honoring-god-in-your-career",
+      "categorySlug": "christian-living",
+      "categoryName": "Christian Living"
+    },
+    {
+      "articleId": "2fJIUEhleZ9S",
+      "title": "Biblical Financial Stewardship: Managing Money God's Way",
+      "slug": "biblical-financial-stewardship-managing-money-gods-way",
+      "categorySlug": "christian-living",
+      "categoryName": "Christian Living"
+    },
+    {
+      "articleId": "d7fmYD2abNJH",
+      "title": "Finding Peace in Anxious Times: A Christian Perspective",
+      "slug": "finding-peace-in-anxious-times-a-christian-perspective",
+      "categorySlug": "christian-living",
+      "categoryName": "Christian Living"
+    },
+    {
+      "articleId": "PcL9GMePTFFn",
+      "title": "Digital Discipleship: Using Technology for God's Glory",
+      "slug": "digital-discipleship-using-technology-for-gods-glory",
+      "categorySlug": "christian-living",
+      "categoryName": "Christian Living"
+    },
+    {
+      "articleId": "OL5mPtT6Mosx",
+      "title": "The Christian's Guide to Rest and Sabbath",
+      "slug": "the-christians-guide-to-rest-and-sabbath",
+      "categorySlug": "christian-living",
+      "categoryName": "Christian Living"
+    },
+    {
+      "articleId": "BboQpXol0cWL",
+      "title": "Making Ethical Decisions in a Complex World",
+      "slug": "making-ethical-decisions-in-a-complex-world",
+      "categorySlug": "christian-living",
+      "categoryName": "Christian Living"
+    },
+    {
+      "articleId": "TnioeiZOQago",
+      "title": "Overcoming Comparison: Finding Contentment in Christ",
+      "slug": "overcoming-comparison-finding-contentment-in-christ",
+      "categorySlug": "christian-living",
+      "categoryName": "Christian Living"
+    },
+    {
+      "articleId": "Sdp31BLeLpM7",
+      "title": "Hospitality as Ministry: Opening Your Home and Heart",
+      "slug": "hospitality-as-ministry-opening-your-home-and-heart",
+      "categorySlug": "christian-living",
+      "categoryName": "Christian Living"
+    },
+    {
+      "articleId": "036UztSaqaS0",
+      "title": "Developing Daily Spiritual Habits That Last",
+      "slug": "developing-daily-spiritual-habits-that-last",
+      "categorySlug": "christian-living",
+      "categoryName": "Christian Living"
+    },
+    {
+      "articleId": "6ouaDtwhm7tV",
+      "title": "Handling Criticism with Grace and Wisdom",
+      "slug": "handling-criticism-with-grace-and-wisdom",
+      "categorySlug": "christian-living",
+      "categoryName": "Christian Living"
+    },
+    {
+      "articleId": "M7O1Jzrd3XG6",
+      "title": "Serving Others: Practical Ways to Live Out Your Faith",
+      "slug": "serving-others-practical-ways-to-live-out-your-faith",
+      "categorySlug": "christian-living",
+      "categoryName": "Christian Living"
+    },
+    {
+      "articleId": "iQxW7dItf7sB",
+      "title": "Redeeming Your Time: Priorities for the Busy Believer",
+      "slug": "redeeming-your-time-priorities-for-the-busy-believer",
+      "categorySlug": "christian-living",
+      "categoryName": "Christian Living"
+    }
+  ],
+  "articleDataPaths": {
+    "divine-inspirations": "divine-inspirations/web_articles.json",
+    "prayer-worship": "prayer-worship/web_articles.json",
+    "biblical-teachings": "biblical-teachings/web_articles.json",
+    "family-relationships": "family-relationships/web_articles.json",
+    "christian-living": "christian-living/web_articles.json"
+  },
+  "portalPages": {
+    "divine-inspirations": {
+      "categoryName": "Divine Inspirations",
+      "categorySlug": "divine-inspirations",
+      "description": "Discover stories of faith, miracles, and divine presence in everyday life.",
+      "headerImage": "images/ePUFEsoLRy7F.jpg",
+      "buildSeed": 1217,
+      "articles": [
+        {
+          "articleId": "WEouy9bSsmi1",
+          "title": "Finding God's Grace in Daily Life: A Guide",
+          "slug": "finding-gods-grace-in-daily-life-a-guide",
+          "excerpt": "In the hustle of daily life, finding God's grace can feel elusive.",
+          "image": "images/WEouy9bSsmi1.jpg"
+        },
+        {
+          "articleId": "ePUFEsoLRy7F",
+          "title": "10 Everyday Miracles That Prove God's Grace",
+          "slug": "10-everyday-miracles-that-prove-gods-grace",
+          "excerpt": "Every sunrise, a testament to God's grace, whispers of hope and renewal.",
+          "image": "images/ePUFEsoLRy7F.jpg"
+        },
+        {
+          "articleId": "FWiHTJoPcp9h",
+          "title": "Miracles in Modern Times: A Closer Look",
+          "slug": "miracles-in-modern-times-a-closer-look",
+          "excerpt": "In a world brimming with technology and science, miracles may seem relics of the past.",
+          "image": "images/FWiHTJoPcp9h.jpg"
+        },
+        {
+          "articleId": "qXbgtxjQ7HEb",
+          "title": "The Power of Prayer: Inspiring Stories of Hope",
+          "slug": "the-power-of-prayer-inspiring-stories-of-hope",
+          "excerpt": "In the quiet moments before dawn, countless Christians bow their heads in prayer.",
+          "image": "images/qXbgtxjQ7HEb.jpg"
+        },
+        {
+          "articleId": "EmnD2dDp7BWm",
+          "title": "From Doubt to Faith: Transformational Journeys",
+          "slug": "from-doubt-to-faith-transformational-journeys",
+          "excerpt": "Every Christian's journey from doubt to faith is a unique testament to God's grace.",
+          "image": "images/EmnD2dDp7BWm.jpg"
+        },
+        {
+          "articleId": "idYudeonBsXD",
+          "title": "Embracing God's Love: Personal Stories of Renewal",
+          "slug": "embracing-gods-love-personal-stories-of-renewal",
+          "excerpt": "In moments of despair, many have found solace in God's boundless love.",
+          "image": "images/idYudeonBsXD.jpg"
+        },
+        {
+          "articleId": "t4cS1mty4pxr",
+          "title": "7 Bible Verses That Illuminate God's Presence",
+          "slug": "7-bible-verses-that-illuminate-gods-presence",
+          "excerpt": "In times of uncertainty, the Bible offers verses that remind us of God's presence.",
+          "image": "images/t4cS1mty4pxr.jpg"
+        },
+        {
+          "articleId": "KMGOn7qr8B64",
+          "title": "Understanding God's Plan: Reflections on Trust",
+          "slug": "understanding-gods-plan-reflections-on-trust",
+          "excerpt": "In our journey with God, trusting His plan can feel like walking blindfolded.",
+          "image": "images/KMGOn7qr8B64.jpg"
+        },
+        {
+          "articleId": "QTIFGOT0UGTS",
+          "title": "How to Strengthen Your Faith Through Adversity",
+          "slug": "how-to-strengthen-your-faith-through-adversity",
+          "excerpt": "In life's storms, faith can be your anchor. When adversity strikes, lean into prayer.",
+          "image": "images/QTIFGOT0UGTS.jpg"
+        },
+        {
+          "articleId": "YQRXpNohCYEc",
+          "title": "Unveiling Divine Intervention: Real-Life Testimonies",
+          "slug": "unveiling-divine-intervention-real-life-testimonies",
+          "excerpt": "In the quiet corners of our lives, divine interventions often unfold.",
+          "image": "images/YQRXpNohCYEc.jpg"
+        },
+        {
+          "articleId": "LmVqBwmgQp9F",
+          "title": "Discovering Joy in God's Promises: A Study",
+          "slug": "discovering-joy-in-gods-promises-a-study",
+          "excerpt": "Amid life's chaos, God's promises offer a beacon of hope.",
+          "image": "images/LmVqBwmgQp9F.jpg"
+        },
+        {
+          "articleId": "p3o9OKBQ6qVe",
+          "title": "5 Inspirational Quotes to Elevate Your Spirit",
+          "slug": "5-inspirational-quotes-to-elevate-your-spirit",
+          "excerpt": "Feeling weighed down? Let these divine words lift you.",
+          "image": "images/p3o9OKBQ6qVe.jpg"
+        }
+      ]
+    },
+    "prayer-worship": {
+      "categoryName": "Prayer & Worship",
+      "categorySlug": "prayer-worship",
+      "description": "Deepen your connection with God through prayer, worship, and spiritual devotion.",
+      "headerImage": "images/GvxGmVh5iAw1.jpg",
+      "buildSeed": 1217,
+      "articles": [
+        {
+          "articleId": "pKpe2QN0r53i",
+          "title": "Finding Solace in Prayer During Difficult Times",
+          "slug": "finding-solace-in-prayer-during-difficult-times",
+          "excerpt": "When life overwhelms us, prayer becomes our refuge and strength.",
+          "image": "images/pKpe2QN0r53i.jpg"
+        },
+        {
+          "articleId": "uBak8fXDBhY8",
+          "title": "10 Inspiring Worship Songs to Elevate Your Spirit",
+          "slug": "10-inspiring-worship-songs-to-elevate-your-spirit",
+          "excerpt": "Music has an extraordinary power to lift our spirits and connect us with the divine.",
+          "image": "images/uBak8fXDBhY8.jpg"
+        },
+        {
+          "articleId": "Gd0QYwVFV4a0",
+          "title": "5 Ways to Cultivate a Heart of Worship",
+          "slug": "5-ways-to-cultivate-a-heart-of-worship",
+          "excerpt": "Developing a heart of worship requires intentionality and practice.",
+          "image": "images/Gd0QYwVFV4a0.jpg"
+        },
+        {
+          "articleId": "GvxGmVh5iAw1",
+          "title": "Unlocking the Power of Prayer: A Comprehensive Guide",
+          "slug": "unlocking-the-power-of-prayer-a-comprehensive-guide",
+          "excerpt": "Prayer is a divine conversation that unlocks spiritual power and deepens faith.",
+          "image": "images/GvxGmVh5iAw1.jpg"
+        },
+        {
+          "articleId": "fJTtuafjdpY8",
+          "title": "The Role of Silence and Stillness in Prayer",
+          "slug": "the-role-of-silence-and-stillness-in-prayer",
+          "excerpt": "In our noisy world, silence becomes a sacred space to hear God's voice.",
+          "image": "images/fJTtuafjdpY8.jpg"
+        },
+        {
+          "articleId": "qC5jtfxCxiXw",
+          "title": "Exploring Ancient Prayer Practices for Modern Life",
+          "slug": "exploring-ancient-prayer-practices-for-modern-life",
+          "excerpt": "Ancient prayer traditions offer timeless wisdom for today's believers.",
+          "image": "images/qC5jtfxCxiXw.jpg"
+        },
+        {
+          "articleId": "Ylf9VcU3Hoy1",
+          "title": "The Transformative Impact of Group Worship",
+          "slug": "the-transformative-impact-of-group-worship",
+          "excerpt": "There's something powerful about gathering with fellow believers in worship.",
+          "image": "images/Ylf9VcU3Hoy1.jpg"
+        },
+        {
+          "articleId": "z9YBcTk2Cp2v",
+          "title": "A Beginner's Guide to Prayer Journaling",
+          "slug": "a-beginners-guide-to-prayer-journaling",
+          "excerpt": "Writing your prayers can deepen your conversation with God.",
+          "image": "images/z9YBcTk2Cp2v.jpg"
+        },
+        {
+          "articleId": "bqoYigPKzqeU",
+          "title": "How to Create a Sacred Space for Worship",
+          "slug": "how-to-create-a-sacred-space-for-worship",
+          "excerpt": "Your environment can enhance or hinder your worship experience.",
+          "image": "images/bqoYigPKzqeU.jpg"
+        },
+        {
+          "articleId": "D9miTZjlCVPq",
+          "title": "How to Deepen Your Daily Prayer Routine",
+          "slug": "how-to-deepen-your-daily-prayer-routine",
+          "excerpt": "Establishing a consistent prayer routine transforms your spiritual walk.",
+          "image": "images/D9miTZjlCVPq.jpg"
+        },
+        {
+          "articleId": "Pc1ajSciReYA",
+          "title": "Understanding the Biblical Foundations of Worship",
+          "slug": "understanding-the-biblical-foundations-of-worship",
+          "excerpt": "Scripture provides rich insight into how God desires to be worshipped.",
+          "image": "images/Pc1ajSciReYA.jpg"
+        },
+        {
+          "articleId": "qXSwsb0H1BwS",
+          "title": "How Worship Shapes Our Relationship with God",
+          "slug": "how-worship-shapes-our-relationship-with-god",
+          "excerpt": "Worship is more than singing—it's a posture of the heart that transforms us.",
+          "image": "images/qXSwsb0H1BwS.jpg"
+        }
+      ]
+    },
+    "biblical-teachings": {
+      "categoryName": "Biblical Teachings",
+      "categorySlug": "biblical-teachings",
+      "description": "Explore the timeless wisdom of Scripture and apply it to modern life.",
+      "headerImage": "images/aBnPJuEnTUJ3.jpg",
+      "buildSeed": 1217,
+      "articles": [
+        {
+          "articleId": "NHTn6JvwLj2P",
+          "title": "7 Biblical Steps to Strengthen Your Faith",
+          "slug": "7-biblical-steps-to-strengthen-your-faith",
+          "excerpt": "Scripture provides a clear pathway for building unshakeable faith.",
+          "image": "images/NHTn6JvwLj2P.jpg"
+        },
+        {
+          "articleId": "avHEef8JRMOG",
+          "title": "The Beatitudes Explained: Pathway to True Happiness",
+          "slug": "the-beatitudes-explained-pathway-to-true-happiness",
+          "excerpt": "Jesus' Beatitudes reveal the surprising path to genuine blessing.",
+          "image": "images/avHEef8JRMOG.jpg"
+        },
+        {
+          "articleId": "aBnPJuEnTUJ3",
+          "title": "Unlocking Biblical Wisdom for Modern Challenges",
+          "slug": "unlocking-biblical-wisdom-for-modern-challenges",
+          "excerpt": "In a world brimming with uncertainty, biblical wisdom shines as an unwavering beacon.",
+          "image": "images/aBnPJuEnTUJ3.jpg"
+        },
+        {
+          "articleId": "wmlygW0Mr31E",
+          "title": "Understanding Parables: Unearth Hidden Biblical Lessons",
+          "slug": "understanding-parables-unearth-hidden-biblical-lessons",
+          "excerpt": "Jesus taught in parables to reveal deep spiritual truths.",
+          "image": "images/wmlygW0Mr31E.jpg"
+        },
+        {
+          "articleId": "TSnGg3NYqCuf",
+          "title": "Prophets of the Bible: Their Messages Today",
+          "slug": "prophets-of-the-bible-their-messages-today",
+          "excerpt": "The prophets' messages remain remarkably relevant for modern believers.",
+          "image": "images/TSnGg3NYqCuf.jpg"
+        },
+        {
+          "articleId": "ni50umCjPZip",
+          "title": "Exploring God's Grace Through Biblical Stories",
+          "slug": "exploring-gods-grace-through-biblical-stories",
+          "excerpt": "From Genesis to Revelation, God's grace weaves through every narrative.",
+          "image": "images/ni50umCjPZip.jpg"
+        },
+        {
+          "articleId": "Kr6yxwyVzEN0",
+          "title": "10 Commandments: Deep Dive into Divine Guidance",
+          "slug": "10-commandments-deep-dive-into-divine-guidance",
+          "excerpt": "The Ten Commandments remain the foundation of moral and spiritual guidance.",
+          "image": "images/Kr6yxwyVzEN0.jpg"
+        },
+        {
+          "articleId": "JgYBRWxP5r8c",
+          "title": "Scripture and Science: Harmonizing Faith and Reason",
+          "slug": "scripture-and-science-harmonizing-faith-and-reason",
+          "excerpt": "Faith and science need not be at odds—they can complement each other.",
+          "image": "images/JgYBRWxP5r8c.jpg"
+        },
+        {
+          "articleId": "UjSL4fU79Rt7",
+          "title": "Faith in Action: Applying Scripture to Everyday Life",
+          "slug": "faith-in-action-applying-scripture-to-everyday-life",
+          "excerpt": "True faith expresses itself through practical application of God's Word.",
+          "image": "images/UjSL4fU79Rt7.jpg"
+        },
+        {
+          "articleId": "Yu4w0UTlDct3",
+          "title": "Bible Study Essentials: Tools for Scripture Mastery",
+          "slug": "bible-study-essentials-tools-for-scripture-mastery",
+          "excerpt": "Effective Bible study requires the right tools and techniques.",
+          "image": "images/Yu4w0UTlDct3.jpg"
+        },
+        {
+          "articleId": "jXJLHuY6eU3E",
+          "title": "How to Live a Christ-Centered Life Daily",
+          "slug": "how-to-live-a-christ-centered-life-daily",
+          "excerpt": "Placing Christ at the center transforms every aspect of daily living.",
+          "image": "images/jXJLHuY6eU3E.jpg"
+        },
+        {
+          "articleId": "aUpbZbtDTItk",
+          "title": "The Role of Prayer in Biblical Teachings",
+          "slug": "the-role-of-prayer-in-biblical-teachings",
+          "excerpt": "Prayer is woven throughout Scripture as essential to spiritual life.",
+          "image": "images/aUpbZbtDTItk.jpg"
+        }
+      ]
+    },
+    "family-relationships": {
+      "categoryName": "Family & Relationships",
+      "categorySlug": "family-relationships",
+      "description": "Discover biblical wisdom for building strong families, nurturing marriages, raising children in faith, and cultivating meaningful relationships. This category offers practical guidance rooted in Scripture for navigating family challenges, strengthening bonds, and creating Christ-centered homes.",
+      "headerImage": "images/ivdIJRx3I4vM.jpg",
+      "buildSeed": 1217,
+      "articles": [
+        {
+          "articleId": "ivdIJRx3I4vM",
+          "title": "Building a Christ-Centered Marriage: A Complete Guide",
+          "slug": "building-a-christ-centered-marriage-a-complete-guide",
+          "excerpt": "When Sarah and Michael exchanged vows at their church wedding five years ago, they knew they wanted ...",
+          "image": "images/ivdIJRx3I4vM.jpg"
+        },
+        {
+          "articleId": "jTd3DLSbARyY",
+          "title": "Raising Children in Faith: Biblical Parenting Principles",
+          "slug": "raising-children-in-faith-biblical-parenting-principles",
+          "excerpt": "In a world filled with competing voices and conflicting values, Christian parents face the beautiful...",
+          "image": "images/jTd3DLSbARyY.jpg"
+        },
+        {
+          "articleId": "Etmd4r2Edaf0",
+          "title": "The Power of Forgiveness in Family Relationships",
+          "slug": "the-power-of-forgiveness-in-family-relationships",
+          "excerpt": "Forgiveness stands as one of the most challenging yet transformative aspects of family life. Within ...",
+          "image": "images/Etmd4r2Edaf0.jpg"
+        },
+        {
+          "articleId": "s4GLVcMRjjXH",
+          "title": "Creating Family Devotional Time: Practical Ideas",
+          "slug": "creating-family-devotional-time-practical-ideas",
+          "excerpt": "In today's fast-paced world, finding time for family can feel like an uphill battle, let alone carvi...",
+          "image": "images/s4GLVcMRjjXH.jpg"
+        },
+        {
+          "articleId": "nzyj83GU2DDt",
+          "title": "Navigating Conflict with Grace: A Biblical Approach",
+          "slug": "navigating-conflict-with-grace-a-biblical-approach",
+          "excerpt": "Conflict is an inevitable part of human relationships, yet as followers of Christ, we are called to ...",
+          "image": "images/nzyj83GU2DDt.jpg"
+        },
+        {
+          "articleId": "ygcR2rymNZfE",
+          "title": "Honoring Parents: Understanding the Fifth Commandment",
+          "slug": "honoring-parents-understanding-the-fifth-commandment",
+          "excerpt": "The fifth commandment stands as one of the most foundational principles for human relationships that...",
+          "image": "images/ygcR2rymNZfE.jpg"
+        },
+        {
+          "articleId": "ROUMQ9Rc6Cfl",
+          "title": "Single and Faithful: Finding Purpose in Singleness",
+          "slug": "single-and-faithful-finding-purpose-in-singleness",
+          "excerpt": "In a world that often defines worth by relationship status, Christian singles can find themselves na...",
+          "image": "images/ROUMQ9Rc6Cfl.jpg"
+        },
+        {
+          "articleId": "N8qECIE9sP7F",
+          "title": "Blending Families with Faith: A Guide for Stepparents",
+          "slug": "blending-families-with-faith-a-guide-for-stepparents",
+          "excerpt": "When Sarah married David three years ago, she thought the hardest part was behind them. They had wea...",
+          "image": "images/N8qECIE9sP7F.jpg"
+        },
+        {
+          "articleId": "vz2KlA6gbsHH",
+          "title": "Teaching Children to Pray: Age-Appropriate Methods",
+          "slug": "teaching-children-to-pray-age-appropriate-methods",
+          "excerpt": "As Christian parents and caregivers, few privileges are as sacred as introducing children to the bea...",
+          "image": "images/vz2KlA6gbsHH.jpg"
+        },
+        {
+          "articleId": "GnGMMpLZNhmV",
+          "title": "Marriage Communication: Speaking Life to Your Spouse",
+          "slug": "marriage-communication-speaking-life-to-your-spouse",
+          "excerpt": "When God brought Eve to Adam in the Garden of Eden, the first recorded words Adam spoke about his wi...",
+          "image": "images/GnGMMpLZNhmV.jpg"
+        },
+        {
+          "articleId": "5UOcfTAJ6kK0",
+          "title": "Grandparenting as Ministry: Leaving a Legacy of Faith",
+          "slug": "grandparenting-as-ministry-leaving-a-legacy-of-faith",
+          "excerpt": "As I sit in my rocking chair watching my five-year-old granddaughter carefully arrange her tea set, ...",
+          "image": "images/5UOcfTAJ6kK0.jpg"
+        },
+        {
+          "articleId": "RoCrV4rQUTS3",
+          "title": "When Family Members Don't Share Your Faith",
+          "slug": "when-family-members-dont-share-your-faith",
+          "excerpt": "The dinner table falls silent as your adult daughter rolls her eyes at your offer to say grace. Your...",
+          "image": "images/RoCrV4rQUTS3.jpg"
+        }
+      ]
+    },
+    "christian-living": {
+      "categoryName": "Christian Living",
+      "categorySlug": "christian-living",
+      "description": "Practical guidance for living out your faith in everyday life. Explore topics like work-life balance, financial stewardship, handling stress, making ethical decisions, and finding purpose in your daily routines. This category bridges Sunday faith with Monday reality, helping believers walk authentically with Christ in every area of life.",
+      "headerImage": "images/tPbZ7muebKX2.jpg",
+      "buildSeed": 1217,
+      "articles": [
+        {
+          "articleId": "tPbZ7muebKX2",
+          "title": "Faith at Work: Honoring God in Your Career",
+          "slug": "faith-at-work-honoring-god-in-your-career",
+          "excerpt": "For many believers, the Monday morning alarm brings a familiar tension. As we transition from Sunday...",
+          "image": "images/tPbZ7muebKX2.jpg"
+        },
+        {
+          "articleId": "2fJIUEhleZ9S",
+          "title": "Biblical Financial Stewardship: Managing Money God's Way",
+          "slug": "biblical-financial-stewardship-managing-money-gods-way",
+          "excerpt": "Money. It's a topic that can stir up anxiety, create tension in marriages, and cause sleepless night...",
+          "image": "images/2fJIUEhleZ9S.jpg"
+        },
+        {
+          "articleId": "d7fmYD2abNJH",
+          "title": "Finding Peace in Anxious Times: A Christian Perspective",
+          "slug": "finding-peace-in-anxious-times-a-christian-perspective",
+          "excerpt": "Anxiety seems to be woven into the very fabric of our modern world. From the moment we wake up to br...",
+          "image": "images/d7fmYD2abNJH.jpg"
+        },
+        {
+          "articleId": "PcL9GMePTFFn",
+          "title": "Digital Discipleship: Using Technology for God's Glory",
+          "slug": "digital-discipleship-using-technology-for-gods-glory",
+          "excerpt": "In our rapidly evolving digital age, many Christians find themselves wrestling with a fundamental qu...",
+          "image": "images/PcL9GMePTFFn.jpg"
+        },
+        {
+          "articleId": "OL5mPtT6Mosx",
+          "title": "The Christian's Guide to Rest and Sabbath",
+          "slug": "the-christians-guide-to-rest-and-sabbath",
+          "excerpt": "In our fast-paced, always-connected world, the concept of rest has become almost foreign to many of ...",
+          "image": "images/OL5mPtT6Mosx.jpg"
+        },
+        {
+          "articleId": "BboQpXol0cWL",
+          "title": "Making Ethical Decisions in a Complex World",
+          "slug": "making-ethical-decisions-in-a-complex-world",
+          "excerpt": "In our rapidly changing world, making ethical decisions has become increasingly complex. What once s...",
+          "image": "images/BboQpXol0cWL.jpg"
+        },
+        {
+          "articleId": "TnioeiZOQago",
+          "title": "Overcoming Comparison: Finding Contentment in Christ",
+          "slug": "overcoming-comparison-finding-contentment-in-christ",
+          "excerpt": "In our hyperconnected world, where curated lives flash before us with every scroll, the ancient sin ...",
+          "image": "images/TnioeiZOQago.jpg"
+        },
+        {
+          "articleId": "Sdp31BLeLpM7",
+          "title": "Hospitality as Ministry: Opening Your Home and Heart",
+          "slug": "hospitality-as-ministry-opening-your-home-and-heart",
+          "excerpt": "When Sarah first heard about the refugee family arriving in her community, she felt a stirring in he...",
+          "image": "images/Sdp31BLeLpM7.jpg"
+        },
+        {
+          "articleId": "036UztSaqaS0",
+          "title": "Developing Daily Spiritual Habits That Last",
+          "slug": "developing-daily-spiritual-habits-that-last",
+          "excerpt": "In the bustling rhythm of modern life, where notifications ping constantly and schedules overflow wi...",
+          "image": "images/036UztSaqaS0.jpg"
+        },
+        {
+          "articleId": "6ouaDtwhm7tV",
+          "title": "Handling Criticism with Grace and Wisdom",
+          "slug": "handling-criticism-with-grace-and-wisdom",
+          "excerpt": "When that harsh comment stings your heart or that unfair judgment pierces your soul, remember that y...",
+          "image": "images/6ouaDtwhm7tV.jpg"
+        },
+        {
+          "articleId": "M7O1Jzrd3XG6",
+          "title": "Serving Others: Practical Ways to Live Out Your Faith",
+          "slug": "serving-others-practical-ways-to-live-out-your-faith",
+          "excerpt": "**By Santiago Inspire**\n\nThe heart of Christian faith beats strongest when it moves us beyond oursel...",
+          "image": "images/M7O1Jzrd3XG6.jpg"
+        },
+        {
+          "articleId": "iQxW7dItf7sB",
+          "title": "Redeeming Your Time: Priorities for the Busy Believer",
+          "slug": "redeeming-your-time-priorities-for-the-busy-believer",
+          "excerpt": "In our fast-paced world, time feels like our scarcest commodity. Between work demands, family respon...",
+          "image": "images/iQxW7dItf7sB.jpg"
+        }
+      ]
+    }
+  }
+}

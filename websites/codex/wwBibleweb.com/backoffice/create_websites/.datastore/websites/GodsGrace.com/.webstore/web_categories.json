@@ -1,0 +1,83 @@
+{
+  "domain": "GodsGrace.com",
+  "siteCode": "WEB-GODS-070312",
+  "totalCategories": 5,
+  "generatedAt": "2025-12-17T19:11:53.545Z",
+  "categories": [
+    {
+      "rank": 1,
+      "name": "Divine Inspirations",
+      "slug": "divine-inspirations",
+      "description": "Explore a collection of uplifting stories, quotes, and reflections designed to inspire and deepen your faith. This category features narratives of divine intervention, powerful testimonies, and motivational messages that highlight the grace and presence of God in everyday life.",
+      "keywords": [
+        "faith inspiration",
+        "Christian stories",
+        "God's grace",
+        "spiritual quotes",
+        "divine intervention"
+      ],
+      "articleCount": 12,
+      "folderPath": "/divine-inspirations"
+    },
+    {
+      "rank": 2,
+      "name": "Prayer & Worship",
+      "slug": "prayer-worship",
+      "description": "Delve into the heart of prayer and worship with guides, practices, and reflections to enrich your spiritual journey. Discover new ways to connect with God, enhance your worship experience, and explore the power of prayer in transforming lives.",
+      "keywords": [
+        "Christian prayer",
+        "worship guides",
+        "spiritual practices",
+        "connect with God",
+        "prayer transformation"
+      ],
+      "articleCount": 12,
+      "folderPath": "/prayer-worship"
+    },
+    {
+      "rank": 3,
+      "name": "Biblical Teachings",
+      "slug": "biblical-teachings",
+      "description": "Engage with insightful articles that unravel the wisdom of the Bible, providing context, interpretation, and application for modern Christian living. From in-depth scripture analysis to practical advice on living a Christ-centered life, this category empowers believers to grow in their faith.",
+      "keywords": [
+        "Bible study",
+        "Christian teachings",
+        "scripture analysis",
+        "faith growth",
+        "Christ-centered living"
+      ],
+      "articleCount": 12,
+      "folderPath": "/biblical-teachings"
+    },
+    {
+      "rank": 4,
+      "name": "Family & Relationships",
+      "slug": "family-relationships",
+      "description": "Discover biblical wisdom for building strong families, nurturing marriages, raising children in faith, and cultivating meaningful relationships. This category offers practical guidance rooted in Scripture for navigating family challenges, strengthening bonds, and creating Christ-centered homes.",
+      "keywords": [
+        "Christian family",
+        "biblical marriage",
+        "parenting faith",
+        "family relationships",
+        "Christ-centered home"
+      ],
+      "articleCount": 12,
+      "folderPath": "/family-relationships"
+    },
+    {
+      "rank": 5,
+      "name": "Christian Living",
+      "slug": "christian-living",
+      "description": "Practical guidance for living out your faith in everyday life. Explore topics like work-life balance, financial stewardship, handling stress, making ethical decisions, and finding purpose in your daily routines. This category bridges Sunday faith with Monday reality, helping believers walk authentically with Christ in every area of life.",
+      "keywords": [
+        "practical faith",
+        "Christian lifestyle",
+        "daily devotion",
+        "faith at work",
+        "biblical stewardship"
+      ],
+      "articleCount": 12,
+      "folderPath": "/christian-living"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "siteCode": "WEB-GODS-897082",
+  "domain": "GodsGoodGrace.com",
+  "overview": "General website",
+  "categoryCount": 3,
+  "quickMode": false,
+  "contentType": "FB",
+  "analysis": {
+    "contentType": "FB",
+    "confidence": "high",
+    "reasoning": "The domain name 'GodsGoodGrace.com' includes keywords strongly associated with faith-based themes, specifically 'God' and 'Grace', which are commonly linked to Christian and spiritual contexts.",
+    "keywords": [
+      "God",
+      "Good",
+      "Grace"
+    ],
+    "niche": "Christian",
+    "tone": "inspirational"
+  },
+  "writersCount": 12,
+  "createdAt": "2025-12-17T18:41:40.676Z",
+  "status": "step6_complete",
+  "categoriesGeneratedAt": "2025-12-17T18:41:54.375Z",
+  "totalArticles": 36,
+  "articlesGeneratedAt": "2025-12-17T18:42:18.858Z",
+  "contentGeneratedAt": "2025-12-17T18:45:37.962Z",
+  "websiteBuiltAt": "2025-12-17T18:45:37.970Z"
+}

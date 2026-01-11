@@ -350,8 +350,8 @@
 
     .beta-badge {
       position: absolute;
-      right: -62px;
-      bottom: -32px;
+      right: -82px;
+      bottom: -12px;
       background: #4b4b4b;
       color: #cfcfcf;
       font-family: Arial, Helvetica, sans-serif;
@@ -798,8 +798,32 @@
       var selectedPersona = 'jubilee';
       var selectedLang = { code: 'en', name: 'English (US)', flag: 'us' };
       var sidebar = document.getElementById('sidebar');
+      var MODEL_COOKIE_NAME = 'jubileeInspireModel';
+      var DEFAULT_MODEL = 'gospelpulse';
+
+      // Cookie helper function
+      function getCookie(name) {
+        var nameEQ = name + '=';
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+          var c = ca[i];
+          while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+          if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+        }
+        return null;
+      }
+
+      // Get saved model from cookie or use default
+      var savedModel = getCookie(MODEL_COOKIE_NAME);
+      var selectedModel = (savedModel && ['gospelpulse', 'kingdombuilder', 'hebrewroots', 'messianic'].indexOf(savedModel) !== -1)
+        ? savedModel
+        : DEFAULT_MODEL;
 
       document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+      // Clear conversation cache when visiting home page
+      // This ensures each new session from the home page starts fresh
+      localStorage.removeItem('jubileeInspireConversation');
 
       // Check if user is authenticated from localStorage
       var isAuthenticated = false;
@@ -860,6 +884,7 @@
             p.set('q', returnQuery);
             p.set('persona', returnPersona || selectedPersona);
             p.set('lang', returnLang || selectedLang.code);
+            p.set('model', selectedModel);
             window.location.href = CHAT_URL + '?' + p.toString();
           }
         });
@@ -884,6 +909,7 @@
             p.set('q', q);
             p.set('persona', selectedPersona);
             p.set('lang', selectedLang.code);
+            p.set('model', selectedModel);
             window.location.href = CHAT_URL + '?' + p.toString();
           }
         }
@@ -1095,6 +1121,7 @@
         }
         p.set('persona', selectedPersona);
         p.set('lang', selectedLang.code);
+        p.set('model', selectedModel);
         p.set('attach', '1');
         window.location.href = CHAT_URL + '?' + p.toString();
       });

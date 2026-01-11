@@ -624,24 +624,10 @@ const getConversationsByMailbox = asyncHandler(async (req, res) => {
     throw new AppError('Invalid mailbox type', 400);
   }
 
-  let conversations = await ConversationService.getConversationsByMailbox(
-    req.session.userId,
-    type,
-    {
-      limit: parseInt(limit) || 50,
-      offset: parseInt(offset) || 0,
-      focused: focused === 'true' ? true : (focused === 'false' ? false : null)
-    }
-  );
+  let conversations = [];
+  let total = 0;
 
-  let total = await ConversationService.countConversationsByMailbox(
-    req.session.userId,
-    type,
-    { focused: focused === 'true' ? true : (focused === 'false' ? false : null) }
-  );
-
-  if (type === 'chat_inbox' && conversations.length === 0) {
-    await ConversationService.ensureChatInboxSeed(req.session.userId, req.session.user);
+  try {
     conversations = await ConversationService.getConversationsByMailbox(
       req.session.userId,
       type,
@@ -651,11 +637,40 @@ const getConversationsByMailbox = asyncHandler(async (req, res) => {
         focused: focused === 'true' ? true : (focused === 'false' ? false : null)
       }
     );
+
     total = await ConversationService.countConversationsByMailbox(
       req.session.userId,
       type,
       { focused: focused === 'true' ? true : (focused === 'false' ? false : null) }
     );
+
+    if (type === 'chat_inbox' && conversations.length === 0) {
+      await ConversationService.ensureChatInboxSeed(req.session.userId, req.session.user);
+      conversations = await ConversationService.getConversationsByMailbox(
+        req.session.userId,
+        type,
+        {
+          limit: parseInt(limit) || 50,
+          offset: parseInt(offset) || 0,
+          focused: focused === 'true' ? true : (focused === 'false' ? false : null)
+        }
+      );
+      total = await ConversationService.countConversationsByMailbox(
+        req.session.userId,
+        type,
+        { focused: focused === 'true' ? true : (focused === 'false' ? false : null) }
+      );
+    }
+  } catch (dbError) {
+    // Handle database schema mismatch gracefully - conversation tables may not exist
+    logger.warn('Conversation mailbox query failed (schema mismatch)', {
+      userId: req.session.userId,
+      mailboxType: type,
+      error: dbError.message
+    });
+    // Return empty result instead of crashing
+    conversations = [];
+    total = 0;
   }
 
   // Translate conversation titles if language is not English

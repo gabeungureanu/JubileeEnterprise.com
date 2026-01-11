@@ -334,8 +334,17 @@
         function renderDashboard() {
             const data = healthData;
 
+            if (!data) {
+                document.getElementById('content').innerHTML = `
+                    <div class="card">
+                        <div class="error-message">No health data received</div>
+                    </div>
+                `;
+                return;
+            }
+
             // Update header
-            document.getElementById('timestamp').textContent = new Date(data.timestamp).toLocaleString();
+            document.getElementById('timestamp').textContent = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'Unknown';
             const envBadge = document.getElementById('env-badge');
             envBadge.textContent = data.environment;
             envBadge.className = `env-badge env-${data.environment}`;
@@ -409,6 +418,7 @@
         }
 
         function renderDatabases(databases) {
+            if (!databases) return '<div class="item-row"><span class="item-meta">No database data available</span></div>';
             let html = '';
             for (const [name, db] of Object.entries(databases)) {
                 const isLegacy = name === 'JubileeVerse';
@@ -445,6 +455,7 @@
         }
 
         function renderVectorDatabases(vectorDbs) {
+            if (!vectorDbs) return '<div class="item-row"><span class="item-meta">No vector databases configured</span></div>';
             let html = '';
             for (const [name, db] of Object.entries(vectorDbs)) {
                 html += `
@@ -469,6 +480,7 @@
         }
 
         function renderApiServices(services) {
+            if (!services) return '<div class="item-row"><span class="item-meta">No API services data available</span></div>';
             let html = '';
             for (const [name, service] of Object.entries(services)) {
                 html += `
@@ -489,6 +501,7 @@
         }
 
         function renderWebsites(websites) {
+            if (!websites || !Array.isArray(websites)) return '<div class="item-row"><span class="item-meta">No websites data available</span></div>';
             let html = '';
             for (const site of websites) {
                 html += `
@@ -588,6 +601,7 @@
         }
 
         function renderSystemInfo(system, uptime) {
+            if (!system) return '<div class="system-info"><span class="item-meta">No system data available</span></div>';
             const formatUptime = (seconds) => {
                 const days = Math.floor(seconds / 86400);
                 const hours = Math.floor((seconds % 86400) / 3600);

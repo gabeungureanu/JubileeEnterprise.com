@@ -177,7 +177,7 @@
       flex-direction: column;
     }
 
-    /* Step containers should flex and not overflow */
+    /* Step containers should flex */
     .panel > div:not(.hidden) {
       display: flex;
       flex-direction: column;
@@ -275,6 +275,191 @@
       color: rgba(255, 255, 255, 0.4);
     }
 
+    /* Domain Fields Container - Side by Side */
+    .domain-fields-container {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .domain-field-wrapper {
+      flex: 1;
+      min-width: 380px;
+      position: relative;
+      padding-bottom: 1.5rem;
+    }
+
+    .domain-input-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .domain-checkbox {
+      width: 20px;
+      height: 20px;
+      appearance: none;
+      -webkit-appearance: none;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(212, 175, 55, 0.3);
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .domain-checkbox:checked {
+      background: var(--gold);
+      border-color: var(--gold);
+    }
+
+    .domain-checkbox:checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--black);
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .domain-checkbox:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .domain-checkbox.valid:not(:disabled) {
+      border-color: var(--green);
+      background: var(--green);
+    }
+
+    .domain-checkbox.valid:not(:disabled)::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--black);
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .domain-checkbox.error:not(:disabled) {
+      border-color: var(--red);
+    }
+
+    /* Prefixed Input Container */
+    .prefixed-input-container {
+      display: flex;
+      align-items: stretch;
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(251, 191, 36, 0.3);
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .prefixed-input-container:focus-within {
+      border-color: var(--yellow);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+    }
+
+    .prefixed-input-container.valid {
+      border-color: var(--green);
+    }
+
+    .prefixed-input-container.valid:focus-within {
+      box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.15);
+    }
+
+    .prefixed-input-container.error {
+      border-color: var(--red);
+    }
+
+    .prefixed-input-container.error:focus-within {
+      box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.15);
+    }
+
+    .input-prefix {
+      display: flex;
+      align-items: center;
+      padding: 0 0.75rem;
+      background: rgba(212, 175, 55, 0.15);
+      color: var(--gold);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      white-space: nowrap;
+      user-select: none;
+      border-right: 1px solid rgba(212, 175, 55, 0.2);
+    }
+
+    .prefixed-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      background: transparent;
+      border: none;
+      color: var(--white);
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .prefixed-input::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Domain Validation Message */
+    .domain-validation-message {
+      position: absolute;
+      bottom: 0;
+      left: 30px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+      height: 1.25rem;
+    }
+
+    .domain-validation-message:empty {
+      visibility: hidden;
+    }
+
+    .domain-validation-message.error {
+      color: var(--red);
+    }
+
+    .domain-validation-message.success {
+      color: var(--green);
+    }
+
+    .domain-validation-message.checking {
+      color: var(--yellow);
+    }
+
+    .validation-icon {
+      font-size: 1rem;
+    }
+
+    /* Loading spinner for validation */
+    .validation-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(251, 191, 36, 0.3);
+      border-top-color: var(--yellow);
+      border-radius: 50%;
+      animation: validationSpin 0.8s linear infinite;
+    }
+
+    @keyframes validationSpin {
+      to { transform: rotate(360deg); }
+    }
+
     /* Text Area Container with Dropdown */
     .textarea-container {
       position: relative;
@@ -283,7 +468,8 @@
     .textarea-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: baseline;
+      margin-top: 0;
       margin-bottom: 0.5rem;
     }
 
@@ -325,7 +511,7 @@
     /* Text Area */
     .textarea-field {
       width: 100%;
-      min-height: 200px;
+      min-height: 131px;
       padding: 1rem;
       background: rgba(255, 255, 255, 0.05);
       border: 2px solid rgba(251, 191, 36, 0.3);
@@ -405,9 +591,10 @@
       display: flex;
       gap: 1rem;
       justify-content: flex-end;
-      margin-top: 2rem;
-      padding-top: 2rem;
+      margin-top: -2rem;
+      padding-top: 0.5rem;
       border-top: 1px solid rgba(251, 191, 36, 0.2);
+      flex-shrink: 0;
     }
 
     .btn {
@@ -1001,16 +1188,48 @@
           <h1 class="step-title">Create Website (Step 1 of 5)</h1>
         </div>
 
-        <!-- Domain Name Input -->
+        <!-- Domain Name Inputs - Two Fields Side by Side -->
         <div class="form-section">
-          <label class="form-label" for="domainName">Domain Name *</label>
-          <input 
-            type="text" 
-            id="domainName" 
-            class="input-field" 
-            placeholder="example: faithfulparenting.com"
-            required
-          >
+          <div class="domain-fields-container">
+            <!-- Inspire Domain Field -->
+            <div class="domain-field-wrapper">
+              <div class="domain-input-row">
+                <input type="checkbox" id="inspireDomainCheck" class="domain-checkbox" disabled>
+                <div class="prefixed-input-container" id="inspireDomainContainer">
+                  <span class="input-prefix">inspire://</span>
+                  <input
+                    type="text"
+                    id="inspireDomain"
+                    class="prefixed-input"
+                    placeholder="example: home.pentecostal"
+                    autocomplete="off"
+                  >
+                </div>
+              </div>
+              <div id="inspireDomainValidation" class="domain-validation-message"></div>
+            </div>
+
+            <!-- Public HTTPS Domain Field -->
+            <div class="domain-field-wrapper">
+              <div class="domain-input-row">
+                <input type="checkbox" id="publicDomainCheck" class="domain-checkbox" disabled>
+                <div class="prefixed-input-container" id="publicDomainContainer">
+                  <span class="input-prefix">https://</span>
+                  <input
+                    type="text"
+                    id="publicDomain"
+                    class="prefixed-input"
+                    placeholder="example: faithfulliving.com"
+                    autocomplete="off"
+                  >
+                </div>
+              </div>
+              <div id="publicDomainValidation" class="domain-validation-message"></div>
+            </div>
+          </div>
+
+          <!-- Hidden field to store legacy domainName for compatibility -->
+          <input type="hidden" id="domainName" value="">
         </div>
 
         <!-- Website Overview -->
@@ -1029,7 +1248,7 @@
           <textarea 
             id="websiteOverview" 
             class="textarea-field" 
-            placeholder="Example: A Christian parenting website dedicated to helping parents raise children with faith-based values. We provide practical advice, biblical wisdom, and community support for families navigating modern parenting challenges..."
+            placeholder="Example: A Christian living website dedicated to helping believers grow in their faith and apply biblical principles to everyday life. We provide practical guidance, spiritual wisdom, and community support for Christians navigating modern challenges..."
             maxlength="8000"
           ></textarea>
           <div class="char-counter">
@@ -1349,9 +1568,272 @@
     });
 
     // ========================================================================
+    // DOMAIN VALIDATION FUNCTIONS
+    // ========================================================================
+
+    // API base URL for InspireCodex
+    const CODEX_API_BASE = 'https://inspirecodex.com';
+
+    // Debounce timer references
+    let inspireDomainTimer = null;
+    let publicDomainTimer = null;
+
+    // Validation state
+    const domainValidation = {
+      inspire: { valid: false, checking: false, value: '' },
+      public: { valid: false, checking: false, value: '' }
+    };
+
+    // Debounce function
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    // Check if domain exists in Codex database
+    async function checkDomainExists(domainName, environment) {
+      try {
+        const response = await fetch(`${CODEX_API_BASE}/api/v1/websites/resolve/${encodeURIComponent(domainName)}?environment=${environment}`);
+
+        if (response.status === 404) {
+          // Domain not found - available
+          return { exists: false };
+        } else if (response.ok) {
+          const data = await response.json();
+          // Domain exists if website is found
+          return { exists: true, website: data.website };
+        } else {
+          // API error - assume unavailable for safety
+          console.error('Domain check error:', response.status);
+          return { exists: false, error: true };
+        }
+      } catch (error) {
+        console.error('Domain check network error:', error);
+        return { exists: false, error: true };
+      }
+    }
+
+    // Update validation UI for a domain field
+    function updateValidationUI(fieldType, status, message) {
+      const checkbox = document.getElementById(`${fieldType}DomainCheck`);
+      const container = document.getElementById(`${fieldType}DomainContainer`);
+      const validationMsg = document.getElementById(`${fieldType}DomainValidation`);
+
+      // Clear all classes
+      checkbox.classList.remove('valid', 'error');
+      container.classList.remove('valid', 'error');
+      validationMsg.classList.remove('success', 'error', 'checking');
+
+      // Update checkbox state
+      checkbox.disabled = (status !== 'valid');
+      checkbox.checked = (status === 'valid');
+
+      switch (status) {
+        case 'valid':
+          checkbox.classList.add('valid');
+          container.classList.add('valid');
+          validationMsg.classList.add('success');
+          validationMsg.innerHTML = `<span class="validation-icon">✓</span> ${message}`;
+          domainValidation[fieldType].valid = true;
+          break;
+
+        case 'error':
+          checkbox.classList.add('error');
+          container.classList.add('error');
+          validationMsg.classList.add('error');
+          validationMsg.innerHTML = `<span class="validation-icon">✗</span> ${message}`;
+          domainValidation[fieldType].valid = false;
+          break;
+
+        case 'checking':
+          validationMsg.classList.add('checking');
+          validationMsg.innerHTML = `<span class="validation-spinner"></span> Checking availability...`;
+          domainValidation[fieldType].checking = true;
+          break;
+
+        default: // 'empty' or undefined
+          validationMsg.innerHTML = '';
+          domainValidation[fieldType].valid = false;
+      }
+
+      if (status !== 'checking') {
+        domainValidation[fieldType].checking = false;
+      }
+
+      // Update hidden legacy field for compatibility
+      updateLegacyDomainField();
+    }
+
+    // Update the hidden domainName field for legacy compatibility
+    function updateLegacyDomainField() {
+      const inspireDomain = document.getElementById('inspireDomain').value.trim();
+      const publicDomain = document.getElementById('publicDomain').value.trim();
+      const hiddenField = document.getElementById('domainName');
+
+      // Prefer Inspire domain, fallback to public domain
+      if (inspireDomain && domainValidation.inspire.valid) {
+        hiddenField.value = inspireDomain;
+      } else if (publicDomain && domainValidation.public.valid) {
+        hiddenField.value = publicDomain;
+      } else if (inspireDomain) {
+        hiddenField.value = inspireDomain;
+      } else if (publicDomain) {
+        hiddenField.value = publicDomain;
+      } else {
+        hiddenField.value = '';
+      }
+    }
+
+    // Validate Inspire domain
+    async function validateInspireDomain(value) {
+      const trimmed = value.trim();
+      domainValidation.inspire.value = trimmed;
+
+      if (!trimmed) {
+        updateValidationUI('inspire', 'empty', '');
+        return;
+      }
+
+      // Basic format validation for Inspire domains
+      if (!/^[a-zA-Z0-9][a-zA-Z0-9.-]*[a-zA-Z0-9]$/.test(trimmed) && !/^[a-zA-Z0-9]$/.test(trimmed)) {
+        updateValidationUI('inspire', 'error', 'Invalid domain format');
+        return;
+      }
+
+      updateValidationUI('inspire', 'checking', '');
+
+      // Extract the root TLD (the part after the last dot, or the whole thing if no dots)
+      const parts = trimmed.split('.');
+      const rootTLD = parts[parts.length - 1].toLowerCase();
+
+      console.log('[IDNS Validation] Checking root TLD:', rootTLD, 'for domain:', trimmed);
+
+      // First, check if the root TLD exists in IDNS
+      let idnsCheckPassed = false;
+      try {
+        const idnsUrl = `${CODEX_API_BASE}/api/v1/idns/domains/${encodeURIComponent(rootTLD)}`;
+        console.log('[IDNS Validation] Fetching:', idnsUrl);
+        const idnsResponse = await fetch(idnsUrl);
+        console.log('[IDNS Validation] Response status:', idnsResponse.status);
+
+        if (idnsResponse.status === 404) {
+          // Root TLD doesn't exist in IDNS
+          console.log('[IDNS Validation] Root TLD not found, showing error');
+          updateValidationUI('inspire', 'error', `Root domain '.${rootTLD}' does not exist`);
+          return;
+        } else if (idnsResponse.ok) {
+          console.log('[IDNS Validation] Root TLD exists, continuing...');
+          idnsCheckPassed = true;
+        } else {
+          // API error - show error (don't allow to proceed without valid root)
+          console.warn('[IDNS Validation] API error:', idnsResponse.status);
+          updateValidationUI('inspire', 'error', 'Unable to verify domain. Please try again.');
+          return;
+        }
+      } catch (error) {
+        console.error('[IDNS Validation] Network error:', error);
+        updateValidationUI('inspire', 'error', 'Network error. Please check your connection.');
+        return;
+      }
+
+      // Only proceed if IDNS check passed
+      if (!idnsCheckPassed) {
+        updateValidationUI('inspire', 'error', 'Domain verification failed');
+        return;
+      }
+
+      // Now check if the exact domain/website already exists
+      console.log('[IDNS Validation] Checking website existence for:', trimmed);
+      const result = await checkDomainExists(trimmed, 'INSPIRE');
+      console.log('[IDNS Validation] Website check result:', result);
+
+      if (result.error) {
+        // Network error on website check - but IDNS passed, so show as available with warning
+        updateValidationUI('inspire', 'valid', 'Domain appears available');
+      } else if (result.exists) {
+        updateValidationUI('inspire', 'error', 'Website already exists. Please choose a different name.');
+      } else {
+        updateValidationUI('inspire', 'valid', 'Domain is available');
+      }
+    }
+
+    // Validate Public HTTPS domain
+    async function validatePublicDomain(value) {
+      const trimmed = value.trim();
+      domainValidation.public.value = trimmed;
+
+      if (!trimmed) {
+        updateValidationUI('public', 'empty', '');
+        return;
+      }
+
+      // Basic format validation for public domains
+      if (!/^[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,}$/.test(trimmed)) {
+        updateValidationUI('public', 'error', 'Invalid domain format (e.g., example.com)');
+        return;
+      }
+
+      updateValidationUI('public', 'checking', '');
+
+      const result = await checkDomainExists(trimmed, 'PUBLIC');
+
+      if (result.error) {
+        updateValidationUI('public', 'valid', 'Domain is available');
+      } else if (result.exists) {
+        updateValidationUI('public', 'error', 'Website already exists. Please choose a different name.');
+      } else {
+        updateValidationUI('public', 'valid', 'Domain is available');
+      }
+    }
+
+    // Set up domain input event listeners
+    const inspireDomainInput = document.getElementById('inspireDomain');
+    const publicDomainInput = document.getElementById('publicDomain');
+
+    // Debounced validation (500ms delay)
+    const debouncedInspireValidation = debounce(validateInspireDomain, 500);
+    const debouncedPublicValidation = debounce(validatePublicDomain, 500);
+
+    inspireDomainInput.addEventListener('input', (e) => {
+      const value = e.target.value;
+      if (value.trim()) {
+        updateValidationUI('inspire', 'checking', '');
+      }
+      debouncedInspireValidation(value);
+    });
+
+    publicDomainInput.addEventListener('input', (e) => {
+      const value = e.target.value;
+      if (value.trim()) {
+        updateValidationUI('public', 'checking', '');
+      }
+      debouncedPublicValidation(value);
+    });
+
+    // Also validate on blur for immediate feedback
+    inspireDomainInput.addEventListener('blur', (e) => {
+      if (e.target.value.trim() && !domainValidation.inspire.checking) {
+        validateInspireDomain(e.target.value);
+      }
+    });
+
+    publicDomainInput.addEventListener('blur', (e) => {
+      if (e.target.value.trim() && !domainValidation.public.checking) {
+        validatePublicDomain(e.target.value);
+      }
+    });
+
+    // ========================================================================
     // FORM VALIDATION AND SUBMISSION
     // ========================================================================
-    
+
     // Use setTimeout to ensure DOM is completely ready
     setTimeout(function() {
       console.log('Setting up Next button...');
@@ -1377,22 +1859,66 @@
 
     async function handleNextClick() {
       console.log('handleNextClick called');
-      
-      const domainInput = document.getElementById('domainName');
+
+      const inspireDomainInput = document.getElementById('inspireDomain');
+      const publicDomainInput = document.getElementById('publicDomain');
       const overviewInput = document.getElementById('websiteOverview');
       const categorySelect = document.getElementById('categoryCount');
       const quickModeCheckbox = document.getElementById('quickMode');
-      
-      // Validate inputs - only domain is required
-      if (!domainInput.value.trim()) {
-        alert('Please enter a domain name');
-        domainInput.focus();
+
+      const inspireDomain = inspireDomainInput.value.trim();
+      const publicDomain = publicDomainInput.value.trim();
+
+      // Validate that at least one domain is entered and valid
+      const hasValidInspire = inspireDomain && domainValidation.inspire.valid;
+      const hasValidPublic = publicDomain && domainValidation.public.valid;
+
+      if (!inspireDomain && !publicDomain) {
+        alert('Please enter at least one domain name');
+        inspireDomainInput.focus();
         return;
       }
 
+      // Check if validation is still in progress
+      if (domainValidation.inspire.checking || domainValidation.public.checking) {
+        alert('Please wait while domain availability is being checked');
+        return;
+      }
+
+      // Check for validation errors
+      if (inspireDomain && !domainValidation.inspire.valid) {
+        alert('The Inspire domain is not available. Please choose a different name.');
+        inspireDomainInput.focus();
+        return;
+      }
+
+      if (publicDomain && !domainValidation.public.valid) {
+        alert('The Public domain is not available. Please choose a different name.');
+        publicDomainInput.focus();
+        return;
+      }
+
+      // At least one must be valid
+      if (!hasValidInspire && !hasValidPublic) {
+        alert('Please enter at least one valid domain name');
+        if (inspireDomain) {
+          inspireDomainInput.focus();
+        } else {
+          publicDomainInput.focus();
+        }
+        return;
+      }
+
+      // Determine primary domain (prefer Inspire, fallback to Public)
+      const primaryDomain = inspireDomain || publicDomain;
+      const primaryEnvironment = inspireDomain ? 'INSPIRE' : 'PUBLIC';
+
       // Gather form data
       const formData = {
-        domain: domainInput.value.trim(),
+        domain: primaryDomain,
+        inspireDomain: inspireDomain || null,
+        publicDomain: publicDomain || null,
+        primaryEnvironment: primaryEnvironment,
         overview: overviewInput.value.trim(),
         categoryCount: parseInt(categorySelect.value),
         quickMode: quickModeCheckbox.checked
@@ -1405,7 +1931,7 @@
 
       // Show Step 2
       showStep2();
-      
+
       // Generate writers
       await generateWriters(formData);
     }
@@ -2011,6 +2537,10 @@
       window.scrollTo(0, 0);
     }
 
+    // NEW: Track total steps (articles + images = 72 for 36 articles)
+    let totalProgressSteps = 0;
+    let currentProgressStep = 0;
+
     function updateProgress(current, total, currentItem, imageStatus = '') {
       const percentage = Math.round((current / total) * 100);
       document.getElementById('progressBar').style.width = `${percentage}%`;
@@ -2024,31 +2554,33 @@
       document.getElementById('progressStatus').textContent = statusText;
     }
 
-    // Identify first article in each category
-    function identifyFirstArticlesInCategories(articles) {
-      categoryFirstArticles.clear();
-      const seenCategories = new Set();
+    // NEW: Update combined progress (articles + images)
+    function updateCombinedProgress(articlesComplete, imagesComplete, totalArticles, totalImages, currentTask) {
+      const totalSteps = totalArticles + totalImages;
+      const completedSteps = articlesComplete + imagesComplete;
+      const percentage = Math.round((completedSteps / totalSteps) * 100);
 
-      articles.forEach((article, index) => {
-        if (!seenCategories.has(article.categorySlug)) {
-          seenCategories.add(article.categorySlug);
-          categoryFirstArticles.add(index);
-        }
-      });
-
-      step5TotalImages = categoryFirstArticles.size;
-      return categoryFirstArticles;
+      document.getElementById('progressBar').style.width = `${percentage}%`;
+      document.getElementById('progressCount').textContent = `${completedSteps} / ${totalSteps} steps`;
+      document.getElementById('progressStatus').textContent = `${currentTask} | Articles: ${articlesComplete}/${totalArticles} | Images: ${imagesComplete}/${totalImages}`;
     }
 
-    // Generate article image using the article ID
-    async function generateArticleImage(siteCode, article, isFirstInCategory, articleId) {
-      if (!isFirstInCategory || !articleId) return { skipped: true };
+    // Generate article image using the article ID and content for theme extraction
+    // NOW generates images for ALL articles, not just first in category
+    async function generateArticleImage(siteCode, article, articleId, articleContent) {
+      if (!articleId) return { skipped: true };
 
       try {
         const response = await fetch('/api/website/generate-article-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ siteCode, article, isFirstInCategory, articleId })
+          body: JSON.stringify({
+            siteCode,
+            article,
+            isFirstInCategory: true, // Generate for all now
+            articleId,
+            articleContent // Include content for theme extraction
+          })
         });
         return await response.json();
       } catch (error) {
@@ -2063,6 +2595,52 @@
 
       statusDot.className = 'status-dot openai';
       statusText.textContent = 'Generating website data...';
+
+      // Image generation queue for parallel processing
+      const imageQueue = [];
+      let imageQueueProcessing = false;
+
+      // Process image queue concurrently (max 2 at a time to avoid rate limits)
+      async function processImageQueue() {
+        if (imageQueueProcessing) return;
+        imageQueueProcessing = true;
+
+        while (imageQueue.length > 0) {
+          // Process up to 2 images concurrently
+          const batch = imageQueue.splice(0, 2);
+          const results = await Promise.all(batch.map(async (item) => {
+            try {
+              const result = await generateArticleImage(
+                item.siteCode,
+                item.article,
+                item.articleId,
+                item.articleContent
+              );
+
+              if (result.success && (result.imageGenerated || result.cached)) {
+                step5ImagesGenerated++;
+                console.log(`Image ${result.cached ? 'cached' : 'generated'}: ${item.articleId} | Themes: ${result.themes?.join(', ') || 'N/A'}`);
+              }
+
+              // Update combined progress
+              updateCombinedProgress(
+                articlesGenerated,
+                step5ImagesGenerated,
+                totalArticlesToGenerate,
+                step5TotalImages,
+                `Processing images...`
+              );
+
+              return result;
+            } catch (err) {
+              console.error(`Image error for ${item.articleId}:`, err);
+              return { success: false };
+            }
+          }));
+        }
+
+        imageQueueProcessing = false;
+      }
 
       try {
         // Phase 1: Create folder structure and JSON files
@@ -2093,23 +2671,30 @@
         articlesGenerated = 0;
         step5ImagesGenerated = 0;
 
-        // Identify which articles are first in their category (for image generation)
-        identifyFirstArticlesInCategories(articles);
+        // NEW: Generate images for ALL articles, not just first in category
+        step5TotalImages = articles.length; // 36 images for 36 articles
 
-        document.getElementById('progressCount').textContent = `0 / ${totalArticlesToGenerate}`;
+        // Combined progress: 36 articles + 36 images = 72 steps
+        const totalSteps = totalArticlesToGenerate + step5TotalImages;
+        document.getElementById('progressCount').textContent = `0 / ${totalSteps} steps`;
 
-        // Phase 2: Generate content first, then images (using article ID)
-        // For each article, generate content. For first article in each category, also generate image using the article ID.
+        // Phase 2: Generate articles and queue images for parallel processing
+        console.log(`Starting generation: ${totalArticlesToGenerate} articles + ${step5TotalImages} images = ${totalSteps} total steps`);
+
         for (let i = 0; i < articles.length; i++) {
           const article = articles[i];
-          const isFirstInCategory = categoryFirstArticles.has(i);
 
-          // Update progress UI
-          const imageStatus = `Images: ${step5ImagesGenerated}/${step5TotalImages}`;
-          updateProgress(i, totalArticlesToGenerate, article.title, imageStatus);
+          // Update combined progress UI
+          updateCombinedProgress(
+            articlesGenerated,
+            step5ImagesGenerated,
+            totalArticlesToGenerate,
+            step5TotalImages,
+            `Writing: ${article.title.substring(0, 40)}...`
+          );
 
           try {
-            // Step 1: Generate article content first
+            // Step 1: Generate article content
             const contentResponse = await fetch('/api/website/generate-article-content', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -2120,33 +2705,53 @@
             if (articleResult.success) {
               articlesGenerated++;
 
-              // Step 2: For first article in category, generate image using the article ID
-              if (isFirstInCategory && articleResult.articleId) {
-                console.log(`Requesting image for first article in ${article.categoryName}: ${articleResult.articleId}`);
-                const imageResult = await generateArticleImage(siteCode, article, true, articleResult.articleId);
-                console.log(`Image result:`, imageResult);
+              // Step 2: Queue image generation (runs in parallel)
+              // Pass article content for theme extraction
+              imageQueue.push({
+                siteCode,
+                article: {
+                  ...article,
+                  title: articleResult.title
+                },
+                articleId: articleResult.articleId,
+                articleContent: articleResult.articleContent || '' // Content for theme extraction
+              });
 
-                if (imageResult.success && imageResult.imageGenerated) {
-                  step5ImagesGenerated++;
-                  console.log(`Article image generated: ${articleResult.articleId} (${article.categoryName})`);
-                } else if (imageResult.success && imageResult.cached) {
-                  step5ImagesGenerated++;
-                  console.log(`Article image cached: ${articleResult.articleId} (${article.categoryName})`);
-                }
-              }
+              // Start processing image queue in background (non-blocking)
+              processImageQueue();
+
+              console.log(`Article ${articlesGenerated}/${totalArticlesToGenerate}: "${article.title}" - Image queued`);
             } else {
               console.error(`Failed to generate article: ${article.title}`, articleResult.error);
               articlesGenerated++;
             }
 
-            // Update progress with image status
-            const newImageStatus = `Images: ${step5ImagesGenerated}/${step5TotalImages}`;
-            updateProgress(articlesGenerated, totalArticlesToGenerate, article.title, newImageStatus);
+            // Update combined progress
+            updateCombinedProgress(
+              articlesGenerated,
+              step5ImagesGenerated,
+              totalArticlesToGenerate,
+              step5TotalImages,
+              `Article ${articlesGenerated}/${totalArticlesToGenerate}`
+            );
 
           } catch (articleError) {
             console.error(`Error generating article: ${article.title}`, articleError);
             articlesGenerated++;
           }
+        }
+
+        // Wait for remaining images in queue to complete
+        document.getElementById('progressStatus').textContent = 'Finishing image generation...';
+        while (imageQueue.length > 0 || imageQueueProcessing) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          updateCombinedProgress(
+            articlesGenerated,
+            step5ImagesGenerated,
+            totalArticlesToGenerate,
+            step5TotalImages,
+            `Images: ${step5ImagesGenerated}/${step5TotalImages}`
+          );
         }
 
         // Phase 3: Finalize content generation

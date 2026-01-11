@@ -293,11 +293,141 @@
       color: #e8e8e8;
       font-size: 15px;
       line-height: 1.7;
+      text-align: justify;
+      text-justify: inter-word;
+    }
+
+    /* Streaming text cursor */
+    .assistant-bubble.streaming::after {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background-color: #ffbd59;
+      border-radius: 50%;
+      margin-left: 4px;
+      vertical-align: middle;
+      animation: streamingPulse 0.8s ease-in-out infinite;
+      box-shadow: 0 0 8px rgba(255, 189, 89, 0.6);
+    }
+
+    @keyframes streamingPulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.5;
+        transform: scale(0.85);
+      }
     }
 
     .assistant-time {
       font-size: 11px;
       color: #555;
+    }
+
+    /* Markdown Styling */
+    .assistant-bubble strong {
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .assistant-bubble em {
+      font-style: italic;
+      color: #f0f0f0;
+    }
+
+    .assistant-bubble .inline-code {
+      background: #2a2a2a;
+      color: #ffbd59;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 13px;
+    }
+
+    .assistant-bubble .code-block {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 12px 0;
+      overflow-x: auto;
+    }
+
+    .assistant-bubble .code-block code {
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 13px;
+      color: #e0e0e0;
+      line-height: 1.5;
+    }
+
+    .assistant-bubble .md-header {
+      color: #ffbd59;
+      margin: 16px 0 8px 0;
+      font-weight: 600;
+    }
+
+    .assistant-bubble h2.md-header {
+      font-size: 20px;
+    }
+
+    .assistant-bubble h3.md-header {
+      font-size: 17px;
+    }
+
+    .assistant-bubble h4.md-header {
+      font-size: 15px;
+    }
+
+    .assistant-bubble .md-list,
+    .assistant-bubble .md-list-num {
+      margin: 8px 0 8px 0;
+      padding-left: 20px;
+      list-style-position: outside;
+    }
+
+    .assistant-bubble .md-list {
+      list-style-type: disc;
+    }
+
+    .assistant-bubble .md-list-num {
+      list-style-type: decimal;
+    }
+
+    .assistant-bubble .md-list-item,
+    .assistant-bubble .md-list-item-num {
+      margin: 2px 0;
+      padding-left: 4px;
+      line-height: 1.7;
+    }
+
+    .assistant-bubble .md-quote {
+      border-left: 3px solid #ffbd59;
+      margin: 12px 0;
+      padding: 8px 16px;
+      background: rgba(255, 189, 89, 0.1);
+      color: #ccc;
+      font-style: italic;
+    }
+
+    .assistant-bubble .md-hr {
+      border: none;
+      border-top: 1px solid #444;
+      margin: 16px 0;
+    }
+
+    .assistant-bubble .md-link {
+      color: #ffbd59;
+      text-decoration: none;
+      border-bottom: 1px dotted #ffbd59;
+      transition: all 0.15s;
+    }
+
+    .assistant-bubble .md-link:hover {
+      color: #ffc970;
+      border-bottom-style: solid;
     }
 
     /* Message Actions - Grok style */
@@ -903,12 +1033,623 @@
       .input-area { padding: 16px; }
       .user-bubble { max-width: 85%; }
     }
+
+    /* Debug Panel Styles */
+    .debug-button {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      width: 36px;
+      height: 36px;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      transition: all 0.2s;
+    }
+
+    .debug-button:hover {
+      background: #3a3a3a;
+      border-color: #ffbd59;
+    }
+
+    .debug-button svg {
+      width: 20px;
+      height: 20px;
+      fill: #888;
+    }
+
+    .debug-button:hover svg {
+      fill: #ffbd59;
+    }
+
+    .debug-button.active {
+      background: #ffbd59;
+      border-color: #ffbd59;
+    }
+
+    .debug-button.active svg {
+      fill: #1a1a1a;
+    }
+
+    .debug-panel-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1001;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .debug-panel-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .debug-panel {
+      position: fixed;
+      top: 0;
+      right: -450px;
+      width: 450px;
+      max-width: 90vw;
+      height: 100vh;
+      background: #1a1a1a;
+      border-left: 1px solid #333;
+      z-index: 1002;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.3s ease;
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .debug-panel.open {
+      right: 0;
+    }
+
+    .debug-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: #222;
+      border-bottom: 1px solid #333;
+      flex-shrink: 0;
+    }
+
+    .debug-panel-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ffbd59;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .debug-panel-title svg {
+      width: 18px;
+      height: 18px;
+      fill: #ffbd59;
+    }
+
+    .debug-panel-close {
+      width: 28px;
+      height: 28px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .debug-panel-close:hover {
+      background: #333;
+    }
+
+    .debug-panel-close svg {
+      width: 16px;
+      height: 16px;
+      fill: #888;
+    }
+
+    .debug-panel-close:hover svg {
+      fill: #fff;
+    }
+
+    .debug-panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    /* Custom scrollbars for debug panel */
+    .debug-panel-content::-webkit-scrollbar,
+    .debug-section-body::-webkit-scrollbar,
+    .debug-log-content::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+
+    .debug-panel-content::-webkit-scrollbar-track,
+    .debug-section-body::-webkit-scrollbar-track,
+    .debug-log-content::-webkit-scrollbar-track {
+      background: #1a1a1a;
+      border-radius: 6px;
+    }
+
+    .debug-panel-content::-webkit-scrollbar-thumb,
+    .debug-section-body::-webkit-scrollbar-thumb,
+    .debug-log-content::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #ffbd59 0%, #e6a84d 100%);
+      border-radius: 6px;
+      border: 2px solid #1a1a1a;
+    }
+
+    .debug-panel-content::-webkit-scrollbar-thumb:hover,
+    .debug-section-body::-webkit-scrollbar-thumb:hover,
+    .debug-log-content::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #ffc970 0%, #ffbd59 100%);
+    }
+
+    .debug-panel-content::-webkit-scrollbar-corner,
+    .debug-section-body::-webkit-scrollbar-corner,
+    .debug-log-content::-webkit-scrollbar-corner {
+      background: #1a1a1a;
+    }
+
+    .debug-section {
+      margin-bottom: 20px;
+      background: #222;
+      border-radius: 8px;
+      border: 1px solid #333;
+      overflow: hidden;
+    }
+
+    .debug-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #282828;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .debug-section-header:hover {
+      background: #303030;
+    }
+
+    .debug-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #ddd;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .debug-section-title .badge {
+      background: #ffbd59;
+      color: #1a1a1a;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+
+    .debug-section-toggle {
+      width: 16px;
+      height: 16px;
+      fill: #666;
+      transition: transform 0.2s;
+    }
+
+    .debug-section.collapsed .debug-section-toggle {
+      transform: rotate(-90deg);
+    }
+
+    .debug-section-body {
+      padding: 12px 16px;
+      border-top: 1px solid #333;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .debug-section.collapsed .debug-section-body {
+      display: none;
+    }
+
+    .debug-log-entry {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #333;
+    }
+
+    .debug-log-entry:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .debug-log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .debug-log-type {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .debug-log-type.request {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .debug-log-type.response {
+      background: #16a34a;
+      color: #fff;
+    }
+
+    .debug-log-type.system {
+      background: #9333ea;
+      color: #fff;
+    }
+
+    .debug-log-time {
+      font-size: 11px;
+      color: #666;
+      font-family: monospace;
+    }
+
+    .debug-log-content {
+      background: #111;
+      border-radius: 4px;
+      padding: 12px;
+      overflow-x: auto;
+    }
+
+    .debug-log-content pre {
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 11px;
+      color: #aaa;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .debug-log-content .key {
+      color: #9cdcfe;
+    }
+
+    .debug-log-content .string {
+      color: #ce9178;
+    }
+
+    .debug-log-content .number {
+      color: #b5cea8;
+    }
+
+    .debug-log-content .boolean {
+      color: #569cd6;
+    }
+
+    .debug-log-content .null {
+      color: #569cd6;
+    }
+
+    .debug-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+      font-size: 13px;
+    }
+
+    .debug-empty svg {
+      width: 48px;
+      height: 48px;
+      fill: #333;
+      margin-bottom: 12px;
+    }
+
+    .debug-clear-btn {
+      width: 100%;
+      padding: 10px;
+      background: #333;
+      border: 1px solid #444;
+      border-radius: 6px;
+      color: #aaa;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 12px;
+    }
+
+    .debug-clear-btn:hover {
+      background: #444;
+      color: #fff;
+    }
+
+    .debug-info-row {
+      display: flex;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .debug-info-label {
+      color: #888;
+      width: 100px;
+      flex-shrink: 0;
+    }
+
+    .debug-info-value {
+      color: #ddd;
+      word-break: break-all;
+    }
+
+    .debug-info-value.truncate {
+      max-height: 60px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .debug-info-value.truncate::after {
+      content: '...';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: linear-gradient(to right, transparent, #222);
+      padding-left: 20px;
+    }
+
+    .debug-cost-footer {
+      padding: 16px;
+      background: #222;
+      border-top: 1px solid #333;
+      flex-shrink: 0;
+    }
+
+    .debug-cost-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .debug-cost-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .debug-cost-label {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .debug-cost-value {
+      font-size: 12px;
+      color: #ddd;
+      font-family: 'Monaco', 'Menlo', monospace;
+    }
+
+    .debug-cost-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      margin-top: 12px;
+      border-top: 1px solid #444;
+    }
+
+    .debug-cost-total .debug-cost-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffbd59;
+    }
+
+    .debug-cost-total .debug-cost-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffbd59;
+    }
+
+    .debug-openai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #10a37f;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
   </style>
 </head>
 <body>
   <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Debug Button -->
+  <button class="debug-button" id="debugButton" title="Debug & Audit Panel">
+    <svg viewBox="0 0 24 24">
+      <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+    </svg>
+  </button>
+
+  <!-- Debug Panel Overlay -->
+  <div class="debug-panel-overlay" id="debugPanelOverlay"></div>
+
+  <!-- Debug Panel -->
+  <div class="debug-panel" id="debugPanel">
+    <div class="debug-panel-header">
+      <div class="debug-panel-title">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+        </svg>
+        Debug & Audit
+      </div>
+      <button class="debug-panel-close" id="debugPanelClose" title="Close">
+        <svg viewBox="0 0 24 24">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="debug-panel-content" id="debugPanelContent">
+      <!-- Session Info Section -->
+      <div class="debug-section" id="debugSessionSection">
+        <div class="debug-section-header">
+          <div class="debug-section-title">Session Info</div>
+          <svg class="debug-section-toggle" viewBox="0 0 24 24">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+          </svg>
+        </div>
+        <div class="debug-section-body" id="debugSessionBody">
+          <div class="debug-info-row">
+            <span class="debug-info-label">Inspire Model:</span>
+            <span class="debug-info-value" id="debugModel">-</span>
+          </div>
+          <div class="debug-info-row">
+            <span class="debug-info-label">OpenAI Model:</span>
+            <span class="debug-info-value">
+              <span id="debugOpenAIModel">-</span>
+              <span class="debug-openai-badge" id="debugOpenAIBadge" style="display: none;">OpenAI</span>
+            </span>
+          </div>
+          <div class="debug-info-row">
+            <span class="debug-info-label">Persona:</span>
+            <span class="debug-info-value" id="debugPersona">-</span>
+          </div>
+          <div class="debug-info-row">
+            <span class="debug-info-label">Language:</span>
+            <span class="debug-info-value" id="debugLang">-</span>
+          </div>
+          <div class="debug-info-row">
+            <span class="debug-info-label">Conv. ID:</span>
+            <span class="debug-info-value" id="debugConvId">-</span>
+          </div>
+          <div class="debug-info-row">
+            <span class="debug-info-label">New Conv:</span>
+            <span class="debug-info-value" id="debugIsNew">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Prompt Section -->
+      <div class="debug-section" id="debugPromptSection">
+        <div class="debug-section-header">
+          <div class="debug-section-title">
+            System Prompt
+            <span class="badge" id="debugSystemPromptLength">0</span>
+          </div>
+          <svg class="debug-section-toggle" viewBox="0 0 24 24">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+          </svg>
+        </div>
+        <div class="debug-section-body">
+          <div class="debug-log-content">
+            <pre id="debugSystemPromptContent">No system prompt loaded</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Developer Prompt Section -->
+      <div class="debug-section" id="debugDeveloperSection">
+        <div class="debug-section-header">
+          <div class="debug-section-title">
+            Developer Prompt
+            <span class="badge" id="debugDeveloperPromptLength">0</span>
+          </div>
+          <svg class="debug-section-toggle" viewBox="0 0 24 24">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+          </svg>
+        </div>
+        <div class="debug-section-body">
+          <div class="debug-log-content">
+            <pre id="debugDeveloperPromptContent">No developer prompt loaded</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Declaration Section -->
+      <div class="debug-section" id="debugUserDeclarationSection">
+        <div class="debug-section-header">
+          <div class="debug-section-title">
+            User Declaration
+            <span class="badge" id="debugUserDeclarationLength">0</span>
+          </div>
+          <svg class="debug-section-toggle" viewBox="0 0 24 24">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+          </svg>
+        </div>
+        <div class="debug-section-body">
+          <div class="debug-log-content">
+            <pre id="debugUserDeclarationContent">No user declaration loaded</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Log Section -->
+      <div class="debug-section" id="debugLogSection">
+        <div class="debug-section-header">
+          <div class="debug-section-title">
+            API Log
+            <span class="badge" id="debugLogCount">0</span>
+          </div>
+          <svg class="debug-section-toggle" viewBox="0 0 24 24">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+          </svg>
+        </div>
+        <div class="debug-section-body" id="debugLogBody">
+          <div class="debug-empty" id="debugLogEmpty">
+            <svg viewBox="0 0 24 24">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+            </svg>
+            <div>No API calls logged yet</div>
+          </div>
+          <div id="debugLogEntries"></div>
+        </div>
+      </div>
+
+      <button class="debug-clear-btn" id="debugClearBtn">Clear All Logs</button>
+    </div>
+    <!-- Cost Footer -->
+    <div class="debug-cost-footer">
+      <div class="debug-cost-row">
+        <span class="debug-cost-label">Input Tokens:</span>
+        <span class="debug-cost-value" id="debugInputTokens">0</span>
+      </div>
+      <div class="debug-cost-row">
+        <span class="debug-cost-label">Output Tokens:</span>
+        <span class="debug-cost-value" id="debugOutputTokens">0</span>
+      </div>
+      <div class="debug-cost-row">
+        <span class="debug-cost-label">API Calls:</span>
+        <span class="debug-cost-value" id="debugApiCalls">0</span>
+      </div>
+      <div class="debug-cost-total">
+        <span class="debug-cost-label">Total Cost:</span>
+        <span class="debug-cost-value" id="debugTotalCost">$0.0000</span>
+      </div>
+    </div>
   </div>
 
   <!-- PIN Modal -->
@@ -1058,9 +1799,10 @@
     (function() {
       'use strict';
 
-      // API Configuration
+      // API Configuration - All APIs use InspireCodex.com (independent from JubileeVerse.com)
       var AUTH_API = 'https://inspirecodex.com';
-      var CHAT_API = 'https://www.jubileeverse.com';
+      var CHAT_API = 'https://inspirecodex.com';
+      var PROMPT_API = '/api/prompt';
 
       // State
       var accessToken = null;
@@ -1071,6 +1813,10 @@
       var selectedPersona = 'jubilee';
       var selectedLang = 'en';
       var selectedModel = 'gospelpulse';
+      var previousModel = 'gospelpulse'; // Track previous model for mid-conversation switching
+      var systemPrompt = ''; // Cached combined system prompt (hidden from user)
+      var promptLayers = { system: '', model: '', developer: '', userDeclarations: '' }; // Individual prompt layers
+      var isNewConversation = true; // Track if this is a new conversation
 
       // DOM Elements
       var loadingOverlay = document.getElementById('loadingOverlay');
@@ -1090,6 +1836,45 @@
       // Conversation cache key
       var CONVERSATION_CACHE_KEY = 'jubileeInspireConversation';
       var PIN_CACHE_KEY = 'jubileeInspirePrivatePin';
+      var MODEL_COOKIE_NAME = 'jubileeInspireModel';
+
+      // Cookie helper functions
+      function setCookie(name, value, days) {
+        var expires = '';
+        if (days) {
+          var date = new Date();
+          date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+          expires = '; expires=' + date.toUTCString();
+        }
+        document.cookie = name + '=' + encodeURIComponent(value) + expires + '; path=/; SameSite=Lax';
+      }
+
+      function getCookie(name) {
+        var nameEQ = name + '=';
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+          var c = ca[i];
+          while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+          if (c.indexOf(nameEQ) === 0) return decodeURIComponent(c.substring(nameEQ.length, c.length));
+        }
+        return null;
+      }
+
+      // Helper function to get user's first name from displayName
+      function getUserFirstName() {
+        if (userData && userData.displayName) {
+          // Split display name and return first part
+          var parts = userData.displayName.trim().split(/\s+/);
+          return parts[0] || 'Friend';
+        }
+        return 'Friend'; // Default fallback
+      }
+
+      // Helper function to inject user variables into prompt text
+      function injectPromptVariables(promptText) {
+        if (!promptText) return promptText;
+        return promptText.replace(/\{\{FIRST_NAME\}\}/g, getUserFirstName());
+      }
 
       // PIN Modal Elements
       var pinModalOverlay = document.getElementById('pinModalOverlay');
@@ -1102,6 +1887,256 @@
         document.getElementById('pin4')
       ];
       var privateChatPin = null;
+
+      // Debug Panel Elements
+      var debugButton = document.getElementById('debugButton');
+      var debugPanel = document.getElementById('debugPanel');
+      var debugPanelOverlay = document.getElementById('debugPanelOverlay');
+      var debugPanelClose = document.getElementById('debugPanelClose');
+      var debugClearBtn = document.getElementById('debugClearBtn');
+      var debugLogEntries = document.getElementById('debugLogEntries');
+      var debugLogEmpty = document.getElementById('debugLogEmpty');
+      var debugLogCount = document.getElementById('debugLogCount');
+      var debugPromptLength = document.getElementById('debugPromptLength');
+      var debugPromptContent = document.getElementById('debugPromptContent');
+
+      // Debug state
+      var debugLogs = [];
+      var openAIModel = 'gpt-4o-mini'; // Default OpenAI model used by the backend
+      var costTracking = {
+        inputTokens: 0,
+        outputTokens: 0,
+        apiCalls: 0,
+        totalCost: 0
+      };
+
+      // OpenAI pricing per 1M tokens (as of 2024)
+      var OPENAI_PRICING = {
+        'gpt-4o': { input: 2.50, output: 10.00 },
+        'gpt-4o-mini': { input: 0.15, output: 0.60 },
+        'gpt-4-turbo': { input: 10.00, output: 30.00 },
+        'gpt-4': { input: 30.00, output: 60.00 },
+        'gpt-3.5-turbo': { input: 0.50, output: 1.50 }
+      };
+
+      // Debug Panel Functions
+      function openDebugPanel() {
+        debugButton.classList.add('active');
+        debugPanel.classList.add('open');
+        debugPanelOverlay.classList.add('open');
+        updateDebugSessionInfo();
+        updateDebugPromptDisplay();
+      }
+
+      function closeDebugPanel() {
+        debugButton.classList.remove('active');
+        debugPanel.classList.remove('open');
+        debugPanelOverlay.classList.remove('open');
+      }
+
+      function toggleDebugPanel() {
+        if (debugPanel.classList.contains('open')) {
+          closeDebugPanel();
+        } else {
+          openDebugPanel();
+        }
+      }
+
+      function updateDebugSessionInfo() {
+        document.getElementById('debugModel').textContent = selectedModel || '-';
+        document.getElementById('debugOpenAIModel').textContent = openAIModel || '-';
+        var badge = document.getElementById('debugOpenAIBadge');
+        if (openAIModel && badge) {
+          badge.style.display = 'inline-flex';
+        }
+        document.getElementById('debugPersona').textContent = selectedPersona || '-';
+        document.getElementById('debugLang').textContent = selectedLang || '-';
+        document.getElementById('debugConvId').textContent = conversationId || '(new)';
+        document.getElementById('debugIsNew').textContent = isNewConversation ? 'Yes' : 'No';
+      }
+
+      function updateDebugCostDisplay() {
+        document.getElementById('debugInputTokens').textContent = costTracking.inputTokens.toLocaleString();
+        document.getElementById('debugOutputTokens').textContent = costTracking.outputTokens.toLocaleString();
+        document.getElementById('debugApiCalls').textContent = costTracking.apiCalls;
+        document.getElementById('debugTotalCost').textContent = '$' + costTracking.totalCost.toFixed(4);
+      }
+
+      function estimateTokens(text) {
+        // Rough estimation: ~4 characters per token for English text
+        if (!text) return 0;
+        return Math.ceil(text.length / 4);
+      }
+
+      function calculateCost(inputTokens, outputTokens, model) {
+        var pricing = OPENAI_PRICING[model] || OPENAI_PRICING['gpt-4o'];
+        // Pricing is per 1M tokens
+        var inputCost = (inputTokens / 1000000) * pricing.input;
+        var outputCost = (outputTokens / 1000000) * pricing.output;
+        return inputCost + outputCost;
+      }
+
+      function trackApiCost(inputText, outputText, model) {
+        var inputTokens = estimateTokens(inputText);
+        var outputTokens = estimateTokens(outputText);
+        var cost = calculateCost(inputTokens, outputTokens, model || openAIModel);
+
+        costTracking.inputTokens += inputTokens;
+        costTracking.outputTokens += outputTokens;
+        costTracking.apiCalls += 1;
+        costTracking.totalCost += cost;
+
+        updateDebugCostDisplay();
+
+        return {
+          inputTokens: inputTokens,
+          outputTokens: outputTokens,
+          cost: cost
+        };
+      }
+
+      function resetCostTracking() {
+        costTracking = {
+          inputTokens: 0,
+          outputTokens: 0,
+          apiCalls: 0,
+          totalCost: 0
+        };
+        updateDebugCostDisplay();
+      }
+
+      function updateDebugPromptDisplay() {
+        var systemPromptEl = document.getElementById('debugSystemPromptContent');
+        var systemLengthEl = document.getElementById('debugSystemPromptLength');
+        var developerPromptEl = document.getElementById('debugDeveloperPromptContent');
+        var developerLengthEl = document.getElementById('debugDeveloperPromptLength');
+        var userDeclarationEl = document.getElementById('debugUserDeclarationContent');
+        var userDeclarationLengthEl = document.getElementById('debugUserDeclarationLength');
+
+        // System Prompt (Layer 1)
+        if (promptLayers.system) {
+          systemPromptEl.textContent = promptLayers.system;
+          systemLengthEl.textContent = promptLayers.system.length + ' chars';
+        } else {
+          systemPromptEl.textContent = 'No system prompt loaded';
+          systemLengthEl.textContent = '0';
+        }
+
+        // Developer Prompt (Layers 2 & 3: Model + Developer)
+        var developerContent = '';
+        if (promptLayers.model) {
+          developerContent += '--- Model: ' + selectedModel.toUpperCase() + ' ---\n';
+          developerContent += promptLayers.model;
+        }
+        if (promptLayers.developer) {
+          if (developerContent) developerContent += '\n\n';
+          developerContent += '--- Developer Guidance ---\n';
+          developerContent += promptLayers.developer;
+        }
+
+        if (developerContent) {
+          developerPromptEl.textContent = developerContent;
+          var devLength = (promptLayers.model || '').length + (promptLayers.developer || '').length;
+          developerLengthEl.textContent = devLength + ' chars';
+        } else {
+          developerPromptEl.textContent = 'No developer prompt loaded';
+          developerLengthEl.textContent = '0';
+        }
+
+        // User Declaration (injected as user role for identity awareness)
+        if (promptLayers.userDeclarations) {
+          userDeclarationEl.textContent = promptLayers.userDeclarations;
+          userDeclarationLengthEl.textContent = promptLayers.userDeclarations.length + ' chars';
+        } else {
+          userDeclarationEl.textContent = 'No user declaration loaded';
+          userDeclarationLengthEl.textContent = '0';
+        }
+      }
+
+      function formatJsonForDisplay(obj) {
+        try {
+          return JSON.stringify(obj, null, 2);
+        } catch (e) {
+          return String(obj);
+        }
+      }
+
+      function formatTimestamp(date) {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) +
+               '.' + String(date.getMilliseconds()).padStart(3, '0');
+      }
+
+      function addDebugLog(type, data) {
+        var entry = {
+          type: type,
+          data: data,
+          timestamp: new Date()
+        };
+        debugLogs.push(entry);
+
+        // Update UI
+        debugLogEmpty.style.display = 'none';
+        debugLogCount.textContent = debugLogs.length;
+
+        var entryEl = document.createElement('div');
+        entryEl.className = 'debug-log-entry';
+        entryEl.innerHTML =
+          '<div class="debug-log-header">' +
+            '<span class="debug-log-type ' + type + '">' + type + '</span>' +
+            '<span class="debug-log-time">' + formatTimestamp(entry.timestamp) + '</span>' +
+          '</div>' +
+          '<div class="debug-log-content">' +
+            '<pre>' + escapeHtml(formatJsonForDisplay(data)) + '</pre>' +
+          '</div>';
+
+        debugLogEntries.appendChild(entryEl);
+
+        // Auto-scroll to bottom if panel is open
+        if (debugPanel.classList.contains('open')) {
+          var logBody = document.getElementById('debugLogBody');
+          logBody.scrollTop = logBody.scrollHeight;
+        }
+
+        // Update session info
+        updateDebugSessionInfo();
+      }
+
+      function clearDebugLogs() {
+        debugLogs = [];
+        debugLogEntries.innerHTML = '';
+        debugLogEmpty.style.display = 'block';
+        debugLogCount.textContent = '0';
+        // Also reset cost tracking when clearing logs
+        resetCostTracking();
+      }
+
+      function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      // Debug section toggle
+      function setupDebugSectionToggles() {
+        var sections = document.querySelectorAll('.debug-section');
+        sections.forEach(function(section) {
+          var header = section.querySelector('.debug-section-header');
+          if (header) {
+            header.addEventListener('click', function() {
+              section.classList.toggle('collapsed');
+            });
+          }
+        });
+      }
+
+      // Debug panel event listeners
+      debugButton.addEventListener('click', toggleDebugPanel);
+      debugPanelClose.addEventListener('click', closeDebugPanel);
+      debugPanelOverlay.addEventListener('click', closeDebugPanel);
+      debugClearBtn.addEventListener('click', clearDebugLogs);
+
+      // Initialize debug section toggles
+      setupDebugSectionToggles();
 
       // Check authentication
       function checkAuth() {
@@ -1182,12 +2217,76 @@
         window.location.href = '/login?redirect=' + encodeURIComponent(returnUrl);
       }
 
+      /**
+       * Fetch system prompt for the selected model
+       * This is called silently and the prompt is never shown to the user
+       * Returns all three layers: system, model-specific, and developer
+       */
+      function fetchSystemPrompt(model, callback) {
+        var url = PROMPT_API + '?model=' + encodeURIComponent(model || '');
+        fetch(url)
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success) {
+              // Store individual layers for display and mid-conversation switching
+              // Apply variable injection (e.g., {{FIRST_NAME}}) to all prompt layers
+              if (data.layers) {
+                promptLayers = {
+                  system: injectPromptVariables(data.layers.system || ''),
+                  model: injectPromptVariables(data.layers.model || ''),
+                  developer: injectPromptVariables(data.layers.developer || ''),
+                  // User declarations are injected as user role message for identity awareness
+                  // This is NOT displayed in UI but sent to model as user-provided information
+                  userDeclarations: injectPromptVariables(data.layers.userDeclarations || '')
+                };
+              }
+
+              // Store the combined prompt for sending to API (with variables injected)
+              systemPrompt = injectPromptVariables(data.combined || data.prompt || '');
+
+              // Log system prompt load to debug panel
+              addDebugLog('system', {
+                event: 'System Prompt Loaded (4 Layers)',
+                model: data.model || model || 'default',
+                layers: {
+                  system: promptLayers.system ? promptLayers.system.length + ' chars' : 'empty',
+                  model: promptLayers.model ? promptLayers.model.length + ' chars' : 'empty',
+                  developer: promptLayers.developer ? promptLayers.developer.length + ' chars' : 'empty',
+                  userDeclarations: promptLayers.userDeclarations ? promptLayers.userDeclarations.length + ' chars (hidden)' : 'empty'
+                },
+                combinedLength: systemPrompt.length,
+                source: url
+              });
+              // Update debug panel display
+              updateDebugPromptDisplay();
+            }
+            if (callback) callback();
+          })
+          .catch(function(err) {
+            console.warn('Failed to fetch system prompt:', err);
+            addDebugLog('system', {
+              event: 'System Prompt Load Failed',
+              model: model || 'default',
+              error: err.message || 'Unknown error'
+            });
+            if (callback) callback();
+          });
+      }
+
       function initChat() {
         // Hide loading overlay
         loadingOverlay.classList.add('hidden');
 
         // Restore private PIN from cache
         restorePrivatePin();
+
+        // Check for model preference in cookie (before restoring conversation)
+        var savedModel = getCookie(MODEL_COOKIE_NAME);
+        if (savedModel && ['gospelpulse', 'kingdombuilder', 'hebrewroots', 'messianic'].indexOf(savedModel) !== -1) {
+          selectedModel = savedModel;
+          previousModel = savedModel;
+          updateModelDropdownUI(savedModel);
+        }
 
         // Restore cached conversation
         restoreConversation();
@@ -1198,14 +2297,22 @@
         selectedPersona = params.get('persona') || 'jubilee';
         selectedLang = params.get('lang') || 'en';
 
-        // If there's an initial query, send it
-        if (initialQuery) {
-          messageInput.value = initialQuery;
-          // Clean URL
-          window.history.replaceState({}, document.title, '/chat');
-          // Send the message
-          sendMessage();
-        }
+        // Determine if this came from home page (no model param means use default)
+        var fromHomePage = !params.get('model');
+
+        // Fetch system prompt based on context
+        // Use cookie-saved model preference for the prompt
+        var promptModel = selectedModel;
+        fetchSystemPrompt(promptModel, function() {
+          // If there's an initial query, send it after prompt is loaded
+          if (initialQuery) {
+            messageInput.value = initialQuery;
+            // Clean URL
+            window.history.replaceState({}, document.title, '/chat');
+            // Send the message
+            sendMessage();
+          }
+        });
 
         // Set current year in footer
         var currentYearSpan = document.getElementById('currentYear');
@@ -1287,6 +2394,10 @@
               welcomeState.style.display = 'none';
             }
 
+            // Mark as not a new conversation since we have history
+            // The system prompt was already sent in the original conversation
+            isNewConversation = false;
+
             // Render cached messages
             cacheData.messages.forEach(function(msg) {
               if (msg.type === 'user') {
@@ -1331,7 +2442,7 @@
         var row = document.createElement('div');
         row.className = 'message-row user';
         row.innerHTML =
-          '<div class="user-bubble">' + escapeHtml(content) + '</div>' +
+          '<div class="user-bubble">' + escapeHtml(content).replace(/\n/g, '<br>') + '</div>' +
           '<div class="user-time">' + time + '</div>';
         return row;
       }
@@ -1347,7 +2458,7 @@
           '<div class="assistant-content">' +
             '<img src="jubilee-profile.png" alt="Jubilee" class="assistant-avatar">' +
             '<div class="assistant-text">' +
-              '<div class="assistant-bubble">' + escapeHtml(content) + '</div>' +
+              '<div class="assistant-bubble">' + parseMarkdown(content) + '</div>' +
               '<div class="message-actions">' +
                 '<button class="action-btn" data-tooltip="Regenerate" data-action="regenerate">' +
                   '<svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4c-4.42 0-8 3.58-8 8s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>' +
@@ -1387,6 +2498,129 @@
         return row;
       }
 
+      /**
+       * Create a streaming assistant message that types out character by character
+       * Returns an object with the row element and a stream() method to add text
+       */
+      function createStreamingAssistantMessage() {
+        var row = document.createElement('div');
+        row.className = 'message-row assistant';
+        row.id = 'streamingMessage';
+        var messageId = 'msg-' + Date.now();
+
+        row.innerHTML =
+          '<div class="assistant-content">' +
+            '<img src="jubilee-profile.png" alt="Jubilee" class="assistant-avatar">' +
+            '<div class="assistant-text">' +
+              '<div class="assistant-bubble streaming" id="streamingBubble"></div>' +
+            '</div>' +
+          '</div>';
+
+        var bubble = row.querySelector('.assistant-bubble');
+        var fullContent = '';
+        var displayedContent = '';
+        var streamInterval = null;
+        var charIndex = 0;
+        var startTime = Date.now();
+
+        return {
+          element: row,
+
+          // Add content to be streamed
+          addContent: function(text) {
+            fullContent += text;
+          },
+
+          // Start streaming the content
+          startStreaming: function(content, onComplete) {
+            fullContent = content;
+            charIndex = 0;
+            displayedContent = '';
+
+            // Stream speed: characters per interval
+            var charsPerTick = 2; // Adjust for faster/slower streaming
+            var intervalMs = 15; // Milliseconds between ticks
+
+            streamInterval = setInterval(function() {
+              if (charIndex < fullContent.length) {
+                // Add characters
+                var endIndex = Math.min(charIndex + charsPerTick, fullContent.length);
+                displayedContent = fullContent.substring(0, endIndex);
+                // Use parseMarkdown to render formatting as we stream
+                bubble.innerHTML = parseMarkdown(displayedContent);
+                charIndex = endIndex;
+
+                // Scroll to keep message visible
+                scrollToBottom();
+              } else {
+                // Streaming complete - render final markdown
+                bubble.innerHTML = parseMarkdown(fullContent);
+                clearInterval(streamInterval);
+                bubble.classList.remove('streaming');
+
+                if (onComplete) {
+                  onComplete();
+                }
+              }
+            }, intervalMs);
+          },
+
+          // Finalize the message with actions
+          finalize: function(time, responseMs) {
+            var speedLabel = responseMs < 1000 ? 'Fast' : responseMs < 3000 ? 'Normal' : 'Slow';
+            var timeDisplay = responseMs < 1000 ? responseMs + 'ms' : (responseMs / 1000).toFixed(1) + 's';
+
+            // Remove streaming class if still present
+            bubble.classList.remove('streaming');
+
+            // Add actions below the bubble
+            var actionsHtml =
+              '<div class="message-actions">' +
+                '<button class="action-btn" data-tooltip="Regenerate" data-action="regenerate">' +
+                  '<svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4c-4.42 0-8 3.58-8 8s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>' +
+                '</button>' +
+                '<button class="action-btn" data-tooltip="Read aloud" data-action="speak">' +
+                  '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>' +
+                '</button>' +
+                '<button class="action-btn" data-tooltip="Copy" data-action="copy" data-message-id="' + messageId + '">' +
+                  '<svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>' +
+                '</button>' +
+                '<button class="action-btn" data-tooltip="Share" data-action="share">' +
+                  '<svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>' +
+                '</button>' +
+                '<div class="action-divider"></div>' +
+                '<button class="action-btn" data-tooltip="Good response" data-action="like">' +
+                  '<svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>' +
+                '</button>' +
+                '<button class="action-btn" data-tooltip="Bad response" data-action="dislike">' +
+                  '<svg viewBox="0 0 24 24"><path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/></svg>' +
+                '</button>' +
+                '<div class="more-options-wrapper">' +
+                  '<button class="action-btn" data-tooltip="More options" data-action="more">' +
+                    '<svg viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>' +
+                  '</button>' +
+                  '<div class="more-options-menu">' +
+                    '<button data-action="report">Report Issue</button>' +
+                    '<button data-action="export-pdf">Export to PDF</button>' +
+                  '</div>' +
+                '</div>' +
+                '<div class="response-time"><span>' + timeDisplay + '</span><span class="response-speed">' + speedLabel + '</span></div>' +
+              '</div>';
+
+            var textContainer = row.querySelector('.assistant-text');
+            textContainer.insertAdjacentHTML('beforeend', actionsHtml);
+
+            // Store content and remove streaming ID
+            row.dataset.content = fullContent;
+            row.id = '';
+          },
+
+          getContent: function() {
+            return fullContent;
+          }
+        };
+      }
+
       function createTypingIndicator() {
         var row = document.createElement('div');
         row.className = 'typing-row';
@@ -1404,7 +2638,111 @@
       function escapeHtml(text) {
         var div = document.createElement('div');
         div.textContent = text;
-        return div.innerHTML.replace(/\n/g, '<br>');
+        return div.innerHTML;
+      }
+
+      /**
+       * Parse markdown-style formatting and convert to HTML
+       * Supports: **bold**, *italic*, `code`, ```code blocks```, lists, headers
+       */
+      function parseMarkdown(text) {
+        if (!text) return '';
+
+        // First, escape HTML to prevent XSS
+        var escaped = escapeHtml(text);
+
+        // Process code blocks first (```code```) - must be done before other formatting
+        escaped = escaped.replace(/```(\w*)\n?([\s\S]*?)```/g, function(match, lang, code) {
+          return '<pre class="code-block"><code>' + code.trim() + '</code></pre>';
+        });
+
+        // Inline code (`code`)
+        escaped = escaped.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+
+        // Bold (**text** or __text__)
+        escaped = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        escaped = escaped.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+
+        // Italic (*text* or _text_) - be careful not to match inside words
+        escaped = escaped.replace(/(?<![*\w])\*([^*]+)\*(?![*\w])/g, '<em>$1</em>');
+        escaped = escaped.replace(/(?<![_\w])_([^_]+)_(?![_\w])/g, '<em>$1</em>');
+
+        // Headers (# Header)
+        escaped = escaped.replace(/^### (.+)$/gm, '<h4 class="md-header">$1</h4>');
+        escaped = escaped.replace(/^## (.+)$/gm, '<h3 class="md-header">$1</h3>');
+        escaped = escaped.replace(/^# (.+)$/gm, '<h2 class="md-header">$1</h2>');
+
+        // Process lists by splitting into lines and grouping
+        // Also handle blank lines between list items
+        var lines = escaped.split('\n');
+        var result = [];
+        var i = 0;
+
+        while (i < lines.length) {
+          var line = lines[i];
+
+          // Check for unordered list item (- or *)
+          if (/^[\-\*] .+/.test(line)) {
+            var listItems = [];
+            while (i < lines.length) {
+              if (/^[\-\*] .+/.test(lines[i])) {
+                listItems.push('<li class="md-list-item">' + lines[i].replace(/^[\-\*] /, '') + '</li>');
+                i++;
+              } else if (lines[i].trim() === '' && i + 1 < lines.length && /^[\-\*] .+/.test(lines[i + 1])) {
+                // Skip blank line if next line is also a list item
+                i++;
+              } else {
+                break;
+              }
+            }
+            result.push('<ul class="md-list">' + listItems.join('') + '</ul>');
+            continue;
+          }
+
+          // Check for numbered list item (1. 2. etc)
+          if (/^\d+\. .+/.test(line)) {
+            var listItems = [];
+            while (i < lines.length) {
+              if (/^\d+\. .+/.test(lines[i])) {
+                listItems.push('<li class="md-list-item-num">' + lines[i].replace(/^\d+\. /, '') + '</li>');
+                i++;
+              } else if (lines[i].trim() === '' && i + 1 < lines.length && /^\d+\. .+/.test(lines[i + 1])) {
+                // Skip blank line if next line is also a list item
+                i++;
+              } else {
+                break;
+              }
+            }
+            result.push('<ol class="md-list-num">' + listItems.join('') + '</ol>');
+            continue;
+          }
+
+          // Regular line
+          result.push(line);
+          i++;
+        }
+
+        escaped = result.join('\n');
+
+        // Blockquotes (> text)
+        escaped = escaped.replace(/^&gt; (.+)$/gm, '<blockquote class="md-quote">$1</blockquote>');
+        escaped = escaped.replace(/<\/blockquote>\n<blockquote class="md-quote">/g, '<br>');
+
+        // Horizontal rule (--- or ***)
+        escaped = escaped.replace(/^---$/gm, '<hr class="md-hr">');
+        escaped = escaped.replace(/^\*\*\*$/gm, '<hr class="md-hr">');
+
+        // Links [text](url) - basic support
+        escaped = escaped.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="md-link" target="_blank" rel="noopener">$1</a>');
+
+        // Convert newlines to <br> (but not inside code blocks)
+        escaped = escaped.replace(/\n/g, '<br>');
+
+        // Clean up extra <br> tags around block elements
+        escaped = escaped.replace(/<br><(pre|ul|ol|blockquote|h[2-4])/g, '<$1');
+        escaped = escaped.replace(/<\/(pre|ul|ol|blockquote|h[2-4])><br>/g, '</$1>');
+
+        return escaped;
       }
 
       function scrollToBottom() {
@@ -1450,24 +2788,84 @@
         var personaName = selectedPersona.charAt(0).toUpperCase() + selectedPersona.slice(1) + ' Inspire';
         var requestStartTime = Date.now();
 
+        // Prepare message with system prompt prefix for new conversations
+        // The system prompt is silently prepended and invisible to the user
+        var messageToSend = content;
+        var historyToSend = conversationHistory.slice(-10);
+
+        var includedSystemPrompt = false;
+        var includedDeveloperPrompt = false;
+        var includedUserDeclarations = false;
+        if (isNewConversation && promptLayers.system) {
+          // Layer 1 (system) goes as system prompt
+          historyToSend = [{ role: 'system', content: promptLayers.system }].concat(historyToSend);
+          includedSystemPrompt = true;
+
+          // Layers 2 & 3 (model + developer) go as developer prompt
+          var developerContent = [promptLayers.model, promptLayers.developer]
+            .filter(function(p) { return p && p.length > 0; })
+            .join('\n\n---\n\n');
+          if (developerContent) {
+            historyToSend = [{ role: 'developer', content: developerContent }].concat(historyToSend);
+            includedDeveloperPrompt = true;
+          }
+
+          // User declarations injection (invisible to UI, sent as user role for identity awareness)
+          // This allows the model to truthfully acknowledge user-provided identity information
+          // Must be injected AFTER system/developer prompts but BEFORE visible user messages
+          if (promptLayers.userDeclarations) {
+            historyToSend.push({ role: 'user', content: promptLayers.userDeclarations });
+            includedUserDeclarations = true;
+          }
+
+          isNewConversation = false; // Only prepend on first message
+        }
+
+        // Prepare request payload
+        var requestPayload = {
+          message: messageToSend,
+          conversationHistory: historyToSend,
+          personaName: personaName,
+          conversationId: conversationId,
+          inspireModel: selectedModel,
+          responseLanguage: selectedLang,
+          systemPrompt: includedSystemPrompt ? promptLayers.system : '',
+          developerPrompt: includedDeveloperPrompt ? [promptLayers.model, promptLayers.developer].filter(function(p) { return p && p.length > 0; }).join('\n\n---\n\n') : ''
+        };
+
+        // Log the request to debug panel (note: userDeclarations content is not logged for privacy)
+        addDebugLog('request', {
+          endpoint: CHAT_API + '/Home/ChatWithJubilee',
+          method: 'POST',
+          includedSystemPrompt: includedSystemPrompt,
+          includedDeveloperPrompt: includedDeveloperPrompt,
+          includedUserDeclarations: includedUserDeclarations,
+          systemPromptLength: includedSystemPrompt ? promptLayers.system.length : 0,
+          developerPromptLength: includedDeveloperPrompt ? (promptLayers.model.length + promptLayers.developer.length) : 0,
+          userDeclarationsLength: includedUserDeclarations ? promptLayers.userDeclarations.length : 0,
+          payload: requestPayload
+        });
+
         fetch(CHAT_API + '/Home/ChatWithJubilee', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
           },
-          body: JSON.stringify({
-            message: content,
-            conversationHistory: conversationHistory.slice(-10),
-            personaName: personaName,
-            conversationId: conversationId,
-            inspireModel: selectedModel,
-            responseLanguage: selectedLang
-          })
+          body: JSON.stringify(requestPayload)
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
           var responseTime = Date.now() - requestStartTime;
+
+          // Log the response to debug panel
+          addDebugLog('response', {
+            responseTime: responseTime + 'ms',
+            success: data.success,
+            conversationId: data.conversation ? data.conversation.id : null,
+            responseLength: data.response ? data.response.length : 0,
+            data: data
+          });
 
           // Remove typing indicator
           var indicator = document.getElementById('typingIndicator');
@@ -1479,17 +2877,50 @@
               conversationId = data.conversation.id;
             }
 
+            // Update OpenAI model if returned from API
+            if (data.model) {
+              openAIModel = data.model;
+            }
+
+            // Calculate input text (message + prompts if included)
+            var inputText = content;
+            if (includedSystemPrompt) {
+              inputText = promptLayers.system + '\n' + content;
+            }
+            if (includedDeveloperPrompt) {
+              inputText = promptLayers.model + '\n' + promptLayers.developer + '\n' + inputText;
+            }
+
+            // Track API cost
+            var costInfo = trackApiCost(inputText, data.response, openAIModel);
+
+            // Log cost info to debug
+            addDebugLog('system', {
+              event: 'Cost Tracked',
+              model: openAIModel,
+              inputTokens: costInfo.inputTokens,
+              outputTokens: costInfo.outputTokens,
+              callCost: '$' + costInfo.cost.toFixed(4),
+              totalCost: '$' + costTracking.totalCost.toFixed(4)
+            });
+
             // Add to history
             conversationHistory.push({ role: 'assistant', content: data.response });
 
-            // Add assistant message with response time
-            var assistantTime = formatTime(new Date());
-            var assistantMsg = createAssistantMessage(data.response, assistantTime, responseTime);
-            messagesWrapper.appendChild(assistantMsg);
+            // Create streaming message and add to DOM
+            var streamingMsg = createStreamingAssistantMessage();
+            messagesWrapper.appendChild(streamingMsg.element);
             scrollToBottom();
 
-            // Save conversation after assistant response
-            saveConversation();
+            // Start streaming the response with yellow dot cursor
+            streamingMsg.startStreaming(data.response, function() {
+              // When streaming is complete, finalize with actions
+              var assistantTime = formatTime(new Date());
+              streamingMsg.finalize(assistantTime, responseTime);
+
+              // Save conversation after streaming is complete
+              saveConversation();
+            });
           } else {
             showError('Sorry, I could not process your request. Please try again.');
           }
@@ -1537,6 +2968,15 @@
 
         // Clear conversation cache
         localStorage.removeItem(CONVERSATION_CACHE_KEY);
+
+        // Reset conversation state
+        isNewConversation = true;
+
+        // Reset cost tracking for new conversation
+        resetCostTracking();
+
+        // Fetch fresh system prompt for the selected model
+        fetchSystemPrompt(selectedModel);
 
         // Re-add welcome state
         var newWelcome = document.createElement('div');
@@ -1714,7 +3154,12 @@
         inspireMenu.querySelectorAll('.inspire-menu-item').forEach(function(item) {
           item.addEventListener('click', function() {
             var model = this.dataset.model;
+            var wasDifferentModel = selectedModel !== model;
+            previousModel = selectedModel;
             selectedModel = model;
+
+            // Save model preference to cookie (expires in 365 days)
+            setCookie(MODEL_COOKIE_NAME, model, 365);
 
             // Update UI
             updateModelDropdownUI(model);
@@ -1722,9 +3167,48 @@
             // Close menu
             inspireMenu.classList.remove('open');
 
+            // Fetch new system prompt for the selected model
+            fetchSystemPrompt(model, function() {
+              // If this is a mid-conversation model switch (not a new conversation)
+              // we need to inject the new model prompt into the conversation
+              if (wasDifferentModel && !isNewConversation && conversationHistory.length > 0) {
+                injectModelSwitchPrompt(previousModel, model);
+              }
+            });
+
             // Save conversation with new model
             saveConversation();
           });
+        });
+      }
+
+      /**
+       * Inject a model switch prompt into an active conversation
+       * This allows changing models mid-conversation without restarting
+       */
+      function injectModelSwitchPrompt(fromModel, toModel) {
+        if (!promptLayers.model) return;
+
+        // Create a transition message that includes the new model prompt
+        var transitionPrompt = '--- MODEL SWITCH ---\n';
+        transitionPrompt += 'The user has switched from ' + fromModel + ' to ' + toModel + ' mode.\n';
+        transitionPrompt += 'Please adjust your responses according to the following guidance:\n\n';
+        transitionPrompt += promptLayers.model;
+
+        // Add the transition as a system message to the conversation history
+        // This is invisible to the user but guides the AI
+        conversationHistory.push({
+          role: 'system',
+          content: transitionPrompt
+        });
+
+        // Log this to debug panel
+        addDebugLog('system', {
+          event: 'Mid-Conversation Model Switch',
+          fromModel: fromModel,
+          toModel: toModel,
+          injectedPromptLength: transitionPrompt.length,
+          note: 'Model prompt injected without restarting conversation'
         });
       }
 

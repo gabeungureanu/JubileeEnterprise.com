@@ -1,0 +1,35 @@
+{
+  "siteCode": "WEB-HOME-881342",
+  "domain": "home.pentecostal",
+  "inspireDomain": "home.pentecostal",
+  "publicDomain": null,
+  "primaryEnvironment": "INSPIRE",
+  "wwbwPaths": {
+    "inspirePath": "C:\\data\\JubileeEnterprise.com\\websites\\codex\\wwBibleweb.com\\pentecostal\\home",
+    "publicPath": null,
+    "primaryPath": "C:\\data\\JubileeEnterprise.com\\websites\\codex\\wwBibleweb.com\\pentecostal\\home"
+  },
+  "overview": "This website is designed specifically for Pentecostal individuals, offering content that is relevant, encouraging, and spiritually enriching. Its purpose is to help users draw nearer to God and to live out the Word of God more fully in their daily lives, providing inspiration, guidance, and tools that align with Pentecostal values and biblical truth.",
+  "categoryCount": 3,
+  "quickMode": false,
+  "contentType": "FB",
+  "analysis": {
+    "contentType": "FB",
+    "confidence": "high",
+    "reasoning": "The domain name 'home.pentecostal' directly references a specific Christian denomination, indicating a focus on faith-based content.",
+    "keywords": [
+      "home",
+      "pentecostal"
+    ],
+    "niche": "Christian Faith",
+    "tone": "inspirational"
+  },
+  "writersCount": 12,
+  "createdAt": "2026-01-10T23:48:05.913Z",
+  "status": "step6_complete",
+  "categoriesGeneratedAt": "2026-01-10T23:48:20.700Z",
+  "totalArticles": 36,
+  "articlesGeneratedAt": "2026-01-10T23:48:49.218Z",
+  "contentGeneratedAt": "2026-01-11T00:05:00.109Z",
+  "websiteBuiltAt": "2026-01-11T00:05:00.163Z"
+}

@@ -1,0 +1,212 @@
+body {
+	margin: 0px;
+	font-family: 'Open Sans', sans-serif;
+	font-size: 1em;
+	background-color: #000;
+	color: #EEE;
+}
+#layout {
+	width: 100%;
+	margin-left: auto;
+	margin-right: auto;
+}
+#myBackVideo {
+  	position: relative;
+  	right: 0;
+  	bottom: 0;
+  	min-width: 100%;
+  	min-height: 100%;
+  	z-index:0;
+}
+#trailerVideo {
+	position:absolute;
+	inset:0;
+	margin:auto;
+	width: 65%;
+	height: auto;
+}
+.menu-shower {
+  display: none;
+}
+.hamburger {
+  display:none;
+}
+#menu {
+	width: 400px;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	z-index: 1;
+	background-image: url(../images/menu_bk.png);
+	background-repeat: repeat;
+	text-align: center;
+	padding-top: 50px;
+	height: 800px;
+}
+#menu a {
+	text-decoration: none;
+	color: #FFF;
+	font-size: 1em;
+	width: 240px;
+	height: 35px;
+	text-align: center;
+	padding-top: 15px;
+	display: block;
+	font-variant: small-caps;
+	border-top-width: 0.5px;
+	border-top-style: solid;
+	border-top-color: #6F9849B3;
+}
+#menu a:hover {
+	color: #FDD96C;
+}
+#menu p {
+	color: #DCBF82;
+	font-size: 1.1em;
+	letter-spacing: 0.2em;
+	text-align: center;
+	margin-top: 7px;
+	margin-bottom: 7px;
+}
+#content {
+	width: 60%;
+	margin-right: auto;
+	margin-left: auto;
+	z-index: 2;
+	text-align: left;
+	font-size: 1.2em;
+	padding-top: 125px;
+	padding-bottom: 125px;
+	line-height: 1.8em;
+	vertical-align: top;
+}
+#content img {
+	float: left;
+	padding: 5px;
+	margin-right: 40px;
+	margin-bottom: 20px;
+	border: 1px solid #FFF;
+	max-width:99%;
+	height:auto;
+}
+#content .title {
+	font-weight: 600;
+	letter-spacing: 0.1em;
+}
+#content .intro {
+	font-size: 1.6em;
+}
+#slides {
+	margin-right: auto;
+	margin-left: auto;
+}
+#slides img {
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    object-fit: cover; 
+	height: 850px;
+}
+#order {
+	width: 80%;
+	font-size: 1.4em;
+	font-size: 1em;
+	color: #222;
+	padding-top: 100px;
+	padding-bottom: 100px;
+	background-color: #FFF;
+	padding-right: 10%;
+	padding-left: 10%;
+	text-align: center;
+}
+#order .cols2 {
+	background-color: #E4E4E4;
+	display: inline-block;
+	width: 43%;
+	margin-right: 1%;
+	margin-left: 1%;
+	padding-top: 10px;
+	padding-bottom: 25px;
+	padding-right: 2%;
+	padding-left: 2%;
+	vertical-align: top;
+}
+#order  h1 {
+	font-size: 2.0em;
+}
+#order h2 {
+	color: #333;
+	font-size: 1.7em;
+	margin-bottom: 50px;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+}
+#order h3 {
+	font-size: 1.1em;
+	}
+#order h4 {
+	font-size: 1.5em;
+	color: #C5E2C9;
+	margin-top: 5px;
+}
+#order h5 {
+	color: #777;
+	font-size: 1.3em;
+}
+#order a {
+	text-decoration: none;
+	color: #FF7F26;
+}
+#order p {
+	line-height: 1.4em;
+}
+#order img {
+	max-width:100%;
+	height:auto;
+}
+#order_lt {
+	float: left;
+	margin-left: 150px;
+}
+#order_rt {
+	float: right;
+	margin-right: 150px;
+}
+#footer {
+	text-align: center;
+	font-size: 0.9em;
+	color: #E4E4E4;
+	padding-top: 50px;
+	padding-bottom: 50px;
+	background-color: #935324;
+	width: 100%;
+}
+
+@media only screen and (max-width: 1200px) {
+#content img {width:300px; height:auto;}
+}
+
+@media only screen and (max-width: 1000px) {
+#layout { height:900px; background-image: url(../images/movie_screen2.jpg);}
+#links {top: 65px; font-size:0.9em; padding-left: 0%; padding-right: 0%; padding-top:28px; padding-bottom: 0px; width: 100%; text-align:center; margin-left:auto; margin-right:auto;}
+#links ul {padding-left:0px; padding-right:0px; margin-left:0px; margin-right:0px;}
+#links ul li {display: inline; float: none; padding-right: 5px; padding-left: 5px;}
+.hamburger {display:block; position:absolute; top:20px; left:7px; z-index:1;}
+.menu-shower:checked ~ #menu {display: block;}
+#menu {width: 100%; padding-top: 15px; height: 300px;}
+#trailerVideo {width: 90%;}
+#content {width: 80%; font-size: 1.1em; padding-top: 125px; padding-bottom: 125px; line-height: 1.6em;}
+#content img {width:250px; height:auto;}
+#order .cols2 {display: block; width: 80%; margin-right: 5%; margin-left: 5%; margin-top: 20px; padding-top: 10px; padding-bottom: 25px; padding-right: 5%; padding-left: 5%;}
+#order h1 {font-size: 2em;}
+#order h2 {font-size: 1.2em;}
+#order h4 {font-size: 1.1em;}
+#order img {padding-bottom:10px;}
+}
+
+@media only screen and (max-width: 768px) {
+  /* For mobile phones: */
+#content img {float: none; margin-right: 0px; max-width:99%; height:auto;}
+#footer {margin-top:150px;}
+}

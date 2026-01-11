@@ -69,12 +69,42 @@ app.use(helmet({
     contentSecurityPolicy: false, // Disable for API
 }));
 
-// CORS configuration
+// CORS configuration - allow all Jubilee domains
+const allowedCorsOrigins = [
+    'https://wwbibleweb.com',
+    'https://www.wwbibleweb.com',
+    'http://wwbibleweb.com',
+    'http://www.wwbibleweb.com',
+    'https://jubileeverse.com',
+    'https://www.jubileeverse.com',
+    'https://jubileeinspire.com',
+    'https://www.jubileeinspire.com',
+    'https://inspirecodex.com',
+    'https://www.inspirecodex.com',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3100',
+    'http://localhost:3847'
+];
+
 const corsOrigins = (process.env.CORS_ORIGINS || '').split(',').filter(Boolean);
+const finalCorsOrigins = corsOrigins.length > 0 ? [...corsOrigins, ...allowedCorsOrigins] : allowedCorsOrigins;
+
 app.use(cors({
-    origin: corsOrigins.length > 0 ? corsOrigins : '*',
+    origin: function(origin, callback) {
+        // Allow requests with no origin (mobile apps, curl, etc.)
+        if (!origin) return callback(null, true);
+
+        // Check if origin is in allowed list
+        if (finalCorsOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        // Allow all origins as fallback for API access
+        return callback(null, true);
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Accept', 'Origin'],
     credentials: true,
 }));
 
@@ -87,13 +117,30 @@ if (NODE_ENV !== 'test') {
     app.use(morgan(NODE_ENV === 'production' ? 'combined' : 'dev'));
 }
 
-// Rate limiting
+// Rate limiting - with whitelist for internal domains
+const whitelistedOrigins = [
+    'wwbibleweb.com',
+    'www.wwbibleweb.com',
+    'jubileeverse.com',
+    'www.jubileeverse.com',
+    'jubileeinspire.com',
+    'www.jubileeinspire.com',
+    'inspirecodex.com',
+    'www.inspirecodex.com',
+    'localhost'
+];
+
 const limiter = rateLimit({
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
     max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
     message: { error: 'Too many requests, please try again later.' },
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req) => {
+        // Skip rate limiting for whitelisted origins
+        const origin = req.get('origin') || req.get('referer') || '';
+        return whitelistedOrigins.some(domain => origin.includes(domain));
+    }
 });
 app.use('/api/', limiter);
 
@@ -783,9 +830,9 @@ app.get('/api/v1/idns/resolve', async (req, res) => {
 
         // Look up in idns_domains table
         const result = await codexPool.query(`
-            SELECT domain_key, domain_type, display_name, mres, managed
+            SELECT domain_name as domain_key, domain_type, domain_name as display_name, mres, managed
             FROM idns_domains
-            WHERE domain_key = $1 AND is_active = true
+            WHERE domain_name = $1 AND is_active = true
         `, [domainKey]);
 
         if (result.rows.length === 0) {
@@ -802,9 +849,9 @@ app.get('/api/v1/idns/resolve', async (req, res) => {
             if (expandedType !== type && (expandedType === 'webspace')) {
                 const expandedKey = `webspace/${domain}`;
                 const expandedResult = await codexPool.query(`
-                    SELECT domain_key, domain_type, display_name, mres, managed
+                    SELECT domain_name as domain_key, domain_type, domain_name as display_name, mres, managed
                     FROM idns_domains
-                    WHERE domain_key = $1 AND is_active = true
+                    WHERE domain_name = $1 AND is_active = true
                 `, [expandedKey]);
 
                 if (expandedResult.rows.length > 0) {
@@ -869,7 +916,7 @@ app.get('/api/v1/idns/domains', async (req, res) => {
         const { type, managed, limit = 100, offset = 0 } = req.query;
 
         let query = `
-            SELECT domain_key, domain_type, display_name, mres, managed, description
+            SELECT domain_name as domain_key, domain_type, domain_name as display_name, mres, managed, metadata
             FROM idns_domains
             WHERE is_active = true
         `;
@@ -886,7 +933,7 @@ app.get('/api/v1/idns/domains', async (req, res) => {
             params.push(managed === 'true');
         }
 
-        query += ` ORDER BY display_name LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+        query += ` ORDER BY domain_name LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
         params.push(parseInt(limit), parseInt(offset));
 
         const result = await codexPool.query(query, params);
@@ -894,6 +941,767 @@ app.get('/api/v1/idns/domains', async (req, res) => {
         res.json({ domains: result.rows, count: result.rows.length });
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch domains', message: err.message });
+    }
+});
+
+// Get single iDNS domain by key
+app.get('/api/v1/idns/domains/:domainKey', async (req, res) => {
+    try {
+        const { domainKey } = req.params;
+
+        const result = await codexPool.query(`
+            SELECT id, domain_name as domain_key, domain_type, domain_name as display_name, mres, managed,
+                   metadata, is_active, created_at, updated_at
+            FROM idns_domains
+            WHERE domain_name = $1
+        `, [domainKey]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Domain not found', domainKey });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch domain', message: err.message });
+    }
+});
+
+// Create new iDNS domain entry
+app.post('/api/v1/idns/domains', async (req, res) => {
+    try {
+        const { domain_key, domain_type, mres, managed, metadata } = req.body;
+
+        if (!domain_key) {
+            return res.status(400).json({ error: 'domain_key is required' });
+        }
+
+        // Check if domain already exists
+        const existing = await codexPool.query(
+            'SELECT id FROM idns_domains WHERE domain_name = $1',
+            [domain_key]
+        );
+
+        if (existing.rows.length > 0) {
+            return res.status(409).json({ error: 'Domain already exists', domain_key });
+        }
+
+        const result = await codexPool.query(`
+            INSERT INTO idns_domains (domain_name, domain_type, mres, managed, metadata, is_active)
+            VALUES ($1, $2, $3, $4, $5, true)
+            RETURNING id, domain_name as domain_key, domain_type, mres, managed, created_at
+        `, [
+            domain_key,
+            domain_type || inferDomainType(domain_key),
+            mres || null,
+            managed || false,
+            metadata ? JSON.stringify(metadata) : '{}'
+        ]);
+
+        res.status(201).json({ success: true, domain: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to create domain', message: err.message });
+    }
+});
+
+// Update iDNS domain entry
+app.put('/api/v1/idns/domains/:domainKey', async (req, res) => {
+    try {
+        const { domainKey } = req.params;
+        const { domain_type, mres, managed, metadata, is_active } = req.body;
+
+        // Check if domain exists
+        const existing = await codexPool.query(
+            'SELECT id FROM idns_domains WHERE domain_name = $1',
+            [domainKey]
+        );
+
+        if (existing.rows.length === 0) {
+            return res.status(404).json({ error: 'Domain not found', domainKey });
+        }
+
+        const result = await codexPool.query(`
+            UPDATE idns_domains
+            SET domain_type = COALESCE($2, domain_type),
+                mres = $3,
+                managed = COALESCE($4, managed),
+                metadata = COALESCE($5, metadata),
+                is_active = COALESCE($6, is_active),
+                updated_at = CURRENT_TIMESTAMP
+            WHERE domain_name = $1
+            RETURNING id, domain_name as domain_key, domain_type, mres, managed, is_active, updated_at
+        `, [
+            domainKey,
+            domain_type,
+            mres !== undefined ? mres : null,
+            managed,
+            metadata ? JSON.stringify(metadata) : null,
+            is_active
+        ]);
+
+        res.json({ success: true, domain: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to update domain', message: err.message });
+    }
+});
+
+// Bulk update iDNS domains (for wwBibleweb.com config sync)
+app.post('/api/v1/idns/sync', async (req, res) => {
+    try {
+        const { domains } = req.body;
+
+        if (!domains || typeof domains !== 'object') {
+            return res.status(400).json({ error: 'domains object is required' });
+        }
+
+        const client = await codexPool.connect();
+        try {
+            await client.query('BEGIN');
+
+            let created = 0;
+            let updated = 0;
+
+            for (const [domainKey, data] of Object.entries(domains)) {
+                const domainType = data.domain_type || inferDomainType(domainKey);
+
+                const result = await client.query(`
+                    INSERT INTO idns_domains (domain_name, domain_type, mres, managed, metadata, is_active)
+                    VALUES ($1, $2, $3, $4, $5, true)
+                    ON CONFLICT (domain_name) DO UPDATE SET
+                        mres = EXCLUDED.mres,
+                        managed = EXCLUDED.managed,
+                        metadata = EXCLUDED.metadata,
+                        is_active = true,
+                        updated_at = CURRENT_TIMESTAMP
+                    RETURNING (xmax = 0) as is_insert
+                `, [
+                    domainKey,
+                    domainType,
+                    data.mres || null,
+                    data.managed || false,
+                    JSON.stringify(data)
+                ]);
+
+                if (result.rows[0].is_insert) {
+                    created++;
+                } else {
+                    updated++;
+                }
+            }
+
+            await client.query('COMMIT');
+
+            res.json({
+                success: true,
+                created,
+                updated,
+                total: Object.keys(domains).length
+            });
+        } catch (txError) {
+            await client.query('ROLLBACK');
+            throw txError;
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to sync domains', message: err.message });
+    }
+});
+
+// Delete iDNS domain entry (soft delete)
+app.delete('/api/v1/idns/domains/:domainKey', async (req, res) => {
+    try {
+        const { domainKey } = req.params;
+        const { hard } = req.query; // ?hard=true for permanent delete
+
+        // Check if domain exists
+        const existing = await codexPool.query(
+            'SELECT id FROM idns_domains WHERE domain_name = $1',
+            [domainKey]
+        );
+
+        if (existing.rows.length === 0) {
+            return res.status(404).json({ error: 'Domain not found', domainKey });
+        }
+
+        if (hard === 'true') {
+            await codexPool.query('DELETE FROM idns_domains WHERE domain_name = $1', [domainKey]);
+            res.json({ success: true, message: 'Domain permanently deleted', domainKey });
+        } else {
+            await codexPool.query(
+                'UPDATE idns_domains SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE domain_name = $1',
+                [domainKey]
+            );
+            res.json({ success: true, message: 'Domain deactivated', domainKey });
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete domain', message: err.message });
+    }
+});
+
+// Helper functions for domain inference
+function inferDomainType(domainKey) {
+    const countries = [
+        'afghanistan', 'albania', 'algeria', 'andorra', 'angola', 'argentina', 'armenia',
+        'australia', 'austria', 'azerbaijan', 'bahamas', 'bahrain', 'bangladesh', 'barbados',
+        'belarus', 'belgium', 'belize', 'benin', 'bhutan', 'bolivia', 'botswana', 'brazil',
+        'brunei', 'bulgaria', 'cambodia', 'cameroon', 'canada', 'chad', 'chile', 'china',
+        'colombia', 'comoros', 'croatia', 'cuba', 'cyprus', 'denmark', 'djibouti', 'dominica',
+        'ecuador', 'egypt', 'eritrea', 'estonia', 'ethiopia', 'fiji', 'finland', 'france',
+        'gabon', 'gambia', 'georgia', 'germany', 'ghana', 'greece', 'grenada', 'guatemala',
+        'guinea', 'guyana', 'haiti', 'honduras', 'hungary', 'iceland', 'india', 'indonesia',
+        'iran', 'iraq', 'ireland', 'israel', 'italy', 'jamaica', 'japan', 'jordan',
+        'kazakhstan', 'kenya', 'kiribati', 'kosovo', 'kuwait', 'kyrgyzstan', 'laos', 'latvia',
+        'lebanon', 'lesotho', 'liberia', 'libya', 'liechtenstein', 'lithuania', 'luxembourg',
+        'madagascar', 'malawi', 'malaysia', 'maldives', 'mali', 'malta', 'mauritania',
+        'mauritius', 'mexico', 'micronesia', 'moldova', 'monaco', 'mongolia', 'montenegro',
+        'morocco', 'mozambique', 'myanmar', 'namibia', 'nauru', 'nepal', 'netherlands',
+        'newzealand', 'nicaragua', 'nigeria', 'norway', 'oman', 'pakistan', 'palau',
+        'palestine', 'panama', 'paraguay', 'peru', 'philippines', 'poland', 'portugal',
+        'qatar', 'romania', 'russia', 'rwanda', 'samoa', 'senegal', 'serbia', 'seychelles',
+        'singapore', 'slovakia', 'slovenia', 'somalia', 'spain', 'sudan', 'suriname',
+        'sweden', 'switzerland', 'taiwan', 'tajikistan', 'tanzania', 'thailand', 'togo',
+        'tonga', 'tunisia', 'turkey', 'turkmenistan', 'tuvalu', 'uganda', 'ukraine',
+        'uruguay', 'uzbekistan', 'vanuatu', 'venezuela', 'vietnam', 'yemen', 'zambia',
+        'zimbabwe', 'unitedstates', 'unitedkingdom', 'unitedarabemirates', 'southafrica',
+        'southkorea', 'northkorea', 'saudiarabia', 'srilanka', 'papuanewguinea', 'hongkong'
+    ];
+
+    const ministryTopics = [
+        'academy', 'bible', 'biblical', 'charity', 'children', 'church', 'coaching',
+        'community', 'conference', 'discipleship', 'events', 'family', 'fellowship',
+        'group', 'healing', 'inspire', 'kids', 'library', 'marriage', 'men', 'ministry',
+        'mission', 'music', 'news', 'pastor', 'podcast', 'praise', 'prayer', 'prophet',
+        'recovery', 'retreat', 'school', 'scriptural', 'sermon', 'serve', 'shepherd',
+        'teacher', 'testimony', 'women', 'worship', 'youth', 'apostle', 'evangelist'
+    ];
+
+    const lowerKey = domainKey.toLowerCase();
+    if (domainKey.includes('/')) return 'webspace';
+    if (countries.includes(lowerKey)) return 'country';
+    if (ministryTopics.includes(lowerKey)) return 'ministry';
+    return 'denomination';
+}
+
+function generateDisplayName(domainKey) {
+    if (domainKey.includes('/')) {
+        const parts = domainKey.split('/');
+        return parts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' / ');
+    }
+    const spaced = domainKey.replace(/([a-z])([A-Z])/g, '$1 $2');
+    return spaced.split(' ').map(word =>
+        word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+}
+
+// =============================================================================
+// WEBSITES API ROUTES - Two-Layer Architecture
+// =============================================================================
+// Websites are the actual built sites. Each website MUST reference an IDNS domain.
+// A domain without a website is not publicly visible.
+
+// Get all websites with their domain information
+app.get('/api/v1/websites', async (req, res) => {
+    try {
+        const { status, environment, limit = 100, offset = 0 } = req.query;
+
+        let query = `
+            SELECT
+                w.id, w.idns_domain_id, w.owner_id, w.status, w.site_title, w.site_description,
+                w.config, w.theme_config, w.seo_config, w.environment, w.content_source,
+                w.content_type, w.view_count, w.created_at, w.updated_at, w.published_at,
+                d.domain_name, d.domain_type, d.protocol_type, d.mres AS masked_resolution
+            FROM websites w
+            INNER JOIN idns_domains d ON w.idns_domain_id = d.id
+            WHERE w.deleted_at IS NULL AND d.is_active = true
+        `;
+        const params = [];
+        let paramIndex = 1;
+
+        if (status) {
+            query += ` AND w.status = $${paramIndex++}`;
+            params.push(status);
+        }
+
+        if (environment) {
+            query += ` AND w.environment = $${paramIndex++}`;
+            params.push(environment);
+        }
+
+        query += ` ORDER BY d.domain_name LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+        params.push(parseInt(limit), parseInt(offset));
+
+        const result = await codexPool.query(query, params);
+
+        // Get total count
+        const countResult = await codexPool.query(`
+            SELECT COUNT(*) FROM websites w
+            INNER JOIN idns_domains d ON w.idns_domain_id = d.id
+            WHERE w.deleted_at IS NULL AND d.is_active = true
+        `);
+
+        res.json({
+            websites: result.rows,
+            total: parseInt(countResult.rows[0].count),
+            limit: parseInt(limit),
+            offset: parseInt(offset)
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch websites', message: err.message });
+    }
+});
+
+// Get website by domain name (primary lookup method)
+app.get('/api/v1/websites/by-domain/:domainName', async (req, res) => {
+    try {
+        const { domainName } = req.params;
+        const { environment } = req.query;
+
+        let query = `
+            SELECT
+                w.id, w.idns_domain_id, w.owner_id, w.status, w.site_title, w.site_description,
+                w.config, w.theme_config, w.seo_config, w.environment, w.content_source,
+                w.content_type, w.view_count, w.created_at, w.updated_at, w.published_at,
+                d.domain_name, d.domain_type, d.protocol_type, d.mres AS masked_resolution
+            FROM websites w
+            INNER JOIN idns_domains d ON w.idns_domain_id = d.id
+            WHERE d.domain_name = $1 AND w.deleted_at IS NULL AND d.is_active = true
+        `;
+        const params = [domainName];
+
+        if (environment) {
+            query += ` AND w.environment = $2`;
+            params.push(environment);
+        }
+
+        const result = await codexPool.query(query, params);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                error: 'Website not found',
+                domainName,
+                message: 'No active website exists for this domain'
+            });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch website', message: err.message });
+    }
+});
+
+// Get website by ID
+app.get('/api/v1/websites/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await codexPool.query(`
+            SELECT
+                w.*, d.domain_name, d.domain_type, d.protocol_type, d.mres AS masked_resolution
+            FROM websites w
+            INNER JOIN idns_domains d ON w.idns_domain_id = d.id
+            WHERE w.id = $1 AND w.deleted_at IS NULL
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Website not found', id });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch website', message: err.message });
+    }
+});
+
+// Create a new website (requires valid IDNS domain)
+app.post('/api/v1/websites', async (req, res) => {
+    try {
+        const {
+            domain_name, // Can specify existing domain OR create new one
+            idns_domain_id, // Or directly reference existing domain ID
+            site_title,
+            site_description,
+            config,
+            theme_config,
+            seo_config,
+            environment = 'WWBW',
+            content_source,
+            content_type = 'folder',
+            status = 'DRAFT',
+            owner_id
+        } = req.body;
+
+        const client = await codexPool.connect();
+        try {
+            await client.query('BEGIN');
+
+            let domainId = idns_domain_id;
+
+            // If domain_name provided but no idns_domain_id, look up or create the domain
+            if (domain_name && !domainId) {
+                // Check if domain exists
+                const existingDomain = await client.query(
+                    'SELECT id FROM idns_domains WHERE domain_name = $1 AND is_active = true',
+                    [domain_name]
+                );
+
+                if (existingDomain.rows.length > 0) {
+                    domainId = existingDomain.rows[0].id;
+                } else {
+                    // Create the domain entry as part of this transaction
+                    const newDomain = await client.query(`
+                        INSERT INTO idns_domains (domain_name, domain_type, protocol_type, is_active)
+                        VALUES ($1, $2, $3, true)
+                        RETURNING id
+                    `, [domain_name, inferDomainType(domain_name), environment]);
+                    domainId = newDomain.rows[0].id;
+                }
+            }
+
+            if (!domainId) {
+                throw new Error('Either domain_name or idns_domain_id is required');
+            }
+
+            // Check if website already exists for this domain + environment
+            const existingWebsite = await client.query(
+                'SELECT id FROM websites WHERE idns_domain_id = $1 AND environment = $2 AND deleted_at IS NULL',
+                [domainId, environment]
+            );
+
+            if (existingWebsite.rows.length > 0) {
+                await client.query('ROLLBACK');
+                return res.status(409).json({
+                    error: 'Website already exists',
+                    message: 'A website already exists for this domain and environment',
+                    existing_website_id: existingWebsite.rows[0].id
+                });
+            }
+
+            // Create the website
+            const result = await client.query(`
+                INSERT INTO websites (
+                    idns_domain_id, owner_id, status, site_title, site_description,
+                    config, theme_config, seo_config, environment, content_source, content_type,
+                    published_at
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                RETURNING *
+            `, [
+                domainId,
+                owner_id || null,
+                status,
+                site_title || null,
+                site_description || null,
+                config ? JSON.stringify(config) : '{}',
+                theme_config ? JSON.stringify(theme_config) : '{}',
+                seo_config ? JSON.stringify(seo_config) : '{}',
+                environment,
+                content_source || null,
+                content_type,
+                status === 'PUBLISHED' ? new Date() : null
+            ]);
+
+            await client.query('COMMIT');
+
+            // Fetch complete website with domain info
+            const website = await codexPool.query(`
+                SELECT w.*, d.domain_name, d.domain_type, d.protocol_type
+                FROM websites w
+                INNER JOIN idns_domains d ON w.idns_domain_id = d.id
+                WHERE w.id = $1
+            `, [result.rows[0].id]);
+
+            res.status(201).json({
+                success: true,
+                message: 'Website created successfully',
+                website: website.rows[0]
+            });
+
+        } catch (txError) {
+            await client.query('ROLLBACK');
+            throw txError;
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        if (err.message.includes('required')) {
+            return res.status(400).json({ error: err.message });
+        }
+        res.status(500).json({ error: 'Failed to create website', message: err.message });
+    }
+});
+
+// Update website
+app.put('/api/v1/websites/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            site_title,
+            site_description,
+            config,
+            theme_config,
+            seo_config,
+            status,
+            content_source,
+            content_type
+        } = req.body;
+
+        // Check if website exists
+        const existing = await codexPool.query(
+            'SELECT id, status FROM websites WHERE id = $1 AND deleted_at IS NULL',
+            [id]
+        );
+
+        if (existing.rows.length === 0) {
+            return res.status(404).json({ error: 'Website not found', id });
+        }
+
+        // If transitioning to PUBLISHED, set published_at
+        const wasPublished = existing.rows[0].status === 'PUBLISHED';
+        const isBeingPublished = status === 'PUBLISHED' && !wasPublished;
+
+        const result = await codexPool.query(`
+            UPDATE websites SET
+                site_title = COALESCE($2, site_title),
+                site_description = COALESCE($3, site_description),
+                config = COALESCE($4, config),
+                theme_config = COALESCE($5, theme_config),
+                seo_config = COALESCE($6, seo_config),
+                status = COALESCE($7, status),
+                content_source = COALESCE($8, content_source),
+                content_type = COALESCE($9, content_type),
+                published_at = CASE WHEN $10 THEN NOW() ELSE published_at END
+            WHERE id = $1
+            RETURNING *
+        `, [
+            id,
+            site_title,
+            site_description,
+            config ? JSON.stringify(config) : null,
+            theme_config ? JSON.stringify(theme_config) : null,
+            seo_config ? JSON.stringify(seo_config) : null,
+            status,
+            content_source,
+            content_type,
+            isBeingPublished
+        ]);
+
+        res.json({ success: true, website: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to update website', message: err.message });
+    }
+});
+
+// Delete website (soft delete)
+app.delete('/api/v1/websites/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { hard } = req.query; // ?hard=true for permanent delete
+
+        // Check if website exists
+        const existing = await codexPool.query(
+            'SELECT id FROM websites WHERE id = $1',
+            [id]
+        );
+
+        if (existing.rows.length === 0) {
+            return res.status(404).json({ error: 'Website not found', id });
+        }
+
+        if (hard === 'true') {
+            await codexPool.query('DELETE FROM websites WHERE id = $1', [id]);
+            res.json({ success: true, message: 'Website permanently deleted', id });
+        } else {
+            await codexPool.query(
+                'UPDATE websites SET deleted_at = NOW(), status = $2 WHERE id = $1',
+                [id, 'ARCHIVED']
+            );
+            res.json({ success: true, message: 'Website archived', id });
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete website', message: err.message });
+    }
+});
+
+// Publish website
+app.post('/api/v1/websites/:id/publish', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await codexPool.query(`
+            UPDATE websites SET
+                status = 'PUBLISHED',
+                published_at = NOW()
+            WHERE id = $1 AND deleted_at IS NULL
+            RETURNING *
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Website not found', id });
+        }
+
+        res.json({ success: true, message: 'Website published', website: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to publish website', message: err.message });
+    }
+});
+
+// Unpublish website (set to draft)
+app.post('/api/v1/websites/:id/unpublish', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await codexPool.query(`
+            UPDATE websites SET status = 'DRAFT'
+            WHERE id = $1 AND deleted_at IS NULL
+            RETURNING *
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Website not found', id });
+        }
+
+        res.json({ success: true, message: 'Website unpublished', website: result.rows[0] });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to unpublish website', message: err.message });
+    }
+});
+
+// Get domain+website combined view (for routing/resolution)
+app.get('/api/v1/websites/resolve/:domainName', async (req, res) => {
+    try {
+        const { domainName } = req.params;
+
+        const result = await codexPool.query(`
+            SELECT * FROM domain_websites
+            WHERE domain_name = $1
+        `, [domainName]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                error: 'Domain not found',
+                domainName,
+                is_live: false
+            });
+        }
+
+        const domain = result.rows[0];
+
+        res.json({
+            domain_name: domain.domain_name,
+            domain_type: domain.domain_type,
+            protocol_type: domain.protocol_type,
+            is_live: domain.is_live,
+            website: domain.website_id ? {
+                id: domain.website_id,
+                title: domain.site_title,
+                status: domain.website_status,
+                environment: domain.environment,
+                content_source: domain.content_source,
+                content_type: domain.content_type,
+                published_at: domain.published_at
+            } : null,
+            masked_resolution: domain.masked_resolution
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to resolve domain', message: err.message });
+    }
+});
+
+// Create domain AND website in one transaction (atomic operation)
+app.post('/api/v1/websites/create-with-domain', async (req, res) => {
+    try {
+        const {
+            domain_name,
+            domain_type,
+            protocol_type = 'WWBW',
+            site_title,
+            site_description,
+            config,
+            status = 'PUBLISHED',
+            content_source,
+            content_type = 'folder',
+            owner_id
+        } = req.body;
+
+        if (!domain_name) {
+            return res.status(400).json({ error: 'domain_name is required' });
+        }
+
+        const client = await codexPool.connect();
+        try {
+            await client.query('BEGIN');
+
+            // Check if domain already exists
+            const existingDomain = await client.query(
+                'SELECT id FROM idns_domains WHERE domain_name = $1',
+                [domain_name]
+            );
+
+            if (existingDomain.rows.length > 0) {
+                await client.query('ROLLBACK');
+                return res.status(409).json({
+                    error: 'Domain already exists',
+                    domain_name,
+                    message: 'This domain name is already registered'
+                });
+            }
+
+            // Create IDNS domain entry
+            const domainResult = await client.query(`
+                INSERT INTO idns_domains (domain_name, domain_type, protocol_type, owner_id, is_active)
+                VALUES ($1, $2, $3, $4, true)
+                RETURNING id
+            `, [
+                domain_name,
+                domain_type || inferDomainType(domain_name),
+                protocol_type,
+                owner_id || null
+            ]);
+
+            const domainId = domainResult.rows[0].id;
+
+            // Create website entry
+            const websiteResult = await client.query(`
+                INSERT INTO websites (
+                    idns_domain_id, owner_id, status, site_title, site_description,
+                    config, environment, content_source, content_type,
+                    published_at
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                RETURNING *
+            `, [
+                domainId,
+                owner_id || null,
+                status,
+                site_title || domain_name,
+                site_description || null,
+                config ? JSON.stringify(config) : '{}',
+                protocol_type,
+                content_source || domain_name,
+                content_type,
+                status === 'PUBLISHED' ? new Date() : null
+            ]);
+
+            await client.query('COMMIT');
+
+            res.status(201).json({
+                success: true,
+                message: 'Domain and website created successfully',
+                domain: {
+                    id: domainId,
+                    domain_name
+                },
+                website: websiteResult.rows[0]
+            });
+
+        } catch (txError) {
+            await client.query('ROLLBACK');
+            throw txError;
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to create domain and website', message: err.message });
     }
 });
 
@@ -1327,7 +2135,7 @@ app.get('/api/auth/devices', async (req, res) => {
 // Register endpoint
 app.post('/api/auth/register', async (req, res) => {
     try {
-        const { email, password, displayName, username } = req.body;
+        const { email, password, displayName, fullName, username } = req.body;
 
         if (!email || !password) {
             return res.status(400).json({
@@ -1359,6 +2167,9 @@ app.post('/api/auth/register', async (req, res) => {
         // Hash password
         const passwordHash = hashPassword(password);
 
+        // Determine display name from fullName, displayName, or email
+        const finalDisplayName = displayName || fullName || email.split('@')[0];
+
         // Create user
         const result = await codexPool.query(
             `INSERT INTO users (id, email, password_hash, display_name, role, is_active, created_at, updated_at)
@@ -1368,11 +2179,25 @@ app.post('/api/auth/register', async (req, res) => {
                 crypto.randomUUID(),
                 email.toLowerCase(),
                 passwordHash,
-                displayName || email.split('@')[0]
+                finalDisplayName
             ]
         );
 
         const user = result.rows[0];
+
+        // Create WWBW email address for the user
+        let wwbwEmail = null;
+        try {
+            // Parse first and last name from fullName or displayName
+            const nameParts = (fullName || finalDisplayName).trim().split(/\s+/);
+            const firstName = nameParts[0] || 'User';
+            const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : firstName;
+
+            wwbwEmail = await createWwbwEmailForUser(user.id, firstName, lastName);
+        } catch (wwbwErr) {
+            console.error('Error creating WWBW email:', wwbwErr);
+            // Don't fail registration if WWBW email creation fails
+        }
 
         // Generate tokens
         const accessToken = generateToken(user.id);
@@ -1384,7 +2209,8 @@ app.post('/api/auth/register', async (req, res) => {
                 id: user.id,
                 email: user.email,
                 displayName: user.display_name,
-                role: user.role
+                role: user.role,
+                wwbwEmail: wwbwEmail ? wwbwEmail.email_address : null
             },
             tokens: {
                 accessToken,
@@ -1401,6 +2227,59 @@ app.post('/api/auth/register', async (req, res) => {
         });
     }
 });
+
+// Helper function to create WWBW email for a user
+// All usernames are stored in lowercase for consistency
+async function createWwbwEmailForUser(userId, firstName, lastName, domain = 'inspire.shema') {
+    // Clean and format the base username in lowercase: firstname.lastname
+    const cleanFirst = firstName.trim().replace(/[^a-zA-Z]/g, '').toLowerCase();
+    const cleanLast = lastName.trim().replace(/[^a-zA-Z]/g, '').toLowerCase();
+
+    if (!cleanFirst || !cleanLast) {
+        throw new Error('Invalid name for WWBW email');
+    }
+
+    const baseUsername = `${cleanFirst}.${cleanLast}`;
+
+    // Check if the base username is available (no suffix needed)
+    const existingResult = await codexPool.query(
+        'SELECT COUNT(*) as count FROM wwbw_emails WHERE base_username = $1 AND domain = $2',
+        [baseUsername, domain]
+    );
+
+    const existingCount = parseInt(existingResult.rows[0]?.count ?? '0', 10);
+
+    let username, suffixNumber;
+
+    if (existingCount === 0) {
+        // Base username is available
+        username = baseUsername;
+        suffixNumber = null;
+    } else {
+        // Find the maximum suffix number currently in use for this base username
+        const maxSuffixResult = await codexPool.query(
+            'SELECT MAX(suffix_number) as max_suffix FROM wwbw_emails WHERE base_username = $1 AND domain = $2',
+            [baseUsername, domain]
+        );
+
+        const maxSuffix = maxSuffixResult.rows[0]?.max_suffix;
+
+        // If max is null, that means only the base (without suffix) exists, so start at 2
+        // Otherwise increment the max suffix
+        suffixNumber = maxSuffix === null ? 2 : maxSuffix + 1;
+        username = `${baseUsername}${suffixNumber}`;
+    }
+
+    // Create the email record
+    const result = await codexPool.query(
+        `INSERT INTO wwbw_emails (user_id, username, domain, base_username, suffix_number, is_primary, is_active)
+         VALUES ($1, $2, $3, $4, $5, TRUE, TRUE)
+         RETURNING *`,
+        [userId, username, domain, baseUsername, suffixNumber]
+    );
+
+    return result.rows[0];
+}
 
 // Logout endpoint
 app.post('/api/auth/logout', async (req, res) => {
@@ -1534,6 +2413,21 @@ app.get('/api/auth/me', async (req, res) => {
 
         const user = result.rows[0];
 
+        // Get WWBW email if exists
+        let wwbwEmail = null;
+        try {
+            const wwbwResult = await codexPool.query(
+                `SELECT username || '@' || domain as email_address, username, domain
+                 FROM wwbw_emails WHERE user_id = $1 AND is_primary = TRUE AND is_active = TRUE`,
+                [user.id]
+            );
+            if (wwbwResult.rows.length > 0) {
+                wwbwEmail = wwbwResult.rows[0].email_address;
+            }
+        } catch (e) {
+            // WWBW table might not exist yet, ignore error
+        }
+
         res.json({
             success: true,
             user: {
@@ -1542,12 +2436,206 @@ app.get('/api/auth/me', async (req, res) => {
                 displayName: user.display_name,
                 avatarUrl: user.avatar_url,
                 role: user.role,
-                preferredLanguage: user.preferred_language
+                preferredLanguage: user.preferred_language,
+                wwbwEmail: wwbwEmail
             }
         });
 
     } catch (err) {
         console.error('Get user error:', err);
+        res.status(500).json({ success: false, error: 'An error occurred' });
+    }
+});
+
+// =============================================================================
+// WWBW EMAIL API ROUTES
+// =============================================================================
+
+// Get user's WWBW email
+app.get('/api/wwbw/email', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ success: false, error: 'No token provided' });
+        }
+
+        const token = authHeader.substring(7);
+        const [base64Payload, signature] = token.split('.');
+        const expectedSignature = crypto.createHmac('sha256', process.env.JWT_SECRET || 'jubilee-secret-key')
+            .update(base64Payload)
+            .digest('hex');
+
+        if (signature !== expectedSignature) {
+            return res.status(401).json({ success: false, error: 'Invalid token' });
+        }
+
+        const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString());
+
+        if (payload.exp < Date.now()) {
+            return res.status(401).json({ success: false, error: 'Token expired' });
+        }
+
+        const result = await codexPool.query(
+            `SELECT id, username, domain, username || '@' || domain as email_address,
+                    base_username, suffix_number, is_primary, is_active, created_at
+             FROM wwbw_emails WHERE user_id = $1 AND is_primary = TRUE`,
+            [payload.userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'No WWBW email found for this user'
+            });
+        }
+
+        res.json({
+            success: true,
+            wwbwEmail: result.rows[0]
+        });
+
+    } catch (err) {
+        console.error('Get WWBW email error:', err);
+        res.status(500).json({ success: false, error: 'An error occurred' });
+    }
+});
+
+// Change WWBW email username
+app.put('/api/wwbw/email/username', async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ success: false, error: 'No token provided' });
+        }
+
+        const token = authHeader.substring(7);
+        const [base64Payload, signature] = token.split('.');
+        const expectedSignature = crypto.createHmac('sha256', process.env.JWT_SECRET || 'jubilee-secret-key')
+            .update(base64Payload)
+            .digest('hex');
+
+        if (signature !== expectedSignature) {
+            return res.status(401).json({ success: false, error: 'Invalid token' });
+        }
+
+        const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString());
+
+        if (payload.exp < Date.now()) {
+            return res.status(401).json({ success: false, error: 'Token expired' });
+        }
+
+        const { newUsername } = req.body;
+
+        if (!newUsername) {
+            return res.status(400).json({
+                success: false,
+                error: 'New username is required'
+            });
+        }
+
+        // Clean the new username (allow letters, numbers, dots, and underscores)
+        const cleanUsername = newUsername.trim().replace(/[^a-zA-Z0-9._]/g, '');
+
+        // Validate username length
+        if (cleanUsername.length < 3) {
+            return res.status(400).json({
+                success: false,
+                error: 'Username must be at least 3 characters'
+            });
+        }
+
+        if (cleanUsername.length > 64) {
+            return res.status(400).json({
+                success: false,
+                error: 'Username must be no more than 64 characters'
+            });
+        }
+
+        // Get user's current WWBW email
+        const currentEmail = await codexPool.query(
+            'SELECT * FROM wwbw_emails WHERE user_id = $1 AND is_primary = TRUE',
+            [payload.userId]
+        );
+
+        if (currentEmail.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'No WWBW email found for this user'
+            });
+        }
+
+        const wwbwEmail = currentEmail.rows[0];
+
+        // Check if new username is available
+        const conflictCheck = await codexPool.query(
+            'SELECT id FROM wwbw_emails WHERE username = $1 AND domain = $2 AND id != $3',
+            [cleanUsername, wwbwEmail.domain, wwbwEmail.id]
+        );
+
+        if (conflictCheck.rows.length > 0) {
+            return res.status(409).json({
+                success: false,
+                error: `Username "${cleanUsername}" is already taken`
+            });
+        }
+
+        // Record the change in history
+        await codexPool.query(
+            `INSERT INTO wwbw_email_history (wwbw_email_id, user_id, old_username, new_username, changed_by)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [wwbwEmail.id, payload.userId, wwbwEmail.username, cleanUsername, payload.userId]
+        );
+
+        // Update the email record
+        const result = await codexPool.query(
+            `UPDATE wwbw_emails
+             SET username = $1, base_username = $1, suffix_number = NULL, updated_at = NOW()
+             WHERE id = $2
+             RETURNING id, username, domain, username || '@' || domain as email_address,
+                       base_username, suffix_number, is_primary, is_active`,
+            [cleanUsername, wwbwEmail.id]
+        );
+
+        res.json({
+            success: true,
+            message: 'WWBW email username updated successfully',
+            wwbwEmail: result.rows[0]
+        });
+
+    } catch (err) {
+        console.error('Change WWBW username error:', err);
+        res.status(500).json({ success: false, error: 'An error occurred' });
+    }
+});
+
+// Check if a WWBW username is available
+app.get('/api/wwbw/username/check', async (req, res) => {
+    try {
+        const { username, domain = 'inspire.shema' } = req.query;
+
+        if (!username) {
+            return res.status(400).json({
+                success: false,
+                error: 'Username is required'
+            });
+        }
+
+        const cleanUsername = username.trim().replace(/[^a-zA-Z0-9._]/g, '');
+
+        const result = await codexPool.query(
+            'SELECT id FROM wwbw_emails WHERE username = $1 AND domain = $2',
+            [cleanUsername, domain]
+        );
+
+        res.json({
+            success: true,
+            available: result.rows.length === 0,
+            username: cleanUsername,
+            domain: domain
+        });
+
+    } catch (err) {
+        console.error('Check WWBW username error:', err);
         res.status(500).json({ success: false, error: 'An error occurred' });
     }
 });
@@ -2645,6 +3733,128 @@ app.delete('/api/account', authenticateToken, async (req, res) => {
     } catch (err) {
         console.error('Delete account error:', err);
         res.status(500).json({ success: false, error: 'Failed to delete account' });
+    }
+});
+
+// =============================================================================
+// CHAT API - OpenAI Integration for JubileeInspire.com
+// =============================================================================
+
+/**
+ * Chat with Jubilee Inspire
+ * POST /Home/ChatWithJubilee
+ *
+ * This endpoint handles chat messages using OpenAI API directly.
+ * Operates independently from JubileeVerse.com.
+ */
+app.post('/Home/ChatWithJubilee', async (req, res) => {
+    const {
+        message,
+        conversationHistory = [],
+        personaName = 'Jubilee Inspire',
+        conversationId = null,
+        inspireModel = 'gospelpulse',
+        responseLanguage = 'en',
+        systemPrompt = '',
+        developerPrompt = ''
+    } = req.body;
+
+    if (!message || !message.trim()) {
+        return res.status(400).json({ success: false, error: 'Message is required' });
+    }
+
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+    if (!OPENAI_API_KEY) {
+        console.error('OPENAI_API_KEY not configured');
+        return res.status(500).json({ success: false, error: 'Chat service not configured' });
+    }
+
+    try {
+        // Build messages array for OpenAI
+        const messages = [];
+
+        // Add system prompt if provided (from model_system.txt)
+        if (systemPrompt) {
+            messages.push({ role: 'system', content: systemPrompt });
+        }
+
+        // Add developer prompt if provided (from model_*.txt + model_developer.txt)
+        if (developerPrompt) {
+            messages.push({ role: 'developer', content: developerPrompt });
+        }
+
+        // Add conversation history
+        conversationHistory.forEach(msg => {
+            if (msg.role && msg.content) {
+                messages.push({ role: msg.role, content: msg.content });
+            }
+        });
+
+        // Add current user message
+        messages.push({ role: 'user', content: message.trim() });
+
+        console.log(`Chat request: model=${inspireModel}, historyLength=${conversationHistory.length}, messageLength=${message.length}`);
+
+        // Call OpenAI API
+        const startTime = Date.now();
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: messages,
+                max_tokens: 1024,
+                temperature: 0.7
+            })
+        });
+
+        const processingTime = Date.now() - startTime;
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('OpenAI API error:', response.status, errorData);
+            return res.status(500).json({
+                success: false,
+                error: 'Failed to generate response',
+                details: errorData.error?.message || 'Unknown error'
+            });
+        }
+
+        const data = await response.json();
+        const assistantResponse = data.choices?.[0]?.message?.content || 'I apologize, but I was unable to generate a response.';
+
+        // Generate conversation ID if not provided
+        const finalConversationId = conversationId || `inspire-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
+        console.log(`Chat response: processingTime=${processingTime}ms, responseLength=${assistantResponse.length}`);
+
+        res.json({
+            success: true,
+            response: assistantResponse,
+            model: 'gpt-4o-mini',
+            personaName,
+            conversation: {
+                id: finalConversationId,
+                title: message.length > 50 ? message.substring(0, 47) + '...' : message,
+                isNew: !conversationId,
+                personaName,
+                lastMessage: assistantResponse.substring(0, 100) + (assistantResponse.length > 100 ? '...' : ''),
+                timestamp: new Date().toISOString()
+            },
+            usage: data.usage || null,
+            processingTimeMs: processingTime
+        });
+
+    } catch (error) {
+        console.error('Chat error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to process chat request',
+            details: error.message
+        });
     }
 });
 

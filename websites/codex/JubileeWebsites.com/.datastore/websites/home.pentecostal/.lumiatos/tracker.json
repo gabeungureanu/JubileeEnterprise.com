@@ -1,0 +1,116 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2025-12-17T12:00:00.000Z",
+  "tracking": {
+    "2025": {
+      "12": {
+        "17": {
+          "campaigns": {
+            "CAMP-001": {
+              "impressions": 0,
+              "clicks": 0,
+              "ads": {
+                "AD-001-A": {
+                  "impressions": 0,
+                  "clicks": 0,
+                  "events": []
+                },
+                "AD-001-B": {
+                  "impressions": 0,
+                  "clicks": 0,
+                  "events": []
+                },
+                "AD-001-C": {
+                  "impressions": 0,
+                  "clicks": 0,
+                  "events": []
+                }
+              }
+            },
+            "CAMP-002": {
+              "impressions": 0,
+              "clicks": 0,
+              "ads": {
+                "AD-002-A": {
+                  "impressions": 0,
+                  "clicks": 0,
+                  "events": []
+                },
+                "AD-002-B": {
+                  "impressions": 0,
+                  "clicks": 0,
+                  "events": []
+                }
+              }
+            },
+            "CAMP-003": {
+              "impressions": 0,
+              "clicks": 0,
+              "ads": {
+                "AD-003-A": {
+                  "impressions": 0,
+                  "clicks": 0,
+                  "events": []
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "totals": {
+    "allTime": {
+      "impressions": 0,
+      "clicks": 0,
+      "ctr": 0
+    },
+    "byCampaign": {
+      "CAMP-001": {
+        "impressions": 0,
+        "clicks": 0,
+        "ctr": 0,
+        "spent": 0
+      },
+      "CAMP-002": {
+        "impressions": 0,
+        "clicks": 0,
+        "ctr": 0,
+        "spent": 0
+      }
+    },
+    "byAd": {
+      "AD-001-A": { "impressions": 0, "clicks": 0, "ctr": 0 },
+      "AD-001-B": { "impressions": 0, "clicks": 0, "ctr": 0 },
+      "AD-001-C": { "impressions": 0, "clicks": 0, "ctr": 0 },
+      "AD-002-A": { "impressions": 0, "clicks": 0, "ctr": 0 },
+      "AD-002-B": { "impressions": 0, "clicks": 0, "ctr": 0 },
+      "AD-003-A": { "impressions": 0, "clicks": 0, "ctr": 0 }
+    },
+    "byCampaign": {
+      "CAMP-001": { "impressions": 0, "clicks": 0, "ctr": 0, "spent": 0 },
+      "CAMP-002": { "impressions": 0, "clicks": 0, "ctr": 0, "spent": 0 },
+      "CAMP-003": { "impressions": 0, "clicks": 0, "ctr": 0, "spent": 0 }
+    }
+  },
+  "eventSchema": {
+    "click": {
+      "timestamp": "ISO 8601 datetime",
+      "adId": "string",
+      "campaignId": "string",
+      "domain": "string",
+      "page": "string (home|portal|article)",
+      "placement": "string",
+      "userAgent": "string (optional)",
+      "referrer": "string (optional)"
+    },
+    "impression": {
+      "timestamp": "ISO 8601 datetime",
+      "adId": "string",
+      "campaignId": "string",
+      "domain": "string",
+      "page": "string",
+      "placement": "string"
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "domain": "FaithChurch.com",
+  "siteCode": "WEB-FAIT-987253",
+  "contentType": "FB",
+  "niche": "Christian Ministry",
+  "categoryCount": 3,
+  "generatedAt": "2025-12-17T10:56:45.158Z",
+  "categories": [
+    {
+      "rank": 1,
+      "name": "Inspirational Sermons",
+      "slug": "inspirational-sermons",
+      "description": "Delve into a collection of powerful sermons designed to uplift and inspire your faith journey. This category features messages from renowned pastors, each offering profound insights and biblical teachings to strengthen your Christian life. Whether you're seeking spiritual growth or encouragement, these sermons provide the guidance and inspiration you need.",
+      "keywords": [
+        "Christian sermons",
+        "faith messages",
+        "Bible teachings",
+        "spiritual growth",
+        "inspirational talks"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 2,
+      "name": "Faith in Action",
+      "slug": "faith-in-action",
+      "description": "Explore stories and practical guides on living out your faith in everyday life. This category highlights ways to integrate Christian values into your daily actions, serving as a testament to God's love and teachings. Discover how you can make a meaningful impact in your community and beyond through acts of service, kindness, and compassion.",
+      "keywords": [
+        "Christian lifestyle",
+        "faith in practice",
+        "community service",
+        "Christian values",
+        "living faith"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 3,
+      "name": "Bible Study Insights",
+      "slug": "bible-study-insights",
+      "description": "Deepen your understanding of the Bible with insightful articles that explore its rich history, themes, and teachings. This category provides resources for both beginners and seasoned believers, offering fresh perspectives and interpretations of scripture. Enhance your study sessions with tools and tips designed to bring the Bible's timeless wisdom to life.",
+      "keywords": [
+        "Bible study",
+        "scriptural insights",
+        "biblical themes",
+        "Bible history",
+        "Christian education"
+      ],
+      "articleCount": 12
+    }
+  ]
+}

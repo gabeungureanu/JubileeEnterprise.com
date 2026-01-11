@@ -1,0 +1,52 @@
+{
+  "domain": "GodsGoodGrace.com",
+  "siteCode": "WEB-GODS-897082",
+  "contentType": "FB",
+  "niche": "Christian",
+  "categoryCount": 3,
+  "generatedAt": "2025-12-17T18:41:54.374Z",
+  "categories": [
+    {
+      "rank": 1,
+      "name": "Living in Grace",
+      "slug": "living-in-grace",
+      "description": "Explore how God's grace influences everyday life through inspiring stories, practical advice, and deep theological insights. This category invites believers to discover the profound impact of divine grace in relationships, work, and personal growth, providing a guide to living a grace-filled life.",
+      "keywords": [
+        "God's grace",
+        "Christian living",
+        "faith stories",
+        "grace in action",
+        "spiritual growth"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 2,
+      "name": "Scripture and Reflection",
+      "slug": "scripture-and-reflection",
+      "description": "Dive deep into the Word with thoughtful reflections and Bible studies designed to illuminate the path of faith. This category offers readers a chance to reflect on scripture with devotionals and insights that foster a deeper understanding of God's message.",
+      "keywords": [
+        "Bible study",
+        "devotionals",
+        "Christian reflection",
+        "scripture insights",
+        "faith journey"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 3,
+      "name": "Community and Fellowship",
+      "slug": "community-and-fellowship",
+      "description": "Celebrate the power of Christian community through stories of fellowship, service, and unity. This category provides resources and narratives that highlight the importance of coming together in faith to support, uplift, and spread the love of Christ.",
+      "keywords": [
+        "Christian community",
+        "fellowship",
+        "church life",
+        "faith service",
+        "unity in Christ"
+      ],
+      "articleCount": 12
+    }
+  ]
+}

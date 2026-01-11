@@ -28,6 +28,7 @@ public class WWBWDnsResolver
         { ".chur", ".church" },
         { ".apos", ".apostle" },
         { ".prop", ".prophet" },
+        { ".pent", ".pentecostal" },
     };
 
     // Fallback DNS mappings when API is unavailable
@@ -53,6 +54,9 @@ public class WWBWDnsResolver
         { "inspire://home.chur", ("https://www.worldwidebibleweb.com/church/home/", null) },
         { "inspire://home.apos", ("https://www.worldwidebibleweb.com/apostle/home/", null) },
         { "inspire://home.prop", ("https://www.worldwidebibleweb.com/prophet/home/", null) },
+        // Pentecostal domain mappings
+        { "inspire://home.pentecostal", ("https://wwbibleweb.com/pentecostal/home/", null) },
+        { "inspire://home.pent", ("https://wwbibleweb.com/pentecostal/home/", null) },
     };
 
     // Known private protocol schemes - only inspire:// is valid for WWBW mode

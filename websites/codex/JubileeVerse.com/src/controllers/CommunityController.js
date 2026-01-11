@@ -15,7 +15,14 @@ const getCommunities = asyncHandler(async (req, res) => {
     throw new AppError('Not authenticated', 401);
   }
 
-  const communities = await CommunityService.getUserCommunities(req.session.userId);
+  let communities = [];
+  try {
+    communities = await CommunityService.getUserCommunities(req.session.userId);
+  } catch (dbError) {
+    // Handle database schema mismatch gracefully - communities table may not exist
+    // Return empty array instead of crashing
+    communities = [];
+  }
 
   res.json({
     success: true,

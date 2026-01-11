@@ -1,0 +1,52 @@
+{
+  "domain": "home.pentecostal",
+  "siteCode": "WEB-HOME-425466",
+  "contentType": "FB",
+  "niche": "Christian Faith",
+  "categoryCount": 3,
+  "generatedAt": "2026-01-10T23:07:50.342Z",
+  "categories": [
+    {
+      "rank": 1,
+      "name": "Spirit-Filled Living",
+      "slug": "spirit-filled-living",
+      "description": "Explore the depths of Pentecostal spirituality with guidance on living a Spirit-filled life. This category offers practical insights and inspirational stories to help you integrate faith into your daily routines, encouraging a closer walk with God through the Holy Spirit.",
+      "keywords": [
+        "Spirit-filled life",
+        "Pentecostal spirituality",
+        "Holy Spirit guidance",
+        "faith integration",
+        "Christian living"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 2,
+      "name": "Pentecostal Worship",
+      "slug": "pentecostal-worship",
+      "description": "Delve into the vibrant world of Pentecostal worship with articles on music, prayer, and praise that uplift the soul. Discover new ways to express your faith through worship practices that resonate with Pentecostal traditions and bring you closer to the divine presence.",
+      "keywords": [
+        "Pentecostal worship",
+        "Christian music",
+        "prayer and praise",
+        "faith expression",
+        "worship traditions"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 3,
+      "name": "Biblical Teachings",
+      "slug": "biblical-teachings",
+      "description": "Strengthen your understanding of the Bible with in-depth articles on scripture interpretation and application. This category offers teachings and reflections that align with Pentecostal beliefs, aiming to deepen your knowledge of God's Word and its relevance in today's world.",
+      "keywords": [
+        "Bible study",
+        "scripture interpretation",
+        "Pentecostal teachings",
+        "God's Word",
+        "Christian faith"
+      ],
+      "articleCount": 12
+    }
+  ]
+}

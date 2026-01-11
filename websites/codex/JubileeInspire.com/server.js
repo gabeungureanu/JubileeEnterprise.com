@@ -40,6 +40,92 @@ const REWRITES = {
     '/chat': '/chat.html'
 };
 
+// Prompts directory
+const PROMPTS_DIR = path.join(BASE_DIR, 'prompts');
+
+// Prompt file names
+const SYSTEM_PROMPT = 'model_system.txt';
+const DEVELOPER_PROMPT = 'model_developer.txt';
+const USER_DECLARATIONS = 'model_userdeclarations.txt';
+const DEFAULT_MODEL = 'gospelpulse';
+
+/**
+ * Read a prompt file safely
+ */
+function readPromptFile(filename) {
+    const filePath = path.join(PROMPTS_DIR, filename);
+    if (fs.existsSync(filePath)) {
+        return fs.readFileSync(filePath, 'utf8').trim();
+    }
+    return '';
+}
+
+/**
+ * Get all three prompt layers for a given model
+ * Returns: { startup, model, emotional, combined }
+ */
+function getPromptLayers(model) {
+    // Sanitize model name to prevent directory traversal
+    const safeModel = (model || DEFAULT_MODEL).replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase();
+
+    // Layer 1: System prompt foundation (always included)
+    const systemPrompt = readPromptFile(SYSTEM_PROMPT);
+
+    // Layer 2: Model-specific prompt
+    let modelPrompt = '';
+    const modelFilename = `model_${safeModel}.txt`;
+    modelPrompt = readPromptFile(modelFilename);
+
+    // If model-specific prompt is empty, fall back to default model
+    if (!modelPrompt && safeModel !== DEFAULT_MODEL) {
+        modelPrompt = readPromptFile(`model_${DEFAULT_MODEL}.txt`);
+    }
+
+    // Layer 3: Developer prompt suffix (always included)
+    const developerPrompt = readPromptFile(DEVELOPER_PROMPT);
+
+    // User declarations (injected as user role message for identity awareness)
+    const userDeclarations = readPromptFile(USER_DECLARATIONS);
+
+    // Combined prompt in correct order: system -> model -> developer
+    const combined = [systemPrompt, modelPrompt, developerPrompt]
+        .filter(p => p.length > 0)
+        .join('\n\n---\n\n');
+
+    return {
+        system: systemPrompt,
+        model: modelPrompt,
+        developer: developerPrompt,
+        userDeclarations: userDeclarations,
+        combined: combined,
+        modelName: safeModel
+    };
+}
+
+/**
+ * Handle API request for system prompt
+ * Returns all three layers separately for flexibility
+ */
+function handlePromptAPI(req, res, query) {
+    const model = query.model || '';
+    const layers = getPromptLayers(model);
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+        success: true,
+        model: layers.modelName,
+        layers: {
+            system: layers.system,
+            model: layers.model,
+            developer: layers.developer,
+            userDeclarations: layers.userDeclarations
+        },
+        combined: layers.combined,
+        // Legacy field for backwards compatibility
+        prompt: layers.combined
+    }));
+}
+
 // Create the HTTP server
 const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url, true);
@@ -54,6 +140,12 @@ const server = http.createServer((req, res) => {
     if (req.method === 'OPTIONS') {
         res.writeHead(204);
         res.end();
+        return;
+    }
+
+    // API endpoint for system prompts
+    if (pathname === '/api/prompt' && req.method === 'GET') {
+        handlePromptAPI(req, res, parsedUrl.query);
         return;
     }
 

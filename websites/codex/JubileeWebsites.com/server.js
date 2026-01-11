@@ -50,9 +50,81 @@ const NAMESPACE_PATH = join(DATASTORE_BASE, '.namespace');
 // Structure: /.datastore/websites/{domain}/.webstore
 const WEBSITES_PATH = join(DATASTORE_BASE, 'websites');
 
+// WWBW (Worldwide Bible Web) Base Path for final website storage
+// Structure for Inspire domains: /websites/codex/wwBibleweb.com/{root}/{subdomain}/
+// Structure for Public domains: /websites/codex/wwBibleweb.com/www/{domain.com}/
+const WWBW_BASE_PATH = join(__dirname, '..', 'wwBibleweb.com');
+
+/**
+ * Calculate the storage path for a website based on domain type
+ * @param {string} inspireDomain - Inspire domain (e.g., "home.pentecostal")
+ * @param {string} publicDomain - Public domain (e.g., "greatwebsite.com")
+ * @returns {object} - { inspirePath, publicPath, primaryPath }
+ */
+function calculateWebsitePaths(inspireDomain, publicDomain) {
+  const paths = {
+    inspirePath: null,
+    publicPath: null,
+    primaryPath: null
+  };
+
+  // Calculate Inspire domain path: /wwBibleweb.com/{root}/{subdomain}/
+  if (inspireDomain) {
+    const parts = inspireDomain.split('.');
+    if (parts.length >= 2) {
+      // e.g., "home.pentecostal" -> root="pentecostal", subdomain="home"
+      const root = parts[parts.length - 1];  // Last part is the root TLD
+      const subdomain = parts.slice(0, -1).join('.');  // Everything before the root
+      paths.inspirePath = join(WWBW_BASE_PATH, root, subdomain);
+    } else {
+      // Single part domain (just the root, no subdomain)
+      paths.inspirePath = join(WWBW_BASE_PATH, inspireDomain, '_root');
+    }
+  }
+
+  // Calculate Public domain path: /wwBibleweb.com/www/{domain.com}/
+  if (publicDomain) {
+    // Remove any protocol prefix if present
+    const cleanDomain = publicDomain.replace(/^https?:\/\//, '').replace(/^www\./, '');
+    paths.publicPath = join(WWBW_BASE_PATH, 'www', cleanDomain);
+  }
+
+  // Primary path is Inspire if available, otherwise Public
+  paths.primaryPath = paths.inspirePath || paths.publicPath;
+
+  return paths;
+}
+
+/**
+ * Copy website files to a destination path
+ * @param {string} sourcePath - Source folder path
+ * @param {string} destPath - Destination folder path
+ */
+async function copyWebsiteToPath(sourcePath, destPath) {
+  await fs.mkdir(destPath, { recursive: true });
+
+  // Copy all files and folders recursively
+  const entries = await fs.readdir(sourcePath, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const srcPath = join(sourcePath, entry.name);
+    const dstPath = join(destPath, entry.name);
+
+    if (entry.isDirectory()) {
+      await copyWebsiteToPath(srcPath, dstPath);
+    } else {
+      await fs.copyFile(srcPath, dstPath);
+    }
+  }
+}
+
 // AI Model Configuration
 const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
-const OPENAI_MODEL = 'gpt-4o';
+const OPENAI_MODEL = 'gpt-4o-mini';
+
+// Article Configuration
+const ARTICLE_TARGET_WORDS = 1500;  // Target word count
+const ARTICLE_MIN_WORDS = 1200;     // Minimum word count
 
 // Website Generation Configuration
 const ARTICLES_PER_CATEGORY = 12;
@@ -63,6 +135,285 @@ const BASIC_AUTH_USER = process.env.BASIC_AUTH_USER || process.env.ADMIN_USER;
 const BASIC_AUTH_PASS = process.env.BASIC_AUTH_PASSWORD || process.env.BASIC_AUTH_PASS || process.env.ADMIN_PASS;
 const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 30);
 const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS || 5 * 60 * 1000);
+
+// ============================================================================
+// API THROTTLING - Prevents rate limiting/blocking by external APIs
+// ============================================================================
+
+// Throttle configuration (delays in milliseconds)
+const API_THROTTLE = {
+  openai: {
+    minDelay: 500,      // Min 500ms between OpenAI calls
+    maxDelay: 2000,     // Max delay with backoff
+    lastCall: 0,        // Timestamp of last call
+    consecutiveErrors: 0 // Track errors for backoff
+  },
+  leonardo: {
+    minDelay: 1000,     // Min 1 second between Leonardo calls (image generation is slower)
+    maxDelay: 5000,     // Max delay with backoff
+    lastCall: 0,
+    consecutiveErrors: 0
+  }
+};
+
+/**
+ * Throttle API calls to prevent rate limiting
+ * Implements delay between calls with exponential backoff on errors
+ * @param {string} api - API name ('openai' or 'leonardo')
+ * @returns {Promise<void>}
+ */
+async function throttleApiCall(api) {
+  const config = API_THROTTLE[api];
+  if (!config) return;
+
+  const now = Date.now();
+  const timeSinceLastCall = now - config.lastCall;
+
+  // Calculate delay with exponential backoff if there were errors
+  let requiredDelay = config.minDelay;
+  if (config.consecutiveErrors > 0) {
+    requiredDelay = Math.min(
+      config.minDelay * Math.pow(2, config.consecutiveErrors),
+      config.maxDelay
+    );
+  }
+
+  // Wait if we need to
+  if (timeSinceLastCall < requiredDelay) {
+    const waitTime = requiredDelay - timeSinceLastCall;
+    console.log(`   ⏱️  Throttling ${api} API: waiting ${waitTime}ms`);
+    await new Promise(resolve => setTimeout(resolve, waitTime));
+  }
+
+  config.lastCall = Date.now();
+}
+
+/**
+ * Report API call success - resets error counter
+ * @param {string} api - API name
+ */
+function apiCallSuccess(api) {
+  const config = API_THROTTLE[api];
+  if (config) {
+    config.consecutiveErrors = 0;
+  }
+}
+
+/**
+ * Report API call error - increases backoff
+ * @param {string} api - API name
+ */
+function apiCallError(api) {
+  const config = API_THROTTLE[api];
+  if (config) {
+    config.consecutiveErrors = Math.min(config.consecutiveErrors + 1, 5); // Cap at 5
+    console.log(`   ⚠️  ${api} API error count: ${config.consecutiveErrors} (next delay: ${Math.min(config.minDelay * Math.pow(2, config.consecutiveErrors), config.maxDelay)}ms)`);
+  }
+}
+
+// ============================================================================
+// LEONARDO AI IMAGE GENERATION
+// ============================================================================
+
+/**
+ * Generate an image using Leonardo AI API
+ * Leonardo uses a two-step process: create generation, then poll for results
+ * @param {string} prompt - The image generation prompt
+ * @param {object} options - Optional settings { width, height, modelId }
+ * @returns {Promise<string|null>} - URL of generated image or null on failure
+ */
+async function generateLeonardoImage(prompt, options = {}) {
+  const apiKey = process.env.LEONARDO_API_KEY;
+
+  if (!apiKey) {
+    console.log('   ⚠️  No Leonardo API key found');
+    return null;
+  }
+
+  // Default settings - landscape orientation similar to DALL-E 1792x1024
+  const width = options.width || 1472;
+  const height = options.height || 832;
+  // Using Leonardo Phoenix 1.0 - high quality with style UUID support
+  const modelId = options.modelId || 'de7d3faf-762f-48e0-b3b7-9d0ac3a3fcf3'; // Leonardo Phoenix 1.0
+
+  try {
+    // Apply API throttling to prevent rate limiting
+    await throttleApiCall('leonardo');
+
+    // Step 1: Create generation request
+    console.log('   🎨 Starting Leonardo image generation...');
+    const createResponse = await fetch('https://cloud.leonardo.ai/api/rest/v1/generations', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        modelId: modelId,
+        width: width,
+        height: height,
+        num_images: 1,
+        public: false
+      })
+    });
+
+    if (!createResponse.ok) {
+      const errorBody = await createResponse.text();
+      console.log(`   ⚠️  Leonardo API create error: ${createResponse.status} - ${errorBody}`);
+      apiCallError('leonardo');
+      return null;
+    }
+
+    const createData = await createResponse.json();
+    const generationId = createData.sdGenerationJob?.generationId;
+
+    if (!generationId) {
+      console.log('   ⚠️  Leonardo API: No generation ID returned');
+      apiCallError('leonardo');
+      return null;
+    }
+
+    console.log(`   ⏳ Leonardo generation started: ${generationId}`);
+
+    // Step 2: Poll for results (max 60 seconds, check every 3 seconds)
+    const maxAttempts = 20;
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
+      attempts++;
+
+      const statusResponse = await fetch(`https://cloud.leonardo.ai/api/rest/v1/generations/${generationId}`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`
+        }
+      });
+
+      if (!statusResponse.ok) {
+        console.log(`   ⚠️  Leonardo API status check failed: ${statusResponse.status}`);
+        continue;
+      }
+
+      const statusData = await statusResponse.json();
+      const generation = statusData.generations_by_pk;
+
+      if (generation?.status === 'COMPLETE') {
+        const images = generation.generated_images;
+        if (images && images.length > 0) {
+          const imageUrl = images[0].url;
+          console.log(`   ✅ Leonardo image generated successfully`);
+          apiCallSuccess('leonardo');
+          return imageUrl;
+        }
+      } else if (generation?.status === 'FAILED') {
+        console.log('   ❌ Leonardo generation failed');
+        apiCallError('leonardo');
+        return null;
+      }
+
+      console.log(`   ⏳ Leonardo generation status: ${generation?.status || 'pending'} (attempt ${attempts}/${maxAttempts})`);
+    }
+
+    console.log('   ⚠️  Leonardo generation timed out');
+    apiCallError('leonardo');
+    return null;
+
+  } catch (error) {
+    console.error('   ❌ Leonardo API error:', error.message);
+    apiCallError('leonardo');
+    return null;
+  }
+}
+
+// ============================================================================
+// THEME EXTRACTION ENGINE
+// ============================================================================
+
+/**
+ * Extract top 3 themes from article content using AI
+ * @param {string} content - The article body text
+ * @param {string} title - The article title
+ * @param {string} categoryName - The category name
+ * @returns {Promise<{themes: string[], emotionalTone: string, visualElements: string[]}>}
+ */
+async function extractArticleThemes(content, title, categoryName) {
+  const themePrompt = `Analyze the following article and extract the 3 most prominent themes/topics that would make compelling visual imagery.
+
+ARTICLE TITLE: ${title}
+CATEGORY: ${categoryName}
+
+ARTICLE CONTENT:
+${content.substring(0, 3000)}
+
+Respond with ONLY this JSON format:
+{
+  "themes": ["theme1", "theme2", "theme3"],
+  "emotionalTone": "one word describing the primary emotion (e.g., hopeful, inspiring, peaceful, dynamic, joyful, reverent, powerful)",
+  "visualElements": ["visual element 1", "visual element 2", "visual element 3"],
+  "colorMood": "warm|cool|neutral|vibrant",
+  "settingSuggestion": "suggested setting or environment for the image"
+}
+
+Focus on:
+- Concrete visual concepts that can be depicted in an image
+- The emotional heart of the article
+- Symbolic or metaphorical representations of key ideas`;
+
+  try {
+    const response = await callOpenAI(themePrompt, 0.7, 500);
+    const cleanJson = response.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const parsed = JSON.parse(cleanJson);
+
+    console.log(`   🎯 Extracted themes for "${title}": ${parsed.themes.join(', ')}`);
+    return parsed;
+  } catch (error) {
+    console.log(`   ⚠️  Theme extraction failed, using fallback`);
+    // Fallback: extract key concepts from title and category
+    return {
+      themes: [categoryName, title.split(' ').slice(0, 3).join(' '), 'inspiration'],
+      emotionalTone: 'inspiring',
+      visualElements: ['light', 'nature', 'people'],
+      colorMood: 'warm',
+      settingSuggestion: 'peaceful natural setting'
+    };
+  }
+}
+
+/**
+ * Generate a rich, context-aware image prompt from extracted themes
+ * @param {object} themeData - Output from extractArticleThemes
+ * @param {string} articleTitle - The article title
+ * @param {string} contentType - FB/BB/OB content type
+ * @param {string} niche - The website niche
+ * @returns {string} - Optimized Leonardo AI prompt
+ */
+function generateThematicImagePrompt(themeData, articleTitle, contentType, niche) {
+  const { themes, emotionalTone, visualElements, colorMood, settingSuggestion } = themeData;
+
+  // Build style descriptors based on content type
+  let styleGuide = '';
+  if (contentType === 'FB') {
+    styleGuide = 'spiritual, reverent, hopeful lighting, sacred atmosphere';
+  } else if (contentType === 'BB') {
+    styleGuide = 'professional, modern, clean lines, corporate elegance';
+  } else {
+    styleGuide = 'vibrant, engaging, contemporary, accessible';
+  }
+
+  // Build color guidance
+  const colorGuide = {
+    warm: 'golden hour lighting, warm amber tones, soft orange and yellow hues',
+    cool: 'serene blue tones, soft silver light, calming cyan accents',
+    neutral: 'balanced natural lighting, earth tones, subtle contrast',
+    vibrant: 'rich saturated colors, dynamic contrast, eye-catching palette'
+  };
+
+  // Construct the prompt - START with no-text instruction (most important words first)
+  const prompt = `Pure photography without any text or writing. A beautiful ${styleGuide} photograph capturing ${themes.join(' and ')}. ${settingSuggestion}. The scene evokes ${emotionalTone} with ${colorGuide[colorMood] || colorGuide.warm}. Visual elements include ${visualElements.join(', ')}. Professional editorial photography style, cinematic lighting, no typography, no words, no letters anywhere in the image.`;
+
+  return prompt;
+}
 
 // ============================================================================
 // TITLE FORMATTING HELPERS
@@ -479,6 +830,9 @@ async function callOpenAI(prompt, temperature = 0.7, maxTokens = 2000) {
  */
 async function makeOpenAICall(apiKey, prompt, temperature, maxTokens) {
   try {
+    // Apply API throttling to prevent rate limiting
+    await throttleApiCall('openai');
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -497,13 +851,16 @@ async function makeOpenAICall(apiKey, prompt, temperature, maxTokens) {
 
     if (!response.ok) {
       const error = await response.json();
+      apiCallError('openai');
       throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
+    apiCallSuccess('openai');
     return data.choices[0].message.content;
   } catch (error) {
     console.error('OpenAI API call failed:', error.message);
+    apiCallError('openai');
     throw error;
   }
 }
@@ -708,33 +1065,52 @@ app.get('/api/websites', async (req, res) => {
 /**
  * STEP 1: Analyze domain name AND generate writers
  * POST /api/website/analyze-and-generate-writers
- * Body: { domain, overview, categoryCount, quickMode }
+ * Body: { domain, inspireDomain, publicDomain, primaryEnvironment, overview, categoryCount, quickMode }
  */
 app.post('/api/website/analyze-and-generate-writers', requireBasicAuth, generationRateLimiter, async (req, res) => {
   try {
-    const { domain, overview, categoryCount = DEFAULT_CATEGORY_COUNT, quickMode = false } = req.body;
+    const {
+      domain,
+      inspireDomain,
+      publicDomain,
+      primaryEnvironment = 'INSPIRE',
+      overview,
+      categoryCount = DEFAULT_CATEGORY_COUNT,
+      quickMode = false
+    } = req.body;
 
-    if (!domain) {
+    // Use provided domain or fall back to inspireDomain/publicDomain
+    const primaryDomain = domain || inspireDomain || publicDomain;
+
+    if (!primaryDomain) {
       return res.status(400).json({
         success: false,
-        error: 'Domain is required'
+        error: 'At least one domain is required'
       });
     }
+
+    // Calculate storage paths for WWBW
+    const wwbwPaths = calculateWebsitePaths(inspireDomain, publicDomain);
 
     // Overview is optional but helpful for better analysis
     const websiteOverview = overview && overview.trim() ? overview.trim() : 'General website';
 
-    console.log(`\n🌐 Analyzing domain: ${domain}`);
+    console.log(`\n🌐 Analyzing domain: ${primaryDomain}`);
+    console.log(`   Inspire Domain: ${inspireDomain || 'None'}`);
+    console.log(`   Public Domain: ${publicDomain || 'None'}`);
+    console.log(`   Primary Environment: ${primaryEnvironment}`);
     console.log(`   Categories: ${categoryCount}`);
     console.log(`   Mode: ${quickMode ? 'Quick' : 'Full'}`);
     console.log(`   Overview provided: ${overview && overview.trim() ? 'Yes' : 'No'}`);
+    if (wwbwPaths.inspirePath) console.log(`   WWBW Inspire Path: ${wwbwPaths.inspirePath}`);
+    if (wwbwPaths.publicPath) console.log(`   WWBW Public Path: ${wwbwPaths.publicPath}`);
 
     // Generate site code
-    const siteCode = generateSiteCode(domain);
+    const siteCode = generateSiteCode(primaryDomain);
     console.log(`   Site Code: ${siteCode}`);
 
     // Create site folder
-    const sitePath = join(SITES_PATH, `${siteCode}-${domain}`);
+    const sitePath = join(SITES_PATH, `${siteCode}-${primaryDomain}`);
     await fs.mkdir(sitePath, { recursive: true });
     await fs.mkdir(join(sitePath, 'writers'), { recursive: true });
     await fs.mkdir(join(sitePath, 'categories'), { recursive: true });
@@ -857,7 +1233,7 @@ Ensure the first 6 writers are female and the last 6 are male. Make all bios and
 
     // Save writers to file
     const writersData = {
-      domain,
+      domain: primaryDomain,
       contentType,
       generatedAt: new Date().toISOString(),
       writers
@@ -869,10 +1245,18 @@ Ensure the first 6 writers are female and the last 6 are male. Make all bios and
       'utf-8'
     );
 
-    // Save config file
+    // Save config file with domain information
     const config = {
       siteCode,
-      domain,
+      domain: primaryDomain,
+      inspireDomain: inspireDomain || null,
+      publicDomain: publicDomain || null,
+      primaryEnvironment,
+      wwbwPaths: {
+        inspirePath: wwbwPaths.inspirePath,
+        publicPath: wwbwPaths.publicPath,
+        primaryPath: wwbwPaths.primaryPath
+      },
       overview: websiteOverview,
       categoryCount,
       quickMode,
@@ -893,7 +1277,10 @@ Ensure the first 6 writers are female and the last 6 are male. Make all bios and
     const registry = await loadRegistry();
     registry.sites.push({
       siteCode,
-      domain,
+      domain: primaryDomain,
+      inspireDomain: inspireDomain || null,
+      publicDomain: publicDomain || null,
+      primaryEnvironment,
       categoryCount,
       quickMode,
       contentType,
@@ -908,7 +1295,11 @@ Ensure the first 6 writers are female and the last 6 are male. Make all bios and
     res.json({
       success: true,
       siteCode,
-      domain,
+      domain: primaryDomain,
+      inspireDomain: inspireDomain || null,
+      publicDomain: publicDomain || null,
+      primaryEnvironment,
+      wwbwPaths,
       contentType,
       analysis,
       writers,
@@ -1921,7 +2312,7 @@ app.post('/api/website/generate-article-content', requireBasicAuth, generationRa
     }
 
     // Generate article content using AI
-    const articlePrompt = `Write a short, engaging article for the following topic. The article must be EXACTLY 100 words or less - this is a strict limit.
+    const articlePrompt = `Write a comprehensive, in-depth article for the following topic. The article must be ${ARTICLE_TARGET_WORDS} words (minimum ${ARTICLE_MIN_WORDS} words).
 
 Title: ${article.title}
 Category: ${article.categoryName}
@@ -1929,21 +2320,30 @@ Website Type: ${contentType === 'FB' ? 'Faith-Based' : contentType === 'BB' ? 'B
 Niche: ${niche}
 
 REQUIREMENTS:
-1. Write exactly 100 words or less
+1. Write approximately ${ARTICLE_TARGET_WORDS} words (minimum ${ARTICLE_MIN_WORDS} words) - this is a STRICT requirement
 2. Be engaging and captivating from the first sentence
-3. Provide valuable insight or information
-4. Match the tone appropriate for the website type
-5. Do NOT include the title in your response
+3. Provide valuable, detailed insight and information
+4. Include multiple sections with clear structure
+5. Match the tone appropriate for the website type
+6. Do NOT include the title in your response
+7. Use proper paragraphs and formatting
+8. Include practical examples, tips, or actionable advice where appropriate
 
-Also identify the top 3 SEO keywords for this article.
+STRUCTURE:
+- Strong opening paragraph that hooks the reader
+- Multiple body sections covering different aspects of the topic
+- Include relevant statistics, facts, or expert insights where appropriate
+- Concluding section with key takeaways or call to action
+
+Also identify the top 5 SEO keywords for this article.
 
 Respond with ONLY this JSON format:
 {
-  "content": "Your article content here (100 words max)...",
-  "keywords": ["keyword1", "keyword2", "keyword3"]
+  "content": "Your full article content here (${ARTICLE_TARGET_WORDS} words)...",
+  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
 }`;
 
-    const articleResponse = await callOpenAI(articlePrompt, 0.7, 500);
+    const articleResponse = await callOpenAI(articlePrompt, 0.7, 4000);
 
     let articleContent = '';
     let keywords = [];
@@ -1954,9 +2354,10 @@ Respond with ONLY this JSON format:
       articleContent = parsed.content || '';
       keywords = parsed.keywords || [];
     } catch (parseError) {
-      // Fallback content
-      articleContent = `Discover insights about ${article.title}. This article explores key concepts and provides valuable information for readers interested in ${article.categoryName}.`;
-      keywords = [article.categorySlug, niche.toLowerCase(), 'guide'];
+      // Fallback content - provide a more substantial placeholder for longer articles
+      console.log(`   ⚠️  Failed to parse article JSON, using fallback content`);
+      articleContent = `Discover comprehensive insights about ${article.title}. This in-depth article explores key concepts, practical strategies, and valuable information for readers interested in ${article.categoryName}.\n\nIn today's fast-paced world, understanding ${article.title.toLowerCase()} has become increasingly important. Whether you're a beginner looking to learn the fundamentals or an experienced practitioner seeking to deepen your knowledge, this guide provides the insights you need.\n\nThe journey toward mastering ${article.categoryName.toLowerCase()} begins with understanding the core principles that drive success in this field. By exploring these foundational concepts, you'll gain the knowledge necessary to make informed decisions and achieve your goals.\n\nAs you continue reading, you'll discover practical tips, expert insights, and actionable strategies that you can implement immediately. Our goal is to provide you with the comprehensive information you need to succeed in ${niche.toLowerCase()}.\n\nStay tuned as we delve deeper into the fascinating world of ${article.categoryName.toLowerCase()}, exploring the latest trends, best practices, and innovative approaches that are shaping the future of this dynamic field.`;
+      keywords = [article.categorySlug, niche.toLowerCase(), 'guide', 'tips', 'insights'];
     }
 
     // Create article data object
@@ -2008,7 +2409,10 @@ Respond with ONLY this JSON format:
       articleId: articleData.id,
       title: article.title,
       category: article.categoryName,
-      keywords
+      categorySlug: article.categorySlug,
+      keywords,
+      // Include content for theme-based image generation
+      articleContent: articleContent.substring(0, 3000) // First 3000 chars for theme extraction
     });
 
   } catch (error) {
@@ -2021,26 +2425,20 @@ Respond with ONLY this JSON format:
 });
 
 /**
- * STEP 5 (Part 2b): Generate article image for first article in category
+ * STEP 5 (Part 2b): Generate article image with theme-based prompts
  * POST /api/website/generate-article-image
- * Body: { siteCode, article, isFirstInCategory, articleId }
+ * Body: { siteCode, article, isFirstInCategory, articleId, articleContent }
+ *
+ * NEW FEATURE: Extracts top 3 themes from article content and generates
+ * emotionally resonant, context-aware images using Leonardo AI
  */
 app.post('/api/website/generate-article-image', requireBasicAuth, generationRateLimiter, async (req, res) => {
   try {
-    const { siteCode, article, isFirstInCategory, articleId } = req.body;
+    const { siteCode, article, isFirstInCategory, articleId, articleContent } = req.body;
 
     console.log(`   🖼️  Image request received: articleId=${articleId}, isFirst=${isFirstInCategory}, category=${article?.categoryName}`);
 
-    // Only generate images for the first article in each category
-    if (!isFirstInCategory) {
-      console.log(`   ⏭️  Skipping image (not first in category)`);
-      return res.json({
-        success: true,
-        skipped: true,
-        message: 'Image generation skipped (not first article in category)'
-      });
-    }
-
+    // Generate images for ALL articles now, not just first in category
     if (!siteCode || !article || !articleId) {
       console.log(`   ❌ Missing required params: siteCode=${!!siteCode}, article=${!!article}, articleId=${!!articleId}`);
       return res.status(400).json({
@@ -2095,48 +2493,47 @@ app.post('/api/website/generate-article-image', requireBasicAuth, generationRate
       // Image doesn't exist, proceed with generation
     }
 
-    console.log(`   🖼️  Generating image for article: ${articleId} (${article.categoryName})`);
+    console.log(`   🖼️  Generating theme-based image for article: ${articleId} (${article.title || article.categoryName})`);
 
-    // Generate image using DALL-E 3 API - LANDSCAPE orientation (1792x1024)
-    const websiteType = contentType === 'FB' ? 'Faith-Based/Christian' : contentType === 'BB' ? 'Business/Professional' : 'General';
-    const imagePrompt = `Create a professional, modern header image for a ${websiteType} website article category called "${article.categoryName}". The category focuses on ${niche}. The image should be clean, inspiring, and suitable for a news/blog website header banner. No text in the image. Professional photography style.`;
+    let imagePrompt;
+    let themeData = null;
+
+    // If we have article content, extract themes for a richer prompt
+    if (articleContent && articleContent.length > 100) {
+      console.log(`   🎯 Extracting themes from article content...`);
+      themeData = await extractArticleThemes(
+        articleContent,
+        article.title || article.categoryName,
+        article.categoryName
+      );
+
+      // Generate rich, thematic prompt
+      imagePrompt = generateThematicImagePrompt(
+        themeData,
+        article.title || article.categoryName,
+        contentType,
+        niche
+      );
+      console.log(`   📝 Generated thematic prompt with themes: ${themeData.themes.join(', ')}`);
+    } else {
+      // Fallback to basic prompt if no content available
+      const websiteType = contentType === 'FB' ? 'Faith-Based/Christian' : contentType === 'BB' ? 'Business/Professional' : 'General';
+      imagePrompt = `Create a professional, modern header image for a ${websiteType} website article titled "${article.title}". Category: ${article.categoryName}. Niche: ${niche}. The image should be visually stunning, emotionally engaging, and suitable for a news/blog website. No text in the image. Professional photography or high-end digital art style.`;
+    }
 
     let generatedImagePath = null;
 
     try {
-      const openaiApiKey = process.env.OPENAI_API_KEY_BACKUP || process.env.OPENAI_API_KEY;
+      const leonardoImageUrl = await generateLeonardoImage(imagePrompt);
 
-      if (openaiApiKey) {
-        const dalleResponse = await fetch('https://api.openai.com/v1/images/generations', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openaiApiKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            model: 'dall-e-3',
-            prompt: imagePrompt,
-            n: 1,
-            size: '1792x1024',
-            quality: 'standard'
-          })
-        });
-
-        if (dalleResponse.ok) {
-          const dalleData = await dalleResponse.json();
-          if (dalleData.data && dalleData.data[0] && dalleData.data[0].url) {
-            const imageResponse = await fetch(dalleData.data[0].url);
-            const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
-            await fs.writeFile(imagePath, imageBuffer);
-            generatedImagePath = `/websites/${domain}/images/${imageFileName}`;
-            console.log(`   ✅ Article image saved: ${imageFileName}`);
-          }
-        } else {
-          const errorBody = await dalleResponse.text();
-          console.log(`   ⚠️  DALL-E 3 API error: ${dalleResponse.status} - ${errorBody}`);
-        }
+      if (leonardoImageUrl) {
+        const imageResponse = await fetch(leonardoImageUrl);
+        const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+        await fs.writeFile(imagePath, imageBuffer);
+        generatedImagePath = `/websites/${domain}/images/${imageFileName}`;
+        console.log(`   ✅ Theme-based article image saved: ${imageFileName}`);
       } else {
-        console.log(`   ⚠️  No OpenAI API key found, skipping image generation`);
+        console.log(`   ⚠️  Leonardo image generation failed or no API key`);
       }
     } catch (imageError) {
       console.error(`   ❌ Image generation error:`, imageError.message);
@@ -2148,11 +2545,199 @@ app.post('/api/website/generate-article-image', requireBasicAuth, generationRate
       articleId: articleId,
       categorySlug: article.categorySlug,
       imagePath: generatedImagePath,
-      message: generatedImagePath ? 'Article image generated successfully' : 'Image generation skipped (no API key or error)'
+      themes: themeData?.themes || null,
+      emotionalTone: themeData?.emotionalTone || null,
+      message: generatedImagePath ? 'Theme-based article image generated successfully' : 'Image generation skipped (no API key or error)'
     });
 
   } catch (error) {
     console.error('Article image generation error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * RETROACTIVE IMAGE REGENERATION
+ * POST /api/website/regenerate-images
+ * Body: { siteCode, forceRegenerate: boolean, category: string (optional) }
+ *
+ * Regenerates all article images using the new theme-based system.
+ * Parses existing article content, extracts themes, and creates new images.
+ * Optionally filter by category slug to only regenerate specific category images.
+ */
+app.post('/api/website/regenerate-images', requireBasicAuth, generationRateLimiter, async (req, res) => {
+  try {
+    const { siteCode, forceRegenerate = false, category = null } = req.body;
+
+    if (!siteCode) {
+      return res.status(400).json({
+        success: false,
+        error: 'Site code is required'
+      });
+    }
+
+    // Find site folder
+    const folders = await fs.readdir(SITES_PATH);
+    const siteFolder = folders.find(f => f.startsWith(siteCode));
+
+    if (!siteFolder) {
+      return res.status(404).json({
+        success: false,
+        error: 'Website not found'
+      });
+    }
+
+    const sitePath = join(SITES_PATH, siteFolder);
+    const configPath = join(sitePath, `${siteCode}.config.json`);
+
+    // Load config
+    const configData = await fs.readFile(configPath, 'utf-8');
+    const config = JSON.parse(configData);
+    const domain = config.domain;
+    const contentType = config.contentType || 'OB';
+    const niche = config.analysis?.niche || 'General';
+
+    // Domain folder path
+    const domainFolder = join(WEBSITES_PATH, domain);
+    const webstorePath = join(domainFolder, '.webstore');
+    const imagesFolder = join(domainFolder, 'images');
+
+    // Collect all articles from all categories (or specific category if provided)
+    const allArticles = [];
+    const categoryFolders = await fs.readdir(domainFolder);
+
+    for (const folder of categoryFolders) {
+      if (folder.startsWith('.') || folder === 'images') continue;
+
+      // If category filter is provided, only process that category
+      if (category && folder !== category) continue;
+
+      const articlesPath = join(domainFolder, folder, 'web_articles.json');
+      try {
+        const articlesData = await fs.readFile(articlesPath, 'utf-8');
+        const articlesJson = JSON.parse(articlesData);
+
+        if (articlesJson.articles) {
+          for (const article of articlesJson.articles) {
+            allArticles.push({
+              ...article,
+              categorySlug: folder
+            });
+          }
+        }
+      } catch (err) {
+        // Category folder might not have articles
+      }
+    }
+
+    const categoryLabel = category ? `category "${category}" in` : '';
+    console.log(`   🔄 Regenerating images for ${allArticles.length} articles in ${categoryLabel} ${domain}`);
+
+    const results = {
+      total: allArticles.length,
+      regenerated: 0,
+      skipped: 0,
+      failed: 0,
+      details: []
+    };
+
+    // Process each article
+    for (const article of allArticles) {
+      const imageFileName = `${article.id}.jpg`;
+      const imagePath = join(imagesFolder, imageFileName);
+
+      // Check if image exists (skip unless forceRegenerate)
+      let imageExists = false;
+      try {
+        await fs.access(imagePath);
+        imageExists = true;
+      } catch (err) {
+        // Image doesn't exist
+      }
+
+      if (imageExists && !forceRegenerate) {
+        results.skipped++;
+        results.details.push({
+          articleId: article.id,
+          title: article.title,
+          status: 'skipped',
+          reason: 'Image exists (use forceRegenerate to override)'
+        });
+        continue;
+      }
+
+      // Extract themes from article content
+      console.log(`   🎯 Processing: ${article.title}`);
+
+      try {
+        const themeData = await extractArticleThemes(
+          article.content || '',
+          article.title,
+          article.category || article.categorySlug
+        );
+
+        // Generate thematic image prompt
+        const imagePrompt = generateThematicImagePrompt(
+          themeData,
+          article.title,
+          contentType,
+          niche
+        );
+
+        console.log(`   📝 Themes: ${themeData.themes.join(', ')}`);
+
+        // Generate image
+        const leonardoImageUrl = await generateLeonardoImage(imagePrompt);
+
+        if (leonardoImageUrl) {
+          const imageResponse = await fetch(leonardoImageUrl);
+          const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+          await fs.writeFile(imagePath, imageBuffer);
+
+          results.regenerated++;
+          results.details.push({
+            articleId: article.id,
+            title: article.title,
+            status: 'regenerated',
+            themes: themeData.themes,
+            emotionalTone: themeData.emotionalTone
+          });
+
+          console.log(`   ✅ Image regenerated: ${imageFileName}`);
+        } else {
+          results.failed++;
+          results.details.push({
+            articleId: article.id,
+            title: article.title,
+            status: 'failed',
+            reason: 'Leonardo API returned no image'
+          });
+        }
+      } catch (err) {
+        results.failed++;
+        results.details.push({
+          articleId: article.id,
+          title: article.title,
+          status: 'failed',
+          reason: err.message
+        });
+        console.error(`   ❌ Failed: ${article.title} - ${err.message}`);
+      }
+    }
+
+    console.log(`   ✅ Regeneration complete: ${results.regenerated} regenerated, ${results.skipped} skipped, ${results.failed} failed`);
+
+    res.json({
+      success: true,
+      domain,
+      results
+    });
+
+  } catch (error) {
+    console.error('Image regeneration error:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -2305,48 +2890,24 @@ app.post('/api/website/generate-category-image', requireBasicAuth, generationRat
     const imagesFolder = join(domainFolder, 'images');
     await fs.mkdir(imagesFolder, { recursive: true });
 
-    // Generate image using DALL-E 3 API - LANDSCAPE orientation (1792x1024)
+    // Generate image using Leonardo AI API - LANDSCAPE orientation (1472x832)
     const imagePrompt = `Create a professional, modern header image for a website category called "${category}". ${description ? `The category is about: ${description}` : ''} The image should be clean, minimal, and suitable for a news/blog website header banner. No text in the image.`;
 
     let imagePath = null;
 
     try {
-      // Use DALL-E 3 for image generation with explicit landscape size
-      const openaiApiKey = process.env.OPENAI_API_KEY_BACKUP || process.env.OPENAI_API_KEY;
+      const leonardoImageUrl = await generateLeonardoImage(imagePrompt);
 
-      if (openaiApiKey) {
-        const dalleResponse = await fetch('https://api.openai.com/v1/images/generations', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openaiApiKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            model: 'dall-e-3',
-            prompt: imagePrompt,
-            n: 1,
-            size: '1792x1024',
-            quality: 'standard'
-          })
-        });
+      if (leonardoImageUrl) {
+        const imageFileName = `${categorySlug}.jpg`;
+        imagePath = join(imagesFolder, imageFileName);
 
-        if (dalleResponse.ok) {
-          const dalleData = await dalleResponse.json();
-          if (dalleData.data && dalleData.data[0] && dalleData.data[0].url) {
-            const imageFileName = `${categorySlug}.jpg`;
-            imagePath = join(imagesFolder, imageFileName);
-
-            const imageResponse = await fetch(dalleData.data[0].url);
-            const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
-            await fs.writeFile(imagePath, imageBuffer);
-            console.log(`   ✅ Image saved: ${imageFileName}`);
-          }
-        } else {
-          const errorBody = await dalleResponse.text();
-          console.log(`   ⚠️  DALL-E 3 API error: ${dalleResponse.status} - ${errorBody}`);
-        }
+        const imageResponse = await fetch(leonardoImageUrl);
+        const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+        await fs.writeFile(imagePath, imageBuffer);
+        console.log(`   ✅ Image saved: ${imageFileName}`);
       } else {
-        console.log(`   ⚠️  No OpenAI API key found, using placeholder`);
+        console.log(`   ⚠️  Leonardo image generation failed or no API key`);
       }
     } catch (imageError) {
       console.error(`   ❌ Image generation error:`, imageError.message);
@@ -2458,6 +3019,15 @@ app.post('/api/website/build-website', requireBasicAuth, generationRateLimiter, 
       console.log(`   ⚠️  More page generation skipped: ${moreErr.message}`);
     }
 
+    // Generate daily history file (required for index.html to load content)
+    try {
+      console.log(`   📅 Generating daily history file...`);
+      const historyResult = await ensureTodayHistory(domain);
+      console.log(`   ✅ Daily history file generated: ${historyResult}`);
+    } catch (historyErr) {
+      console.log(`   ⚠️  History generation warning: ${historyErr.message}`);
+    }
+
     // Update config
     config.status = 'step6_complete';
     config.websiteBuiltAt = new Date().toISOString();
@@ -2472,11 +3042,52 @@ app.post('/api/website/build-website', requireBasicAuth, generationRateLimiter, 
       await saveRegistry(registry);
     }
 
+    // Copy website to WWBW paths if configured
+    const wwbwCopied = { inspire: false, public: false };
+    const wwbwUrls = { inspire: null, public: null };
+
+    if (config.wwbwPaths) {
+      // Copy to Inspire path if exists
+      if (config.wwbwPaths.inspirePath) {
+        try {
+          console.log(`   📁 Copying to WWBW Inspire path: ${config.wwbwPaths.inspirePath}`);
+          await copyWebsiteToPath(domainFolder, config.wwbwPaths.inspirePath);
+          wwbwCopied.inspire = true;
+
+          // Calculate URL path from wwBibleweb.com root
+          const relativePath = config.wwbwPaths.inspirePath.replace(WWBW_BASE_PATH, '').replace(/\\/g, '/');
+          wwbwUrls.inspire = `/wwbw${relativePath}/index.html`;
+          console.log(`   ✅ Copied to Inspire path`);
+        } catch (copyErr) {
+          console.error(`   ❌ Failed to copy to Inspire path: ${copyErr.message}`);
+        }
+      }
+
+      // Copy to Public path if exists
+      if (config.wwbwPaths.publicPath) {
+        try {
+          console.log(`   📁 Copying to WWBW Public path: ${config.wwbwPaths.publicPath}`);
+          await copyWebsiteToPath(domainFolder, config.wwbwPaths.publicPath);
+          wwbwCopied.public = true;
+
+          // Calculate URL path from wwBibleweb.com root
+          const relativePath = config.wwbwPaths.publicPath.replace(WWBW_BASE_PATH, '').replace(/\\/g, '/');
+          wwbwUrls.public = `/wwbw${relativePath}/index.html`;
+          console.log(`   ✅ Copied to Public path`);
+        } catch (copyErr) {
+          console.error(`   ❌ Failed to copy to Public path: ${copyErr.message}`);
+        }
+      }
+    }
+
     res.json({
       success: true,
       siteCode,
       domain,
       websiteUrl: `/websites/${domain}/index.html`,
+      wwbwCopied,
+      wwbwUrls,
+      wwbwPaths: config.wwbwPaths || null,
       message: 'Website built successfully'
     });
 
@@ -5336,7 +5947,9 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
 
       } catch (error) {
         console.error('Error loading site data:', error);
-        document.getElementById('homePage').innerHTML = '<div style="padding: 40px; text-align: center;"><h2>Loading...</h2><p>Site data is being prepared.</p></div>';
+        // Don't overwrite server-rendered content - it's already functional
+        // The history file just enhances dynamic features like hero carousel
+        console.log('Using server-rendered content (history file not available)');
       }
     }
 
@@ -6319,8 +6932,13 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
 // STATIC FILE ROUTES
 // ============================================================================
 
-// Serve generated websites
+// Serve generated websites from internal datastore
 app.use('/websites', express.static(WEBSITES_PATH));
+
+// Serve WWBW websites (Worldwide Bible Web)
+// Inspire domains: /wwbw/{root}/{subdomain}/
+// Public domains: /wwbw/www/{domain.com}/
+app.use('/wwbw', express.static(WWBW_BASE_PATH));
 
 // Serve the main creation page
 app.get('/', (req, res) => {
@@ -6381,6 +6999,7 @@ async function startServer() {
     console.log(`   - Sites:     ${SITES_PATH}`);
     console.log(`   - Registry:  ${REGISTRY_PATH}`);
     console.log(`   - Websites:  ${WEBSITES_PATH}`);
+    console.log(`   - WWBW Base: ${WWBW_BASE_PATH}`);
 
     // Load registry
     const registry = await loadRegistry();

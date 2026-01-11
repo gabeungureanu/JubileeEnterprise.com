@@ -1,0 +1,52 @@
+{
+  "domain": "home.pentecostal",
+  "siteCode": "WEB-HOME-881342",
+  "contentType": "FB",
+  "niche": "Christian Faith",
+  "categoryCount": 3,
+  "generatedAt": "2026-01-10T23:48:20.699Z",
+  "categories": [
+    {
+      "rank": 1,
+      "name": "Spiritual Growth",
+      "slug": "spiritual-growth",
+      "description": "Dive deep into your faith with articles that encourage spiritual growth, biblical study, and personal transformation. This category offers resources and insights to help you connect with God, strengthen your prayer life, and cultivate a more profound understanding of Scripture.",
+      "keywords": [
+        "spiritual growth",
+        "bible study",
+        "prayer life",
+        "personal transformation",
+        "Pentecostal faith"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 2,
+      "name": "Faith in Action",
+      "slug": "faith-in-action",
+      "description": "Explore how to live out your faith through service, outreach, and community involvement. This category features inspiring stories, practical tips, and encouragement to put your beliefs into practice and make a positive impact in the world around you.",
+      "keywords": [
+        "faith in action",
+        "community service",
+        "outreach",
+        "Pentecostal values",
+        "Christian living"
+      ],
+      "articleCount": 12
+    },
+    {
+      "rank": 3,
+      "name": "Worship and Praise",
+      "slug": "worship-and-praise",
+      "description": "Immerse yourself in the spirit of worship with articles that focus on praise, music, and worship experiences. Discover how worship can deepen your relationship with God, enhance your church experience, and uplift your spirit through creative expressions.",
+      "keywords": [
+        "worship",
+        "praise",
+        "Christian music",
+        "worship experiences",
+        "Pentecostal worship"
+      ],
+      "articleCount": 12
+    }
+  ]
+}

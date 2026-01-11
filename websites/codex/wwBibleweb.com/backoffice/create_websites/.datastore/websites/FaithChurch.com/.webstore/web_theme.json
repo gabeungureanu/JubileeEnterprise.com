@@ -1,0 +1,18 @@
+{
+  "domain": "FaithChurch.com",
+  "siteCode": "WEB-FAIT-314773",
+  "contentType": "FB",
+  "generatedAt": "2025-12-17T11:38:08.096Z",
+  "theme": {
+    "colors": {
+      "primary": "#4A5568",
+      "secondary": "#718096",
+      "accent": "#D69E2E"
+    },
+    "fonts": {
+      "heading": "Inter, sans-serif",
+      "body": "Inter, sans-serif"
+    },
+    "layout": "modern"
+  }
+}

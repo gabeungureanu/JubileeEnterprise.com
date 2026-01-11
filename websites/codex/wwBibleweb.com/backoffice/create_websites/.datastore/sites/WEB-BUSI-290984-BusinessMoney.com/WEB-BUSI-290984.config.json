@@ -1,0 +1,22 @@
+{
+  "siteCode": "WEB-BUSI-290984",
+  "domain": "BusinessMoney.com",
+  "overview": "General website",
+  "categoryCount": 3,
+  "quickMode": false,
+  "contentType": "BB",
+  "analysis": {
+    "contentType": "BB",
+    "confidence": "high",
+    "reasoning": "The domain name 'BusinessMoney.com' contains keywords directly related to business and finance, suggesting a focus on business-related content.",
+    "keywords": [
+      "business",
+      "money"
+    ],
+    "niche": "Finance",
+    "tone": "professional"
+  },
+  "writersCount": 12,
+  "createdAt": "2025-12-17T07:25:11.140Z",
+  "status": "step1_complete"
+}
