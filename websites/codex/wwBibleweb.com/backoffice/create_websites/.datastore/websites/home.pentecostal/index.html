@@ -3447,7 +3447,8 @@ In a world that often feels disconnecte...</p>
     // GLOBAL STATE
     // ========================================================================
 
-    let siteData = null;
+    // Use window.siteData for sharing between app.js and inline script
+    let siteData = window.siteData || null;
     let currentMode = 'home';
     let currentCategory = null;
     let currentArticle = null;
@@ -3475,6 +3476,7 @@ In a world that often feels disconnecte...</p>
           throw new Error('History file not found: ' + historyFile);
         }
         siteData = await response.json();
+        window.siteData = siteData; // Expose to app.js and other scripts
         console.log('Loaded site data:', siteData);
 
         buildNavigation();

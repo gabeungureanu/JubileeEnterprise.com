@@ -1274,15 +1274,46 @@ function handlePathNavigation() {
 
   // Get the last few parts of the path
   // e.g., ['pentecostal', 'home', 'spiritual-growth.html']
+  // or    ['pentecostal', 'home', 'spiritual-growth', 'index.html'] (category folder)
   // or    ['pentecostal', 'home', 'spiritual-growth', 'article-title.html']
 
   if (parts.length < 3) return; // Not enough parts for our URL structure
 
   const lastPart = parts[parts.length - 1];
 
-  // If it's index.html, show home
-  if (lastPart === 'index.html') {
+  // If path is exactly /group/subsite/index.html (3 parts ending in index.html), it's home
+  if (parts.length === 3 && lastPart === 'index.html') {
     return; // Already on home page
+  }
+
+  // If path is /group/subsite/category/index.html (4 parts ending in index.html), it's a category
+  // e.g., /pentecostal/home/faith-in-action/index.html
+  if (parts.length === 4 && lastPart === 'index.html') {
+    const categorySlug = parts[2]; // e.g., 'faith-in-action'
+    console.log('Path navigation: Detected category folder URL:', categorySlug);
+
+    // Wait for siteData to be available, then open portal
+    // Use window.siteData which is populated by inline script's loadSiteData
+    const tryOpenPortal = () => {
+      const sd = window.siteData || siteData;
+      if (sd && sd.portalPages && sd.portalPages[categorySlug]) {
+        console.log('Path navigation: Opening category portal', categorySlug);
+        openPortal(categorySlug, true);
+      } else if (!sd) {
+        // siteData still loading, retry after a short delay
+        console.log('Path navigation: Waiting for siteData...');
+        setTimeout(tryOpenPortal, 200);
+      } else {
+        // siteData loaded but category not found - could be a known category
+        const knownCategories = ['spiritual-growth', 'faith-in-action', 'worship-and-praise', 'prayer-and-devotion', 'holy-spirit'];
+        if (knownCategories.includes(categorySlug)) {
+          console.log('Path navigation: Opening known category portal', categorySlug);
+          openPortal(categorySlug, true);
+        }
+      }
+    };
+    tryOpenPortal();
+    return;
   }
 
   // If path has 4 parts and ends with .html, it's an article
