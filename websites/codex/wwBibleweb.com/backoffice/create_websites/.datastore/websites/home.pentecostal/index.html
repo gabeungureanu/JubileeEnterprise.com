@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <base href="/pentecostal/home/">
   <title>home.pentecostal - Home</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -2254,6 +2258,21 @@
       .category-row {
         grid-template-columns: repeat(2, 1fr);
       }
+
+      /* Article page responsive */
+      .article-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .article-sidebar {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+
+      .featured-spotlight-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 768px) {
@@ -2299,6 +2318,20 @@
       .more-from-brands-grid {
         grid-template-columns: repeat(3, 1fr);
       }
+
+      /* Article page responsive for mobile */
+      .article-sidebar {
+        grid-template-columns: 1fr;
+      }
+
+      .article-title {
+        font-size: 26px;
+      }
+
+      .featured-spotlight-section {
+        width: 100%;
+        max-width: 100%;
+      }
     }
 
     @media (max-width: 576px) {
@@ -2320,7 +2353,7 @@
         <td>
           <div class="header-content">
             <div class="header-brand">
-              <h1 class="header-title"><a href="#" id="siteHomeLink" onclick="goHome(); return false;">HOME.PENTECOSTAL</a></h1>
+              <h1 class="header-title"><a href="/pentecostal/home/index.html" id="siteHomeLink" onclick="goHome(); return false;">HOME.PENTECOSTAL</a></h1>
             </div>
             <div class="header-actions">
               <div class="search-box">
@@ -2338,8 +2371,8 @@
   <!-- Category Navigation Bar - Black with White Text -->
   <nav id="category-nav">
     <ul id="nav-list">
-      <li class="home-link"><a href="#" onclick="goHome(); return false;"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></a></li>
-      <li><a href="#spiritual-growth" onclick="openPortal('spiritual-growth'); return false;">Spiritual Growth</a></li><li><a href="#faith-in-action" onclick="openPortal('faith-in-action'); return false;">Faith in Action</a></li><li><a href="#worship-and-praise" onclick="openPortal('worship-and-praise'); return false;">Worship and Praise</a></li><li><a href="#prayer-and-devotion" onclick="openPortal('prayer-and-devotion'); return false;">Prayer and Devotion</a></li><li><a href="#holy-spirit" onclick="openPortal('holy-spirit'); return false;">Holy Spirit</a></li>
+      <li class="home-link"><a href="/pentecostal/home/index.html" onclick="goHome(); return false;"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></a></li>
+      <li><a href="/pentecostal/home/spiritual-growth.html" onclick="openPortal('spiritual-growth'); return false;">Spiritual Growth</a></li><li><a href="/pentecostal/home/faith-in-action.html" onclick="openPortal('faith-in-action'); return false;">Faith in Action</a></li><li><a href="/pentecostal/home/worship-and-praise.html" onclick="openPortal('worship-and-praise'); return false;">Worship and Praise</a></li><li><a href="/pentecostal/home/prayer-and-devotion.html" onclick="openPortal('prayer-and-devotion'); return false;">Prayer and Devotion</a></li><li><a href="/pentecostal/home/holy-spirit.html" onclick="openPortal('holy-spirit'); return false;">Holy Spirit</a></li>
     </ul>
   </nav>
 
@@ -2880,7 +2913,7 @@ In a world that often feels disconnecte...</p>
 
   <!-- Legacy Article Page (for server-rendered fallback) -->
   <section id="articlePage" class="article-page hidden">
-    <a href="#" class="back-link" id="backToHome" onclick="goHome(); return false;">‹ Back to Home</a>
+    <a href="/pentecostal/home/index.html" class="back-link" id="backToHome" onclick="goHome(); return false;">‹ Back to Home</a>
     <div class="article-breadcrumbs" id="articleBreadcrumbs">Home | Feature Story</div>
     <h1 class="article-title" id="articleTitle">Feature Story</h1>
     <div class="article-meta">
@@ -3252,10 +3285,46 @@ In a world that often feels disconnecte...</p>
   </footer>
 
   <!-- External JavaScript Application -->
-  <script src="app.js"></script>
+  <script src="/pentecostal/home/app.js"></script>
 
   <!-- Inline JavaScript (backward compatibility + view tracking integration) -->
   <script>
+    // ========================================================================
+    // PATH HELPER FUNCTIONS (needed for subdirectory navigation)
+    // ========================================================================
+
+    /**
+     * getBasePath - Get the base path for the site (e.g., /pentecostal/home)
+     * This is critical for subdirectory navigation to work correctly
+     */
+    function getBasePath() {
+      const path = window.location.pathname;
+      // Match /pentecostal/home or similar two-level paths
+      const match = path.match(/^(\/[^\/]+\/[^\/]+)/);
+      return match ? match[1] : '/pentecostal/home';
+    }
+
+    /**
+     * getWebstorePath - Get absolute path to .webstore folder
+     */
+    function getWebstorePath() {
+      return getBasePath() + '/.webstore/';
+    }
+
+    /**
+     * getLumiatosPath - Get absolute path to .lumiatos folder
+     */
+    function getLumiatosPath() {
+      return getBasePath() + '/.lumiatos/';
+    }
+
+    /**
+     * getImagePath - Get absolute path to an article image
+     */
+    function getImagePath(articleId) {
+      return getBasePath() + '/images/' + articleId + '.jpg';
+    }
+
     // ========================================================================
     // HELPER FUNCTIONS
     // ========================================================================
@@ -3384,7 +3453,8 @@ In a world that often feels disconnecte...</p>
     let currentArticle = null;
     let heroSlideIndex = 0;
     let heroInterval = null;
-    let portalPageCache = {}; // Cache for rendered portal pages
+    // Caching disabled for development
+    // let portalPageCache = {};
 
     // ========================================================================
     // DATA LOADING
@@ -3398,7 +3468,9 @@ In a world that often feels disconnecte...</p>
         const dd = String(today.getDate()).padStart(2, '0');
         const historyFile = yy + '-' + mm + dd + '.json';
 
-        const response = await fetch('.webstore/history/' + historyFile);
+        // Use absolute path to work from any subdirectory
+        const webstorePath = getWebstorePath();
+        const response = await fetch(webstorePath + 'history/' + historyFile);
         if (!response.ok) {
           throw new Error('History file not found: ' + historyFile);
         }
@@ -3410,6 +3482,11 @@ In a world that often feels disconnecte...</p>
         startHeroCarousel();
         updateFooterCategories();
 
+        // Handle initial hash navigation AFTER siteData is loaded
+        if (window.handleInitialHash) {
+          window.handleInitialHash();
+        }
+
       } catch (error) {
         console.error('Error loading site data:', error);
         // Don't overwrite server-rendered content - it's already functional
@@ -3417,6 +3494,11 @@ In a world that often feels disconnecte...</p>
         console.log('Using server-rendered content (history file not available)');
         // Still start the hero carousel with server-rendered slides
         startHeroCarousel();
+
+        // Still try to handle hash navigation with fallback categories
+        if (window.handleInitialHash) {
+          window.handleInitialHash();
+        }
       }
     }
 
@@ -3468,7 +3550,8 @@ In a world that often feels disconnecte...</p>
       // Do NOT use siteData.categories (from history) as it only includes categories with articles
       let categories = [];
       try {
-        const response = await fetch('.webstore/web_categories.json');
+        // Use absolute path to work from any subdirectory
+        const response = await fetch(getWebstorePath() + 'web_categories.json');
         if (response.ok) {
           const data = await response.json();
           categories = data.categories || [];
@@ -3518,7 +3601,14 @@ In a world that often feels disconnecte...</p>
       currentArticle = null;
       document.getElementById('homePage').style.display = 'block';
       document.getElementById('portalPage').style.display = 'none';
-      document.getElementById('articleDetailPage').style.display = 'none';
+      // Hide both article page containers
+      const articleDetailPage = document.getElementById('articleDetailPage');
+      if (articleDetailPage) articleDetailPage.style.display = 'none';
+      const articlePage = document.getElementById('articlePage');
+      if (articlePage) {
+        articlePage.style.display = 'none';
+        articlePage.classList.add('hidden');
+      }
       window.scrollTo(0, 0);
     }
 
@@ -3531,7 +3621,14 @@ In a world that often feels disconnecte...</p>
       // Home page content is rendered server-side, just ensure it's visible
       document.getElementById('homePage').style.display = 'block';
       document.getElementById('portalPage').style.display = 'none';
-      document.getElementById('articleDetailPage').style.display = 'none';
+      // Hide both article page containers
+      const articleDetailPage = document.getElementById('articleDetailPage');
+      if (articleDetailPage) articleDetailPage.style.display = 'none';
+      const articlePage = document.getElementById('articlePage');
+      if (articlePage) {
+        articlePage.style.display = 'none';
+        articlePage.classList.add('hidden');
+      }
     }
 
     // ========================================================================
@@ -3603,7 +3700,14 @@ In a world that often feels disconnecte...</p>
       currentCategory = categorySlug;
 
       document.getElementById('homePage').style.display = 'none';
-      document.getElementById('articleDetailPage').style.display = 'none';
+      // Hide both article page containers
+      const articleDetailPage = document.getElementById('articleDetailPage');
+      if (articleDetailPage) articleDetailPage.style.display = 'none';
+      const articlePageEl = document.getElementById('articlePage');
+      if (articlePageEl) {
+        articlePageEl.style.display = 'none';
+        articlePageEl.classList.add('hidden');
+      }
 
       // NOTE: Portal cache disabled to ensure fresh cross-category content
       // TODO: Re-enable cache after verifying business rules work correctly
@@ -3620,6 +3724,10 @@ In a world that often feels disconnecte...</p>
       portalPage.innerHTML = '<div style="padding: 40px; text-align: center;">Loading...</div>';
 
       try {
+        // Get base path for images (absolute path to work from subdirectories)
+        const basePath = getBasePath();
+        const imagesPath = basePath + '/images/';
+
         // Get portal data
         const portalData = siteData.portalPages ? siteData.portalPages[categorySlug] : null;
 
@@ -3644,8 +3752,9 @@ In a world that often feels disconnecte...</p>
 
         // Load ad data for sidebar
         let adHtml = '';
+        const lumiatosPath = getLumiatosPath();
         try {
-          const adResponse = await fetch('.lumiatos/lighthouse.json');
+          const adResponse = await fetch(lumiatosPath + 'lighthouse.json');
           if (adResponse.ok) {
             const adData = await adResponse.json();
             const defaultAdId = adData.defaultAds['300x250'];
@@ -3655,9 +3764,9 @@ In a world that often feels disconnecte...</p>
                 const campaign = adData.campaigns[campId];
                 if (campaign.ads && campaign.ads[defaultAdId]) {
                   const ad = campaign.ads[defaultAdId];
-                  adHtml = '<div class="portal-ad-unit" onclick="handleAdClick(\'' + ad.id + '\', \'' + campId + '\', \'' + ad.creative.clickUrl + '\')">';
-                  adHtml += '<img src=".lumiatos/' + ad.creative.imageUrl + '" alt="' + ad.creative.altText + '">';
-                  adHtml += '<div class="portal-ad-label">Advertisement</div>';
+                  adHtml = '<div class="home-ad-unit" onclick="handleAdClick(\'' + ad.id + '\', \'' + campId + '\', \'' + ad.creative.clickUrl + '\')">';
+                  adHtml += '<img src="' + lumiatosPath + ad.creative.imageUrl + '" alt="' + ad.creative.altText + '">';
+                  adHtml += '<div class="home-ad-label">Advertisement</div>';
                   adHtml += '</div>';
                   // Track ad impression
                   if (window.ViewTracker) {
@@ -3683,7 +3792,7 @@ In a world that often feels disconnecte...</p>
           usedArticleIds.add(heroArticle.articleId);
           html += '<section class="hero-section">';
           html += '<div class="hero-image">';
-          html += '<img src="' + (heroArticle.image || 'images/' + heroArticle.articleId + '.jpg') + '" alt="' + heroArticle.title + '" onerror="this.parentElement.style.background=\'linear-gradient(135deg, #667eea 0%, #764ba2 100%)\';">';
+          html += '<img src="' + (heroArticle.image ? basePath + '/' + heroArticle.image : imagesPath + heroArticle.articleId + '.jpg') + '" alt="' + heroArticle.title + '" onerror="this.parentElement.style.background=\'linear-gradient(135deg, #667eea 0%, #764ba2 100%)\';">';
           html += '<div class="hero-overlay">';
           html += '<h2 class="hero-title"><a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + heroArticle.articleId + '\'); return false;">' + heroArticle.title + '</a></h2>';
           html += '</div>';
@@ -3714,7 +3823,7 @@ In a world that often feels disconnecte...</p>
           usedArticleIds.add(article.articleId);
           html += '<div class="featured-card">';
           html += '<a href="#" onclick="openArticle(\'' + articleCat + '\', \'' + article.articleId + '\'); return false;" class="featured-card-image">';
-          html += '<img src="' + (article.image || 'images/' + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
+          html += '<img src="' + (article.image ? basePath + '/' + article.image : imagesPath + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
           html += '</a>';
           html += '<h3 class="featured-card-title"><a href="#" onclick="openArticle(\'' + articleCat + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></h3>';
           html += '<p class="featured-card-excerpt">' + truncateText(article.excerpt || '', 120) + '</p>';
@@ -3744,7 +3853,7 @@ In a world that often feels disconnecte...</p>
 
           html += '<div class="spotlight-main">';
           html += '<a href="#" onclick="openArticle(\'' + spotlightMain.categorySlug + '\', \'' + spotlightMain.articleId + '\'); return false;" class="spotlight-main-image">';
-          html += '<img src="' + (spotlightMain.image || 'images/' + spotlightMain.articleId + '.jpg') + '" alt="' + spotlightMain.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
+          html += '<img src="' + (spotlightMain.image ? basePath + '/' + spotlightMain.image : imagesPath + spotlightMain.articleId + '.jpg') + '" alt="' + spotlightMain.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
           html += '</a>';
           html += '<h3 class="spotlight-main-title"><a href="#" onclick="openArticle(\'' + spotlightMain.categorySlug + '\', \'' + spotlightMain.articleId + '\'); return false;">' + spotlightMain.title + '</a></h3>';
           html += '<p class="spotlight-main-excerpt">' + truncateText(spotlightMain.excerpt || '', 150) + '</p>';
@@ -3757,7 +3866,7 @@ In a world that often feels disconnecte...</p>
           usedArticleIds.add(article.articleId);
           html += '<div class="spotlight-list-item">';
           html += '<a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;" class="spotlight-list-image">';
-          html += '<img src="' + (article.image || 'images/' + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
+          html += '<img src="' + (article.image ? basePath + '/' + article.image : imagesPath + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
           html += '</a>';
           html += '<div class="spotlight-list-content">';
           html += '<h4 class="spotlight-list-title"><a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></h4>';
@@ -3774,7 +3883,7 @@ In a world that often feels disconnecte...</p>
           usedArticleIds.add(article.articleId);
           html += '<div class="related-info-card">';
           html += '<a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;" class="related-info-image">';
-          html += '<img src="' + (article.image || 'images/' + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
+          html += '<img src="' + (article.image ? basePath + '/' + article.image : imagesPath + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
           html += '</a>';
           html += '<h4 class="related-info-title"><a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></h4>';
           html += '</div>';
@@ -3788,7 +3897,7 @@ In a world that often feels disconnecte...</p>
         recommendedArticles.forEach(article => {
           html += '<div class="recommended-item">';
           html += '<a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;" class="recommended-image">';
-          html += '<img src="' + (article.image || 'images/' + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
+          html += '<img src="' + (article.image ? basePath + '/' + article.image : imagesPath + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
           html += '</a>';
           html += '<div class="recommended-content">';
           html += '<h4 class="recommended-title"><a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;">' + article.title + '</a></h4>';
@@ -3804,19 +3913,83 @@ In a world that often feels disconnecte...</p>
 
         html += '</div>'; // End main-column
 
-        // Sidebar with ad and You Might Like
+        // Sidebar - MATCHING HOME PAGE SIDEBAR STRUCTURE EXACTLY
         html += '<aside class="sidebar">';
+
+        // 1. Promo Box (matching home page)
+        const categoryDisplayName = (siteData.portalPages[categorySlug] && siteData.portalPages[categorySlug].categoryName) || categorySlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        html += '<div class="promo-box">';
+        html += '<div class="promo-title">' + categoryDisplayName + '</div>';
+        html += '<div class="promo-subtitle">Explore Faith-Building Content</div>';
+        html += '<a href="#" onclick="goHome(); return false;" class="promo-btn">Browse All</a>';
+        html += '</div>';
+
+        // 2. Most Popular - from current category
+        html += '<div class="sidebar-section">';
+        html += '<div class="sidebar-header">MOST POPULAR</div>';
+        html += '<div class="sidebar-content">';
+        const popularArticles = uniqueArticles.slice(0, 7);
+        popularArticles.forEach(article => {
+          html += '<div class="popular-item">';
+          html += '<div class="popular-image">';
+          html += '<a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + article.articleId + '\'); return false;">';
+          html += '<img src="' + (article.image ? basePath + '/' + article.image : imagesPath + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
+          html += '</a>';
+          html += '</div>';
+          html += '<div class="popular-content">';
+          html += '<a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + article.articleId + '\'); return false;" class="popular-title">' + article.title + '</a>';
+          html += '</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+        html += '</div>';
+
+        // 3. 300x600 Skyscraper Ad
+        html += '<div class="skyscraper-ad-unit">';
+        html += '<a href="https://jubileeverse.com?utm_source=lumiatos&utm_campaign=CAMP-003&utm_ad=AD-003-B" target="_blank" rel="noopener" onclick="handleAdClick(\'AD-003-B\', \'CAMP-003\', this.href);">';
+        html += '<img src="' + lumiatosPath + 'images/jubileeverse-300x600.jpg" alt="JubileeVerse.com - Beyond Artificial Intelligence">';
+        html += '</a>';
+        html += '<div class="skyscraper-ad-label">Advertisement</div>';
+        html += '</div>';
+
+        // 4. Must Read - from OTHER categories (cross-category discovery)
+        html += '<div class="sidebar-section">';
+        html += '<div class="sidebar-header">Must Read</div>';
+        html += '<div class="sidebar-content">';
+        const mustReadArticles = otherCategoryArticles.filter(a => !usedArticleIds.has(a.articleId)).slice(0, 7);
+        mustReadArticles.forEach(article => {
+          usedArticleIds.add(article.articleId);
+          html += '<div class="popular-item">';
+          html += '<a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;" class="popular-image">';
+          html += '<img src="' + (article.image ? basePath + '/' + article.image : imagesPath + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
+          html += '</a>';
+          html += '<div class="popular-content">';
+          html += '<a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;" class="popular-title">' + article.title + '</a>';
+          html += '</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+        html += '</div>';
+
+        // 5. 300x250 Ad Unit (using the adHtml if available, or default)
         if (adHtml) {
           html += adHtml;
+        } else {
+          html += '<div class="home-ad-unit">';
+          html += '<a href="https://jubileeverse.com?utm_source=lumiatos&utm_campaign=CAMP-003&utm_ad=AD-003-A" target="_blank" rel="noopener" onclick="handleAdClick(\'AD-003-A\', \'CAMP-003\', this.href);">';
+          html += '<img src="' + lumiatosPath + 'images/jubileeverse-300x250.jpg" alt="JubileeVerse.com - Beyond Artificial Intelligence: Smarter Today, Stronger Tomorrow">';
+          html += '</a>';
+          html += '<div class="home-ad-label">Advertisement</div>';
+          html += '</div>';
         }
 
-        // You Might Like section - single article style matching content page
+        // 6. You Might Like - random article
         if (uniqueArticles.length > 0) {
           const youMightLikeArticle = uniqueArticles[Math.floor(Math.random() * uniqueArticles.length)];
           html += '<div class="random-article">';
           html += '<div class="random-article-header">You Might Like</div>';
           html += '<a href="#" onclick="openArticle(\'' + categorySlug + '\', \'' + youMightLikeArticle.articleId + '\'); return false;" class="random-article-image">';
-          html += '<img src="' + (youMightLikeArticle.image || 'images/' + youMightLikeArticle.articleId + '.jpg') + '" alt="' + youMightLikeArticle.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
+          html += '<img src="' + (youMightLikeArticle.image ? basePath + '/' + youMightLikeArticle.image : imagesPath + youMightLikeArticle.articleId + '.jpg') + '" alt="' + youMightLikeArticle.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
           html += '</a>';
           html += '<div class="random-article-content">';
           html += '<h4 class="random-article-title">';
@@ -3832,8 +4005,8 @@ In a world that often feels disconnecte...</p>
         html += '</div>'; // End content-grid
         html += '</main>'; // End main-content
 
-        // Cache the rendered portal page
-        portalPageCache[categorySlug] = html;
+        // Caching disabled for development
+        // portalPageCache[categorySlug] = html;
         portalPage.innerHTML = html;
         window.scrollTo(0, 0);
 
@@ -3856,74 +4029,8 @@ In a world that often feels disconnecte...</p>
     }
 
     // ========================================================================
-    // ARTICLE DETAIL MODE
+    // ARTICLE DETAIL MODE - Handled by app.js (uses original articlePage section)
     // ========================================================================
-
-    async function openArticle(categorySlug, articleId) {
-      currentMode = 'article';
-      currentCategory = categorySlug;
-      currentArticle = articleId;
-
-      document.getElementById('homePage').style.display = 'none';
-      document.getElementById('portalPage').style.display = 'none';
-
-      const articlePage = document.getElementById('articleDetailPage');
-      articlePage.style.display = 'block';
-      articlePage.innerHTML = '<div style="padding: 40px; text-align: center;">Loading article...</div>';
-
-      try {
-        // Load article data
-        const articlesPath = siteData.articleDataPaths ? siteData.articleDataPaths[categorySlug] : categorySlug + '/web_articles.json';
-        const response = await fetch(articlesPath);
-        const data = await response.json();
-
-        const article = data.articles.find(a => a.id === articleId);
-
-        if (!article) {
-          throw new Error('Article not found');
-        }
-
-        const categoryName = siteData.categories.find(c => c.slug === categorySlug)?.name || categorySlug;
-
-        let html = '<div class="article-detail-container">';
-        html += '<div class="article-breadcrumb">';
-        html += '<a href="#" onclick="goHome(); return false;">Home</a> &gt; ';
-        html += '<a href="#" onclick="openPortal(\'' + categorySlug + '\'); return false;">' + categoryName + '</a> &gt; ';
-        html += '<span>' + article.title + '</span>';
-        html += '</div>';
-
-        html += '<h1 class="article-detail-title">' + article.title + '</h1>';
-
-        html += '<div class="article-meta">';
-        html += '<span class="article-author">By ' + (article.writerName || 'Staff Writer') + '</span>';
-        html += '<span class="article-date">' + new Date(article.createdAt || Date.now()).toLocaleDateString() + '</span>';
-        html += '</div>';
-
-        if (article.id) {
-          html += '<div class="article-hero-image" style="background-image: url(\'images/' + article.id + '.jpg\')"></div>';
-        }
-
-        // Business Rule: Strip markdown from displayed content
-        html += '<div class="article-content">' + formatArticleContent(article.content, article.id, siteData.allArticles || []) + '</div>';
-
-        html += '<div class="article-tags">';
-        if (article.keywords) {
-          article.keywords.forEach(keyword => {
-            html += '<span class="article-tag">' + keyword + '</span>';
-          });
-        }
-        html += '</div>';
-
-        html += '</div>';
-
-        articlePage.innerHTML = html;
-        window.scrollTo(0, 0);
-
-      } catch (error) {
-        console.error('Error loading article:', error);
-        articlePage.innerHTML = '<div style="padding: 40px; text-align: center;"><h2>Article Not Found</h2></div>';
-      }
-    }
 
     function formatArticleContent(content, currentArticleId, allArticles) {
       if (!content) return '';
@@ -3932,9 +4039,10 @@ In a world that often feels disconnecte...</p>
       const paragraphs = stripped.split(/\n\n+/);
 
       // Inline 870x250 banner to insert after 5th paragraph
+      const lumiatosPathForAd = getLumiatosPath();
       const inlineBannerHtml = '<div class="inline-content-ad" style="margin: 25px 0; text-align: center;">' +
         '<a href="https://jubileeverse.com?utm_source=lumiatos&utm_campaign=CAMP-003&utm_ad=AD-003-D&utm_placement=inline" target="_blank" rel="noopener" onclick="handleAdClick(\'AD-003-D\', \'CAMP-003\', this.href);">' +
-        '<img src=".lumiatos/images/jubileeverse-870x250.jpg" alt="JubileeVerse.com - Beyond Artificial Intelligence" style="max-width: 100%; height: auto; display: inline-block;">' +
+        '<img src="' + lumiatosPathForAd + 'images/jubileeverse-870x250.jpg" alt="JubileeVerse.com - Beyond Artificial Intelligence" style="max-width: 100%; height: auto; display: inline-block;">' +
         '</a>' +
         '<div style="font-size: 10px; color: #999; margin-top: 2px;">Advertisement</div>' +
         '<div style="max-width: 100%; height: 6px; background-color: #000; margin-top: 25px;"></div>' +
@@ -3953,7 +4061,7 @@ In a world that often feels disconnecte...</p>
           '<div style="font-size: 13px; font-weight: 700; color: #c00; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Related Articles</div>' +
           '<div style="display: flex; gap: 15px; align-items: flex-start;">' +
           '<a href="#" onclick="showContentPage(\'' + randomRelated.id + '\', \'' + randomRelated.categorySlug + '\'); return false;" style="flex-shrink: 0;">' +
-          '<img src="images/' + randomRelated.id + '.jpg" alt="' + randomRelated.title + '" style="width: 80px; height: 80px; object-fit: cover; display: block;" onerror="this.style.background=\'#ddd\'">' +
+          '<img src="' + getBasePath() + '/images/' + randomRelated.id + '.jpg" alt="' + randomRelated.title + '" style="width: 80px; height: 80px; object-fit: cover; display: block;" onerror="this.style.background=\'#ddd\'">' +
           '</a>' +
           '<div style="flex: 1; min-width: 0;">' +
           '<a href="#" onclick="showContentPage(\'' + randomRelated.id + '\', \'' + randomRelated.categorySlug + '\'); return false;" style="font-size: 17px; font-weight: 700; color: #222; text-decoration: none; display: block; line-height: 1.3; margin-bottom: 6px;">' + randomRelated.title + '</a>' +
@@ -4166,7 +4274,7 @@ In a world that often feels disconnecte...</p>
             // Fetch full article content from the category JSON file
             let articlesWithContent = [];
             try {
-              const articlePath = categorySlug + '/web_articles.json';
+              const articlePath = getBasePath() + '/' + categorySlug + '/web_articles.json';
               const response = await fetch(articlePath);
               if (response.ok) {
                 const categoryData = await response.json();
@@ -4200,10 +4308,11 @@ In a world that often feels disconnecte...</p>
               return `<a href="#" class="more-link" onclick="showContentPage('${a.articleId}', '${categorySlug}'); return false;">${teaser}</a>`;
             }).join('');
 
+            const basePath = getBasePath();
             return `
               <div class="featured-category-card">
                 <div class="featured-category-header">${categoryName}</div>
-                <img src="images/${article.articleId}.jpg" alt="${article.title}" class="featured-category-image" onerror="this.src='images/default-article.jpg'">
+                <img src="${basePath}/images/${article.articleId}.jpg" alt="${article.title}" class="featured-category-image" onerror="this.src='${basePath}/images/default-article.jpg'">
                 <div class="featured-category-title">
                   <a href="#" onclick="showContentPage('${article.articleId}', '${categorySlug}'); return false;">${article.title}</a>
                 </div>
@@ -4223,12 +4332,13 @@ In a world that often feels disconnecte...</p>
         const brandsGrid = document.getElementById('more-from-brands-grid');
 
         if (brandsGrid && brandArticles.length > 0) {
+          const basePath = getBasePath();
           brandsGrid.innerHTML = brandArticles.map(article => {
             const categoryName = article.categoryName || article.categorySlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
             return `
               <div class="brand-card">
-                <img src="images/${article.articleId}.jpg" alt="${article.title}" class="brand-card-image" onerror="this.src='images/default-article.jpg'">
+                <img src="${basePath}/images/${article.articleId}.jpg" alt="${article.title}" class="brand-card-image" onerror="this.src='${basePath}/images/default-article.jpg'">
                 <div class="brand-card-label">${categoryName}</div>
                 <div class="brand-card-title">
                   <a href="#" onclick="showContentPage('${article.articleId}', '${article.categorySlug}'); return false;">${article.title}</a>
@@ -4261,32 +4371,43 @@ In a world that often feels disconnecte...</p>
         }
       }
 
+      // Known category slugs as fallback (from web_categories.json)
+      const knownCategorySlugs = ['spiritual-growth', 'faith-in-action', 'worship-and-praise', 'prayer-and-devotion', 'holy-spirit'];
+
       // Check for category URL format: {categorySlug}
-      if (siteData) {
+      if (siteData && siteData.categories) {
         const category = siteData.categories.find(c => c.slug === hash);
         if (category) {
           console.log('Hash navigation: Opening category portal', hash);
           openPortal(hash);
+          return;
         }
+      }
+
+      // Fallback: If siteData not loaded yet but hash matches a known category, open it anyway
+      if (knownCategorySlugs.includes(hash)) {
+        console.log('Hash navigation (fallback): Opening category portal', hash);
+        openPortal(hash);
       }
     }
 
     window.addEventListener('hashchange', handleHashNavigation);
 
-    // Also handle initial page load with hash
-    document.addEventListener('DOMContentLoaded', function() {
+    // Handle initial page load with hash - called after siteData is loaded
+    // This is now triggered from loadSiteData() after data is ready
+    window.handleInitialHash = function() {
       if (window.location.hash) {
-        // Delay to ensure siteData is loaded
-        setTimeout(handleHashNavigation, 500);
+        console.log('Initial hash detected:', window.location.hash);
+        handleHashNavigation();
       }
-    });
+    };
 
     // ========================================================================
     // VIEW TRACKING SYSTEM
     // ========================================================================
 
     const ViewTracker = {
-      trackerPath: '.webstore/web_tracker.json',
+      trackerPath: getWebstorePath() + 'web_tracker.json',
       trackerData: null,
       pendingViews: [],
       saveTimeout: null,
