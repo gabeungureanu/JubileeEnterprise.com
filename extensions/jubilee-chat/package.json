@@ -1,0 +1,80 @@
+{
+  "name": "jubilee-chat",
+  "displayName": "JubileeChat",
+  "description": "ChatGPT-powered assistant panel with one-click transfer to Claude Code",
+  "version": "1.0.0",
+  "publisher": "JubileeEnterprise",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "jubilee-chat-container",
+          "title": "JubileeChat",
+          "icon": "resources/chat-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "jubilee-chat-container": [
+        {
+          "type": "webview",
+          "id": "jubileeChat.chatPanel",
+          "name": "JubileeChat",
+          "visibility": "visible"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "jubileeChat.openPanel",
+        "title": "Open JubileeChat Panel"
+      },
+      {
+        "command": "jubileeChat.sendToClaudeCode",
+        "title": "Send to Claude Code"
+      }
+    ],
+    "configuration": {
+      "title": "JubileeChat",
+      "properties": {
+        "jubileeChat.model": {
+          "type": "string",
+          "default": "gpt-4o-mini",
+          "description": "OpenAI model to use for chat"
+        },
+        "jubileeChat.maxTokens": {
+          "type": "number",
+          "default": 2048,
+          "description": "Maximum tokens for response"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.0.0",
+    "@vscode/vsce": "^2.22.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "openai": "^4.20.0"
+  }
+}
