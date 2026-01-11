@@ -4196,6 +4196,13 @@ In a world that often feels disconnecte...</p>
       // Load site data
       loadSiteData();
 
+      // CRITICAL: Override app.js's window assignments with our inline versions
+      // The inline openPortal/openArticle have proper path handling for subdirectories
+      window.openPortal = openPortal;
+      window.openArticle = openArticle;
+      window.loadSiteData = loadSiteData;
+      window.goHome = goHome;
+
       // ============ PAGE SELF-CHECK VALIDATION ============
       // Validates that all sections have content and auto-repairs if empty
       setTimeout(function validateAndRepairSections() {
@@ -4676,19 +4683,20 @@ In a world that often feels disconnecte...</p>
     };
 
     // Wrap openPortal to track portal views
-    const originalOpenPortal = openPortal;
-    openPortal = async function(categorySlug) {
-      await originalOpenPortal(categorySlug);
-      const category = siteData.categories.find(c => c.slug === categorySlug);
+    // Use the inline script's openPortal (which has proper path handling)
+    const inlineOpenPortal = openPortal;
+    window.openPortal = async function(categorySlug) {
+      await inlineOpenPortal(categorySlug);
+      const category = siteData?.categories?.find(c => c.slug === categorySlug);
       const categoryName = category ? category.name : categorySlug;
       ViewTracker.trackPageView('portal', categorySlug);
       ViewTracker.trackPortalView(categorySlug, categoryName);
     };
 
     // Wrap openArticle to track article views
-    const originalOpenArticle = openArticle;
-    openArticle = async function(categorySlug, articleId) {
-      await originalOpenArticle(categorySlug, articleId);
+    const inlineOpenArticle = openArticle;
+    window.openArticle = async function(categorySlug, articleId) {
+      await inlineOpenArticle(categorySlug, articleId);
       // Get article title from the loaded data
       const articleTitle = document.querySelector('.article-detail-title')?.textContent || 'Unknown';
       ViewTracker.trackPageView('article', articleId);
@@ -4696,9 +4704,9 @@ In a world that often feels disconnecte...</p>
     };
 
     // Wrap goHome to track home views
-    const originalGoHome = goHome;
-    goHome = function() {
-      originalGoHome();
+    const inlineGoHome = goHome;
+    window.goHome = function() {
+      inlineGoHome();
       ViewTracker.trackPageView('home');
     };
 
