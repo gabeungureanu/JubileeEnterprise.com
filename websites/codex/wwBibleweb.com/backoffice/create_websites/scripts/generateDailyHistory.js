@@ -177,12 +177,20 @@ function generateDailyHistory(domain, targetDate = new Date()) {
   });
 
   // Load all articles by category
+  // NOTE: Categories are loaded from web_categories.json, which may include categories without articles yet
+  // This allows adding new categories without breaking the history generation
   const articlesByCategory = {};
   const allArticles = [];
+  const categoriesWithArticles = [];
 
   for (const category of sortedCategories) {
     const articles = loadCategoryArticles(domainPath, category.slug);
     articlesByCategory[category.slug] = articles;
+
+    // Track categories that have articles
+    if (articles.length > 0) {
+      categoriesWithArticles.push(category);
+    }
 
     for (const article of articles) {
       allArticles.push({
@@ -195,6 +203,14 @@ function generateDailyHistory(domain, targetDate = new Date()) {
         image: `images/${article.id}.jpg`
       });
     }
+  }
+
+  // Log category status for debugging
+  console.log(`  - Total categories in config: ${sortedCategories.length}`);
+  console.log(`  - Categories with articles: ${categoriesWithArticles.length}`);
+  if (sortedCategories.length !== categoriesWithArticles.length) {
+    const missingCategories = sortedCategories.filter(c => !categoriesWithArticles.includes(c));
+    console.log(`  - Categories without articles: ${missingCategories.map(c => c.slug).join(', ')}`);
   }
 
   // Generate seed from date
@@ -545,10 +561,13 @@ function generateDailyHistory(domain, targetDate = new Date()) {
     siteCode: config.siteCode,
     siteName: theme.siteName || "God's Grace",
     siteTagline: theme.siteTagline || 'Faith, Hope, and Divine Inspiration',
+    // Include ALL categories from config, with actual article counts
+    // This ensures navigation works for all categories, even those without articles yet
     categories: sortedCategories.map(cat => ({
       name: cat.name,
       slug: cat.slug,
-      articleCount: cat.articleCount
+      articleCount: articlesByCategory[cat.slug]?.length || 0,
+      hasArticles: (articlesByCategory[cat.slug]?.length || 0) > 0
     })),
     heroCarousel,
     homeFeatured,

@@ -3173,13 +3173,14 @@ ${articleCardsHtml}
     .header-title a { color: inherit; }
     .more-link { color: #666; font-size: 14px; font-weight: 500; }
     .more-link.active { color: #333; font-weight: 600; }
-    .nav-row-wrapper { width: 100%; background: #000; }
-    .nav-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: stretch; }
-    .nav-link { flex: 1; display: flex; justify-content: center; align-items: center; }
-    .nav-link a { padding: 14px 20px; font-size: 14px; font-weight: 600; color: #fff; text-transform: uppercase; border-bottom: 3px solid transparent; transition: all 0.2s; }
-    .nav-link a:hover { background: rgba(255,255,255,0.1); border-bottom-color: #ffd700; }
-    .home-icon { display: inline-flex; width: 16px; height: 16px; margin-right: 4px; }
-    .home-icon svg { width: 16px; height: 16px; fill: #fff; }
+    /* ========== CATEGORY NAVIGATION - BLACK BAR, LEFT-ALIGNED ========== */
+    #category-nav { width: 100%; background: #1a1a1a; }
+    #category-nav ul { list-style: none; margin: 0; padding: 0 20px; display: flex; justify-content: flex-start; align-items: center; max-width: 1200px; margin: 0 auto; }
+    #category-nav ul li { position: relative; }
+    #category-nav ul li a { display: block; padding: 12px 18px; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; transition: border-bottom 0.2s ease; border-bottom: 3px solid transparent; }
+    #category-nav ul li a:hover { border-bottom-color: #ffd700; }
+    #category-nav ul li.home-link a { padding: 12px 14px; }
+    #category-nav ul li.home-link svg { width: 16px; height: 16px; fill: #ffffff; vertical-align: middle; }
     .main-content { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
     .page-header { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #ddd; }
     .page-title { font-family: 'Roboto Condensed', sans-serif; font-size: 36px; font-weight: 700; margin-bottom: 10px; }
@@ -3245,14 +3246,46 @@ ${categorySectionsHtml}
 function generateCNNStyleWebsite(domain, siteName, categories, articles) {
   const currentYear = new Date().getFullYear();
 
-  // Get featured articles
-  const featuredArticles = articles.slice(0, 12);
-
-  // Group articles by category
+  // Group articles by category FIRST
   const articlesByCategory = {};
   categories.forEach(cat => {
     articlesByCategory[cat.slug] = articles.filter(a => a.categorySlug === cat.slug);
   });
+
+  // Get featured articles - first 12 from all articles
+  const featuredArticles = articles.slice(0, 12);
+
+  // TICKER: Get 12 random articles distributed across ALL categories
+  // This ensures the ticker shows variety from different categories
+  const tickerArticles = [];
+  const categoriesWithArticles = categories.filter(cat => (articlesByCategory[cat.slug] || []).length > 0);
+
+  if (categoriesWithArticles.length > 0) {
+    // Calculate how many articles to take from each category
+    const articlesPerCategory = Math.ceil(12 / categoriesWithArticles.length);
+
+    categoriesWithArticles.forEach(cat => {
+      const catArticles = articlesByCategory[cat.slug] || [];
+      // Shuffle category articles and take up to articlesPerCategory
+      const shuffled = [...catArticles].sort(() => Math.random() - 0.5);
+      tickerArticles.push(...shuffled.slice(0, articlesPerCategory));
+    });
+
+    // Shuffle the final ticker array and limit to 12
+    tickerArticles.sort(() => Math.random() - 0.5);
+    tickerArticles.splice(12);
+  }
+
+  // If we couldn't get enough, fall back to first 12 articles
+  const finalTickerArticles = tickerArticles.length >= 12 ? tickerArticles : articles.slice(0, 12);
+
+  // BUSINESS RULE: Spotlight section must show articles from DIFFERENT categories than the Hero
+  // Hero uses featuredArticles[0], so spotlight must exclude that article's category
+  const heroCategory = featuredArticles[0]?.categorySlug;
+  const spotlightArticles = articles.filter(a => a.categorySlug !== heroCategory);
+
+  // Shuffle spotlight articles to get variety
+  const shuffledSpotlight = [...spotlightArticles].sort(() => Math.random() - 0.5);
 
   // Get most popular (use first articles from each category)
   const mostPopular = [];
@@ -3268,6 +3301,125 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
     const catArticles = articlesByCategory[cat.slug] || [];
     return catArticles[0] || null;
   }).filter(Boolean);
+
+  // ========================================================================
+  // SELF-CHECK VALIDATION & AUTO-REPAIR SYSTEM
+  // ========================================================================
+  // Validates all article arrays have required content and auto-repairs if empty
+
+  const validationErrors = [];
+  const repairLog = [];
+
+  // Helper function to get fallback articles from all sources
+  function getFallbackArticles(count, excludeIds = new Set()) {
+    const fallback = articles
+      .filter(a => !excludeIds.has(a.id))
+      .slice(0, count);
+    return fallback;
+  }
+
+  // Section validation rules with auto-repair
+  const sectionValidations = [
+    {
+      name: 'featuredArticles',
+      data: featuredArticles,
+      minCount: 12,
+      repair: () => {
+        const needed = 12 - featuredArticles.length;
+        const supplements = articles.slice(featuredArticles.length, featuredArticles.length + needed);
+        featuredArticles.push(...supplements);
+        return supplements.length;
+      }
+    },
+    {
+      name: 'shuffledSpotlight',
+      data: shuffledSpotlight,
+      minCount: 24, // Need enough for Must Read (7), spotlight main (1), spotlight list (2), related (4), recommended (10)
+      repair: () => {
+        // If not enough spotlight articles from other categories, include all articles
+        const needed = 24 - shuffledSpotlight.length;
+        if (needed > 0) {
+          const existingIds = new Set(shuffledSpotlight.map(a => a.id));
+          const supplements = articles
+            .filter(a => !existingIds.has(a.id))
+            .slice(0, needed);
+          shuffledSpotlight.push(...supplements);
+          return supplements.length;
+        }
+        return 0;
+      }
+    },
+    {
+      name: 'mostPopular',
+      data: mostPopular,
+      minCount: 7,
+      repair: () => {
+        const needed = 7 - mostPopular.length;
+        const existingIds = new Set(mostPopular.map(a => a.id));
+        const supplements = articles
+          .filter(a => !existingIds.has(a.id))
+          .slice(0, needed);
+        mostPopular.push(...supplements);
+        return supplements.length;
+      }
+    },
+    {
+      name: 'heroSlides',
+      data: heroSlides,
+      minCount: 1,
+      repair: () => {
+        if (heroSlides.length === 0 && articles.length > 0) {
+          heroSlides.push(articles[0]);
+          return 1;
+        }
+        return 0;
+      }
+    },
+    {
+      name: 'categories (for navigation)',
+      data: categories,
+      minCount: 1,
+      repair: () => {
+        // Categories should always exist from config, no auto-repair possible
+        console.error('   ❌ CRITICAL: No categories defined for navigation!');
+        return 0;
+      }
+    }
+  ];
+
+  // Run validation and auto-repair
+  sectionValidations.forEach(validation => {
+    const { name, data, minCount, repair } = validation;
+    if (data.length < minCount) {
+      validationErrors.push(`${name}: Expected ${minCount} articles, found ${data.length}`);
+      const repaired = repair();
+      if (repaired > 0) {
+        repairLog.push(`${name}: Auto-repaired by adding ${repaired} articles (now ${data.length})`);
+      }
+    }
+  });
+
+  // Log validation results
+  if (validationErrors.length > 0) {
+    console.log('   ⚠️  VALIDATION WARNINGS:');
+    validationErrors.forEach(err => console.log(`      - ${err}`));
+  }
+  if (repairLog.length > 0) {
+    console.log('   🔧 AUTO-REPAIRS APPLIED:');
+    repairLog.forEach(repair => console.log(`      - ${repair}`));
+  }
+  if (validationErrors.length === 0) {
+    console.log('   ✅ All sections validated successfully');
+  }
+
+  // Final data check with detailed logging
+  console.log('   📊 SECTION DATA COUNTS:');
+  console.log(`      - categories: ${categories.length}`);
+  console.log(`      - featuredArticles: ${featuredArticles.length}`);
+  console.log(`      - shuffledSpotlight: ${shuffledSpotlight.length}`);
+  console.log(`      - mostPopular: ${mostPopular.length}`);
+  console.log(`      - heroSlides: ${heroSlides.length}`);
+  console.log(`      - Total articles available: ${articles.length}`);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -3376,76 +3528,112 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
       text-transform: uppercase;
     }
 
-    /* Navigation Row */
-    .nav-row-wrapper {
+    /* ============================================
+       CATEGORY NAVIGATION BAR - BLACK WITH WHITE TEXT, LEFT-ALIGNED
+       ============================================ */
+    #category-nav {
       width: 100%;
-      background: #000;
+      background: #1a1a1a;
     }
 
-    .nav-container {
+    #category-nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0 20px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
       max-width: 1200px;
-      width: 100%;
       margin: 0 auto;
-      display: flex;
-      justify-content: stretch;
-      align-items: stretch;
-      padding: 0;
     }
 
-    .nav-link {
-      flex: 1 1 20%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
+    #category-nav ul li {
+      position: relative;
     }
 
-    .home-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 16px;
-      height: 16px;
-      margin-right: 4px;
-      vertical-align: middle;
-    }
-
-    .home-icon svg {
-      width: 16px;
-      height: 16px;
-      fill: #fff;
-    }
-
-    .nav-link a {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      white-space: nowrap;
-      padding: 14px 20px;
-      font-size: 14px;
+    #category-nav ul li a {
+      display: block;
+      padding: 6px 18px;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 11px;
       font-weight: 600;
-      color: #fff;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      border-bottom: 3px solid transparent;
-      transition: all 0.2s;
+      letter-spacing: 0.3px;
+      border-bottom: 2px solid transparent;
+      transition: border-bottom-color 0.2s;
     }
 
-    .nav-link a:hover,
-    .nav-link.active a {
-      background: rgba(255,255,255,0.1);
+    #category-nav ul li a:hover {
       border-bottom-color: #ffd700;
     }
 
-    .nav-link.nav-spacer {
-      /* Spacer divs for future use */
+    #category-nav ul li a svg {
+      width: 16px;
+      height: 16px;
+      fill: #ffffff;
+      vertical-align: middle;
     }
 
-    /* Article Links Row */
-    .article-row-wrapper {
+    /* ============================================
+       TICKER BAR - JAVASCRIPT-POWERED SMOOTH SCROLL
+       Uses requestAnimationFrame for 60fps smoothness
+       ============================================ */
+    #ticker-bar {
       width: 100%;
       background: #1a1a1a;
+      overflow: hidden;
+      position: relative;
+      border-top: 1px solid #333;
+      height: 36px;
+    }
+
+    /* Wrapper - JavaScript handles the transform animation */
+    #ticker-bar .ticker-wrap {
+      display: inline-flex;
+      white-space: nowrap;
+      /* Hardware acceleration */
+      will-change: transform;
+      transform: translateX(0);
+    }
+
+    /* Each content block has same items - creates seamless loop */
+    #ticker-bar .ticker-content {
+      display: inline-flex;
+      align-items: center;
+      height: 36px;
+    }
+
+    #ticker-bar .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      padding: 0 25px;
+      font-size: 12px;
+      color: #b0b0b0;
+      white-space: nowrap;
+      height: 36px;
+    }
+
+    #ticker-bar .ticker-item .cat-label {
+      font-weight: 700;
+      color: #ffd700;
+      margin-right: 6px;
+      text-transform: uppercase;
+      font-size: 10px;
+    }
+
+    #ticker-bar .ticker-item a {
+      color: #b0b0b0;
+      text-decoration: none;
+    }
+
+    #ticker-bar .ticker-item a:hover {
+      color: #ffffff;
+    }
+
+    /* Legacy - keep for compatibility */
+    .article-row-wrapper {
+      display: none;
       border-top: 1px solid #333;
     }
 
@@ -4541,6 +4729,78 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
       background: rgba(255,255,255,0.3);
     }
 
+    /* Hero Carousel with Slow Fade Transition
+       - 2 second fade out
+       - 5 second pause (showing image)
+       - 2 second fade in for next slide */
+    .hero-carousel {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      /* 2 second fade transition */
+      transition: opacity 2s ease-in-out;
+      z-index: 1;
+    }
+
+    /* First slide establishes container height */
+    .hero-slide:first-child {
+      position: relative;
+      opacity: 1;
+    }
+
+    /* Active slide fades in on top */
+    .hero-slide.active {
+      opacity: 1;
+      z-index: 2;
+    }
+
+    /* When first slide is not active, fade it out */
+    .hero-slide:first-child:not(.active) {
+      opacity: 0;
+    }
+
+    .hero-category {
+      display: inline-block;
+      background: #ffd700;
+      color: #000000;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .hero-dots {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .hero-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.4);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .hero-dot.active, .hero-dot:hover {
+      background: #ffd700;
+    }
+
     /* Sidebar */
     .sidebar {
       display: flex;
@@ -5391,7 +5651,7 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
         <td>
           <div class="header-content">
             <div class="header-brand">
-              <h1 class="header-title"><a href="#" id="siteHomeLink" onclick="showHomePage(); return false;">${siteName.toUpperCase()}</a></h1>
+              <h1 class="header-title"><a href="#" id="siteHomeLink" onclick="goHome(); return false;">${siteName.toUpperCase()}</a></h1>
             </div>
             <div class="header-actions">
               <div class="search-box">
@@ -5406,17 +5666,29 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
     </table>
   </div>
 
-  <!-- Navigation Row (Dynamically generated based on number of categories) -->
-  <div class="nav-row-wrapper">
-    <div class="nav-container" id="nav-container">
-      <!-- Category links generated by JavaScript based on siteCategories array -->
-    </div>
-  </div>
+  <!-- Category Navigation Bar - Black with White Text -->
+  <nav id="category-nav">
+    <ul id="nav-list">
+      <li class="home-link"><a href="#" onclick="goHome(); return false;"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></a></li>
+      ${categories.map(cat => `<li><a href="#${cat.slug}" onclick="openPortal('${cat.slug}'); return false;">${cat.name}</a></li>`).join('')}
+    </ul>
+  </nav>
 
-  <!-- Article Links Row (Always 3 random articles) -->
-  <div class="article-row-wrapper">
-    <div class="article-container" id="article-links-container">
-      ${featuredArticles.slice(0, 3).map(article => `<div class="article-link"><a href="#" onclick="showContentPage('${article.id}', '${article.categorySlug}'); return false;"><span class="article-category">${article.category}:</span> ${article.title}</a></div>`).join('')}
+  <!-- Ticker Bar - Black with Smooth Scrolling Headlines (12 random articles from ALL categories) -->
+  <div id="ticker-bar">
+    <div class="ticker-wrap">
+      <div class="ticker-content">
+        ${finalTickerArticles.map(article => {
+          const catName = categories.find(c => c.slug === article.categorySlug)?.name || article.categorySlug;
+          return `<span class="ticker-item"><span class="cat-label">${catName}:</span> <a href="#" onclick="showContentPage('${article.id}', '${article.categorySlug}'); return false;">${article.title}</a></span>`;
+        }).join('')}
+      </div>
+      <div class="ticker-content">
+        ${finalTickerArticles.map(article => {
+          const catName = categories.find(c => c.slug === article.categorySlug)?.name || article.categorySlug;
+          return `<span class="ticker-item"><span class="cat-label">${catName}:</span> <a href="#" onclick="showContentPage('${article.id}', '${article.categorySlug}'); return false;">${article.title}</a></span>`;
+        }).join('')}
+      </div>
     </div>
   </div>
 
@@ -5425,18 +5697,30 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
   <main class="main-content">
     <div class="content-grid">
       <div class="main-column">
-        <!-- Hero Section -->
+        <!-- Hero Carousel - Rotates through first article from each category -->
         <section class="hero-section">
-          <div class="hero-image" onclick="showContentPage('${featuredArticles[0]?.id || ''}', '${featuredArticles[0]?.categorySlug || ''}');" style="cursor: pointer;">
-            ${featuredArticles[0] ? `<img src="images/${featuredArticles[0].id || featuredArticles[0].categorySlug}.jpg" alt="${featuredArticles[0].title}" onerror="this.parentElement.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'">` : ''}
-            <div class="hero-overlay">
-              <h2 class="hero-title">
-                <a href="#" onclick="showContentPage('${featuredArticles[0]?.id || ''}', '${featuredArticles[0]?.categorySlug || ''}'); return false;">${featuredArticles[0]?.title || 'Welcome to ' + siteName}</a>
-              </h2>
-            </div>
+          <div class="hero-carousel" id="heroCarousel">
+            ${categories.map((cat, index) => {
+              const catArticle = featuredArticles.find(a => a.categorySlug === cat.slug) || featuredArticles[index];
+              if (!catArticle) return '';
+              return `<div class="hero-slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+              <div class="hero-image" onclick="showContentPage('${catArticle.id}', '${catArticle.categorySlug}');" style="cursor: pointer;">
+                <img src="images/${catArticle.id}.jpg" alt="${catArticle.title}" onerror="this.parentElement.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)'">
+                <div class="hero-overlay">
+                  <span class="hero-category">${cat.name}</span>
+                  <h2 class="hero-title">
+                    <a href="#" onclick="showContentPage('${catArticle.id}', '${catArticle.categorySlug}'); return false;">${catArticle.title}</a>
+                  </h2>
+                </div>
+              </div>
+            </div>`;
+            }).join('')}
             <div class="hero-nav">
-              <button class="hero-nav-btn">‹</button>
-              <button class="hero-nav-btn">›</button>
+              <button class="hero-nav-btn hero-prev" onclick="changeHeroSlide(-1)">‹</button>
+              <button class="hero-nav-btn hero-next" onclick="changeHeroSlide(1)">›</button>
+            </div>
+            <div class="hero-dots">
+              ${categories.map((_, index) => `<span class="hero-dot ${index === 0 ? 'active' : ''}" onclick="goToHeroSlide(${index})"></span>`).join('')}
             </div>
           </div>
         </section>
@@ -5460,22 +5744,23 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
           </div>
 
           <!-- IN THE SPOTLIGHT Column (Right) -->
+          <!-- BUSINESS RULE: Spotlight must show articles from DIFFERENT categories than the Hero -->
           <div class="section-block">
             <div class="section-header">In The Spotlight</div>
             <div class="section-content">
-              <!-- Main Spotlight Article -->
-              ${featuredArticles[0] ? `
+              <!-- Main Spotlight Article - from OTHER categories than Hero -->
+              ${shuffledSpotlight[0] ? `
               <div class="spotlight-main">
-                <a href="#" onclick="showContentPage('${featuredArticles[0].id}', '${featuredArticles[0].categorySlug}'); return false;" class="spotlight-main-image">
-                  <img src="images/${featuredArticles[0].id || featuredArticles[0].categorySlug}.jpg" alt="${featuredArticles[0].title}" onerror="this.parentElement.style.background='#ddd'">
+                <a href="#" onclick="showContentPage('${shuffledSpotlight[0].id}', '${shuffledSpotlight[0].categorySlug}'); return false;" class="spotlight-main-image">
+                  <img src="images/${shuffledSpotlight[0].id || shuffledSpotlight[0].categorySlug}.jpg" alt="${shuffledSpotlight[0].title}" onerror="this.parentElement.style.background='#ddd'">
                 </a>
-                <h3 class="spotlight-main-title"><a href="#" onclick="showContentPage('${featuredArticles[0].id}', '${featuredArticles[0].categorySlug}'); return false;">${featuredArticles[0].title}</a></h3>
-                <p class="spotlight-main-excerpt">${(featuredArticles[0].content || 'Explore the latest developments and trends.').substring(0, 150)}...</p>
+                <h3 class="spotlight-main-title"><a href="#" onclick="showContentPage('${shuffledSpotlight[0].id}', '${shuffledSpotlight[0].categorySlug}'); return false;">${shuffledSpotlight[0].title}</a></h3>
+                <p class="spotlight-main-excerpt">${(shuffledSpotlight[0].content || 'Explore the latest developments and trends.').substring(0, 150)}...</p>
               </div>
               ` : ''}
 
-              <!-- Spotlight List Items -->
-              ${featuredArticles.slice(1, 3).map(article => `
+              <!-- Spotlight List Items - from OTHER categories than Hero -->
+              ${shuffledSpotlight.slice(1, 3).map(article => `
               <div class="spotlight-list-item">
                 <a href="#" onclick="showContentPage('${article.id}', '${article.categorySlug}'); return false;" class="spotlight-list-image">
                   <img src="images/${article.id || article.categorySlug}.jpg" alt="${article.title}" onerror="this.parentElement.style.background='#ddd'">
@@ -5487,10 +5772,10 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
               </div>
               `).join('')}
 
-              <!-- Related Information Section -->
+              <!-- Related Information Section - from OTHER categories than Hero -->
               <div class="related-info-header">Related Information</div>
               <div class="related-info-grid">
-                ${featuredArticles.slice(11, 15).map(article => `
+                ${shuffledSpotlight.slice(3, 7).map(article => `
                 <div class="related-info-card">
                   <a href="#" onclick="showContentPage('${article.id}', '${article.categorySlug}'); return false;" class="related-info-image">
                     <img src="images/${article.id || article.categorySlug}.jpg" alt="${article.title}" onerror="this.parentElement.style.background='#ddd'">
@@ -5500,10 +5785,10 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
                 `).join('')}
               </div>
 
-              <!-- Recommended Section -->
+              <!-- Recommended Section - from OTHER categories than Hero -->
               <div class="section-header" style="margin-top: 20px;">Recommended</div>
               <div class="recommended-list">
-                ${featuredArticles.slice(15, 25).map(article => `
+                ${shuffledSpotlight.slice(7, 17).map(article => `
                 <div class="recommended-item">
                   <a href="#" onclick="showContentPage('${article.id}', '${article.categorySlug}'); return false;" class="recommended-image">
                     <img src="images/${article.id || article.categorySlug}.jpg" alt="${article.title}" onerror="this.parentElement.style.background='#ddd'">
@@ -5554,11 +5839,11 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
           <div class="skyscraper-ad-label">Advertisement</div>
         </div>
 
-        <!-- Must Read -->
+        <!-- Must Read - Articles from OTHER categories for cross-category discovery -->
         <div class="sidebar-section">
           <div class="sidebar-header">Must Read</div>
           <div class="sidebar-content">
-            ${featuredArticles.slice(25, 32).map(article => `
+            ${shuffledSpotlight.slice(17, 24).map(article => `
             <div class="popular-item">
               <a href="#" onclick="showContentPage('${article.id}', '${article.categorySlug}'); return false;" class="popular-image">
                 <img src="images/${article.id}.jpg" alt="${article.title}" onerror="this.parentElement.style.background='#ddd'">
@@ -5602,9 +5887,15 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
   </main>
   </div>
 
-  <!-- Article Detail Page -->
+  <!-- Portal Page (Category View) - Dynamically populated by JavaScript -->
+  <div id="portalPage" style="display: none;"></div>
+
+  <!-- Article Detail Page - Dynamically populated by JavaScript -->
+  <div id="articleDetailPage" style="display: none;"></div>
+
+  <!-- Legacy Article Page (for server-rendered fallback) -->
   <section id="articlePage" class="article-page hidden">
-    <a href="#" class="back-link" id="backToHome" onclick="showHomePage(); return false;">‹ Back to Home</a>
+    <a href="#" class="back-link" id="backToHome" onclick="goHome(); return false;">‹ Back to Home</a>
     <div class="article-breadcrumbs" id="articleBreadcrumbs">Home | Feature Story</div>
     <h1 class="article-title" id="articleTitle">Feature Story</h1>
     <div class="article-meta">
@@ -5877,7 +6168,10 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
     </div>
   </footer>
 
-  <!-- JavaScript -->
+  <!-- External JavaScript Application -->
+  <script src="app.js"></script>
+
+  <!-- Inline JavaScript (backward compatibility + view tracking integration) -->
   <script>
     // ========================================================================
     // HELPER FUNCTIONS
@@ -5908,6 +6202,93 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
       const stripped = stripMarkdown(text);
       if (stripped.length <= maxLength) return stripped;
       return stripped.substring(0, maxLength).trim() + '...';
+    }
+
+    // ========================================================================
+    // CROSS-CATEGORY ARTICLE SELECTION
+    // ========================================================================
+
+    /**
+     * getArticlesFromOtherCategories - Get articles from categories OTHER than the specified one
+     * BUSINESS RULE: Spotlight, Related Information, and Recommended sections
+     * MUST show articles from OTHER categories (not the current category)
+     * This prevents the page from becoming repetitive with same-category content
+     *
+     * @param {string} excludeCategorySlug - The category slug to exclude
+     * @param {number} count - Maximum number of articles to return
+     * @returns {Array} - Array of articles from other categories
+     */
+    function getArticlesFromOtherCategories(excludeCategorySlug, count = 10) {
+      if (!siteData || !siteData.allArticles) {
+        console.warn('getArticlesFromOtherCategories: siteData.allArticles not available');
+        return [];
+      }
+
+      console.log('getArticlesFromOtherCategories: Excluding category:', excludeCategorySlug);
+      const allCategories = [...new Set(siteData.allArticles.map(a => a.categorySlug))];
+      console.log('getArticlesFromOtherCategories: Available categories:', allCategories);
+
+      // Filter articles that are NOT from the excluded category
+      const otherArticles = siteData.allArticles.filter(article => {
+        return article.categorySlug && article.categorySlug !== excludeCategorySlug;
+      });
+
+      console.log('getArticlesFromOtherCategories: Found', otherArticles.length, 'articles from other categories');
+
+      // Shuffle to get variety
+      const shuffled = [...otherArticles].sort(() => Math.random() - 0.5);
+
+      // Deduplicate by articleId
+      const seen = new Set();
+      const unique = shuffled.filter(a => {
+        const id = a.articleId || a.id;
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+
+      const result = unique.slice(0, count);
+
+      // Validation: Ensure no articles from excluded category snuck through
+      const invalidArticles = result.filter(a => a.categorySlug === excludeCategorySlug);
+      if (invalidArticles.length > 0) {
+        console.error('BUG: getArticlesFromOtherCategories returned articles from excluded category!', invalidArticles);
+      }
+
+      return result;
+    }
+
+    /**
+     * ensureMinimumArticles - Ensure a section has minimum number of articles
+     * BUSINESS RULE: Sections like Featured must always show their full count (e.g., 8 articles)
+     * If the current category doesn't have enough articles, supplement from other categories
+     *
+     * @param {Array} primaryArticles - Articles from the current category
+     * @param {string} currentCategorySlug - The current category slug
+     * @param {number} minCount - Minimum number of articles needed
+     * @param {Set} excludeIds - Article IDs to exclude (already used elsewhere)
+     * @returns {Array} - Array with at least minCount articles
+     */
+    function ensureMinimumArticles(primaryArticles, currentCategorySlug, minCount, excludeIds = new Set()) {
+      const result = [...primaryArticles];
+
+      // Track IDs already in result
+      primaryArticles.forEach(a => excludeIds.add(a.articleId || a.id));
+
+      // If we don't have enough, supplement from other categories
+      if (result.length < minCount) {
+        const needed = minCount - result.length;
+        console.log('ensureMinimumArticles: Need', needed, 'more articles for section');
+
+        const supplements = getArticlesFromOtherCategories(currentCategorySlug, needed + 10)
+          .filter(a => !excludeIds.has(a.articleId || a.id))
+          .slice(0, needed);
+
+        console.log('ensureMinimumArticles: Adding', supplements.length, 'supplemental articles from other categories');
+        result.push(...supplements);
+      }
+
+      return result;
     }
 
     // ========================================================================
@@ -5951,6 +6332,8 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
         // Don't overwrite server-rendered content - it's already functional
         // The history file just enhances dynamic features like hero carousel
         console.log('Using server-rendered content (history file not available)');
+        // Still start the hero carousel with server-rendered slides
+        startHeroCarousel();
       }
     }
 
@@ -5986,35 +6369,59 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
     // ========================================================================
 
     /**
-     * buildNavigation - Build the 6-column navigation with SVG home icon
-     * Business Rule: Add SVG home icon to navigation in generated HTML
+     * buildNavigation - Build navigation with ALL categories and ticker
+     * Business Rule: Display ALL categories in black bar with white text, yellow underline on hover
+     * Home icon goes to home page, category links go to respective categories
+     * ALWAYS loads categories from .webstore/web_categories.json to ensure all categories are shown
      */
-    function buildNavigation() {
-      if (!siteData || !siteData.categories) return;
-
-      const navContainer = document.getElementById('nav-container');
-      if (!navContainer) return;
+    async function buildNavigation() {
+      const navList = document.getElementById('nav-list');
+      if (!navList) return;
 
       // SVG Home Icon
-      const homeSvg = '<svg class="home-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>';
+      const homeSvg = '<svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>';
 
-      let navHtml = '<a href="#" class="nav-link" onclick="goHome(); return false;">' + homeSvg + '</a>';
+      // ALWAYS load categories from web_categories.json to get ALL categories
+      // Do NOT use siteData.categories (from history) as it only includes categories with articles
+      let categories = [];
+      try {
+        const response = await fetch('.webstore/web_categories.json');
+        if (response.ok) {
+          const data = await response.json();
+          categories = data.categories || [];
+          console.log('buildNavigation: Loaded ' + categories.length + ' categories from web_categories.json');
+        }
+      } catch (err) {
+        console.log('buildNavigation: Could not load web_categories.json, using server-rendered nav');
+        return; // Keep server-rendered navigation
+      }
 
-      siteData.categories.slice(0, 5).forEach(cat => {
-        navHtml += '<a href="#' + cat.slug + '" class="nav-link" onclick="openPortal(\\'' + cat.slug + '\\'); return false;">' + cat.name + '</a>';
+      // If no categories loaded, keep the server-rendered navigation
+      if (categories.length === 0) {
+        console.log('buildNavigation: No categories found, keeping server-rendered nav');
+        return;
+      }
+
+      // Build navigation: Home + ALL categories
+      let navHtml = '<li class="home-link"><a href="#" onclick="goHome(); return false;">' + homeSvg + '</a></li>';
+
+      categories.forEach(cat => {
+        navHtml += '<li><a href="#' + cat.slug + '" onclick="openPortal(\\'' + cat.slug + '\\'); return false;">' + cat.name + '</a></li>';
       });
 
-      navContainer.innerHTML = navHtml;
+      navList.innerHTML = navHtml;
+      console.log('buildNavigation: Navigation rebuilt with ' + categories.length + ' categories');
 
-      // Article links row
-      const articleLinksContainer = document.getElementById('article-links-container');
-      if (articleLinksContainer && siteData.allArticles) {
-        let linksHtml = '';
-        const shuffled = [...siteData.allArticles].sort(() => Math.random() - 0.5);
-        shuffled.slice(0, 10).forEach(article => {
-          linksHtml += '<a href="#" class="article-quick-link" onclick="openArticle(\\'' + article.categorySlug + '\\', \\'' + article.articleId + '\\'); return false;">' + truncateText(article.title, 40) + '</a>';
+      // Build ticker with scrolling article headlines (Category: Title format)
+      const tickerContent = document.getElementById('ticker-content');
+      if (tickerContent && siteData && siteData.allArticles) {
+        let tickerHtml = '';
+        const allArticles = [...siteData.allArticles, ...siteData.allArticles]; // Duplicate for seamless loop
+        allArticles.forEach(article => {
+          const catName = categories.find(c => c.slug === article.categorySlug)?.name || article.categorySlug;
+          tickerHtml += '<span class="ticker-item"><span class="cat-label">' + catName + ':</span> <a href="#" onclick="showContentPage(\\'' + article.articleId + '\\', \\'' + article.categorySlug + '\\'); return false;">' + article.title + '</a></span>';
         });
-        articleLinksContainer.innerHTML = linksHtml;
+        tickerContent.innerHTML = tickerHtml;
       }
     }
 
@@ -6032,6 +6439,11 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
       window.scrollTo(0, 0);
     }
 
+    // Wrapper function for article links - showContentPage(articleId, categorySlug)
+    function showContentPage(articleId, categorySlug) {
+      openArticle(categorySlug, articleId);
+    }
+
     function renderHomePage() {
       // Home page content is rendered server-side, just ensure it's visible
       document.getElementById('homePage').style.display = 'block';
@@ -6044,28 +6456,41 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
     // ========================================================================
 
     function startHeroCarousel() {
-      if (!siteData || !siteData.heroCarousel || siteData.heroCarousel.length <= 1) return;
+      const slides = document.querySelectorAll('.hero-slide');
+      if (slides.length <= 1) return;
 
+      // 9 second interval: 5s display + 2s fade out + 2s fade in
       heroInterval = setInterval(() => {
-        heroSlideIndex = (heroSlideIndex + 1) % siteData.heroCarousel.length;
+        heroSlideIndex = (heroSlideIndex + 1) % slides.length;
         updateHeroSlide();
-      }, 5000);
+      }, 9000);
     }
 
     function updateHeroSlide() {
       const slides = document.querySelectorAll('.hero-slide');
-      const indicators = document.querySelectorAll('.hero-indicator');
+      const dots = document.querySelectorAll('.hero-dot');
 
       slides.forEach((slide, index) => {
         slide.classList.toggle('active', index === heroSlideIndex);
       });
 
-      indicators.forEach((indicator, index) => {
-        indicator.classList.toggle('active', index === heroSlideIndex);
+      dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === heroSlideIndex);
       });
     }
 
-    function goToSlide(index) {
+    function changeHeroSlide(direction) {
+      const slides = document.querySelectorAll('.hero-slide');
+      if (slides.length === 0) return;
+      heroSlideIndex = (heroSlideIndex + direction + slides.length) % slides.length;
+      updateHeroSlide();
+      if (heroInterval) {
+        clearInterval(heroInterval);
+        startHeroCarousel();
+      }
+    }
+
+    function goToHeroSlide(index) {
       heroSlideIndex = index;
       updateHeroSlide();
       if (heroInterval) {
@@ -6074,13 +6499,21 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
       }
     }
 
+    function goToSlide(index) {
+      goToHeroSlide(index);
+    }
+
     // ========================================================================
     // PORTAL MODE (Category Page)
     // ========================================================================
 
     /**
      * openPortal - Open a category portal page
-     * Business Rule: No duplicate article IDs within a single portal page
+     * BUSINESS RULES:
+     * 1. No duplicate article IDs within a single portal page
+     * 2. Spotlight, Related Information, and Recommended sections MUST show articles from OTHER categories
+     * 3. Featured section shows articles from current category, supplemented from others if needed
+     * 4. Ensure minimum article counts for each section
      */
     async function openPortal(categorySlug) {
       currentMode = 'portal';
@@ -6089,14 +6522,15 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
       document.getElementById('homePage').style.display = 'none';
       document.getElementById('articleDetailPage').style.display = 'none';
 
-      // Check if we have a cached portal page
-      if (portalPageCache[categorySlug]) {
-        const portalPage = document.getElementById('portalPage');
-        portalPage.innerHTML = portalPageCache[categorySlug];
-        portalPage.style.display = 'block';
-        window.scrollTo(0, 0);
-        return;
-      }
+      // NOTE: Portal cache disabled to ensure fresh cross-category content
+      // TODO: Re-enable cache after verifying business rules work correctly
+      // if (portalPageCache[categorySlug]) {
+      //   const portalPage = document.getElementById('portalPage');
+      //   portalPage.innerHTML = portalPageCache[categorySlug];
+      //   portalPage.style.display = 'block';
+      //   window.scrollTo(0, 0);
+      //   return;
+      // }
 
       const portalPage = document.getElementById('portalPage');
       portalPage.style.display = 'block';
@@ -6117,6 +6551,13 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
           seenIds.add(article.articleId);
           return true;
         });
+
+        // BUSINESS RULE: Get articles from OTHER categories for cross-category sections
+        const otherCategoryArticles = getArticlesFromOtherCategories(categorySlug, 30);
+        console.log('Portal: Got', otherCategoryArticles.length, 'cross-category articles for', categorySlug);
+
+        // Track which article IDs we've used (for deduplication)
+        const usedArticleIds = new Set();
 
         // Load ad data for sidebar
         let adHtml = '';
@@ -6153,9 +6594,10 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
         html += '<div class="content-grid">';
         html += '<div class="main-column">';
 
-        // Hero Carousel for portal
-        if (uniqueArticles.length > 0) {
-          const heroArticle = uniqueArticles[0];
+        // Hero Carousel for portal - uses current category article
+        const heroArticle = uniqueArticles[0];
+        if (heroArticle) {
+          usedArticleIds.add(heroArticle.articleId);
           html += '<section class="hero-section">';
           html += '<div class="hero-image">';
           html += '<img src="' + (heroArticle.image || 'images/' + heroArticle.articleId + '.jpg') + '" alt="' + heroArticle.title + '" onerror="this.parentElement.style.background=\\'linear-gradient(135deg, #667eea 0%, #764ba2 100%)\\';">';
@@ -6169,16 +6611,29 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
         // Featured & Spotlight - New Layout
         html += '<div class="section-row">';
 
-        // FEATURED Column (Left) - Stacked Cards
+        // FEATURED Column (Left) - From current category, supplemented if needed
+        // Reserve first 3 articles for hero and other uses
+        uniqueArticles.slice(0, 3).forEach(a => usedArticleIds.add(a.articleId));
+
+        // BUSINESS RULE: Ensure 8 featured articles, supplement from other categories if needed
+        const featuredArticles = ensureMinimumArticles(
+          uniqueArticles.slice(3, 11),
+          categorySlug,
+          8,
+          new Set(usedArticleIds)
+        );
+
         html += '<div class="section-block">';
         html += '<div class="section-header">Featured</div>';
         html += '<div class="section-content">';
-        uniqueArticles.slice(3, 11).forEach(article => {
+        featuredArticles.forEach(article => {
+          const articleCat = article.categorySlug || categorySlug;
+          usedArticleIds.add(article.articleId);
           html += '<div class="featured-card">';
-          html += '<a href="#" onclick="openArticle(\\'' + categorySlug + '\\', \\'' + article.articleId + '\\'); return false;" class="featured-card-image">';
+          html += '<a href="#" onclick="openArticle(\\'' + articleCat + '\\', \\'' + article.articleId + '\\'); return false;" class="featured-card-image">';
           html += '<img src="' + (article.image || 'images/' + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\\'#ddd\\'">';
           html += '</a>';
-          html += '<h3 class="featured-card-title"><a href="#" onclick="openArticle(\\'' + categorySlug + '\\', \\'' + article.articleId + '\\'); return false;">' + article.title + '</a></h3>';
+          html += '<h3 class="featured-card-title"><a href="#" onclick="openArticle(\\'' + articleCat + '\\', \\'' + article.articleId + '\\'); return false;">' + article.title + '</a></h3>';
           html += '<p class="featured-card-excerpt">' + truncateText(article.excerpt || '', 120) + '</p>';
           html += '</div>';
         });
@@ -6186,70 +6641,74 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
         html += '</div>';
 
         // IN THE SPOTLIGHT Column (Right)
-        // Article distribution (avoiding duplicates except Recommended):
-        // - Hero: article 0
-        // - Featured (left): articles 3-10 (8 articles)
-        // - Spotlight main: article 11 (or fallback to 0 if not enough)
-        // - Spotlight list: articles 12-13 (or fallback)
-        // - Related info: articles 14-17 (or fallback)
-        // - Recommended: 10 articles from 0-9 (can repeat)
+        // BUSINESS RULE: Spotlight MUST show articles from OTHER categories
         html += '<div class="section-block">';
         html += '<div class="section-header">In The Spotlight</div>';
         html += '<div class="section-content">';
 
-        // Main Spotlight Article - use article 11 to avoid overlap with featured (3-10)
-        const mainSpotlightIdx = uniqueArticles.length > 11 ? 11 : 0;
-        if (uniqueArticles.length > 0) {
-          const mainSpotlight = uniqueArticles[mainSpotlightIdx];
+        // Main Spotlight Article - from OTHER categories
+        const spotlightMain = otherCategoryArticles.find(a => !usedArticleIds.has(a.articleId));
+        if (spotlightMain) {
+          usedArticleIds.add(spotlightMain.articleId);
+
+          // VALIDATION: Check that spotlight is from different category than hero
+          if (spotlightMain.categorySlug === categorySlug) {
+            console.error('BUG: Spotlight article is from SAME category as current page!');
+          }
+          if (heroArticle && spotlightMain.articleId === heroArticle.articleId) {
+            console.error('BUG: Spotlight article is SAME as hero article!');
+          }
+
           html += '<div class="spotlight-main">';
-          html += '<a href="#" onclick="openArticle(\\'' + categorySlug + '\\', \\'' + mainSpotlight.articleId + '\\'); return false;" class="spotlight-main-image">';
-          html += '<img src="' + (mainSpotlight.image || 'images/' + mainSpotlight.articleId + '.jpg') + '" alt="' + mainSpotlight.title + '" onerror="this.parentElement.style.background=\\'#ddd\\'">';
+          html += '<a href="#" onclick="openArticle(\\'' + spotlightMain.categorySlug + '\\', \\'' + spotlightMain.articleId + '\\'); return false;" class="spotlight-main-image">';
+          html += '<img src="' + (spotlightMain.image || 'images/' + spotlightMain.articleId + '.jpg') + '" alt="' + spotlightMain.title + '" onerror="this.parentElement.style.background=\\'#ddd\\'">';
           html += '</a>';
-          html += '<h3 class="spotlight-main-title"><a href="#" onclick="openArticle(\\'' + categorySlug + '\\', \\'' + mainSpotlight.articleId + '\\'); return false;">' + mainSpotlight.title + '</a></h3>';
-          html += '<p class="spotlight-main-excerpt">' + truncateText(mainSpotlight.excerpt || '', 150) + '</p>';
+          html += '<h3 class="spotlight-main-title"><a href="#" onclick="openArticle(\\'' + spotlightMain.categorySlug + '\\', \\'' + spotlightMain.articleId + '\\'); return false;">' + spotlightMain.title + '</a></h3>';
+          html += '<p class="spotlight-main-excerpt">' + truncateText(spotlightMain.excerpt || '', 150) + '</p>';
           html += '</div>';
         }
 
-        // Spotlight List Items - use articles 12-13 to avoid overlap
-        const listStart = uniqueArticles.length > 13 ? 12 : 1;
-        const listEnd = uniqueArticles.length > 13 ? 14 : 3;
-        uniqueArticles.slice(listStart, listEnd).forEach(article => {
+        // Spotlight List Items - from OTHER categories
+        const spotlightList = otherCategoryArticles.filter(a => !usedArticleIds.has(a.articleId)).slice(0, 2);
+        spotlightList.forEach(article => {
+          usedArticleIds.add(article.articleId);
           html += '<div class="spotlight-list-item">';
-          html += '<a href="#" onclick="openArticle(\\'' + categorySlug + '\\', \\'' + article.articleId + '\\'); return false;" class="spotlight-list-image">';
+          html += '<a href="#" onclick="openArticle(\\'' + article.categorySlug + '\\', \\'' + article.articleId + '\\'); return false;" class="spotlight-list-image">';
           html += '<img src="' + (article.image || 'images/' + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\\'#ddd\\'">';
           html += '</a>';
           html += '<div class="spotlight-list-content">';
-          html += '<h4 class="spotlight-list-title"><a href="#" onclick="openArticle(\\'' + categorySlug + '\\', \\'' + article.articleId + '\\'); return false;">' + article.title + '</a></h4>';
+          html += '<h4 class="spotlight-list-title"><a href="#" onclick="openArticle(\\'' + article.categorySlug + '\\', \\'' + article.articleId + '\\'); return false;">' + article.title + '</a></h4>';
           html += '<p class="spotlight-list-excerpt">' + truncateText(article.excerpt || '', 80) + '</p>';
           html += '</div>';
           html += '</div>';
         });
 
-        // Related Information Section - use articles 14-17 to avoid overlap
-        const relatedStart = uniqueArticles.length > 17 ? 14 : 0;
-        const relatedEnd = uniqueArticles.length > 17 ? 18 : 4;
+        // Related Information Section - BUSINESS RULE: from OTHER categories
         html += '<div class="related-info-header">Related Information</div>';
         html += '<div class="related-info-grid">';
-        uniqueArticles.slice(relatedStart, relatedEnd).forEach(article => {
+        const relatedArticles = otherCategoryArticles.filter(a => !usedArticleIds.has(a.articleId)).slice(0, 4);
+        relatedArticles.forEach(article => {
+          usedArticleIds.add(article.articleId);
           html += '<div class="related-info-card">';
-          html += '<a href="#" onclick="openArticle(\\'' + categorySlug + '\\', \\'' + article.articleId + '\\'); return false;" class="related-info-image">';
+          html += '<a href="#" onclick="openArticle(\\'' + article.categorySlug + '\\', \\'' + article.articleId + '\\'); return false;" class="related-info-image">';
           html += '<img src="' + (article.image || 'images/' + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\\'#ddd\\'">';
           html += '</a>';
-          html += '<h4 class="related-info-title"><a href="#" onclick="openArticle(\\'' + categorySlug + '\\', \\'' + article.articleId + '\\'); return false;">' + article.title + '</a></h4>';
+          html += '<h4 class="related-info-title"><a href="#" onclick="openArticle(\\'' + article.categorySlug + '\\', \\'' + article.articleId + '\\'); return false;">' + article.title + '</a></h4>';
           html += '</div>';
         });
         html += '</div>';
 
-        // Recommended Section - 10 articles with images (can repeat from earlier sections)
+        // Recommended Section - BUSINESS RULE: from OTHER categories
         html += '<div class="section-header" style="margin-top: 20px;">Recommended</div>';
         html += '<div class="recommended-list">';
-        uniqueArticles.slice(0, 10).forEach(article => {
+        const recommendedArticles = otherCategoryArticles.filter(a => !usedArticleIds.has(a.articleId)).slice(0, 5);
+        recommendedArticles.forEach(article => {
           html += '<div class="recommended-item">';
-          html += '<a href="#" onclick="openArticle(\\'' + categorySlug + '\\', \\'' + article.articleId + '\\'); return false;" class="recommended-image">';
+          html += '<a href="#" onclick="openArticle(\\'' + article.categorySlug + '\\', \\'' + article.articleId + '\\'); return false;" class="recommended-image">';
           html += '<img src="' + (article.image || 'images/' + article.articleId + '.jpg') + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\\'#ddd\\'">';
           html += '</a>';
           html += '<div class="recommended-content">';
-          html += '<h4 class="recommended-title"><a href="#" onclick="openArticle(\\'' + categorySlug + '\\', \\'' + article.articleId + '\\'); return false;">' + article.title + '</a></h4>';
+          html += '<h4 class="recommended-title"><a href="#" onclick="openArticle(\\'' + article.categorySlug + '\\', \\'' + article.articleId + '\\'); return false;">' + article.title + '</a></h4>';
           html += '<p class="recommended-excerpt">' + truncateText(article.excerpt || '', 100) + '</p>';
           html += '</div>';
           html += '</div>';
@@ -6450,7 +6909,56 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
       document.getElementById('subscribeModal').style.display = 'none';
     }
 
+    // ========================================================================
+    // SMOOTH TICKER ANIMATION - Uses requestAnimationFrame for 60fps
+    // ========================================================================
+    let tickerPosition = 0;
+    let tickerPaused = false;
+    let tickerAnimationId = null;
+
+    function initSmoothTicker() {
+      const tickerWrap = document.querySelector('#ticker-bar .ticker-wrap');
+      const tickerBar = document.getElementById('ticker-bar');
+      if (!tickerWrap) return;
+
+      // Get the width of one content block (half the total width)
+      const tickerContent = tickerWrap.querySelector('.ticker-content');
+      if (!tickerContent) return;
+
+      const contentWidth = tickerContent.offsetWidth;
+      if (contentWidth === 0) return;
+
+      // Pause on hover
+      tickerBar.addEventListener('mouseenter', function() { tickerPaused = true; });
+      tickerBar.addEventListener('mouseleave', function() { tickerPaused = false; });
+
+      // Animation speed: pixels per frame at 60fps
+      // Lower = slower (0.3 is very slow, readable speed)
+      const speed = 0.3;
+
+      function animateTicker() {
+        if (!tickerPaused) {
+          tickerPosition -= speed;
+
+          // Reset when we've scrolled one full content block
+          if (Math.abs(tickerPosition) >= contentWidth) {
+            tickerPosition = 0;
+          }
+
+          tickerWrap.style.transform = 'translateX(' + tickerPosition + 'px)';
+        }
+
+        tickerAnimationId = requestAnimationFrame(animateTicker);
+      }
+
+      // Start the animation
+      animateTicker();
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+      // Initialize smooth ticker
+      setTimeout(initSmoothTicker, 100);
+
       // Subscribe button
       const subscribeBtn = document.getElementById('subscribe-btn');
       if (subscribeBtn) {
@@ -6496,6 +7004,47 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
 
       // Load site data
       loadSiteData();
+
+      // ============ PAGE SELF-CHECK VALIDATION ============
+      // Validates that all sections have content and auto-repairs if empty
+      setTimeout(function validateAndRepairSections() {
+        console.log('🔍 Running page validation...');
+        const repairs = [];
+
+        // Define sections to validate
+        const sectionsToValidate = [
+          { id: 'sidebar-must-read', selector: '.sidebar-section .sidebar-content', minItems: 1, name: 'Sidebar Must Read' },
+          { id: 'articleMustRead', selector: '#articleMustRead .popular-item', minItems: 1, name: 'Article Must Read' },
+          { id: 'featured-spotlight', selector: '#featured-spotlight-section .featured-item', minItems: 1, name: 'Featured Section' },
+          { id: 'spotlight-items', selector: '#featured-spotlight-section .spotlight-item', minItems: 1, name: 'Spotlight Items' }
+        ];
+
+        sectionsToValidate.forEach(section => {
+          const elements = document.querySelectorAll(section.selector);
+          if (elements.length < section.minItems) {
+            console.error('❌ VALIDATION FAILED: ' + section.name + ' - Expected ' + section.minItems + '+ items, found ' + elements.length);
+            repairs.push(section.name);
+          } else {
+            console.log('✅ ' + section.name + ': ' + elements.length + ' items');
+          }
+        });
+
+        // Check for empty sidebar content containers
+        document.querySelectorAll('.sidebar-content').forEach((el, idx) => {
+          if (el.innerHTML.trim() === '' || el.children.length === 0) {
+            console.error('❌ EMPTY SECTION DETECTED: sidebar-content #' + idx);
+            repairs.push('Sidebar content #' + idx);
+          }
+        });
+
+        // Summary
+        if (repairs.length > 0) {
+          console.error('⚠️ PAGE VALIDATION: ' + repairs.length + ' sections need attention');
+          console.error('   Empty sections: ' + repairs.join(', '));
+        } else {
+          console.log('✅ PAGE VALIDATION COMPLETE: All sections have content');
+        }
+      }, 2000); // Run 2 seconds after page load
 
       // ============ FEATURED CATEGORIES & MORE FROM BRANDS ============
       async function populateFeaturedSections() {
@@ -6611,14 +7160,41 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
       setTimeout(populateFeaturedSections, 1000);
     });
 
-    // Handle hash navigation
-    window.addEventListener('hashchange', function() {
+    // Handle hash navigation for SEO-friendly URLs
+    // Supports: #article/{categorySlug}/{articleId} and #{categorySlug}
+    function handleHashNavigation() {
       const hash = window.location.hash.slice(1);
-      if (hash && siteData) {
+      if (!hash) return;
+
+      // Check for article URL format: article/{categorySlug}/{articleId}
+      if (hash.startsWith('article/')) {
+        const parts = hash.split('/');
+        if (parts.length >= 3) {
+          const categorySlug = parts[1];
+          const articleId = parts[2];
+          console.log('Hash navigation: Opening article', articleId, 'in category', categorySlug);
+          openArticle(categorySlug, articleId);
+          return;
+        }
+      }
+
+      // Check for category URL format: {categorySlug}
+      if (siteData) {
         const category = siteData.categories.find(c => c.slug === hash);
         if (category) {
+          console.log('Hash navigation: Opening category portal', hash);
           openPortal(hash);
         }
+      }
+    }
+
+    window.addEventListener('hashchange', handleHashNavigation);
+
+    // Also handle initial page load with hash
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.location.hash) {
+        // Delay to ensure siteData is loaded
+        setTimeout(handleHashNavigation, 500);
       }
     });
 

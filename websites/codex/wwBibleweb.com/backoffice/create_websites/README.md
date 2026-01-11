@@ -249,6 +249,69 @@ curl https://api.openai.com/v1/models \
 - Check browser console for errors (F12)
 - Verify you're accessing http://localhost:3001
 
+## 📜 Business Rules & Content Guidelines
+
+The website generator enforces strict business rules to ensure high-quality, diverse content across all generated websites.
+
+### Cross-Category Content Distribution
+
+**CRITICAL RULE**: To prevent repetitive content and enhance user engagement, certain sections MUST display articles from DIFFERENT categories than the current page's category.
+
+| Section | Source | Business Rule |
+|---------|--------|---------------|
+| **Hero** | Current category | First article from the current category |
+| **Featured** | Current category + supplemental | 8 articles from current category, supplemented from other categories if insufficient |
+| **In The Spotlight** | OTHER categories only | Main spotlight and list items must be from different categories |
+| **Related Information** | OTHER categories only | 4 articles from categories other than current |
+| **Recommended** | OTHER categories only | 5 articles from categories other than current |
+| **You Might Like** | Current category | Random article for sidebar variety |
+
+### Helper Functions
+
+The generator includes two key helper functions for content distribution:
+
+#### `getArticlesFromOtherCategories(excludeCategorySlug, count)`
+- Filters articles to exclude the specified category
+- Returns shuffled, deduplicated articles from other categories
+- Includes validation to ensure no excluded-category articles slip through
+- Logs category distribution for debugging
+
+#### `ensureMinimumArticles(primaryArticles, currentCategorySlug, minCount, excludeIds)`
+- Ensures sections always have their required minimum article count
+- Supplements from other categories when current category has insufficient articles
+- Prevents article ID duplication across sections
+
+### Article Deduplication
+
+- Each page tracks used article IDs in a `Set`
+- Articles can only appear ONCE per page (except in specific designated repeat sections)
+- Console warnings are logged if the same article appears in hero and spotlight
+
+### Validation Logging
+
+The generator outputs validation messages to the browser console:
+- `getArticlesFromOtherCategories: Excluding category: [slug]` - Shows which category is being filtered out
+- `getArticlesFromOtherCategories: Found X articles from other categories` - Confirms cross-category selection
+- `ensureMinimumArticles: Need X more articles for section` - Indicates when supplementation is needed
+- `BUG: Spotlight article is from SAME category as current page!` - Error if business rule is violated
+
+### Minimum Content Requirements
+
+| Section | Required Count | Fallback Behavior |
+|---------|---------------|-------------------|
+| Featured | 8 articles | Supplement from other categories |
+| Spotlight Main | 1 article | Use first available cross-category article |
+| Spotlight List | 2 articles | Use available cross-category articles |
+| Related Info | 4 articles | Use available cross-category articles |
+| Recommended | 5 articles | Use available cross-category articles |
+| Most Popular | 7 articles | Mix from all categories |
+
+### Portal Page Cache
+
+The portal page cache is **temporarily disabled** to ensure fresh cross-category content is loaded each time. To re-enable caching after verifying business rules work correctly, uncomment the cache check in the `openPortal()` function.
+
+---
+
 ## 📝 Development Notes
 
 ### Adding New Steps
