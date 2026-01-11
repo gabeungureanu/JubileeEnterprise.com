@@ -4030,6 +4030,98 @@ function generateCNNStyleWebsite(domain, siteName, categories, articles) {
       gap: 16px;
     }
 
+    /* Article Detail Page (Dynamic) - For JavaScript-rendered article pages */
+    #articleDetailPage {
+      background: #fff;
+    }
+
+    .article-detail-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 30px 20px 60px;
+      background: #fff;
+    }
+
+    .article-breadcrumb {
+      font-size: 13px;
+      color: #c00;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 15px;
+    }
+
+    .article-breadcrumb a {
+      color: #c00;
+      text-decoration: none;
+    }
+
+    .article-breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    .article-detail-title {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 38px;
+      font-weight: 800;
+      line-height: 1.2;
+      color: #111;
+      margin-bottom: 15px;
+    }
+
+    #articleDetailPage .article-meta {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .article-hero-image {
+      width: 100%;
+      height: 450px;
+      background-size: cover;
+      background-position: center;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+
+    #articleDetailPage .article-content {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #333;
+    }
+
+    #articleDetailPage .article-content p {
+      margin-bottom: 20px;
+      text-align: justify;
+    }
+
+    #articleDetailPage .article-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    .article-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e5e5;
+    }
+
+    .article-tag {
+      display: inline-block;
+      padding: 6px 14px;
+      background: #f5f5f5;
+      color: #666;
+      font-size: 13px;
+      border-radius: 20px;
+      text-transform: capitalize;
+    }
+
     .sidebar-card {
       border: 1px solid #e5e5e5;
       border-radius: 6px;
