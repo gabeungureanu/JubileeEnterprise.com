@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
+using JubileeFlywheel.Charts.Indicators;
 
 namespace JubileeFlywheel.Charts;
 
@@ -215,6 +216,55 @@ public partial class SkiaChartControl : UserControl
         _viewport.ZoomTime(0.67, _viewport.ChartLeft + _viewport.ChartWidth / 2);
         FitPriceToVisibleData();
         InvalidateChart();
+    }
+
+    private void IndicatorsButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new IndicatorManagerDialog(_renderEngine.Indicators, _data);
+        dialog.Owner = Window.GetWindow(this);
+
+        if (dialog.ShowDialog() == true)
+        {
+            // Recalculate and redraw after changes
+            _renderEngine.RecalculateIndicators();
+            InvalidateChart();
+        }
+    }
+
+    /// <summary>
+    /// Add an indicator to the chart
+    /// </summary>
+    public void AddIndicator(IIndicator indicator)
+    {
+        _renderEngine.Indicators.AddIndicator(indicator);
+        _renderEngine.RecalculateIndicators();
+        InvalidateChart();
+    }
+
+    /// <summary>
+    /// Remove an indicator from the chart
+    /// </summary>
+    public void RemoveIndicator(string indicatorId)
+    {
+        _renderEngine.Indicators.RemoveIndicator(indicatorId);
+        InvalidateChart();
+    }
+
+    /// <summary>
+    /// Remove all indicators
+    /// </summary>
+    public void ClearIndicators()
+    {
+        _renderEngine.Indicators.ClearIndicators();
+        InvalidateChart();
+    }
+
+    /// <summary>
+    /// Get the list of current indicators
+    /// </summary>
+    public IReadOnlyList<IIndicator> GetIndicators()
+    {
+        return _renderEngine.Indicators.Indicators;
     }
 
     private void LoadSymbol(string symbol)

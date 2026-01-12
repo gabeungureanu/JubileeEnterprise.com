@@ -1,4 +1,5 @@
 using SkiaSharp;
+using JubileeFlywheel.Charts.Indicators;
 
 namespace JubileeFlywheel.Charts;
 
@@ -9,8 +10,12 @@ public class ChartRenderEngine : IDisposable
 {
     private readonly ChartViewport _viewport;
     private readonly ChartColors _colors;
+    private readonly IndicatorRenderer _indicatorRenderer;
     private ChartDataSeries? _data;
     private ChartType _chartType = ChartType.Candlestick;
+
+    // Sub-panel configuration
+    private float _subPanelHeight = 100; // Height per sub-panel indicator
 
     // Cached paints (reused to avoid GC pressure)
     private SKPaint _backgroundPaint;
@@ -46,8 +51,14 @@ public class ChartRenderEngine : IDisposable
     {
         _viewport = viewport;
         _colors = colors ?? ChartColors.DarkTheme;
+        _indicatorRenderer = new IndicatorRenderer(viewport);
         InitializePaints();
     }
+
+    /// <summary>
+    /// Access to the indicator renderer for adding/removing indicators
+    /// </summary>
+    public IndicatorRenderer Indicators => _indicatorRenderer;
 
     private void InitializePaints()
     {
@@ -167,6 +178,11 @@ public class ChartRenderEngine : IDisposable
     public void SetData(ChartDataSeries data)
     {
         _data = data;
+        // Recalculate all indicators with new data
+        if (_data != null && _data.Bars.Count > 0)
+        {
+            _indicatorRenderer.Calculate(_data.Bars);
+        }
     }
 
     /// <summary>
@@ -204,7 +220,11 @@ public class ChartRenderEngine : IDisposable
     /// </summary>
     public void Render(SKCanvas canvas, int width, int height)
     {
-        _viewport.SetScreenSize(width, height);
+        // Calculate sub-panel space needed
+        float subPanelTotalHeight = _indicatorRenderer.GetSubPanelHeight((int)_subPanelHeight);
+
+        // Adjust viewport for sub-panels
+        _viewport.SetScreenSize(width, height, subPanelTotalHeight);
 
         // Clear background
         canvas.Clear(_colors.Background);
@@ -212,12 +232,37 @@ public class ChartRenderEngine : IDisposable
         // Render layers
         RenderGrid(canvas);
         RenderChart(canvas);
+
+        // Render overlay indicators on the main chart
+        if (_data != null && _data.Bars.Count > 0)
+        {
+            _indicatorRenderer.RenderOverlays(canvas, _data.Bars);
+        }
+
         RenderPriceScale(canvas);
         RenderTimeScale(canvas);
+
+        // Render sub-panel indicators below the main chart
+        if (_data != null && _data.Bars.Count > 0 && subPanelTotalHeight > 0)
+        {
+            float subPanelTop = (float)_viewport.ChartBottom + 30; // After time scale
+            _indicatorRenderer.RenderSubPanels(canvas, _data.Bars, subPanelTop, subPanelTotalHeight);
+        }
 
         if (_showCrosshair)
         {
             RenderCrosshair(canvas);
+        }
+    }
+
+    /// <summary>
+    /// Recalculate all indicators (call after adding/removing indicators or changing parameters)
+    /// </summary>
+    public void RecalculateIndicators()
+    {
+        if (_data != null && _data.Bars.Count > 0)
+        {
+            _indicatorRenderer.Calculate(_data.Bars);
         }
     }
 

@@ -26,9 +26,9 @@ public class ChartViewport
     public double ChartLeft => LeftMargin;
     public double ChartRight => ScreenWidth - RightMargin;
     public double ChartTop => TopMargin;
-    public double ChartBottom => ScreenHeight - BottomMargin;
+    public double ChartBottom => ScreenHeight - BottomMargin - SubPanelHeight;
     public double ChartWidth => ChartRight - ChartLeft;
-    public double ChartHeight => ChartBottom - ChartTop;
+    public double ChartHeight => Math.Max(1, ChartBottom - ChartTop);
 
     // Time span
     public TimeSpan TimeRange => MaxTime - MinTime;
@@ -58,7 +58,23 @@ public class ChartViewport
     {
         ScreenWidth = Math.Max(1, width);
         ScreenHeight = Math.Max(1, height);
+        SubPanelHeight = 0;
     }
+
+    /// <summary>
+    /// Set screen dimensions with space reserved for sub-panel indicators
+    /// </summary>
+    public void SetScreenSize(double width, double height, double subPanelHeight)
+    {
+        ScreenWidth = Math.Max(1, width);
+        ScreenHeight = Math.Max(1, height);
+        SubPanelHeight = Math.Max(0, subPanelHeight);
+    }
+
+    /// <summary>
+    /// Height reserved for sub-panel indicators
+    /// </summary>
+    public double SubPanelHeight { get; private set; }
 
     /// <summary>
     /// Set world bounds with optional price padding
