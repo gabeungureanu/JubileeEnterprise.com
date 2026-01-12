@@ -1,0 +1,375 @@
+/**
+ * Jubilee Tasks - Webview Provider
+ * Provides the task grid UI in a VS Code webview panel
+ */
+
+import * as vscode from 'vscode';
+import { getTaskService } from './task-service';
+import { DeveloperTask } from './types';
+import { ActivityMonitor } from './activity-monitor';
+
+export class TasksWebviewProvider implements vscode.WebviewViewProvider {
+    public static readonly viewType = 'jubileeTasksPanel';
+    private _view?: vscode.WebviewView;
+    private refreshInterval?: NodeJS.Timeout;
+    private currentTaskId?: string;
+
+    constructor(
+        private readonly extensionUri: vscode.Uri
+    ) {}
+
+    public resolveWebviewView(
+        webviewView: vscode.WebviewView,
+        _context: vscode.WebviewViewResolveContext,
+        _token: vscode.CancellationToken
+    ): void {
+        this._view = webviewView;
+
+        webviewView.webview.options = {
+            enableScripts: true,
+            localResourceRoots: [this.extensionUri]
+        };
+
+        webviewView.webview.html = this.getHtmlContent();
+
+        // Handle messages from webview
+        webviewView.webview.onDidReceiveMessage(async (message) => {
+            switch (message.command) {
+                case 'refresh':
+                    await this.refreshTasks();
+                    break;
+                case 'completeTask':
+                    await this.completeTask(message.taskId);
+                    break;
+            }
+        });
+
+        // Initial load
+        this.refreshTasks();
+
+        // Setup auto-refresh
+        const config = vscode.workspace.getConfiguration('jubileeTasks');
+        const intervalSeconds = config.get('autoRefreshIntervalSeconds', 30);
+        this.refreshInterval = setInterval(() => {
+            this.refreshTasks();
+        }, intervalSeconds * 1000);
+
+        webviewView.onDidDispose(() => {
+            if (this.refreshInterval) {
+                clearInterval(this.refreshInterval);
+            }
+        });
+    }
+
+    public setCurrentTask(taskId: string | undefined): void {
+        this.currentTaskId = taskId;
+        this.refreshTasks();
+    }
+
+    public async refreshTasks(): Promise<void> {
+        if (!this._view) {
+            return;
+        }
+
+        const taskService = getTaskService();
+        const response = await taskService.getTasks({ limit: 50 });
+
+        if (response.success && response.data) {
+            // Group tasks by date
+            const groupedTasks = this.groupTasksByDate(response.data);
+
+            this._view.webview.postMessage({
+                command: 'updateTasks',
+                tasks: groupedTasks,
+                currentTaskId: this.currentTaskId
+            });
+        }
+    }
+
+    private groupTasksByDate(tasks: DeveloperTask[]): Record<string, DeveloperTask[]> {
+        const groups: Record<string, DeveloperTask[]> = {};
+
+        for (const task of tasks) {
+            const date = new Date(task.start_time);
+            const dateKey = date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            if (!groups[dateKey]) {
+                groups[dateKey] = [];
+            }
+            groups[dateKey].push(task);
+        }
+
+        return groups;
+    }
+
+    private async completeTask(taskId: string): Promise<void> {
+        // This is called from the webview - emit event for extension to handle
+        vscode.commands.executeCommand('jubileeTasks.completeCurrentTask');
+    }
+
+    private getHtmlContent(): string {
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jubilee Tasks</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--vscode-font-family);
+            font-size: var(--vscode-font-size);
+            color: var(--vscode-foreground);
+            background-color: var(--vscode-sideBar-background);
+            padding: 8px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--vscode-widget-border);
+        }
+
+        .header h2 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .refresh-btn {
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .refresh-btn:hover {
+            background: var(--vscode-button-hoverBackground);
+        }
+
+        .date-group {
+            margin-bottom: 16px;
+        }
+
+        .date-header {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--vscode-descriptionForeground);
+            margin-bottom: 8px;
+            padding: 4px 0;
+            border-bottom: 1px solid var(--vscode-widget-border);
+        }
+
+        .task-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .task-table th {
+            text-align: left;
+            padding: 4px 6px;
+            background: var(--vscode-editor-background);
+            color: var(--vscode-descriptionForeground);
+            font-weight: 500;
+            border-bottom: 1px solid var(--vscode-widget-border);
+        }
+
+        .task-table td {
+            padding: 6px;
+            border-bottom: 1px solid var(--vscode-widget-border);
+            vertical-align: middle;
+        }
+
+        .task-table tr:hover {
+            background: var(--vscode-list-hoverBackground);
+        }
+
+        .task-table tr.current {
+            background: var(--vscode-list-activeSelectionBackground);
+        }
+
+        .task-code {
+            font-family: var(--vscode-editor-font-family);
+            font-weight: 600;
+            color: var(--vscode-textLink-foreground);
+            white-space: nowrap;
+        }
+
+        .dev-initials {
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .task-name {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .time {
+            white-space: nowrap;
+            font-family: var(--vscode-editor-font-family);
+            font-size: 10px;
+        }
+
+        .duration {
+            font-family: var(--vscode-editor-font-family);
+            white-space: nowrap;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status.complete {
+            background: var(--vscode-testing-iconPassed);
+            color: white;
+        }
+
+        .status.in_progress {
+            background: var(--vscode-progressBar-background);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--vscode-descriptionForeground);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Task Tracker</h2>
+        <button class="refresh-btn" onclick="refresh()">Refresh</button>
+    </div>
+    <div id="content">
+        <div class="loading">Loading tasks...</div>
+    </div>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+
+        function refresh() {
+            vscode.postMessage({ command: 'refresh' });
+        }
+
+        function completeTask(taskId) {
+            vscode.postMessage({ command: 'completeTask', taskId: taskId });
+        }
+
+        function formatTime(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
+        function renderTasks(groupedTasks, currentTaskId) {
+            const content = document.getElementById('content');
+            const dates = Object.keys(groupedTasks);
+
+            if (dates.length === 0) {
+                content.innerHTML = '<div class="empty-state">No tasks yet. Start working to track your first task!</div>';
+                return;
+            }
+
+            let html = '';
+
+            for (const date of dates) {
+                const tasks = groupedTasks[date];
+
+                html += '<div class="date-group">';
+                html += '<div class="date-header">' + date + '</div>';
+                html += '<table class="task-table">';
+                html += '<thead><tr>';
+                html += '<th>Task ID</th>';
+                html += '<th>Dev</th>';
+                html += '<th>Task Name</th>';
+                html += '<th>Start</th>';
+                html += '<th>End</th>';
+                html += '<th>Duration</th>';
+                html += '<th>Status</th>';
+                html += '</tr></thead>';
+                html += '<tbody>';
+
+                for (const task of tasks) {
+                    const isCurrent = task.id === currentTaskId;
+                    html += '<tr class="' + (isCurrent ? 'current' : '') + '">';
+                    html += '<td class="task-code">' + task.task_code + '</td>';
+                    html += '<td class="dev-initials">' + task.developer_initials + '</td>';
+                    html += '<td class="task-name" title="' + escapeHtml(task.task_name) + '">' + escapeHtml(task.task_name) + '</td>';
+                    html += '<td class="time">' + formatTime(task.start_time) + '</td>';
+                    html += '<td class="time">' + (task.end_time ? formatTime(task.end_time) : '-') + '</td>';
+                    html += '<td class="duration">' + (task.duration_formatted || formatDuration(task.active_duration_ms)) + '</td>';
+                    html += '<td><span class="status ' + task.status + '">' + task.status.replace('_', ' ') + '</span></td>';
+                    html += '</tr>';
+                }
+
+                html += '</tbody></table>';
+                html += '</div>';
+            }
+
+            content.innerHTML = html;
+        }
+
+        function formatDuration(ms) {
+            if (!ms) return '00:00:00';
+            const hours = Math.floor(ms / 3600000);
+            const minutes = Math.floor((ms % 3600000) / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000);
+            return hours.toString().padStart(2, '0') + ':' +
+                   minutes.toString().padStart(2, '0') + ':' +
+                   seconds.toString().padStart(2, '0');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        window.addEventListener('message', event => {
+            const message = event.data;
+
+            switch (message.command) {
+                case 'updateTasks':
+                    renderTasks(message.tasks, message.currentTaskId);
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>`;
+    }
+}

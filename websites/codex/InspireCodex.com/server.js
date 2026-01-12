@@ -24,6 +24,9 @@ const app = express();
 const PORT = process.env.PORT || 3100;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
+// Trust proxy for proper client IP detection behind Cloudflare/reverse proxy
+app.set('trust proxy', 1);
+
 // =============================================================================
 // DATABASE CONNECTIONS
 // =============================================================================
@@ -4069,6 +4072,521 @@ app.post('/Home/ChatWithJubilee', async (req, res) => {
 });
 
 // =============================================================================
+// DEVELOPER TASKS API - Automated Task Tracking for Jubilee Tasks Extension
+// =============================================================================
+
+/**
+ * Get all developer projects
+ * GET /api/v1/developer/projects
+ */
+app.get('/api/v1/developer/projects', async (req, res) => {
+    try {
+        const { category, active = 'true' } = req.query;
+        let query = 'SELECT * FROM developer_projects WHERE 1=1';
+        const params = [];
+        let paramIndex = 1;
+
+        if (category) {
+            query += ` AND project_category = $${paramIndex++}`;
+            params.push(category);
+        }
+
+        if (active === 'true') {
+            query += ' AND is_active = true';
+        }
+
+        query += ' ORDER BY project_name ASC';
+
+        const result = await codexPool.query(query, params);
+        res.json({ success: true, projects: result.rows });
+    } catch (err) {
+        console.error('Get developer projects error:', err);
+        res.status(500).json({ success: false, error: 'Failed to fetch projects', message: err.message });
+    }
+});
+
+/**
+ * Create or update a developer project
+ * POST /api/v1/developer/projects
+ */
+app.post('/api/v1/developer/projects', async (req, res) => {
+    try {
+        const { project_name, project_category, project_type, folder_path, description } = req.body;
+
+        if (!project_name || !project_category) {
+            return res.status(400).json({ success: false, error: 'project_name and project_category are required' });
+        }
+
+        const result = await codexPool.query(`
+            INSERT INTO developer_projects (project_name, project_category, project_type, folder_path, description)
+            VALUES ($1, $2, $3, $4, $5)
+            ON CONFLICT (project_name) DO UPDATE SET
+                project_category = EXCLUDED.project_category,
+                project_type = EXCLUDED.project_type,
+                folder_path = EXCLUDED.folder_path,
+                description = EXCLUDED.description,
+                updated_at = NOW()
+            RETURNING *
+        `, [project_name.toLowerCase(), project_category, project_type, folder_path, description]);
+
+        res.status(201).json({ success: true, project: result.rows[0] });
+    } catch (err) {
+        console.error('Create developer project error:', err);
+        res.status(500).json({ success: false, error: 'Failed to create project', message: err.message });
+    }
+});
+
+/**
+ * Get developer tasks with optional filters
+ * GET /api/v1/developer/tasks
+ */
+app.get('/api/v1/developer/tasks', async (req, res) => {
+    try {
+        const {
+            developer,
+            project_name,
+            status,
+            date,
+            start_date,
+            end_date,
+            session_id,
+            limit = 100,
+            offset = 0,
+            sort_by = 'start_time',
+            sort_order = 'DESC'
+        } = req.query;
+
+        let query = `
+            SELECT t.*,
+                   p.project_category,
+                   p.project_type,
+                   CASE
+                       WHEN t.active_duration_ms > 0 THEN
+                           LPAD((t.active_duration_ms / 3600000)::TEXT, 2, '0') || ':' ||
+                           LPAD(((t.active_duration_ms % 3600000) / 60000)::TEXT, 2, '0') || ':' ||
+                           LPAD(((t.active_duration_ms % 60000) / 1000)::TEXT, 2, '0')
+                       ELSE '00:00:00'
+                   END AS duration_formatted
+            FROM developer_tasks t
+            LEFT JOIN developer_projects p ON t.project_id = p.id
+            WHERE 1=1
+        `;
+        const params = [];
+        let paramIndex = 1;
+
+        if (developer) {
+            query += ` AND t.developer_initials = $${paramIndex++}`;
+            params.push(developer.toUpperCase());
+        }
+
+        if (project_name) {
+            query += ` AND t.project_name = $${paramIndex++}`;
+            params.push(project_name.toLowerCase());
+        }
+
+        if (status) {
+            query += ` AND t.status = $${paramIndex++}`;
+            params.push(status);
+        }
+
+        if (date) {
+            query += ` AND DATE(t.start_time AT TIME ZONE 'UTC') = $${paramIndex++}`;
+            params.push(date);
+        }
+
+        if (start_date) {
+            query += ` AND t.start_time >= $${paramIndex++}`;
+            params.push(start_date);
+        }
+
+        if (end_date) {
+            query += ` AND t.start_time <= $${paramIndex++}`;
+            params.push(end_date);
+        }
+
+        if (session_id) {
+            query += ` AND t.session_id = $${paramIndex++}`;
+            params.push(session_id);
+        }
+
+        // Validate sort column to prevent SQL injection
+        const validSortColumns = ['start_time', 'end_time', 'task_code', 'task_number', 'project_name', 'developer_initials', 'status'];
+        const sortColumn = validSortColumns.includes(sort_by) ? sort_by : 'start_time';
+        const sortDir = sort_order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+        query += ` ORDER BY t.${sortColumn} ${sortDir}`;
+        query += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+        params.push(parseInt(limit), parseInt(offset));
+
+        const result = await codexPool.query(query, params);
+
+        // Get total count for pagination
+        let countQuery = 'SELECT COUNT(*) FROM developer_tasks t WHERE 1=1';
+        const countParams = [];
+        let countParamIndex = 1;
+
+        if (developer) {
+            countQuery += ` AND t.developer_initials = $${countParamIndex++}`;
+            countParams.push(developer.toUpperCase());
+        }
+        if (project_name) {
+            countQuery += ` AND t.project_name = $${countParamIndex++}`;
+            countParams.push(project_name.toLowerCase());
+        }
+        if (status) {
+            countQuery += ` AND t.status = $${countParamIndex++}`;
+            countParams.push(status);
+        }
+        if (date) {
+            countQuery += ` AND DATE(t.start_time AT TIME ZONE 'UTC') = $${countParamIndex++}`;
+            countParams.push(date);
+        }
+
+        const countResult = await codexPool.query(countQuery, countParams);
+
+        res.json({
+            success: true,
+            tasks: result.rows,
+            total: parseInt(countResult.rows[0].count),
+            limit: parseInt(limit),
+            offset: parseInt(offset)
+        });
+    } catch (err) {
+        console.error('Get developer tasks error:', err);
+        res.status(500).json({ success: false, error: 'Failed to fetch tasks', message: err.message });
+    }
+});
+
+/**
+ * Get a single developer task by ID
+ * GET /api/v1/developer/tasks/:id
+ */
+app.get('/api/v1/developer/tasks/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await codexPool.query(`
+            SELECT t.*,
+                   p.project_category,
+                   p.project_type,
+                   CASE
+                       WHEN t.active_duration_ms > 0 THEN
+                           LPAD((t.active_duration_ms / 3600000)::TEXT, 2, '0') || ':' ||
+                           LPAD(((t.active_duration_ms % 3600000) / 60000)::TEXT, 2, '0') || ':' ||
+                           LPAD(((t.active_duration_ms % 60000) / 1000)::TEXT, 2, '0')
+                       ELSE '00:00:00'
+                   END AS duration_formatted
+            FROM developer_tasks t
+            LEFT JOIN developer_projects p ON t.project_id = p.id
+            WHERE t.id = $1
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Task not found' });
+        }
+
+        res.json({ success: true, task: result.rows[0] });
+    } catch (err) {
+        console.error('Get developer task error:', err);
+        res.status(500).json({ success: false, error: 'Failed to fetch task', message: err.message });
+    }
+});
+
+/**
+ * Get next available task code
+ * GET /api/v1/developer/tasks/next-code
+ */
+app.get('/api/v1/developer/tasks/next-code', async (req, res) => {
+    try {
+        const result = await codexPool.query('SELECT generate_task_code() as task_code');
+        res.json({ success: true, task_code: result.rows[0].task_code });
+    } catch (err) {
+        console.error('Get next task code error:', err);
+        res.status(500).json({ success: false, error: 'Failed to generate task code', message: err.message });
+    }
+});
+
+/**
+ * Create a new developer task
+ * POST /api/v1/developer/tasks
+ */
+app.post('/api/v1/developer/tasks', async (req, res) => {
+    try {
+        const {
+            project_name,
+            developer_initials,
+            task_name,
+            original_prompt,
+            session_id,
+            machine_name,
+            workspace_path
+        } = req.body;
+
+        if (!project_name || !developer_initials || !task_name) {
+            return res.status(400).json({
+                success: false,
+                error: 'project_name, developer_initials, and task_name are required'
+            });
+        }
+
+        // Validate developer initials (exactly 2 letters)
+        if (!/^[A-Za-z]{2}$/.test(developer_initials)) {
+            return res.status(400).json({
+                success: false,
+                error: 'developer_initials must be exactly 2 letters'
+            });
+        }
+
+        // Get or create project
+        let projectResult = await codexPool.query(
+            'SELECT id FROM developer_projects WHERE project_name = $1',
+            [project_name.toLowerCase()]
+        );
+
+        let projectId = null;
+        if (projectResult.rows.length > 0) {
+            projectId = projectResult.rows[0].id;
+        }
+
+        // Generate task code
+        const codeResult = await codexPool.query('SELECT generate_task_code() as task_code');
+        const taskCode = codeResult.rows[0].task_code;
+
+        // Create task
+        const result = await codexPool.query(`
+            INSERT INTO developer_tasks (
+                task_code,
+                project_id,
+                project_name,
+                developer_initials,
+                task_name,
+                original_prompt,
+                status,
+                session_id,
+                machine_name,
+                workspace_path,
+                last_activity_at
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, 'in_progress', $7, $8, $9, NOW())
+            RETURNING *
+        `, [
+            taskCode,
+            projectId,
+            project_name.toLowerCase(),
+            developer_initials.toUpperCase(),
+            task_name,
+            original_prompt,
+            session_id,
+            machine_name,
+            workspace_path
+        ]);
+
+        console.log(`Created developer task: ${taskCode} - ${task_name}`);
+
+        res.status(201).json({ success: true, task: result.rows[0] });
+    } catch (err) {
+        console.error('Create developer task error:', err);
+        res.status(500).json({ success: false, error: 'Failed to create task', message: err.message });
+    }
+});
+
+/**
+ * Update a developer task
+ * PUT /api/v1/developer/tasks/:id
+ */
+app.put('/api/v1/developer/tasks/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            task_name,
+            status,
+            end_time,
+            active_duration_ms
+        } = req.body;
+
+        // Build dynamic update query
+        const updates = [];
+        const params = [];
+        let paramIndex = 1;
+
+        if (task_name !== undefined) {
+            updates.push(`task_name = $${paramIndex++}`);
+            params.push(task_name);
+        }
+
+        if (status !== undefined) {
+            updates.push(`status = $${paramIndex++}`);
+            params.push(status);
+        }
+
+        if (end_time !== undefined) {
+            updates.push(`end_time = $${paramIndex++}`);
+            params.push(end_time);
+        }
+
+        if (active_duration_ms !== undefined) {
+            updates.push(`active_duration_ms = $${paramIndex++}`);
+            params.push(active_duration_ms);
+        }
+
+        if (updates.length === 0) {
+            return res.status(400).json({ success: false, error: 'No fields to update' });
+        }
+
+        params.push(id);
+        const query = `
+            UPDATE developer_tasks
+            SET ${updates.join(', ')}, updated_at = NOW()
+            WHERE id = $${paramIndex}
+            RETURNING *
+        `;
+
+        const result = await codexPool.query(query, params);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Task not found' });
+        }
+
+        res.json({ success: true, task: result.rows[0] });
+    } catch (err) {
+        console.error('Update developer task error:', err);
+        res.status(500).json({ success: false, error: 'Failed to update task', message: err.message });
+    }
+});
+
+/**
+ * Update task activity timestamp (for inactivity tracking)
+ * PUT /api/v1/developer/tasks/:id/activity
+ */
+app.put('/api/v1/developer/tasks/:id/activity', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await codexPool.query(`
+            UPDATE developer_tasks
+            SET last_activity_at = NOW(), updated_at = NOW()
+            WHERE id = $1
+            RETURNING id, last_activity_at
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Task not found' });
+        }
+
+        res.json({ success: true, task: result.rows[0] });
+    } catch (err) {
+        console.error('Update task activity error:', err);
+        res.status(500).json({ success: false, error: 'Failed to update activity', message: err.message });
+    }
+});
+
+/**
+ * Complete a developer task
+ * POST /api/v1/developer/tasks/:id/complete
+ */
+app.post('/api/v1/developer/tasks/:id/complete', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { active_duration_ms } = req.body;
+
+        const result = await codexPool.query(`
+            UPDATE developer_tasks
+            SET status = 'complete',
+                end_time = NOW(),
+                active_duration_ms = $2,
+                updated_at = NOW()
+            WHERE id = $1
+            RETURNING *
+        `, [id, active_duration_ms || 0]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Task not found' });
+        }
+
+        console.log(`Completed developer task: ${result.rows[0].task_code}`);
+
+        res.json({ success: true, task: result.rows[0] });
+    } catch (err) {
+        console.error('Complete developer task error:', err);
+        res.status(500).json({ success: false, error: 'Failed to complete task', message: err.message });
+    }
+});
+
+/**
+ * Get developer task statistics
+ * GET /api/v1/developer/tasks/stats
+ */
+app.get('/api/v1/developer/tasks/stats', async (req, res) => {
+    try {
+        const { developer, start_date, end_date } = req.query;
+
+        let query = `
+            SELECT
+                developer_initials,
+                DATE(start_time AT TIME ZONE 'UTC') as task_date,
+                COUNT(*) as total_tasks,
+                COUNT(*) FILTER (WHERE status = 'complete') as completed_tasks,
+                COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress_tasks,
+                SUM(active_duration_ms) as total_duration_ms
+            FROM developer_tasks
+            WHERE 1=1
+        `;
+        const params = [];
+        let paramIndex = 1;
+
+        if (developer) {
+            query += ` AND developer_initials = $${paramIndex++}`;
+            params.push(developer.toUpperCase());
+        }
+
+        if (start_date) {
+            query += ` AND start_time >= $${paramIndex++}`;
+            params.push(start_date);
+        }
+
+        if (end_date) {
+            query += ` AND start_time <= $${paramIndex++}`;
+            params.push(end_date);
+        }
+
+        query += ` GROUP BY developer_initials, DATE(start_time AT TIME ZONE 'UTC')`;
+        query += ` ORDER BY task_date DESC, developer_initials`;
+
+        const result = await codexPool.query(query, params);
+
+        res.json({ success: true, stats: result.rows });
+    } catch (err) {
+        console.error('Get developer task stats error:', err);
+        res.status(500).json({ success: false, error: 'Failed to fetch stats', message: err.message });
+    }
+});
+
+/**
+ * Get in-progress tasks for a session
+ * GET /api/v1/developer/tasks/session/:sessionId/active
+ */
+app.get('/api/v1/developer/tasks/session/:sessionId/active', async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+
+        const result = await codexPool.query(`
+            SELECT * FROM developer_tasks
+            WHERE session_id = $1 AND status = 'in_progress'
+            ORDER BY start_time DESC
+            LIMIT 1
+        `, [sessionId]);
+
+        res.json({
+            success: true,
+            task: result.rows.length > 0 ? result.rows[0] : null
+        });
+    } catch (err) {
+        console.error('Get active task error:', err);
+        res.status(500).json({ success: false, error: 'Failed to fetch active task', message: err.message });
+    }
+});
+
+// =============================================================================
 // ERROR HANDLING
 // =============================================================================
 
@@ -4080,13 +4598,14 @@ app.use((req, res) => {
         available_endpoints: {
             health: 'GET /health',
             status: 'GET /api/v1/status',
-            deploy: 'POST /api/deploy (requires X-Deploy-Secret header)',
-            auth: {
-                login: 'POST /api/auth/login',
-                register: 'POST /api/auth/register',
-                logout: 'POST /api/auth/logout',
-                refresh: 'POST /api/auth/refresh',
-                me: 'GET /api/auth/me'
+            developer: {
+                projects: 'GET/POST /api/v1/developer/projects',
+                tasks: 'GET/POST /api/v1/developer/tasks',
+                taskById: 'GET/PUT /api/v1/developer/tasks/:id',
+                complete: 'POST /api/v1/developer/tasks/:id/complete',
+                activity: 'PUT /api/v1/developer/tasks/:id/activity',
+                stats: 'GET /api/v1/developer/tasks/stats',
+                sessionActive: 'GET /api/v1/developer/tasks/session/:sessionId/active'
             },
             codex: {
                 users: 'GET /api/v1/codex/users',
@@ -4108,15 +4627,6 @@ app.use((req, res) => {
                 pull: 'GET /api/sync/pull',
                 preferences: 'GET/PUT /api/sync/preferences',
                 status: 'GET /api/sync/status'
-            },
-            'sync-v2': {
-                registerDevice: 'POST /api/sync/v2/devices/register',
-                getCollections: 'GET /api/sync/v2/collections',
-                commit: 'POST /api/sync/v2/collections/:type/commit',
-                getUpdates: 'GET /api/sync/v2/collections/:type/updates',
-                acknowledge: 'POST /api/sync/v2/collections/:type/acknowledge',
-                getProgress: 'GET /api/sync/v2/devices/:deviceId/progress',
-                fullSync: 'GET /api/sync/v2/collections/:type/full'
             }
         }
     });
