@@ -40,6 +40,8 @@ namespace JubileeFlywheel
 
         private void NavTab_Checked(object sender, RoutedEventArgs e)
         {
+            if (DashboardViewControl == null) return;
+
             if (sender is RadioButton tab)
             {
                 DashboardViewControl.Visibility = Visibility.Collapsed;
