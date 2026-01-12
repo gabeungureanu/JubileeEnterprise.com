@@ -6,7 +6,9 @@
   "categorySlugs": [
     "spiritual-growth",
     "faith-in-action",
-    "worship-and-praise"
+    "worship-and-praise",
+    "prayer-and-devotion",
+    "holy-spirit"
   ],
   "writerNames": [
     "Jubilee Inspire",
@@ -22,10 +24,10 @@
     "Santiago Inspire",
     "Tahoma Inspire"
   ],
-  "totalCategories": 3,
-  "totalArticles": 36,
+  "totalCategories": 5,
+  "totalArticles": 60,
   "totalWriters": 12,
-  "lastUpdated": "2026-01-11T00:05:00.108Z",
+  "lastUpdated": "2026-01-11T21:56:14.585Z",
   "createdAt": "2026-01-10T23:48:05.913Z",
   "status": "step5_complete"
 }

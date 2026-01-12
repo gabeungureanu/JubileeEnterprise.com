@@ -10,7 +10,7 @@ export class ChatGPTService {
     private backupClient: OpenAI | null = null;
     private usePrimary: boolean = true;
     private conversationHistory: ChatMessage[] = [];
-    private readonly model = 'gpt-4o-mini';
+    private model: string = 'gpt-4-turbo';
 
     constructor(primaryKey: string, backupKey: string) {
         if (primaryKey) {
@@ -135,5 +135,13 @@ export class ChatGPTService {
 
     getHistory(): ChatMessage[] {
         return [...this.conversationHistory];
+    }
+
+    setModel(model: string): void {
+        this.model = model;
+    }
+
+    getModel(): string {
+        return this.model;
     }
 }

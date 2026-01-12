@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { ClaudeService, FileContext } from './claude-service';
+import { SpeechRecognizer } from './speech-recognizer';
 
 export class JubileeDeveloperViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'jubileeDeveloper.chatPanel';
@@ -9,12 +10,13 @@ export class JubileeDeveloperViewProvider implements vscode.WebviewViewProvider 
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
-        private readonly _claudeService: ClaudeService
+        private readonly _claudeService: ClaudeService,
+        private readonly _speechRecognizer: SpeechRecognizer
     ) {}
 
     public resolveWebviewView(
         webviewView: vscode.WebviewView,
-        context: vscode.WebviewViewResolveContext,
+        _context: vscode.WebviewViewResolveContext,
         _token: vscode.CancellationToken
     ) {
         this._view = webviewView;
@@ -46,8 +48,35 @@ export class JubileeDeveloperViewProvider implements vscode.WebviewViewProvider 
                 case 'addFileContext':
                     await this._addCurrentFileContext();
                     break;
+                case 'startVoiceInput':
+                    await this._handleVoiceInput();
+                    break;
             }
         });
+    }
+
+    private async _handleVoiceInput() {
+        this._postMessage({ type: 'listening', show: true });
+
+        try {
+            console.log('JubileeDeveloper: Starting voice input...');
+            const transcription = await this._speechRecognizer.startListening();
+            console.log('JubileeDeveloper: Voice input result:', transcription);
+
+            this._postMessage({
+                type: 'voiceResult',
+                text: transcription
+            });
+        } catch (error: any) {
+            console.error('JubileeDeveloper: Voice input error:', error);
+            const errorMessage = error?.message || 'Voice recognition failed';
+            this._postMessage({
+                type: 'voiceError',
+                text: errorMessage
+            });
+        } finally {
+            this._postMessage({ type: 'listening', show: false });
+        }
     }
 
     public sendMessageWithContext(message: string, context: FileContext): void {
@@ -417,6 +446,36 @@ export class JubileeDeveloperViewProvider implements vscode.WebviewViewProvider 
             justify-content: space-between;
         }
 
+        .recording-indicator {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            margin-bottom: 8px;
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            border-radius: 4px;
+            font-size: 12px;
+            color: #dc3545;
+        }
+
+        .recording-indicator.show {
+            display: flex;
+        }
+
+        .recording-dot {
+            width: 8px;
+            height: 8px;
+            background: #dc3545;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         .input-wrapper {
             display: flex;
             gap: 8px;
@@ -441,23 +500,50 @@ export class JubileeDeveloperViewProvider implements vscode.WebviewViewProvider 
             border-color: var(--vscode-focusBorder);
         }
 
-        .send-btn {
-            padding: 10px 16px;
+        .btn-group {
+            display: flex;
+            gap: 4px;
+        }
+
+        .send-btn, .mic-btn {
+            padding: 10px 12px;
             background: var(--vscode-button-background);
             color: var(--vscode-button-foreground);
             border: none;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .send-btn:hover {
+        .send-btn:hover, .mic-btn:hover {
             background: var(--vscode-button-hoverBackground);
         }
 
-        .send-btn:disabled {
+        .send-btn:disabled, .mic-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+
+        .mic-btn {
+            padding: 10px;
+        }
+
+        .mic-btn.recording {
+            background: #dc3545;
+            animation: pulse 1.5s infinite;
+        }
+
+        .mic-btn.transcribing {
+            background: var(--vscode-button-secondaryBackground);
+            opacity: 0.7;
+        }
+
+        .mic-btn svg {
+            width: 16px;
+            height: 16px;
         }
 
         .welcome {
@@ -533,6 +619,10 @@ export class JubileeDeveloperViewProvider implements vscode.WebviewViewProvider 
     </div>
 
     <div class="input-container">
+        <div class="recording-indicator" id="recordingIndicator">
+            <span class="recording-dot"></span>
+            <span id="recordingText">Recording...</span>
+        </div>
         <div class="context-indicator" id="contextIndicator">
             <span id="contextText"></span>
             <button class="header-btn" id="clearContextBtn">×</button>
@@ -543,7 +633,17 @@ export class JubileeDeveloperViewProvider implements vscode.WebviewViewProvider 
                 placeholder="Ask me anything about code..."
                 rows="1"
             ></textarea>
-            <button class="send-btn" id="sendBtn">Send</button>
+            <div class="btn-group">
+                <button class="mic-btn" id="micBtn" title="Voice input (click to record)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                </button>
+                <button class="send-btn" id="sendBtn">Send</button>
+            </div>
         </div>
     </div>
 
@@ -552,14 +652,18 @@ export class JubileeDeveloperViewProvider implements vscode.WebviewViewProvider 
         const chatContainer = document.getElementById('chatContainer');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
+        const micBtn = document.getElementById('micBtn');
         const clearBtn = document.getElementById('clearBtn');
         const loadingEl = document.getElementById('loading');
         const contextIndicator = document.getElementById('contextIndicator');
         const contextText = document.getElementById('contextText');
         const clearContextBtn = document.getElementById('clearContextBtn');
+        const recordingIndicator = document.getElementById('recordingIndicator');
+        const recordingText = document.getElementById('recordingText');
 
         let currentAssistantMessage = null;
         let currentContext = null;
+        let isRecording = false;
 
         // Auto-resize textarea
         messageInput.addEventListener('input', function() {
@@ -576,11 +680,24 @@ export class JubileeDeveloperViewProvider implements vscode.WebviewViewProvider 
         });
 
         sendBtn.addEventListener('click', sendMessage);
+        micBtn.addEventListener('click', startVoiceInput);
         clearBtn.addEventListener('click', clearChat);
         clearContextBtn.addEventListener('click', () => {
             currentContext = null;
             contextIndicator.classList.remove('show');
         });
+
+        function startVoiceInput() {
+            if (isRecording) return;
+
+            isRecording = true;
+            micBtn.classList.add('recording');
+            micBtn.disabled = true;
+            recordingIndicator.classList.add('show');
+            recordingText.textContent = 'Listening... Speak now';
+
+            vscode.postMessage({ type: 'startVoiceInput' });
+        }
 
         function sendMessage() {
             const text = messageInput.value.trim();
@@ -766,6 +883,36 @@ export class JubileeDeveloperViewProvider implements vscode.WebviewViewProvider 
                     break;
                 case 'notification':
                     showNotification(message.text);
+                    break;
+                case 'listening':
+                    if (message.show) {
+                        isRecording = true;
+                        micBtn.classList.add('recording');
+                        micBtn.disabled = true;
+                        recordingIndicator.classList.add('show');
+                    } else {
+                        isRecording = false;
+                        micBtn.classList.remove('recording');
+                        micBtn.disabled = false;
+                        recordingIndicator.classList.remove('show');
+                    }
+                    break;
+                case 'voiceResult':
+                    messageInput.value = message.text;
+                    messageInput.style.height = 'auto';
+                    messageInput.style.height = Math.min(messageInput.scrollHeight, 150) + 'px';
+                    messageInput.focus();
+                    isRecording = false;
+                    micBtn.classList.remove('recording');
+                    micBtn.disabled = false;
+                    recordingIndicator.classList.remove('show');
+                    break;
+                case 'voiceError':
+                    showNotification('Voice input: ' + message.text);
+                    isRecording = false;
+                    micBtn.classList.remove('recording');
+                    micBtn.disabled = false;
+                    recordingIndicator.classList.remove('show');
                     break;
             }
         });

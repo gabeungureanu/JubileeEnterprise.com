@@ -20,6 +20,16 @@
       "name": "Worship and Praise",
       "slug": "worship-and-praise",
       "articleCount": 12
+    },
+    {
+      "name": "Prayer and Devotion",
+      "slug": "prayer-and-devotion",
+      "articleCount": 12
+    },
+    {
+      "name": "Holy Spirit",
+      "slug": "holy-spirit",
+      "articleCount": 12
     }
   ],
   "heroCarousel": [
@@ -2297,6 +2307,192 @@
           "slug": "the-importance-of-praise-in-your-daily-life",
           "excerpt": "In a world teeming with challenges, distractions, and negativity, the act of pra...",
           "image": "images/kYQrHZtJGBgx.jpg"
+        }
+      ]
+    },
+    "prayer-and-devotion": {
+      "categoryName": "Prayer and Devotion",
+      "categorySlug": "prayer-and-devotion",
+      "description": "Strengthen your prayer life and deepen your devotional practices with articles focused on connecting with God. Explore various aspects of prayer, from morning devotions to intercessory prayer, and discover how to cultivate a consistent and meaningful relationship with God through prayer.",
+      "headerImage": "images/bUdv0gMtPA1y.jpg",
+      "buildSeed": 1768168574584,
+      "articles": [
+        {
+          "articleId": "bUdv0gMtPA1y",
+          "title": "The Art of Morning Devotion: Starting Your Day with God",
+          "slug": "the-art-of-morning-devotion-starting-your-day-with-god",
+          "excerpt": "Morning devotion is more than just a routine; it is a sacred discipline that ...",
+          "image": "images/bUdv0gMtPA1y.jpg"
+        },
+        {
+          "articleId": "qS3RBeTMuUvG",
+          "title": "10 Powerful Prayers for Strength in Difficult Times",
+          "slug": "10-powerful-prayers-for-strength-in-difficult-times",
+          "excerpt": "In the journey of life, we encounter challenges that can leave us feeling ove...",
+          "image": "images/qS3RBeTMuUvG.jpg"
+        },
+        {
+          "articleId": "8VMcGF06pXND",
+          "title": "Building a Prayer Closet: Creating Sacred Space for God",
+          "slug": "building-a-prayer-closet-creating-sacred-space-for-god",
+          "excerpt": "In a world that never seems to slow down, finding a sacred space to connect w...",
+          "image": "images/8VMcGF06pXND.jpg"
+        },
+        {
+          "articleId": "R3GJJoxlONFB",
+          "title": "Understanding the Lord's Prayer: A Deep Devotional Study",
+          "slug": "understanding-the-lords-prayer-a-deep-devotional-study",
+          "excerpt": "The Lord's Prayer is more than just a recitation; it is a profound declaratio...",
+          "image": "images/R3GJJoxlONFB.jpg"
+        },
+        {
+          "articleId": "ZVv4i6G4YX3i",
+          "title": "Fasting and Prayer: A Guide to Spiritual Breakthrough",
+          "slug": "fasting-and-prayer-a-guide-to-spiritual-breakthrough",
+          "excerpt": "In a world characterized by noise and distraction, the ancient practices of f...",
+          "image": "images/ZVv4i6G4YX3i.jpg"
+        },
+        {
+          "articleId": "MnoAZCJaJlc5",
+          "title": "Intercessory Prayer: Standing in the Gap for Others",
+          "slug": "intercessory-prayer-standing-in-the-gap-for-others",
+          "excerpt": "Intercessory prayer is a profound and transformative act within the realm of ...",
+          "image": "images/MnoAZCJaJlc5.jpg"
+        },
+        {
+          "articleId": "RHiMVNn9lP8l",
+          "title": "Praying the Psalms: Ancient Words for Modern Hearts",
+          "slug": "praying-the-psalms-ancient-words-for-modern-hearts",
+          "excerpt": "The Psalms, a collection of sacred songs and prayers, have echoed through the...",
+          "image": "images/RHiMVNn9lP8l.jpg"
+        },
+        {
+          "articleId": "LBf4PJGxcATV",
+          "title": "How to Develop a Consistent Prayer Life",
+          "slug": "how-to-develop-a-consistent-prayer-life",
+          "excerpt": "In the hustle and bustle of modern life, finding time for consistent prayer c...",
+          "image": "images/LBf4PJGxcATV.jpg"
+        },
+        {
+          "articleId": "IvYpZMFDodQP",
+          "title": "The Power of Praying Scripture Over Your Life",
+          "slug": "the-power-of-praying-scripture-over-your-life",
+          "excerpt": "In a world often filled with uncertainty and chaos, the act of praying Script...",
+          "image": "images/IvYpZMFDodQP.jpg"
+        },
+        {
+          "articleId": "n8pYrk9e9hkI",
+          "title": "Evening Devotions: Ending Your Day in God's Presence",
+          "slug": "evening-devotions-ending-your-day-in-gods-presence",
+          "excerpt": "In the hustle and bustle of daily life, as the sun sets and the world quiets ...",
+          "image": "images/n8pYrk9e9hkI.jpg"
+        },
+        {
+          "articleId": "PwkDWyVO8S3O",
+          "title": "Prayer Journaling: Documenting Your Walk with God",
+          "slug": "prayer-journaling-documenting-your-walk-with-god",
+          "excerpt": "In the quiet moments of our lives, when the world fades away and we find ours...",
+          "image": "images/PwkDWyVO8S3O.jpg"
+        },
+        {
+          "articleId": "MpCTNnUHLijQ",
+          "title": "Corporate Prayer: The Strength of Praying Together",
+          "slug": "corporate-prayer-the-strength-of-praying-together",
+          "excerpt": "In a world often filled with chaos and uncertainty, the power of prayer stand...",
+          "image": "images/MpCTNnUHLijQ.jpg"
+        }
+      ]
+    },
+    "holy-spirit": {
+      "categoryName": "Holy Spirit",
+      "categorySlug": "holy-spirit",
+      "description": "Experience the power and presence of the Holy Spirit through articles exploring spiritual gifts, the baptism of the Holy Spirit, and living a Spirit-led life. Discover how to cultivate a deeper relationship with the Holy Spirit and walk in His power daily.",
+      "headerImage": "images/m4cZsfBUy8ed.jpg?v=1768107844473",
+      "buildSeed": 1768168574585,
+      "articles": [
+        {
+          "articleId": "m4cZsfBUy8ed",
+          "title": "The Baptism of the Holy Spirit: What Every Believer Should Know",
+          "slug": "the-baptism-of-the-holy-spirit-what-every-believer-should-know",
+          "excerpt": "## Introduction  In the heart of Pentecostal theology lies a transformative e...",
+          "image": "images/m4cZsfBUy8ed.jpg?v=1768107844473"
+        },
+        {
+          "articleId": "2JhA1u3Dtpb6",
+          "title": "Speaking in Tongues: Understanding the Gift of Languages",
+          "slug": "speaking-in-tongues-understanding-the-gift-of-languages",
+          "excerpt": "## Introduction  In the vibrant tapestry of Pentecostal faith, the gift of to...",
+          "image": "images/2JhA1u3Dtpb6.jpg?v=1768107855670"
+        },
+        {
+          "articleId": "yzhKd1tSe25V",
+          "title": "The Nine Gifts of the Holy Spirit Explained",
+          "slug": "the-nine-gifts-of-the-holy-spirit-explained",
+          "excerpt": "## Introduction  In the vibrant tapestry of Pentecostal faith, the work of th...",
+          "image": "images/yzhKd1tSe25V.jpg?v=1768107917499"
+        },
+        {
+          "articleId": "Af5bTTgvoASJ",
+          "title": "How to Be Filled with the Holy Spirit Daily",
+          "slug": "how-to-be-filled-with-the-holy-spirit-daily",
+          "excerpt": "## Introduction  As Pentecostal Christians, we celebrate the transformative p...",
+          "image": "images/Af5bTTgvoASJ.jpg?v=1768107941932"
+        },
+        {
+          "articleId": "fw6Dlt7zPIbS",
+          "title": "The Fruit of the Spirit: Evidence of a Spirit-Led Life",
+          "slug": "the-fruit-of-the-spirit-evidence-of-a-spirit-led-life",
+          "excerpt": "## Introduction  In the vibrant tapestry of Pentecostal theology, the work of...",
+          "image": "images/fw6Dlt7zPIbS.jpg?v=1768107982361"
+        },
+        {
+          "articleId": "GEGCn4ACBh8t",
+          "title": "Hearing the Voice of the Holy Spirit in Your Life",
+          "slug": "hearing-the-voice-of-the-holy-spirit-in-your-life",
+          "excerpt": "## Introduction  In the chaotic noise of daily life, discerning the voice of ...",
+          "image": "images/GEGCn4ACBh8t.jpg?v=1768108021278"
+        },
+        {
+          "articleId": "FlTHwCiGgWDa",
+          "title": "The Holy Spirit as Your Comforter and Guide",
+          "slug": "the-holy-spirit-as-your-comforter-and-guide",
+          "excerpt": "## Introduction  In a world that often feels chaotic and uncertain, the need ...",
+          "image": "images/FlTHwCiGgWDa.jpg?v=1768108053890"
+        },
+        {
+          "articleId": "UyJQG8TrcQlL",
+          "title": "Praying in the Spirit: Power Beyond Words",
+          "slug": "praying-in-the-spirit-power-beyond-words",
+          "excerpt": "## Introduction  In a world filled with chaos, uncertainty, and overwhelming ...",
+          "image": "images/UyJQG8TrcQlL.jpg?v=1768108096994"
+        },
+        {
+          "articleId": "nz1O0jURKegf",
+          "title": "The Role of the Holy Spirit in Spiritual Warfare",
+          "slug": "the-role-of-the-holy-spirit-in-spiritual-warfare",
+          "excerpt": "## Introduction  In the life of every believer, the presence and power of the...",
+          "image": "images/nz1O0jURKegf.jpg?v=1768108140613"
+        },
+        {
+          "articleId": "HbsgjkjoosEr",
+          "title": "Fire of God: Understanding Holy Spirit Revival",
+          "slug": "fire-of-god-understanding-holy-spirit-revival",
+          "excerpt": "## Introduction  The term “revival” often conjures images of fervent worship,...",
+          "image": "images/HbsgjkjoosEr.jpg?v=1768108175964"
+        },
+        {
+          "articleId": "1aWzRhEFoAlw",
+          "title": "Walking in the Power of the Holy Spirit",
+          "slug": "walking-in-the-power-of-the-holy-spirit",
+          "excerpt": "## Introduction  In the vibrant tapestry of Pentecostal faith, the Holy Spiri...",
+          "image": "images/1aWzRhEFoAlw.jpg?v=1768108209264"
+        },
+        {
+          "articleId": "OlKpsXnoe3mj",
+          "title": "The Holy Spirit in the Book of Acts: Lessons for Today",
+          "slug": "the-holy-spirit-in-the-book-of-acts-lessons-for-today",
+          "excerpt": "## Introduction  The Book of Acts stands as a powerful testament to the work ...",
+          "image": "images/OlKpsXnoe3mj.jpg?v=1768108248388"
         }
       ]
     }

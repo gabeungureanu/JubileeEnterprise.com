@@ -277,14 +277,20 @@ async function loadSiteData() {
  */
 async function loadCategoryArticles(categorySlug) {
   try {
-    const articlesPath = categorySlug + '/web_articles.json';
+    // Use absolute path from base to work from any URL depth
+    const basePath = getBasePath();
+    const articlesPath = basePath + '/' + categorySlug + '/web_articles.json';
+    console.log('loadCategoryArticles: Fetching', articlesPath);
     const response = await fetch(articlesPath);
     if (response.ok) {
       const data = await response.json();
+      console.log('loadCategoryArticles: Loaded', data.articles?.length, 'articles for', categorySlug);
       return data.articles || [];
+    } else {
+      console.warn('loadCategoryArticles: Failed to fetch', articlesPath, 'Status:', response.status);
     }
   } catch (error) {
-    console.warn('Could not load articles for', categorySlug);
+    console.warn('Could not load articles for', categorySlug, error);
   }
   return [];
 }
@@ -865,12 +871,13 @@ function buildPortalHTML(categorySlug, categoryName, articles, otherArticles, us
   const mustReadArticles = otherArticles.filter(a => !usedIds.has(a.articleId)).slice(0, 7);
   mustReadArticles.forEach(article => {
     usedIds.add(article.articleId);
+    const mustReadHref = buildArticleHref(article.categorySlug, article.title);
     html += '<div class="popular-item">';
-    html += '<a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;" class="popular-image">';
+    html += '<a href="' + mustReadHref + '" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;" class="popular-image">';
     html += '<img src="' + getImagePath(article.articleId) + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">';
     html += '</a>';
     html += '<div class="popular-content">';
-    html += '<a href="#" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;" class="popular-title">' + article.title + '</a>';
+    html += '<a href="' + mustReadHref + '" onclick="openArticle(\'' + article.categorySlug + '\', \'' + article.articleId + '\'); return false;" class="popular-title">' + article.title + '</a>';
     html += '</div>';
     html += '</div>';
   });
@@ -1008,6 +1015,12 @@ async function openArticle(categorySlug, articleId, skipUrlUpdate) {
       }
     }
 
+    // Dynamically populate sidebar sections
+    populateArticleSidebar(categorySlug, articleId, categories);
+
+    // Dynamically populate Featured & Spotlight section at bottom
+    populateArticleFeaturedSpotlight(categorySlug, articleId);
+
     window.scrollTo(0, 0);
 
     // Track view
@@ -1021,13 +1034,202 @@ async function openArticle(categorySlug, articleId, skipUrlUpdate) {
   }
 }
 
+/**
+ * Populate article sidebar sections dynamically
+ * Updates MOST POPULAR, YOU MIGHT LIKE, MUST READ sections
+ */
+function populateArticleSidebar(currentCategorySlug, currentArticleId, categories) {
+  const usedIds = new Set([currentArticleId]);
+
+  // Get articles from current category for MOST POPULAR
+  const sd = window.siteData || siteData;
+  const currentCategoryArticles = (sd?.allArticles || [])
+    .filter(a => a.categorySlug === currentCategorySlug && a.articleId !== currentArticleId);
+
+  // Get articles from OTHER categories for MUST READ and YOU MIGHT LIKE
+  const otherCategoryArticles = getArticlesFromOtherCategories(currentCategorySlug, 20);
+
+  // Helper to build article link HTML
+  function buildPopularItem(article) {
+    const href = buildArticleHref(article.categorySlug, article.title);
+    return '<div class="popular-item">' +
+      '<a href="' + href + '" onclick="openArticle(\'' + article.categorySlug + '\', \'' + (article.articleId || article.id) + '\'); return false;" class="popular-image">' +
+      '<img src="' + getImagePath(article.articleId || article.id) + '" alt="' + article.title + '" onerror="this.parentElement.style.background=\'#ddd\'">' +
+      '</a>' +
+      '<div class="popular-content">' +
+      '<a href="' + href + '" onclick="openArticle(\'' + article.categorySlug + '\', \'' + (article.articleId || article.id) + '\'); return false;" class="popular-title">' + article.title + '</a>' +
+      '</div>' +
+      '</div>';
+  }
+
+  // 1. MOST POPULAR - articles from current category
+  const popularSection = document.getElementById('articleSidebarPopular');
+  if (popularSection) {
+    const popularArticles = currentCategoryArticles.slice(0, 7);
+    if (popularArticles.length > 0) {
+      popularSection.innerHTML = popularArticles.map(a => {
+        usedIds.add(a.articleId);
+        return buildPopularItem(a);
+      }).join('');
+    }
+  }
+
+  // 2. YOU MIGHT LIKE (top) - random article from other categories
+  const youMightLike = document.getElementById('articleYouMightLike');
+  if (youMightLike) {
+    const randomArticle = otherCategoryArticles.find(a => !usedIds.has(a.articleId));
+    if (randomArticle) {
+      usedIds.add(randomArticle.articleId);
+      const href = buildArticleHref(randomArticle.categorySlug, randomArticle.title);
+      const excerpt = truncateText(randomArticle.excerpt || randomArticle.content || '', 100);
+      youMightLike.innerHTML = '<div class="random-article-header">You Might Like</div>' +
+        '<a href="' + href + '" onclick="openArticle(\'' + randomArticle.categorySlug + '\', \'' + randomArticle.articleId + '\'); return false;" class="random-article-image">' +
+        '<img src="' + getImagePath(randomArticle.articleId) + '" alt="' + randomArticle.title + '" onerror="this.parentElement.style.background=\'#ddd\'">' +
+        '</a>' +
+        '<div class="random-article-content">' +
+        '<h4 class="random-article-title">' +
+        '<a href="' + href + '" onclick="openArticle(\'' + randomArticle.categorySlug + '\', \'' + randomArticle.articleId + '\'); return false;">' + randomArticle.title + '</a>' +
+        '</h4>' +
+        '<p class="random-article-excerpt">' + excerpt + '</p>' +
+        '</div>';
+    }
+  }
+
+  // 3. MUST READ - articles from other categories
+  const mustReadSection = document.getElementById('articleMustRead');
+  if (mustReadSection) {
+    const mustReadArticles = otherCategoryArticles.filter(a => !usedIds.has(a.articleId)).slice(0, 7);
+    if (mustReadArticles.length > 0) {
+      mustReadSection.innerHTML = mustReadArticles.map(a => {
+        usedIds.add(a.articleId);
+        return buildPopularItem(a);
+      }).join('');
+    }
+  }
+
+  // 4. YOU MIGHT LIKE (bottom) - another random article from other categories
+  const youMightLike2 = document.getElementById('articleYouMightLike2');
+  if (youMightLike2) {
+    const randomArticle2 = otherCategoryArticles.find(a => !usedIds.has(a.articleId));
+    if (randomArticle2) {
+      usedIds.add(randomArticle2.articleId);
+      const href = buildArticleHref(randomArticle2.categorySlug, randomArticle2.title);
+      const excerpt = truncateText(randomArticle2.excerpt || randomArticle2.content || '', 100);
+      youMightLike2.innerHTML = '<div class="random-article-header">You Might Like</div>' +
+        '<a href="' + href + '" onclick="openArticle(\'' + randomArticle2.categorySlug + '\', \'' + randomArticle2.articleId + '\'); return false;" class="random-article-image">' +
+        '<img src="' + getImagePath(randomArticle2.articleId) + '" alt="' + randomArticle2.title + '" onerror="this.parentElement.style.background=\'#ddd\'">' +
+        '</a>' +
+        '<div class="random-article-content">' +
+        '<h4 class="random-article-title">' +
+        '<a href="' + href + '" onclick="openArticle(\'' + randomArticle2.categorySlug + '\', \'' + randomArticle2.articleId + '\'); return false;">' + randomArticle2.title + '</a>' +
+        '</h4>' +
+        '<p class="random-article-excerpt">' + excerpt + '</p>' +
+        '</div>';
+    }
+  }
+
+  console.log('Article sidebar populated for category:', currentCategorySlug);
+}
+
+/**
+ * Populate Featured & Spotlight section at bottom of article page
+ */
+function populateArticleFeaturedSpotlight(currentCategorySlug, currentArticleId) {
+  const featuredSpotlightSection = document.getElementById('featured-spotlight-section');
+  if (!featuredSpotlightSection) return;
+
+  const sd = window.siteData || siteData;
+  const allArticles = sd?.allArticles || [];
+  const categories = sd?.categories || window.categoriesData?.categories || [];
+
+  if (allArticles.length === 0) return;
+
+  const usedIds = new Set([currentArticleId]);
+
+  // Get articles from other categories for variety
+  const otherArticles = getArticlesFromOtherCategories(currentCategorySlug, 20);
+
+  // FEATURED Column - 4 articles from other categories
+  const featuredArticles = otherArticles.filter(a => !usedIds.has(a.articleId)).slice(0, 4);
+  featuredArticles.forEach(a => usedIds.add(a.articleId));
+
+  // SPOTLIGHT Column - 1 main + 9 list items from other categories
+  const spotlightMain = otherArticles.find(a => !usedIds.has(a.articleId));
+  if (spotlightMain) usedIds.add(spotlightMain.articleId);
+
+  const spotlightList = otherArticles.filter(a => !usedIds.has(a.articleId)).slice(0, 9);
+
+  let html = '<div class="featured-spotlight-grid">';
+
+  // FEATURED Column
+  html += '<div class="featured-column">';
+  html += '<div class="featured-column-header">Featured</div>';
+  featuredArticles.forEach(art => {
+    const href = buildArticleHref(art.categorySlug, art.title);
+    const excerpt = truncateText(art.excerpt || art.content || '', 80);
+    html += '<div class="featured-item">';
+    html += '<a href="' + href + '" onclick="openArticle(\'' + art.categorySlug + '\', \'' + art.articleId + '\'); return false;">';
+    html += '<img src="' + getImagePath(art.articleId) + '" alt="' + art.title + '" class="featured-item-image" onerror="this.style.background=\'#ddd\'">';
+    html += '</a>';
+    html += '<h3 class="featured-item-title">';
+    html += '<a href="' + href + '" onclick="openArticle(\'' + art.categorySlug + '\', \'' + art.articleId + '\'); return false;">' + art.title + '</a>';
+    html += '</h3>';
+    html += '<p class="featured-item-excerpt">' + excerpt + '</p>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // SPOTLIGHT Column
+  html += '<div class="spotlight-column">';
+  html += '<div class="spotlight-column-header">In The Spotlight</div>';
+
+  if (spotlightMain) {
+    const mainHref = buildArticleHref(spotlightMain.categorySlug, spotlightMain.title);
+    const mainExcerpt = truncateText(spotlightMain.excerpt || spotlightMain.content || '', 100);
+    html += '<div class="spotlight-main">';
+    html += '<a href="' + mainHref + '" onclick="openArticle(\'' + spotlightMain.categorySlug + '\', \'' + spotlightMain.articleId + '\'); return false;">';
+    html += '<img src="' + getImagePath(spotlightMain.articleId) + '" alt="' + spotlightMain.title + '" class="spotlight-main-image" onerror="this.style.background=\'#ddd\'">';
+    html += '</a>';
+    html += '<h3 class="spotlight-main-title">';
+    html += '<a href="' + mainHref + '" onclick="openArticle(\'' + spotlightMain.categorySlug + '\', \'' + spotlightMain.articleId + '\'); return false;">' + spotlightMain.title + '</a>';
+    html += '</h3>';
+    html += '<p class="spotlight-main-excerpt">' + mainExcerpt + '</p>';
+    html += '</div>';
+  }
+
+  html += '<div class="spotlight-list">';
+  spotlightList.forEach(art => {
+    const href = buildArticleHref(art.categorySlug, art.title);
+    const excerpt = truncateText(art.excerpt || art.content || '', 60);
+    html += '<div class="spotlight-item">';
+    html += '<a href="' + href + '" onclick="openArticle(\'' + art.categorySlug + '\', \'' + art.articleId + '\'); return false;">';
+    html += '<img src="' + getImagePath(art.articleId) + '" alt="' + art.title + '" class="spotlight-item-image" onerror="this.style.background=\'#ddd\'">';
+    html += '</a>';
+    html += '<div class="spotlight-item-content">';
+    html += '<h4 class="spotlight-item-title">';
+    html += '<a href="' + href + '" onclick="openArticle(\'' + art.categorySlug + '\', \'' + art.articleId + '\'); return false;">' + art.title + '</a>';
+    html += '</h4>';
+    html += '<p class="spotlight-item-excerpt">' + excerpt + '</p>';
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  html += '</div>';
+  html += '</div>';
+
+  featuredSpotlightSection.innerHTML = html;
+  console.log('Featured & Spotlight section populated');
+}
+
 function buildArticleHTML(article, categorySlug, categoryName) {
   const content = stripMarkdown(article.content || '');
   const paragraphs = content.split('\n\n').filter(p => p.trim());
+  const categoryHref = buildCategoryHref(categorySlug);
 
   let html = '<article class="article-detail">';
   html += '<header class="article-header">';
-  html += '<a href="#" class="article-category" onclick="openPortal(\'' + categorySlug + '\'); return false;">' + categoryName + '</a>';
+  html += '<a href="' + categoryHref + '" class="article-category" onclick="openPortal(\'' + categorySlug + '\'); return false;">' + categoryName + '</a>';
   html += '<h1 class="article-title">' + article.title + '</h1>';
   html += '<div class="article-meta">';
   if (article.author) {
@@ -1566,3 +1768,5 @@ window.getImagePath = getImagePath;
 window.getWebstorePath = getWebstorePath;
 window.getLumiatosPath = getLumiatosPath;
 window.updateActiveNavLink = updateActiveNavLink;
+window.populateArticleSidebar = populateArticleSidebar;
+window.populateArticleFeaturedSpotlight = populateArticleFeaturedSpotlight;

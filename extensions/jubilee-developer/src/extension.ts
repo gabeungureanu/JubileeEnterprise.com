@@ -2,9 +2,11 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { ClaudeService } from './claude-service';
+import { SpeechRecognizer } from './speech-recognizer';
 import { JubileeDeveloperViewProvider } from './webview-provider';
 
 let claudeService: ClaudeService;
+let speechRecognizer: SpeechRecognizer;
 let viewProvider: JubileeDeveloperViewProvider;
 
 export function activate(context: vscode.ExtensionContext) {
@@ -24,6 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     claudeService = new ClaudeService(apiKey);
+    speechRecognizer = new SpeechRecognizer();
 
     // Apply configuration
     const config = vscode.workspace.getConfiguration('jubileeDeveloper');
@@ -31,7 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
     claudeService.setMaxTokens(config.get('maxTokens') || 4096);
 
     // Create webview provider for the sidebar panel
-    viewProvider = new JubileeDeveloperViewProvider(context.extensionUri, claudeService);
+    viewProvider = new JubileeDeveloperViewProvider(context.extensionUri, claudeService, speechRecognizer);
 
     // Register the webview provider
     context.subscriptions.push(
@@ -202,7 +205,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // Show welcome message
-    vscode.window.showInformationMessage('Jubilee Developer is ready! Press Ctrl+Shift+J to open.');
+    vscode.window.showInformationMessage('Jubilee Developer is ready! Find it in the left sidebar or press Ctrl+Shift+J.');
 }
 
 function findEnvFile(): string | null {

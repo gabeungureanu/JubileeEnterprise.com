@@ -2,9 +2,11 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { ChatGPTService } from './chatgpt-service';
+import { SpeechRecognizer } from './speech-recognizer';
 import { JubileeChatViewProvider } from './webview-provider';
 
 let chatService: ChatGPTService;
+let speechRecognizer: SpeechRecognizer;
 let viewProvider: JubileeChatViewProvider;
 
 export function activate(context: vscode.ExtensionContext) {
@@ -25,9 +27,10 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     chatService = new ChatGPTService(primaryKey, backupKey);
+    speechRecognizer = new SpeechRecognizer();
 
-    // Create webview provider for the sidebar panel
-    viewProvider = new JubileeChatViewProvider(context.extensionUri, chatService);
+    // Create webview provider (includes both file tree and chat)
+    viewProvider = new JubileeChatViewProvider(context.extensionUri, chatService, speechRecognizer);
 
     // Register the webview provider
     context.subscriptions.push(
@@ -61,7 +64,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // Show welcome message
-    vscode.window.showInformationMessage('JubileeChat is ready! Open the panel from the activity bar.');
+    vscode.window.showInformationMessage('JubileeChat is ready! Find it in the left sidebar.');
 }
 
 function findEnvFile(): string | null {

@@ -1,6 +1,17 @@
 {
   "permissions": {
+    "defaultMode": "bypassPermissions",
     "allow": [
+      "Bash",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "WebFetch",
+      "WebSearch",
+      "Task",
+      "NotebookEdit",
       "Bash(dir /s /b /ad)",
       "Bash(grep:*)",
       "Bash(xargs ls:*)",
@@ -342,7 +353,29 @@
       "Bash(cmd /c \"cd /d c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\backoffice\\\\create_websites && node scripts\\\\generateDailyHistory.js home.pentecostal 2>&1\")",
       "Bash(cmd /c \"dir c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home\\\\images /B\")",
       "Bash(cmd /c \"dir c:\\\\data\\\\JubileeEnterprise.com\\\\websites\\\\codex\\\\wwBibleweb.com\\\\pentecostal\\\\home\\\\.webstore\\\\history /B\")",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(npm run compile:*)",
+      "Bash(npm run package:*)",
+      "Bash(code --uninstall-extension:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm i:*)",
+      "Bash(npm config list:*)",
+      "Bash(npm --prefix . install typescript esbuild @types/node @types/vscode @vscode/vsce --save-dev)",
+      "Bash(pushd:*)",
+      "Bash(popd)",
+      "Bash(npx @vscode/vsce package:*)",
+      "Bash(npx esbuild:*)",
+      "Bash(cmd /c \"C:\\\\Users\\\\elian\\\\AppData\\\\Local\\\\Microsoft\\\\WinGet\\\\Links\\\\ffmpeg.exe -list_devices true -f dshow -i dummy\")",
+      "Bash(\"C:\\\\ffmpeg\\\\bin\\\\ffmpeg.exe\" -version)",
+      "Bash(\"C:\\\\Program Files\\\\ffmpeg\\\\bin\\\\ffmpeg.exe\" -version)",
+      "Bash(\"/c/Users/elian/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.0.1-full_build/bin/ffmpeg.exe\" -list_devices true -f dshow -i dummy)",
+      "Bash(\"/c/Users/elian/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.0.1-full_build/bin/ffmpeg.exe\" -f dshow -i \"audio=Microphone \\(G06-BT\\)\" -t 3 -ar 16000 -ac 1 -y /c/Users/elian/AppData/Local/Temp/test-recording.wav)",
+      "Bash(vsce package:*)",
+      "Bash(npm version:*)",
+      "Bash(npx vsce package)",
+      "Bash(npm audit:*)",
+      "Bash(npm outdated:*)",
+      "Bash(\"C:/Program Files/JubileeEnterprise/ClaudeBrowser/ClaudeBrowser.exe\" --url \"https://www.wwbibleweb.com/pentecostal/home/index.html\" --screenshot \"c:/temp/wwbibleweb_home.png\" --wait 5000 --size 1920x1080)"
     ]
   }
 }
