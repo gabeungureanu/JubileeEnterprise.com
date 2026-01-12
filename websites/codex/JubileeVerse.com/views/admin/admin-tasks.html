@@ -9628,7 +9628,8 @@
 
       // ==================== VIEW SWITCHING FUNCTIONALITY ====================
 
-      let currentView = 'dashboard';  // Default to Dashboard/Analytics view for this page
+      // Default to 'tasks' view since this is the /admin/tasks page
+      let currentView = 'tasks';
       let selectedTaskId = null;
       let taskQueueData = [];
 
@@ -9638,8 +9639,8 @@
       let qaTestsRunning = false;
       let expandedCategories = new Set();
 
-      // Set default view class on body (Dashboard/Analytics view for this page)
-      document.body.classList.add('dashboard-view-active');
+      // Set default view class on body - tasks view for this page
+      document.body.classList.add('tasks-view-active');
 
       // Switch between Analytics, Tasks, and QA Tests views
       function switchToView(viewName) {
