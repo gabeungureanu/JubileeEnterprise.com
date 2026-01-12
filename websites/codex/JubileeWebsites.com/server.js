@@ -24,6 +24,21 @@ const __dirname = dirname(__filename);
 const app = express();
 
 // ============================================================================
+// PORT CONFIGURATION - PRODUCTION LOCKED
+// ============================================================================
+
+const REQUIRED_PORT = 3008;
+const PORT = process.env.PORT || REQUIRED_PORT;
+
+// Fail-fast port validation for production safety
+if (parseInt(PORT) !== REQUIRED_PORT) {
+  console.error(`[FATAL] JubileeWebsites.com MUST run on port ${REQUIRED_PORT}`);
+  console.error(`[FATAL] Received PORT=${PORT} - this is NOT allowed`);
+  console.error(`[FATAL] Check PM2 ecosystem.config.cjs or environment variables`);
+  process.exit(1);
+}
+
+// ============================================================================
 // MIDDLEWARE
 // ============================================================================
 
@@ -31,14 +46,23 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Serve static files (HTML, CSS, JS)
-app.use(express.static(__dirname));
+// Security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
+// Serve static files from public folder (marketing site)
+app.use(express.static(join(__dirname, 'public')));
+
+// Also serve root directory for create_website.html and other app files
+app.use('/app', express.static(__dirname));
 
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
-
-const PORT = process.env.PORT || 3001;
 
 // Data Store - internal app configurations and registry
 const DATASTORE_BASE = process.env.DATASTORE_PATH || join(__dirname, '.datastore');
@@ -6940,12 +6964,17 @@ app.use('/websites', express.static(WEBSITES_PATH));
 // Public domains: /wwbw/www/{domain.com}/
 app.use('/wwbw', express.static(WWBW_BASE_PATH));
 
-// Serve the main creation page
+// Serve the marketing landing page (public/index.html)
 app.get('/', (req, res) => {
+  res.sendFile(join(__dirname, 'public', 'index.html'));
+});
+
+// Serve the website creation app
+app.get('/create', (req, res) => {
   res.sendFile(join(__dirname, 'create_website.html'));
 });
 
-app.get('/create', (req, res) => {
+app.get('/generator', (req, res) => {
   res.sendFile(join(__dirname, 'create_website.html'));
 });
 
