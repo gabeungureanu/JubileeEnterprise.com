@@ -98,6 +98,21 @@ public class MockMailService : IMailService
             Priority = EmailPriority.High,
             FolderId = "inbox",
             HasAttachments = true,
+            Attachments = new List<EmailAttachment>
+            {
+                new EmailAttachment
+                {
+                    FileName = "Q1_Project_Report.pdf",
+                    FileSize = 2548736,
+                    ContentType = "application/pdf"
+                },
+                new EmailAttachment
+                {
+                    FileName = "Budget_Summary.xlsx",
+                    FileSize = 524288,
+                    ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                }
+            },
             Preview = "Here's the latest update on our Q1 projects..."
         });
 
