@@ -9628,7 +9628,8 @@
 
       // ==================== VIEW SWITCHING FUNCTIONALITY ====================
 
-      let currentView = 'dashboard';  // Default to Dashboard/Analytics view for this page
+      // Default to 'tasks' view since this is the /admin/tasks page
+      let currentView = 'tasks';
       let selectedTaskId = null;
       let taskQueueData = [];
 
@@ -9638,8 +9639,13 @@
       let qaTestsRunning = false;
       let expandedCategories = new Set();
 
-      // Set default view class on body (Dashboard/Analytics view for this page)
-      document.body.classList.add('dashboard-view-active');
+      // Set default view class on body - tasks view for this page
+      document.body.classList.add('tasks-view-active');
+
+      // Update button active states to match default view
+      document.querySelectorAll('.control-btn[data-view]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === 'tasks');
+      });
 
       // Switch between Analytics, Tasks, and QA Tests views
       function switchToView(viewName) {
@@ -12218,33 +12224,32 @@
       // Defer ALL data loading until after page renders
       // This prevents the "Page Unresponsive" error on initial load
       setTimeout(() => {
-        // Load data sequentially to reduce browser strain
-        loadDashboardMetrics()
-          .catch(e => console.error('loadDashboardMetrics error:', e))
+        // Default view is 'tasks', so load task queue first for best UX
+        loadTaskQueue()
+          .catch(e => console.error('loadTaskQueue error:', e))
           .finally(() => {
-            // Load tasks after dashboard metrics
+            loadAssignees().catch(e => console.error('loadAssignees error:', e));
+            restoreViewState();
+
+            // Then load dashboard metrics in background
             setTimeout(() => {
-              loadTasks()
-                .catch(e => console.error('loadTasks error:', e))
+              loadDashboardMetrics()
+                .catch(e => console.error('loadDashboardMetrics error:', e))
                 .finally(() => {
-                  // Load task queue after tasks
-                  setTimeout(() => {
-                    loadTaskQueue().catch(e => console.error('loadTaskQueue error:', e));
-                    loadAssignees().catch(e => console.error('loadAssignees error:', e));
-                    restoreViewState();
-
-                    // Update operational health gauges after data loads
-                    if (typeof updateOperationalHealthGauges === 'function') {
-                      setTimeout(() => updateOperationalHealthGauges(), 200);
-                    }
-
-                    // Defer QA tests loading (271 tests)
-                    setTimeout(() => {
-                      loadQATests().catch(e => console.error('loadQATests error:', e));
-                    }, 1000);
-                  }, 100);
+                  // Update operational health gauges after dashboard loads
+                  if (typeof updateOperationalHealthGauges === 'function') {
+                    setTimeout(() => updateOperationalHealthGauges(), 200);
+                  }
                 });
-            }, 100);
+
+              // Load tasks (for the old table - may be deprecated)
+              loadTasks().catch(e => console.error('loadTasks error:', e));
+
+              // Defer QA tests loading (271 tests)
+              setTimeout(() => {
+                loadQATests().catch(e => console.error('loadQATests error:', e));
+              }, 1000);
+            }, 200);
           });
       }, 50);  // Small delay to let page render first
     })();

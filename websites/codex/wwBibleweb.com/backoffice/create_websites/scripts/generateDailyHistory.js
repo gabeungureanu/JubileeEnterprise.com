@@ -510,13 +510,15 @@ function generateDailyHistory(domain, targetDate = new Date()) {
     image: article.image
   }));
 
-  // Build allArticles list
+  // Build allArticles list (include excerpt and image for cross-category sections)
   const formattedAllArticles = allArticles.map(article => ({
     articleId: article.articleId,
     title: article.title,
     slug: article.slug,
     categorySlug: article.categorySlug,
-    categoryName: article.categoryName
+    categoryName: article.categoryName,
+    excerpt: article.excerpt,
+    image: article.image
   }));
 
   // Build article data paths

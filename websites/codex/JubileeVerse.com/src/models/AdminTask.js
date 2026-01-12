@@ -95,6 +95,35 @@ function rowToHistory(row) {
  * Get all tasks with optional filters
  */
 async function findAll(filters = {}) {
+  // Try to use the API endpoint first
+  try {
+    const apiFilters = {
+      status: filters.status,
+      taskType: filters.taskType,
+      priority: filters.priority,
+      component: filters.component,
+      assignedTo: filters.assignedTo,
+      search: filters.search,
+      sortBy: filters.sortBy || 'task_number',
+      sortOrder: filters.sortOrder || 'desc',
+      limit: filters.limit || 100,
+      offset: filters.offset || 0
+    };
+
+    console.log('[AdminTask.findAll] Calling API with filters:', JSON.stringify(apiFilters));
+    const result = await database.getAdminTasks(apiFilters);
+    console.log('[AdminTask.findAll] API result:', result ? `${result.tasks?.length || 0} tasks` : 'null');
+    if (result && result.tasks) {
+      const mappedTasks = result.tasks.map(rowToTask);
+      console.log('[AdminTask.findAll] Returning', mappedTasks.length, 'mapped tasks');
+      return mappedTasks;
+    }
+  } catch (apiError) {
+    // Log but continue to fallback
+    console.warn('Admin tasks API failed, trying direct query:', apiError.message, apiError.stack);
+  }
+
+  // Fallback to direct SQL (will return empty in API mode)
   let query = `
     SELECT t.*,
            creator.display_name as created_by_name,
@@ -179,7 +208,7 @@ async function findAll(filters = {}) {
   }
 
   const result = await database.query(query, params);
-  return result.rows.map(rowToTask);
+  return (result.rows || []).map(rowToTask);
 }
 
 /**
@@ -266,6 +295,17 @@ async function findOpenParentTask(component = null) {
  * Get task by ID
  */
 async function findById(taskId) {
+  // Try to use the API endpoint first
+  try {
+    const task = await database.getAdminTaskById(taskId);
+    if (task) {
+      return rowToTask(task);
+    }
+  } catch (apiError) {
+    console.warn('Admin task by ID API failed, trying direct query:', apiError.message);
+  }
+
+  // Fallback to direct SQL
   const result = await database.query(`
     SELECT t.*,
            creator.display_name as created_by_name,
@@ -489,6 +529,17 @@ async function deleteTask(taskId) {
  * Get task statistics
  */
 async function getStats() {
+  // Try to use the API endpoint first
+  try {
+    const stats = await database.getAdminTaskStats();
+    if (stats && typeof stats.total !== 'undefined') {
+      return stats;
+    }
+  } catch (apiError) {
+    console.warn('Admin tasks stats API failed, trying direct query:', apiError.message);
+  }
+
+  // Fallback to direct SQL
   const result = await database.query(`
     SELECT
       COUNT(*) as total,
@@ -507,6 +558,17 @@ async function getStats() {
   `);
 
   const row = result.rows[0];
+
+  // Handle case where query returns no results (e.g., API mode without admin_tasks table)
+  if (!row) {
+    return {
+      total: 0,
+      byStatus: { submitted: 0, inReview: 0, inProgress: 0, fixing: 0, completed: 0 },
+      byPriority: { critical: 0, highPriority: 0 },
+      byType: { bugs: 0, development: 0, enhancements: 0, operational: 0 }
+    };
+  }
+
   return {
     total: parseInt(row.total, 10),
     byStatus: {
@@ -533,25 +595,66 @@ async function getStats() {
  * Get distinct components used in tasks
  */
 async function getComponents() {
+  // Try to use the API endpoint first
+  try {
+    const components = await database.getAdminTaskComponents();
+    if (Array.isArray(components)) {
+      return components;
+    }
+  } catch (apiError) {
+    console.warn('Admin tasks components API failed, trying direct query:', apiError.message);
+  }
+
+  // Fallback to direct SQL
   const result = await database.query(`
     SELECT DISTINCT component FROM admin_tasks
     WHERE component IS NOT NULL
     ORDER BY component
   `);
-  return result.rows.map(r => r.component);
+  return (result.rows || []).map(r => r.component);
 }
 
 /**
  * Get users who can be assigned tasks (admin role)
  */
 async function getAssignableUsers() {
+  // Try to get admin users from the dedicated API endpoint
+  try {
+    const users = await database.getAdminUsers();
+    if (Array.isArray(users) && users.length > 0) {
+      return users.map(r => ({
+        id: r.id,
+        displayName: r.display_name || r.displayName,
+        email: r.email
+      }));
+    }
+  } catch (apiError) {
+    console.warn('Admin users API failed, trying fallback:', apiError.message);
+  }
+
+  // Fallback: try to get all users and filter
+  try {
+    const users = await database.getUsers ? await database.getUsers() : [];
+    const adminUsers = users.filter(u => u.role === 'admin' && u.is_active);
+    if (adminUsers.length > 0) {
+      return adminUsers.map(r => ({
+        id: r.id,
+        displayName: r.display_name || r.displayName,
+        email: r.email
+      }));
+    }
+  } catch (e) {
+    // Fall through to SQL query
+  }
+
+  // Final fallback to direct SQL (will return empty in API mode)
   const result = await database.query(`
     SELECT id, display_name, email
     FROM users
     WHERE role = 'admin' AND is_active = true
     ORDER BY display_name
   `);
-  return result.rows.map(r => ({
+  return (result.rows || []).map(r => ({
     id: r.id,
     displayName: r.display_name,
     email: r.email

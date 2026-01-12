@@ -680,6 +680,104 @@ async function getInspireContent(options = {}) {
 }
 
 // ============================================================================
+// ADMIN TASKS API CLIENT FUNCTIONS
+// ============================================================================
+
+/**
+ * Get admin tasks with optional filters
+ */
+async function getAdminTasks(filters = {}) {
+    const params = new URLSearchParams();
+    if (filters.status) params.append('status', filters.status);
+    if (filters.taskType) params.append('taskType', filters.taskType);
+    if (filters.priority) params.append('priority', filters.priority);
+    if (filters.component) params.append('component', filters.component);
+    if (filters.assignedTo) params.append('assignedTo', filters.assignedTo);
+    if (filters.search) params.append('search', filters.search);
+    if (filters.sortBy) params.append('sortBy', filters.sortBy);
+    if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
+    if (filters.limit) params.append('limit', filters.limit);
+    if (filters.offset) params.append('offset', filters.offset);
+
+    const result = await apiRequest(`/api/v1/codex/admin-tasks?${params}`);
+    return result;
+}
+
+/**
+ * Get admin task statistics
+ */
+async function getAdminTaskStats() {
+    const result = await apiRequest('/api/v1/codex/admin-tasks/stats');
+    return result.stats || {
+        total: 0,
+        byStatus: { submitted: 0, inReview: 0, inProgress: 0, fixing: 0, completed: 0 },
+        byPriority: { critical: 0, highPriority: 0 },
+        byType: { bugs: 0, development: 0, enhancements: 0, operational: 0 }
+    };
+}
+
+/**
+ * Get single admin task by ID
+ */
+async function getAdminTaskById(taskId) {
+    try {
+        const result = await apiRequest(`/api/v1/codex/admin-tasks/${taskId}`);
+        return result.task || null;
+    } catch (error) {
+        if (error.status === 404) return null;
+        throw error;
+    }
+}
+
+/**
+ * Create admin task
+ */
+async function createAdminTask(taskData) {
+    const result = await apiRequest('/api/v1/codex/admin-tasks', {
+        method: 'POST',
+        body: JSON.stringify(taskData)
+    });
+    return result.task;
+}
+
+/**
+ * Update admin task
+ */
+async function updateAdminTask(taskId, updates) {
+    const result = await apiRequest(`/api/v1/codex/admin-tasks/${taskId}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates)
+    });
+    return result.task;
+}
+
+/**
+ * Delete admin task
+ */
+async function deleteAdminTask(taskId) {
+    await apiRequest(`/api/v1/codex/admin-tasks/${taskId}`, {
+        method: 'DELETE'
+    });
+    return true;
+}
+
+/**
+ * Get distinct task components
+ */
+async function getAdminTaskComponents() {
+    const result = await apiRequest('/api/v1/codex/admin-tasks-components');
+    return result.components || [];
+}
+
+/**
+ * Get admin users (for task assignment)
+ */
+async function getAdminUsers() {
+    const result = await apiRequest('/api/v1/codex/admin-users');
+    return result.users || [];
+}
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
@@ -705,6 +803,16 @@ module.exports = {
     getLanguages,
     authenticateUser,
     getInspireContent,
+
+    // Admin Tasks API
+    getAdminTasks,
+    getAdminTaskStats,
+    getAdminTaskById,
+    createAdminTask,
+    updateAdminTask,
+    deleteAdminTask,
+    getAdminTaskComponents,
+    getAdminUsers,
 
     // Constants
     API_BASE_URL
