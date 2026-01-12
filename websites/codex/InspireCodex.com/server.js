@@ -831,308 +831,6 @@ app.put('/api/v1/codex/users/:id/role', async (req, res) => {
     }
 });
 
-// =============================================================================
-// ADMIN TASKS API
-// =============================================================================
-
-// Get all admin tasks with optional filters
-app.get('/api/v1/codex/admin-tasks', async (req, res) => {
-    try {
-        const { status, taskType, priority, component, assignedTo, search, sortBy = 'task_number', sortOrder = 'desc', limit = 100, offset = 0 } = req.query;
-
-        let query = `
-            SELECT t.*,
-                   creator.display_name as created_by_name,
-                   assignee.display_name as assigned_to_name,
-                   parent.task_number as parent_task_number,
-                   parent.title as parent_title
-            FROM admin_tasks t
-            LEFT JOIN users creator ON t.created_by = creator.id
-            LEFT JOIN users assignee ON t.assigned_to = assignee.id
-            LEFT JOIN admin_tasks parent ON t.parent_task_id = parent.id
-            WHERE 1=1
-        `;
-        const params = [];
-        let paramIndex = 1;
-
-        if (status) {
-            query += ` AND t.status = $${paramIndex++}`;
-            params.push(status);
-        }
-        if (taskType) {
-            query += ` AND t.task_type = $${paramIndex++}`;
-            params.push(taskType);
-        }
-        if (priority) {
-            query += ` AND t.priority = $${paramIndex++}`;
-            params.push(priority);
-        }
-        if (component) {
-            query += ` AND t.component = $${paramIndex++}`;
-            params.push(component);
-        }
-        if (assignedTo) {
-            query += ` AND t.assigned_to = $${paramIndex++}`;
-            params.push(assignedTo);
-        }
-        if (search) {
-            query += ` AND (t.title ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex})`;
-            params.push(`%${search}%`);
-            paramIndex++;
-        }
-
-        // Sort and pagination
-        const validSortFields = ['task_number', 'title', 'priority', 'status', 'created_at', 'updated_at'];
-        const sortField = validSortFields.includes(sortBy) ? sortBy : 'task_number';
-        const order = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
-        query += ` ORDER BY t.${sortField} ${order}`;
-        query += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
-        params.push(parseInt(limit), parseInt(offset));
-
-        const result = await codexPool.query(query, params);
-
-        // Get total count
-        let countQuery = `SELECT COUNT(*) FROM admin_tasks t WHERE 1=1`;
-        const countParams = [];
-        let countIndex = 1;
-        if (status) {
-            countQuery += ` AND t.status = $${countIndex++}`;
-            countParams.push(status);
-        }
-        if (taskType) {
-            countQuery += ` AND t.task_type = $${countIndex++}`;
-            countParams.push(taskType);
-        }
-        if (priority) {
-            countQuery += ` AND t.priority = $${countIndex++}`;
-            countParams.push(priority);
-        }
-        const countResult = await codexPool.query(countQuery, countParams);
-
-        res.json({
-            success: true,
-            tasks: result.rows,
-            total: parseInt(countResult.rows[0].count),
-            limit: parseInt(limit),
-            offset: parseInt(offset)
-        });
-    } catch (err) {
-        console.error('Get admin tasks error:', err);
-        res.status(500).json({ success: false, error: 'Failed to fetch tasks', message: err.message });
-    }
-});
-
-// Get admin task statistics
-app.get('/api/v1/codex/admin-tasks/stats', async (req, res) => {
-    try {
-        const result = await codexPool.query(`
-            SELECT
-                COUNT(*) as total,
-                COUNT(*) FILTER (WHERE status = 'submitted') as submitted,
-                COUNT(*) FILTER (WHERE status = 'in_review') as in_review,
-                COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress,
-                COUNT(*) FILTER (WHERE status = 'fixing') as fixing,
-                COUNT(*) FILTER (WHERE status = 'completed') as completed,
-                COUNT(*) FILTER (WHERE priority = 'critical') as critical,
-                COUNT(*) FILTER (WHERE priority = 'high') as high_priority,
-                COUNT(*) FILTER (WHERE task_type = 'bug') as bugs,
-                COUNT(*) FILTER (WHERE task_type = 'development') as development,
-                COUNT(*) FILTER (WHERE task_type = 'enhancement') as enhancements,
-                COUNT(*) FILTER (WHERE task_type = 'operational') as operational
-            FROM admin_tasks
-        `);
-
-        const row = result.rows[0] || {};
-        res.json({
-            success: true,
-            stats: {
-                total: parseInt(row.total || 0),
-                byStatus: {
-                    submitted: parseInt(row.submitted || 0),
-                    inReview: parseInt(row.in_review || 0),
-                    inProgress: parseInt(row.in_progress || 0),
-                    fixing: parseInt(row.fixing || 0),
-                    completed: parseInt(row.completed || 0)
-                },
-                byPriority: {
-                    critical: parseInt(row.critical || 0),
-                    highPriority: parseInt(row.high_priority || 0)
-                },
-                byType: {
-                    bugs: parseInt(row.bugs || 0),
-                    development: parseInt(row.development || 0),
-                    enhancements: parseInt(row.enhancements || 0),
-                    operational: parseInt(row.operational || 0)
-                }
-            }
-        });
-    } catch (err) {
-        console.error('Get admin task stats error:', err);
-        res.status(500).json({ success: false, error: 'Failed to fetch task stats', message: err.message });
-    }
-});
-
-// Get single admin task by ID
-app.get('/api/v1/codex/admin-tasks/:id', async (req, res) => {
-    try {
-        const result = await codexPool.query(`
-            SELECT t.*,
-                   creator.display_name as created_by_name,
-                   assignee.display_name as assigned_to_name,
-                   parent.task_number as parent_task_number,
-                   parent.title as parent_title
-            FROM admin_tasks t
-            LEFT JOIN users creator ON t.created_by = creator.id
-            LEFT JOIN users assignee ON t.assigned_to = assignee.id
-            LEFT JOIN admin_tasks parent ON t.parent_task_id = parent.id
-            WHERE t.id = $1
-        `, [req.params.id]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Task not found' });
-        }
-
-        res.json({ success: true, task: result.rows[0] });
-    } catch (err) {
-        console.error('Get admin task error:', err);
-        res.status(500).json({ success: false, error: 'Failed to fetch task', message: err.message });
-    }
-});
-
-// Create admin task
-app.post('/api/v1/codex/admin-tasks', async (req, res) => {
-    try {
-        const { title, description, taskType, priority, component, assignedTo, createdBy, parentTaskId, effortHours } = req.body;
-
-        if (!title || !taskType || !priority) {
-            return res.status(400).json({ success: false, error: 'Title, taskType, and priority are required' });
-        }
-
-        // Get next task number
-        const taskNumResult = await codexPool.query('SELECT COALESCE(MAX(task_number), 0) + 1 as next_num FROM admin_tasks');
-        const taskNumber = taskNumResult.rows[0].next_num;
-        const taskCode = `TASK-${String(taskNumber).padStart(4, '0')}`;
-
-        const result = await codexPool.query(`
-            INSERT INTO admin_tasks (
-                task_number, task_code, title, description, task_type, priority,
-                component, assigned_to, created_by, parent_task_id, effort_hours,
-                status, submitted_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'submitted', NOW())
-            RETURNING *
-        `, [taskNumber, taskCode, title, description, taskType, priority, component, assignedTo, createdBy, parentTaskId, effortHours]);
-
-        res.status(201).json({ success: true, task: result.rows[0] });
-    } catch (err) {
-        console.error('Create admin task error:', err);
-        res.status(500).json({ success: false, error: 'Failed to create task', message: err.message });
-    }
-});
-
-// Update admin task
-app.put('/api/v1/codex/admin-tasks/:id', async (req, res) => {
-    try {
-        const { title, description, taskType, priority, status, component, assignedTo, notes, resolution, effortHours, completedWork } = req.body;
-
-        // Build dynamic update query
-        const updates = [];
-        const values = [];
-        let paramIndex = 1;
-
-        if (title !== undefined) { updates.push(`title = $${paramIndex++}`); values.push(title); }
-        if (description !== undefined) { updates.push(`description = $${paramIndex++}`); values.push(description); }
-        if (taskType !== undefined) { updates.push(`task_type = $${paramIndex++}`); values.push(taskType); }
-        if (priority !== undefined) { updates.push(`priority = $${paramIndex++}`); values.push(priority); }
-        if (status !== undefined) {
-            updates.push(`status = $${paramIndex++}`);
-            values.push(status);
-            // Update status timestamps
-            if (status === 'in_review') updates.push(`reviewed_at = NOW()`);
-            if (status === 'in_progress') updates.push(`started_at = NOW()`);
-            if (status === 'fixing') updates.push(`fixing_at = NOW()`);
-            if (status === 'completed') updates.push(`completed_at = NOW()`);
-        }
-        if (component !== undefined) { updates.push(`component = $${paramIndex++}`); values.push(component); }
-        if (assignedTo !== undefined) { updates.push(`assigned_to = $${paramIndex++}`); values.push(assignedTo); }
-        if (notes !== undefined) { updates.push(`notes = $${paramIndex++}`); values.push(notes); }
-        if (resolution !== undefined) { updates.push(`resolution = $${paramIndex++}`); values.push(resolution); }
-        if (effortHours !== undefined) { updates.push(`effort_hours = $${paramIndex++}`); values.push(effortHours); }
-        if (completedWork !== undefined) { updates.push(`completed_work = $${paramIndex++}`); values.push(completedWork); }
-
-        updates.push(`updated_at = NOW()`);
-        values.push(req.params.id);
-
-        const result = await codexPool.query(`
-            UPDATE admin_tasks SET ${updates.join(', ')}
-            WHERE id = $${paramIndex}
-            RETURNING *
-        `, values);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Task not found' });
-        }
-
-        res.json({ success: true, task: result.rows[0] });
-    } catch (err) {
-        console.error('Update admin task error:', err);
-        res.status(500).json({ success: false, error: 'Failed to update task', message: err.message });
-    }
-});
-
-// Delete admin task
-app.delete('/api/v1/codex/admin-tasks/:id', async (req, res) => {
-    try {
-        const result = await codexPool.query('DELETE FROM admin_tasks WHERE id = $1 RETURNING id', [req.params.id]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: 'Task not found' });
-        }
-
-        res.json({ success: true, deleted: true });
-    } catch (err) {
-        console.error('Delete admin task error:', err);
-        res.status(500).json({ success: false, error: 'Failed to delete task', message: err.message });
-    }
-});
-
-// Get distinct components from tasks
-app.get('/api/v1/codex/admin-tasks-components', async (req, res) => {
-    try {
-        const result = await codexPool.query(`
-            SELECT DISTINCT component FROM admin_tasks
-            WHERE component IS NOT NULL
-            ORDER BY component
-        `);
-        res.json({ success: true, components: result.rows.map(r => r.component) });
-    } catch (err) {
-        console.error('Get components error:', err);
-        res.status(500).json({ success: false, error: 'Failed to fetch components', message: err.message });
-    }
-});
-
-// Get admin users (assignable users for tasks)
-app.get('/api/v1/codex/admin-users', async (req, res) => {
-    try {
-        const result = await codexPool.query(`
-            SELECT id, display_name, email
-            FROM users
-            WHERE role = 'admin' AND is_active = true
-            ORDER BY display_name
-        `);
-        res.json({
-            success: true,
-            users: result.rows.map(r => ({
-                id: r.id,
-                displayName: r.display_name,
-                email: r.email
-            }))
-        });
-    } catch (err) {
-        console.error('Get admin users error:', err);
-        res.status(500).json({ success: false, error: 'Failed to fetch admin users', message: err.message });
-    }
-});
-
 // Personas
 app.get('/api/v1/codex/personas', async (req, res) => {
     try {
@@ -1271,6 +969,279 @@ app.get('/api/v1/codex/bible/verses', async (req, res) => {
         res.json({ verses: result.rows });
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch verses', message: err.message });
+    }
+});
+
+// =============================================================================
+// ADMIN TASKS API ROUTES
+// =============================================================================
+
+// Get all admin tasks with optional filters
+app.get('/api/v1/codex/admin-tasks', async (req, res) => {
+    try {
+        const { status, taskType, priority, component, assignedTo, search, sortBy, sortOrder, limit, offset } = req.query;
+
+        let query = `
+            SELECT t.*,
+                   creator.display_name as created_by_name,
+                   assignee.display_name as assigned_to_name
+            FROM admin_tasks t
+            LEFT JOIN users creator ON t.created_by = creator.id
+            LEFT JOIN users assignee ON t.assigned_to = assignee.id
+            WHERE 1=1
+        `;
+        const params = [];
+        let paramCount = 0;
+
+        if (status) {
+            params.push(status);
+            query += ` AND t.status = $${++paramCount}`;
+        }
+        if (taskType) {
+            params.push(taskType);
+            query += ` AND t.task_type = $${++paramCount}`;
+        }
+        if (priority) {
+            params.push(priority);
+            query += ` AND t.priority = $${++paramCount}`;
+        }
+        if (component) {
+            params.push(component);
+            query += ` AND t.component = $${++paramCount}`;
+        }
+        if (assignedTo) {
+            params.push(assignedTo);
+            query += ` AND t.assigned_to = $${++paramCount}`;
+        }
+        if (search) {
+            params.push(`%${search}%`);
+            query += ` AND (t.title ILIKE $${++paramCount} OR t.description ILIKE $${paramCount})`;
+        }
+
+        // Sorting
+        const validSortColumns = ['task_number', 'created_at', 'updated_at', 'priority', 'status'];
+        const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'task_number';
+        const sortDir = sortOrder?.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+        query += ` ORDER BY t.${sortColumn} ${sortDir}`;
+
+        // Pagination
+        const limitNum = Math.min(parseInt(limit) || 100, 500);
+        const offsetNum = parseInt(offset) || 0;
+        params.push(limitNum);
+        query += ` LIMIT $${++paramCount}`;
+        params.push(offsetNum);
+        query += ` OFFSET $${++paramCount}`;
+
+        const result = await codexPool.query(query, params);
+        res.json({ tasks: result.rows, total: result.rowCount });
+    } catch (err) {
+        console.error('Error fetching admin tasks:', err);
+        res.status(500).json({ error: 'Failed to fetch admin tasks', message: err.message });
+    }
+});
+
+// Get admin task statistics
+app.get('/api/v1/codex/admin-tasks/stats', async (req, res) => {
+    try {
+        const result = await codexPool.query(`
+            SELECT
+                COUNT(*) as total,
+                COUNT(*) FILTER (WHERE status = 'submitted') as submitted,
+                COUNT(*) FILTER (WHERE status = 'in_review') as in_review,
+                COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress,
+                COUNT(*) FILTER (WHERE status = 'fixing') as fixing,
+                COUNT(*) FILTER (WHERE status = 'completed') as completed,
+                COUNT(*) FILTER (WHERE priority = 'critical') as critical,
+                COUNT(*) FILTER (WHERE priority = 'high') as high_priority,
+                COUNT(*) FILTER (WHERE task_type = 'bug') as bugs,
+                COUNT(*) FILTER (WHERE task_type = 'development') as development,
+                COUNT(*) FILTER (WHERE task_type = 'enhancement') as enhancements,
+                COUNT(*) FILTER (WHERE task_type = 'operational') as operational
+            FROM admin_tasks
+        `);
+
+        const row = result.rows[0] || {};
+        res.json({
+            stats: {
+                total: parseInt(row.total) || 0,
+                byStatus: {
+                    submitted: parseInt(row.submitted) || 0,
+                    inReview: parseInt(row.in_review) || 0,
+                    inProgress: parseInt(row.in_progress) || 0,
+                    fixing: parseInt(row.fixing) || 0,
+                    completed: parseInt(row.completed) || 0
+                },
+                byPriority: {
+                    critical: parseInt(row.critical) || 0,
+                    highPriority: parseInt(row.high_priority) || 0
+                },
+                byType: {
+                    bugs: parseInt(row.bugs) || 0,
+                    development: parseInt(row.development) || 0,
+                    enhancements: parseInt(row.enhancements) || 0,
+                    operational: parseInt(row.operational) || 0
+                }
+            }
+        });
+    } catch (err) {
+        console.error('Error fetching admin task stats:', err);
+        res.status(500).json({ error: 'Failed to fetch stats', message: err.message });
+    }
+});
+
+// Get single admin task by ID
+app.get('/api/v1/codex/admin-tasks/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await codexPool.query(`
+            SELECT t.*,
+                   creator.display_name as created_by_name,
+                   assignee.display_name as assigned_to_name
+            FROM admin_tasks t
+            LEFT JOIN users creator ON t.created_by = creator.id
+            LEFT JOIN users assignee ON t.assigned_to = assignee.id
+            WHERE t.id = $1
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+        res.json({ task: result.rows[0] });
+    } catch (err) {
+        console.error('Error fetching admin task:', err);
+        res.status(500).json({ error: 'Failed to fetch task', message: err.message });
+    }
+});
+
+// Get task history
+app.get('/api/v1/codex/admin-tasks/:id/history', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await codexPool.query(`
+            SELECT h.*, u.display_name as changed_by_name
+            FROM admin_task_history h
+            LEFT JOIN users u ON h.changed_by = u.id
+            WHERE h.task_id = $1
+            ORDER BY h.changed_at DESC
+        `, [id]);
+        res.json({ history: result.rows });
+    } catch (err) {
+        console.error('Error fetching task history:', err);
+        res.status(500).json({ error: 'Failed to fetch history', message: err.message });
+    }
+});
+
+// Create admin task
+app.post('/api/v1/codex/admin-tasks', async (req, res) => {
+    try {
+        const { title, description, task_type, priority, status, component, assigned_to, created_by } = req.body;
+
+        if (!title) {
+            return res.status(400).json({ error: 'Title is required' });
+        }
+
+        const result = await codexPool.query(`
+            INSERT INTO admin_tasks (title, description, task_type, priority, status, component, assigned_to, created_by)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING *
+        `, [
+            title,
+            description || null,
+            task_type || 'development',
+            priority || 'medium',
+            status || 'submitted',
+            component || null,
+            assigned_to || null,
+            created_by || null
+        ]);
+
+        res.status(201).json({ task: result.rows[0] });
+    } catch (err) {
+        console.error('Error creating admin task:', err);
+        res.status(500).json({ error: 'Failed to create task', message: err.message });
+    }
+});
+
+// Update admin task
+app.put('/api/v1/codex/admin-tasks/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+
+        // Build dynamic update query
+        const setClauses = [];
+        const params = [];
+        let paramCount = 0;
+
+        const allowedFields = ['title', 'description', 'task_type', 'priority', 'status', 'component', 'assigned_to', 'notes', 'resolution'];
+        for (const field of allowedFields) {
+            if (updates[field] !== undefined) {
+                params.push(updates[field]);
+                setClauses.push(`${field} = $${++paramCount}`);
+            }
+        }
+
+        if (setClauses.length === 0) {
+            return res.status(400).json({ error: 'No valid fields to update' });
+        }
+
+        params.push(id);
+        const query = `UPDATE admin_tasks SET ${setClauses.join(', ')}, updated_at = NOW() WHERE id = $${++paramCount} RETURNING *`;
+
+        const result = await codexPool.query(query, params);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+        res.json({ task: result.rows[0] });
+    } catch (err) {
+        console.error('Error updating admin task:', err);
+        res.status(500).json({ error: 'Failed to update task', message: err.message });
+    }
+});
+
+// Delete admin task
+app.delete('/api/v1/codex/admin-tasks/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await codexPool.query('DELETE FROM admin_tasks WHERE id = $1 RETURNING id', [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+        res.json({ success: true, deleted: id });
+    } catch (err) {
+        console.error('Error deleting admin task:', err);
+        res.status(500).json({ error: 'Failed to delete task', message: err.message });
+    }
+});
+
+// Get distinct task components
+app.get('/api/v1/codex/admin-tasks-components', async (req, res) => {
+    try {
+        const result = await codexPool.query(`
+            SELECT DISTINCT component FROM admin_tasks
+            WHERE component IS NOT NULL
+            ORDER BY component
+        `);
+        res.json({ components: result.rows.map(r => r.component) });
+    } catch (err) {
+        console.error('Error fetching components:', err);
+        res.status(500).json({ error: 'Failed to fetch components', message: err.message });
+    }
+});
+
+// Get admin users (for task assignment)
+app.get('/api/v1/codex/admin-users', async (req, res) => {
+    try {
+        const result = await codexPool.query(`
+            SELECT id, display_name, email
+            FROM users
+            WHERE role = 'admin' AND is_active = true
+            ORDER BY display_name
+        `);
+        res.json({ users: result.rows });
+    } catch (err) {
+        console.error('Error fetching admin users:', err);
+        res.status(500).json({ error: 'Failed to fetch admin users', message: err.message });
     }
 });
 
