@@ -631,7 +631,7 @@
                                     </Grid.RowDefinitions>
 
                                     <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                                        <TextBlock Text="{Binding MainViewModel.SelectedMessage.Subject, FallbackValue='[No Subject]', TargetNullValue='[Null Subject]'}" FontSize="{StaticResource HeaderFontSize}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                                        <TextBlock Text="{Binding MainViewModel.SelectedMessage.Subject, FallbackValue='[No Subject]', TargetNullValue='[Null Subject]'}" FontSize="{StaticResource HeaderFontSize}" FontWeight="SemiBold" Foreground="{StaticResource PrimaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
@@ -644,11 +644,11 @@
                                             </Grid.RowDefinitions>
 
                                             <TextBlock Grid.Row="0" Grid.Column="0" Text="From:" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource BodyFontSize}" Margin="0,0,8,4"/>
-                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding MainViewModel.SelectedMessage.From, FallbackValue='[No From]', TargetNullValue='[Null From]'}" FontSize="{StaticResource BodyFontSize}" Margin="0,0,0,4"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding MainViewModel.SelectedMessage.From, FallbackValue='[No From]', TargetNullValue='[Null From]'}" FontSize="{StaticResource BodyFontSize}" Foreground="{StaticResource PrimaryTextBrush}" Margin="0,0,0,4"/>
                                             <TextBlock Grid.Row="1" Grid.Column="0" Text="To:" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource BodyFontSize}" Margin="0,0,8,4"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding MainViewModel.SelectedMessage.To, Converter={StaticResource ListToStringConverter}, FallbackValue='[No To]', TargetNullValue='[Null To]'}" FontSize="{StaticResource BodyFontSize}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding MainViewModel.SelectedMessage.To, Converter={StaticResource ListToStringConverter}, FallbackValue='[No To]', TargetNullValue='[Null To]'}" FontSize="{StaticResource BodyFontSize}" Foreground="{StaticResource PrimaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
                                             <TextBlock Grid.Row="2" Grid.Column="0" Text="Date:" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource BodyFontSize}" Margin="0,0,8,4"/>
-                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding MainViewModel.SelectedMessage.ReceivedDate, StringFormat='{}{0:dddd, MMMM dd, yyyy h:mm tt}', FallbackValue='[No Date]'}" FontSize="{StaticResource BodyFontSize}" Margin="0,0,0,4"/>
+                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding MainViewModel.SelectedMessage.ReceivedDate, StringFormat='{}{0:dddd, MMMM dd, yyyy h:mm tt}', FallbackValue='[No Date]'}" FontSize="{StaticResource BodyFontSize}" Foreground="{StaticResource PrimaryTextBrush}" Margin="0,0,0,4"/>
                                         </Grid>
                                     </StackPanel>
 
@@ -709,7 +709,7 @@
                                         </ItemsControl>
                                     </StackPanel>
 
-                                    <TextBlock Grid.Row="3" Text="{Binding MainViewModel.SelectedMessage.Body}" FontSize="{StaticResource BodyFontSize}" TextWrapping="Wrap" LineHeight="22"/>
+                                    <TextBlock Grid.Row="3" Text="{Binding MainViewModel.SelectedMessage.Body}" FontSize="{StaticResource BodyFontSize}" Foreground="{StaticResource PrimaryTextBrush}" TextWrapping="Wrap" LineHeight="22"/>
                                 </Grid>
                             </ScrollViewer>
 
