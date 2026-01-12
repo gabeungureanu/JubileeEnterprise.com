@@ -468,73 +468,123 @@ app.get('/api/v1/admin/health', async (req, res) => {
         }
     }
 
-    // Website Availability Checks (HTTP HEAD requests)
+    // Website Availability Checks - Aggressive validation
     // All Jubilee Enterprise platform websites organized by category
     const websites = [
         // Codex Category - Core Infrastructure & APIs
-        { name: 'JubileeVerse.com', url: 'http://localhost:3000', category: 'codex', type: 'app', description: 'AI Chat Platform' },
-        { name: 'InspireCodex.com', url: 'http://localhost:3100', category: 'codex', type: 'api', description: 'Central API & Health Dashboard' },
-        { name: 'InspireContinuum.com', url: 'http://localhost:3101', category: 'codex', type: 'api', description: 'User Activity & Admin Dashboard' },
-        { name: 'JubileeBrowser.com', url: 'http://localhost:3200', category: 'codex', type: 'static', description: 'Browser Download Portal' },
-        { name: 'wwBibleweb.com', url: 'http://localhost:3847', category: 'codex', type: 'static', description: 'IDNS Registry & Bible Web' },
+        { name: 'JubileeVerse.com', url: 'http://localhost:3000', port: 3000, category: 'codex', type: 'app', description: 'AI Chat Platform' },
+        { name: 'InspireCodex.com', url: 'http://localhost:3100', port: 3100, category: 'codex', type: 'api', description: 'Central API & Health Dashboard' },
+        { name: 'InspireContinuum.com', url: 'http://localhost:3101', port: 3101, category: 'codex', type: 'api', description: 'User Activity & Admin Dashboard' },
+        { name: 'JubileeBrowser.com', url: 'http://localhost:3200', port: 3200, category: 'codex', type: 'static', description: 'Browser Download Portal' },
+        { name: 'JubileeWebsites.com', url: 'http://localhost:3008', port: 3008, category: 'codex', type: 'app', description: 'AI Website Generator' },
+        { name: 'JubileeParadox.com', url: 'http://localhost:3009', port: 3009, category: 'codex', type: 'static', description: 'Book/Movie Platform' },
+        { name: 'wwBibleweb.com', url: 'http://localhost:3847', port: 3847, category: 'codex', type: 'static', description: 'IDNS Registry & Bible Web' },
 
         // Inspire Category - Ministry & Content Sites
-        { name: 'JubileeInspire.com', url: 'http://localhost:3001', category: 'inspire', type: 'static', description: 'Ministry Landing Page' },
-        { name: 'CelestialPaths.com', url: 'http://localhost:3300', category: 'inspire', type: 'static', description: 'Spiritual Journey Platform' },
+        { name: 'JubileeInspire.com', url: 'http://localhost:3001', port: 3001, category: 'inspire', type: 'static', description: 'Ministry Landing Page' },
+        { name: 'CelestialPaths.com', url: 'http://localhost:3300', port: 3300, category: 'inspire', type: 'static', description: 'Spiritual Journey Platform' },
     ];
 
-    for (const site of websites) {
-        try {
-            const siteHealth = await new Promise((resolve) => {
-                const startMs = Date.now();
-                const req = http.get(site.url, { timeout: 5000 }, (res) => {
+    // Aggressive website health check function
+    const checkWebsite = (site) => {
+        return new Promise((resolve) => {
+            const startMs = Date.now();
+            let resolved = false;
+
+            // Set a hard timeout - if no response in 2 seconds, it's down
+            const hardTimeout = setTimeout(() => {
+                if (!resolved) {
+                    resolved = true;
                     resolve({
                         name: site.name,
                         url: site.url,
+                        port: site.port,
                         category: site.category,
                         type: site.type,
                         description: site.description,
-                        status: res.statusCode < 400 ? 'online' : 'error',
+                        status: 'offline',
+                        error: 'No response within 2 seconds',
+                        responseTime: 2000
+                    });
+                }
+            }, 2000);
+
+            const req = http.get(site.url, {
+                timeout: 1500,
+                headers: { 'Connection': 'close' }
+            }, (res) => {
+                if (resolved) return;
+                resolved = true;
+                clearTimeout(hardTimeout);
+
+                // Read the response body to ensure connection is complete
+                let data = '';
+                res.on('data', chunk => { data += chunk; });
+                res.on('end', () => {
+                    const responseTime = Date.now() - startMs;
+                    // Check for valid HTTP response and reasonable content
+                    const isValidResponse = res.statusCode >= 200 && res.statusCode < 500;
+                    const hasContent = data.length > 0 || res.statusCode === 204;
+
+                    resolve({
+                        name: site.name,
+                        url: site.url,
+                        port: site.port,
+                        category: site.category,
+                        type: site.type,
+                        description: site.description,
+                        status: isValidResponse && hasContent ? 'online' : 'error',
                         statusCode: res.statusCode,
-                        responseTime: Date.now() - startMs
+                        responseTime: responseTime,
+                        contentLength: data.length
                     });
                 });
-                req.on('error', (err) => resolve({
+            });
+
+            req.on('error', (err) => {
+                if (resolved) return;
+                resolved = true;
+                clearTimeout(hardTimeout);
+
+                // Determine specific error type
+                let errorType = 'offline';
+                let errorMsg = err.message;
+
+                if (err.code === 'ECONNREFUSED') {
+                    errorMsg = `Port ${site.port} connection refused`;
+                } else if (err.code === 'ECONNRESET') {
+                    errorMsg = 'Connection reset by server';
+                } else if (err.code === 'ETIMEDOUT') {
+                    errorType = 'timeout';
+                    errorMsg = 'Connection timed out';
+                } else if (err.code === 'ENOTFOUND') {
+                    errorMsg = 'Host not found';
+                }
+
+                resolve({
                     name: site.name,
                     url: site.url,
+                    port: site.port,
                     category: site.category,
                     type: site.type,
                     description: site.description,
-                    status: 'offline',
-                    error: err.message
-                }));
-                req.on('timeout', () => {
-                    req.destroy();
-                    resolve({
-                        name: site.name,
-                        url: site.url,
-                        category: site.category,
-                        type: site.type,
-                        description: site.description,
-                        status: 'timeout',
-                        error: 'Connection timed out'
-                    });
+                    status: errorType,
+                    error: errorMsg,
+                    errorCode: err.code
                 });
             });
 
-            health.websites.push(siteHealth);
-        } catch (err) {
-            health.websites.push({
-                name: site.name,
-                url: site.url,
-                category: site.category,
-                type: site.type,
-                description: site.description,
-                status: 'error',
-                error: err.message
+            req.on('timeout', () => {
+                if (resolved) return;
+                req.destroy();
+                // Let the hardTimeout handle this
             });
-        }
-    }
+        });
+    };
+
+    // Check all websites in parallel for speed
+    const websiteResults = await Promise.all(websites.map(site => checkWebsite(site)));
+    health.websites = websiteResults;
 
     // Codex Services (IDNS, etc.)
     health.codexServices = {};
