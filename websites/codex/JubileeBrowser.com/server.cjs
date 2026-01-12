@@ -1,20 +1,51 @@
 /**
  * JubileeBrowser.com Static File Server
  *
- * A simple Node.js server for serving static content.
- * Run with: node server.js
- * Default port: 3200 (or process.env.PORT)
+ * PRODUCTION SERVER - DO NOT MODIFY PORT CONFIGURATION
+ *
+ * Assigned Port: 3200 (HARDCODED - Cloudflare Tunnel Requirement)
+ * This port is mapped in Cloudflare tunnel config and MUST NOT change.
+ *
+ * Run with: node server.cjs
  */
+
+'use strict';
 
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
 
-const PORT = process.env.PORT || 3200;
+// ============================================================================
+// PRODUCTION PORT CONFIGURATION - DO NOT MODIFY
+// ============================================================================
+const REQUIRED_PORT = 3200;
+const SERVICE_NAME = 'JubileeBrowser.com';
+
+// Validate port - fail fast if misconfigured
+const PORT = parseInt(process.env.PORT, 10) || REQUIRED_PORT;
+if (PORT !== REQUIRED_PORT) {
+    console.error('');
+    console.error('='.repeat(60));
+    console.error('  FATAL: PORT CONFIGURATION ERROR');
+    console.error('='.repeat(60));
+    console.error(`  Service:  ${SERVICE_NAME}`);
+    console.error(`  Required: ${REQUIRED_PORT}`);
+    console.error(`  Received: ${PORT}`);
+    console.error('');
+    console.error('  This service MUST run on port ' + REQUIRED_PORT);
+    console.error('  Cloudflare tunnel is configured for this port.');
+    console.error('  DO NOT override the PORT environment variable.');
+    console.error('='.repeat(60));
+    console.error('');
+    process.exit(1);
+}
+
 const BASE_DIR = __dirname;
 
-// MIME types for serving static files
+// ============================================================================
+// MIME TYPES
+// ============================================================================
 const MIME_TYPES = {
     '.html': 'text/html',
     '.css': 'text/css',
@@ -40,12 +71,16 @@ const MIME_TYPES = {
     '.msi': 'application/octet-stream'
 };
 
-// Create the HTTP server
+// ============================================================================
+// HTTP SERVER
+// ============================================================================
 const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url, true);
     let pathname = parsedUrl.pathname;
 
-    // Enable CORS
+    // Security headers
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -82,7 +117,6 @@ const server = http.createServer((req, res) => {
 
     // Check if file exists
     if (!fs.existsSync(filePath)) {
-        // Try adding .html extension
         if (!path.extname(filePath) && fs.existsSync(filePath + '.html')) {
             filePath = filePath + '.html';
         } else {
@@ -118,33 +152,55 @@ const server = http.createServer((req, res) => {
         });
         res.end(content);
     } catch (error) {
-        console.error('Error serving file:', error);
+        console.error('[ERROR] Failed to serve file:', filePath, error.message);
         res.writeHead(500);
         res.end('Internal Server Error');
     }
 });
 
-// Start the server
-server.listen(PORT, () => {
+// ============================================================================
+// SERVER STARTUP
+// ============================================================================
+server.listen(REQUIRED_PORT, () => {
     console.log('');
-    console.log('='.repeat(50));
-    console.log('  JubileeBrowser.com Static Server');
-    console.log('='.repeat(50));
-    console.log(`  Status:  Running`);
-    console.log(`  Port:    ${PORT}`);
-    console.log(`  URL:     http://localhost:${PORT}`);
-    console.log(`  Dir:     ${BASE_DIR}`);
-    console.log('='.repeat(50));
-    console.log('');
-    console.log('Press Ctrl+C to stop the server');
+    console.log('='.repeat(60));
+    console.log(`  ${SERVICE_NAME} - PRODUCTION SERVER`);
+    console.log('='.repeat(60));
+    console.log(`  Status:      ONLINE`);
+    console.log(`  Port:        ${REQUIRED_PORT} (LOCKED)`);
+    console.log(`  URL:         http://localhost:${REQUIRED_PORT}`);
+    console.log(`  Directory:   ${BASE_DIR}`);
+    console.log(`  Environment: ${process.env.NODE_ENV || 'production'}`);
+    console.log(`  Started:     ${new Date().toISOString()}`);
+    console.log('='.repeat(60));
     console.log('');
 });
 
-// Handle graceful shutdown
-process.on('SIGINT', () => {
-    console.log('\nShutting down server...');
+// Handle server errors
+server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+        console.error(`[FATAL] Port ${REQUIRED_PORT} is already in use`);
+    } else {
+        console.error('[FATAL] Server error:', error.message);
+    }
+    process.exit(1);
+});
+
+// ============================================================================
+// GRACEFUL SHUTDOWN
+// ============================================================================
+const shutdown = (signal) => {
+    console.log(`\n[${signal}] Shutting down ${SERVICE_NAME}...`);
     server.close(() => {
-        console.log('Server stopped.');
+        console.log(`[${signal}] Server stopped gracefully.`);
         process.exit(0);
     });
-});
+    // Force exit after 10 seconds
+    setTimeout(() => {
+        console.error('[TIMEOUT] Forced shutdown after 10s');
+        process.exit(1);
+    }, 10000);
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));

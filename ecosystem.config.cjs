@@ -1,8 +1,23 @@
 /**
- * PM2 Ecosystem Configuration
+ * PM2 Ecosystem Configuration - PRODUCTION
  *
- * Manages all Jubilee Enterprise services with auto-restart,
- * monitoring, and log management.
+ * ============================================================================
+ * WARNING: PRODUCTION CONFIGURATION - DO NOT MODIFY PORT ASSIGNMENTS
+ * ============================================================================
+ *
+ * All ports are LOCKED to match Cloudflare tunnel configuration.
+ * Changing ports will break public website access.
+ *
+ * Port Registry (Cloudflare Tunnel Mapped):
+ *   3000  - JubileeVerse.com      (AI chatbot advanced)
+ *   3001  - JubileeInspire.com    (AI chatbot simple)
+ *   3008  - JubileeWebsites.com   (AI website generator)
+ *   3009  - JubileeParadox.com    (Book/Movie site)
+ *   3100  - InspireCodex.com      (Codex API)
+ *   3101  - InspireContinuum.com  (Continuum API)
+ *   3200  - JubileeBrowser.com    (Browser downloads)
+ *   3300  - CelestialPaths.com    (Domain registrar)
+ *   3847  - wwBibleweb.com        (Webspace hosting)
  *
  * Commands:
  *   pm2 start ecosystem.config.cjs     - Start all services
@@ -12,56 +27,80 @@
  *   pm2 logs                           - View logs
  *   pm2 monit                          - Real-time monitoring dashboard
  *   pm2 save                           - Save current process list
- *   pm2 startup                        - Generate startup script
+ *   pm2-startup install                - Enable Windows startup
  */
+
+'use strict';
+
+// ============================================================================
+// PORT REGISTRY - LOCKED CONFIGURATION
+// DO NOT MODIFY THESE VALUES
+// ============================================================================
+const PORTS = Object.freeze({
+  JUBILEE_VERSE:      3000,
+  JUBILEE_INSPIRE:    3001,
+  JUBILEE_WEBSITES:   3008,
+  JUBILEE_PARADOX:    3009,
+  INSPIRE_CODEX:      3100,
+  INSPIRE_CONTINUUM:  3101,
+  JUBILEE_BROWSER:    3200,
+  CELESTIAL_PATHS:    3300,
+  WW_BIBLEWEB:        3847
+});
+
+// Base paths
+const BASE_PATH = 'C:/data/JubileeEnterprise.com';
+const CODEX_PATH = `${BASE_PATH}/websites/codex`;
+const LOGS_PATH = `${BASE_PATH}/logs`;
+
+// Common production settings
+const PRODUCTION_DEFAULTS = {
+  instances: 1,
+  exec_mode: 'fork',
+  autorestart: true,
+  watch: false,
+  max_memory_restart: '500M',
+  restart_delay: 3000,
+  max_restarts: 50,        // High restart limit for 24/7 operation
+  min_uptime: '10s',
+  log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+  merge_logs: true,
+  kill_timeout: 10000,
+  listen_timeout: 10000,
+  shutdown_with_message: true,
+  wait_ready: false,
+  exp_backoff_restart_delay: 100  // Exponential backoff for restarts
+};
 
 module.exports = {
   apps: [
     // ===========================================
-    // CORE SERVICES
+    // CORE AI SERVICES
     // ===========================================
-    {
-      name: 'JubileeInspire',
-      script: 'server.js',
-      cwd: 'C:/data/JubileeEnterprise.com/websites/codex/JubileeInspire.com',
-      env: {
-        NODE_ENV: 'production',
-        PORT: 3001
-      },
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '500M',
-      restart_delay: 5000,
-      max_restarts: 10,
-      min_uptime: '10s',
-      error_file: 'C:/data/JubileeEnterprise.com/logs/jubilee-inspire-error.log',
-      out_file: 'C:/data/JubileeEnterprise.com/logs/jubilee-inspire-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      merge_logs: true,
-      kill_timeout: 5000
-    },
     {
       name: 'JubileeVerse',
       script: 'server.js',
-      cwd: 'C:/data/JubileeEnterprise.com/websites/codex/JubileeVerse.com',
+      cwd: `${CODEX_PATH}/JubileeVerse.com`,
       env: {
         NODE_ENV: 'production',
-        PORT: 3000,
-        DB_MOCK: 'true'  // Use mock mode until PostgreSQL is configured
+        PORT: PORTS.JUBILEE_VERSE,
+        DB_MOCK: 'true'
       },
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '500M',
-      restart_delay: 5000,
-      max_restarts: 10,
-      min_uptime: '10s',
-      error_file: 'C:/data/JubileeEnterprise.com/logs/jubilee-verse-error.log',
-      out_file: 'C:/data/JubileeEnterprise.com/logs/jubilee-verse-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      merge_logs: true,
-      kill_timeout: 5000
+      ...PRODUCTION_DEFAULTS,
+      error_file: `${LOGS_PATH}/jubilee-verse-error.log`,
+      out_file: `${LOGS_PATH}/jubilee-verse-out.log`
+    },
+    {
+      name: 'JubileeInspire',
+      script: 'server.js',
+      cwd: `${CODEX_PATH}/JubileeInspire.com`,
+      env: {
+        NODE_ENV: 'production',
+        PORT: PORTS.JUBILEE_INSPIRE
+      },
+      ...PRODUCTION_DEFAULTS,
+      error_file: `${LOGS_PATH}/jubilee-inspire-error.log`,
+      out_file: `${LOGS_PATH}/jubilee-inspire-out.log`
     },
 
     // ===========================================
@@ -70,44 +109,26 @@ module.exports = {
     {
       name: 'InspireCodex',
       script: 'server.js',
-      cwd: 'C:/data/JubileeEnterprise.com/websites/codex/InspireCodex.com',
+      cwd: `${CODEX_PATH}/InspireCodex.com`,
       env: {
         NODE_ENV: 'production',
-        PORT: 3100
+        PORT: PORTS.INSPIRE_CODEX
       },
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '500M',
-      restart_delay: 5000,
-      max_restarts: 10,
-      min_uptime: '10s',
-      error_file: 'C:/data/JubileeEnterprise.com/logs/inspire-codex-error.log',
-      out_file: 'C:/data/JubileeEnterprise.com/logs/inspire-codex-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      merge_logs: true,
-      kill_timeout: 5000
+      ...PRODUCTION_DEFAULTS,
+      error_file: `${LOGS_PATH}/inspire-codex-error.log`,
+      out_file: `${LOGS_PATH}/inspire-codex-out.log`
     },
     {
       name: 'InspireContinuum',
       script: 'server.js',
-      cwd: 'C:/data/JubileeEnterprise.com/websites/codex/InspireContinuum.com',
+      cwd: `${CODEX_PATH}/InspireContinuum.com`,
       env: {
         NODE_ENV: 'production',
-        PORT: 3101
+        PORT: PORTS.INSPIRE_CONTINUUM
       },
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '500M',
-      restart_delay: 5000,
-      max_restarts: 10,
-      min_uptime: '10s',
-      error_file: 'C:/data/JubileeEnterprise.com/logs/inspire-continuum-error.log',
-      out_file: 'C:/data/JubileeEnterprise.com/logs/inspire-continuum-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      merge_logs: true,
-      kill_timeout: 5000
+      ...PRODUCTION_DEFAULTS,
+      error_file: `${LOGS_PATH}/inspire-continuum-error.log`,
+      out_file: `${LOGS_PATH}/inspire-continuum-out.log`
     },
 
     // ===========================================
@@ -116,107 +137,64 @@ module.exports = {
     {
       name: 'wwBibleweb',
       script: 'server.js',
-      cwd: 'C:/data/JubileeEnterprise.com/websites/codex/wwBibleweb.com',
+      cwd: `${CODEX_PATH}/wwBibleweb.com`,
       env: {
         NODE_ENV: 'production',
-        PORT: 3847
+        PORT: PORTS.WW_BIBLEWEB
       },
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '500M',
-      restart_delay: 5000,
-      max_restarts: 10,
-      min_uptime: '10s',
-      error_file: 'C:/data/JubileeEnterprise.com/logs/wwbibleweb-error.log',
-      out_file: 'C:/data/JubileeEnterprise.com/logs/wwbibleweb-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      merge_logs: true,
-      kill_timeout: 5000
+      ...PRODUCTION_DEFAULTS,
+      error_file: `${LOGS_PATH}/wwbibleweb-error.log`,
+      out_file: `${LOGS_PATH}/wwbibleweb-out.log`
     },
     {
       name: 'JubileeBrowser',
       script: 'server.cjs',
-      cwd: 'C:/data/JubileeEnterprise.com/websites/codex/JubileeBrowser.com',
+      cwd: `${CODEX_PATH}/JubileeBrowser.com`,
       env: {
         NODE_ENV: 'production',
-        PORT: 3200
+        PORT: PORTS.JUBILEE_BROWSER
       },
-      instances: 1,
-      autorestart: true,
-      watch: false,
+      ...PRODUCTION_DEFAULTS,
       max_memory_restart: '200M',
-      restart_delay: 5000,
-      max_restarts: 10,
-      min_uptime: '10s',
-      error_file: 'C:/data/JubileeEnterprise.com/logs/jubilee-browser-error.log',
-      out_file: 'C:/data/JubileeEnterprise.com/logs/jubilee-browser-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      merge_logs: true,
-      kill_timeout: 5000
+      error_file: `${LOGS_PATH}/jubilee-browser-error.log`,
+      out_file: `${LOGS_PATH}/jubilee-browser-out.log`
     },
     {
       name: 'CelestialPaths',
       script: 'server.cjs',
-      cwd: 'C:/data/JubileeEnterprise.com/websites/codex/CelestialPaths.com',
+      cwd: `${CODEX_PATH}/CelestialPaths.com`,
       env: {
         NODE_ENV: 'production',
-        PORT: 3300
+        PORT: PORTS.CELESTIAL_PATHS
       },
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '500M',
-      restart_delay: 5000,
-      max_restarts: 10,
-      min_uptime: '10s',
-      error_file: 'C:/data/JubileeEnterprise.com/logs/celestial-paths-error.log',
-      out_file: 'C:/data/JubileeEnterprise.com/logs/celestial-paths-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      merge_logs: true,
-      kill_timeout: 5000
+      ...PRODUCTION_DEFAULTS,
+      error_file: `${LOGS_PATH}/celestial-paths-error.log`,
+      out_file: `${LOGS_PATH}/celestial-paths-out.log`
     },
     {
       name: 'JubileeWebsites',
       script: 'server.js',
-      cwd: 'C:/data/JubileeEnterprise.com/websites/codex/JubileeWebsites.com',
+      cwd: `${CODEX_PATH}/JubileeWebsites.com`,
       env: {
         NODE_ENV: 'production',
-        PORT: 3008
+        PORT: PORTS.JUBILEE_WEBSITES
       },
-      instances: 1,
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '500M',
-      restart_delay: 5000,
-      max_restarts: 10,
-      min_uptime: '10s',
-      error_file: 'C:/data/JubileeEnterprise.com/logs/jubilee-websites-error.log',
-      out_file: 'C:/data/JubileeEnterprise.com/logs/jubilee-websites-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      merge_logs: true,
-      kill_timeout: 5000
+      ...PRODUCTION_DEFAULTS,
+      error_file: `${LOGS_PATH}/jubilee-websites-error.log`,
+      out_file: `${LOGS_PATH}/jubilee-websites-out.log`
     },
     {
       name: 'JubileeParadox',
       script: 'server.cjs',
-      cwd: 'C:/data/JubileeEnterprise.com/websites/codex/JubileeParadox.com',
+      cwd: `${CODEX_PATH}/JubileeParadox.com`,
       env: {
         NODE_ENV: 'production',
-        PORT: 3009
+        PORT: PORTS.JUBILEE_PARADOX
       },
-      instances: 1,
-      autorestart: true,
-      watch: false,
+      ...PRODUCTION_DEFAULTS,
       max_memory_restart: '200M',
-      restart_delay: 5000,
-      max_restarts: 10,
-      min_uptime: '10s',
-      error_file: 'C:/data/JubileeEnterprise.com/logs/jubilee-paradox-error.log',
-      out_file: 'C:/data/JubileeEnterprise.com/logs/jubilee-paradox-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      merge_logs: true,
-      kill_timeout: 5000
+      error_file: `${LOGS_PATH}/jubilee-paradox-error.log`,
+      out_file: `${LOGS_PATH}/jubilee-paradox-out.log`
     }
   ]
 };
