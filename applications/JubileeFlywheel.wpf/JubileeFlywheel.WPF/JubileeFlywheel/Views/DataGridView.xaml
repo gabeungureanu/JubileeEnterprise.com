@@ -1,0 +1,159 @@
+<UserControl x:Class="JubileeFlywheel.Views.DataGridView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1200"
+             Background="{StaticResource BgPrimaryBrush}">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="Data Grid"
+                   FontSize="24" FontWeight="SemiBold"
+                   Foreground="{StaticResource TextPrimaryBrush}"
+                   Margin="0,0,0,16"/>
+
+        <!-- Controls -->
+        <Border Grid.Row="1" Style="{StaticResource CardBorder}" Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- API Endpoint Selection -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="API Endpoint:"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <ComboBox x:Name="EndpointComboBox" Grid.Row="0" Grid.Column="1"
+                          DisplayMemberPath="Name"
+                          SelectionChanged="EndpointComboBox_SelectionChanged"/>
+
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="Data Path (optional):"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           VerticalAlignment="Center" Margin="16,0,8,0"/>
+                <TextBox x:Name="DataPathTextBox" Grid.Row="0" Grid.Column="3"
+                         ToolTip="JSONPath to data array (e.g., 'data.items')"/>
+
+                <Button Grid.Row="0" Grid.Column="4" Content="Fetch Data"
+                        Margin="8,0,0,0" Click="FetchDataButton_Click"/>
+
+                <!-- Filter and Export -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Filter:"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           VerticalAlignment="Center" Margin="0,8,8,0"/>
+                <TextBox x:Name="FilterTextBox" Grid.Row="1" Grid.Column="1"
+                         Margin="0,8,0,0"
+                         TextChanged="FilterTextBox_TextChanged"
+                         ToolTip="Type to filter data"/>
+
+                <StackPanel Grid.Row="1" Grid.Column="4" Orientation="Horizontal"
+                            Margin="8,8,0,0">
+                    <Button Content="Export CSV" Margin="0,0,8,0"
+                            Click="ExportCsvButton_Click"/>
+                    <Button Content="Export JSON" Click="ExportJsonButton_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Data Grid -->
+        <Border Grid.Row="2" Style="{StaticResource CardBorder}">
+            <Grid>
+                <!-- Loading Indicator -->
+                <Border x:Name="LoadingOverlay" Visibility="Collapsed"
+                        Background="#80000000" Panel.ZIndex="1">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <TextBlock Text="Loading..."
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   FontSize="18"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Data Grid -->
+                <DataGrid x:Name="MainDataGrid"
+                          AutoGenerateColumns="True"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          Background="{StaticResource BgSecondaryBrush}"
+                          Foreground="{StaticResource TextPrimaryBrush}"
+                          BorderBrush="{StaticResource BorderBrush}"
+                          GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="{StaticResource BorderBrush}"
+                          RowBackground="{StaticResource BgSecondaryBrush}"
+                          AlternatingRowBackground="{StaticResource BgTertiaryBrush}"
+                          HeadersVisibility="Column">
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="{StaticResource BgTertiaryBrush}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            <Setter Property="Padding" Value="8,6"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+                            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="Padding" Value="8,4"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource JubileeAccentBrush}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource BgPrimaryBrush}"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.CellStyle>
+                </DataGrid>
+
+                <!-- Empty State -->
+                <Border x:Name="EmptyState" Visibility="Visible"
+                        Background="{StaticResource BgSecondaryBrush}">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <TextBlock Text="No data loaded"
+                                   FontSize="18"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="Select an API endpoint and click 'Fetch Data'"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Footer -->
+        <Border Grid.Row="3" Margin="0,8,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock x:Name="ErrorText" Grid.Column="0"
+                           Foreground="{StaticResource ErrorBrush}"
+                           VerticalAlignment="Center"/>
+
+                <TextBlock x:Name="RowCountText" Grid.Column="1"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

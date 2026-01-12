@@ -1,0 +1,175 @@
+<UserControl x:Class="JubileeFlywheel.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1200"
+             Background="{StaticResource BgPrimaryBrush}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="16">
+        <StackPanel MaxWidth="600">
+            <!-- Header -->
+            <TextBlock Text="Settings"
+                       FontSize="24" FontWeight="SemiBold"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       Margin="0,0,0,24"/>
+
+            <!-- General Settings -->
+            <Border Style="{StaticResource CardBorder}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="General"
+                               FontSize="16" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               Margin="0,0,0,16"/>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Auto-refresh enabled"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="Automatically refresh data at specified intervals"
+                                       FontSize="11"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <CheckBox x:Name="AutoRefreshCheckBox" Grid.Column="1"
+                                  IsChecked="True" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="120"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Default refresh interval"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="Seconds between automatic data refreshes"
+                                       FontSize="11"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <TextBox x:Name="DefaultIntervalTextBox" Grid.Column="1"
+                                 Text="30" VerticalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Appearance Settings -->
+            <Border Style="{StaticResource CardBorder}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Appearance"
+                               FontSize="16" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               Margin="0,0,0,16"/>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="150"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Theme"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="Choose your preferred color scheme"
+                                       FontSize="11"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <ComboBox x:Name="ThemeComboBox" Grid.Column="1"
+                                  VerticalAlignment="Center">
+                            <ComboBoxItem Content="Dark" IsSelected="True"/>
+                            <ComboBoxItem Content="Light" IsEnabled="False"/>
+                        </ComboBox>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="150"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Dashboard columns"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="Number of columns in dashboard grid"
+                                       FontSize="11"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </StackPanel>
+
+                        <ComboBox x:Name="ColumnsComboBox" Grid.Column="1"
+                                  VerticalAlignment="Center">
+                            <ComboBoxItem Content="2"/>
+                            <ComboBoxItem Content="3"/>
+                            <ComboBoxItem Content="4" IsSelected="True"/>
+                            <ComboBoxItem Content="5"/>
+                            <ComboBoxItem Content="6"/>
+                        </ComboBox>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Data Settings -->
+            <Border Style="{StaticResource CardBorder}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Data"
+                               FontSize="16" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               Margin="0,0,0,16"/>
+
+                    <Button Content="Clear Cache" Click="ClearCacheButton_Click"
+                            HorizontalAlignment="Left" Margin="0,0,0,12"/>
+
+                    <Button Content="Export All Settings" Click="ExportSettingsButton_Click"
+                            HorizontalAlignment="Left" Margin="0,0,0,12"/>
+
+                    <Button Content="Import Settings" Click="ImportSettingsButton_Click"
+                            HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+
+            <!-- About Section -->
+            <Border Style="{StaticResource CardBorder}">
+                <StackPanel>
+                    <TextBlock Text="About"
+                               FontSize="16" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               Margin="0,0,0,16"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="J" FontSize="32" FontWeight="Bold"
+                                   Foreground="{StaticResource JubileeAccentBrush}"
+                                   Margin="0,0,12,0" VerticalAlignment="Center"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Jubilee Flywheel"
+                                       FontSize="18" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"/>
+                            <TextBlock Text="Data Visualization Dashboard"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Text="Version 1.0.0"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Margin="0,8,0,0"/>
+
+                    <TextBlock Text="Copyright 2024-2026 Jubilee Solutions"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Save Button -->
+            <Button Content="Save Settings" Margin="0,24,0,0"
+                    HorizontalAlignment="Right"
+                    Click="SaveSettingsButton_Click"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

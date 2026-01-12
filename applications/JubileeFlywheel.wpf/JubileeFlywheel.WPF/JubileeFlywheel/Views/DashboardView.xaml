@@ -1,0 +1,184 @@
+<UserControl x:Class="JubileeFlywheel.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+             xmlns:controls="clr-namespace:JubileeFlywheel.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1200"
+             Background="{StaticResource BgPrimaryBrush}">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Dashboard Header -->
+        <Border Grid.Row="0" Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <TextBlock x:Name="DashboardTitle" Text="My Dashboard"
+                               FontSize="24" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               VerticalAlignment="Center"/>
+                    <ComboBox x:Name="DashboardSelector" Margin="16,0,0,0"
+                              MinWidth="150" VerticalAlignment="Center"
+                              SelectionChanged="DashboardSelector_SelectionChanged"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="Edit Layout" x:Name="EditLayoutButton"
+                            Click="EditLayoutButton_Click" Margin="0,0,8,0"/>
+                    <Button Content="New Dashboard" Click="NewDashboardButton_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Widgets Grid -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl x:Name="WidgetsContainer">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Columns="4" Rows="3"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource CardBorder}" Margin="8">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Widget Header -->
+                                <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <TextBlock Text="{Binding Title}"
+                                               FontSize="14" FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <Button Content="X" HorizontalAlignment="Right"
+                                            Width="24" Height="24" Padding="0"
+                                            Click="RemoveWidgetButton_Click"
+                                            ToolTip="Remove widget"
+                                            Tag="{Binding}"/>
+                                </Grid>
+
+                                <!-- Widget Content -->
+                                <ContentControl Grid.Row="1" Content="{Binding}">
+                                    <ContentControl.ContentTemplateSelector>
+                                        <controls:WidgetTemplateSelector/>
+                                    </ContentControl.ContentTemplateSelector>
+                                </ContentControl>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Empty State -->
+        <Border x:Name="EmptyState" Grid.Row="1" Visibility="Collapsed"
+                Background="{StaticResource BgSecondaryBrush}"
+                CornerRadius="8">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="No widgets yet" FontSize="18"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                <TextBlock Text="Click 'Add Widget' to get started"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+
+    <UserControl.Resources>
+        <!-- Line Chart Template -->
+        <DataTemplate x:Key="LineChartTemplate">
+            <lvc:CartesianChart Series="{Binding ChartSeries}"
+                                XAxes="{Binding XAxes}"
+                                YAxes="{Binding YAxes}"
+                                TooltipPosition="Top"
+                                ZoomMode="X"/>
+        </DataTemplate>
+
+        <!-- Bar Chart Template -->
+        <DataTemplate x:Key="BarChartTemplate">
+            <lvc:CartesianChart Series="{Binding ChartSeries}"
+                                XAxes="{Binding XAxes}"
+                                YAxes="{Binding YAxes}"
+                                TooltipPosition="Top"/>
+        </DataTemplate>
+
+        <!-- Pie Chart Template -->
+        <DataTemplate x:Key="PieChartTemplate">
+            <lvc:PieChart Series="{Binding ChartSeries}"
+                          LegendPosition="Right"/>
+        </DataTemplate>
+
+        <!-- Area Chart Template -->
+        <DataTemplate x:Key="AreaChartTemplate">
+            <lvc:CartesianChart Series="{Binding ChartSeries}"
+                                XAxes="{Binding XAxes}"
+                                YAxes="{Binding YAxes}"
+                                TooltipPosition="Top"/>
+        </DataTemplate>
+
+        <!-- Gauge Template -->
+        <DataTemplate x:Key="GaugeTemplate">
+            <Grid>
+                <lvc:PieChart Series="{Binding ChartSeries}"
+                              InitialRotation="-90"
+                              MaxAngle="180"/>
+                <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                            Margin="0,0,0,20">
+                    <TextBlock Text="{Binding GaugeValue, StringFormat={}{0:N0}}"
+                               FontSize="32" FontWeight="Bold"
+                               Foreground="{StaticResource JubileeAccentBrush}"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="%" FontSize="14"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <!-- KPI Card Template -->
+        <DataTemplate x:Key="KpiCardTemplate">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="{Binding KpiValue, StringFormat={}{0:N0}}"
+                           FontSize="36" FontWeight="Bold"
+                           Foreground="{StaticResource JubileeAccentBrush}"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding KpiUnit}"
+                           FontSize="14"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                            Margin="0,8,0,0">
+                    <TextBlock Text="{Binding KpiChange, StringFormat={}{0:+0.0;-0.0}%}"
+                               FontSize="14"
+                               Foreground="{StaticResource SuccessBrush}"/>
+                    <TextBlock Text=" vs last period"
+                               FontSize="12"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                </StackPanel>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- Data Grid Widget Template -->
+        <DataTemplate x:Key="DataGridWidgetTemplate">
+            <TextBlock Text="Configure data source in Data Grid view"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       VerticalAlignment="Center" HorizontalAlignment="Center"
+                       TextWrapping="Wrap" TextAlignment="Center"/>
+        </DataTemplate>
+    </UserControl.Resources>
+</UserControl>

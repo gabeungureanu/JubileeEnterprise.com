@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>JubileeFlywheel</AssemblyName>
+    <RootNamespace>JubileeFlywheel</RootNamespace>
+    <AssemblyTitle>Jubilee Flywheel</AssemblyTitle>
+    <FileDescription>Jubilee Flywheel - Data Visualization Dashboard</FileDescription>
+    <Version>1.0.0</Version>
+    <Authors>Jubilee Solutions</Authors>
+    <Company>Jubilee Solutions</Company>
+    <Product>Jubilee Flywheel</Product>
+    <Description>A comprehensive data visualization dashboard for external API data with real-time charts, gauges, and data grids</Description>
+    <Copyright>Copyright 2024-2026 Jubilee Solutions</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-rc2" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="System.Runtime.Caching" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Icons\*.ico" />
+    <Resource Include="Resources\Icons\*.png" />
+    <Resource Include="Resources\Fonts\*.ttf" Condition="Exists('Resources\Fonts')" />
+  </ItemGroup>
+
+</Project>
