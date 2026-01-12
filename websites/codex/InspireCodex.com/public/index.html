@@ -110,7 +110,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 7px 0;
             border-bottom: 1px solid #21262d;
         }
 
@@ -502,17 +502,19 @@
 
         function renderWebsites(websites) {
             if (!websites || !Array.isArray(websites)) return '<div class="item-row"><span class="item-meta">No websites data available</span></div>';
+            // Sort websites alphabetically by name
+            const sortedSites = [...websites].sort((a, b) => a.name.localeCompare(b.name));
             let html = '';
-            for (const site of websites) {
+            for (const site of sortedSites) {
                 html += `
                     <div class="item-row">
                         <div>
                             <span class="item-name">${site.name}</span>
-                            ${site.status === 'error' || site.status === 'offline' ? `<div class="error-message">${site.error || 'Offline'}</div>` : ''}
+                            ${site.status === 'error' || site.status === 'offline' || site.status === 'timeout' ? `<div class="error-message">${site.error || 'Offline'}</div>` : ''}
                         </div>
                         <div class="item-details">
+                            ${site.port ? `<span class="badge badge-port">:${site.port}</span>` : ''}
                             ${site.responseTime ? `<span class="badge badge-ms">${site.responseTime}ms</span>` : ''}
-                            ${site.statusCode ? `<span class="item-meta">${site.statusCode}</span>` : ''}
                             <span class="status-indicator status-${site.status}"></span>
                         </div>
                     </div>
