@@ -334,7 +334,7 @@ app.get('/api/v1/admin/health', async (req, res) => {
     };
 
     // PostgreSQL Databases (lowercase names match actual PostgreSQL database names)
-    const databases = ['codex', 'inspire', 'continuum'];
+    const databases = ['codex', 'inspire', 'continuum', 'flywheel'];
 
     for (const dbName of databases) {
         try {
