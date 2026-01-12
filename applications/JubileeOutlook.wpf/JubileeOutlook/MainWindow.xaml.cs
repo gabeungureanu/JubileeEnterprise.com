@@ -854,8 +854,11 @@ public partial class MainWindow : Window
             _composeMailViewModel.ComposeCancelled += OnComposeCancelled;
         }
 
-        // Reset the form and start composing
-        _composeMailViewModel.StartComposing();
+        // Get the authenticated user's email
+        var userEmail = _authManager.Session?.Profile?.Email;
+
+        // Reset the form and start composing with the user's email
+        _composeMailViewModel.StartComposing(userEmail);
 
         // Set the DataContext for the compose panel
         if (ComposeMailPanel != null)

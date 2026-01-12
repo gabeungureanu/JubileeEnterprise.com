@@ -1,6 +1,8 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace JubileeOutlook.Models;
 
-public class EmailMessage
+public partial class EmailMessage : ObservableObject
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Subject { get; set; } = string.Empty;
@@ -13,8 +15,13 @@ public class EmailMessage
     public bool IsHtml { get; set; }
     public DateTime ReceivedDate { get; set; } = DateTime.Now;
     public DateTime SentDate { get; set; } = DateTime.Now;
-    public bool IsRead { get; set; }
-    public bool IsFlagged { get; set; }
+
+    [ObservableProperty]
+    private bool _isRead;
+
+    [ObservableProperty]
+    private bool _isFlagged;
+
     public bool HasAttachments { get; set; }
     public List<EmailAttachment> Attachments { get; set; } = new();
     public string FolderId { get; set; } = string.Empty;

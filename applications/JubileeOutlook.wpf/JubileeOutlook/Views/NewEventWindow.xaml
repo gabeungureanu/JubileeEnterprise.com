@@ -496,12 +496,35 @@
                             Style="{StaticResource SaveButtonStyle}"
                             Width="80"
                             HorizontalAlignment="Left"
-                            Margin="0,0,0,24">
+                            Margin="0,0,0,12">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xe161;" FontFamily="{StaticResource MaterialIcons}" FontSize="16" Margin="0,0,6,0"/>
                             <TextBlock Text="Save" FontSize="13" FontWeight="SemiBold"/>
                         </StackPanel>
                     </Button>
+
+                    <!-- Validation Error Message -->
+                    <Border Background="#5A1A1A"
+                            BorderBrush="#8B0000"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Padding="12,8"
+                            Margin="0,0,0,24"
+                            Visibility="{Binding ValidationError, Converter={StaticResource StringToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xe002;"
+                                      FontFamily="{StaticResource MaterialIcons}"
+                                      FontSize="16"
+                                      Foreground="#FF6B6B"
+                                      VerticalAlignment="Center"
+                                      Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding ValidationError}"
+                                      FontSize="13"
+                                      Foreground="#FF6B6B"
+                                      VerticalAlignment="Center"
+                                      TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
 
                     <!-- Title -->
                     <Grid Margin="0,0,0,16">
@@ -648,7 +671,6 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="140"/>
-                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="80"/>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="80"/>
@@ -669,52 +691,61 @@
                         <DatePicker Grid.Column="1"
                                    SelectedDate="{Binding EventDate}"
                                    Background="#252525"
-                                   Foreground="#EEEEEE"
-                                   BorderBrush="#3A3A3A"
-                                   BorderThickness="1"
+                                   Foreground="#FFFFFF"
+                                   BorderBrush="Transparent"
+                                   BorderThickness="0"
                                    Padding="8,6"
                                    FontSize="13"
                                    Margin="0,0,8,0">
                             <DatePicker.Resources>
                                 <Style TargetType="DatePickerTextBox">
-                                    <Setter Property="Foreground" Value="#EEEEEE"/>
+                                    <Setter Property="Foreground" Value="#FFFFFF"/>
                                     <Setter Property="Background" Value="#252525"/>
+                                    <Setter Property="BorderBrush" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
                                     <Setter Property="CaretBrush" Value="#FFFFFF"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="DatePickerTextBox">
+                                                <Grid>
+                                                    <Border Background="{TemplateBinding Background}"
+                                                            BorderThickness="0">
+                                                        <ScrollViewer x:Name="PART_ContentHost"
+                                                                     Foreground="{TemplateBinding Foreground}"
+                                                                     VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </Grid>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
                                 </Style>
                             </DatePicker.Resources>
                         </DatePicker>
 
-                        <!-- to label -->
-                        <TextBlock Grid.Column="2"
-                                   Text="to"
-                                   FontSize="13"
-                                   Foreground="#AAAAAA"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,8,0"/>
-
                         <!-- Start Time -->
-                        <ComboBox Grid.Column="3"
+                        <ComboBox Grid.Column="2"
                                  ItemsSource="{Binding TimeOptions}"
                                  SelectedItem="{Binding StartTime}"
                                  Style="{StaticResource DarkComboBoxStyle}"
                                  Margin="0,0,8,0"/>
 
-                        <TextBlock Grid.Column="4"
+                        <TextBlock Grid.Column="3"
                                    Text="to"
                                    FontSize="13"
-                                   Foreground="#AAAAAA"
+                                   Foreground="#FFFFFF"
                                    VerticalAlignment="Center"
                                    Margin="0,0,8,0"/>
 
                         <!-- End Time -->
-                        <ComboBox Grid.Column="5"
+                        <ComboBox Grid.Column="4"
                                  ItemsSource="{Binding TimeOptions}"
                                  SelectedItem="{Binding EndTime}"
                                  Style="{StaticResource DarkComboBoxStyle}"
                                  Margin="0,0,12,0"/>
 
                         <!-- World Icon -->
-                        <TextBlock Grid.Column="6"
+                        <TextBlock Grid.Column="5"
                                    Text="&#xe894;" FontFamily="{StaticResource MaterialIcons}"
                                    FontSize="18"
                                    Foreground="#666666"
@@ -722,7 +753,7 @@
                                    Margin="0,0,12,0"/>
 
                         <!-- Make recurring -->
-                        <Button Grid.Column="7"
+                        <Button Grid.Column="6"
                                Style="{StaticResource LinkButtonStyle}"
                                HorizontalAlignment="Left">
                             <StackPanel Orientation="Horizontal">
@@ -732,13 +763,13 @@
                         </Button>
 
                         <!-- All day toggle -->
-                        <StackPanel Grid.Column="8" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <StackPanel Grid.Column="7" Orientation="Horizontal" HorizontalAlignment="Right">
                             <ToggleButton IsChecked="{Binding IsAllDay}"
                                          Style="{StaticResource ModernToggleSwitchStyle}"
                                          Margin="0,0,8,0"/>
                             <TextBlock Text="All day"
                                        FontSize="13"
-                                       Foreground="#CCCCCC"
+                                       Foreground="#FFFFFF"
                                        VerticalAlignment="Center"/>
                         </StackPanel>
                     </Grid>
@@ -1127,45 +1158,101 @@
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.Items>
-                                    <!-- Hour markers from 8 to 17 (visible hours) -->
+                                    <!-- Hour markers from 0 to 23 (24-hour timeline) -->
                                     <Grid Canvas.Top="0">
-                                        <TextBlock Text="8" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <TextBlock Text="0" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
                                         <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
                                     <Grid Canvas.Top="40">
-                                        <TextBlock Text="9" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <TextBlock Text="1" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
                                         <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
                                     <Grid Canvas.Top="80">
-                                        <TextBlock Text="10" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <TextBlock Text="2" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
                                         <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
                                     <Grid Canvas.Top="120">
-                                        <TextBlock Text="11" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <TextBlock Text="3" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
                                         <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
                                     <Grid Canvas.Top="160">
-                                        <TextBlock Text="12" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <TextBlock Text="4" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
                                         <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
                                     <Grid Canvas.Top="200">
-                                        <TextBlock Text="13" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <TextBlock Text="5" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
                                         <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
                                     <Grid Canvas.Top="240">
-                                        <TextBlock Text="14" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <TextBlock Text="6" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
                                         <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
                                     <Grid Canvas.Top="280">
-                                        <TextBlock Text="15" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <TextBlock Text="7" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
                                         <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
                                     <Grid Canvas.Top="320">
-                                        <TextBlock Text="16" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <TextBlock Text="8" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
                                         <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
                                     <Grid Canvas.Top="360">
+                                        <TextBlock Text="9" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    </Grid>
+                                    <Grid Canvas.Top="400">
+                                        <TextBlock Text="10" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    </Grid>
+                                    <Grid Canvas.Top="440">
+                                        <TextBlock Text="11" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    </Grid>
+                                    <Grid Canvas.Top="480">
+                                        <TextBlock Text="12" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    </Grid>
+                                    <Grid Canvas.Top="520">
+                                        <TextBlock Text="13" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    </Grid>
+                                    <Grid Canvas.Top="560">
+                                        <TextBlock Text="14" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    </Grid>
+                                    <Grid Canvas.Top="600">
+                                        <TextBlock Text="15" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    </Grid>
+                                    <Grid Canvas.Top="640">
+                                        <TextBlock Text="16" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    </Grid>
+                                    <Grid Canvas.Top="680">
                                         <TextBlock Text="17" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    </Grid>
+                                    <Grid Canvas.Top="720">
+                                        <TextBlock Text="18" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    </Grid>
+                                    <Grid Canvas.Top="760">
+                                        <TextBlock Text="19" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    </Grid>
+                                    <Grid Canvas.Top="800">
+                                        <TextBlock Text="20" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    </Grid>
+                                    <Grid Canvas.Top="840">
+                                        <TextBlock Text="21" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    </Grid>
+                                    <Grid Canvas.Top="880">
+                                        <TextBlock Text="22" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    </Grid>
+                                    <Grid Canvas.Top="920">
+                                        <TextBlock Text="23" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
                                         <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
                                 </ItemsControl.Items>

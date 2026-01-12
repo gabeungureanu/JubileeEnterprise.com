@@ -8,6 +8,8 @@ public class MailFolder : INotifyPropertyChanged
     private bool _isExpanded = true;
     private bool _isSelected;
     private string _name = string.Empty;
+    private int _unreadCount;
+    private int _totalCount;
 
     public string Id { get; set; } = Guid.NewGuid().ToString();
 
@@ -24,8 +26,32 @@ public class MailFolder : INotifyPropertyChanged
         }
     }
     public FolderType Type { get; set; }
-    public int UnreadCount { get; set; }
-    public int TotalCount { get; set; }
+
+    public int UnreadCount
+    {
+        get => _unreadCount;
+        set
+        {
+            if (_unreadCount != value)
+            {
+                _unreadCount = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public int TotalCount
+    {
+        get => _totalCount;
+        set
+        {
+            if (_totalCount != value)
+            {
+                _totalCount = value;
+                OnPropertyChanged();
+            }
+        }
+    }
     public string Icon { get; set; } = string.Empty;
     public List<MailFolder> SubFolders { get; set; } = new();
     public string? ParentFolderId { get; set; }

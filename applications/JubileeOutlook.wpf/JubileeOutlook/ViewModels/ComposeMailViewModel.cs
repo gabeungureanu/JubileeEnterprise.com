@@ -123,9 +123,15 @@ public partial class ComposeMailViewModel : ObservableObject
         Attachments.Clear();
     }
 
-    public void StartComposing()
+    public void StartComposing(string? fromEmail = null)
     {
         IsComposing = true;
+
+        // Set the From field to the provided email, or keep default if not provided
+        if (!string.IsNullOrEmpty(fromEmail))
+        {
+            From = fromEmail;
+        }
     }
 }
 

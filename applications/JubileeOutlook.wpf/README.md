@@ -490,6 +490,59 @@ This application is part of the Jubilee Enterprise suite. Refer to the root repo
 - Value converters for UI formatting
 - Theme fixes for white text on ribbon buttons and labels
 
+### Version 1.2.0 (2026-01-12)
+- **Calendar View Enhancements**:
+  - Updated calendar to display current date correctly (January 12, 2026)
+  - Implemented full calendar view switching functionality:
+    - Day view: Single day column with hourly time slots
+    - Work Week view: Monday-Friday layout with time grid
+    - Week view: Full 7-day week (Sunday-Saturday) with time grid
+    - Month view: Monthly calendar grid with day-of-week headers
+  - Fixed calendar view button functionality to switch between views
+  - Updated date range display in header based on selected view
+  - 24-hour timeline (00:00-24:00) for accurate time slot representation
+
+- **New Event Window Improvements**:
+  - Removed unnecessary "to" label before time dropdown for cleaner UI
+  - Changed all label and time text colors to white for dark theme consistency
+  - Removed white border from date input field for seamless dark theme integration
+  - Set time dropdown text color to white for better visibility
+  - 24-hour timeline preview (00:00-24:00) in right panel
+  - Green event block accurately reflects selected start and end times
+  - Real-time preview updates as user changes time selection
+
+- **Event Validation and Saving**:
+  - Comprehensive event validation before saving:
+    - Event title required
+    - Valid start and end times required
+    - End time must be after start time
+  - In-context error messages with red banner display
+  - Window remains open on validation failure for corrections
+  - Window closes automatically on successful save
+  - Events persist to calendar view after creation
+
+- **Dynamic Event Rendering**:
+  - Events now display on calendar in correct date and time slots
+  - Event positioning based on 24-hour timeline (60px per hour scale)
+  - Event height calculated from duration
+  - Event colors match selected category (Blue, Green, Orange, Purple, Red, Yellow)
+  - EventTopPositionConverter: Calculates Canvas position from start time
+  - EventsByDateConverter: Filters events by date for each day column
+  - Events display with title, time range, and location
+
+- **Value Converters Added**:
+  - StringToVisibilityConverter: Shows/hides elements based on string content
+  - EventTopPositionConverter: Positions events on time grid
+  - EventsByDateConverter: Multi-value converter for date-based event filtering
+
+- **Bug Fixes**:
+  - Fixed UniformGrid cell count mismatch in Month view (required 42 cells for 6x7 grid)
+  - Fixed missing AddDaysConverter references in Week view
+  - Replaced converter bindings with static date values for Week view headers
+  - Fixed TextTransform property errors (not supported in WPF)
+  - Fixed duplicate Background attribute in Month view
+  - Fixed DatePicker border visibility issues with custom ControlTemplate
+
 ### Version 1.1.0 (2026-01-10)
 - **Email Composition Window**:
   - Full-featured compose mail view with dark theme

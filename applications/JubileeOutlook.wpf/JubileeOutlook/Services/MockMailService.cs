@@ -11,6 +11,7 @@ public class MockMailService : IMailService
     {
         InitializeFolders();
         InitializeMockMessages();
+        UpdateFolderCounts(); // Calculate correct unread counts after messages are initialized
     }
 
     private void InitializeFolders()
@@ -262,7 +263,9 @@ public class MockMailService : IMailService
         {
             var folderMessages = _messages.Where(m => m.FolderId == folder.Id).ToList();
             folder.TotalCount = folderMessages.Count;
-            folder.UnreadCount = folderMessages.Count(m => !m.IsRead);
+            var unreadCount = folderMessages.Count(m => !m.IsRead);
+            System.Diagnostics.Debug.WriteLine($"[MockMailService] Folder '{folder.Name}' - Total: {folder.TotalCount}, Unread: {unreadCount}");
+            folder.UnreadCount = unreadCount;
         }
     }
 }

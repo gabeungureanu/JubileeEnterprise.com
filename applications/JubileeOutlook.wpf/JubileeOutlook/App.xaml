@@ -21,6 +21,10 @@
             <helpers:ListToStringConverter x:Key="ListToStringConverter"/>
             <helpers:FileSizeConverter x:Key="FileSizeConverter"/>
             <helpers:AppModuleToBoolConverter x:Key="AppModuleToBoolConverter"/>
+            <helpers:EnumToVisibilityConverter x:Key="EnumToVisibilityConverter"/>
+            <helpers:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+            <helpers:EventTopPositionConverter x:Key="EventTopPositionConverter"/>
+            <helpers:EventsByDateConverter x:Key="EventsByDateConverter"/>
 
         </ResourceDictionary>
     </Application.Resources>

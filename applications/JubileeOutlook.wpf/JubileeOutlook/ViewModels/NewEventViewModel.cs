@@ -72,6 +72,9 @@ public partial class NewEventViewModel : ObservableObject
     [ObservableProperty]
     private string _eventTimeRange = "08:00 - 08:30";
 
+    [ObservableProperty]
+    private string _validationError = string.Empty;
+
     public CalendarEvent? CreatedEvent { get; private set; }
 
     public NewEventViewModel()
@@ -185,19 +188,53 @@ public partial class NewEventViewModel : ObservableObject
     [RelayCommand]
     private void SaveEvent()
     {
+        // Clear previous validation errors
+        ValidationError = string.Empty;
+
+        // Validate event title
+        if (string.IsNullOrWhiteSpace(EventTitle))
+        {
+            ValidationError = "Event title is required.";
+            return;
+        }
+
         // Parse start and end times
         var startDateTime = EventDate;
         var endDateTime = EventDate;
 
-        if (TimeSpan.TryParse(StartTime, out var start))
+        if (!TimeSpan.TryParse(StartTime, out var start))
         {
-            startDateTime = EventDate.Add(start);
+            ValidationError = "Invalid start time.";
+            return;
         }
 
-        if (TimeSpan.TryParse(EndTime, out var end))
+        if (!TimeSpan.TryParse(EndTime, out var end))
         {
-            endDateTime = EventDate.Add(end);
+            ValidationError = "Invalid end time.";
+            return;
         }
+
+        startDateTime = EventDate.Add(start);
+        endDateTime = EventDate.Add(end);
+
+        // Validate end time is after start time
+        if (endDateTime <= startDateTime)
+        {
+            ValidationError = "End time must be after start time.";
+            return;
+        }
+
+        // Determine event color based on category selection
+        var eventColor = SelectedCategory?.Name switch
+        {
+            "Blue category" => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(91, 155, 213)),
+            "Green category" => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(112, 173, 71)),
+            "Orange category" => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(237, 125, 49)),
+            "Purple category" => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(153, 102, 204)),
+            "Red category" => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(231, 72, 86)),
+            "Yellow category" => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 192, 0)),
+            _ => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(91, 155, 213))
+        };
 
         CreatedEvent = new CalendarEvent
         {
@@ -208,7 +245,9 @@ public partial class NewEventViewModel : ObservableObject
             Description = Description,
             IsAllDay = IsAllDay,
             Status = IsBusy ? EventStatus.Busy : EventStatus.Free,
-            Category = EventCategory.None
+            Category = EventCategory.None,
+            CalendarName = "My Calendar",
+            EventColor = eventColor
         };
 
         SaveCompleted?.Invoke(this, EventArgs.Empty);

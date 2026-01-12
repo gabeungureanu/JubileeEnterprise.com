@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using JubileeOutlook.Models;
 using JubileeOutlook.Services;
 using System.Collections.ObjectModel;
+using System.Windows.Threading;
 
 namespace JubileeOutlook.ViewModels;
 
@@ -25,6 +26,9 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private EmailMessage? _selectedMessage;
+
+    [ObservableProperty]
+    private EmailMessage? _displayedMessage;
 
     [ObservableProperty]
     private CalendarEvent? _selectedEvent;
@@ -141,10 +145,26 @@ public partial class MainViewModel : ObservableObject
 
     partial void OnSelectedMessageChanged(EmailMessage? value)
     {
-        if (value != null && !value.IsRead)
+        if (value != null)
         {
-            _ = _mailService.MarkAsReadAsync(value.Id, true);
-            value.IsRead = true;
+            // Mark as read if needed
+            if (!value.IsRead)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Marking email '{value.Subject}' as read");
+                _ = _mailService.MarkAsReadAsync(value.Id, true);
+                value.IsRead = true;
+
+                // Update unread count for the current folder by counting unread messages
+                if (SelectedFolder != null)
+                {
+                    var unreadCount = Messages.Count(m => !m.IsRead);
+                    System.Diagnostics.Debug.WriteLine($"[MainViewModel] Updating unread count to {unreadCount}");
+                    SelectedFolder.UnreadCount = unreadCount;
+                }
+            }
+
+            // Store the message for display in the reading pane
+            DisplayedMessage = value;
         }
     }
 
@@ -152,6 +172,13 @@ public partial class MainViewModel : ObservableObject
     {
         var messages = await _mailService.GetMessagesAsync(folderId);
         Messages = new ObservableCollection<EmailMessage>(messages);
+
+        // Update folder counts by counting the actual messages
+        if (SelectedFolder != null)
+        {
+            SelectedFolder.UnreadCount = Messages.Count(m => !m.IsRead);
+            SelectedFolder.TotalCount = Messages.Count;
+        }
     }
 
     private async Task LoadEventsAsync(DateTime startDate, DateTime endDate)

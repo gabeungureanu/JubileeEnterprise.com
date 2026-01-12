@@ -1,0 +1,184 @@
+<!-- This is a temporary file with the new calendar view implementations -->
+<!-- Day View - Single day column -->
+<Grid Visibility="{Binding ViewMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Day}">
+    <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <!-- Day Header -->
+    <Border Grid.Row="0" Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="60,12,0,12">
+        <StackPanel HorizontalAlignment="Center">
+            <TextBlock Text="{Binding SelectedDate, StringFormat='{}{0:ddd}'}" FontSize="11" Foreground="#888888"
+                       HorizontalAlignment="Center" Margin="0,0,0,4"/>
+            <TextBlock Text="{Binding SelectedDate, StringFormat='{}{0:dd}'}" FontSize="24" FontWeight="Light"
+                       Foreground="#CCCCCC" HorizontalAlignment="Center"/>
+        </StackPanel>
+    </Border>
+
+    <!-- Time Grid -->
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="60"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Time Labels (same as work week) -->
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="12 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="1 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="2 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="3 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="4 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="5 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="6 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="7 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="8 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="9 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="10 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="11 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="12 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="1 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="2 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="3 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="4 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="5 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="6 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="7 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="8 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="9 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="10 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="11 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+            </StackPanel>
+
+            <!-- Day Column -->
+            <Border Grid.Column="1" Style="{StaticResource DayColumnStyle}"/>
+        </Grid>
+    </ScrollViewer>
+</Grid>
+
+<!-- Week View - 7 day columns (Sunday-Saturday) -->
+<Grid Visibility="{Binding ViewMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Week}">
+    <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <!-- Day Headers -->
+    <Border Grid.Row="0" Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0,0,0,1">
+        <Grid Margin="60,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <ItemsControl ItemsSource="{Binding VisibleDays}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="1" Columns="7"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="8,12">
+                            <TextBlock Text="{Binding StringFormat='{}{0:ddd}'}" FontSize="11" Foreground="#888888"
+                                       HorizontalAlignment="Center" Margin="0,0,0,4" TextTransform="Uppercase"/>
+                            <TextBlock Text="{Binding StringFormat='{}{0:dd}'}" FontSize="24" FontWeight="Light"
+                                       Foreground="#CCCCCC" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+    </Border>
+
+    <!-- Time Grid with 7 columns -->
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="60"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Time Labels -->
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="12 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="1 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="2 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="3 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="4 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="5 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="6 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="7 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="8 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="9 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="10 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="11 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="12 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="1 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="2 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="3 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="4 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="5 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="6 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="7 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="8 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="9 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="10 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+                <TextBlock Text="11 PM" Style="{StaticResource TimeSlotLabelStyle}"/>
+            </StackPanel>
+
+            <!-- 7 Day Columns -->
+            <Border Grid.Column="1" Style="{StaticResource DayColumnStyle}"/>
+            <Border Grid.Column="2" Style="{StaticResource DayColumnStyle}"/>
+            <Border Grid.Column="3" Style="{StaticResource DayColumnStyle}"/>
+            <Border Grid.Column="4" Style="{StaticResource DayColumnStyle}"/>
+            <Border Grid.Column="5" Style="{StaticResource DayColumnStyle}"/>
+            <Border Grid.Column="6" Style="{StaticResource DayColumnStyle}"/>
+            <Border Grid.Column="7" Style="{StaticResource DayColumnStyle}"/>
+        </Grid>
+    </ScrollViewer>
+</Grid>
+
+<!-- Month View - Calendar grid -->
+<Grid Visibility="{Binding ViewMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Month}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Day of Week Headers -->
+            <UniformGrid Grid.Row="0" Rows="1" Columns="7" Margin="0,0,0,8">
+                <TextBlock Text="SUNDAY" FontSize="10" Foreground="#888888" HorizontalAlignment="Center" Padding="8,4"/>
+                <TextBlock Text="MONDAY" FontSize="10" Foreground="#888888" HorizontalAlignment="Center" Padding="8,4"/>
+                <TextBlock Text="TUESDAY" FontSize="10" Foreground="#888888" HorizontalAlignment="Center" Padding="8,4"/>
+                <TextBlock Text="WEDNESDAY" FontSize="10" Foreground="#888888" HorizontalAlignment="Center" Padding="8,4"/>
+                <TextBlock Text="THURSDAY" FontSize="10" Foreground="#888888" HorizontalAlignment="Center" Padding="8,4"/>
+                <TextBlock Text="FRIDAY" FontSize="10" Foreground="#888888" HorizontalAlignment="Center" Padding="8,4"/>
+                <TextBlock Text="SATURDAY" FontSize="10" Foreground="#888888" HorizontalAlignment="Center" Padding="8,4"/>
+            </UniformGrid>
+
+            <!-- Calendar Grid (5 weeks x 7 days) -->
+            <UniformGrid Grid.Row="1" Rows="5" Columns="7">
+                <!-- Placeholder cells - in a real implementation, these would be data-bound -->
+                <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
+                    <TextBlock Text="..." FontSize="14" Foreground="#555555" Margin="8" VerticalAlignment="Top"/>
+                </Border>
+            </UniformGrid>
+        </Grid>
+    </ScrollViewer>
+</Grid>
