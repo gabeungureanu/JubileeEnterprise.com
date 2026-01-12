@@ -25,6 +25,8 @@ namespace JubileeFlywheel
             services.AddSingleton<IApiService, ApiService>();
             services.AddSingleton<ISettingsService, SettingsService>();
             services.AddSingleton<IDataCacheService, DataCacheService>();
+            services.AddSingleton<ISymbolService, SymbolService>();
+            services.AddSingleton<IOhlcAggregationEngine, OhlcAggregationEngine>();
 
             services.AddTransient<MainViewModel>();
             services.AddTransient<DashboardViewModel>();

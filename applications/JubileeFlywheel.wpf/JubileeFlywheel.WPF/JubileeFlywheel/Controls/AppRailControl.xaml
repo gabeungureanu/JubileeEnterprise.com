@@ -1,0 +1,107 @@
+<UserControl x:Class="JubileeFlywheel.Controls.AppRailControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="600"
+             d:DesignWidth="48">
+
+    <Border Background="{StaticResource SecondaryBackgroundBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="0,0,1,0">
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- Menu Button at Top -->
+                <RowDefinition Height="Auto"/>
+                <!-- Module Buttons -->
+                <RowDefinition Height="*"/>
+                <!-- Settings at Bottom -->
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Menu/Hamburger Button at Top -->
+            <Button Grid.Row="0"
+                    Style="{StaticResource AppRailMenuButtonStyle}"
+                    Click="MenuButton_Click"
+                    ToolTip="Menu"
+                    Margin="0,8,0,0">
+                <TextBlock Text="{StaticResource IconMenu}"
+                           FontFamily="{StaticResource MaterialIcons}"
+                           FontSize="20"
+                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+            </Button>
+
+            <!-- Module Buttons in Middle -->
+            <StackPanel Grid.Row="1" VerticalAlignment="Top" Margin="0,16,0,0">
+                <RadioButton x:Name="InboxModule"
+                             GroupName="FlywheelModules"
+                             Style="{StaticResource AppRailButtonStyle}"
+                             IsChecked="True"
+                             Checked="ModuleButton_Checked"
+                             ToolTip="Watchlist">
+                    <TextBlock Text="{StaticResource IconWatchlist}"
+                               FontFamily="{StaticResource MaterialIcons}"
+                               FontSize="22"
+                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                </RadioButton>
+
+                <RadioButton x:Name="ChartsModule"
+                             GroupName="FlywheelModules"
+                             Style="{StaticResource AppRailButtonStyle}"
+                             Checked="ModuleButton_Checked"
+                             ToolTip="Charts">
+                    <TextBlock Text="{StaticResource IconShowChart}"
+                               FontFamily="{StaticResource MaterialIcons}"
+                               FontSize="22"
+                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                </RadioButton>
+
+                <RadioButton x:Name="PortfolioModule"
+                             GroupName="FlywheelModules"
+                             Style="{StaticResource AppRailButtonStyle}"
+                             Checked="ModuleButton_Checked"
+                             ToolTip="Portfolio">
+                    <TextBlock Text="{StaticResource IconPortfolio}"
+                               FontFamily="{StaticResource MaterialIcons}"
+                               FontSize="22"
+                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                </RadioButton>
+
+                <RadioButton x:Name="AccountsModule"
+                             GroupName="FlywheelModules"
+                             Style="{StaticResource AppRailButtonStyle}"
+                             Checked="ModuleButton_Checked"
+                             ToolTip="Accounts">
+                    <TextBlock Text="{StaticResource IconAccount}"
+                               FontFamily="{StaticResource MaterialIcons}"
+                               FontSize="22"
+                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                </RadioButton>
+
+                <RadioButton x:Name="DataModule"
+                             GroupName="FlywheelModules"
+                             Style="{StaticResource AppRailButtonStyle}"
+                             Checked="ModuleButton_Checked"
+                             ToolTip="Data Sources">
+                    <TextBlock Text="{StaticResource IconApi}"
+                               FontFamily="{StaticResource MaterialIcons}"
+                               FontSize="22"
+                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
+                </RadioButton>
+            </StackPanel>
+
+            <!-- Settings Button at Bottom -->
+            <Button Grid.Row="2"
+                    Style="{StaticResource AppRailMenuButtonStyle}"
+                    Click="SettingsButton_Click"
+                    ToolTip="Settings"
+                    Margin="0,0,0,12">
+                <TextBlock Text="{StaticResource IconSettings}"
+                           FontFamily="{StaticResource MaterialIcons}"
+                           FontSize="20"
+                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+            </Button>
+        </Grid>
+    </Border>
+</UserControl>

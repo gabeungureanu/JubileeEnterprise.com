@@ -99,5 +99,23 @@ namespace JubileeFlywheel.Views
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         }
+
+        private void CollapseWidgetsButton_Click(object sender, RoutedEventArgs e)
+        {
+            WidgetsPanel.Height = 0;
+            ExpandWidgetsButton.Visibility = Visibility.Visible;
+        }
+
+        private void ExpandWidgetsButton_Click(object sender, RoutedEventArgs e)
+        {
+            WidgetsPanel.Height = 250;
+            ExpandWidgetsButton.Visibility = Visibility.Collapsed;
+        }
+
+        public void LoadSymbol(string symbol)
+        {
+            MainStockChart.CurrentSymbol = symbol;
+            _ = MainStockChart.LoadChartDataAsync(symbol, Models.TimeResolution.OneMinute);
+        }
     }
 }

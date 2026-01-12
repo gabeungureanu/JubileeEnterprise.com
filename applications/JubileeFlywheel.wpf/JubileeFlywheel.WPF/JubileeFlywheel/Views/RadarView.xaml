@@ -1,0 +1,507 @@
+<UserControl x:Class="JubileeFlywheel.Views.RadarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1400"
+             Background="{StaticResource PrimaryBackgroundBrush}">
+
+    <UserControl.Resources>
+        <!-- Bullish Cell Style -->
+        <Style x:Key="BullishCellStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource BullishBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="4,2"/>
+        </Style>
+
+        <!-- Bearish Cell Style -->
+        <Style x:Key="BearishCellStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource BearishBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="4,2"/>
+        </Style>
+
+        <!-- Highlight Cell Background -->
+        <Style x:Key="HighlightCellStyle" TargetType="Border">
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="CornerRadius" Value="2"/>
+        </Style>
+
+        <!-- DataGrid Header Style -->
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{StaticResource SecondaryBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        </Style>
+
+        <!-- DataGrid Cell Style -->
+        <Style TargetType="DataGridCell">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,1,0"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource TertiaryBackgroundBrush}"/>
+                    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- DataGrid Row Style -->
+        <Style TargetType="DataGridRow">
+            <Setter Property="Background" Value="{StaticResource PrimaryBackgroundBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource TertiaryBackgroundBrush}"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource TertiaryBackgroundBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- Toolbar -->
+            <RowDefinition Height="Auto"/>
+            <!-- DataGrid -->
+            <RowDefinition Height="*"/>
+            <!-- Status Bar -->
+            <RowDefinition Height="28"/>
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <Border Grid.Row="0" Background="{StaticResource SecondaryBackgroundBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+            <Grid Margin="12,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Title -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{StaticResource IconWatchlist}"
+                               FontFamily="{StaticResource MaterialIcons}"
+                               FontSize="18" VerticalAlignment="Center"
+                               Foreground="{StaticResource GoldBrandBrush}"
+                               Margin="0,0,8,0"/>
+                    <TextBlock Text="Radar Screen - Page 1"
+                               FontSize="14" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Timeframe and Studies -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="24,0,0,0">
+                    <ComboBox x:Name="TimeframeCombo" Width="100" Margin="0,0,8,0"
+                              SelectedIndex="0">
+                        <ComboBoxItem Content="Daily"/>
+                        <ComboBoxItem Content="Weekly"/>
+                        <ComboBoxItem Content="Monthly"/>
+                        <ComboBoxItem Content="1 Min"/>
+                        <ComboBoxItem Content="5 Min"/>
+                        <ComboBoxItem Content="15 Min"/>
+                        <ComboBoxItem Content="60 Min"/>
+                    </ComboBox>
+
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                            Content="Studies" Padding="12,6" Margin="0,0,8,0"
+                            Click="StudiesButton_Click"/>
+
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                            Content="Data" Padding="12,6" Margin="0,0,8,0"
+                            Click="DataButton_Click"/>
+
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                            Content="Settings" Padding="12,6"
+                            Click="SettingsButton_Click"/>
+                </StackPanel>
+
+                <!-- Search -->
+                <Grid Grid.Column="2" MaxWidth="200" HorizontalAlignment="Right" Margin="16,0">
+                    <TextBox x:Name="SearchTextBox" Style="{StaticResource ModernTextBoxStyle}"
+                             TextChanged="SearchTextBox_TextChanged"/>
+                    <TextBlock Text="Filter symbols..."
+                               Foreground="{StaticResource TextTertiaryBrush}"
+                               IsHitTestVisible="False" VerticalAlignment="Center"
+                               Margin="12,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Text, ElementName=SearchTextBox}" Value="">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+
+                <!-- Actions -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal">
+                    <Button Style="{StaticResource PrimaryButtonStyle}"
+                            Click="RefreshButton_Click" Padding="12,6">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{StaticResource IconRefresh}"
+                                       FontFamily="{StaticResource MaterialIcons}"
+                                       FontSize="14" VerticalAlignment="Center"
+                                       Margin="0,0,6,0"/>
+                            <TextBlock Text="Refresh" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Radar Screen DataGrid -->
+        <DataGrid x:Name="RadarDataGrid" Grid.Row="1"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  SelectionUnit="FullRow"
+                  GridLinesVisibility="Vertical"
+                  VerticalGridLinesBrush="{StaticResource BorderBrush}"
+                  Background="{StaticResource PrimaryBackgroundBrush}"
+                  BorderThickness="0"
+                  RowHeaderWidth="0"
+                  CanUserResizeColumns="True"
+                  CanUserReorderColumns="True"
+                  CanUserSortColumns="True"
+                  SelectionChanged="RadarDataGrid_SelectionChanged"
+                  MouseDoubleClick="RadarDataGrid_MouseDoubleClick">
+
+            <DataGrid.Columns>
+                <!-- Symbol -->
+                <DataGridTemplateColumn Header="Symbol" Width="70" SortMemberPath="Symbol">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Symbol}"
+                                       Foreground="{StaticResource AccentBrush}"
+                                       FontWeight="SemiBold" VerticalAlignment="Center"
+                                       Padding="4,2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Description -->
+                <DataGridTemplateColumn Header="Description" Width="150" SortMemberPath="Description">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Description}"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       TextTrimming="CharacterEllipsis"
+                                       VerticalAlignment="Center" Padding="4,2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Last -->
+                <DataGridTemplateColumn Header="Last" Width="70" SortMemberPath="Last">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Last, StringFormat='{}{0:N2}'}"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       Padding="4,2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Net Chg -->
+                <DataGridTemplateColumn Header="Net Chg" Width="65" SortMemberPath="NetChg">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding NetChg, StringFormat='{}{0:N2}'}"
+                                       Foreground="{Binding NetChgColor}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       Padding="4,2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Net %Chg -->
+                <DataGridTemplateColumn Header="Net %Chg" Width="70" SortMemberPath="NetPctChg">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding NetPctChg, StringFormat='{}{0:N2}%'}"
+                                       Foreground="{Binding NetChgColor}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       Padding="4,2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Volume Today -->
+                <DataGridTemplateColumn Header="Volume Today" Width="90" SortMemberPath="Volume">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Volume, StringFormat='{}{0:N0}'}"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       Padding="4,2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Interval -->
+                <DataGridTemplateColumn Header="Interval" Width="55" SortMemberPath="Interval">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Interval}"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" Padding="4,2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- MACD -->
+                <DataGridTemplateColumn Header="MACD" Width="55" SortMemberPath="Macd">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="{Binding MomentumColor}" Opacity="0.3"
+                                    CornerRadius="2" Padding="4,2">
+                                <TextBlock Text="{Binding Macd, StringFormat='{}{0:N2}'}"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- MACD Diff -->
+                <DataGridTemplateColumn Header="MACDDiff" Width="65" SortMemberPath="MacdDiff">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding MacdDiff, StringFormat='{}{0:N2}'}"
+                                       Foreground="{Binding MomentumColor}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       Padding="4,2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Momentum -->
+                <DataGridTemplateColumn Header="Momentum" Width="75" SortMemberPath="Momentum">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="{Binding MomentumColor}" Opacity="0.4"
+                                    CornerRadius="2" Padding="4,2">
+                                <TextBlock Text="{Binding Momentum, StringFormat='{}{0:N2}'}"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Upper Band -->
+                <DataGridTemplateColumn Header="UpperBand" Width="75" SortMemberPath="UpperBand">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="#4000C853" CornerRadius="2" Padding="4,2">
+                                <TextBlock Text="{Binding UpperBand, StringFormat='{}{0:N2}'}"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Lower Band -->
+                <DataGridTemplateColumn Header="LowerBand" Width="75" SortMemberPath="LowerBand">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="#40FF1744" CornerRadius="2" Padding="4,2">
+                                <TextBlock Text="{Binding LowerBand, StringFormat='{}{0:N2}'}"
+                                           Foreground="{StaticResource TextPrimaryBrush}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Candlestick Pattern -->
+                <DataGridTemplateColumn Header="#Candlestick Patt..." Width="120" SortMemberPath="CandlestickPattern">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="{Binding PatternColor}" Opacity="0.6"
+                                    CornerRadius="2" Padding="4,2"
+                                    Visibility="{Binding CandlestickPattern, Converter={StaticResource StringToVisibilityConverter}}">
+                                <TextBlock Text="{Binding CandlestickPattern}"
+                                           Foreground="{StaticResource PrimaryBackgroundBrush}"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Signal -->
+                <DataGridTemplateColumn Header="Signal" Width="70" SortMemberPath="SignalText">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="{Binding SignalBackground}"
+                                    CornerRadius="2" Padding="6,2"
+                                    HorizontalAlignment="Center"
+                                    Visibility="{Binding SignalText, Converter={StaticResource StringToVisibilityConverter}}">
+                                <TextBlock Text="{Binding SignalText}"
+                                           Foreground="White" FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- MACD RS Alert -->
+                <DataGridTemplateColumn Header="MACD RS Alert" Width="90" SortMemberPath="MacdRsAlert">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding MacdRsAlert}"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       VerticalAlignment="Center" Padding="4,2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- MACD Diff -->
+                <DataGridTemplateColumn Header="MACD Diff" Width="70" SortMemberPath="MacdRsDiff">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding MacdRsDiff, StringFormat='{}{0:N3}'}"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       Padding="4,2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- X Bars Ago -->
+                <DataGridTemplateColumn Header="X Bars Ago" Width="70" SortMemberPath="XBarsAgo">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding XBarsAgo}"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       Padding="4,2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- RSI RS Signal -->
+                <DataGridTemplateColumn Header="Signal" Width="85" SortMemberPath="RsiAlert">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="{Binding RsiAlertBackground}"
+                                    CornerRadius="2" Padding="6,2"
+                                    HorizontalAlignment="Center"
+                                    Visibility="{Binding RsiAlert, Converter={StaticResource StringToVisibilityConverter}}">
+                                <TextBlock Text="{Binding RsiAlert}"
+                                           Foreground="White" FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- RSI Alert -->
+                <DataGridTemplateColumn Header="Alert" Width="85" SortMemberPath="RsiCondition">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="{Binding RsiAlertBackground}"
+                                    CornerRadius="2" Padding="6,2"
+                                    HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding RsiCondition}"
+                                           Foreground="White"
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- RSI -->
+                <DataGridTemplateColumn Header="RSI" Width="55" SortMemberPath="Rsi">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Rsi, StringFormat='{}{0:N2}'}"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       Padding="4,2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2" Background="{StaticResource SecondaryBackgroundBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
+            <Grid Margin="12,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Page Tabs -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="MyRadarScreen" Style="{StaticResource SecondaryButtonStyle}"
+                            Padding="8,2" FontSize="10" Margin="0,0,4,0"/>
+                    <Button Content="RS RadarScreen" Style="{StaticResource PrimaryButtonStyle}"
+                            Padding="8,2" FontSize="10" Margin="0,0,4,0"/>
+                    <Button Content="+" Style="{StaticResource IconButtonStyle}"
+                            Width="20" Height="20" ToolTip="Add Page"/>
+                </StackPanel>
+
+                <!-- SIM Status -->
+                <TextBlock Grid.Column="1" x:Name="SimIdText"
+                           Text="SIM1393533M" FontSize="10"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           VerticalAlignment="Center" Margin="24,0,0,0"/>
+
+                <!-- Stats -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Positions:" FontSize="10"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Margin="0,0,4,0"/>
+                    <TextBlock x:Name="PositionsText" Text="3" FontSize="10"
+                               Foreground="{StaticResource TextPrimaryBrush}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                    <TextBlock Text="Buying Power:" FontSize="10"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Margin="0,0,4,0"/>
+                    <TextBlock x:Name="BuyingPowerText" Text="$5,723,865" FontSize="10"
+                               Foreground="{StaticResource BullishBrush}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="5" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                    <TextBlock Text="Open P/L:" FontSize="10"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Margin="0,0,4,0"/>
+                    <TextBlock x:Name="OpenPLText" Text="$1,198" FontSize="10"
+                               Foreground="{StaticResource BullishBrush}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

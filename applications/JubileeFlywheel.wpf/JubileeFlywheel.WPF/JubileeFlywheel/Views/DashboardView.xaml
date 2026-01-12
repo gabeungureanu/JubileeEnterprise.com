@@ -7,96 +7,150 @@
              xmlns:controls="clr-namespace:JubileeFlywheel.Controls"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1200"
-             Background="{StaticResource BgPrimaryBrush}">
+             Background="{StaticResource PrimaryBackgroundBrush}">
 
-    <Grid Margin="16">
+    <Grid>
         <Grid.RowDefinitions>
+            <!-- Main Chart Area -->
+            <RowDefinition Height="*" MinHeight="300"/>
+            <!-- Splitter -->
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <!-- Dashboard Widgets -->
+            <RowDefinition Height="Auto" MinHeight="0"/>
         </Grid.RowDefinitions>
 
-        <!-- Dashboard Header -->
-        <Border Grid.Row="0" Margin="0,0,0,16">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+        <!-- Main Stock Chart -->
+        <controls:StockChartControl x:Name="MainStockChart" Grid.Row="0"/>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <TextBlock x:Name="DashboardTitle" Text="My Dashboard"
-                               FontSize="24" FontWeight="SemiBold"
-                               Foreground="{StaticResource TextPrimaryBrush}"
-                               VerticalAlignment="Center"/>
-                    <ComboBox x:Name="DashboardSelector" Margin="16,0,0,0"
-                              MinWidth="150" VerticalAlignment="Center"
-                              SelectionChanged="DashboardSelector_SelectionChanged"/>
-                </StackPanel>
+        <!-- Horizontal Splitter -->
+        <GridSplitter Grid.Row="1" Height="4" HorizontalAlignment="Stretch"
+                      VerticalAlignment="Center"
+                      Background="{StaticResource BorderBrush}"
+                      Cursor="SizeNS"/>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Content="Edit Layout" x:Name="EditLayoutButton"
-                            Click="EditLayoutButton_Click" Margin="0,0,8,0"/>
-                    <Button Content="New Dashboard" Click="NewDashboardButton_Click"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+        <!-- Widgets Panel (Collapsed by default) -->
+        <Grid Grid.Row="2" x:Name="WidgetsPanel" Height="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <!-- Widgets Grid -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Disabled">
-            <ItemsControl x:Name="WidgetsContainer">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <UniformGrid Columns="4" Rows="3"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border Style="{StaticResource CardBorder}" Margin="8">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
+            <!-- Dashboard Header -->
+            <Border Grid.Row="0" Background="{StaticResource SecondaryBackgroundBrush}"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                <Grid Margin="16,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                                <!-- Widget Header -->
-                                <Grid Grid.Row="0" Margin="0,0,0,8">
-                                    <TextBlock Text="{Binding Title}"
-                                               FontSize="14" FontWeight="SemiBold"
-                                               Foreground="{StaticResource TextPrimaryBrush}"/>
-                                    <Button Content="X" HorizontalAlignment="Right"
-                                            Width="24" Height="24" Padding="0"
-                                            Click="RemoveWidgetButton_Click"
-                                            ToolTip="Remove widget"
-                                            Tag="{Binding}"/>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <TextBlock x:Name="DashboardTitle" Text="Dashboard Widgets"
+                                   FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center"/>
+                        <ComboBox x:Name="DashboardSelector" Margin="16,0,0,0"
+                                  MinWidth="150" VerticalAlignment="Center"
+                                  SelectionChanged="DashboardSelector_SelectionChanged"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button Style="{StaticResource SecondaryButtonStyle}"
+                                Content="Edit Layout" x:Name="EditLayoutButton"
+                                Click="EditLayoutButton_Click" Margin="0,0,8,0"
+                                Padding="12,6"/>
+                        <Button Style="{StaticResource SecondaryButtonStyle}"
+                                Content="New Dashboard" Click="NewDashboardButton_Click"
+                                Padding="12,6"/>
+                        <Button Style="{StaticResource IconButtonStyle}"
+                                Click="CollapseWidgetsButton_Click"
+                                ToolTip="Collapse Widgets" Margin="8,0,0,0">
+                            <TextBlock Text="{StaticResource IconCollapse}"
+                                       FontFamily="{StaticResource MaterialIcons}"
+                                       FontSize="16"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Widgets Grid -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Margin="8">
+                <ItemsControl x:Name="WidgetsContainer">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="4" Rows="2"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardBorder}" Margin="8" MinHeight="120">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Widget Header -->
+                                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                                        <TextBlock Text="{Binding Title}"
+                                                   FontSize="12" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                                        <Button Style="{StaticResource IconButtonStyle}"
+                                                HorizontalAlignment="Right"
+                                                Width="20" Height="20"
+                                                Click="RemoveWidgetButton_Click"
+                                                ToolTip="Remove widget"
+                                                Tag="{Binding}">
+                                            <TextBlock Text="{StaticResource IconClose}"
+                                                       FontFamily="{StaticResource MaterialIcons}"
+                                                       FontSize="12"/>
+                                        </Button>
+                                    </Grid>
+
+                                    <!-- Widget Content -->
+                                    <ContentControl Grid.Row="1" Content="{Binding}">
+                                        <ContentControl.ContentTemplateSelector>
+                                            <controls:WidgetTemplateSelector/>
+                                        </ContentControl.ContentTemplateSelector>
+                                    </ContentControl>
                                 </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
 
-                                <!-- Widget Content -->
-                                <ContentControl Grid.Row="1" Content="{Binding}">
-                                    <ContentControl.ContentTemplateSelector>
-                                        <controls:WidgetTemplateSelector/>
-                                    </ContentControl.ContentTemplateSelector>
-                                </ContentControl>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+            <!-- Empty State -->
+            <Border x:Name="EmptyState" Grid.Row="1" Visibility="Collapsed"
+                    Background="{StaticResource CardBackgroundBrush}"
+                    CornerRadius="8" Margin="16">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="No widgets yet" FontSize="16"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                    <TextBlock Text="Click 'Add Widget' to add market indicators"
+                               Foreground="{StaticResource TextTertiaryBrush}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </Grid>
 
-        <!-- Empty State -->
-        <Border x:Name="EmptyState" Grid.Row="1" Visibility="Collapsed"
-                Background="{StaticResource BgSecondaryBrush}"
-                CornerRadius="8">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <TextBlock Text="No widgets yet" FontSize="18"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                <TextBlock Text="Click 'Add Widget' to get started"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           HorizontalAlignment="Center"/>
+        <!-- Toggle Widgets Button (shows when collapsed) -->
+        <Button x:Name="ExpandWidgetsButton" Grid.Row="2"
+                Style="{StaticResource SecondaryButtonStyle}"
+                HorizontalAlignment="Center" VerticalAlignment="Top"
+                Click="ExpandWidgetsButton_Click"
+                Margin="0,8,0,0" Padding="16,6"
+                Visibility="Visible">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{StaticResource IconExpand}"
+                           FontFamily="{StaticResource MaterialIcons}"
+                           FontSize="14" VerticalAlignment="Center"
+                           Margin="0,0,6,0"/>
+                <TextBlock Text="Show Widgets" VerticalAlignment="Center"/>
             </StackPanel>
-        </Border>
+        </Button>
     </Grid>
 
     <UserControl.Resources>
@@ -138,12 +192,12 @@
                               InitialRotation="-90"
                               MaxAngle="180"/>
                 <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Center"
-                            Margin="0,0,0,20">
+                            Margin="0,0,0,10">
                     <TextBlock Text="{Binding GaugeValue, StringFormat={}{0:N0}}"
-                               FontSize="32" FontWeight="Bold"
-                               Foreground="{StaticResource JubileeAccentBrush}"
+                               FontSize="24" FontWeight="Bold"
+                               Foreground="{StaticResource GoldBrandBrush}"
                                HorizontalAlignment="Center"/>
-                    <TextBlock Text="%" FontSize="14"
+                    <TextBlock Text="%" FontSize="11"
                                Foreground="{StaticResource TextSecondaryBrush}"
                                HorizontalAlignment="Center"/>
                 </StackPanel>
@@ -154,31 +208,28 @@
         <DataTemplate x:Key="KpiCardTemplate">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <TextBlock Text="{Binding KpiValue, StringFormat={}{0:N0}}"
-                           FontSize="36" FontWeight="Bold"
-                           Foreground="{StaticResource JubileeAccentBrush}"
+                           FontSize="28" FontWeight="Bold"
+                           Foreground="{StaticResource GoldBrandBrush}"
                            HorizontalAlignment="Center"/>
                 <TextBlock Text="{Binding KpiUnit}"
-                           FontSize="14"
+                           FontSize="11"
                            Foreground="{StaticResource TextSecondaryBrush}"
-                           HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                           HorizontalAlignment="Center" Margin="0,2,0,0"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
-                            Margin="0,8,0,0">
+                            Margin="0,4,0,0">
                     <TextBlock Text="{Binding KpiChange, StringFormat={}{0:+0.0;-0.0}%}"
-                               FontSize="14"
-                               Foreground="{StaticResource SuccessBrush}"/>
-                    <TextBlock Text=" vs last period"
                                FontSize="12"
-                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                               Foreground="{StaticResource BullishBrush}"/>
                 </StackPanel>
             </StackPanel>
         </DataTemplate>
 
         <!-- Data Grid Widget Template -->
         <DataTemplate x:Key="DataGridWidgetTemplate">
-            <TextBlock Text="Configure data source in Data Grid view"
-                       Foreground="{StaticResource TextSecondaryBrush}"
+            <TextBlock Text="Configure data source"
+                       Foreground="{StaticResource TextTertiaryBrush}"
                        VerticalAlignment="Center" HorizontalAlignment="Center"
-                       TextWrapping="Wrap" TextAlignment="Center"/>
+                       TextWrapping="Wrap" TextAlignment="Center" FontSize="11"/>
         </DataTemplate>
     </UserControl.Resources>
 </UserControl>

@@ -1,45 +1,19 @@
 <Application x:Class="JubileeFlywheel.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:JubileeFlywheel"
+             xmlns:converters="clr-namespace:JubileeFlywheel.Converters"
              StartupUri="MainWindow.xaml"
              ShutdownMode="OnLastWindowClose">
     <Application.Resources>
         <ResourceDictionary>
-            <!-- Global Color Definitions - Jubilee Dark Theme -->
-            <Color x:Key="BgPrimaryColor">#1a1a2e</Color>
-            <Color x:Key="BgSecondaryColor">#16213e</Color>
-            <Color x:Key="BgTertiaryColor">#0f3460</Color>
-            <Color x:Key="AccentColor">#e94560</Color>
-            <Color x:Key="JubileeAccentColor">#E6AC00</Color>
-            <Color x:Key="SuccessColor">#4CAF50</Color>
-            <Color x:Key="WarningColor">#FF9800</Color>
-            <Color x:Key="ErrorColor">#F44336</Color>
-            <Color x:Key="InfoColor">#2196F3</Color>
-            <Color x:Key="TextPrimaryColor">#ffffff</Color>
-            <Color x:Key="TextSecondaryColor">#a0a0a0</Color>
-            <Color x:Key="BorderColor">#2a2a4e</Color>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Dark Theme with all styles -->
+                <ResourceDictionary Source="Themes/DarkTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
 
-            <SolidColorBrush x:Key="BgPrimaryBrush" Color="{StaticResource BgPrimaryColor}"/>
-            <SolidColorBrush x:Key="BgSecondaryBrush" Color="{StaticResource BgSecondaryColor}"/>
-            <SolidColorBrush x:Key="BgTertiaryBrush" Color="{StaticResource BgTertiaryColor}"/>
-            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
-            <SolidColorBrush x:Key="JubileeAccentBrush" Color="{StaticResource JubileeAccentColor}"/>
-            <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}"/>
-            <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}"/>
-            <SolidColorBrush x:Key="ErrorBrush" Color="{StaticResource ErrorColor}"/>
-            <SolidColorBrush x:Key="InfoBrush" Color="{StaticResource InfoColor}"/>
-            <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}"/>
-            <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
-            <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
-
-            <!-- Chart Colors -->
-            <Color x:Key="Chart1Color">#4CAF50</Color>
-            <Color x:Key="Chart2Color">#2196F3</Color>
-            <Color x:Key="Chart3Color">#E6AC00</Color>
-            <Color x:Key="Chart4Color">#e94560</Color>
-            <Color x:Key="Chart5Color">#9C27B0</Color>
-            <Color x:Key="Chart6Color">#00BCD4</Color>
+            <!-- Converters -->
+            <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
 
             <!-- Global ScrollBar Style -->
             <Style TargetType="ScrollBar">
@@ -49,7 +23,7 @@
 
             <!-- Global Button Style -->
             <Style TargetType="Button">
-                <Setter Property="Background" Value="{StaticResource BgTertiaryBrush}"/>
+                <Setter Property="Background" Value="{StaticResource TertiaryBackgroundBrush}"/>
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
                 <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
@@ -67,7 +41,7 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource JubileeAccentBrush}"/>
+                                    <Setter Property="Background" Value="{StaticResource GoldBrandBrush}"/>
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
                                     <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
@@ -80,7 +54,7 @@
 
             <!-- Global TextBox Style -->
             <Style TargetType="TextBox">
-                <Setter Property="Background" Value="{StaticResource BgSecondaryBrush}"/>
+                <Setter Property="Background" Value="{StaticResource SecondaryBackgroundBrush}"/>
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
                 <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
@@ -90,7 +64,7 @@
 
             <!-- Global ComboBox Style -->
             <Style TargetType="ComboBox">
-                <Setter Property="Background" Value="{StaticResource BgSecondaryBrush}"/>
+                <Setter Property="Background" Value="{StaticResource SecondaryBackgroundBrush}"/>
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
                 <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
@@ -99,7 +73,7 @@
 
             <!-- Global ContextMenu Style -->
             <Style TargetType="ContextMenu">
-                <Setter Property="Background" Value="{StaticResource BgSecondaryBrush}"/>
+                <Setter Property="Background" Value="{StaticResource SecondaryBackgroundBrush}"/>
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
                 <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
@@ -114,50 +88,17 @@
 
             <!-- Global ToolTip Style -->
             <Style TargetType="ToolTip">
-                <Setter Property="Background" Value="{StaticResource BgSecondaryBrush}"/>
+                <Setter Property="Background" Value="{StaticResource SecondaryBackgroundBrush}"/>
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
                 <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
                 <Setter Property="Padding" Value="8,4"/>
             </Style>
 
-            <!-- Card Style for Dashboard Widgets -->
-            <Style x:Key="CardBorder" TargetType="Border">
-                <Setter Property="Background" Value="{StaticResource BgSecondaryBrush}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
-                <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="CornerRadius" Value="8"/>
-                <Setter Property="Padding" Value="16"/>
-            </Style>
-
-            <!-- Navigation Tab Style -->
-            <Style x:Key="NavTabStyle" TargetType="RadioButton">
-                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
-                <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="Padding" Value="16,8"/>
-                <Setter Property="Margin" Value="4,0"/>
-                <Setter Property="Cursor" Value="Hand"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="RadioButton">
-                            <Border x:Name="border" Background="{TemplateBinding Background}"
-                                    CornerRadius="4" Padding="{TemplateBinding Padding}">
-                                <ContentPresenter HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsChecked" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource BgTertiaryBrush}"/>
-                                    <Setter Property="Foreground" Value="{StaticResource JubileeAccentBrush}"/>
-                                </Trigger>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="border" Property="Background"
-                                            Value="{StaticResource BgTertiaryBrush}"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
+            <!-- Legacy Brush Aliases for backwards compatibility -->
+            <SolidColorBrush x:Key="BgPrimaryBrush" Color="{StaticResource PrimaryBackgroundColor}"/>
+            <SolidColorBrush x:Key="BgSecondaryBrush" Color="{StaticResource SecondaryBackgroundColor}"/>
+            <SolidColorBrush x:Key="BgTertiaryBrush" Color="{StaticResource TertiaryBackgroundColor}"/>
+            <SolidColorBrush x:Key="JubileeAccentBrush" Color="{StaticResource GoldBrandColor}"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

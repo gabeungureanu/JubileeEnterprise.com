@@ -4,111 +4,373 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:JubileeFlywheel"
+        xmlns:controls="clr-namespace:JubileeFlywheel.Controls"
         xmlns:views="clr-namespace:JubileeFlywheel.Views"
-        xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
         mc:Ignorable="d"
-        Title="Jubilee Flywheel - Data Visualization Dashboard"
+        Title="Jubilee Flywheel"
         Height="900" Width="1400"
         MinHeight="600" MinWidth="1000"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource BgPrimaryBrush}">
+        WindowStyle="None"
+        AllowsTransparency="False"
+        Background="{StaticResource PrimaryBackgroundBrush}"
+        ResizeMode="CanResizeWithGrip"
+        StateChanged="Window_StateChanged">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="40"
+                      CornerRadius="0"
+                      GlassFrameThickness="0"
+                      NonClientFrameEdges="None"
+                      ResizeBorderThickness="6"
+                      UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
 
     <Grid>
         <Grid.RowDefinitions>
+            <!-- Title Bar -->
+            <RowDefinition Height="40"/>
+            <!-- Ribbon/Command Bar -->
             <RowDefinition Height="Auto"/>
+            <!-- Main Content -->
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <!-- Status Bar -->
+            <RowDefinition Height="28"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Border Grid.Row="0" Background="{StaticResource BgSecondaryBrush}"
+        <!-- Custom Title Bar -->
+        <Border Grid.Row="0" Background="{StaticResource PrimaryBackgroundBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <!-- App Icon and Title -->
+                    <ColumnDefinition Width="Auto"/>
+                    <!-- Navigation Tabs (centered) -->
+                    <ColumnDefinition Width="*"/>
+                    <!-- Window Buttons -->
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- App Icon and Title -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="J" FontSize="20" FontWeight="Bold"
+                               Foreground="{StaticResource GoldBrandBrush}"
+                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="Jubilee Flywheel" FontSize="13" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Navigation Tabs in Title Bar -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
+                    <RadioButton x:Name="HomeTab" Content="Home"
+                                 Style="{StaticResource NavTabStyle}" IsChecked="True"
+                                 Checked="TopNavTab_Checked"/>
+                    <RadioButton x:Name="RadarTab" Content="Radar"
+                                 Style="{StaticResource NavTabStyle}"
+                                 Checked="TopNavTab_Checked"/>
+                    <RadioButton x:Name="ChartsTab" Content="Charts"
+                                 Style="{StaticResource NavTabStyle}"
+                                 Checked="TopNavTab_Checked"/>
+                    <RadioButton x:Name="AccountsTab" Content="Accounts"
+                                 Style="{StaticResource NavTabStyle}"
+                                 Checked="TopNavTab_Checked"/>
+                </StackPanel>
+
+                <!-- Window Control Buttons -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button x:Name="MinimizeButton" Style="{StaticResource WindowButtonStyle}"
+                            Click="MinimizeButton_Click" ToolTip="Minimize">
+                        <TextBlock Text="{StaticResource IconMinimize}"
+                                   FontFamily="{StaticResource MaterialIcons}"
+                                   FontSize="16"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </Button>
+                    <Button x:Name="MaximizeButton" Style="{StaticResource WindowButtonStyle}"
+                            Click="MaximizeButton_Click" ToolTip="Maximize">
+                        <TextBlock x:Name="MaximizeIcon"
+                                   Text="{StaticResource IconMaximize}"
+                                   FontFamily="{StaticResource MaterialIcons}"
+                                   FontSize="16"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </Button>
+                    <Button x:Name="CloseButton" Style="{StaticResource CloseButtonStyle}"
+                            Click="CloseButton_Click" ToolTip="Close">
+                        <TextBlock Text="{StaticResource IconClose}"
+                                   FontFamily="{StaticResource MaterialIcons}"
+                                   FontSize="16"
+                                   Foreground="{StaticResource TextPrimaryBrush}"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Command/Ribbon Bar -->
+        <Border Grid.Row="1" Background="{StaticResource SecondaryBackgroundBrush}"
                 BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
-            <Grid Margin="16,12">
+            <Grid Margin="56,8,16,8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Logo and Title -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="J" FontSize="28" FontWeight="Bold"
-                               Foreground="{StaticResource JubileeAccentBrush}"
-                               Margin="0,0,8,0"/>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Jubilee Flywheel" FontSize="18" FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextPrimaryBrush}"/>
-                        <TextBlock Text="Data Visualization Dashboard" FontSize="11"
-                                   Foreground="{StaticResource TextSecondaryBrush}"/>
-                    </StackPanel>
+                <!-- Action Buttons -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button Style="{StaticResource PrimaryButtonStyle}"
+                            Click="NewChartButton_Click" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{StaticResource IconAddChart}"
+                                       FontFamily="{StaticResource MaterialIcons}"
+                                       FontSize="16" VerticalAlignment="Center"
+                                       Margin="0,0,6,0"/>
+                            <TextBlock Text="New Chart" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                            Click="RefreshButton_Click" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{StaticResource IconRefresh}"
+                                       FontFamily="{StaticResource MaterialIcons}"
+                                       FontSize="16" VerticalAlignment="Center"
+                                       Margin="0,0,6,0"/>
+                            <TextBlock Text="Refresh" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                            Click="AddWidgetButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{StaticResource IconAdd}"
+                                       FontFamily="{StaticResource MaterialIcons}"
+                                       FontSize="16" VerticalAlignment="Center"
+                                       Margin="0,0,6,0"/>
+                            <TextBlock Text="Add Widget" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
-                <!-- Navigation Tabs -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
-                    <RadioButton x:Name="DashboardTab" Content="Dashboard"
-                                 Style="{StaticResource NavTabStyle}" IsChecked="True"
-                                 Checked="NavTab_Checked"/>
-                    <RadioButton x:Name="DataGridTab" Content="Data Grid"
-                                 Style="{StaticResource NavTabStyle}"
-                                 Checked="NavTab_Checked"/>
-                    <RadioButton x:Name="ApiConfigTab" Content="API Config"
-                                 Style="{StaticResource NavTabStyle}"
-                                 Checked="NavTab_Checked"/>
-                    <RadioButton x:Name="SettingsTab" Content="Settings"
-                                 Style="{StaticResource NavTabStyle}"
-                                 Checked="NavTab_Checked"/>
-                </StackPanel>
+                <!-- Search Box -->
+                <Border Grid.Column="1" MaxWidth="300" HorizontalAlignment="Right" Margin="16,0">
+                    <Grid>
+                        <TextBox x:Name="SearchTextBox" Style="{StaticResource ModernTextBoxStyle}"
+                                 Text="" VerticalAlignment="Center"/>
+                        <TextBlock Text="Search symbols..."
+                                   Foreground="{StaticResource TextTertiaryBrush}"
+                                   IsHitTestVisible="False" VerticalAlignment="Center"
+                                   Margin="12,0,0,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=SearchTextBox}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <Button Style="{StaticResource IconButtonStyle}"
+                                HorizontalAlignment="Right" Margin="4"
+                                Click="SearchButton_Click">
+                            <TextBlock Text="{StaticResource IconSearch}"
+                                       FontFamily="{StaticResource MaterialIcons}"
+                                       FontSize="18"/>
+                        </Button>
+                    </Grid>
+                </Border>
 
-                <!-- Actions -->
+                <!-- Right Actions -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <Button Content="Refresh" Click="RefreshButton_Click" Margin="0,0,8,0"
-                            ToolTip="Refresh all data"/>
-                    <Button Content="Add Widget" Click="AddWidgetButton_Click"
-                            ToolTip="Add a new widget to the dashboard"/>
+                    <Button Style="{StaticResource IconButtonStyle}"
+                            ToolTip="Notifications" Margin="0,0,4,0">
+                        <TextBlock Text="{StaticResource IconNotification}"
+                                   FontFamily="{StaticResource MaterialIcons}"
+                                   FontSize="18"/>
+                    </Button>
+                    <Button Style="{StaticResource IconButtonStyle}"
+                            ToolTip="Export" Click="ExportButton_Click">
+                        <TextBlock Text="{StaticResource IconExport}"
+                                   FontFamily="{StaticResource MaterialIcons}"
+                                   FontSize="18"/>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- Main Content Area -->
-        <Grid Grid.Row="1">
-            <!-- Dashboard View -->
-            <views:DashboardView x:Name="DashboardViewControl"
-                                 Visibility="Visible"/>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <!-- App Rail (Left Navigation) -->
+                <ColumnDefinition Width="48"/>
+                <!-- Stock List Panel -->
+                <ColumnDefinition x:Name="StockListColumn" Width="280"/>
+                <!-- Splitter -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- Main View Area -->
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-            <!-- Data Grid View -->
-            <views:DataGridView x:Name="DataGridViewControl"
-                                Visibility="Collapsed"/>
+            <!-- App Rail Control -->
+            <controls:AppRailControl x:Name="AppRail" Grid.Column="0"
+                                     ModuleChanged="AppRail_ModuleChanged"
+                                     SettingsRequested="AppRail_SettingsRequested"
+                                     MenuRequested="AppRail_MenuRequested"/>
 
-            <!-- API Config View -->
-            <views:ApiConfigView x:Name="ApiConfigViewControl"
-                                 Visibility="Collapsed"/>
+            <!-- Stock Symbol List (Inbox) -->
+            <Border Grid.Column="1" Background="{StaticResource SecondaryBackgroundBrush}"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-            <!-- Settings View -->
-            <views:SettingsView x:Name="SettingsViewControl"
-                                Visibility="Collapsed"/>
+                    <!-- Stock List Header -->
+                    <Border Grid.Row="0" Padding="12,10"
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Watchlist" FontSize="14" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                       VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Style="{StaticResource IconButtonStyle}"
+                                        ToolTip="Add Symbol" Click="AddSymbolButton_Click">
+                                    <TextBlock Text="{StaticResource IconAdd}"
+                                               FontFamily="{StaticResource MaterialIcons}"
+                                               FontSize="18"/>
+                                </Button>
+                                <Button Style="{StaticResource IconButtonStyle}"
+                                        ToolTip="Filter" Click="FilterButton_Click">
+                                    <TextBlock Text="{StaticResource IconFilter}"
+                                               FontFamily="{StaticResource MaterialIcons}"
+                                               FontSize="18"/>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Stock List -->
+                    <ListBox x:Name="StockListBox" Grid.Row="1"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             ItemContainerStyle="{StaticResource StockListItemStyle}"
+                             SelectionChanged="StockListBox_SelectionChanged"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Symbol -->
+                                    <TextBlock Grid.Column="0" Grid.Row="0"
+                                               Text="{Binding Symbol}"
+                                               FontWeight="SemiBold" FontSize="14"
+                                               Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                                    <!-- Company Name -->
+                                    <TextBlock Grid.Column="0" Grid.Row="1"
+                                               Text="{Binding Name}"
+                                               FontSize="11"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               TextTrimming="CharacterEllipsis"/>
+
+                                    <!-- Price -->
+                                    <TextBlock Grid.Column="1" Grid.Row="0"
+                                               Text="{Binding Price, StringFormat='{}{0:C2}'}"
+                                               FontWeight="SemiBold" FontSize="14"
+                                               Foreground="{StaticResource TextPrimaryBrush}"
+                                               HorizontalAlignment="Right"/>
+
+                                    <!-- Change -->
+                                    <TextBlock Grid.Column="1" Grid.Row="1"
+                                               Text="{Binding ChangePercent, StringFormat='{}{0:+0.00;-0.00;0.00}%'}"
+                                               FontSize="11"
+                                               HorizontalAlignment="Right">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsPositive}" Value="True">
+                                                        <Setter Property="Foreground" Value="{StaticResource BullishBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsPositive}" Value="False">
+                                                        <Setter Property="Foreground" Value="{StaticResource BearishBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Grid Splitter -->
+            <GridSplitter Grid.Column="2" Width="4" HorizontalAlignment="Center"
+                          VerticalAlignment="Stretch"
+                          Background="{StaticResource BorderBrush}"
+                          Cursor="SizeWE"/>
+
+            <!-- Main Content Views -->
+            <Grid Grid.Column="3" Background="{StaticResource PrimaryBackgroundBrush}">
+                <!-- Dashboard View -->
+                <views:DashboardView x:Name="DashboardViewControl" Visibility="Visible"/>
+
+                <!-- Radar View -->
+                <views:RadarView x:Name="RadarViewControl" Visibility="Collapsed"/>
+
+                <!-- Data Grid View -->
+                <views:DataGridView x:Name="DataGridViewControl" Visibility="Collapsed"/>
+
+                <!-- API Config View -->
+                <views:ApiConfigView x:Name="ApiConfigViewControl" Visibility="Collapsed"/>
+
+                <!-- Settings View -->
+                <views:SettingsView x:Name="SettingsViewControl" Visibility="Collapsed"/>
+            </Grid>
         </Grid>
 
         <!-- Status Bar -->
-        <Border Grid.Row="2" Background="{StaticResource BgSecondaryBrush}"
+        <Border Grid.Row="3" Background="{StaticResource SecondaryBackgroundBrush}"
                 BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
-            <Grid Margin="16,8">
+            <Grid Margin="56,0,16,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock x:Name="StatusText" Grid.Column="0" Text="Ready"
                            Foreground="{StaticResource TextSecondaryBrush}"
-                           VerticalAlignment="Center"/>
+                           VerticalAlignment="Center" FontSize="11"/>
 
-                <TextBlock Grid.Column="1" Text="v1.0.0"
-                           Foreground="{StaticResource TextSecondaryBrush}"
-                           VerticalAlignment="Center" Margin="16,0"/>
+                <TextBlock x:Name="MarketStatusText" Grid.Column="1"
+                           Text="Market: Open"
+                           Foreground="{StaticResource BullishBrush}"
+                           VerticalAlignment="Center" FontSize="11"
+                           Margin="16,0"/>
 
-                <TextBlock x:Name="ClockText" Grid.Column="2"
+                <TextBlock Grid.Column="2" Text="v1.0.0"
+                           Foreground="{StaticResource TextTertiaryBrush}"
+                           VerticalAlignment="Center" FontSize="11" Margin="16,0"/>
+
+                <TextBlock x:Name="ClockText" Grid.Column="3"
                            Foreground="{StaticResource TextSecondaryBrush}"
-                           VerticalAlignment="Center"/>
+                           VerticalAlignment="Center" FontSize="11"/>
             </Grid>
         </Border>
     </Grid>
