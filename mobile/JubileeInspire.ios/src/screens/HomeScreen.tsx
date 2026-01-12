@@ -16,15 +16,37 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-import { colors, spacing, typography } from '../config';
+import { spacing, typography } from '../config';
+import { useTheme } from '../contexts/ThemeContext';
+
+// Feature Item Component
+interface FeatureItemProps {
+  icon: string;
+  title: string;
+  description: string;
+}
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation();
+  const { colors } = useTheme();
 
   const handleStartChat = () => {
     // @ts-expect-error Navigation typing simplified for unused screen
     navigation.navigate('Chat', { conversationId: undefined });
   };
+
+  const styles = createStyles(colors);
+
+  // Feature Item Component
+  const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) => (
+    <View style={styles.featureItem}>
+      <Text style={styles.featureIcon}>{icon}</Text>
+      <View style={styles.featureTextContainer}>
+        <Text style={styles.featureTitle}>{title}</Text>
+        <Text style={styles.featureDescription}>{description}</Text>
+      </View>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -81,24 +103,7 @@ const HomeScreen: React.FC = () => {
   );
 };
 
-// Feature Item Component
-interface FeatureItemProps {
-  icon: string;
-  title: string;
-  description: string;
-}
-
-const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) => (
-  <View style={styles.featureItem}>
-    <Text style={styles.featureIcon}>{icon}</Text>
-    <View style={styles.featureTextContainer}>
-      <Text style={styles.featureTitle}>{title}</Text>
-      <Text style={styles.featureDescription}>{description}</Text>
-    </View>
-  </View>
-);
-
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.primary,

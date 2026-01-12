@@ -22,11 +22,12 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 
-import { colors, spacing } from '../config';
+import { spacing } from '../config';
 import { ChatMessage, Conversation, RootStackParamList } from '../types';
 import { MessageBubble, TypingIndicator, ChatInput, EmptyChat } from '../components';
 import { storage } from '../services/storage';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>;
 
@@ -49,6 +50,7 @@ const personas = [
 const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
   const conversationId = route.params?.conversationId;
   const { user, isAuthenticated, signOut } = useAuth();
+  const { colors } = useTheme();
 
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -78,23 +80,37 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
           return;
         }
       }
-      // Create new conversation when conversationId is undefined
-      const newConversation = storage.createNewConversation();
-      console.log('[ChatScreen] Created new conversation:', newConversation.id);
 
-      // Save immediately to storage so it appears in sidebar
-      await storage.saveConversation(newConversation);
-      console.log('[ChatScreen] Saved new conversation to storage');
+      // No conversationId - this is a new conversation request
+      // Check if there's already a pending conversation
+      let pendingConv = await storage.loadPendingConversation();
 
-      setConversation(newConversation);
-      setMessages([]);
-      // Reset streaming state
-      setIsTyping(false);
-      setStreamingMessageId(null);
+      if (pendingConv) {
+        // Reuse the existing pending conversation to avoid duplicates on reload
+        console.log('[ChatScreen] Reusing existing pending conversation:', pendingConv.id);
+        setConversation(pendingConv);
+        setMessages(pendingConv.messages);
+        setIsTyping(false);
+        setStreamingMessageId(null);
+        navigation.setParams({ conversationId: pendingConv.id } as any);
+      } else {
+        // Create a new pending conversation (not saved to main list yet)
+        const newConversation = storage.createNewConversation();
+        console.log('[ChatScreen] Created new pending conversation:', newConversation.id);
 
-      // Update navigation params to include the new conversation ID
-      // This allows the drawer to know which conversation is active
-      navigation.setParams({ conversationId: newConversation.id } as any);
+        // Save as pending conversation (temporary placeholder)
+        await storage.savePendingConversation(newConversation);
+        console.log('[ChatScreen] Saved as pending conversation');
+
+        setConversation(newConversation);
+        setMessages([]);
+        // Reset streaming state
+        setIsTyping(false);
+        setStreamingMessageId(null);
+
+        // Update navigation params to include the new conversation ID
+        navigation.setParams({ conversationId: newConversation.id } as any);
+      }
     };
 
     loadConversation();
@@ -154,7 +170,7 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
   };
 
   const handleSend = async (text: string) => {
-    if (!text.trim() || isTyping) return;
+    if (!text.trim() || isTyping || !conversation) return;
 
     // Add user message
     const userMessage: ChatMessage = {
@@ -164,8 +180,21 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     scrollToBottom();
+
+    // If this is the first message, promote pending conversation to saved conversation
+    if (messages.length === 0) {
+      console.log('[ChatScreen] First message sent, promoting pending conversation');
+      const updatedConversation = {
+        ...conversation,
+        messages: [userMessage],
+        updatedAt: new Date(),
+      };
+      await storage.promotePendingConversation(updatedConversation);
+      console.log('[ChatScreen] Pending conversation promoted to saved conversation');
+    }
 
     // Show typing indicator
     setIsTyping(true);
@@ -203,6 +232,8 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
   const renderMessage = ({ item }: { item: ChatMessage }) => (
     <MessageBubble message={item} />
   );
+
+  const styles = createStyles(colors);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -371,7 +402,7 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

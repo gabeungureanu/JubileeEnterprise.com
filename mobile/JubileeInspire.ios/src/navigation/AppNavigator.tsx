@@ -13,11 +13,12 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { RootStackParamList, DrawerParamList } from '../types';
-import { colors } from '../config';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Screens
 import ChatScreen from '../screens/ChatScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import AppearanceScreen from '../screens/AppearanceScreen';
 import AuthScreen from '../screens/AuthScreen';
 
 // Components
@@ -52,6 +53,14 @@ const MainStack: React.FC = () => {
         }}
       />
       <Stack.Screen
+        name="Appearance"
+        component={AppearanceScreen}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
         name="Auth"
         component={AuthScreen}
         options={{
@@ -65,6 +74,8 @@ const MainStack: React.FC = () => {
 
 // App navigator with drawer
 const AppNavigator: React.FC = () => {
+  const { colors } = useTheme();
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>

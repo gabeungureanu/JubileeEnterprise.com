@@ -11,6 +11,7 @@ const STORAGE_KEYS = {
   CONVERSATIONS: '@jubilee_inspire_conversations',
   CURRENT_CONVERSATION: '@jubilee_inspire_current',
   USER_SETTINGS: '@jubilee_inspire_settings',
+  PENDING_CONVERSATION: '@jubilee_inspire_pending_conversation',
 };
 
 /**
@@ -155,6 +156,7 @@ export const storage = {
         STORAGE_KEYS.CONVERSATIONS,
         STORAGE_KEYS.CURRENT_CONVERSATION,
         STORAGE_KEYS.USER_SETTINGS,
+        STORAGE_KEYS.PENDING_CONVERSATION,
       ]);
     } catch (error) {
       console.error('Failed to clear storage:', error);
@@ -185,6 +187,69 @@ export const storage = {
       return cleaned;
     }
     return cleaned.substring(0, maxLength - 3) + '...';
+  },
+
+  /**
+   * Save pending conversation (temporary placeholder, not in main list)
+   */
+  async savePendingConversation(conversation: Conversation): Promise<void> {
+    try {
+      const data = JSON.stringify(conversation);
+      await AsyncStorage.setItem(STORAGE_KEYS.PENDING_CONVERSATION, data);
+    } catch (error) {
+      console.error('Failed to save pending conversation:', error);
+    }
+  },
+
+  /**
+   * Load pending conversation
+   */
+  async loadPendingConversation(): Promise<Conversation | null> {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.PENDING_CONVERSATION);
+      if (data) {
+        const conversation = JSON.parse(data) as Conversation;
+        return {
+          ...conversation,
+          createdAt: new Date(conversation.createdAt),
+          updatedAt: new Date(conversation.updatedAt),
+          messages: conversation.messages.map(msg => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp),
+          })),
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to load pending conversation:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Clear pending conversation
+   */
+  async clearPendingConversation(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEYS.PENDING_CONVERSATION);
+    } catch (error) {
+      console.error('Failed to clear pending conversation:', error);
+    }
+  },
+
+  /**
+   * Promote pending conversation to saved conversation
+   * This happens when the user sends their first message
+   */
+  async promotePendingConversation(conversation: Conversation): Promise<void> {
+    try {
+      // Save to main conversations list
+      await this.saveConversation(conversation);
+      // Clear the pending conversation
+      await this.clearPendingConversation();
+    } catch (error) {
+      console.error('Failed to promote pending conversation:', error);
+    }
   },
 };
 

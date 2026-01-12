@@ -7,7 +7,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, typography } from '../config';
+import { spacing, typography } from '../config';
+import { useTheme } from '../contexts/ThemeContext';
 
 const jubileeProfile = require('../../assets/jubilee-profile.png');
 
@@ -45,6 +46,9 @@ const suggestions: SuggestionItem[] = [
 ];
 
 const EmptyChat: React.FC<EmptyChatProps> = ({ onSuggestionPress }) => {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.container}>
       {/* Logo */}
@@ -81,7 +85,7 @@ const EmptyChat: React.FC<EmptyChatProps> = ({ onSuggestionPress }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',

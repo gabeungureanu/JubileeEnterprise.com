@@ -21,7 +21,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as DocumentPicker from 'expo-document-picker';
-import { colors, spacing, typography } from '../config';
+import { spacing, typography } from '../config';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Web Speech API types
 declare global {
@@ -42,10 +43,15 @@ const ChatInput: React.FC<ChatInputProps> = ({
   disabled = false,
   placeholder = 'Message Jubilee Inspire...',
 }) => {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   const [text, setText] = useState('');
   const [showToolsMenu, setShowToolsMenu] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [showMicTooltip, setShowMicTooltip] = useState(false);
+  const [showVoiceMode, setShowVoiceMode] = useState(false);
   const [attachedFile, setAttachedFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<any>(null);
@@ -107,15 +113,43 @@ const ChatInput: React.FC<ChatInputProps> = ({
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setShowToolsMenu(false);
+    setShowMoreMenu(false);
 
     console.log('[ChatInput] Tool selected:', tool);
 
     // Handle different tool actions
-    if (tool === 'file-upload' || tool === 'image-upload') {
-      await handleFileAttachment();
-    } else {
-      // TODO: Implement other tool actions
-      console.log('[ChatInput] Tool not yet implemented:', tool);
+    switch (tool) {
+      case 'add-photos':
+        await handleFileAttachment();
+        break;
+      case 'create-image':
+        Alert.alert('Create Image', 'Image generation feature coming soon!');
+        break;
+      case 'thinking':
+        Alert.alert('Thinking Mode', 'Extended reasoning mode coming soon!');
+        break;
+      case 'deep-research':
+        Alert.alert('Deep Research', 'Research mode coming soon!');
+        break;
+      case 'shopping-research':
+        Alert.alert('Shopping Research', 'Shopping research coming soon!');
+        break;
+      case 'more':
+        setShowMoreMenu(true);
+        setShowToolsMenu(false);
+        break;
+      default:
+        console.log('[ChatInput] Tool not yet implemented:', tool);
+    }
+  };
+
+  const handleVoiceModeToggle = async () => {
+    if (Platform.OS === 'ios') {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    setShowVoiceMode(!showVoiceMode);
+    if (!showVoiceMode) {
+      Alert.alert('Voice Mode', 'Full voice conversation mode coming soon!');
     }
   };
 
@@ -271,7 +305,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           }}
         />
 
-        {/* Microphone or Send Button */}
+        {/* Send Button, Voice Mode, or Microphone */}
         {canSend ? (
           <TouchableOpacity
             style={[styles.sendButton, styles.sendButtonActive]}
@@ -282,29 +316,45 @@ const ChatInput: React.FC<ChatInputProps> = ({
             <Ionicons name="arrow-up" size={20} color="#000000" />
           </TouchableOpacity>
         ) : (
-          <View style={styles.micButtonContainer}>
+          <View style={styles.rightButtons}>
+            {/* Voice Mode Button */}
             <TouchableOpacity
-              style={[styles.micButton, isListening && styles.micButtonActive]}
-              onPress={handleVoiceInput}
+              style={[styles.voiceModeButton, showVoiceMode && styles.voiceModeButtonActive]}
+              onPress={handleVoiceModeToggle}
               disabled={disabled}
-              {...(Platform.OS === 'web' ? {
-                onMouseEnter: () => setShowMicTooltip(true),
-                onMouseLeave: () => setShowMicTooltip(false)
-              } as any : {})}
             >
               <Ionicons
-                name={isListening ? "mic" : "mic-outline"}
-                size={24}
-                color={isListening ? "#ef4444" : colors.textSecondary}
+                name="headset-outline"
+                size={22}
+                color={showVoiceMode ? colors.primary : colors.textSecondary}
               />
             </TouchableOpacity>
-            {showMicTooltip && Platform.OS === 'web' && (
-              <View style={styles.tooltip}>
-                <Text style={styles.tooltipText}>
-                  {isListening ? 'Stop listening' : 'Voice input'}
-                </Text>
-              </View>
-            )}
+
+            {/* Microphone Button */}
+            <View style={styles.micButtonContainer}>
+              <TouchableOpacity
+                style={[styles.micButton, isListening && styles.micButtonActive]}
+                onPress={handleVoiceInput}
+                disabled={disabled}
+                {...(Platform.OS === 'web' ? {
+                  onMouseEnter: () => setShowMicTooltip(true),
+                  onMouseLeave: () => setShowMicTooltip(false)
+                } as any : {})}
+              >
+                <Ionicons
+                  name={isListening ? "mic" : "mic-outline"}
+                  size={22}
+                  color={isListening ? "#ef4444" : colors.textSecondary}
+                />
+              </TouchableOpacity>
+              {showMicTooltip && Platform.OS === 'web' && (
+                <View style={styles.tooltip}>
+                  <Text style={styles.tooltipText}>
+                    {isListening ? 'Stop listening' : 'Voice input'}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
         )}
       </View>
@@ -313,82 +363,94 @@ const ChatInput: React.FC<ChatInputProps> = ({
       <Modal
         visible={showToolsMenu}
         transparent
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setShowToolsMenu(false)}
       >
         <Pressable style={styles.modalOverlay} onPress={() => setShowToolsMenu(false)}>
           <View style={styles.toolsMenu}>
-            <View style={styles.toolsHeader}>
-              <Text style={styles.toolsTitle}>Tools</Text>
-              <TouchableOpacity onPress={() => setShowToolsMenu(false)}>
-                <Ionicons name="close" size={24} color={colors.text} />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={styles.toolItem}
+              onPress={() => handleToolSelect('add-photos')}
+            >
+              <Ionicons name="attach-outline" size={20} color={colors.text} />
+              <Text style={styles.toolTitle}>Add photos & files</Text>
+            </TouchableOpacity>
 
+            <TouchableOpacity
+              style={styles.toolItem}
+              onPress={() => handleToolSelect('create-image')}
+            >
+              <Ionicons name="image-outline" size={20} color={colors.text} />
+              <Text style={styles.toolTitle}>Create image</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.toolItem}
+              onPress={() => handleToolSelect('thinking')}
+            >
+              <Ionicons name="bulb-outline" size={20} color={colors.text} />
+              <Text style={styles.toolTitle}>Thinking</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.toolItem}
+              onPress={() => handleToolSelect('deep-research')}
+            >
+              <Ionicons name="search-outline" size={20} color={colors.text} />
+              <Text style={styles.toolTitle}>Deep research</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.toolItem}
+              onPress={() => handleToolSelect('shopping-research')}
+            >
+              <Ionicons name="cart-outline" size={20} color={colors.text} />
+              <Text style={styles.toolTitle}>Shopping research</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.toolItem, styles.lastToolItem]}
+              onPress={() => handleToolSelect('more')}
+            >
+              <Ionicons name="ellipsis-horizontal" size={20} color={colors.text} />
+              <Text style={styles.toolTitle}>More</Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} style={styles.chevron} />
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
+
+      {/* More Menu Modal */}
+      <Modal
+        visible={showMoreMenu}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowMoreMenu(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowMoreMenu(false)}>
+          <View style={styles.toolsMenu}>
             <TouchableOpacity
               style={styles.toolItem}
               onPress={() => handleToolSelect('bible-search')}
             >
-              <Ionicons name="book-outline" size={24} color={colors.primary} />
-              <View style={styles.toolContent}>
-                <Text style={styles.toolTitle}>Bible Search</Text>
-                <Text style={styles.toolDescription}>Search Scripture passages</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.toolItem}
-              onPress={() => handleToolSelect('file-upload')}
-            >
-              <Ionicons name="attach-outline" size={24} color={colors.primary} />
-              <View style={styles.toolContent}>
-                <Text style={styles.toolTitle}>Attach File</Text>
-                <Text style={styles.toolDescription}>Upload documents, images, or files</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.toolItem}
-              onPress={() => handleToolSelect('image-upload')}
-            >
-              <Ionicons name="image-outline" size={24} color={colors.primary} />
-              <View style={styles.toolContent}>
-                <Text style={styles.toolTitle}>Upload Image</Text>
-                <Text style={styles.toolDescription}>Attach or capture a photo</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.toolItem}
-              onPress={() => handleToolSelect('voice-mode')}
-            >
-              <Ionicons name="mic-outline" size={24} color={colors.primary} />
-              <View style={styles.toolContent}>
-                <Text style={styles.toolTitle}>Voice Mode</Text>
-                <Text style={styles.toolDescription}>Speak with Jubilee Inspire</Text>
-              </View>
+              <Ionicons name="book-outline" size={20} color={colors.text} />
+              <Text style={styles.toolTitle}>Bible search</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.toolItem}
               onPress={() => handleToolSelect('scripture-notes')}
             >
-              <Ionicons name="document-text-outline" size={24} color={colors.primary} />
-              <View style={styles.toolContent}>
-                <Text style={styles.toolTitle}>Scripture Notes</Text>
-                <Text style={styles.toolDescription}>Add study notes</Text>
-              </View>
+              <Ionicons name="document-text-outline" size={20} color={colors.text} />
+              <Text style={styles.toolTitle}>Scripture notes</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.toolItem}
+              style={[styles.toolItem, styles.lastToolItem]}
               onPress={() => handleToolSelect('bookmarks')}
             >
-              <Ionicons name="bookmark-outline" size={24} color={colors.primary} />
-              <View style={styles.toolContent}>
-                <Text style={styles.toolTitle}>Bookmarks</Text>
-                <Text style={styles.toolDescription}>Save favorite verses</Text>
-              </View>
+              <Ionicons name="bookmark-outline" size={20} color={colors.text} />
+              <Text style={styles.toolTitle}>Bookmarks</Text>
             </TouchableOpacity>
           </View>
         </Pressable>
@@ -401,7 +463,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
@@ -470,6 +532,20 @@ const styles = StyleSheet.create({
     textAlignVertical: 'center',
     lineHeight: Platform.OS === 'web' ? 20 : undefined,
   },
+  rightButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  voiceModeButton: {
+    padding: spacing.xs,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  voiceModeButtonActive: {
+    backgroundColor: `${colors.primary}15`,
+    borderRadius: 20,
+  },
   micButtonContainer: {
     position: 'relative',
   },
@@ -520,50 +596,50 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'flex-start',
+    paddingTop: Platform.OS === 'web' ? 60 : 100,
+    paddingLeft: spacing.md,
   },
   toolsMenu: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: Platform.OS === 'ios' ? spacing['2xl'] : spacing.lg,
-  },
-  toolsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  toolsTitle: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: '600',
-    color: colors.text,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    maxWidth: 280,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 5,
+      },
+    }),
   },
   toolItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 4,
+    gap: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  toolContent: {
-    marginLeft: spacing.md,
-    flex: 1,
+  lastToolItem: {
+    borderBottomWidth: 0,
   },
   toolTitle: {
-    fontSize: typography.fontSize.base,
-    fontWeight: '500',
-    color: colors.text,
-    marginBottom: 2,
-  },
-  toolDescription: {
     fontSize: typography.fontSize.sm,
-    color: colors.textSecondary,
+    fontWeight: '400',
+    color: colors.text,
+    flex: 1,
+  },
+  chevron: {
+    marginLeft: 'auto',
   },
 });
 

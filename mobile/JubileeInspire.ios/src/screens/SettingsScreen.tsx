@@ -17,10 +17,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { colors, spacing, typography, APP_VERSION } from '../config';
+import { spacing, typography, APP_VERSION } from '../config';
 import { RootStackParamList } from '../types';
 import { storage } from '../services/storage';
 import { ConfirmDialog } from '../components';
+import { useTheme } from '../contexts/ThemeContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
@@ -31,6 +32,8 @@ interface SettingsItemProps {
   onPress?: () => void;
   showArrow?: boolean;
   danger?: boolean;
+  colors: any;
+  styles: any;
 }
 
 const SettingsItem: React.FC<SettingsItemProps> = ({
@@ -40,6 +43,8 @@ const SettingsItem: React.FC<SettingsItemProps> = ({
   onPress,
   showArrow = true,
   danger = false,
+  colors,
+  styles,
 }) => (
   <TouchableOpacity
     style={styles.settingsItem}
@@ -67,8 +72,8 @@ const SettingsItem: React.FC<SettingsItemProps> = ({
 );
 
 const SettingsScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors, getThemeDisplayName } = useTheme();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const handleClearHistory = () => {
     console.log('[SettingsScreen] handleClearHistory called');
@@ -81,27 +86,26 @@ const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
     try {
       console.log('[SettingsScreen] Starting to clear conversations...');
+
+      // Clear all conversations and pending conversation
       await storage.clearAll();
       console.log('[SettingsScreen] Storage cleared successfully');
 
-      // Navigate back to close the settings modal
-      console.log('[SettingsScreen] Navigating back...');
+      // Close the settings modal immediately
       navigation.goBack();
 
-      // Then navigate to a new chat
+      // Use a small delay to allow the modal to close, then navigate to new chat
       setTimeout(() => {
-        console.log('[SettingsScreen] Navigating to new chat...');
+        console.log('[SettingsScreen] Navigating to new chat with force reload...');
+
+        // Navigate to a new chat with a unique timestamp to force reload
+        // This will trigger the ChatScreen to create a new pending conversation
         navigation.navigate('Chat', {
           conversationId: undefined,
           timestamp: Date.now()
         } as any);
+      }, 200);
 
-        // Show success message
-        setTimeout(() => {
-          console.log('[SettingsScreen] Showing success dialog');
-          setShowSuccessDialog(true);
-        }, 300);
-      }, 100);
     } catch (error) {
       console.error('[SettingsScreen] Error clearing conversations:', error);
       Alert.alert('Error', 'Failed to delete conversations. Please try again.');
@@ -112,6 +116,8 @@ const SettingsScreen: React.FC<Props> = ({ navigation }) => {
     console.log('[SettingsScreen] User cancelled deletion');
     setShowConfirmDialog(false);
   };
+
+  const styles = createStyles(colors);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -147,12 +153,16 @@ const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               title="Sign In"
               subtitle="Sync conversations across devices"
               onPress={() => Alert.alert('Coming Soon', 'Sign in will be available in a future update.')}
+              colors={colors}
+              styles={styles}
             />
             <SettingsItem
               icon="cloud-upload-outline"
               title="Sync Data"
               subtitle="Last synced: Never"
               onPress={() => Alert.alert('Coming Soon', 'Cloud sync will be available in a future update.')}
+              colors={colors}
+              styles={styles}
             />
           </View>
         </View>
@@ -166,18 +176,24 @@ const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               title="Bible Translation"
               subtitle="King James Version (KJV)"
               onPress={() => Alert.alert('Coming Soon', 'Translation selection will be available in a future update.')}
+              colors={colors}
+              styles={styles}
             />
             <SettingsItem
               icon="moon-outline"
               title="Appearance"
-              subtitle="System default"
-              onPress={() => Alert.alert('Coming Soon', 'Theme settings will be available in a future update.')}
+              subtitle={getThemeDisplayName()}
+              onPress={() => navigation.navigate('Appearance')}
+              colors={colors}
+              styles={styles}
             />
             <SettingsItem
               icon="notifications-outline"
               title="Notifications"
               subtitle="Daily verse reminders"
               onPress={() => Alert.alert('Coming Soon', 'Notification settings will be available in a future update.')}
+              colors={colors}
+              styles={styles}
             />
           </View>
         </View>
@@ -191,6 +207,8 @@ const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               title="Export Conversations"
               subtitle="Download your chat history"
               onPress={() => Alert.alert('Coming Soon', 'Export feature will be available in a future update.')}
+              colors={colors}
+              styles={styles}
             />
             <SettingsItem
               icon="trash-outline"
@@ -198,6 +216,8 @@ const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               subtitle="Delete all chat history"
               onPress={handleClearHistory}
               danger
+              colors={colors}
+              styles={styles}
             />
           </View>
         </View>
@@ -211,21 +231,29 @@ const SettingsScreen: React.FC<Props> = ({ navigation }) => {
               title="About Jubilee Inspire"
               subtitle={`Version ${APP_VERSION}`}
               showArrow={false}
+              colors={colors}
+              styles={styles}
             />
             <SettingsItem
               icon="document-text-outline"
               title="Terms of Service"
               onPress={() => Alert.alert('Terms of Service', 'Terms will be available at jubileeverse.com/terms')}
+              colors={colors}
+              styles={styles}
             />
             <SettingsItem
               icon="shield-checkmark-outline"
               title="Privacy Policy"
               onPress={() => Alert.alert('Privacy Policy', 'Privacy policy will be available at jubileeverse.com/privacy')}
+              colors={colors}
+              styles={styles}
             />
             <SettingsItem
               icon="help-circle-outline"
               title="Help & Support"
               onPress={() => Alert.alert('Help & Support', 'Visit jubileeverse.com/support for help')}
+              colors={colors}
+              styles={styles}
             />
           </View>
         </View>
@@ -255,25 +283,11 @@ const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />
-
-      {/* Success Dialog */}
-      <ConfirmDialog
-        visible={showSuccessDialog}
-        title="Success"
-        message="All conversations have been permanently deleted."
-        confirmText="OK"
-        cancelText=""
-        confirmColor={colors.primary}
-        icon="checkmark-circle-outline"
-        iconColor={colors.primary}
-        onConfirm={() => setShowSuccessDialog(false)}
-        onCancel={() => setShowSuccessDialog(false)}
-      />
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,

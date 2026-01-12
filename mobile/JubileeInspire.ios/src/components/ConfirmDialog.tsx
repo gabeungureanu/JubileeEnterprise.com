@@ -14,7 +14,8 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, typography } from '../config';
+import { spacing, typography } from '../config';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ConfirmDialogProps {
   visible: boolean;
@@ -35,12 +36,18 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   message,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
-  confirmColor = colors.error,
+  confirmColor,
   onConfirm,
   onCancel,
   icon = 'alert-circle-outline',
-  iconColor = colors.error,
+  iconColor,
 }) => {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
+  const finalConfirmColor = confirmColor || colors.error;
+  const finalIconColor = iconColor || colors.error;
+
   return (
     <Modal
       visible={visible}
@@ -53,8 +60,8 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <TouchableWithoutFeedback>
             <View style={styles.dialog}>
               {/* Icon */}
-              <View style={[styles.iconContainer, { backgroundColor: `${iconColor}15` }]}>
-                <Ionicons name={icon} size={40} color={iconColor} />
+              <View style={[styles.iconContainer, { backgroundColor: `${finalIconColor}15` }]}>
+                <Ionicons name={icon} size={40} color={finalIconColor} />
               </View>
 
               {/* Title */}
@@ -79,7 +86,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                   style={[
                     styles.button,
                     styles.confirmButton,
-                    { backgroundColor: confirmColor },
+                    { backgroundColor: finalConfirmColor },
                     !cancelText && styles.singleButton,
                   ]}
                   onPress={onConfirm}
@@ -96,7 +103,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',

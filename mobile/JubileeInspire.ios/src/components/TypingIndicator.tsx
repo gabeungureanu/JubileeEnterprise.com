@@ -6,11 +6,15 @@
 
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Image } from 'react-native';
-import { colors, spacing, typography } from '../config';
+import { spacing, typography } from '../config';
+import { useTheme } from '../contexts/ThemeContext';
 
 const jubileeProfile = require('../../assets/jubilee-profile.png');
 
 const TypingIndicator: React.FC = () => {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   const dot1 = useRef(new Animated.Value(0)).current;
   const dot2 = useRef(new Animated.Value(0)).current;
   const dot3 = useRef(new Animated.Value(0)).current;
@@ -78,7 +82,7 @@ const TypingIndicator: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     paddingHorizontal: spacing.md,

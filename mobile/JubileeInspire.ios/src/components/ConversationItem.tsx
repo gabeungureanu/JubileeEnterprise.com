@@ -4,11 +4,12 @@
  * Displays a conversation in the sidebar list.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Conversation } from '../types';
-import { colors, spacing, typography } from '../config';
+import { spacing, typography } from '../config';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -23,7 +24,14 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
   onPress,
   onDelete,
 }) => {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const menuButtonRef = useRef<TouchableOpacity>(null);
 
   const handleDelete = () => {
     if (Platform.OS === 'web') {
@@ -49,6 +57,31 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
     setShowDeleteConfirm(false);
   };
 
+  const handleOptionPress = (option: string) => {
+    setShowOptionsMenu(false);
+
+    switch (option) {
+      case 'share':
+        Alert.alert('Share', 'Share functionality coming soon!');
+        break;
+      case 'group':
+        Alert.alert('Start a group chat', 'Group chat functionality coming soon!');
+        break;
+      case 'rename':
+        Alert.alert('Rename', 'Rename functionality coming soon!');
+        break;
+      case 'pin':
+        Alert.alert('Pin chat', 'Pin chat functionality coming soon!');
+        break;
+      case 'archive':
+        Alert.alert('Archive', 'Archive functionality coming soon!');
+        break;
+      case 'delete':
+        handleDelete();
+        break;
+    }
+  };
+
   const formatDate = (date: Date) => {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
@@ -62,41 +95,127 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
 
   return (
     <>
-      <TouchableOpacity
-        style={[styles.container, isActive && styles.activeContainer]}
-        onPress={onPress}
-        activeOpacity={0.7}
-      >
-        <View style={styles.iconContainer}>
-          <Ionicons
-            name="chatbubble-outline"
-            size={18}
-            color={isActive ? colors.primary : colors.textSecondary}
-          />
-        </View>
-
-        <View style={styles.contentContainer}>
-          <Text
-            style={[styles.title, isActive && styles.activeTitle]}
-            numberOfLines={1}
-          >
-            {conversation.title}
-          </Text>
-          {conversation.preview && (
-            <Text style={styles.preview} numberOfLines={1}>
-              {conversation.preview}
-            </Text>
-          )}
-        </View>
-
+      <View style={styles.itemWrapper}>
         <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={handleDelete}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={[styles.container, isActive && styles.activeContainer]}
+          onPress={onPress}
+          activeOpacity={0.7}
+          {...(Platform.OS === 'web' ? {
+            onMouseEnter: () => setIsHovered(true),
+            onMouseLeave: () => setIsHovered(false)
+          } as any : {})}
         >
-          <Ionicons name="trash-outline" size={16} color={colors.textSecondary} />
+          <View style={styles.iconContainer}>
+            <Ionicons
+              name="chatbubble-outline"
+              size={18}
+              color={isActive ? colors.primary : colors.textSecondary}
+            />
+          </View>
+
+          <View style={styles.contentContainer}>
+            <Text
+              style={[styles.title, isActive && styles.activeTitle]}
+              numberOfLines={1}
+            >
+              {conversation.title}
+            </Text>
+            {conversation.preview && (
+              <Text style={styles.preview} numberOfLines={1}>
+                {conversation.preview}
+              </Text>
+            )}
+          </View>
+
+          {(isHovered || Platform.OS !== 'web') && (
+            <TouchableOpacity
+              ref={menuButtonRef}
+              style={styles.menuButton}
+              onPress={(e: any) => {
+                e.stopPropagation();
+                if (Platform.OS === 'web' && e.target) {
+                  const rect = e.target.getBoundingClientRect();
+                  setMenuPosition({
+                    top: rect.bottom + 10,
+                    left: rect.left - 160,
+                  });
+                }
+                setShowOptionsMenu(!showOptionsMenu);
+              }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="ellipsis-horizontal" size={18} color={colors.textSecondary} />
+            </TouchableOpacity>
+          )}
         </TouchableOpacity>
-      </TouchableOpacity>
+
+      </View>
+
+      {/* Options Menu Modal */}
+      <Modal
+        visible={showOptionsMenu}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowOptionsMenu(false)}
+      >
+        <TouchableOpacity
+          style={styles.menuOverlay}
+          activeOpacity={1}
+          onPress={() => setShowOptionsMenu(false)}
+        >
+          <View style={[styles.menuContent, { position: 'absolute', top: menuPosition.top, left: menuPosition.left }]}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => handleOptionPress('share')}
+            >
+              <Ionicons name="share-outline" size={20} color={colors.text} />
+              <Text style={styles.menuItemText}>Share</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => handleOptionPress('group')}
+            >
+              <Ionicons name="people-outline" size={20} color={colors.text} />
+              <Text style={styles.menuItemText}>Start a group chat</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => handleOptionPress('rename')}
+            >
+              <Ionicons name="create-outline" size={20} color={colors.text} />
+              <Text style={styles.menuItemText}>Rename</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => handleOptionPress('pin')}
+            >
+              <Ionicons name="pin-outline" size={20} color={colors.text} />
+              <Text style={styles.menuItemText}>Pin chat</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => handleOptionPress('archive')}
+            >
+              <Ionicons name="archive-outline" size={20} color={colors.text} />
+              <Text style={styles.menuItemText}>Archive</Text>
+            </TouchableOpacity>
+
+            <View style={styles.menuDivider} />
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => handleOptionPress('delete')}
+            >
+              <Ionicons name="trash-outline" size={20} color="#ef4444" />
+              <Text style={[styles.menuItemText, styles.deleteText]}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Delete Confirmation Modal for Web */}
       {Platform.OS === 'web' && (
@@ -140,7 +259,10 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
+  itemWrapper: {
+    position: 'relative',
+  },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -151,7 +273,7 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   activeContainer: {
-    backgroundColor: 'rgba(26, 54, 93, 0.1)',
+    backgroundColor: `${colors.primary}15`,
   },
   iconContainer: {
     marginRight: spacing.sm,
@@ -176,6 +298,47 @@ const styles = StyleSheet.create({
   deleteButton: {
     padding: spacing.xs,
     opacity: 0.6,
+  },
+  menuButton: {
+    padding: spacing.xs,
+    opacity: 0.6,
+  },
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  menuContent: {
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    paddingVertical: spacing.xs,
+    minWidth: 200,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+      },
+    }),
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
+  },
+  menuItemText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text,
+    fontWeight: '400',
+  },
+  deleteText: {
+    color: '#ef4444',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.xs,
   },
   modalOverlay: {
     flex: 1,
@@ -244,3 +407,4 @@ const styles = StyleSheet.create({
 });
 
 export default ConversationItem;
+

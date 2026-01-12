@@ -7,13 +7,14 @@ export type RootStackParamList = {
   Main: undefined;
   Chat: { conversationId?: string; timestamp?: number };
   Settings: undefined;
+  Appearance: undefined;
   NewChat: undefined;
   Auth: undefined;
 };
 
 export type DrawerParamList = {
   HomeStack: {
-    screen: 'Chat' | 'Settings' | 'Auth';
+    screen: 'Chat' | 'Settings' | 'Appearance' | 'Auth';
     params?: { conversationId?: string; timestamp?: number };
   } | undefined;
 };

@@ -8,7 +8,8 @@ import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ChatMessage } from '../types';
-import { colors, spacing, typography } from '../config';
+import { spacing, typography } from '../config';
+import { useTheme } from '../contexts/ThemeContext';
 
 const jubileeProfile = require('../../assets/jubilee-profile.png');
 
@@ -19,6 +20,8 @@ interface MessageBubbleProps {
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
 
   return (
     <View style={[styles.container, isUser && styles.userContainer]}>
@@ -45,7 +48,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     paddingHorizontal: spacing.md,

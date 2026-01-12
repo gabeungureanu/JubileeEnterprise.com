@@ -28,8 +28,12 @@ Jubilee Inspire is a Scripture-centered mobile application that provides an inte
 - **Clear All Conversations**: Delete all chat history with a custom confirmation dialog
 - **Keyboard Shortcuts**: Press Enter to send messages (Shift+Enter for new lines in web)
 - **Responsive UI**: Optimized for both mobile devices and web browsers
-- **Dark Theme**: Professional dark theme optimized for readability
+- **Theme System**: Support for System/Dark/Light themes with smooth transitions
 - **Chronological Organization**: Conversations automatically grouped by date for easy navigation
+- **Collapsible Sidebar**: ChatGPT-style sidebar that collapses to a thin icon bar (~56px)
+- **ChatGPT-style Input Tools**: Dropdown menu with tools (Add photos, Create image, Thinking, Deep research, etc.)
+- **Voice Mode**: Dedicated voice mode button for full voice conversation experience
+- **Conversation Options Menu**: Right-click/hover menu with Share, Rename, Pin, Archive, and Delete options
 
 ## Quick Start
 
@@ -83,7 +87,7 @@ npm run web
 
 ```
 JubileeInspire.ios/
-├── App.tsx                 # App entry point
+├── App.tsx                 # App entry point with ThemeProvider
 ├── app.json                # Expo configuration
 ├── package.json            # Dependencies
 ├── tsconfig.json           # TypeScript config
@@ -96,31 +100,35 @@ JubileeInspire.ios/
 ├── assets/                 # App icons and splash screens
 └── src/
     ├── components/         # Reusable UI components
-    │   ├── ChatInput.tsx       # Input field with voice, attachments, Enter key
-    │   ├── ConversationItem.tsx # Sidebar conversation item with delete
-    │   ├── DrawerContent.tsx    # Sidebar with conversation history
-    │   ├── MessageBubble.tsx    # Chat message display
+    │   ├── ChatInput.tsx       # Input field with voice, attachments, tools dropdown
+    │   ├── ConversationItem.tsx # Sidebar item with ellipsis options menu
+    │   ├── DrawerContent.tsx    # Collapsible sidebar with conversation history
+    │   ├── MessageBubble.tsx    # Chat message display with theming
     │   ├── TypingIndicator.tsx  # Loading animation for AI responses
     │   ├── EmptyChat.tsx        # Empty state for new conversations
     │   ├── ConfirmDialog.tsx    # Custom branded confirmation modal
     │   └── index.ts             # Component exports
     ├── config/             # App configuration
     │   ├── environment.ts
+    │   ├── theme.ts            # Theme color definitions (light/dark)
     │   └── index.ts
     ├── contexts/           # React contexts
-    │   └── AuthContext.tsx
+    │   ├── AuthContext.tsx     # Authentication state
+    │   └── ThemeContext.tsx    # Theme management (System/Light/Dark)
     ├── navigation/         # React Navigation setup
     │   ├── AppNavigator.tsx
     │   └── index.ts
     ├── screens/            # App screens
     │   ├── AuthScreen.tsx       # Authentication screen
     │   ├── ChatScreen.tsx       # Main chat interface
+    │   ├── HomeScreen.tsx       # Home/landing screen
     │   ├── SettingsScreen.tsx   # App settings and preferences
+    │   ├── AppearanceScreen.tsx # Theme selection (System/Light/Dark)
     │   └── index.ts
     ├── services/           # API service layer
     │   ├── httpClient.ts        # Base HTTP client
     │   ├── api.ts               # API endpoints
-    │   ├── storage.ts           # AsyncStorage wrapper
+    │   ├── storage.ts           # AsyncStorage wrapper with theme persistence
     │   └── index.ts
     ├── types/              # TypeScript definitions
     │   └── index.ts
@@ -273,20 +281,26 @@ All API communication goes through the `services/` layer:
 - Message status indicators
 
 #### ConversationItem (`src/components/ConversationItem.tsx`)
-- Sidebar conversation list item
+- Sidebar conversation list item with hover effects
 - Shows conversation title and preview
-- Delete button with confirmation
-- Active conversation highlighting
-- Long-press/click-and-hold for delete (mobile/web)
+- Ellipsis menu (three dots) appears on hover
+- Options menu with: Share, Start a group chat, Rename, Pin chat, Archive, Delete
+- Dynamic menu positioning 10px below ellipsis button
+- Click-outside to close menu (Modal overlay)
+- Active conversation highlighting with theme colors
+- Custom delete confirmation modal for web
 
 #### DrawerContent (`src/components/DrawerContent.tsx`)
-- Sidebar navigation component
-- Conversation history with chronological grouping
-- New chat button with timestamp-based forcing
+- Collapsible sidebar navigation (ChatGPT-style)
+- Always visible: thin icon bar (~56px) when collapsed, full width when expanded
+- Collapse/expand toggle button in header
+- Conversation history with chronological grouping (Today, Yesterday, Previous 7 Days, etc.)
+- New chat button at bottom of sidebar
 - Real-time updates via navigation state listener
 - Auto-reload when conversation changes
 - Optimized loading with debouncing
-- Settings navigation
+- Settings and Appearance navigation links
+- Theme-aware styling with smooth transitions
 
 #### ConfirmDialog (`src/components/ConfirmDialog.tsx`)
 - Custom branded confirmation modal
@@ -496,9 +510,27 @@ npx expo start --clear --verbose
 
 ## Recent Changes
 
-### Version 1.0.0 - Latest Updates
+### Version 1.0.0 - Latest Updates (January 2026)
 
 #### New Features
+- ✅ **Theme System**: Full support for System/Light/Dark themes with smooth transitions
+  - ThemeContext for global theme state management
+  - Theme persistence via AsyncStorage
+  - Automatic system theme detection
+  - Dedicated Appearance settings screen
+- ✅ **Collapsible Sidebar**: ChatGPT-style sidebar that collapses to a thin icon bar (~56px)
+  - Always visible in both collapsed and expanded states
+  - Smooth collapse/expand animations
+  - Icon-only mode when collapsed
+- ✅ **Conversation Options Menu**: Ellipsis menu on hover for each conversation
+  - Share, Start a group chat, Rename, Pin chat, Archive, Delete options
+  - Dynamic positioning 10px below the ellipsis button
+  - Click-outside to dismiss (Modal overlay)
+  - Custom icons for each option
+- ✅ **ChatGPT-style Input Tools**: Dropdown menu with creative tools
+  - Add photos, Create image, Thinking, Deep research options
+  - Plus button to access tools menu
+  - Voice mode button for voice conversations
 - ✅ **Real-time Chat History**: New conversations appear in sidebar immediately (like ChatGPT)
 - ✅ **File Attachments**: Upload and attach documents with preview functionality
 - ✅ **Custom Confirmation Dialogs**: Replaced browser alerts with branded modal dialogs
@@ -506,6 +538,7 @@ npx expo start --clear --verbose
 - ✅ **Clear All Conversations**: Delete all chat history with confirmation dialog
 - ✅ **Smart New Chat**: Timestamp-based navigation forcing for reliable new conversation creation
 - ✅ **Settings Screen**: Comprehensive settings with profile, preferences, and data management
+- ✅ **Appearance Screen**: Dedicated screen for theme selection with visual previews
 
 #### Bug Fixes
 - Fixed "New Chat" button not creating fresh conversations
@@ -514,6 +547,8 @@ npx expo start --clear --verbose
 - Fixed `navigation.addListener is not a function` error (separated useNavigation hooks)
 - Fixed blank conversations appearing on page reload (intentional for real-time updates)
 - Fixed TypeScript compilation errors for web-specific props
+- Fixed popup menu positioning (now uses getBoundingClientRect for accurate placement)
+- Fixed sidebar disappearing when collapsed (now always visible as thin icon bar)
 
 #### Performance Improvements
 - Optimized conversation saves with 500ms debouncing
@@ -529,6 +564,15 @@ npx expo start --clear --verbose
 - Added proper TypeScript types for navigation params
 - Platform-specific code for web vs native features
 - Created reusable ConfirmDialog component matching app design system
+- Added ThemeContext with useTheme hook for theme-aware components
+- Implemented theme persistence with AsyncStorage
+- Added getBoundingClientRect for accurate web menu positioning
+
+#### New Files Added
+- `src/config/theme.ts` - Theme color definitions for light and dark modes
+- `src/contexts/ThemeContext.tsx` - Theme management context with persistence
+- `src/screens/AppearanceScreen.tsx` - Theme selection UI with visual previews
+- `src/screens/HomeScreen.tsx` - Home/landing screen
 
 #### Dependencies Added
 - `expo-document-picker@^14.0.8` - File attachment handling

@@ -20,9 +20,10 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, typography } from '../config';
+import { spacing, typography } from '../config';
 import { RootStackParamList, User, AuthTokens } from '../types';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Auth'>;
 
@@ -30,6 +31,7 @@ type AuthMode = 'signin' | 'signup';
 
 const AuthScreen: React.FC<Props> = ({ navigation }) => {
   const { signIn } = useAuth();
+  const { colors } = useTheme();
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -174,6 +176,8 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
       handleSignUp();
     }
   };
+
+  const styles = createStyles(colors);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -325,7 +329,7 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
