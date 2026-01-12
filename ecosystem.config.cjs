@@ -59,6 +59,27 @@ module.exports = {
       merge_logs: true,
       kill_timeout: 5000
     },
+    {
+      name: 'wwBibleweb',
+      script: 'server.js',
+      cwd: 'C:/data/JubileeEnterprise.com/websites/codex/wwBibleweb.com',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3847
+      },
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '500M',
+      restart_delay: 5000,
+      max_restarts: 10,
+      min_uptime: '10s',
+      error_file: 'C:/data/JubileeEnterprise.com/logs/wwbibleweb-error.log',
+      out_file: 'C:/data/JubileeEnterprise.com/logs/wwbibleweb-out.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      merge_logs: true,
+      kill_timeout: 5000
+    },
     // JubileeVerse disabled - has PostgreSQL connection issues
     // {
     //   name: 'JubileeVerse',
