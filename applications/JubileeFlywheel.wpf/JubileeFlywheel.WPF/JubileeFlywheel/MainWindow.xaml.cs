@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using JubileeFlywheel.Models;
 using JubileeFlywheel.Services;
@@ -119,7 +121,7 @@ namespace JubileeFlywheel
                     var json = File.ReadAllText(path);
                     var state = JsonConvert.DeserializeObject<WindowStateInfo>(json);
 
-                    if (state != null)
+                    if (state != null && IsPositionOnScreen(state.Left, state.Top, state.Width, state.Height))
                     {
                         Left = state.Left;
                         Top = state.Top;
@@ -130,14 +132,85 @@ namespace JubileeFlywheel
                         {
                             WindowState = WindowState.Maximized;
                         }
+                        return;
                     }
                 }
             }
             catch
             {
-                // Use default window state
+                // Fall through to center window
             }
+
+            // First launch or invalid state - center window on primary screen
+            CenterWindowOnScreen();
         }
+
+        private bool IsPositionOnScreen(double left, double top, double width, double height)
+        {
+            // Use Win32 MonitorFromRect to check if the window is on any monitor
+            var rect = new RECT
+            {
+                Left = (int)left,
+                Top = (int)top,
+                Right = (int)(left + width),
+                Bottom = (int)(top + height)
+            };
+
+            IntPtr monitor = MonitorFromRect(ref rect, MONITOR_DEFAULTTONULL);
+            if (monitor == IntPtr.Zero)
+                return false;
+
+            // Get monitor info to verify the window is reasonably visible
+            var monitorInfo = new MONITORINFO { cbSize = Marshal.SizeOf<MONITORINFO>() };
+            if (GetMonitorInfo(monitor, ref monitorInfo))
+            {
+                // Check if at least part of the window overlaps with the working area
+                var workArea = monitorInfo.rcWork;
+                bool overlapsHorizontally = left < workArea.Right && (left + width) > workArea.Left;
+                bool overlapsVertically = top < workArea.Bottom && (top + height) > workArea.Top;
+                return overlapsHorizontally && overlapsVertically;
+            }
+
+            return false;
+        }
+
+        private void CenterWindowOnScreen()
+        {
+            // Get the working area of the primary screen
+            var workArea = SystemParameters.WorkArea;
+            Left = workArea.Left + (workArea.Width - Width) / 2;
+            Top = workArea.Top + (workArea.Height - Height) / 2;
+        }
+
+        #region Win32 Interop for Multi-Monitor Support
+
+        private const int MONITOR_DEFAULTTONULL = 0;
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr MonitorFromRect(ref RECT lprc, int dwFlags);
+
+        [DllImport("user32.dll")]
+        private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RECT
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MONITORINFO
+        {
+            public int cbSize;
+            public RECT rcMonitor;
+            public RECT rcWork;
+            public int dwFlags;
+        }
+
+        #endregion
 
         private class WindowStateInfo
         {
