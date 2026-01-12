@@ -12,28 +12,25 @@
             BorderThickness="0,0,1,0">
         <Grid>
             <Grid.RowDefinitions>
-                <!-- Menu Button at Top -->
-                <RowDefinition Height="Auto"/>
                 <!-- Module Buttons -->
                 <RowDefinition Height="*"/>
                 <!-- Settings at Bottom -->
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Menu/Hamburger Button at Top -->
-            <Button Grid.Row="0"
-                    Style="{StaticResource AppRailMenuButtonStyle}"
-                    Click="MenuButton_Click"
-                    ToolTip="Menu"
-                    Margin="0,8,0,0">
-                <TextBlock Text="{StaticResource IconMenu}"
-                           FontFamily="{StaticResource MaterialIcons}"
-                           FontSize="20"
-                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
-            </Button>
+            <!-- Module Buttons including Menu at Top -->
+            <StackPanel Grid.Row="0" VerticalAlignment="Top" Margin="0,8,0,0">
+                <!-- Menu/Hamburger Button -->
+                <Button Style="{StaticResource AppRailMenuButtonStyle}"
+                        Click="MenuButton_Click"
+                        ToolTip="Menu"
+                        Margin="0,0,0,8">
+                    <TextBlock Text="{StaticResource IconMenu}"
+                               FontFamily="{StaticResource MaterialIcons}"
+                               FontSize="22"
+                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                </Button>
 
-            <!-- Module Buttons in Middle -->
-            <StackPanel Grid.Row="1" VerticalAlignment="Top" Margin="0,16,0,0">
                 <RadioButton x:Name="InboxModule"
                              GroupName="FlywheelModules"
                              Style="{StaticResource AppRailButtonStyle}"
@@ -92,7 +89,7 @@
             </StackPanel>
 
             <!-- Settings Button at Bottom -->
-            <Button Grid.Row="2"
+            <Button Grid.Row="1"
                     Style="{StaticResource AppRailMenuButtonStyle}"
                     Click="SettingsButton_Click"
                     ToolTip="Settings"

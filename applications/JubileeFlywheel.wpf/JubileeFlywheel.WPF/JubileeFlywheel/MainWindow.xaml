@@ -7,7 +7,7 @@
         xmlns:controls="clr-namespace:JubileeFlywheel.Controls"
         xmlns:views="clr-namespace:JubileeFlywheel.Views"
         mc:Ignorable="d"
-        Title="Jubilee Flywheel"
+        Title="Flywheel"
         Height="900" Width="1400"
         MinHeight="600" MinWidth="1000"
         WindowStartupLocation="CenterScreen"
@@ -50,19 +50,12 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- App Icon and Title -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
-                    <TextBlock Text="J" FontSize="20" FontWeight="Bold"
-                               Foreground="{StaticResource GoldBrandBrush}"
-                               VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBlock Text="Jubilee Flywheel" FontSize="13" FontWeight="SemiBold"
-                               Foreground="{StaticResource TextPrimaryBrush}"
-                               VerticalAlignment="Center"/>
-                </StackPanel>
-
-                <!-- Navigation Tabs in Title Bar -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center"
+                <!-- App Icon and Navigation Tabs (Left-aligned) -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center"
                             WindowChrome.IsHitTestVisibleInChrome="True">
+                    <TextBlock Text="F" FontSize="20" FontWeight="Bold"
+                               Foreground="{StaticResource GoldBrandBrush}"
+                               VerticalAlignment="Center" Margin="0,0,16,0"/>
                     <RadioButton x:Name="HomeTab" Content="Home"
                                  Style="{StaticResource NavTabStyle}" IsChecked="True"
                                  Checked="TopNavTab_Checked"/>
@@ -76,6 +69,9 @@
                                  Style="{StaticResource NavTabStyle}"
                                  Checked="TopNavTab_Checked"/>
                 </StackPanel>
+
+                <!-- Spacer -->
+                <Border Grid.Column="1"/>
 
                 <!-- Window Control Buttons -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal">

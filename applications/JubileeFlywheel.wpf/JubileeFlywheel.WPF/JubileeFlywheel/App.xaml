@@ -9,6 +9,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <!-- Dark Theme with all styles -->
                 <ResourceDictionary Source="Themes/DarkTheme.xaml"/>
+                <ResourceDictionary Source="Themes/ScrollBarStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Converters -->
