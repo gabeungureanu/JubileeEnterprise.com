@@ -1,0 +1,108 @@
+<UserControl x:Class="JubileeFlywheel.Charts.SkiaChartControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
+             mc:Ignorable="d"
+             d:DesignHeight="400"
+             d:DesignWidth="600"
+             Focusable="True"
+             Background="Black">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <Border Grid.Row="0" Background="{StaticResource SecondaryBackgroundBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1"
+                Padding="8,4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Symbol Input -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBox x:Name="SymbolTextBox" Width="80"
+                             Text="{Binding Symbol, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource ModernTextBoxStyle}"
+                             FontWeight="Bold"
+                             KeyDown="SymbolTextBox_KeyDown"
+                             ToolTip="Enter symbol"/>
+                    <Button x:Name="LoadButton" Content="Load" Margin="4,0,0,0"
+                            Click="LoadButton_Click"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Padding="8,4"/>
+                </StackPanel>
+
+                <!-- Chart Type Selector -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="16,0,0,0">
+                    <ComboBox x:Name="ChartTypeCombo" Width="120"
+                              SelectionChanged="ChartTypeCombo_SelectionChanged"
+                              ToolTip="Chart Type">
+                        <ComboBoxItem Content="Candlestick" IsSelected="True"/>
+                        <ComboBoxItem Content="OHLC"/>
+                        <ComboBoxItem Content="Line"/>
+                        <ComboBoxItem Content="Area"/>
+                        <ComboBoxItem Content="Heikin Ashi"/>
+                        <ComboBoxItem Content="Renko"/>
+                        <ComboBoxItem Content="Point &amp; Figure"/>
+                    </ComboBox>
+
+                    <ComboBox x:Name="IntervalCombo" Width="80" Margin="8,0,0,0"
+                              SelectionChanged="IntervalCombo_SelectionChanged"
+                              ToolTip="Time Interval">
+                        <ComboBoxItem Content="1m"/>
+                        <ComboBoxItem Content="5m"/>
+                        <ComboBoxItem Content="15m"/>
+                        <ComboBoxItem Content="30m"/>
+                        <ComboBoxItem Content="1H"/>
+                        <ComboBoxItem Content="4H"/>
+                        <ComboBoxItem Content="1D" IsSelected="True"/>
+                        <ComboBoxItem Content="1W"/>
+                        <ComboBoxItem Content="1M"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <!-- Price Info Panel -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock x:Name="OhlcInfo" FontFamily="Consolas" FontSize="12"
+                               Foreground="{StaticResource TextSecondaryBrush}"/>
+                </StackPanel>
+
+                <!-- Zoom Controls -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal">
+                    <Button Content="Fit" Padding="8,4" Margin="0,0,4,0"
+                            Click="FitButton_Click"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            ToolTip="Fit to data"/>
+                    <Button Content="+" Padding="8,4" Margin="0,0,4,0"
+                            Click="ZoomInButton_Click"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            ToolTip="Zoom in"/>
+                    <Button Content="-" Padding="8,4"
+                            Click="ZoomOutButton_Click"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            ToolTip="Zoom out"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Chart Canvas -->
+        <skia:SKElement x:Name="ChartCanvas" Grid.Row="1"
+                        PaintSurface="ChartCanvas_PaintSurface"
+                        MouseMove="ChartCanvas_MouseMove"
+                        MouseLeave="ChartCanvas_MouseLeave"
+                        MouseWheel="ChartCanvas_MouseWheel"
+                        MouseLeftButtonDown="ChartCanvas_MouseLeftButtonDown"
+                        MouseLeftButtonUp="ChartCanvas_MouseLeftButtonUp"/>
+    </Grid>
+</UserControl>

@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              xmlns:controls="clr-namespace:JubileeFlywheel.Controls"
+             xmlns:charts="clr-namespace:JubileeFlywheel.Charts"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1200"
              Background="{StaticResource PrimaryBackgroundBrush}">
@@ -19,8 +20,8 @@
             <RowDefinition Height="Auto" MinHeight="0"/>
         </Grid.RowDefinitions>
 
-        <!-- Main Stock Chart -->
-        <controls:StockChartControl x:Name="MainStockChart" Grid.Row="0"/>
+        <!-- Main Stock Chart - High Performance GPU-Accelerated -->
+        <charts:SkiaChartControl x:Name="MainStockChart" Grid.Row="0"/>
 
         <!-- Horizontal Splitter -->
         <GridSplitter Grid.Row="1" Height="4" HorizontalAlignment="Stretch"

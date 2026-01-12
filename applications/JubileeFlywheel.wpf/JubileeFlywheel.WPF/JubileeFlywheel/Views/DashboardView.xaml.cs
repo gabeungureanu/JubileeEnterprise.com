@@ -114,8 +114,8 @@ namespace JubileeFlywheel.Views
 
         public void LoadSymbol(string symbol)
         {
-            MainStockChart.CurrentSymbol = symbol;
-            _ = MainStockChart.LoadChartDataAsync(symbol, Models.TimeResolution.OneMinute);
+            MainStockChart.Symbol = symbol;
+            MainStockChart.InvalidateChart();
         }
     }
 }
