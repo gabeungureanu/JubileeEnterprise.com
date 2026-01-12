@@ -5,6 +5,48 @@ All notable changes to Jubilee Browser will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.0.8] - 2026-01-11
+
+### Added
+- **jubilee://settings Internal Page**: Full Chrome/Edge-style Settings page with comprehensive UI
+  - Profile management section with account info display
+  - Sync settings with toggle controls for bookmarks, history, passwords, tabs, and extensions
+  - Privacy & Security settings with granular controls
+  - Appearance customization (theme, font size)
+  - Search engine and homepage configuration
+  - Downloads path configuration
+  - Startup behavior settings
+  - Accessibility options
+
+- **WebView2 JavaScript Bridge**: Bidirectional communication between Settings UI and browser core
+  - `settings:getAll` - Retrieves all browser settings as JSON
+  - `settings:update` - Updates individual settings with persistence
+  - `settings:reset` - Resets all settings to defaults
+  - `profile:getInfo` - Returns user profile information
+  - `sync:getPreferences` - Returns sync preferences
+  - `account:manage` - Opens account management window
+  - `auth:signOut` - Signs out current user
+
+- **InspireContinuum Heartbeat**: Real-time session tracking for dashboard
+  - 60-second heartbeat interval while signed in
+  - Automatic session registration on sign-in
+  - Session end notification on sign-out
+  - Browser ID and version tracking
+
+### Changed
+- **Settings Page Typography**: Updated design system with CSS custom properties
+  - Primary text color: white (#ffffff)
+  - Secondary accent color: gold (#E6AC00)
+  - Custom scrollbar styling (WebKit and Firefox)
+  - Improved visual hierarchy and accessibility
+  - Focus-visible states for keyboard navigation
+
+### Technical
+- Added `InternalPageHandler` integration in navigation flow
+- Implemented `OnWebMessageReceived` handler for Settings-to-C# communication
+- Added heartbeat timer to `SyncEngine.cs` with non-blocking async execution
+- Updated `InspireContinuum.com/server.js` with proper upsert for heartbeat endpoint
+
 ## [8.0.7] - 2026-01-05
 
 ### Changed

@@ -1,0 +1,16 @@
+{
+  "name": "jubilee-inspire-qdrant-ingest",
+  "version": "1.0.0",
+  "description": "YAML ingestion script for JubileeInspire personas into Qdrant",
+  "main": "ingest-yaml.js",
+  "scripts": {
+    "ingest": "node ingest-yaml.js"
+  },
+  "dependencies": {
+    "@qdrant/js-client-rest": "^1.7.0",
+    "dotenv": "^16.3.1",
+    "js-yaml": "^4.1.0",
+    "openai": "^4.24.0",
+    "uuid": "^9.0.0"
+  }
+}
