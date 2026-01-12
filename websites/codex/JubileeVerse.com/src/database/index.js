@@ -23,8 +23,9 @@ const API_KEY = process.env.INSPIRE_CODEX_API_KEY || '';
 
 /**
  * Check if we should use mock mode
+ * In production, NEVER use mock mode unless explicitly forced with DB_MOCK=true
  */
-const useMockMode = process.env.DB_MOCK === 'true' || process.env.NODE_ENV === 'test';
+const useMockMode = process.env.DB_MOCK === 'true' || (process.env.NODE_ENV === 'test' && process.env.DB_MOCK !== 'false');
 
 // ============================================================================
 // API CLIENT
@@ -220,8 +221,11 @@ let pgPool = null;
  */
 async function initPostgres() {
     try {
-        if (useMockMode) {
-            logger.info('Database initialized (mock mode)');
+        // In production, ALWAYS try to connect to the API first
+        const isProduction = process.env.NODE_ENV === 'production';
+
+        if (useMockMode && !isProduction) {
+            logger.info('Database initialized (mock mode - explicitly requested)');
             pgPool = mockPool;
             return pgPool;
         }
@@ -246,20 +250,22 @@ async function initPostgres() {
         } catch (apiError) {
             logger.error('InspireCodex API connection failed', { error: apiError.message });
 
-            // Fall back to mock mode in development
+            // Fall back to mock mode ONLY in development (never in production)
             if (process.env.NODE_ENV === 'development') {
-                logger.warn('Falling back to mock database mode');
+                logger.warn('Falling back to mock database mode (development only)');
                 pgPool = mockPool;
                 return pgPool;
             }
 
+            // In production, we fail rather than silently using mock mode
             throw apiError;
         }
     } catch (error) {
         logger.error('Database initialization failed', { error: error.message });
 
+        // Only fall back to mock in development, never in production
         if (process.env.NODE_ENV === 'development') {
-            logger.warn('Falling back to mock database mode');
+            logger.warn('Falling back to mock database mode (development only)');
             pgPool = mockPool;
             return pgPool;
         }
@@ -410,6 +416,36 @@ async function getUserById(userId) {
 }
 
 /**
+ * Get user by email from InspireCodex API (includes password_hash for authentication)
+ */
+async function getUserByEmail(email) {
+    try {
+        const result = await apiRequest(`/api/v1/codex/users/by-email/${encodeURIComponent(email.toLowerCase())}`);
+        return result.user || null;
+    } catch (error) {
+        if (error.status === 404) {
+            return null;
+        }
+        throw error;
+    }
+}
+
+/**
+ * Update user's last login timestamp
+ */
+async function updateUserLastLogin(userId) {
+    try {
+        await apiRequest(`/api/v1/codex/users/${userId}/last-login`, {
+            method: 'PUT'
+        });
+        return true;
+    } catch (error) {
+        logger.error('Failed to update last login', { userId, error: error.message });
+        return false;
+    }
+}
+
+/**
  * Get personas from InspireCodex API
  */
 async function getPersonas() {
@@ -479,6 +515,8 @@ module.exports = {
     apiRequest,
     getUsers,
     getUserById,
+    getUserByEmail,
+    updateUserLastLogin,
     getPersonas,
     getConfig,
     getPlans,

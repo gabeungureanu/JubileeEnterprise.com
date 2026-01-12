@@ -329,7 +329,23 @@ app.get('/api/v1/admin/health', async (req, res) => {
         system: {
             nodeVersion: process.version,
             platform: process.platform,
-            memoryUsage: process.memoryUsage()
+            arch: process.arch,
+            memoryUsage: process.memoryUsage(),
+            cpuUsage: process.cpuUsage(),
+            osInfo: {
+                totalMemory: require('os').totalmem(),
+                freeMemory: require('os').freemem(),
+                cpus: require('os').cpus().length,
+                cpuModel: require('os').cpus()[0]?.model || 'Unknown',
+                loadAvg: require('os').loadavg(),
+                hostname: require('os').hostname()
+            },
+            processInfo: {
+                pid: process.pid,
+                ppid: process.ppid,
+                title: process.title,
+                cwd: process.cwd()
+            }
         }
     };
 
@@ -679,7 +695,7 @@ app.get('/api/v1/codex/users', async (req, res) => {
     try {
         const { limit = 50, offset = 0 } = req.query;
         const result = await codexPool.query(`
-            SELECT id, email, username, display_name, created_at, last_login_at, is_active
+            SELECT id, email, display_name, avatar_url, role, created_at, last_login_at, is_active
             FROM users
             ORDER BY created_at DESC
             LIMIT $1 OFFSET $2
@@ -701,18 +717,114 @@ app.get('/api/v1/codex/users', async (req, res) => {
 app.get('/api/v1/codex/users/:id', async (req, res) => {
     try {
         const result = await codexPool.query(`
-            SELECT id, email, username, display_name, created_at, last_login_at, is_active,
-                   language_preference, default_persona_id
+            SELECT id, email, display_name, avatar_url, role,
+                   created_at, last_login_at, is_active, updated_at
             FROM users WHERE id = $1
         `, [req.params.id]);
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).json({ success: false, error: 'User not found' });
         }
 
-        res.json(result.rows[0]);
+        res.json({ success: true, user: result.rows[0] });
     } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch user', message: err.message });
+        console.error('Get user by ID error:', err);
+        res.status(500).json({ success: false, error: 'Failed to fetch user', message: err.message });
+    }
+});
+
+// User lookup by email (for internal authentication)
+// Returns full user data including password_hash for verification
+app.get('/api/v1/codex/users/by-email/:email', async (req, res) => {
+    try {
+        const email = req.params.email.toLowerCase();
+        const result = await codexPool.query(`
+            SELECT id, email, password_hash, display_name, avatar_url, role,
+                   is_active, last_login_at, created_at, updated_at
+            FROM users WHERE email = $1
+        `, [email]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        res.json({ success: true, user: result.rows[0] });
+    } catch (err) {
+        console.error('User lookup error:', err);
+        res.status(500).json({ success: false, error: 'Failed to fetch user', message: err.message });
+    }
+});
+
+// Update user last login timestamp
+app.put('/api/v1/codex/users/:id/last-login', async (req, res) => {
+    try {
+        await codexPool.query(
+            'UPDATE users SET last_login_at = NOW() WHERE id = $1',
+            [req.params.id]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Update last login error:', err);
+        res.status(500).json({ success: false, error: 'Failed to update last login' });
+    }
+});
+
+// Update user password hash (internal endpoint for password reset)
+app.put('/api/v1/codex/users/:id/password', async (req, res) => {
+    try {
+        const { password_hash } = req.body;
+
+        if (!password_hash) {
+            return res.status(400).json({
+                success: false,
+                error: 'password_hash is required'
+            });
+        }
+
+        const result = await codexPool.query(
+            'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2 RETURNING id, email',
+            [password_hash, req.params.id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        console.log(`User password updated: ${result.rows[0].email}`);
+        res.json({ success: true, user: result.rows[0] });
+    } catch (err) {
+        console.error('Update password error:', err);
+        res.status(500).json({ success: false, error: 'Failed to update password' });
+    }
+});
+
+// Update user role (admin endpoint)
+app.put('/api/v1/codex/users/:id/role', async (req, res) => {
+    try {
+        const { role } = req.body;
+        const validRoles = ['user', 'contributor', 'reviewer', 'moderator', 'admin'];
+
+        if (!role || !validRoles.includes(role)) {
+            return res.status(400).json({
+                success: false,
+                error: `Invalid role. Must be one of: ${validRoles.join(', ')}`
+            });
+        }
+
+        const result = await codexPool.query(
+            'UPDATE users SET role = $1, updated_at = NOW() WHERE id = $2 RETURNING id, email, role',
+            [role, req.params.id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        console.log(`User role updated: ${result.rows[0].email} -> ${role}`);
+        res.json({ success: true, user: result.rows[0] });
+    } catch (err) {
+        console.error('Update role error:', err);
+        res.status(500).json({ success: false, error: 'Failed to update role' });
     }
 });
 

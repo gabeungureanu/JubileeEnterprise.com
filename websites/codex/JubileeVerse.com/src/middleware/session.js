@@ -21,6 +21,29 @@ function setPgPool(pool) {
 }
 
 /**
+ * Determine if secure cookies should be used
+ * - Force secure: SESSION_SECURE=true
+ * - Force insecure: SESSION_SECURE=false, localhost, or IISNode
+ * - Default: secure in production with proper domain
+ */
+function shouldUseSecureCookie() {
+  const isIISNode = !!process.env.IISNODE_VERSION;
+  const forceSecure = process.env.SESSION_SECURE === 'true';
+  const forceInsecure = process.env.SESSION_SECURE === 'false';
+  const host = config.server.host || 'localhost';
+  const isLocalhost = host === 'localhost' || host === '0.0.0.0' || host === '127.0.0.1';
+
+  if (forceSecure) {
+    return true;
+  }
+  if (forceInsecure || isIISNode || isLocalhost) {
+    return false;
+  }
+  // Default: secure in production
+  return !config.server.isDev;
+}
+
+/**
  * Create session middleware with PostgreSQL store
  */
 function createPgSessionMiddleware() {
@@ -29,23 +52,7 @@ function createPgSessionMiddleware() {
     return createMemorySessionMiddleware();
   }
 
-  // Determine if we should use secure cookies
-  // In IISNode environment, we may be behind a proxy handling HTTPS
-  // Use secure cookies only if explicitly configured or if we detect HTTPS
-  const isIISNode = !!process.env.IISNODE_VERSION;
-  const forceSecure = process.env.SESSION_SECURE === 'true';
-  const forceInsecure = process.env.SESSION_SECURE === 'false';
-
-  // Default: secure in production unless running under IISNode without explicit HTTPS config
-  // This allows HTTP access in IISNode development scenarios
-  let useSecureCookie = !config.server.isDev;
-  if (forceSecure) {
-    useSecureCookie = true;
-  } else if (forceInsecure || isIISNode) {
-    // IISNode typically handles HTTP, with IIS handling HTTPS termination
-    // Allow non-secure cookies unless explicitly configured otherwise
-    useSecureCookie = false;
-  }
+  const useSecureCookie = shouldUseSecureCookie();
 
   // Use memory store by default since PostgreSQL session tables may not exist
   // This avoids session_pkey conflict errors with the codex database
@@ -68,19 +75,9 @@ function createPgSessionMiddleware() {
  * Create session middleware with memory store
  */
 function createMemorySessionMiddleware() {
-  // Same secure cookie logic as PostgreSQL store
-  const isIISNode = !!process.env.IISNODE_VERSION;
-  const forceSecure = process.env.SESSION_SECURE === 'true';
-  const forceInsecure = process.env.SESSION_SECURE === 'false';
+  const useSecureCookie = shouldUseSecureCookie();
 
-  let useSecureCookie = !config.server.isDev;
-  if (forceSecure) {
-    useSecureCookie = true;
-  } else if (forceInsecure || isIISNode) {
-    useSecureCookie = false;
-  }
-
-  logger.info('Session: Using memory store');
+  logger.info('Session: Using memory store', { secureCookie: useSecureCookie });
   return session({
     secret: config.session.secret,
     resave: false,
@@ -99,17 +96,7 @@ function createMemorySessionMiddleware() {
  * Create session middleware with Redis store (production)
  */
 function createRedisSessionMiddleware(redisClient) {
-  // Same secure cookie logic as other stores
-  const isIISNode = !!process.env.IISNODE_VERSION;
-  const forceSecure = process.env.SESSION_SECURE === 'true';
-  const forceInsecure = process.env.SESSION_SECURE === 'false';
-
-  let useSecureCookie = !config.server.isDev;
-  if (forceSecure) {
-    useSecureCookie = true;
-  } else if (forceInsecure || isIISNode) {
-    useSecureCookie = false;
-  }
+  const useSecureCookie = shouldUseSecureCookie();
 
   const sessionConfig = {
     secret: config.session.secret,
