@@ -154,7 +154,8 @@ public partial class SkiaChartControl : UserControl
 
     private void ChartTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (ChartTypeCombo.SelectedIndex < 0) return;
+        // Guard against XAML initialization firing before constructor completes
+        if (_renderEngine == null || ChartTypeCombo.SelectedIndex < 0) return;
 
         var chartType = ChartTypeCombo.SelectedIndex switch
         {
@@ -174,6 +175,9 @@ public partial class SkiaChartControl : UserControl
 
     private void IntervalCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        // Guard against XAML initialization firing before constructor completes
+        if (_renderEngine == null) return;
+
         // For now, just regenerate sample data with different characteristics
         // In production, this would fetch new data from the data service
         LoadSampleData();
