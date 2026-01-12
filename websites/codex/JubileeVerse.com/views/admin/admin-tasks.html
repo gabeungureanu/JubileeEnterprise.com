@@ -7324,7 +7324,20 @@
       }
 
       // Count workdays between two dates (Mon-Fri only)
+      // Includes safety limit to prevent infinite loops
       function countWorkdays(startDate, endDate) {
+        // Safety: validate dates
+        if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          console.warn('[countWorkdays] Invalid dates provided');
+          return 0;
+        }
+
+        // Safety: ensure start is before end
+        if (startDate > endDate) {
+          console.warn('[countWorkdays] Start date is after end date');
+          return 0;
+        }
+
         let workdays = 0;
         let current = new Date(startDate);
         current.setHours(0, 0, 0, 0);
@@ -7332,13 +7345,23 @@
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
 
-        while (current <= end) {
+        // Safety limit: max 3 years (about 780 workdays) to prevent infinite loops
+        const MAX_ITERATIONS = 1100;
+        let iterations = 0;
+
+        while (current <= end && iterations < MAX_ITERATIONS) {
           const dayOfWeek = current.getDay();
           if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Mon-Fri only
             workdays++;
           }
           current.setDate(current.getDate() + 1);
+          iterations++;
         }
+
+        if (iterations >= MAX_ITERATIONS) {
+          console.warn('[countWorkdays] Hit iteration limit - date range may be too large');
+        }
+
         return workdays;
       }
 
@@ -7402,7 +7425,14 @@
       }
 
       // Store milestone data globally for recalculation
-      let milestoneData = calculateMilestoneTimeRemaining();
+      // Wrapped in try-catch to prevent page hang on calculation errors
+      let milestoneData;
+      try {
+        milestoneData = calculateMilestoneTimeRemaining();
+      } catch (e) {
+        console.error('[milestoneData] Calculation failed:', e);
+        milestoneData = { fuelPercent: 100, hoursRemaining: 40, totalMilestoneHours: 40, hoursSpent: 0, totalWorkdays: 5 };
+      }
 
       // Create gauge instances
       // Fuel gauge now uses 'milestone' type with gray fill and 10% red warning zone
@@ -7412,8 +7442,12 @@
         initialValue: milestoneData.fuelPercent,
         formatValue: (v) => {
           // Recalculate to get accurate remaining hours
-          const data = calculateMilestoneTimeRemaining();
-          return `${data.hoursRemaining}h`;
+          try {
+            const data = calculateMilestoneTimeRemaining();
+            return `${data.hoursRemaining}h`;
+          } catch (e) {
+            return '40h';
+          }
         }
       });
 
@@ -7454,10 +7488,12 @@
       });
 
       // Calculate new operational metrics based on live CW+ (AI-augmented) data
+      // Wrapped in try-catch to prevent page hang on errors
       function calculateOperationalHealth(tasks, stats) {
-        // Get milestone data for time-based calculations
-        const msData = calculateMilestoneTimeRemaining();
-        const hoursRemaining = msData.hoursRemaining || 24;
+        try {
+          // Get milestone data for time-based calculations
+          const msData = calculateMilestoneTimeRemaining();
+          const hoursRemaining = msData.hoursRemaining || 24;
 
         // ============================================
         // CW+ (Completed Work Plus) - AI-AUGMENTED DATA
@@ -7702,6 +7738,25 @@
           totalCWPlus: totalCWPlus,
           totalEHH: totalEHH
         };
+        } catch (error) {
+          console.error('[calculateOperationalHealth] Error:', error);
+          // Return safe defaults to prevent page hang
+          return {
+            pressure: { value: 0, zone: 'comfortable', gaugePercent: 0 },
+            confidence: { value: 100, zone: 'high', gaugePercent: 100 },
+            quality: { value: 100, zone: 'healthy', gaugePercent: 100 },
+            requiredWPH: 0,
+            currentWPH: 0,
+            pendingTasks: 0,
+            pendingHH: 0,
+            milestoneConfidence: 'On Track',
+            schedulePosition: 'On Track',
+            estCompletionDate: new Date(),
+            hoursRemaining: 40,
+            totalCWPlus: 0,
+            totalEHH: 0
+          };
+        }
       }
 
       // State
@@ -9472,25 +9527,31 @@
 
       // After a short delay, animate gauges to their actual values
       setTimeout(() => {
-        // Calculate milestone time remaining and set Fuel gauge
-        milestoneData = calculateMilestoneTimeRemaining();
-        FuelGauge.setValue(milestoneData.fuelPercent);
-        const fuelTextEl = document.getElementById('fuelGaugeText');
-        if (fuelTextEl) fuelTextEl.textContent = `${milestoneData.hoursRemaining}h`;
+        try {
+          // Calculate milestone time remaining and set Fuel gauge
+          milestoneData = calculateMilestoneTimeRemaining();
+          FuelGauge.setValue(milestoneData.fuelPercent);
+          const fuelTextEl = document.getElementById('fuelGaugeText');
+          if (fuelTextEl) fuelTextEl.textContent = `${milestoneData.hoursRemaining}h`;
 
-        // Initialize operational metrics gauges with calculated values
-        // These will be properly updated once tasks are loaded
-        TempGauge.setValue(0);   // Execution Pressure: starts at 0%
-        OilGauge.setValue(100);  // Delivery Confidence: starts at 100% (high is good)
-        RpmGauge.setValue(100);  // Quality Control: starts at 100% (high is good)
+          // Initialize operational metrics gauges with calculated values
+          // These will be properly updated once tasks are loaded
+          TempGauge.setValue(0);   // Execution Pressure: starts at 0%
+          OilGauge.setValue(100);  // Delivery Confidence: starts at 100% (high is good)
+          RpmGauge.setValue(100);  // Quality Control: starts at 100% (high is good)
+        } catch (error) {
+          console.error('[gauge initialization] Error:', error);
+        }
       }, 500);
 
       // Update operational health gauges when tasks change
       function updateOperationalHealthGauges() {
-        const metrics = calculateOperationalHealth(tasks, stats);
+        try {
+          const metrics = calculateOperationalHealth(tasks, stats);
+          if (!metrics) return;
 
-        // Update TEMP (Execution Pressure) gauge
-        TempGauge.setValue(metrics.pressure.gaugePercent);
+          // Update TEMP (Execution Pressure) gauge
+          TempGauge.setValue(metrics.pressure.gaugePercent);
         const tempText = document.getElementById('tempGaugeText');
         if (tempText) tempText.textContent = `${Math.round(metrics.pressure.value)}%`;
 
@@ -9514,6 +9575,9 @@
           milestoneConfidence: metrics.milestoneConfidence,
           schedule: metrics.schedulePosition
         });
+        } catch (error) {
+          console.error('[updateOperationalHealthGauges] Error:', error);
+        }
       }
 
       // Update Work Remaining panel with calculated metrics
