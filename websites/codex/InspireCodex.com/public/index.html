@@ -84,6 +84,12 @@
             font-weight: 600;
         }
 
+        .last-checked {
+            font-size: 0.75rem;
+            color: #8b949e;
+            font-weight: 400;
+        }
+
         .status-indicator {
             width: 10px;
             height: 10px;
@@ -384,10 +390,12 @@
             `;
 
             // Websites Section
+            const lastChecked = new Date().toLocaleTimeString();
             html += `
                 <div class="card">
                     <div class="card-header">
                         <span class="card-title">Platform Websites</span>
+                        <span class="last-checked">Last checked: ${lastChecked}</span>
                     </div>
                     ${renderWebsites(data.websites)}
                 </div>
