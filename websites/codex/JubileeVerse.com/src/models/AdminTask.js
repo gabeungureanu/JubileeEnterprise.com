@@ -110,13 +110,17 @@ async function findAll(filters = {}) {
       offset: filters.offset || 0
     };
 
+    console.log('[AdminTask.findAll] Calling API with filters:', JSON.stringify(apiFilters));
     const result = await database.getAdminTasks(apiFilters);
+    console.log('[AdminTask.findAll] API result:', result ? `${result.tasks?.length || 0} tasks` : 'null');
     if (result && result.tasks) {
-      return result.tasks.map(rowToTask);
+      const mappedTasks = result.tasks.map(rowToTask);
+      console.log('[AdminTask.findAll] Returning', mappedTasks.length, 'mapped tasks');
+      return mappedTasks;
     }
   } catch (apiError) {
     // Log but continue to fallback
-    console.warn('Admin tasks API failed, trying direct query:', apiError.message);
+    console.warn('Admin tasks API failed, trying direct query:', apiError.message, apiError.stack);
   }
 
   // Fallback to direct SQL (will return empty in API mode)
