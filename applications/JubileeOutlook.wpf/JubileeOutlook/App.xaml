@@ -19,6 +19,7 @@
             <helpers:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
             <helpers:ReadToWeightConverter x:Key="ReadToWeightConverter"/>
             <helpers:ListToStringConverter x:Key="ListToStringConverter"/>
+            <helpers:FileSizeConverter x:Key="FileSizeConverter"/>
             <helpers:AppModuleToBoolConverter x:Key="AppModuleToBoolConverter"/>
 
         </ResourceDictionary>
