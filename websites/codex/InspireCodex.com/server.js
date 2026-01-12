@@ -16,6 +16,9 @@ const rateLimit = require('express-rate-limit');
 const { Pool } = require('pg');
 const http = require('http');
 
+// Qdrant RAG Service for semantic search
+const qdrantService = require('./services/qdrant-service');
+
 const app = express();
 const PORT = process.env.PORT || 3100;
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -184,7 +187,24 @@ app.get('/health', async (req, res) => {
         }
     }
 
+    // Check Qdrant RAG service
+    const ragStatus = qdrantService.getStatus();
+    health.rag = {
+        status: ragStatus.initialized ? 'connected' : 'unavailable',
+        collection: ragStatus.config.collection,
+        error: ragStatus.error || null
+    };
+
     res.status(health.status === 'ok' ? 200 : 503).json(health);
+});
+
+// Qdrant RAG status endpoint
+app.get('/api/v1/rag/status', async (req, res) => {
+    const status = qdrantService.getStatus();
+    res.json({
+        success: true,
+        rag: status
+    });
 });
 
 // =============================================================================
@@ -3783,6 +3803,28 @@ app.post('/Home/ChatWithJubilee', async (req, res) => {
             messages.push({ role: 'developer', content: developerPrompt });
         }
 
+        // RAG: Search Qdrant for relevant context
+        let ragContext = null;
+        let ragResultCount = 0;
+        try {
+            const ragResult = await qdrantService.searchKnowledge(message.trim(), {
+                limit: 5,
+                minScore: 0.45
+            });
+            if (ragResult.success && ragResult.context) {
+                ragContext = ragResult.context;
+                ragResultCount = ragResult.resultCount || 0;
+                // Inject RAG context as a system message
+                messages.push({
+                    role: 'system',
+                    content: ragContext
+                });
+                console.log(`RAG: Found ${ragResultCount} relevant knowledge chunks`);
+            }
+        } catch (ragError) {
+            console.warn('RAG search failed (continuing without context):', ragError.message);
+        }
+
         // Add conversation history
         conversationHistory.forEach(msg => {
             if (msg.role && msg.content) {
@@ -3793,7 +3835,7 @@ app.post('/Home/ChatWithJubilee', async (req, res) => {
         // Add current user message
         messages.push({ role: 'user', content: message.trim() });
 
-        console.log(`Chat request: model=${inspireModel}, historyLength=${conversationHistory.length}, messageLength=${message.length}`);
+        console.log(`Chat request: model=${inspireModel}, historyLength=${conversationHistory.length}, messageLength=${message.length}, ragContext=${ragResultCount > 0}`);
 
         // Call OpenAI API
         const startTime = Date.now();
@@ -3829,7 +3871,7 @@ app.post('/Home/ChatWithJubilee', async (req, res) => {
         // Generate conversation ID if not provided
         const finalConversationId = conversationId || `inspire-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
 
-        console.log(`Chat response: processingTime=${processingTime}ms, responseLength=${assistantResponse.length}`);
+        console.log(`Chat response: processingTime=${processingTime}ms, responseLength=${assistantResponse.length}, ragUsed=${ragResultCount > 0}`);
 
         res.json({
             success: true,
@@ -3845,7 +3887,12 @@ app.post('/Home/ChatWithJubilee', async (req, res) => {
                 timestamp: new Date().toISOString()
             },
             usage: data.usage || null,
-            processingTimeMs: processingTime
+            processingTimeMs: processingTime,
+            rag: {
+                enabled: true,
+                contextUsed: ragResultCount > 0,
+                resultCount: ragResultCount
+            }
         });
 
     } catch (error) {
@@ -3955,6 +4002,19 @@ async function startServer() {
         } catch (err) {
             console.warn('⚠️ Legacy database connection failed:', err.message);
         }
+    }
+
+    // Initialize Qdrant RAG service
+    try {
+        const ragReady = await qdrantService.initialize();
+        if (ragReady) {
+            console.log('✅ Qdrant RAG service connected');
+        } else {
+            const status = qdrantService.getStatus();
+            console.warn('⚠️ Qdrant RAG service not available:', status.error);
+        }
+    } catch (err) {
+        console.warn('⚠️ Qdrant RAG initialization failed:', err.message);
     }
 
     // Start server
