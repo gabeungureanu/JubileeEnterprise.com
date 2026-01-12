@@ -120,6 +120,11 @@
             border-bottom: 1px solid #21262d;
         }
 
+        .item-row.compact {
+            padding: 5px 0;
+            font-size: 0.9rem;
+        }
+
         .item-row:last-child {
             border-bottom: none;
         }
@@ -426,12 +431,12 @@
         }
 
         function renderDatabases(databases) {
-            if (!databases) return '<div class="item-row"><span class="item-meta">No database data available</span></div>';
+            if (!databases) return '<div class="item-row compact"><span class="item-meta">No database data available</span></div>';
             let html = '';
             for (const [name, db] of Object.entries(databases)) {
                 const isLegacy = name === 'JubileeVerse';
                 html += `
-                    <div class="item-row expandable" onclick="toggleTableList('${name}')">
+                    <div class="item-row compact expandable" onclick="toggleTableList('${name}')">
                         <div>
                             <span class="item-name">${name}</span>
                             ${isLegacy ? '<span style="color: #8b949e; font-size: 0.75rem;"> (legacy)</span>' : ''}
@@ -488,11 +493,11 @@
         }
 
         function renderApiServices(services) {
-            if (!services) return '<div class="item-row"><span class="item-meta">No API services data available</span></div>';
+            if (!services) return '<div class="item-row compact"><span class="item-meta">No API services data available</span></div>';
             let html = '';
             for (const [name, service] of Object.entries(services)) {
                 html += `
-                    <div class="item-row">
+                    <div class="item-row compact">
                         <div>
                             <span class="item-name">${name}</span>
                             ${service.status === 'error' || service.status === 'offline' ? `<div class="error-message">${service.error || 'Offline'}</div>` : ''}
