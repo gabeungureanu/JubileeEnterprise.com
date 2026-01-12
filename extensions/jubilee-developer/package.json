@@ -1,0 +1,134 @@
+{
+  "name": "jubilee-developer",
+  "displayName": "Jubilee Developer",
+  "description": "Claude-powered AI assistant for VS Code with code context awareness",
+  "version": "1.0.0",
+  "publisher": "JubileeEnterprise",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other",
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "jubilee-developer-container",
+          "title": "Jubilee Developer",
+          "icon": "resources/jubilee-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "jubilee-developer-container": [
+        {
+          "type": "webview",
+          "id": "jubileeDeveloper.chatPanel",
+          "name": "Chat",
+          "visibility": "visible"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "jubileeDeveloper.openPanel",
+        "title": "Open Jubilee Developer"
+      },
+      {
+        "command": "jubileeDeveloper.askAboutSelection",
+        "title": "Jubilee: Ask about selection"
+      },
+      {
+        "command": "jubileeDeveloper.explainCode",
+        "title": "Jubilee: Explain this code"
+      },
+      {
+        "command": "jubileeDeveloper.fixCode",
+        "title": "Jubilee: Fix this code"
+      },
+      {
+        "command": "jubileeDeveloper.insertResponse",
+        "title": "Jubilee: Insert last response at cursor"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "jubileeDeveloper.askAboutSelection",
+          "when": "editorHasSelection",
+          "group": "jubilee@1"
+        },
+        {
+          "command": "jubileeDeveloper.explainCode",
+          "when": "editorHasSelection",
+          "group": "jubilee@2"
+        },
+        {
+          "command": "jubileeDeveloper.fixCode",
+          "when": "editorHasSelection",
+          "group": "jubilee@3"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "jubileeDeveloper.openPanel",
+        "key": "ctrl+shift+j",
+        "mac": "cmd+shift+j"
+      },
+      {
+        "command": "jubileeDeveloper.insertResponse",
+        "key": "ctrl+shift+i",
+        "mac": "cmd+shift+i"
+      }
+    ],
+    "configuration": {
+      "title": "Jubilee Developer",
+      "properties": {
+        "jubileeDeveloper.model": {
+          "type": "string",
+          "default": "claude-sonnet-4-20250514",
+          "enum": [
+            "claude-sonnet-4-20250514",
+            "claude-opus-4-20250514",
+            "claude-3-5-haiku-20241022"
+          ],
+          "description": "Claude model to use"
+        },
+        "jubileeDeveloper.maxTokens": {
+          "type": "number",
+          "default": 4096,
+          "description": "Maximum tokens for response"
+        },
+        "jubileeDeveloper.includeFileContext": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include current file context in prompts"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "npx esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "npx @vscode/vsce package --allow-missing-repository"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.80.0",
+    "@vscode/vsce": "^2.22.0",
+    "esbuild": "^0.19.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0"
+  }
+}
