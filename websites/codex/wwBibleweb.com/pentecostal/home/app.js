@@ -235,7 +235,32 @@ async function loadSiteData() {
     // Load today's history file
     const historyFile = getTodayHistoryFileName();
     console.log('loadSiteData: Loading history file:', historyFile);
-    const historyResponse = await fetch(webstorePath + 'history/' + historyFile);
+    let historyResponse = await fetch(webstorePath + 'history/' + historyFile);
+
+    // If today's file doesn't exist, request server to create it from most recent file
+    if (!historyResponse.ok) {
+      console.log('loadSiteData: Today\'s history file not found, requesting server to create it...');
+      try {
+        const basePath = getBasePath();
+        const ensureResponse = await fetch('/api/ensure-daily-history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sitePath: basePath })
+        });
+
+        if (ensureResponse.ok) {
+          const result = await ensureResponse.json();
+          console.log('loadSiteData: Server response:', result.action, result.message);
+          // Retry fetching today's file
+          historyResponse = await fetch(webstorePath + 'history/' + historyFile);
+        } else {
+          console.warn('loadSiteData: Server could not create today\'s history file');
+        }
+      } catch (ensureError) {
+        console.warn('loadSiteData: Could not contact server to ensure daily history:', ensureError);
+      }
+    }
+
     if (historyResponse.ok) {
       siteData = await historyResponse.json();
       window.siteData = siteData; // Global access - CRITICAL for portal pages
