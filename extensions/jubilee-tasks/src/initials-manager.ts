@@ -19,6 +19,7 @@ export class InitialsManager {
 
     /**
      * Get the developer's initials, prompting if not set or expired
+     * @deprecated Use getInitialsSilent() instead for inline UI flow
      */
     async getInitials(): Promise<string | null> {
         // Check memory cache first
@@ -38,8 +39,33 @@ export class InitialsManager {
             }
         }
 
-        // Need to prompt user
-        return this.promptForInitials();
+        // Return null - caller should handle prompting via inline UI
+        return null;
+    }
+
+    /**
+     * Get the developer's initials without prompting (silent check)
+     * Returns null if not set or expired - caller handles UI
+     */
+    async getInitialsSilent(): Promise<string | null> {
+        // Check memory cache first
+        if (this.cachedInitials) {
+            return this.cachedInitials;
+        }
+
+        // Check persistent storage
+        const stored = this.context.globalState.get<InitialsData>(INITIALS_KEY);
+
+        if (stored) {
+            // Check if expired (1 year)
+            const now = Date.now();
+            if (now - stored.timestamp < ONE_YEAR_MS) {
+                this.cachedInitials = stored.initials;
+                return stored.initials;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -96,11 +122,20 @@ export class InitialsManager {
 
     /**
      * Force re-prompt for initials (e.g., from command)
+     * @deprecated Use clearInitials() with inline UI instead
      */
     async resetAndPrompt(): Promise<string | null> {
         this.cachedInitials = null;
         await this.context.globalState.update(INITIALS_KEY, undefined);
         return this.promptForInitials();
+    }
+
+    /**
+     * Clear stored initials (for inline UI reset flow)
+     */
+    async clearInitials(): Promise<void> {
+        this.cachedInitials = null;
+        await this.context.globalState.update(INITIALS_KEY, undefined);
     }
 
     /**

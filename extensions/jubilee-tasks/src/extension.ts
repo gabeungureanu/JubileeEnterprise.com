@@ -72,6 +72,15 @@ export async function activate(context: vscode.ExtensionContext) {
 
         log('Webview provider registered, registering commands...');
 
+        // Set up inline initials submission handler
+        webviewProvider.setOnInitialsSubmitted(async (initials: string) => {
+            await initialsManager.setInitials(initials);
+            webviewProvider.setDeveloperInitials(initials);
+            webviewProvider.setInitialsValidated(true);
+            webviewProvider.refreshTasks();
+            log(`Developer initials set via inline UI: ${initials}`);
+        });
+
         // Register commands
         context.subscriptions.push(
             vscode.commands.registerCommand('jubileeTasks.showPanel', () => {
@@ -83,7 +92,10 @@ export async function activate(context: vscode.ExtensionContext) {
             }),
 
             vscode.commands.registerCommand('jubileeTasks.setInitials', async () => {
-                await initialsManager.resetAndPrompt();
+                // Clear cached initials and show inline UI
+                await initialsManager.clearInitials();
+                webviewProvider.setDeveloperInitials(undefined);
+                webviewProvider.setInitialsValidated(false);
             }),
 
             vscode.commands.registerCommand('jubileeTasks.completeCurrentTask', async () => {
@@ -129,42 +141,42 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 async function initializeAsync(): Promise<void> {
-    // Check for existing initials and prompt if not set
+    // Check for existing initials silently (no pop-up prompt)
     const hasInitials = initialsManager.hasValidInitials();
     let initials: string | null = null;
 
-    if (!hasInitials) {
-        log('Developer initials not set, prompting user...');
-        initials = await initialsManager.promptForInitials();
-        if (!initials) {
-            vscode.window.showWarningMessage(
-                'Jubilee Tasks: Developer initials not set. Task tracking disabled until initials are configured.'
-            );
-        } else {
-            log(`Developer initials set to: ${initials}`);
-        }
+    if (hasInitials) {
+        // Get existing initials without prompting
+        initials = await initialsManager.getInitialsSilent();
+        log(`Developer initials found: ${initials}`);
     } else {
-        // Get existing initials
-        initials = await initialsManager.getInitials();
+        log('Developer initials not set - inline UI will prompt user');
     }
 
-    // Update the webview with initials
+    // Update the webview with initials status
     if (initials) {
         webviewProvider.setDeveloperInitials(initials);
+        webviewProvider.setInitialsValidated(true);
+    } else {
+        // Show inline initials input (not validated yet)
+        webviewProvider.setInitialsValidated(false);
     }
 
-    // Check for existing active task for this session
-    try {
-        await checkExistingTask();
-    } catch (err) {
-        console.error('Failed to check existing task:', err);
-    }
+    // Only proceed with task checking if initials are set
+    if (initials) {
+        // Check for existing active task for this session
+        try {
+            await checkExistingTask();
+        } catch (err) {
+            console.error('Failed to check existing task:', err);
+        }
 
-    // Ensure project exists in database
-    try {
-        await ensureProjectExists();
-    } catch (err) {
-        console.error('Failed to ensure project exists:', err);
+        // Ensure project exists in database
+        try {
+            await ensureProjectExists();
+        } catch (err) {
+            console.error('Failed to ensure project exists:', err);
+        }
     }
 }
 

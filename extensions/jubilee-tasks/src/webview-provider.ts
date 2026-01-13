@@ -13,10 +13,33 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
     private refreshInterval?: NodeJS.Timeout;
     private currentTaskId?: string;
     private developerInitials?: string;
+    private initialsValidated: boolean = false;
+    private onInitialsSubmittedCallback?: (initials: string) => Promise<void>;
 
     constructor(
         private readonly extensionUri: vscode.Uri
     ) {}
+
+    /**
+     * Set callback for when initials are submitted via inline UI
+     */
+    public setOnInitialsSubmitted(callback: (initials: string) => Promise<void>): void {
+        this.onInitialsSubmittedCallback = callback;
+    }
+
+    /**
+     * Mark initials as validated (hides the input UI and updates header)
+     */
+    public setInitialsValidated(validated: boolean): void {
+        this.initialsValidated = validated;
+        if (this._view) {
+            this._view.webview.postMessage({
+                command: 'setInitialsValidated',
+                validated: validated,
+                initials: this.developerInitials
+            });
+        }
+    }
 
     public setDeveloperInitials(initials: string | undefined): void {
         this.developerInitials = initials;
@@ -53,6 +76,19 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
                     break;
                 case 'completeTask':
                     await this.completeTask(message.taskId);
+                    break;
+                case 'submitInitials':
+                    if (this.onInitialsSubmittedCallback && message.initials) {
+                        try {
+                            await this.onInitialsSubmittedCallback(message.initials);
+                            // Callback will call setInitialsValidated on success
+                        } catch (err) {
+                            this._view?.webview.postMessage({
+                                command: 'initialsError',
+                                error: err instanceof Error ? err.message : 'Failed to save initials'
+                            });
+                        }
+                    }
                     break;
             }
         });
@@ -337,21 +373,145 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
             padding: 20px;
             color: var(--vscode-descriptionForeground);
         }
+
+        /* Inline Initials Input Styles */
+        .initials-overlay {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            left: 0;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 16px;
+            border-top: 2px solid #ffd700;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .initials-overlay.hidden {
+            display: none;
+        }
+
+        .initials-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .initials-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #ffd700;
+            margin-bottom: 4px;
+        }
+
+        .initials-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .initials-input {
+            width: 60px;
+            padding: 6px 10px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            text-align: center;
+            border: 2px solid #ffd700;
+            border-radius: 4px;
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            outline: none;
+        }
+
+        .initials-input:focus {
+            border-color: #ffec8b;
+            box-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
+        }
+
+        .initials-input.error {
+            border-color: var(--vscode-errorForeground);
+        }
+
+        .initials-submit {
+            padding: 6px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #ffd700;
+            color: #000000;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .initials-submit:hover {
+            background: #ffec8b;
+        }
+
+        .initials-submit:disabled {
+            background: #666;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .initials-error {
+            font-size: 11px;
+            color: var(--vscode-errorForeground);
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .initials-hint {
+            font-size: 10px;
+            color: var(--vscode-descriptionForeground);
+            margin-top: 2px;
+        }
+
+        /* Content area padding when overlay is visible */
+        body.initials-required {
+            padding-bottom: 100px;
+        }
     </style>
 </head>
-<body>
+<body class="${this.initialsValidated ? '' : 'initials-required'}">
     <div class="header">
-        <h2>Developer Tasks <span id="initials-display"></span></h2>
+        <h2>Developer Tasks <span id="initials-display">${this.developerInitials ? '(' + this.developerInitials + ')' : ''}</span></h2>
         <button class="refresh-btn" onclick="refresh()">Refresh</button>
     </div>
     <div id="content">
-        <div class="loading">Loading tasks...</div>
+        <div class="loading">${this.initialsValidated ? 'Loading tasks...' : 'Enter your initials to begin tracking'}</div>
+    </div>
+
+    <!-- Inline Initials Input -->
+    <div id="initials-overlay" class="initials-overlay ${this.initialsValidated ? 'hidden' : ''}">
+        <div class="initials-container">
+            <div class="initials-label">Developer Initials</div>
+            <div class="initials-row">
+                <input type="text"
+                       id="initials-input"
+                       class="initials-input"
+                       maxlength="2"
+                       placeholder="XX"
+                       autocomplete="off"
+                       spellcheck="false">
+                <button id="initials-submit" class="initials-submit" onclick="submitInitials()">Submit</button>
+            </div>
+            <div id="initials-error" class="initials-error" style="display: none;"></div>
+            <div class="initials-hint">Enter your 2-letter initials (e.g., GU, JD)</div>
+        </div>
     </div>
 
     <script nonce="${nonce}">
         console.log('Jubilee Tasks Webview: Script loaded');
         const vscode = acquireVsCodeApi();
         console.log('Jubilee Tasks Webview: vscode API acquired');
+
+        // Track initials validation state
+        let initialsValidated = ${this.initialsValidated};
 
         function refresh() {
             console.log('Jubilee Tasks Webview: Refresh clicked');
@@ -361,6 +521,94 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
         function completeTask(taskId) {
             vscode.postMessage({ command: 'completeTask', taskId: taskId });
         }
+
+        // Initials input handling
+        function validateInitials(value) {
+            if (!value) {
+                return 'Initials are required';
+            }
+            if (value.length !== 2) {
+                return 'Initials must be exactly 2 characters';
+            }
+            if (!/^[A-Za-z]{2}$/.test(value)) {
+                return 'Initials must contain only letters';
+            }
+            return null;
+        }
+
+        function submitInitials() {
+            const input = document.getElementById('initials-input');
+            const errorDiv = document.getElementById('initials-error');
+            const submitBtn = document.getElementById('initials-submit');
+
+            const value = input.value.trim().toUpperCase();
+            const error = validateInitials(value);
+
+            if (error) {
+                input.classList.add('error');
+                errorDiv.textContent = error;
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Clear error state
+            input.classList.remove('error');
+            errorDiv.style.display = 'none';
+
+            // Disable button while submitting
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+
+            // Send to extension
+            vscode.postMessage({ command: 'submitInitials', initials: value });
+        }
+
+        function hideInitialsOverlay() {
+            const overlay = document.getElementById('initials-overlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+            }
+            document.body.classList.remove('initials-required');
+            initialsValidated = true;
+        }
+
+        function showInitialsError(errorMessage) {
+            const input = document.getElementById('initials-input');
+            const errorDiv = document.getElementById('initials-error');
+            const submitBtn = document.getElementById('initials-submit');
+
+            input.classList.add('error');
+            errorDiv.textContent = errorMessage;
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit';
+        }
+
+        // Setup initials input event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('initials-input');
+            if (input) {
+                // Auto-uppercase as user types
+                input.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.toUpperCase();
+                    // Clear error state on input
+                    e.target.classList.remove('error');
+                    document.getElementById('initials-error').style.display = 'none';
+                });
+
+                // Submit on Enter key
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        submitInitials();
+                    }
+                });
+
+                // Focus the input if overlay is visible
+                if (!initialsValidated) {
+                    setTimeout(() => input.focus(), 100);
+                }
+            }
+        });
 
         function formatTime(isoString) {
             const date = new Date(isoString);
@@ -532,6 +780,23 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
                     if (initialsDisplay) {
                         initialsDisplay.textContent = message.initials ? '(' + message.initials + ')' : '';
                     }
+                    break;
+                case 'setInitialsValidated':
+                    console.log('Jubilee Tasks Webview: Initials validated:', message.validated, 'initials:', message.initials);
+                    if (message.validated) {
+                        hideInitialsOverlay();
+                        // Update header with initials
+                        if (message.initials) {
+                            const initialsDisplay = document.getElementById('initials-display');
+                            if (initialsDisplay) {
+                                initialsDisplay.textContent = '(' + message.initials + ')';
+                            }
+                        }
+                    }
+                    break;
+                case 'initialsError':
+                    console.log('Jubilee Tasks Webview: Initials error:', message.error);
+                    showInitialsError(message.error);
                     break;
                 case 'error':
                     console.log('Jubilee Tasks Webview: Showing error:', message.error);
