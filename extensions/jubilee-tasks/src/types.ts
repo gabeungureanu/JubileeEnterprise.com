@@ -27,6 +27,7 @@ export interface DeveloperTask {
     start_time: string;
     end_time: string | null;
     active_duration_ms: number;
+    ehh_minutes: number | null;  // Estimated Human Hours in minutes
     last_activity_at: string;
     session_id: string | null;
     machine_name: string | null;
@@ -35,6 +36,7 @@ export interface DeveloperTask {
     updated_at: string;
     // View fields
     duration_formatted?: string;
+    ehh_formatted?: string;  // EHH formatted as HH:MM
     task_date?: string;
     project_category?: string;
     project_type?: string;
@@ -65,6 +67,7 @@ export interface TaskUpdateRequest {
 
 export interface TaskCompleteRequest {
     active_duration_ms: number;
+    ehh_minutes?: number;
 }
 
 export interface TaskListFilters {

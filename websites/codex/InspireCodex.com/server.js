@@ -4760,17 +4760,18 @@ app.put('/api/v1/developer/tasks/:id/activity', async (req, res) => {
 app.post('/api/v1/developer/tasks/:id/complete', async (req, res) => {
     try {
         const { id } = req.params;
-        const { active_duration_ms } = req.body;
+        const { active_duration_ms, ehh_minutes } = req.body;
 
         const result = await codexPool.query(`
             UPDATE developer_tasks
             SET status = 'complete',
                 end_time = NOW(),
                 active_duration_ms = $2,
+                ehh_minutes = $3,
                 updated_at = NOW()
             WHERE id = $1
             RETURNING *
-        `, [id, active_duration_ms || 0]);
+        `, [id, active_duration_ms || 0, ehh_minutes || null]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: 'Task not found' });
@@ -4782,6 +4783,40 @@ app.post('/api/v1/developer/tasks/:id/complete', async (req, res) => {
     } catch (err) {
         console.error('Complete developer task error:', err);
         res.status(500).json({ success: false, error: 'Failed to complete task', message: err.message });
+    }
+});
+
+/**
+ * Update a developer task's EHH value
+ * PUT /api/v1/developer/tasks/:id/ehh
+ */
+app.put('/api/v1/developer/tasks/:id/ehh', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { ehh_minutes } = req.body;
+
+        if (ehh_minutes === undefined || ehh_minutes === null) {
+            return res.status(400).json({ success: false, error: 'ehh_minutes is required' });
+        }
+
+        const result = await codexPool.query(`
+            UPDATE developer_tasks
+            SET ehh_minutes = $2,
+                updated_at = NOW()
+            WHERE id = $1
+            RETURNING *
+        `, [id, ehh_minutes]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Task not found' });
+        }
+
+        console.log(`Updated EHH for task ${result.rows[0].task_code}: ${ehh_minutes} minutes`);
+
+        res.json({ success: true, task: result.rows[0] });
+    } catch (err) {
+        console.error('Update developer task EHH error:', err);
+        res.status(500).json({ success: false, error: 'Failed to update EHH', message: err.message });
     }
 });
 

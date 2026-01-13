@@ -20,7 +20,7 @@
       "activitybar": [
         {
           "id": "jubilee-tasks",
-          "title": "Jubilee Tasks",
+          "title": "Jubilee Task Manager",
           "icon": "resources/icon.svg"
         }
       ]
@@ -30,7 +30,7 @@
         {
           "type": "webview",
           "id": "jubileeTasksPanel",
-          "name": "Task Tracker"
+          "name": "Developer Tasks"
         }
       ]
     },

@@ -203,7 +203,30 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
             color: var(--vscode-descriptionForeground);
             margin-bottom: 8px;
             padding: 4px 0;
-            border-bottom: 1px solid var(--vscode-widget-border);
+        }
+
+        .date-separator {
+            width: 100%;
+            height: 1px;
+            background-color: #ffffff;
+            margin: 4px 0 8px 0;
+        }
+
+        .totals-row {
+            font-weight: 600;
+        }
+
+        .totals-row td {
+            padding-top: 8px;
+            padding-bottom: 8px;
+            border-top: 1px solid #ffffff;
+            border-bottom: 1px solid #ffffff;
+        }
+
+        .totals-label {
+            text-align: right;
+            padding-right: 12px;
+            font-weight: 600;
         }
 
         .task-table {
@@ -215,9 +238,9 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
         .task-table th {
             text-align: left;
             padding: 4px 6px;
-            background: var(--vscode-editor-background);
-            color: var(--vscode-descriptionForeground);
-            font-weight: 500;
+            background: rgba(255, 215, 0, 0.5);
+            color: #ffffff;
+            font-weight: 700;
             border-bottom: 1px solid var(--vscode-widget-border);
         }
 
@@ -233,6 +256,10 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
 
         .task-table tr.current {
             background: var(--vscode-list-activeSelectionBackground);
+        }
+
+        .task-table tbody tr:last-child td {
+            border-bottom: 1px solid #ffffff;
         }
 
         .task-code {
@@ -258,11 +285,13 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
             white-space: nowrap;
             font-family: var(--vscode-editor-font-family);
             font-size: 10px;
+            text-align: center;
         }
 
         .duration {
             font-family: var(--vscode-editor-font-family);
             white-space: nowrap;
+            text-align: center;
         }
 
         .status {
@@ -301,7 +330,7 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
 </head>
 <body>
     <div class="header">
-        <h2>Task Tracker</h2>
+        <h2>Developer Tasks</h2>
         <button class="refresh-btn" onclick="refresh()">Refresh</button>
     </div>
     <div id="content">
@@ -327,7 +356,6 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
             return date.toLocaleTimeString('en-US', {
                 hour: '2-digit',
                 minute: '2-digit',
-                second: '2-digit',
                 hour12: true
             });
         }
@@ -346,34 +374,82 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
             for (const date of dates) {
                 const tasks = groupedTasks[date];
 
+                // Calculate daily totals (only for completed tasks)
+                const completedTasks = tasks.filter(t => t.status === 'complete');
+                let totalDurationMs = 0;
+                let totalEhhMinutes = 0;
+                let earliestStart = null;
+                let latestEnd = null;
+
+                for (const task of completedTasks) {
+                    totalDurationMs += parseInt(task.active_duration_ms) || 0;
+                    totalEhhMinutes += parseInt(task.ehh_minutes) || 0;
+
+                    const startTime = new Date(task.start_time);
+                    const endTime = task.end_time ? new Date(task.end_time) : null;
+
+                    if (!earliestStart || startTime < earliestStart) {
+                        earliestStart = startTime;
+                    }
+                    if (endTime && (!latestEnd || endTime > latestEnd)) {
+                        latestEnd = endTime;
+                    }
+                }
+
                 html += '<div class="date-group">';
                 html += '<div class="date-header">' + date + '</div>';
+                html += '<div class="date-separator"></div>';
                 html += '<table class="task-table">';
                 html += '<thead><tr>';
                 html += '<th>Task ID</th>';
                 html += '<th>Dev</th>';
                 html += '<th>Task Name</th>';
-                html += '<th>Start</th>';
-                html += '<th>End</th>';
-                html += '<th>Duration</th>';
-                html += '<th>Status</th>';
+                html += '<th style="text-align: center;">Start</th>';
+                html += '<th style="text-align: center;">End</th>';
+                html += '<th style="text-align: center;">Duration</th>';
+                html += '<th style="text-align: center;">EHH</th>';
+                html += '<th style="text-align: center;">Task Status</th>';
                 html += '</tr></thead>';
                 html += '<tbody>';
 
                 for (const task of tasks) {
                     const isCurrent = task.id === currentTaskId;
+                    const isInProgress = task.status === 'in_progress';
+
                     html += '<tr class="' + (isCurrent ? 'current' : '') + '">';
                     html += '<td class="task-code">' + task.task_code + '</td>';
                     html += '<td class="dev-initials">' + task.developer_initials + '</td>';
                     html += '<td class="task-name" title="' + escapeHtml(task.task_name) + '">' + escapeHtml(task.task_name) + '</td>';
                     html += '<td class="time">' + formatTime(task.start_time) + '</td>';
-                    html += '<td class="time">' + (task.end_time ? formatTime(task.end_time) : '-') + '</td>';
-                    html += '<td class="duration">' + (task.duration_formatted || formatDuration(task.active_duration_ms)) + '</td>';
-                    html += '<td><span class="status ' + task.status + '">' + task.status.replace('_', ' ') + '</span></td>';
+
+                    // Hide End, Duration, EHH for in-progress tasks
+                    if (isInProgress) {
+                        html += '<td class="time">-</td>';
+                        html += '<td class="duration">-</td>';
+                        html += '<td class="duration">-</td>';
+                    } else {
+                        html += '<td class="time">' + (task.end_time ? formatTime(task.end_time) : '-') + '</td>';
+                        html += '<td class="duration">' + formatDurationDisplay(task.duration_formatted, task.active_duration_ms) + '</td>';
+                        html += '<td class="duration">' + formatEHH(task.ehh_minutes, task.ehh_formatted) + '</td>';
+                    }
+
+                    html += '<td style="text-align: center;"><span class="status ' + task.status + '">' + task.status.replace('_', ' ') + '</span></td>';
                     html += '</tr>';
                 }
 
-                html += '</tbody></table>';
+                // Daily totals row (only shown if there are completed tasks)
+                if (completedTasks.length > 0) {
+                    html += '<tfoot><tr class="totals-row">';
+                    html += '<td colspan="3" class="totals-label">TOTALS:</td>';
+                    html += '<td class="time">' + (earliestStart ? formatTime(earliestStart.toISOString()) : '-') + '</td>';
+                    html += '<td class="time">' + (latestEnd ? formatTime(latestEnd.toISOString()) : '-') + '</td>';
+                    html += '<td class="duration">' + formatDuration(totalDurationMs) + '</td>';
+                    html += '<td class="duration">' + formatMinutesToHHMM(totalEhhMinutes) + '</td>';
+                    html += '<td></td>';
+                    html += '</tr></tfoot>';
+                }
+
+                html += '</table>';
                 html += '</div>';
             }
 
@@ -381,13 +457,47 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
         }
 
         function formatDuration(ms) {
-            if (!ms) return '00:00:00';
+            if (!ms) return '00:00';
             const hours = Math.floor(ms / 3600000);
             const minutes = Math.floor((ms % 3600000) / 60000);
-            const seconds = Math.floor((ms % 60000) / 1000);
             return hours.toString().padStart(2, '0') + ':' +
-                   minutes.toString().padStart(2, '0') + ':' +
-                   seconds.toString().padStart(2, '0');
+                   minutes.toString().padStart(2, '0');
+        }
+
+        function formatDurationDisplay(formatted, ms) {
+            // If we have a formatted string from API (HH:MM:SS), strip seconds
+            if (formatted && formatted.length >= 5) {
+                const parts = formatted.split(':');
+                if (parts.length === 3) {
+                    return parts[0] + ':' + parts[1];
+                }
+                return formatted;
+            }
+            // Otherwise format from milliseconds
+            return formatDuration(ms);
+        }
+
+        function formatEHH(ehhMinutes, ehhFormatted) {
+            // If we have a pre-formatted string, use it (strip seconds if HH:MM:SS)
+            if (ehhFormatted && ehhFormatted.length >= 5) {
+                const parts = ehhFormatted.split(':');
+                if (parts.length === 3) {
+                    return parts[0] + ':' + parts[1];
+                }
+                return ehhFormatted;
+            }
+            // Otherwise format from minutes
+            if (ehhMinutes === null || ehhMinutes === undefined || ehhMinutes === 0) {
+                return '-';
+            }
+            return formatMinutesToHHMM(ehhMinutes);
+        }
+
+        function formatMinutesToHHMM(minutes) {
+            if (!minutes) return '00:00';
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            return hours.toString().padStart(2, '0') + ':' + mins.toString().padStart(2, '0');
         }
 
         function escapeHtml(text) {

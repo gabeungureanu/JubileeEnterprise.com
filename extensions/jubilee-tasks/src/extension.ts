@@ -11,9 +11,15 @@ import { InitialsManager } from './initials-manager';
 import { ProjectDetector } from './project-detector';
 import { getTaskService, resetTaskService } from './task-service';
 import { getTaskGenerator } from './task-generator';
+import { getEHHEstimator } from './ehh-estimator';
 import { ActivityMonitor } from './activity-monitor';
 import { TasksWebviewProvider } from './webview-provider';
 import { DeveloperTask } from './types';
+
+// 4 hours in milliseconds for auto-completion threshold
+const AUTO_COMPLETE_THRESHOLD_MS = 4 * 60 * 60 * 1000;
+// Check interval for auto-completion (every 5 minutes)
+const AUTO_COMPLETE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 // Global state
 let initialsManager: InitialsManager;
@@ -23,6 +29,7 @@ let webviewProvider: TasksWebviewProvider;
 let currentTask: DeveloperTask | null = null;
 let sessionId: string;
 let isMonitoring = false;
+let autoCompleteTimer: NodeJS.Timeout | null = null;
 
 // Output channel for debugging
 let outputChannel: vscode.OutputChannel;
@@ -92,6 +99,17 @@ export async function activate(context: vscode.ExtensionContext) {
             dispose: () => activityMonitor.stop()
         });
 
+        // Start auto-completion checker (4-hour inactivity threshold)
+        startAutoCompleteChecker();
+        context.subscriptions.push({
+            dispose: () => {
+                if (autoCompleteTimer) {
+                    clearInterval(autoCompleteTimer);
+                    autoCompleteTimer = null;
+                }
+            }
+        });
+
         // Start terminal monitoring for Claude Code
         startClaudeCodeMonitoring(context);
 
@@ -111,12 +129,18 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 async function initializeAsync(): Promise<void> {
-    // Check for existing initials (don't prompt on startup - let user do it manually)
+    // Check for existing initials and prompt if not set
     const hasInitials = initialsManager.hasValidInitials();
     if (!hasInitials) {
-        vscode.window.showWarningMessage(
-            'Jubilee Tasks: Developer initials not set. Run "Jubilee: Set Developer Initials" to enable task tracking.'
-        );
+        log('Developer initials not set, prompting user...');
+        const initials = await initialsManager.promptForInitials();
+        if (!initials) {
+            vscode.window.showWarningMessage(
+                'Jubilee Tasks: Developer initials not set. Task tracking disabled until initials are configured.'
+            );
+        } else {
+            log(`Developer initials set to: ${initials}`);
+        }
     }
 
     // Check for existing active task for this session
@@ -147,65 +171,84 @@ export function deactivate() {
 }
 
 /**
- * Start monitoring Claude Code terminal for user messages
+ * Start monitoring Claude Code via hook messages file
  */
 function startClaudeCodeMonitoring(context: vscode.ExtensionContext) {
-    // Monitor terminal creation
-    context.subscriptions.push(
-        vscode.window.onDidOpenTerminal((terminal) => {
-            if (isClaudeCodeTerminal(terminal)) {
-                console.log('Claude Code terminal detected:', terminal.name);
-                monitorTerminal(terminal);
-            }
-        })
-    );
-
-    // Check existing terminals
-    for (const terminal of vscode.window.terminals) {
-        if (isClaudeCodeTerminal(terminal)) {
-            console.log('Existing Claude Code terminal found:', terminal.name);
-            monitorTerminal(terminal);
-        }
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders || workspaceFolders.length === 0) {
+        log('No workspace folder found, cannot monitor hook messages');
+        return;
     }
 
-    // Monitor active terminal changes
+    const workspaceRoot = workspaceFolders[0].uri.fsPath;
+    const hookMessagesPath = vscode.Uri.file(`${workspaceRoot}/.claude/hook-messages.json`);
+
+    log(`Setting up file watcher for: ${hookMessagesPath.fsPath}`);
+
+    // Create file watcher for hook messages
+    const watcher = vscode.workspace.createFileSystemWatcher(
+        new vscode.RelativePattern(workspaceFolders[0], '.claude/hook-messages.json')
+    );
+
+    // Track last processed message to avoid duplicates
+    let lastProcessedTimestamp = 0;
+
+    const processHookMessage = async () => {
+        try {
+            const fs = await import('fs');
+            const content = fs.readFileSync(hookMessagesPath.fsPath, 'utf8');
+            const message = JSON.parse(content);
+
+            // Skip if we've already processed this message
+            if (message.timestamp <= lastProcessedTimestamp) {
+                return;
+            }
+            lastProcessedTimestamp = message.timestamp;
+
+            log(`Received hook message: ${message.event}`);
+
+            if (message.event === 'UserPromptSubmit') {
+                // User submitted a new prompt - create a task
+                log(`User prompt submitted: ${message.prompt?.substring(0, 100)}...`);
+                activityMonitor.onActivity();
+
+                // Create task if we have a prompt and no current task
+                if (message.prompt && !currentTask) {
+                    await createTask(message.prompt);
+                } else if (message.prompt && currentTask) {
+                    // Update activity on existing task
+                    activityMonitor.onActivity();
+                }
+            } else if (message.event === 'Stop') {
+                // Claude finished responding - could complete task or just update activity
+                log('Claude response completed');
+                activityMonitor.onActivity();
+            }
+        } catch (err) {
+            // File might not exist yet or be in the process of being written
+            if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+                log(`Error processing hook message: ${err}`);
+            }
+        }
+    };
+
+    // Watch for changes to the hook messages file
+    watcher.onDidChange(processHookMessage);
+    watcher.onDidCreate(processHookMessage);
+
+    context.subscriptions.push(watcher);
+
+    // Also monitor terminal activity as a backup
     context.subscriptions.push(
         vscode.window.onDidChangeActiveTerminal((terminal) => {
-            if (terminal && isClaudeCodeTerminal(terminal)) {
+            if (terminal) {
                 activityMonitor.onActivity();
             }
         })
     );
 
     isMonitoring = true;
-}
-
-/**
- * Check if a terminal is Claude Code
- */
-function isClaudeCodeTerminal(terminal: vscode.Terminal): boolean {
-    const name = terminal.name.toLowerCase();
-    return name.includes('claude') ||
-           name.includes('code') ||
-           name === 'task' ||
-           name === 'terminal';
-}
-
-/**
- * Monitor a Claude Code terminal for user input
- */
-function monitorTerminal(terminal: vscode.Terminal) {
-    // VS Code doesn't provide direct terminal input/output access
-    // We'll use a workaround by monitoring terminal write events via shell integration
-    // For now, we trigger task creation on terminal focus and typing activity
-
-    // The best approach is to hook into Claude Code's hooks system or
-    // monitor file changes and terminal activity patterns
-
-    // Alternative: Use VS Code's proposed terminal data API (if available)
-    // or integrate with Claude Code's hook system
-
-    console.log(`Monitoring terminal: ${terminal.name}`);
+    log('Claude Code hook monitoring started');
 }
 
 /**
@@ -262,28 +305,40 @@ async function createTask(userPrompt: string): Promise<void> {
 }
 
 /**
- * Complete the current task
+ * Complete the current task with EHH estimation
  */
-async function completeCurrentTask(): Promise<void> {
+async function completeCurrentTask(isAutoComplete: boolean = false): Promise<void> {
     if (!currentTask) {
         console.log('No current task to complete');
         return;
     }
 
     const taskService = getTaskService();
+    const ehhEstimator = getEHHEstimator();
     const activeDuration = activityMonitor.getActiveDuration();
 
+    // Estimate EHH before completing
+    log(`Estimating EHH for task ${currentTask.task_code}...`);
+
+    // Update task with duration for EHH estimation
+    const taskForEHH = { ...currentTask, active_duration_ms: activeDuration };
+    const ehhMinutes = await ehhEstimator.estimateEHH(taskForEHH);
+
     const response = await taskService.completeTask(currentTask.id, {
-        active_duration_ms: activeDuration
+        active_duration_ms: activeDuration,
+        ehh_minutes: ehhMinutes || undefined
     });
 
     if (response.success && response.data) {
         const formattedDuration = ActivityMonitor.formatDuration(activeDuration);
-        vscode.window.showInformationMessage(
-            `Task ${currentTask.task_code} completed (${formattedDuration})`
-        );
+        const formattedEHH = ehhMinutes ? `${Math.floor(ehhMinutes / 60)}h ${ehhMinutes % 60}m` : 'N/A';
 
-        console.log(`Task completed: ${currentTask.task_code}, duration: ${formattedDuration}`);
+        const message = isAutoComplete
+            ? `Task ${currentTask.task_code} auto-completed due to inactivity (${formattedDuration}, EHH: ${formattedEHH})`
+            : `Task ${currentTask.task_code} completed (${formattedDuration}, EHH: ${formattedEHH})`;
+
+        vscode.window.showInformationMessage(message);
+        log(`Task completed: ${currentTask.task_code}, duration: ${formattedDuration}, EHH: ${formattedEHH}`);
     } else {
         console.error('Failed to complete task:', response.error);
     }
@@ -292,6 +347,26 @@ async function completeCurrentTask(): Promise<void> {
     activityMonitor.reset();
     webviewProvider.setCurrentTask(undefined);
     webviewProvider.refreshTasks();
+}
+
+/**
+ * Start the auto-completion checker
+ * Checks every 5 minutes if a task has been inactive for 4 hours
+ */
+function startAutoCompleteChecker(): void {
+    autoCompleteTimer = setInterval(async () => {
+        if (!currentTask) return;
+
+        const stats = activityMonitor.getStats();
+        const now = new Date();
+        const timeSinceLastActivity = now.getTime() - stats.lastActivity.getTime();
+
+        // Check if inactive for more than 4 hours
+        if (timeSinceLastActivity >= AUTO_COMPLETE_THRESHOLD_MS) {
+            log(`Auto-completing task ${currentTask.task_code} due to 4+ hours of inactivity`);
+            await completeCurrentTask(true);
+        }
+    }, AUTO_COMPLETE_CHECK_INTERVAL_MS);
 }
 
 /**
