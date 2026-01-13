@@ -1,0 +1,72 @@
+{
+  "name": "Jubilee Enterprise Services",
+  "version": "1.0.0",
+  "description": "Unified service configuration for all Jubilee websites and APIs",
+  "healthPort": 3999,
+  "services": [
+    {
+      "name": "jubileeverse",
+      "description": "JubileeVerse.com - Main Website",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com/websites/codex/JubileeVerse.com",
+      "port": 3000,
+      "enabled": true
+    },
+    {
+      "name": "jubileeinspire",
+      "description": "JubileeInspire.com - Inspiration Platform",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com/websites/codex/JubileeInspire.com",
+      "port": 3001,
+      "enabled": true
+    },
+    {
+      "name": "wwbibleweb",
+      "description": "wwBibleweb.com - Bible Web Platform",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com/websites/codex/wwBibleweb.com",
+      "port": 3003,
+      "enabled": true
+    },
+    {
+      "name": "jubileewebsites",
+      "description": "JubileeWebsites.com - Website Generator",
+      "script": "server.mjs",
+      "cwd": "C:/data/JubileeEnterprise.com/websites/codex/JubileeWebsites.com",
+      "port": 3008,
+      "enabled": true
+    },
+    {
+      "name": "jubileeparadox",
+      "description": "JubileeParadox.com - Movie Website",
+      "script": "server.cjs",
+      "cwd": "C:/data/JubileeEnterprise.com/websites/codex/JubileeParadox.com",
+      "port": 3009,
+      "enabled": true
+    },
+    {
+      "name": "inspirecodex-api",
+      "description": "InspireCodex API - Identity & Configuration",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/InspireCodex.com",
+      "port": 3100,
+      "enabled": true
+    },
+    {
+      "name": "inspirecontinuum-api",
+      "description": "InspireContinuum API - User Activity & Chat",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com/websites/codex/InspireContinuum.com",
+      "port": 3101,
+      "enabled": true
+    },
+    {
+      "name": "jubileebrowser",
+      "description": "JubileeBrowser.com - Browser Downloads",
+      "script": "server.cjs",
+      "cwd": "C:/data/JubileeEnterprise.com/websites/codex/JubileeBrowser.com",
+      "port": 3200,
+      "enabled": true
+    }
+  ]
+}
