@@ -880,6 +880,10 @@ public partial class MainWindow : Window
 
     private void OnMailSent(object? sender, EventArgs e)
     {
+        // Clear displayed message so reading pane shows blank after sending
+        _mainViewModel.DisplayedMessage = null;
+        _mainViewModel.SelectedMessage = null;
+
         // Mail was sent successfully
         HideComposePanel();
         MessageBox.Show("Mail sent successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -887,6 +891,10 @@ public partial class MainWindow : Window
 
     private void OnComposeCancelled(object? sender, EventArgs e)
     {
+        // Clear displayed message so reading pane shows blank after closing compose
+        _mainViewModel.DisplayedMessage = null;
+        _mainViewModel.SelectedMessage = null;
+
         // User cancelled composition
         HideComposePanel();
     }
