@@ -1832,8 +1832,8 @@
       color: #666;
       padding-bottom: var(--space-sm);
       border-bottom: 1px solid #e0e0e0;
-      margin-bottom: 5px;
-      margin-top: 60px;
+      margin-bottom: 2px;
+      margin-top: 40px;
     }
 
     .section-content {
@@ -2362,6 +2362,14 @@
       font-size: 14px;
       font-weight: 700;
       color: #333;
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-brand-item:hover {
+      color: #000;
+      text-decoration: underline;
     }
 
     .footer-main {
@@ -3540,7 +3548,7 @@ In a world that often feels disconnecte...</p>
   <footer class="site-footer">
     <div class="footer-top">
       <div class="footer-brands">
-        <span class="footer-brand-item">Spiritual Growth</span><span class="footer-brand-item">Faith in Action</span><span class="footer-brand-item">Worship and Praise</span><span class="footer-brand-item">Prayer and Devotion</span><span class="footer-brand-item">Holy Spirit</span>
+        <a href="#" class="footer-brand-item" onclick="openPortal('spiritual-growth'); return false;">Spiritual Growth</a><a href="#" class="footer-brand-item" onclick="openPortal('faith-in-action'); return false;">Faith in Action</a><a href="#" class="footer-brand-item" onclick="openPortal('worship-and-praise'); return false;">Worship and Praise</a><a href="#" class="footer-brand-item" onclick="openPortal('prayer-and-devotion'); return false;">Prayer and Devotion</a><a href="#" class="footer-brand-item" onclick="openPortal('holy-spirit'); return false;">Holy Spirit</a>
       </div>
     </div>
     <div class="footer-main">

@@ -4,12 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Jubilee: Project Manager - JubileeVerse Admin">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Tasks - Admin - JubileeVerse</title>
   <link rel="icon" type="image/png" href="/images/personas/jubilee.png">
   <link rel="apple-touch-icon" href="/images/personas/jubilee.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/admin-header.css">
-  <link rel="stylesheet" href="/css/admin-sidebar.css">
+  <link rel="stylesheet" href="/css/admin-header.css?v=20260113">
+  <link rel="stylesheet" href="/css/admin-sidebar.css?v=20260113">
   <style>
     * {
       margin: 0;
@@ -5651,7 +5654,7 @@
     }
   </style>
 </head>
-<body>
+<body class="tasks-view-active">
   <!-- Custom Calendar Popup -->
   <div class="custom-calendar-overlay" id="calendarOverlay"></div>
   <div class="custom-calendar" id="customCalendar">
@@ -6218,12 +6221,12 @@
       <!-- Right Control Panel - Navigation for Views (Dashboard, Tasks, QA Tests) -->
       <div class="tasks-control-panel">
         <!-- Dashboard View (Primary - default view, shows velocity gauges and analytics) -->
-        <button class="control-btn active" data-view="dashboard" title="Dashboard - Velocity & Analytics">
+        <button class="control-btn" data-view="dashboard" title="Dashboard - Velocity & Analytics">
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
           <span class="control-btn-label">Dashboard</span>
         </button>
         <!-- Tasks View (shows task queue with full operational controls) -->
-        <button class="control-btn" data-view="tasks" title="Task Queue - Operational View">
+        <button class="control-btn active" data-view="tasks" title="Task Queue - Operational View">
           <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
           <span class="control-btn-label">Tasks</span>
         </button>
@@ -6470,8 +6473,13 @@
   </div>
 
   <script>
+    // Animations DISABLED - debugging freeze issue
+    const DEBUG_DISABLE_ANIMATIONS = true;
+    console.log('[DEBUG] Script starting - animations disabled');
+
     (function() {
       'use strict';
+      console.log('[DEBUG] IIFE starting');
 
       // ==================== PAGE LOAD REVEAL ANIMATION ====================
       // Animates the green and red vertical lines from center outward
@@ -6849,52 +6857,24 @@
           ctx.fill();
         }
 
-        let wiggleFrameCount = 0;
+        // Wiggle animation REMOVED - was causing page freezes
+        // Needle now stays stable at all times
         function startWiggle() {
-          if (isWiggling) return;
-          isWiggling = true;
-          isStabilized = false;  // Reset stabilization when starting new animation
-          wiggleFrameCount = 0;
-
-          // Clear any existing stabilization timer
-          if (stabilizationTimer) {
-            clearTimeout(stabilizationTimer);
-          }
-
-          // Set up stabilization timer - after 10 seconds, needle becomes stable
-          stabilizationTimer = setTimeout(() => {
-            stabilize();
-          }, STABILIZATION_DELAY);
-
-          function wiggle() {
-            if (!isWiggling) return;
-            wiggleFrameCount++;
-            // Only update every 20th frame (80% slower than previous)
-            if (wiggleFrameCount % 20 === 0) {
-              drawGauge();
-            }
-            requestAnimationFrame(wiggle);
-          }
-          wiggle();
+          // No-op - wiggle disabled
+          isStabilized = true;
         }
 
         function stopWiggle() {
-          isWiggling = false;
-          if (stabilizationTimer) {
-            clearTimeout(stabilizationTimer);
-            stabilizationTimer = null;
-          }
+          // No-op - wiggle disabled
           drawGauge();
         }
 
-        // Stabilize the needle - stop oscillation and hold at exact value
         function stabilize() {
           isStabilized = true;
           isWiggling = false;
           currentVibrationOffset = 0;
           drawGauge();
-          updateDisplayValue(currentValue);  // Show exact value
-          console.log('Velocity gauge stabilized at', currentValue, 'WPH');
+          updateDisplayValue(currentValue);
         }
 
         function animateTo(value) {
@@ -6910,7 +6890,7 @@
             isStabilized = false;  // Temporarily un-stabilize for animation
           }
 
-          // Start wiggle during animation
+          // Start wiggle during animation (now a no-op since wiggle is disabled)
           startWiggle();
 
           function animate() {
@@ -6960,6 +6940,13 @@
           if (newScale !== maxScale) {
             console.log('[VelocityGauge] Auto-rescaling required:', maxScale, '->', newScale);
             setMaxScale(newScale);
+          }
+
+          // DEBUG: Skip animation if flag set
+          if (typeof DEBUG_DISABLE_ANIMATIONS !== 'undefined' && DEBUG_DISABLE_ANIMATIONS) {
+            console.log('[VelocityGauge] DEBUG: Setting value instantly (no animation)');
+            setValueInstant(value);
+            return;
           }
 
           console.log('[VelocityGauge] Animating to:', value, '(max:', maxScale, ')');
@@ -7284,6 +7271,11 @@
         }
 
         setValue(percent) {
+          // DEBUG: Skip animation if flag set
+          if (typeof DEBUG_DISABLE_ANIMATIONS !== 'undefined' && DEBUG_DISABLE_ANIMATIONS) {
+            this.setValueInstant(percent);
+            return;
+          }
           this.animateTo(percent);
         }
 
@@ -8523,16 +8515,35 @@
       // Add business days to a date (skips weekends)
       // Timeline Burst: Projects where the project would be if work had been done at human speed
       function addBusinessDays(startDate, businessDays) {
+        // Safety: validate inputs to prevent infinite loops
+        if (!startDate || isNaN(new Date(startDate).getTime())) {
+          console.warn('[addBusinessDays] Invalid start date');
+          return new Date();
+        }
+        if (!businessDays || businessDays < 0 || !isFinite(businessDays)) {
+          console.warn('[addBusinessDays] Invalid businessDays:', businessDays);
+          return new Date(startDate);
+        }
+
         const result = new Date(startDate);
         let daysAdded = 0;
 
-        while (daysAdded < businessDays) {
+        // Safety limit: max 10 years (about 2600 business days) to prevent infinite loops
+        const MAX_ITERATIONS = 3700;  // ~10 years including weekends
+        let iterations = 0;
+
+        while (daysAdded < businessDays && iterations < MAX_ITERATIONS) {
           result.setDate(result.getDate() + 1);
           const dayOfWeek = result.getDay();
           // Skip Saturday (6) and Sunday (0)
           if (dayOfWeek !== 0 && dayOfWeek !== 6) {
             daysAdded++;
           }
+          iterations++;
+        }
+
+        if (iterations >= MAX_ITERATIONS) {
+          console.warn('[addBusinessDays] Hit iteration limit - businessDays may be too large:', businessDays);
         }
 
         return result;
@@ -9502,43 +9513,58 @@
       });
 
       // Initialize
+      console.log('[DEBUG] Before initSidebar');
       initSidebar();
+      console.log('[DEBUG] After initSidebar, before initPanelResize');
       initPanelResize();
+      console.log('[DEBUG] After initPanelResize');
 
       // Initialize velocity gauge (speedometer) - start at 0, animate to value
+      console.log('[DEBUG] Before VelocityGauge.init');
       VelocityGauge.init('velocityGaugeCanvas');
+      console.log('[DEBUG] After VelocityGauge.init');
       VelocityGauge.setValueInstant(0);
+      console.log('[DEBUG] After VelocityGauge.setValueInstant');
 
       // Note: Main gauge value is set dynamically by loadDashboardMetrics()
       // which calculates WPH from database data. No hardcoded value here.
 
       // Initialize all 4 mini gauges - start at max, then animate to target
+      console.log('[DEBUG] Before FuelGauge.init');
       FuelGauge.init();
       FuelGauge.setValueInstant(100);  // Start at max (full fuel = 100% time remaining)
 
+      console.log('[DEBUG] Before TempGauge.init');
       TempGauge.init();
       TempGauge.setValueInstant(100);  // Start at max
 
+      console.log('[DEBUG] Before OilGauge.init');
       OilGauge.init();
       OilGauge.setValueInstant(100);  // Start at max
 
+      console.log('[DEBUG] Before RpmGauge.init');
       RpmGauge.init();
       RpmGauge.setValueInstant(100);  // Start at max
+      console.log('[DEBUG] All gauges initialized');
 
       // After a short delay, animate gauges to their actual values
       setTimeout(() => {
+        console.log('[DEBUG] Gauge value timeout started');
         try {
           // Calculate milestone time remaining and set Fuel gauge
           milestoneData = calculateMilestoneTimeRemaining();
+          console.log('[DEBUG] Milestone calculated, setting FuelGauge');
           FuelGauge.setValue(milestoneData.fuelPercent);
           const fuelTextEl = document.getElementById('fuelGaugeText');
           if (fuelTextEl) fuelTextEl.textContent = `${milestoneData.hoursRemaining}h`;
 
           // Initialize operational metrics gauges with calculated values
           // These will be properly updated once tasks are loaded
+          console.log('[DEBUG] Setting Temp/Oil/Rpm gauges');
           TempGauge.setValue(0);   // Execution Pressure: starts at 0%
           OilGauge.setValue(100);  // Delivery Confidence: starts at 100% (high is good)
           RpmGauge.setValue(100);  // Quality Control: starts at 100% (high is good)
+          console.log('[DEBUG] All gauge values set');
         } catch (error) {
           console.error('[gauge initialization] Error:', error);
         }
@@ -9678,15 +9704,42 @@
 
       // Helper: Calculate working hours between two dates (Mon-Fri, 8hrs/day)
       function calculateWorkingHours(startDate, endDate) {
+        // Safety: validate dates to prevent infinite loops
+        if (!startDate || !endDate || isNaN(new Date(startDate).getTime()) || isNaN(new Date(endDate).getTime())) {
+          console.warn('[calculateWorkingHours] Invalid dates provided');
+          return 0;
+        }
+
+        // Safety: ensure start is before end
+        if (new Date(startDate) > new Date(endDate)) {
+          console.warn('[calculateWorkingHours] Start date is after end date');
+          return 0;
+        }
+
         let hours = 0;
         const current = new Date(startDate);
-        while (current <= endDate) {
+        current.setHours(0, 0, 0, 0);
+
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        // Safety limit: max 10 years to prevent infinite loops
+        const MAX_ITERATIONS = 3700;
+        let iterations = 0;
+
+        while (current <= end && iterations < MAX_ITERATIONS) {
           const dayOfWeek = current.getDay();
           if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not weekend
             hours += 8;
           }
           current.setDate(current.getDate() + 1);
+          iterations++;
         }
+
+        if (iterations >= MAX_ITERATIONS) {
+          console.warn('[calculateWorkingHours] Hit iteration limit - date range may be too large');
+        }
+
         return hours;
       }
 

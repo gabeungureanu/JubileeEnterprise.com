@@ -182,13 +182,18 @@ const requireAuth = (req, res, next) => {
  */
 const redirectIfAuth = (req, res, next) => {
   if (req.session?.user || req.session?.userId) {
+    // Check for redirect parameter in query string
+    const redirectUrl = req.query.redirect || '/dashboard';
+
     if (req.xhr || req.headers.accept?.includes('application/json')) {
-      return res.status(400).json({
-        success: false,
-        error: 'Already authenticated'
+      // For AJAX requests, return redirect URL so client can handle it
+      return res.status(200).json({
+        success: true,
+        alreadyAuthenticated: true,
+        redirect: redirectUrl
       });
     }
-    return res.redirect('/dashboard');
+    return res.redirect(redirectUrl);
   }
   next();
 };
