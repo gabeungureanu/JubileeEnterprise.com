@@ -8,6 +8,15 @@ namespace JubileeOutlook.ViewModels;
 public partial class NewEventViewModel : ObservableObject
 {
     public event EventHandler? SaveCompleted;
+    public event EventHandler? DeleteCompleted;
+
+    [ObservableProperty]
+    private bool _isEditMode;
+
+    [ObservableProperty]
+    private string _windowTitle = "New event";
+
+    private string? _editingEventId;
 
     [ObservableProperty]
     private string _eventTitle = string.Empty;
@@ -85,6 +94,48 @@ public partial class NewEventViewModel : ObservableObject
         InitializeReminderOptions();
         InitializeCategoryOptions();
         CalculateEventPosition();
+    }
+
+    public void LoadEventForEditing(CalendarEvent eventToEdit)
+    {
+        if (eventToEdit == null) return;
+
+        IsEditMode = true;
+        WindowTitle = "Edit event";
+        _editingEventId = eventToEdit.Id;
+
+        EventTitle = eventToEdit.Subject;
+        Location = eventToEdit.Location;
+        Description = eventToEdit.Description;
+        EventDate = eventToEdit.StartTime.Date;
+        StartTime = eventToEdit.StartTime.ToString("HH:mm");
+        EndTime = eventToEdit.EndTime.ToString("HH:mm");
+        IsAllDay = eventToEdit.IsAllDay;
+        Attendees = string.Join("; ", eventToEdit.Attendees);
+
+        IsBusy = eventToEdit.Status == EventStatus.Busy;
+
+        var colorHex = GetColorHexFromBrush(eventToEdit.EventColor);
+        foreach (var category in CategoryOptions)
+        {
+            if (category.Color.Equals(colorHex, StringComparison.OrdinalIgnoreCase))
+            {
+                SelectedCategory = category;
+                break;
+            }
+        }
+
+        CalculateEventPosition();
+    }
+
+    private static string GetColorHexFromBrush(System.Windows.Media.Brush brush)
+    {
+        if (brush is System.Windows.Media.SolidColorBrush solidBrush)
+        {
+            var color = solidBrush.Color;
+            return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+        }
+        return "#5B9BD5";
     }
 
     private void InitializeStatusOptions()
@@ -238,6 +289,7 @@ public partial class NewEventViewModel : ObservableObject
 
         CreatedEvent = new CalendarEvent
         {
+            Id = IsEditMode && !string.IsNullOrEmpty(_editingEventId) ? _editingEventId : Guid.NewGuid().ToString(),
             Subject = EventTitle,
             Location = Location,
             StartTime = startDateTime,
@@ -251,6 +303,16 @@ public partial class NewEventViewModel : ObservableObject
         };
 
         SaveCompleted?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private void DeleteEvent()
+    {
+        if (IsEditMode && !string.IsNullOrEmpty(_editingEventId))
+        {
+            CreatedEvent = new CalendarEvent { Id = _editingEventId };
+            DeleteCompleted?.Invoke(this, EventArgs.Empty);
+        }
     }
 }
 

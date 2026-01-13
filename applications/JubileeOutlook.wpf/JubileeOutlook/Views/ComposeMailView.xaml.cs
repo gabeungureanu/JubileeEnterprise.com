@@ -29,6 +29,7 @@ public partial class ComposeMailView : UserControl
         {
             oldViewModel.AttachmentRequested -= OnAttachmentRequested;
             oldViewModel.Attachments.CollectionChanged -= OnAttachmentsCollectionChanged;
+            oldViewModel.PropertyChanged -= OnViewModelPropertyChanged;
         }
 
         // Subscribe to new view model
@@ -36,6 +37,42 @@ public partial class ComposeMailView : UserControl
         {
             newViewModel.AttachmentRequested += OnAttachmentRequested;
             newViewModel.Attachments.CollectionChanged += OnAttachmentsCollectionChanged;
+            newViewModel.PropertyChanged += OnViewModelPropertyChanged;
+        }
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // When IsComposing changes to true, clear the RichTextBox to ensure fresh state
+        if (e.PropertyName == nameof(ComposeMailViewModel.IsComposing) &&
+            sender is ComposeMailViewModel viewModel &&
+            viewModel.IsComposing)
+        {
+            ClearMessageBody();
+        }
+    }
+
+    /// <summary>
+    /// Clears the RichTextBox content to ensure a fresh compose state
+    /// </summary>
+    public void ClearMessageBody()
+    {
+        if (MessageBodyEditor != null)
+        {
+            MessageBodyEditor.Document.Blocks.Clear();
+            MessageBodyEditor.Document.Blocks.Add(new Paragraph());
+        }
+
+        // Also ensure attachments section is hidden
+        if (AttachmentsSection != null)
+        {
+            AttachmentsSection.Visibility = Visibility.Collapsed;
+        }
+
+        // Reset formatting toolbar to collapsed
+        if (FormattingToolbar != null)
+        {
+            FormattingToolbar.Visibility = Visibility.Collapsed;
         }
     }
 

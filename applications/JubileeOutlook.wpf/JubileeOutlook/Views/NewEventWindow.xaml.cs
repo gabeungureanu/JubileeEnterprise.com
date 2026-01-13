@@ -1,21 +1,31 @@
 using System.Windows;
+using JubileeOutlook.Models;
 using JubileeOutlook.ViewModels;
 
 namespace JubileeOutlook.Views;
 
 public partial class NewEventWindow : Window
 {
+    public bool IsDeleted { get; private set; }
+    private CalendarEvent? _eventToEdit;
+
     public NewEventWindow()
     {
         InitializeComponent();
+        Loaded += NewEventWindow_Loaded;
+    }
 
-        if (DataContext is NewEventViewModel viewModel)
+    public NewEventWindow(CalendarEvent eventToEdit) : this()
+    {
+        _eventToEdit = eventToEdit;
+    }
+
+    private void NewEventWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        // Load event for editing after window is loaded
+        if (_eventToEdit != null && DataContext is NewEventViewModel viewModel)
         {
-            viewModel.SaveCompleted += (s, e) =>
-            {
-                DialogResult = true;
-                Close();
-            };
+            viewModel.LoadEventForEditing(_eventToEdit);
         }
     }
 
@@ -35,5 +45,32 @@ public partial class NewEventWindow : Window
     {
         DialogResult = false;
         Close();
+    }
+
+    private void SaveButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is NewEventViewModel viewModel)
+        {
+            viewModel.SaveEventCommand.Execute(null);
+            if (viewModel.CreatedEvent != null && string.IsNullOrEmpty(viewModel.ValidationError))
+            {
+                DialogResult = true;
+                Close();
+            }
+        }
+    }
+
+    private void DeleteButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is NewEventViewModel viewModel)
+        {
+            viewModel.DeleteEventCommand.Execute(null);
+            if (viewModel.CreatedEvent != null)
+            {
+                IsDeleted = true;
+                DialogResult = true;
+                Close();
+            }
+        }
     }
 }

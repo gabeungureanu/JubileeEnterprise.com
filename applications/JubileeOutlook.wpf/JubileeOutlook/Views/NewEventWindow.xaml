@@ -41,7 +41,7 @@
             </Grid.ColumnDefinitions>
 
             <TextBlock Grid.Column="0"
-                       Text="New event"
+                       Text="{Binding WindowTitle}"
                        FontSize="13"
                        Foreground="#CCCCCC"
                        VerticalAlignment="Center"
@@ -491,17 +491,57 @@
                         </ToggleButton>
                     </StackPanel>
 
-                    <!-- Save Button -->
-                    <Button Command="{Binding SaveEventCommand}"
-                            Style="{StaticResource SaveButtonStyle}"
-                            Width="80"
-                            HorizontalAlignment="Left"
-                            Margin="0,0,0,12">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xe161;" FontFamily="{StaticResource MaterialIcons}" FontSize="16" Margin="0,0,6,0"/>
-                            <TextBlock Text="Save" FontSize="13" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Button>
+                    <!-- Save and Delete Buttons -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <Button Click="SaveButton_Click"
+                                Style="{StaticResource SaveButtonStyle}"
+                                Width="80"
+                                Margin="0,0,12,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xe161;" FontFamily="{StaticResource MaterialIcons}" FontSize="16" Margin="0,0,6,0"/>
+                                <TextBlock Text="Save" FontSize="13" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Delete Button (only shown in edit mode) -->
+                        <Button Click="DeleteButton_Click"
+                                Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVisibilityConverter}}"
+                                Width="90">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="#D32F2F"/>
+                                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Padding" Value="12,8"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="border"
+                                                        Background="{TemplateBinding Background}"
+                                                        CornerRadius="4"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="border" Property="Background" Value="#E53935"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="border" Property="Background" Value="#C62828"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xe872;" FontFamily="{StaticResource MaterialIcons}" FontSize="16" Margin="0,0,6,0"/>
+                                <TextBlock Text="Delete" FontSize="13" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
 
                     <!-- Validation Error Message -->
                     <Border Background="#5A1A1A"

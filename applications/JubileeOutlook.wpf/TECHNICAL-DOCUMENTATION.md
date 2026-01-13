@@ -741,7 +741,190 @@ partial void OnSelectedMessageChanged(EmailMessage? value)
 
 ### Calendar and Event Management
 
+#### Double-Click Event Editing (v1.4.0)
+
+Users can double-click on any calendar event to open it in edit mode. This feature works across all calendar views (Day, Work Week, Week, and Month).
+
+**CalendarView.xaml - InputBindings on Event Blocks**:
+```xaml
+<Border Style="{StaticResource CalendarEventBlockStyle}"
+        Background="{Binding EventColor}" Cursor="Hand">
+    <Border.InputBindings>
+        <MouseBinding MouseAction="LeftDoubleClick"
+                      Command="{Binding DataContext.EditEventCommand,
+                                RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      CommandParameter="{Binding}"/>
+    </Border.InputBindings>
+    <!-- Event content -->
+</Border>
+```
+
+**CalendarViewModel - EditEvent Command**:
+```csharp
+[RelayCommand]
+private void EditEvent(CalendarEvent eventToEdit)
+{
+    if (eventToEdit == null) return;
+
+    var editEventWindow = new NewEventWindow(eventToEdit);
+    if (editEventWindow.ShowDialog() == true)
+    {
+        var viewModel = editEventWindow.DataContext as NewEventViewModel;
+        if (viewModel?.CreatedEvent != null)
+        {
+            if (editEventWindow.IsDeleted)
+            {
+                // Remove deleted event
+                var eventToRemove = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
+                if (eventToRemove != null) Events.Remove(eventToRemove);
+            }
+            else
+            {
+                // Update existing event
+                var existingEvent = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
+                if (existingEvent != null)
+                {
+                    var index = Events.IndexOf(existingEvent);
+                    Events.RemoveAt(index);
+                    Events.Insert(index, viewModel.CreatedEvent);
+                }
+            }
+        }
+    }
+}
+```
+
+#### NewEventWindow Edit Mode Support
+
+**Window Constructor Overload**:
+```csharp
+public partial class NewEventWindow : Window
+{
+    public bool IsDeleted { get; private set; }
+    private CalendarEvent? _eventToEdit;
+
+    public NewEventWindow() { ... }
+
+    public NewEventWindow(CalendarEvent eventToEdit) : this()
+    {
+        _eventToEdit = eventToEdit;
+    }
+
+    private void NewEventWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (_eventToEdit != null && DataContext is NewEventViewModel viewModel)
+        {
+            viewModel.LoadEventForEditing(_eventToEdit);
+        }
+    }
+}
+```
+
+**Direct Click Handlers for Save/Delete**:
+```csharp
+private void SaveButton_Click(object sender, RoutedEventArgs e)
+{
+    if (DataContext is NewEventViewModel viewModel)
+    {
+        viewModel.SaveEventCommand.Execute(null);
+        if (viewModel.CreatedEvent != null && string.IsNullOrEmpty(viewModel.ValidationError))
+        {
+            DialogResult = true;
+            Close();
+        }
+    }
+}
+
+private void DeleteButton_Click(object sender, RoutedEventArgs e)
+{
+    if (DataContext is NewEventViewModel viewModel)
+    {
+        viewModel.DeleteEventCommand.Execute(null);
+        if (viewModel.CreatedEvent != null)
+        {
+            IsDeleted = true;
+            DialogResult = true;
+            Close();
+        }
+    }
+}
+```
+
 #### NewEventViewModel Architecture
+
+**Edit Mode Properties**:
+```csharp
+public event EventHandler? SaveCompleted;
+public event EventHandler? DeleteCompleted;
+
+[ObservableProperty]
+private bool _isEditMode;
+
+[ObservableProperty]
+private string _windowTitle = "New event";
+
+private string? _editingEventId;
+```
+
+**LoadEventForEditing Method**:
+```csharp
+public void LoadEventForEditing(CalendarEvent eventToEdit)
+{
+    if (eventToEdit == null) return;
+
+    IsEditMode = true;
+    WindowTitle = "Edit event";
+    _editingEventId = eventToEdit.Id;
+
+    EventTitle = eventToEdit.Subject;
+    Location = eventToEdit.Location;
+    Description = eventToEdit.Description;
+    EventDate = eventToEdit.StartTime.Date;
+    StartTime = eventToEdit.StartTime.ToString("HH:mm");
+    EndTime = eventToEdit.EndTime.ToString("HH:mm");
+    IsAllDay = eventToEdit.IsAllDay;
+    Attendees = string.Join("; ", eventToEdit.Attendees);
+    IsBusy = eventToEdit.Status == EventStatus.Busy;
+
+    // Match category by color
+    var colorHex = GetColorHexFromBrush(eventToEdit.EventColor);
+    foreach (var category in CategoryOptions)
+    {
+        if (category.Color.Equals(colorHex, StringComparison.OrdinalIgnoreCase))
+        {
+            SelectedCategory = category;
+            break;
+        }
+    }
+
+    CalculateEventPosition();
+}
+```
+
+**DeleteEvent Command**:
+```csharp
+[RelayCommand]
+private void DeleteEvent()
+{
+    if (IsEditMode && !string.IsNullOrEmpty(_editingEventId))
+    {
+        CreatedEvent = new CalendarEvent { Id = _editingEventId };
+        DeleteCompleted?.Invoke(this, EventArgs.Empty);
+    }
+}
+```
+
+**SaveEvent - Preserves Event ID for Updates**:
+```csharp
+CreatedEvent = new CalendarEvent
+{
+    Id = IsEditMode && !string.IsNullOrEmpty(_editingEventId)
+        ? _editingEventId
+        : Guid.NewGuid().ToString(),
+    // ... other properties
+};
+```
+
 **Core Collections**:
 ```csharp
 public ObservableCollection<ShowAsStatusItem> ShowAsStatusOptions { get; }
@@ -990,6 +1173,7 @@ public class EventHeightConverter : IValueConverter
 | 1.1.0 | 2026-01 | Added split-button, window state persistence, animated accent bar |
 | 1.2.0 | 2026-01-12 | Calendar view enhancements, event validation, dynamic event rendering |
 | 1.3.0 | 2026-01-13 | Dynamic date system, consistent event rendering, email preview panel improvements |
+| 1.4.0 | 2026-01-13 | Double-click event editing, edit mode for NewEventWindow, Save/Delete button fixes |
 
 ---
 

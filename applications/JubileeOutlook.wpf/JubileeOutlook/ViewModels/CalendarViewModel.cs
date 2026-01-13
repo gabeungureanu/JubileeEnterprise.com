@@ -212,6 +212,39 @@ public partial class CalendarViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void EditEvent(CalendarEvent eventToEdit)
+    {
+        if (eventToEdit == null) return;
+
+        var editEventWindow = new JubileeOutlook.Views.NewEventWindow(eventToEdit);
+        if (editEventWindow.ShowDialog() == true)
+        {
+            var viewModel = editEventWindow.DataContext as JubileeOutlook.ViewModels.NewEventViewModel;
+            if (viewModel?.CreatedEvent != null)
+            {
+                if (editEventWindow.IsDeleted)
+                {
+                    var eventToRemove = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
+                    if (eventToRemove != null)
+                    {
+                        Events.Remove(eventToRemove);
+                    }
+                }
+                else
+                {
+                    var existingEvent = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
+                    if (existingEvent != null)
+                    {
+                        var index = Events.IndexOf(existingEvent);
+                        Events.RemoveAt(index);
+                        Events.Insert(index, viewModel.CreatedEvent);
+                    }
+                }
+            }
+        }
+    }
+
+    [RelayCommand]
     private void AddCalendar()
     {
         // This will be handled by the main application
