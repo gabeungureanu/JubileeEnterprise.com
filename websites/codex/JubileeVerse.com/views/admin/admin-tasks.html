@@ -8515,16 +8515,35 @@
       // Add business days to a date (skips weekends)
       // Timeline Burst: Projects where the project would be if work had been done at human speed
       function addBusinessDays(startDate, businessDays) {
+        // Safety: validate inputs to prevent infinite loops
+        if (!startDate || isNaN(new Date(startDate).getTime())) {
+          console.warn('[addBusinessDays] Invalid start date');
+          return new Date();
+        }
+        if (!businessDays || businessDays < 0 || !isFinite(businessDays)) {
+          console.warn('[addBusinessDays] Invalid businessDays:', businessDays);
+          return new Date(startDate);
+        }
+
         const result = new Date(startDate);
         let daysAdded = 0;
 
-        while (daysAdded < businessDays) {
+        // Safety limit: max 10 years (about 2600 business days) to prevent infinite loops
+        const MAX_ITERATIONS = 3700;  // ~10 years including weekends
+        let iterations = 0;
+
+        while (daysAdded < businessDays && iterations < MAX_ITERATIONS) {
           result.setDate(result.getDate() + 1);
           const dayOfWeek = result.getDay();
           // Skip Saturday (6) and Sunday (0)
           if (dayOfWeek !== 0 && dayOfWeek !== 6) {
             daysAdded++;
           }
+          iterations++;
+        }
+
+        if (iterations >= MAX_ITERATIONS) {
+          console.warn('[addBusinessDays] Hit iteration limit - businessDays may be too large:', businessDays);
         }
 
         return result;
@@ -9685,15 +9704,42 @@
 
       // Helper: Calculate working hours between two dates (Mon-Fri, 8hrs/day)
       function calculateWorkingHours(startDate, endDate) {
+        // Safety: validate dates to prevent infinite loops
+        if (!startDate || !endDate || isNaN(new Date(startDate).getTime()) || isNaN(new Date(endDate).getTime())) {
+          console.warn('[calculateWorkingHours] Invalid dates provided');
+          return 0;
+        }
+
+        // Safety: ensure start is before end
+        if (new Date(startDate) > new Date(endDate)) {
+          console.warn('[calculateWorkingHours] Start date is after end date');
+          return 0;
+        }
+
         let hours = 0;
         const current = new Date(startDate);
-        while (current <= endDate) {
+        current.setHours(0, 0, 0, 0);
+
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        // Safety limit: max 10 years to prevent infinite loops
+        const MAX_ITERATIONS = 3700;
+        let iterations = 0;
+
+        while (current <= end && iterations < MAX_ITERATIONS) {
           const dayOfWeek = current.getDay();
           if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not weekend
             hours += 8;
           }
           current.setDate(current.getDate() + 1);
+          iterations++;
         }
+
+        if (iterations >= MAX_ITERATIONS) {
+          console.warn('[calculateWorkingHours] Hit iteration limit - date range may be too large');
+        }
+
         return hours;
       }
 
