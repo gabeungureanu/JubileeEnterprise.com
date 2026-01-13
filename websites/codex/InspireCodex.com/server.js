@@ -139,14 +139,22 @@ const whitelistedOrigins = [
 
 const limiter = rateLimit({
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '10000'), // Increased from 100 to 10000
     message: { error: 'Too many requests, please try again later.' },
     standardHeaders: true,
     legacyHeaders: false,
     skip: (req) => {
         // Skip rate limiting for whitelisted origins
         const origin = req.get('origin') || req.get('referer') || '';
-        return whitelistedOrigins.some(domain => origin.includes(domain));
+        const isWhitelisted = whitelistedOrigins.some(domain => origin.includes(domain));
+
+        // Skip rate limiting for developer tasks API (internal tooling)
+        const isDeveloperTasksApi = req.path.startsWith('/api/v1/developer');
+
+        // Skip rate limiting for local requests (no origin = likely internal)
+        const isLocalRequest = !origin || origin === '';
+
+        return isWhitelisted || isDeveloperTasksApi || isLocalRequest;
     }
 });
 app.use('/api/', limiter);
