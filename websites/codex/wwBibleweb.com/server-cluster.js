@@ -20,7 +20,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Configuration
-const NUM_WORKERS = process.env.CLUSTER_WORKERS || os.cpus().length;
+const NUM_WORKERS = 16; // Fixed 16 workers for 16-core processor
 const RELOAD_TRIGGER_FILE = path.join(__dirname, '.reload-trigger');
 const PID_FILE = path.join(__dirname, '.cluster-master.pid');
 

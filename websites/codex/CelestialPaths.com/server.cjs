@@ -1,7 +1,7 @@
 /**
- * CelestialPaths.com Production Server Launcher
+ * CelestialPaths.com - Static Express Server
  *
- * PRODUCTION SERVER - DO NOT MODIFY PORT CONFIGURATION
+ * PRODUCTION SERVER - Serves static HTML files
  *
  * Assigned Port: 3300 (HARDCODED - Cloudflare Tunnel Requirement)
  * This port is mapped in Cloudflare tunnel config and MUST NOT change.
@@ -11,8 +11,9 @@
 
 'use strict';
 
-const { spawn } = require('child_process');
+const express = require('express');
 const path = require('path');
+const compression = require('compression');
 
 // ============================================================================
 // PRODUCTION PORT CONFIGURATION - DO NOT MODIFY
@@ -39,43 +40,105 @@ if (PORT !== REQUIRED_PORT) {
     process.exit(1);
 }
 
-const FRONTEND_DIR = path.join(__dirname, 'website', 'frontend');
+// Static files directory (Next.js export)
+const STATIC_DIR = path.join(__dirname, 'website', 'frontend', 'out');
+
+// ============================================================================
+// EXPRESS SERVER SETUP
+// ============================================================================
+const app = express();
+
+// Enable gzip compression
+app.use(compression());
+
+// Security headers
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+});
+
+// Cache static assets for 1 year (they have hashed filenames)
+app.use('/_next/static', express.static(path.join(STATIC_DIR, '_next', 'static'), {
+    maxAge: '1y',
+    immutable: true
+}));
+
+// Cache other _next files for 1 day
+app.use('/_next', express.static(path.join(STATIC_DIR, '_next'), {
+    maxAge: '1d'
+}));
+
+// Serve static files with short cache for HTML
+app.use(express.static(STATIC_DIR, {
+    maxAge: '1h',
+    index: ['index.html'],
+    extensions: ['html']
+}));
+
+// Handle trailing slash routes (e.g., /about/ -> /about/index.html)
+app.use((req, res, next) => {
+    if (req.path.endsWith('/') && req.path !== '/') {
+        const indexPath = path.join(STATIC_DIR, req.path, 'index.html');
+        res.sendFile(indexPath, (err) => {
+            if (err) next();
+        });
+    } else {
+        next();
+    }
+});
+
+// Fallback: try adding .html extension
+app.use((req, res, next) => {
+    if (!req.path.includes('.')) {
+        const htmlPath = path.join(STATIC_DIR, req.path + '.html');
+        res.sendFile(htmlPath, (err) => {
+            if (err) {
+                // Try index.html in directory
+                const indexPath = path.join(STATIC_DIR, req.path, 'index.html');
+                res.sendFile(indexPath, (err2) => {
+                    if (err2) next();
+                });
+            }
+        });
+    } else {
+        next();
+    }
+});
+
+// 404 handler
+app.use((req, res) => {
+    const notFoundPath = path.join(STATIC_DIR, '404.html');
+    res.status(404).sendFile(notFoundPath, (err) => {
+        if (err) {
+            res.status(404).send('Page not found');
+        }
+    });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+    console.error(`[ERROR] ${err.message}`);
+    res.status(500).send('Internal Server Error');
+});
 
 // ============================================================================
 // SERVER STARTUP
 // ============================================================================
-console.log('');
-console.log('='.repeat(60));
-console.log(`  ${SERVICE_NAME} - PRODUCTION SERVER`);
-console.log('='.repeat(60));
-console.log(`  Status:      STARTING`);
-console.log(`  Port:        ${REQUIRED_PORT} (LOCKED)`);
-console.log(`  Directory:   ${FRONTEND_DIR}`);
-console.log(`  Environment: ${process.env.NODE_ENV || 'production'}`);
-console.log(`  Started:     ${new Date().toISOString()}`);
-console.log('='.repeat(60));
-console.log('');
-
-// Start Next.js in production mode with LOCKED port
-const nextProcess = spawn('npx', ['next', 'start', '-p', REQUIRED_PORT.toString()], {
-    cwd: FRONTEND_DIR,
-    stdio: 'inherit',
-    shell: true,
-    env: {
-        ...process.env,
-        PORT: REQUIRED_PORT.toString(),
-        NODE_ENV: 'production'
-    }
-});
-
-nextProcess.on('error', (error) => {
-    console.error(`[FATAL] Failed to start ${SERVICE_NAME}:`, error.message);
-    process.exit(1);
-});
-
-nextProcess.on('close', (code) => {
-    console.log(`[INFO] ${SERVICE_NAME} exited with code ${code}`);
-    process.exit(code);
+const server = app.listen(REQUIRED_PORT, () => {
+    console.log('');
+    console.log('='.repeat(60));
+    console.log(`  ${SERVICE_NAME} - STATIC EXPRESS SERVER`);
+    console.log('='.repeat(60));
+    console.log(`  Status:      RUNNING`);
+    console.log(`  Port:        ${REQUIRED_PORT} (LOCKED)`);
+    console.log(`  Static Dir:  ${STATIC_DIR}`);
+    console.log(`  Environment: ${process.env.NODE_ENV || 'production'}`);
+    console.log(`  Started:     ${new Date().toISOString()}`);
+    console.log('='.repeat(60));
+    console.log('');
 });
 
 // ============================================================================
@@ -83,7 +146,10 @@ nextProcess.on('close', (code) => {
 // ============================================================================
 const shutdown = (signal) => {
     console.log(`\n[${signal}] Shutting down ${SERVICE_NAME}...`);
-    nextProcess.kill(signal);
+    server.close(() => {
+        console.log('[INFO] Server closed gracefully');
+        process.exit(0);
+    });
     // Force exit after 10 seconds
     setTimeout(() => {
         console.error('[TIMEOUT] Forced shutdown after 10s');

@@ -1,79 +1,88 @@
 {
   "name": "Jubilee Enterprise Services",
-  "version": "1.0.0",
-  "description": "Unified service configuration for all Jubilee websites and APIs",
+  "version": "2.0.0",
+  "description": "Unified service configuration with 16-worker cluster mode for all Jubilee websites and APIs",
   "healthPort": 3999,
   "services": [
     {
       "name": "jubileeverse",
-      "description": "JubileeVerse.com - Main Website",
-      "script": "server.js",
+      "description": "JubileeVerse.com - Main Website (16 workers)",
+      "script": "server-cluster.js",
       "cwd": "C:/data/JubileeEnterprise.com/websites/codex/JubileeVerse.com",
       "port": 3000,
+      "workers": 16,
       "enabled": true
     },
     {
       "name": "jubileeinspire",
-      "description": "JubileeInspire.com - Inspiration Platform",
-      "script": "server.js",
+      "description": "JubileeInspire.com - Inspiration Platform (16 workers)",
+      "script": "server-cluster.js",
       "cwd": "C:/data/JubileeEnterprise.com/websites/codex/JubileeInspire.com",
       "port": 3001,
+      "workers": 16,
       "enabled": true
     },
     {
       "name": "wwbibleweb",
-      "description": "wwBibleweb.com - Bible Web Platform",
-      "script": "server.js",
+      "description": "wwBibleweb.com - Bible Web Platform (16 workers)",
+      "script": "server-cluster.js",
       "cwd": "C:/data/JubileeEnterprise.com/websites/codex/wwBibleweb.com",
       "port": 3003,
+      "workers": 16,
       "enabled": true
     },
     {
       "name": "jubileewebsites",
-      "description": "JubileeWebsites.com - Website Generator",
-      "script": "server.mjs",
+      "description": "JubileeWebsites.com - Website Generator (16 workers)",
+      "script": "server-cluster.cjs",
       "cwd": "C:/data/JubileeEnterprise.com/websites/codex/JubileeWebsites.com",
       "port": 3008,
+      "workers": 16,
       "enabled": true
     },
     {
       "name": "jubileeparadox",
-      "description": "JubileeParadox.com - Movie Website",
-      "script": "server.cjs",
+      "description": "JubileeParadox.com - Movie Website (16 workers)",
+      "script": "server-cluster.cjs",
       "cwd": "C:/data/JubileeEnterprise.com/websites/codex/JubileeParadox.com",
       "port": 3009,
+      "workers": 16,
       "enabled": true
     },
     {
       "name": "inspirecodex-api",
-      "description": "InspireCodex API - Identity & Configuration",
-      "script": "server.js",
+      "description": "InspireCodex API - Identity & Configuration (16 workers)",
+      "script": "server-cluster.cjs",
       "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/InspireCodex.com",
       "port": 3100,
+      "workers": 16,
       "enabled": true
     },
     {
       "name": "inspirecontinuum-api",
-      "description": "InspireContinuum API - User Activity & Chat",
-      "script": "server.js",
+      "description": "InspireContinuum API - User Activity & Chat (16 workers)",
+      "script": "server-cluster.cjs",
       "cwd": "C:/data/JubileeEnterprise.com/websites/codex/InspireContinuum.com",
       "port": 3101,
+      "workers": 16,
       "enabled": true
     },
     {
       "name": "jubileebrowser",
-      "description": "JubileeBrowser.com - Browser Downloads",
-      "script": "server.cjs",
+      "description": "JubileeBrowser.com - Browser Downloads (16 workers)",
+      "script": "server-cluster.cjs",
       "cwd": "C:/data/JubileeEnterprise.com/websites/codex/JubileeBrowser.com",
       "port": 3200,
+      "workers": 16,
       "enabled": true
     },
     {
       "name": "celestialpaths",
-      "description": "CelestialPaths.com - Celestial Paths Website",
-      "script": "server.cjs",
+      "description": "CelestialPaths.com - Static Website (16 workers)",
+      "script": "server-cluster.cjs",
       "cwd": "C:/data/JubileeEnterprise.com/websites/codex/CelestialPaths.com",
       "port": 3300,
+      "workers": 16,
       "enabled": true
     }
   ]

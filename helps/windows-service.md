@@ -5,6 +5,7 @@
 The Jubilee Enterprise platform uses a **unified Windows Service** (`jubileeservices.exe`) to manage all websites and APIs from a single service. This approach provides:
 
 - Centralized management of all Node.js applications
+- **Multi-core clustering** with 16 workers per service (optimized for 16-core processor)
 - Automatic restart on crash with exponential backoff
 - Health monitoring via HTTP endpoint
 - Zero-downtime reload capability
@@ -19,22 +20,25 @@ The Jubilee Enterprise platform uses a **unified Windows Service** (`jubileeserv
 | Health Endpoint | http://localhost:3999/health |
 | Configuration | `services/unified/services.json` |
 | Logs Directory | `services/unified/logs/` |
+| CPU Cores | 16 physical (32 logical) |
+| Workers per Service | 16 |
+| Total Workers | 144 |
 
 ## Managed Services
 
-The unified service manages the following websites and APIs:
+The unified service manages the following websites and APIs with cluster mode:
 
-| Service | Port | Description |
-|---------|------|-------------|
-| JubileeVerse.com | 3000 | Main Website |
-| JubileeInspire.com | 3001 | Inspiration Platform |
-| wwBibleweb.com | 3003 | Bible Web Platform |
-| JubileeWebsites.com | 3008 | Website Generator |
-| JubileeParadox.com | 3009 | Movie Website |
-| InspireCodex API | 3100 | Identity & Configuration API |
-| InspireContinuum API | 3101 | User Activity & Chat API |
-| JubileeBrowser.com | 3200 | Browser Downloads |
-| CelestialPaths.com | 3300 | Celestial Paths Website |
+| Service | Port | Workers | Description |
+|---------|------|---------|-------------|
+| JubileeVerse.com | 3000 | 16 | Main Website |
+| JubileeInspire.com | 3001 | 16 | Inspiration Platform |
+| wwBibleweb.com | 3003 | 16 | Bible Web Platform |
+| JubileeWebsites.com | 3008 | 16 | Website Generator |
+| JubileeParadox.com | 3009 | 16 | Movie Website |
+| InspireCodex API | 3100 | 16 | Identity & Configuration API |
+| InspireContinuum API | 3101 | 16 | User Activity & Chat API |
+| JubileeBrowser.com | 3200 | 16 | Browser Downloads |
+| CelestialPaths.com | 3300 | 16 | Static Website (Express) |
 
 ## File Structure
 
