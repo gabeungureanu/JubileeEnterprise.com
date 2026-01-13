@@ -1,5 +1,5 @@
 /**
- * JubileeWebsites.com - Production Cluster Server
+ * CelestialPaths.com - Production Cluster Server
  *
  * Multi-core clustering wrapper for high availability:
  * - Uses 16 workers for 16-core processor
@@ -7,13 +7,9 @@
  * - Auto-restart crashed workers
  * - Windows Service compatible
  *
- * PRODUCTION PORT: 3008 (HARDCODED - Cloudflare Tunnel Requirement)
+ * PRODUCTION PORT: 3300 (HARDCODED - Cloudflare Tunnel Requirement)
  *
- * For Windows Service deployment, use:
- *   node install-service.js    (as Administrator)
- *
- * For zero-downtime reload after code changes:
- *   node reload-service.js
+ * Run with: node server-cluster.cjs
  */
 
 'use strict';
@@ -30,11 +26,11 @@ const PID_FILE = path.join(__dirname, '.cluster-master.pid');
 if (cluster.isMaster || cluster.isPrimary) {
     console.log('');
     console.log('='.repeat(60));
-    console.log('  JubileeWebsites.com - Production Cluster');
+    console.log('  CelestialPaths.com - Production Cluster');
     console.log('='.repeat(60));
     console.log(`  Master PID:    ${process.pid}`);
     console.log(`  Workers:       ${NUM_WORKERS}`);
-    console.log(`  Port:          3008 (Cloudflare Tunnel)`);
+    console.log(`  Port:          3300 (Cloudflare Tunnel)`);
     console.log('='.repeat(60));
     console.log('');
 
@@ -158,17 +154,7 @@ if (cluster.isMaster || cluster.isPrimary) {
     });
 
 } else {
-    // Worker process - run the actual server (ES module)
+    // Worker process - run the actual server
     console.log(`[Worker ${cluster.worker.id}] Starting server...`);
-
-    // Dynamic import of ES module server
-    (async () => {
-        try {
-            await import('./server.mjs');
-            console.log(`[Worker ${cluster.worker.id}] Server loaded successfully`);
-        } catch (err) {
-            console.error(`[Worker ${cluster.worker.id}] FATAL: Failed to load server:`, err);
-            process.exit(1);
-        }
-    })();
+    require('./server.cjs');
 }

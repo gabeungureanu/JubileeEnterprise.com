@@ -39,5 +39,9 @@
     "url": "git+https://github.com/jubilee-internet/jubilee-sso.git"
   },
   "author": "Jubilee Internet, Inc.",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "dependencies": {
+    "compression": "^1.8.1",
+    "express": "^5.2.1"
+  }
 }
