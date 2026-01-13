@@ -1321,6 +1321,12 @@ function closeArticleDetail() {
 // ============================================================================
 
 async function populateFeaturedSections() {
+  // Only run on home page, not on portal/article pages
+  if (currentMode !== 'home') {
+    console.log('populateFeaturedSections: Skipping - not on home page (mode:', currentMode, ')');
+    return;
+  }
+
   if (!siteData || !siteData.allArticles || siteData.allArticles.length === 0) {
     console.log('No articles available for featured sections');
     return;
