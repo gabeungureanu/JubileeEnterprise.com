@@ -1,5 +1,6 @@
 node_modules
 .env
+logs/
 
 # Windows Service runtime files
 daemon/
