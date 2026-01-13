@@ -54,22 +54,69 @@ function rowToUser(row) {
  * Find user by ID
  */
 async function findById(userId) {
-  const result = await database.query(
-    'SELECT * FROM users WHERE id = $1',
-    [userId]
-  );
-  return rowToUser(result.rows[0]);
+  // Use API endpoint for user lookup
+  try {
+    const user = await database.getUserById(userId);
+    if (!user) return null;
+    return apiRowToUser(user);
+  } catch (error) {
+    // Fallback to raw query if API fails (should not happen in production)
+    const result = await database.query(
+      'SELECT * FROM users WHERE id = $1',
+      [userId]
+    );
+    return rowToUser(result.rows[0]);
+  }
 }
 
 /**
  * Find user by email
  */
 async function findByEmail(email) {
-  const result = await database.query(
-    'SELECT * FROM users WHERE email = $1',
-    [email.toLowerCase()]
-  );
-  return rowToUser(result.rows[0]);
+  // Use API endpoint for user lookup (includes password_hash for auth)
+  try {
+    const user = await database.getUserByEmail(email);
+    if (!user) return null;
+    return apiRowToUser(user);
+  } catch (error) {
+    // Fallback to raw query if API fails (should not happen in production)
+    const result = await database.query(
+      'SELECT * FROM users WHERE email = $1',
+      [email.toLowerCase()]
+    );
+    return rowToUser(result.rows[0]);
+  }
+}
+
+/**
+ * Convert API response to user object (handles both snake_case and already-converted formats)
+ */
+function apiRowToUser(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    email: row.email,
+    passwordHash: row.password_hash || row.passwordHash,
+    displayName: row.display_name || row.displayName,
+    avatarUrl: row.avatar_url || row.avatarUrl,
+    role: row.role,
+    preferredLanguage: row.preferred_language || row.preferredLanguage || 'en',
+    defaultPersonaId: row.default_persona_id || row.defaultPersonaId,
+    emailVerified: row.email_verified || row.emailVerified,
+    emailVerifiedAt: row.email_verified_at || row.emailVerifiedAt,
+    isActive: row.is_active !== undefined ? row.is_active : (row.isActive !== undefined ? row.isActive : true),
+    lastLoginAt: row.last_login_at || row.lastLoginAt,
+    createdAt: row.created_at || row.createdAt,
+    updatedAt: row.updated_at || row.updatedAt,
+    // Analytics fields
+    userType: row.user_type || row.userType,
+    subscriptionTier: row.subscription_tier || row.subscriptionTier,
+    analyticsConsent: row.analytics_consent || row.analyticsConsent,
+    analyticsConsentAt: row.analytics_consent_at || row.analyticsConsentAt,
+    // Declared denomination
+    declaredDenomination: row.declared_denomination || row.declaredDenomination,
+    declaredDenominationAt: row.declared_denomination_at || row.declaredDenominationAt
+  };
 }
 
 /**
@@ -211,10 +258,16 @@ async function setResetToken(userId, token, expiresAt) {
  * Update last login timestamp
  */
 async function updateLastLogin(userId) {
-  await database.query(
-    `UPDATE users SET last_login_at = NOW() WHERE id = $1`,
-    [userId]
-  );
+  // Use API endpoint for updating last login
+  try {
+    await database.updateUserLastLogin(userId);
+  } catch (error) {
+    // Fallback to raw query if API fails
+    await database.query(
+      `UPDATE users SET last_login_at = NOW() WHERE id = $1`,
+      [userId]
+    );
+  }
 }
 
 /**

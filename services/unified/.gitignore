@@ -1,0 +1,14 @@
+# Logs
+logs/
+*.log
+
+# Runtime files
+.manager.pid
+.reload-trigger
+
+# Windows Service daemon
+daemon/
+
+# IDE
+.idea/
+.vscode/

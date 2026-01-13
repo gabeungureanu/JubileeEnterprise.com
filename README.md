@@ -25,6 +25,9 @@ JubileeEnterprise.com/
 │       └── JubileeWebsites.com/     # AI website generation
 ├── applications/                # Desktop applications
 │   └── JubileeBrowser.wpf/      # Windows browser (.NET/WPF)
+├── services/                    # Service management
+│   └── unified/                 # Unified Windows Service manager
+├── helps/                       # Documentation
 ├── infrastructure/              # Shared infrastructure configs
 │   └── docker/                  # Docker compose files
 └── .vscode/                     # VS Code workspace config
@@ -119,9 +122,53 @@ import { createLogger } from '@jubilee/shared/logging';
 import { emailSchema, passwordSchema } from '@jubilee/shared/validation';
 ```
 
-## Deployment
+## Production Deployment (Windows Service)
 
-Each website is deployed independently. See individual project directories for deployment instructions.
+All production websites are managed by a **unified Windows Service** with **Node.js cluster mode** (16 workers per service) (`jubileeservices.exe`). This service automatically starts on Windows boot and manages all Node.js applications.
+
+### Service Management
+
+```bash
+# Check service status
+sc query jubileeservices.exe
+
+# Health check endpoint
+curl http://localhost:3999/health
+
+# Start/Stop/Restart (requires Administrator)
+net start jubileeservices.exe
+net stop jubileeservices.exe
+powershell -Command "Restart-Service jubileeservices.exe"
+
+# Hot reload all services (no restart needed)
+cd services/unified
+node reload-service.cjs
+```
+
+### Production Port Assignments
+
+| Service | Port | Description |
+|---------|------|-------------|
+| JubileeVerse.com | 3000 | Main Website |
+| JubileeInspire.com | 3001 | Inspiration Platform |
+| wwBibleweb.com | 3003 | Bible Web Platform |
+| JubileeWebsites.com | 3008 | Website Generator |
+| JubileeParadox.com | 3009 | Movie Website |
+| InspireCodex API | 3100 | Identity & Configuration |
+| InspireContinuum API | 3101 | User Activity & Chat |
+| JubileeBrowser.com | 3200 | Browser Downloads |
+| CelestialPaths.com | 3300 | Celestial Paths |
+| Health Endpoint | 3999 | Service Manager Health |
+
+### Configuration
+
+Service configuration is in `services/unified/services.json`. See [helps/windows-service.md](./helps/windows-service.md) for detailed documentation.
+
+### Admin Dashboard
+
+Real-time monitoring dashboard: **http://localhost:3008/admin/**
+
+### Docker Deployment (Alternative)
 
 ```bash
 # Build a specific website for production

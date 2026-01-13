@@ -107,6 +107,8 @@ const server = http.createServer((req, res) => {
         handleGetConfig(req, res);
     } else if (pathname === '/api/config' && req.method === 'POST') {
         handleSaveConfig(req, res);
+    } else if (pathname === '/api/ensure-daily-history' && req.method === 'POST') {
+        handleEnsureDailyHistory(req, res);
     } else {
         // Serve static files
         serveStaticFile(req, res, pathname);
@@ -611,6 +613,107 @@ function handleSaveConfig(req, res) {
         } catch (error) {
             console.error('Error saving config:', error);
             sendJson(res, 500, { error: 'Failed to save configuration: ' + error.message });
+        }
+    });
+}
+
+/**
+ * Ensure today's history file exists for a website
+ * If today's file doesn't exist, copies the most recent history file and updates the date
+ * Business Rule: Auto-create daily history files on first visitor of each day
+ */
+function handleEnsureDailyHistory(req, res) {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+        try {
+            const { sitePath } = JSON.parse(body);
+
+            if (!sitePath || typeof sitePath !== 'string') {
+                sendJson(res, 400, { error: 'sitePath is required' });
+                return;
+            }
+
+            // Convert URL path to filesystem path (e.g., /pentecostal/home -> pentecostal/home)
+            const cleanPath = sitePath.replace(/^\/+/, '').replace(/\//g, path.sep);
+            const historyDir = path.join(BASE_DIR, cleanPath, '.webstore', 'history');
+
+            // Security: ensure path is within BASE_DIR
+            const normalizedPath = path.normalize(historyDir);
+            if (!normalizedPath.startsWith(BASE_DIR)) {
+                sendJson(res, 403, { error: 'Invalid site path' });
+                return;
+            }
+
+            // Check if history directory exists
+            if (!fs.existsSync(historyDir)) {
+                sendJson(res, 404, { error: 'History directory not found', path: historyDir });
+                return;
+            }
+
+            // Generate today's filename (YY-MMDD.json)
+            const today = new Date();
+            const yy = today.getFullYear().toString().slice(-2);
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayFileName = `${yy}-${mm}${dd}.json`;
+            const todayFilePath = path.join(historyDir, todayFileName);
+
+            // If today's file already exists, return success
+            if (fs.existsSync(todayFilePath)) {
+                sendJson(res, 200, {
+                    success: true,
+                    fileName: todayFileName,
+                    action: 'exists',
+                    message: 'Today\'s history file already exists'
+                });
+                return;
+            }
+
+            // Find the most recent history file
+            const historyFiles = fs.readdirSync(historyDir)
+                .filter(f => /^\d{2}-\d{4}\.json$/.test(f))
+                .sort()
+                .reverse();
+
+            if (historyFiles.length === 0) {
+                sendJson(res, 404, { error: 'No existing history files found to copy from' });
+                return;
+            }
+
+            const mostRecentFile = historyFiles[0];
+            const mostRecentPath = path.join(historyDir, mostRecentFile);
+
+            // Read the most recent file
+            const sourceContent = fs.readFileSync(mostRecentPath, 'utf8');
+            let historyData;
+            try {
+                historyData = JSON.parse(sourceContent);
+            } catch (parseError) {
+                sendJson(res, 500, { error: 'Failed to parse source history file' });
+                return;
+            }
+
+            // Update the date fields
+            const todayISO = today.toISOString().split('T')[0]; // YYYY-MM-DD
+            historyData.buildDate = todayISO;
+            historyData.buildTimestamp = today.toISOString();
+
+            // Write the new file
+            fs.writeFileSync(todayFilePath, JSON.stringify(historyData, null, 2));
+            console.log(`Created daily history file: ${todayFilePath} (copied from ${mostRecentFile})`);
+
+            sendJson(res, 201, {
+                success: true,
+                fileName: todayFileName,
+                action: 'created',
+                copiedFrom: mostRecentFile,
+                message: 'Created today\'s history file from most recent file'
+            });
+
+        } catch (error) {
+            console.error('Error ensuring daily history:', error);
+            sendJson(res, 500, { error: 'Failed to ensure daily history: ' + error.message });
         }
     });
 }

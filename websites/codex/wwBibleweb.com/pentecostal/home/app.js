@@ -235,7 +235,32 @@ async function loadSiteData() {
     // Load today's history file
     const historyFile = getTodayHistoryFileName();
     console.log('loadSiteData: Loading history file:', historyFile);
-    const historyResponse = await fetch(webstorePath + 'history/' + historyFile);
+    let historyResponse = await fetch(webstorePath + 'history/' + historyFile);
+
+    // If today's file doesn't exist, request server to create it from most recent file
+    if (!historyResponse.ok) {
+      console.log('loadSiteData: Today\'s history file not found, requesting server to create it...');
+      try {
+        const basePath = getBasePath();
+        const ensureResponse = await fetch('/api/ensure-daily-history', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sitePath: basePath })
+        });
+
+        if (ensureResponse.ok) {
+          const result = await ensureResponse.json();
+          console.log('loadSiteData: Server response:', result.action, result.message);
+          // Retry fetching today's file
+          historyResponse = await fetch(webstorePath + 'history/' + historyFile);
+        } else {
+          console.warn('loadSiteData: Server could not create today\'s history file');
+        }
+      } catch (ensureError) {
+        console.warn('loadSiteData: Could not contact server to ensure daily history:', ensureError);
+      }
+    }
+
     if (historyResponse.ok) {
       siteData = await historyResponse.json();
       window.siteData = siteData; // Global access - CRITICAL for portal pages
@@ -257,6 +282,7 @@ async function loadSiteData() {
 
     // Populate dynamic sections
     setTimeout(populateFeaturedSections, 500);
+    setTimeout(populateMoreFromBrands, 500);
 
     // Handle initial path navigation NOW that data is loaded
     console.log('loadSiteData: Checking for path navigation...');
@@ -1296,6 +1322,7 @@ function closeArticleDetail() {
 // ============================================================================
 
 async function populateFeaturedSections() {
+  // This section appears on all pages (home, portal, article) as part of the footer area
   if (!siteData || !siteData.allArticles || siteData.allArticles.length === 0) {
     console.log('No articles available for featured sections');
     return;
@@ -1366,7 +1393,19 @@ async function populateFeaturedSections() {
     featuredGrid.innerHTML = categoryCards.join('');
   }
 
-  // More From Our Brands
+}
+
+/**
+ * Populate More From Our Brands section
+ * This runs on all pages (home, portal, article) to show brand articles in footer
+ */
+function populateMoreFromBrands() {
+  if (!siteData || !siteData.allArticles || siteData.allArticles.length === 0) {
+    console.log('populateMoreFromBrands: No articles available');
+    return;
+  }
+
+  const categories = categoriesData?.categories || siteData?.categories || [];
   const shuffled = [...siteData.allArticles].sort(() => Math.random() - 0.5);
   const brandArticles = shuffled.slice(0, 5);
   const brandsGrid = document.getElementById('more-from-brands-grid');
@@ -1375,6 +1414,7 @@ async function populateFeaturedSections() {
     brandsGrid.innerHTML = brandArticles.map(article => {
       const categoryName = categories.find(c => c.slug === article.categorySlug)?.name || article.categorySlug;
       const brandHref = buildArticleHref(article.categorySlug, article.title);
+      const excerpt = article.excerpt || '';
       return `
         <div class="brand-card">
           <img src="${getImagePath(article.articleId)}" alt="${article.title}" class="brand-card-image">
@@ -1382,9 +1422,11 @@ async function populateFeaturedSections() {
           <div class="brand-card-title">
             <a href="${brandHref}" onclick="showContentPage('${article.articleId}', '${article.categorySlug}'); return false;">${article.title}</a>
           </div>
+          ${excerpt ? `<div class="brand-card-excerpt">${excerpt}</div>` : ''}
         </div>
       `;
     }).join('');
+    console.log('populateMoreFromBrands: Populated', brandArticles.length, 'brand articles');
   }
 }
 
