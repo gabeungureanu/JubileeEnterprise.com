@@ -240,6 +240,8 @@
       color: #b0b0b0;
       white-space: nowrap;
       height: clamp(16px, 1.5vw, 21px);
+      position: relative;
+      top: -5px;
     }
 
     #ticker-bar .ticker-item .cat-label {
@@ -1265,12 +1267,8 @@
       border-radius: 8px;
       overflow: hidden;
       cursor: pointer;
-      transition: transform 0.2s;
       width: 300px;
-    }
-
-    .portal-ad-unit:hover {
-      transform: scale(1.02);
+      margin-top: 20px;
     }
 
     .portal-ad-unit a {
@@ -1299,13 +1297,9 @@
       border-radius: 8px;
       overflow: visible;
       cursor: pointer;
-      transition: transform 0.2s;
       width: 300px;
       margin-bottom: 0;
-    }
-
-    .home-ad-unit:hover {
-      transform: scale(1.02);
+      margin-top: -10px;
     }
 
     .home-ad-unit a {
@@ -1713,6 +1707,9 @@
       flex-direction: column;
       gap: var(--space-xs);
       width: 300px;
+      align-self: end;
+      position: sticky;
+      bottom: 20px;
     }
 
     .sidebar-section {
@@ -1821,6 +1818,10 @@
 
     .section-block {
       background: white;
+      align-self: end;
+      position: sticky;
+      bottom: 20px;
+      margin-top: -50px;
     }
 
     .section-header {
@@ -1831,7 +1832,8 @@
       color: #666;
       padding-bottom: var(--space-sm);
       border-bottom: 1px solid #e0e0e0;
-      margin-bottom: var(--space-md);
+      margin-bottom: 5px;
+      margin-top: 60px;
     }
 
     .section-content {
@@ -2322,6 +2324,17 @@
 
     .brand-card-title a:hover {
       text-decoration: underline;
+    }
+
+    .brand-card-excerpt {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.4;
+      margin-top: 6px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     /* Footer */
@@ -3576,7 +3589,7 @@ In a world that often feels disconnecte...</p>
   </footer>
 
   <!-- External JavaScript Application - SINGLE SOURCE OF TRUTH -->
-  <script src="/pentecostal/home/app.js?v=20260112"></script>
+  <script src="/pentecostal/home/app.js?v=20260112d"></script>
 
   <!-- Minimal inline script for truncateText helper (used by server-rendered HTML) -->
   <script>

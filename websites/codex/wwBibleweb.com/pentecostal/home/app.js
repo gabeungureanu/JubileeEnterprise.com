@@ -282,6 +282,7 @@ async function loadSiteData() {
 
     // Populate dynamic sections
     setTimeout(populateFeaturedSections, 500);
+    setTimeout(populateMoreFromBrands, 500);
 
     // Handle initial path navigation NOW that data is loaded
     console.log('loadSiteData: Checking for path navigation...');
@@ -1321,12 +1322,7 @@ function closeArticleDetail() {
 // ============================================================================
 
 async function populateFeaturedSections() {
-  // Only run on home page, not on portal/article pages
-  if (currentMode !== 'home') {
-    console.log('populateFeaturedSections: Skipping - not on home page (mode:', currentMode, ')');
-    return;
-  }
-
+  // This section appears on all pages (home, portal, article) as part of the footer area
   if (!siteData || !siteData.allArticles || siteData.allArticles.length === 0) {
     console.log('No articles available for featured sections');
     return;
@@ -1397,7 +1393,19 @@ async function populateFeaturedSections() {
     featuredGrid.innerHTML = categoryCards.join('');
   }
 
-  // More From Our Brands
+}
+
+/**
+ * Populate More From Our Brands section
+ * This runs on all pages (home, portal, article) to show brand articles in footer
+ */
+function populateMoreFromBrands() {
+  if (!siteData || !siteData.allArticles || siteData.allArticles.length === 0) {
+    console.log('populateMoreFromBrands: No articles available');
+    return;
+  }
+
+  const categories = categoriesData?.categories || siteData?.categories || [];
   const shuffled = [...siteData.allArticles].sort(() => Math.random() - 0.5);
   const brandArticles = shuffled.slice(0, 5);
   const brandsGrid = document.getElementById('more-from-brands-grid');
@@ -1406,6 +1414,7 @@ async function populateFeaturedSections() {
     brandsGrid.innerHTML = brandArticles.map(article => {
       const categoryName = categories.find(c => c.slug === article.categorySlug)?.name || article.categorySlug;
       const brandHref = buildArticleHref(article.categorySlug, article.title);
+      const excerpt = article.excerpt || '';
       return `
         <div class="brand-card">
           <img src="${getImagePath(article.articleId)}" alt="${article.title}" class="brand-card-image">
@@ -1413,9 +1422,11 @@ async function populateFeaturedSections() {
           <div class="brand-card-title">
             <a href="${brandHref}" onclick="showContentPage('${article.articleId}', '${article.categorySlug}'); return false;">${article.title}</a>
           </div>
+          ${excerpt ? `<div class="brand-card-excerpt">${excerpt}</div>` : ''}
         </div>
       `;
     }).join('');
+    console.log('populateMoreFromBrands: Populated', brandArticles.length, 'brand articles');
   }
 }
 
