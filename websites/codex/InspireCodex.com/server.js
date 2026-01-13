@@ -91,7 +91,7 @@ const allowedCorsOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
     'http://localhost:3100',
-    'http://localhost:3847'
+    'http://localhost:3003'
 ];
 
 const corsOrigins = (process.env.CORS_ORIGINS || '').split(',').filter(Boolean);
@@ -505,7 +505,7 @@ app.get('/api/v1/admin/health', async (req, res) => {
         { name: 'JubileeBrowser.com', url: 'http://localhost:3200', port: 3200, category: 'codex', type: 'static', description: 'Browser Download Portal' },
         { name: 'JubileeWebsites.com', url: 'http://localhost:3008', port: 3008, category: 'codex', type: 'app', description: 'AI Website Generator' },
         { name: 'JubileeParadox.com', url: 'http://localhost:3009', port: 3009, category: 'codex', type: 'static', description: 'Book/Movie Platform' },
-        { name: 'wwBibleweb.com', url: 'http://localhost:3847', port: 3847, category: 'codex', type: 'static', description: 'IDNS Registry & Bible Web' },
+        { name: 'wwBibleweb.com', url: 'http://localhost:3003', port: 3003, category: 'codex', type: 'static', description: 'IDNS Registry & Bible Web' },
 
         // Inspire Category - Ministry & Content Sites
         { name: 'JubileeInspire.com', url: 'http://localhost:3001', port: 3001, category: 'inspire', type: 'static', description: 'Ministry Landing Page' },
@@ -696,6 +696,11 @@ app.get('/api/v1/admin/health', async (req, res) => {
 
 // Static file serving for admin dashboard
 app.use(express.static('public'));
+
+// Serve index.html for root path
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // =============================================================================
 // CODEX API ROUTES - Identity & Configuration
