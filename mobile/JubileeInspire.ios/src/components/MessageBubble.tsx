@@ -5,8 +5,8 @@
  * Includes ChatGPT-style action bar with Copy, Good/Bad Response, Share, Try Again, and More options.
  */
 
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, Platform, Pressable } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, Platform, Pressable, Modal, TouchableWithoutFeedback } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { ChatMessage } from '../types';
@@ -223,40 +223,47 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                 onPress={handleMoreOptions}
                 colors={colors}
               />
-              {/* More Options Popup Menu */}
+              {/* More Options Popup Menu with click-outside overlay */}
               {showMoreMenu && (
-                <View style={[styles.moreMenu, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                <>
+                  {/* Invisible overlay to capture clicks outside the menu */}
                   <Pressable
-                    style={({ hovered }) => [
-                      styles.menuItem,
-                      hovered && { backgroundColor: colors.surface || 'rgba(0,0,0,0.05)' }
-                    ]}
-                    onPress={handleBranchInNewChat}
-                  >
-                    <Ionicons name="git-branch-outline" size={16} color={colors.text} style={styles.menuIcon} />
-                    <Text style={[styles.menuText, { color: colors.text }]}>Branch in new chat</Text>
-                  </Pressable>
-                  <Pressable
-                    style={({ hovered }) => [
-                      styles.menuItem,
-                      hovered && { backgroundColor: colors.surface || 'rgba(0,0,0,0.05)' }
-                    ]}
-                    onPress={handleReadAloud}
-                  >
-                    <Ionicons name="volume-high-outline" size={16} color={colors.text} style={styles.menuIcon} />
-                    <Text style={[styles.menuText, { color: colors.text }]}>Read aloud</Text>
-                  </Pressable>
-                  <Pressable
-                    style={({ hovered }) => [
-                      styles.menuItem,
-                      hovered && { backgroundColor: colors.surface || 'rgba(0,0,0,0.05)' }
-                    ]}
-                    onPress={handleReportMessage}
-                  >
-                    <Ionicons name="flag-outline" size={16} color={colors.text} style={styles.menuIcon} />
-                    <Text style={[styles.menuText, { color: colors.text }]}>Report message</Text>
-                  </Pressable>
-                </View>
+                    style={styles.menuOverlay}
+                    onPress={() => setShowMoreMenu(false)}
+                  />
+                  <View style={[styles.moreMenu, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                    <Pressable
+                      style={({ hovered }) => [
+                        styles.menuItem,
+                        hovered && { backgroundColor: colors.surface || 'rgba(0,0,0,0.05)' }
+                      ]}
+                      onPress={handleBranchInNewChat}
+                    >
+                      <Ionicons name="git-branch-outline" size={16} color={colors.text} style={styles.menuIcon} />
+                      <Text style={[styles.menuText, { color: colors.text }]}>Branch in new chat</Text>
+                    </Pressable>
+                    <Pressable
+                      style={({ hovered }) => [
+                        styles.menuItem,
+                        hovered && { backgroundColor: colors.surface || 'rgba(0,0,0,0.05)' }
+                      ]}
+                      onPress={handleReadAloud}
+                    >
+                      <Ionicons name="volume-high-outline" size={16} color={colors.text} style={styles.menuIcon} />
+                      <Text style={[styles.menuText, { color: colors.text }]}>Read aloud</Text>
+                    </Pressable>
+                    <Pressable
+                      style={({ hovered }) => [
+                        styles.menuItem,
+                        hovered && { backgroundColor: colors.surface || 'rgba(0,0,0,0.05)' }
+                      ]}
+                      onPress={handleReportMessage}
+                    >
+                      <Ionicons name="flag-outline" size={16} color={colors.text} style={styles.menuIcon} />
+                      <Text style={[styles.menuText, { color: colors.text }]}>Report message</Text>
+                    </Pressable>
+                  </View>
+                </>
               )}
             </View>
           </View>
@@ -270,6 +277,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 const styles = StyleSheet.create({
   actionButtonWrapper: {
     position: 'relative',
+    zIndex: 100,
   },
   actionButton: {
     padding: 6,
@@ -284,16 +292,25 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 4,
     marginTop: 4,
-    alignItems: 'center',
     zIndex: 1000,
+    minWidth: 70,
   },
   tooltipText: {
     fontSize: 11,
     fontWeight: '500',
-    whiteSpace: 'nowrap',
+    textAlign: 'center',
   },
   moreOptionsWrapper: {
     position: 'relative',
+    zIndex: 100,
+  },
+  menuOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
   },
   moreMenu: {
     position: 'absolute',
