@@ -1,2 +1,7 @@
 node_modules
 .env
+
+# Windows Service runtime files
+daemon/
+.cluster-master.pid
+.reload-trigger
