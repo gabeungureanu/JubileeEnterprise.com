@@ -202,3 +202,212 @@ public class EventsByDateConverter : IMultiValueConverter
         throw new NotImplementedException();
     }
 }
+
+/// <summary>
+/// Converts a DateTime to check if it's today for highlighting purposes
+/// </summary>
+public class IsTodayConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is DateTime date)
+        {
+            return date.Date == DateTime.Today;
+        }
+        return false;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Converts a DateTime to check if it's today and returns appropriate background brush
+/// </summary>
+public class IsTodayToBackgroundConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is DateTime date)
+        {
+            if (date.Date == DateTime.Today)
+            {
+                return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(9, 71, 113)); // #094771
+            }
+        }
+        return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Transparent);
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Converts a DateTime to check if it's today and returns appropriate foreground color
+/// </summary>
+public class IsTodayToForegroundConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is DateTime date)
+        {
+            if (date.Date == DateTime.Today)
+            {
+                return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255)); // White
+            }
+        }
+        // Default gray for non-today dates
+        var paramStr = parameter as string;
+        if (paramStr == "header")
+        {
+            return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(136, 136, 136)); // #888888
+        }
+        return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(204, 204, 204)); // #CCCCCC
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Adds days to a DateTime value
+/// </summary>
+public class AddDaysConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is DateTime date && parameter != null)
+        {
+            if (int.TryParse(parameter.ToString(), out int days))
+            {
+                return date.AddDays(days);
+            }
+        }
+        return value;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Converts DateTime to day-of-week abbreviation (uppercase 3 letters)
+/// </summary>
+public class DateToDayOfWeekConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is DateTime date)
+        {
+            return date.ToString("ddd", CultureInfo.InvariantCulture).ToUpper();
+        }
+        return string.Empty;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Converts DateTime to day number string
+/// </summary>
+public class DateToDayNumberConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is DateTime date)
+        {
+            return date.Day.ToString();
+        }
+        return string.Empty;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Checks if date is in the current month for mini calendar styling
+/// </summary>
+public class IsCurrentMonthConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (values.Length >= 2 && values[0] is DateTime date && values[1] is DateTime selectedDate)
+        {
+            return date.Month == selectedDate.Month && date.Year == selectedDate.Year;
+        }
+        return true;
+    }
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Converts a date to foreground color based on whether it's in current month
+/// </summary>
+public class MiniCalendarDayForegroundConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (values.Length >= 2 && values[0] is DateTime date && values[1] is DateTime selectedDate)
+        {
+            // Today gets white text
+            if (date.Date == DateTime.Today)
+            {
+                return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
+            }
+            // Same month gets normal white/gray text
+            if (date.Month == selectedDate.Month && date.Year == selectedDate.Year)
+            {
+                return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(204, 204, 204));
+            }
+            // Different month gets dim text
+            return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(85, 85, 85));
+        }
+        return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(204, 204, 204));
+    }
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Converts a date to background color for mini calendar (highlights today)
+/// </summary>
+public class MiniCalendarDayBackgroundConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is DateTime date)
+        {
+            if (date.Date == DateTime.Today)
+            {
+                return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(9, 71, 113)); // #094771
+            }
+        }
+        return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Transparent);
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}

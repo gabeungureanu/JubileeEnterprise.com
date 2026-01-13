@@ -25,6 +25,15 @@
             <helpers:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
             <helpers:EventTopPositionConverter x:Key="EventTopPositionConverter"/>
             <helpers:EventsByDateConverter x:Key="EventsByDateConverter"/>
+            <helpers:IsTodayConverter x:Key="IsTodayConverter"/>
+            <helpers:IsTodayToBackgroundConverter x:Key="IsTodayToBackgroundConverter"/>
+            <helpers:IsTodayToForegroundConverter x:Key="IsTodayToForegroundConverter"/>
+            <helpers:AddDaysConverter x:Key="AddDaysConverter"/>
+            <helpers:DateToDayOfWeekConverter x:Key="DateToDayOfWeekConverter"/>
+            <helpers:DateToDayNumberConverter x:Key="DateToDayNumberConverter"/>
+            <helpers:IsCurrentMonthConverter x:Key="IsCurrentMonthConverter"/>
+            <helpers:MiniCalendarDayForegroundConverter x:Key="MiniCalendarDayForegroundConverter"/>
+            <helpers:MiniCalendarDayBackgroundConverter x:Key="MiniCalendarDayBackgroundConverter"/>
 
         </ResourceDictionary>
     </Application.Resources>

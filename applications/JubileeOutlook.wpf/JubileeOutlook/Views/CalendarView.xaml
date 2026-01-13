@@ -134,7 +134,7 @@
                         <!-- Mini Calendar -->
                         <Border Background="#1A1A1A" CornerRadius="8" Padding="12" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="January 2026" FontSize="14" FontWeight="SemiBold"
+                                <TextBlock Text="{Binding MiniCalendarMonthYear}" FontSize="14" FontWeight="SemiBold"
                                            Foreground="#FFFFFF" HorizontalAlignment="Center" Margin="0,0,0,12"/>
 
                                 <!-- Mini Calendar Grid -->
@@ -155,53 +155,29 @@
                                         <TextBlock Text="Sa" Style="{StaticResource MiniCalendarDayHeaderStyle}"/>
                                     </UniformGrid>
 
-                                    <!-- Calendar Days -->
-                                    <UniformGrid Grid.Row="1" Rows="5" Columns="7">
-                                        <!-- Week 1 -->
-                                        <TextBlock Style="{StaticResource MiniCalendarDayOtherMonthStyle}"/>
-                                        <TextBlock Style="{StaticResource MiniCalendarDayOtherMonthStyle}"/>
-                                        <TextBlock Style="{StaticResource MiniCalendarDayOtherMonthStyle}"/>
-                                        <TextBlock Text="1" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="2" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="3" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="4" Style="{StaticResource MiniCalendarDayStyle}"/>
-
-                                        <!-- Week 2 -->
-                                        <TextBlock Text="5" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="6" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="7" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="8" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="9" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="10" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="11" Style="{StaticResource MiniCalendarDayStyle}"/>
-
-                                        <!-- Week 3 -->
-                                        <TextBlock Text="12" Style="{StaticResource MiniCalendarDayTodayStyle}"/>
-                                        <TextBlock Text="13" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="14" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="15" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="16" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="17" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="18" Style="{StaticResource MiniCalendarDayStyle}"/>
-
-                                        <!-- Week 4 -->
-                                        <TextBlock Text="19" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="20" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="21" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="22" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="23" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="24" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="25" Style="{StaticResource MiniCalendarDayStyle}"/>
-
-                                        <!-- Week 5 -->
-                                        <TextBlock Text="26" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="27" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="28" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="29" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="30" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Text="31" Style="{StaticResource MiniCalendarDayStyle}"/>
-                                        <TextBlock Style="{StaticResource MiniCalendarDayOtherMonthStyle}"/>
-                                    </UniformGrid>
+                                    <!-- Calendar Days - Dynamic binding to MiniCalendarDays -->
+                                    <ItemsControl Grid.Row="1" ItemsSource="{Binding MiniCalendarDays}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <UniformGrid Rows="5" Columns="7"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{Binding Converter={StaticResource MiniCalendarDayBackgroundConverter}}"
+                                                        CornerRadius="2" Margin="1" Padding="2">
+                                                    <TextBlock Text="{Binding Day}" FontSize="11" HorizontalAlignment="Center">
+                                                        <TextBlock.Foreground>
+                                                            <MultiBinding Converter="{StaticResource MiniCalendarDayForegroundConverter}">
+                                                                <Binding/>
+                                                                <Binding Path="DataContext.SelectedDate" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                                            </MultiBinding>
+                                                        </TextBlock.Foreground>
+                                                    </TextBlock>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -333,57 +309,27 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <!-- Day Headers -->
+                        <!-- Day Headers - Dynamic binding to VisibleDays -->
                     <Border Grid.Row="0" Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0,0,0,1">
-                        <Grid Margin="60,0,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <!-- Monday -->
-                            <StackPanel Grid.Column="0" Margin="8,12">
-                                <TextBlock Text="MON" FontSize="11" Foreground="#888888"
-                                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                <TextBlock Text="6" FontSize="24" FontWeight="Light"
-                                           Foreground="#CCCCCC" HorizontalAlignment="Center"/>
-                            </StackPanel>
-
-                            <!-- Tuesday -->
-                            <StackPanel Grid.Column="1" Margin="8,12">
-                                <TextBlock Text="TUE" FontSize="11" Foreground="#888888"
-                                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                <TextBlock Text="7" FontSize="24" FontWeight="Light"
-                                           Foreground="#CCCCCC" HorizontalAlignment="Center"/>
-                            </StackPanel>
-
-                            <!-- Wednesday -->
-                            <StackPanel Grid.Column="2" Margin="8,12">
-                                <TextBlock Text="WED" FontSize="11" Foreground="#888888"
-                                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                <TextBlock Text="8" FontSize="24" FontWeight="Light"
-                                           Foreground="#CCCCCC" HorizontalAlignment="Center"/>
-                            </StackPanel>
-
-                            <!-- Thursday -->
-                            <StackPanel Grid.Column="3" Margin="8,12">
-                                <TextBlock Text="THU" FontSize="11" Foreground="#888888"
-                                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                <TextBlock Text="9" FontSize="24" FontWeight="Light"
-                                           Foreground="#CCCCCC" HorizontalAlignment="Center"/>
-                            </StackPanel>
-
-                            <!-- Friday (Today) -->
-                            <StackPanel Grid.Column="4" Margin="8,12" Background="#094771">
-                                <TextBlock Text="FRI" FontSize="11" Foreground="#FFFFFF"
-                                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                <TextBlock Text="10" FontSize="24" FontWeight="Light"
-                                           Foreground="#FFFFFF" HorizontalAlignment="Center"/>
-                            </StackPanel>
-                        </Grid>
+                        <ItemsControl ItemsSource="{Binding VisibleDays}" Margin="60,0,0,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Rows="1" Columns="5"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="8,12" Background="{Binding Converter={StaticResource IsTodayToBackgroundConverter}}">
+                                        <TextBlock Text="{Binding Converter={StaticResource DateToDayOfWeekConverter}}"
+                                                   FontSize="11" HorizontalAlignment="Center" Margin="0,0,0,4"
+                                                   Foreground="{Binding Converter={StaticResource IsTodayToForegroundConverter}, ConverterParameter=header}"/>
+                                        <TextBlock Text="{Binding Day}" FontSize="24" FontWeight="Light"
+                                                   HorizontalAlignment="Center"
+                                                   Foreground="{Binding Converter={StaticResource IsTodayToForegroundConverter}}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </Border>
 
                     <!-- Time Grid -->
@@ -538,73 +484,27 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <!-- Day Headers for 7 days -->
+                        <!-- Day Headers for 7 days - Dynamic binding to VisibleDays -->
                         <Border Grid.Row="0" Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0,0,0,1">
-                            <Grid Margin="60,0,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Sunday -->
-                                <StackPanel Grid.Column="0" Margin="8,12">
-                                    <TextBlock Text="SUN" FontSize="11" Foreground="#888888"
-                                               HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                    <TextBlock Text="12" FontSize="24" FontWeight="Light" Foreground="#CCCCCC" HorizontalAlignment="Center"/>
-                                </StackPanel>
-
-                                <!-- Monday -->
-                                <StackPanel Grid.Column="1" Margin="8,12">
-                                    <TextBlock Text="MON" FontSize="11" Foreground="#888888"
-                                               HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                    <TextBlock Text="13" FontSize="24" FontWeight="Light" Foreground="#CCCCCC" HorizontalAlignment="Center"/>
-                                </StackPanel>
-
-                                <!-- Tuesday -->
-                                <StackPanel Grid.Column="2" Margin="8,12">
-                                    <TextBlock Text="TUE" FontSize="11" Foreground="#888888"
-                                               HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                    <TextBlock Text="14" FontSize="24" FontWeight="Light"
-                                               Foreground="#CCCCCC" HorizontalAlignment="Center"/>
-                                </StackPanel>
-
-                                <!-- Wednesday -->
-                                <StackPanel Grid.Column="3" Margin="8,12">
-                                    <TextBlock Text="WED" FontSize="11" Foreground="#888888"
-                                               HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                    <TextBlock Text="15" FontSize="24" FontWeight="Light"
-                                               Foreground="#CCCCCC" HorizontalAlignment="Center"/>
-                                </StackPanel>
-
-                                <!-- Thursday -->
-                                <StackPanel Grid.Column="4" Margin="8,12">
-                                    <TextBlock Text="THU" FontSize="11" Foreground="#888888"
-                                               HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                    <TextBlock Text="16" FontSize="24" FontWeight="Light"
-                                               Foreground="#CCCCCC" HorizontalAlignment="Center"/>
-                                </StackPanel>
-
-                                <!-- Friday -->
-                                <StackPanel Grid.Column="5" Margin="8,12">
-                                    <TextBlock Text="FRI" FontSize="11" Foreground="#888888"
-                                               HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                    <TextBlock Text="17" FontSize="24" FontWeight="Light"
-                                               Foreground="#CCCCCC" HorizontalAlignment="Center"/>
-                                </StackPanel>
-
-                                <!-- Saturday -->
-                                <StackPanel Grid.Column="6" Margin="8,12">
-                                    <TextBlock Text="SAT" FontSize="11" Foreground="#888888"
-                                               HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                    <TextBlock Text="18" FontSize="24" FontWeight="Light"
-                                               Foreground="#CCCCCC" HorizontalAlignment="Center"/>
-                                </StackPanel>
-                            </Grid>
+                            <ItemsControl ItemsSource="{Binding VisibleDays}" Margin="60,0,0,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Rows="1" Columns="7"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="8,12" Background="{Binding Converter={StaticResource IsTodayToBackgroundConverter}}">
+                                            <TextBlock Text="{Binding Converter={StaticResource DateToDayOfWeekConverter}}"
+                                                       FontSize="11" HorizontalAlignment="Center" Margin="0,0,0,4"
+                                                       Foreground="{Binding Converter={StaticResource IsTodayToForegroundConverter}, ConverterParameter=header}"/>
+                                            <TextBlock Text="{Binding Day}" FontSize="24" FontWeight="Light"
+                                                       HorizontalAlignment="Center"
+                                                       Foreground="{Binding Converter={StaticResource IsTodayToForegroundConverter}}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </Border>
 
                         <!-- Time Grid with 7 columns -->
@@ -661,7 +561,7 @@
                         </ScrollViewer>
                     </Grid>
 
-                    <!-- Month View -->
+                    <!-- Month View - Dynamic binding to MonthViewDays -->
                     <Grid Visibility="{Binding ViewMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Month}">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <Grid Margin="20">
@@ -681,137 +581,29 @@
                                     <TextBlock Text="SATURDAY" FontSize="10" Foreground="#888888" HorizontalAlignment="Center" Padding="8,4"/>
                                 </UniformGrid>
 
-                                <!-- Calendar Grid (6 weeks x 7 days) -->
-                                <UniformGrid Grid.Row="1" Rows="6" Columns="7">
-                                    <!-- Week 1 -->
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="28" FontSize="14" Foreground="#555555" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="29" FontSize="14" Foreground="#555555" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="30" FontSize="14" Foreground="#555555" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="31" FontSize="14" Foreground="#555555" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="1" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="2" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="3" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <!-- Additional days would be dynamically generated in a real implementation -->
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="4" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="5" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="6" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="7" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="8" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#094771" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="12" FontSize="14" Foreground="#FFFFFF" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="9" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="10" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="11" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="13" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="14" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="15" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="16" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="17" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="18" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="19" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="20" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="21" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="22" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="23" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="24" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="25" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="26" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="27" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="28" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="29" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="30" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="31" FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="1" FontSize="14" Foreground="#555555" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="2" FontSize="14" Foreground="#555555" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="3" FontSize="14" Foreground="#555555" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="..." FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="..." FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="..." FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                    <Border Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
-                                        <TextBlock Text="..." FontSize="14" Foreground="#CCCCCC" Margin="8" VerticalAlignment="Top"/>
-                                    </Border>
-                                </UniformGrid>
+                                <!-- Calendar Grid (6 weeks x 7 days) - Dynamic -->
+                                <ItemsControl Grid.Row="1" ItemsSource="{Binding MonthViewDays}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Rows="6" Columns="7"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{Binding Converter={StaticResource IsTodayToBackgroundConverter}}"
+                                                    BorderBrush="#333333" BorderThickness="0.5" MinHeight="100">
+                                                <TextBlock Text="{Binding Day}" FontSize="14" Margin="8" VerticalAlignment="Top">
+                                                    <TextBlock.Foreground>
+                                                        <MultiBinding Converter="{StaticResource MiniCalendarDayForegroundConverter}">
+                                                            <Binding/>
+                                                            <Binding Path="DataContext.SelectedDate" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                                        </MultiBinding>
+                                                    </TextBlock.Foreground>
+                                                </TextBlock>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </Grid>
                         </ScrollViewer>
                     </Grid>

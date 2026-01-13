@@ -32,11 +32,21 @@ public partial class CalendarViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<DateTime> _visibleDays = new();
 
+    [ObservableProperty]
+    private string _miniCalendarMonthYear = string.Empty;
+
+    [ObservableProperty]
+    private ObservableCollection<DateTime> _miniCalendarDays = new();
+
+    [ObservableProperty]
+    private ObservableCollection<DateTime> _monthViewDays = new();
+
     public CalendarViewModel()
     {
         InitializeCalendars();
         InitializeSampleEvents();
         UpdateViewDates();
+        UpdateMiniCalendar();
     }
 
     private void InitializeCalendars()
@@ -269,6 +279,7 @@ public partial class CalendarViewModel : ObservableObject
                 ViewStartDate = firstDayOfMonth;
                 ViewEndDate = firstDayOfMonth.AddMonths(1).AddDays(-1);
                 DateRangeText = SelectedDate.ToString("MMMM yyyy");
+                UpdateMonthViewDays();
                 break;
         }
     }
@@ -284,5 +295,46 @@ public partial class CalendarViewModel : ObservableObject
         );
 
         return dayEvents;
+    }
+
+    private void UpdateMiniCalendar()
+    {
+        // Update the month/year header based on selected date
+        MiniCalendarMonthYear = SelectedDate.ToString("MMMM yyyy");
+
+        // Calculate the days to display in the mini calendar (6 weeks x 7 days = 42 cells)
+        MiniCalendarDays.Clear();
+
+        var firstDayOfMonth = new DateTime(SelectedDate.Year, SelectedDate.Month, 1);
+        var startOfCalendar = firstDayOfMonth.AddDays(-(int)firstDayOfMonth.DayOfWeek);
+
+        // Generate 35 days (5 weeks) for the mini calendar
+        for (int i = 0; i < 35; i++)
+        {
+            MiniCalendarDays.Add(startOfCalendar.AddDays(i));
+        }
+    }
+
+    private void UpdateMonthViewDays()
+    {
+        MonthViewDays.Clear();
+
+        var firstDayOfMonth = new DateTime(SelectedDate.Year, SelectedDate.Month, 1);
+        var startOfCalendar = firstDayOfMonth.AddDays(-(int)firstDayOfMonth.DayOfWeek);
+
+        // Generate 42 days (6 weeks) for the month view
+        for (int i = 0; i < 42; i++)
+        {
+            MonthViewDays.Add(startOfCalendar.AddDays(i));
+        }
+    }
+
+    partial void OnSelectedDateChanged(DateTime value)
+    {
+        UpdateMiniCalendar();
+        if (ViewMode == CalendarViewMode.Month)
+        {
+            UpdateMonthViewDays();
+        }
     }
 }
