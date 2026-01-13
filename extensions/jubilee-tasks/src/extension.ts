@@ -193,6 +193,88 @@ export function deactivate() {
 }
 
 /**
+ * Check if the user's prompt indicates they want to mark the task as done
+ */
+function isDoneCommand(promptLower: string): boolean {
+    // Match variations of "done" as a standalone command or clear indicator
+    const donePatterns = [
+        /^done\.?$/,                    // Just "done" or "done."
+        /^that'?s?\s+done\.?$/,         // "that's done", "thats done"
+        /^task\s+(is\s+)?done\.?$/,     // "task done", "task is done"
+        /^mark\s+(as\s+)?done\.?$/,     // "mark done", "mark as done"
+        /^complete\.?$/,                // Just "complete"
+        /^finished\.?$/,                // Just "finished"
+        /^close\s+(this\s+)?task\.?$/,  // "close task", "close this task"
+        /^done\s+with\s+(this\s+)?task\.?$/, // "done with task", "done with this task"
+    ];
+
+    return donePatterns.some(pattern => pattern.test(promptLower.trim()));
+}
+
+/**
+ * Check if the user's prompt indicates a genuinely NEW task vs troubleshooting/fixing
+ * Returns true if it looks like a new task request
+ */
+function isNewTaskRequest(promptLower: string): boolean {
+    // Patterns that indicate CONTINUATION/TROUBLESHOOTING (NOT a new task)
+    const continuationPatterns = [
+        /^(please\s+)?fix/,             // "fix", "please fix"
+        /^(please\s+)?update/,          // "update", "please update"
+        /^(it'?s?\s+)?not\s+working/,   // "not working", "it's not working"
+        /^(that'?s?\s+)?wrong/,         // "wrong", "that's wrong"
+        /^(please\s+)?try\s+again/,     // "try again"
+        /^(please\s+)?redo/,            // "redo"
+        /^error/,                       // "error..."
+        /^bug/,                         // "bug..."
+        /^issue/,                       // "issue..."
+        /^problem/,                     // "problem..."
+        /^(please\s+)?change/,          // "change..."
+        /^(please\s+)?modify/,          // "modify..."
+        /^(please\s+)?adjust/,          // "adjust..."
+        /^(please\s+)?correct/,         // "correct..."
+        /^(please\s+)?tweak/,           // "tweak..."
+        /^why\s+(is|does|did|isn't|doesn't|didn't)/, // "why is...", "why does..."
+        /^what\s+(is|went)\s+wrong/,    // "what is wrong", "what went wrong"
+        /^(that|this)\s+(is\s+)?(still|not)/, // "that's still...", "this is not..."
+        /^(it\s+)?(still|doesn't|didn't|isn't)/, // "still...", "doesn't..."
+        /^same\s+(issue|problem|error)/, // "same issue", "same problem"
+        /^(please\s+)?check/,           // "check..."
+        /^(please\s+)?look\s+at/,       // "look at..."
+        /^(please\s+)?review/,          // "review..."
+        /^(please\s+)?debug/,           // "debug..."
+        /^(please\s+)?troubleshoot/,    // "troubleshoot..."
+        /refresh/,                      // "refresh..."
+        /restart/,                      // "restart..."
+        /reload/,                       // "reload..."
+        /^(I\s+)?get\s+(an?\s+)?error/, // "I get an error", "get error"
+        /^(I\s+)?see\s+(an?\s+)?error/, // "I see an error"
+        /^(there'?s?\s+)?(an?\s+)?error/, // "there's an error"
+    ];
+
+    // If it matches a continuation pattern, it's NOT a new task
+    const isContinuation = continuationPatterns.some(pattern => pattern.test(promptLower.trim()));
+
+    if (isContinuation) {
+        return false;
+    }
+
+    // Patterns that indicate a NEW task
+    const newTaskPatterns = [
+        /^(now\s+)?(let'?s?\s+)?(create|build|add|implement|make|develop|write|design)/, // "create", "let's build", "add"
+        /^(now\s+)?(I\s+)?(want|need)\s+(to|you\s+to)/, // "I want to...", "I need you to..."
+        /^(now\s+)?work\s+on/,          // "work on..."
+        /^(now\s+)?start/,              // "start..."
+        /^(now\s+)?begin/,              // "begin..."
+        /^next/,                        // "next..."
+        /^new\s+(task|feature|page|component|function)/, // "new task", "new feature"
+        /^(can\s+you\s+)?(please\s+)?(help\s+me\s+)?(create|build|add|implement|make)/, // "can you create..."
+    ];
+
+    // If it matches a new task pattern, it IS a new task
+    return newTaskPatterns.some(pattern => pattern.test(promptLower.trim()));
+}
+
+/**
  * Start monitoring Claude Code via hook messages file
  */
 function startClaudeCodeMonitoring(context: vscode.ExtensionContext) {
@@ -230,26 +312,46 @@ function startClaudeCodeMonitoring(context: vscode.ExtensionContext) {
             log(`Received hook message: ${message.event}`);
 
             if (message.event === 'UserPromptSubmit') {
-                // User submitted a new prompt - create a task
-                log(`User prompt submitted: ${message.prompt?.substring(0, 100)}...`);
+                const prompt = message.prompt?.trim() || '';
+                const promptLower = prompt.toLowerCase();
+
+                log(`User prompt submitted: ${prompt.substring(0, 100)}...`);
                 activityMonitor.onActivity();
 
-                // Create task if we have a prompt and no current task
+                // Check if user is marking task as done
+                if (isDoneCommand(promptLower)) {
+                    log('User marked task as done');
+                    if (currentTask) {
+                        await completeCurrentTask(false);
+                        vscode.window.showInformationMessage('Task marked as complete!');
+                    } else {
+                        log('No current task to complete');
+                    }
+                    return;
+                }
+
+                // Check if this is a new task or continuation of current work
                 if (message.prompt && !currentTask) {
+                    // No current task - create one
                     await createTask(message.prompt);
                 } else if (message.prompt && currentTask) {
-                    // Update activity on existing task
-                    activityMonitor.onActivity();
+                    // We have a current task - check if this is a NEW task or continuation
+                    if (isNewTaskRequest(promptLower)) {
+                        // This looks like a genuinely new task - complete current and start new
+                        log('Detected new task request - completing current task first');
+                        await completeCurrentTask(false);
+                        await createTask(message.prompt);
+                    } else {
+                        // This is troubleshooting/fixing/continuation - just update activity
+                        log('Detected continuation/fix request - updating activity on current task');
+                        activityMonitor.onActivity();
+                    }
                 }
             } else if (message.event === 'Stop') {
-                // Claude finished responding - complete the current task
-                log('Claude response completed - completing current task');
+                // Claude finished responding - just update activity, don't auto-complete
+                // Tasks are only completed when user explicitly says "Done"
+                log('Claude response completed - updating activity (waiting for user to say Done)');
                 activityMonitor.onActivity();
-
-                // Complete the task when Claude stops (task is finished)
-                if (currentTask) {
-                    await completeCurrentTask(false);
-                }
             }
         } catch (err) {
             // File might not exist yet or be in the process of being written
