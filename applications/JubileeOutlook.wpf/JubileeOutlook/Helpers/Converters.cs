@@ -173,6 +173,67 @@ public class EventTopPositionConverter : IValueConverter
     }
 }
 
+/// <summary>
+/// Converts a CalendarEvent to its height in pixels based on duration
+/// </summary>
+public class EventHeightConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is JubileeOutlook.Models.CalendarEvent calEvent)
+        {
+            var duration = calEvent.EndTime - calEvent.StartTime;
+            return Math.Max(duration.TotalHours * 60, 30); // 60px per hour, minimum 30px
+        }
+        return 30.0;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Converter to get events for a specific day column index from VisibleDays
+/// </summary>
+public class EventsForDayColumnConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (values.Length >= 3 &&
+            values[0] is System.Collections.IEnumerable events &&
+            values[1] is System.Collections.IEnumerable visibleDays &&
+            parameter != null &&
+            int.TryParse(parameter.ToString(), out int dayIndex))
+        {
+            var daysList = visibleDays.Cast<DateTime>().ToList();
+            if (dayIndex >= 0 && dayIndex < daysList.Count)
+            {
+                var targetDate = daysList[dayIndex];
+                var filteredEvents = new System.Collections.ObjectModel.ObservableCollection<JubileeOutlook.Models.CalendarEvent>();
+                foreach (var evt in events)
+                {
+                    if (evt is JubileeOutlook.Models.CalendarEvent calEvent)
+                    {
+                        if (calEvent.StartTime.Date == targetDate.Date)
+                        {
+                            filteredEvents.Add(calEvent);
+                        }
+                    }
+                }
+                return filteredEvents;
+            }
+        }
+        return new System.Collections.ObjectModel.ObservableCollection<JubileeOutlook.Models.CalendarEvent>();
+    }
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public class EventsByDateConverter : IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)

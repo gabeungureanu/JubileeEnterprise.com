@@ -24,6 +24,8 @@
             <helpers:EnumToVisibilityConverter x:Key="EnumToVisibilityConverter"/>
             <helpers:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
             <helpers:EventTopPositionConverter x:Key="EventTopPositionConverter"/>
+            <helpers:EventHeightConverter x:Key="EventHeightConverter"/>
+            <helpers:EventsForDayColumnConverter x:Key="EventsForDayColumnConverter"/>
             <helpers:EventsByDateConverter x:Key="EventsByDateConverter"/>
             <helpers:IsTodayConverter x:Key="IsTodayConverter"/>
             <helpers:IsTodayToBackgroundConverter x:Key="IsTodayToBackgroundConverter"/>
