@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jubilee Enterprise - Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 280px 1fr 280px;
+            gap: 20px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* Server Panels */
+        .server-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .server-panel h2 {
+            text-align: center;
+            color: #f5a623;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(245, 166, 35, 0.3);
+        }
+
+        .server-card {
+            background: linear-gradient(145deg, #1e2a3a 0%, #152030 100%);
+            border: 1px solid rgba(245, 166, 35, 0.2);
+            border-radius: 10px;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .server-card:hover {
+            border-color: rgba(245, 166, 35, 0.5);
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(245, 166, 35, 0.15);
+        }
+
+        .server-card.left:hover {
+            transform: translateX(-5px);
+        }
+
+        .server-status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            animation: pulse 2s infinite;
+        }
+
+        .server-status-indicator.online {
+            background: #00ff88;
+            box-shadow: 0 0 10px #00ff88;
+        }
+
+        .server-status-indicator.offline {
+            background: #ff4444;
+            box-shadow: 0 0 10px #ff4444;
+            animation: none;
+        }
+
+        .server-status-indicator.warning {
+            background: #ffaa00;
+            box-shadow: 0 0 10px #ffaa00;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .server-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .server-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .server-details {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .server-port {
+            font-size: 11px;
+            color: #f5a623;
+            font-weight: 600;
+            background: rgba(245, 166, 35, 0.1);
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        /* Center Panel */
+        .center-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Speedometer Container */
+        .speedometer-container {
+            background: linear-gradient(145deg, #1e2a3a 0%, #0d1520 100%);
+            border: 2px solid rgba(245, 166, 35, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .speedometer-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        #speedometer-canvas {
+            width: 100%;
+            height: auto;
+        }
+
+        .speedometer-value {
+            position: absolute;
+            bottom: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .speedometer-number {
+            font-size: 48px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .speedometer-unit {
+            font-size: 16px;
+            color: #888;
+            margin-left: 5px;
+        }
+
+        /* Milestone Info */
+        .milestone-info {
+            text-align: center;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        .milestone-title {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .milestone-date {
+            font-size: 18px;
+            font-weight: bold;
+            color: #f5a623;
+        }
+
+        .milestone-hours {
+            font-size: 14px;
+            color: #00ff88;
+            margin-top: 5px;
+        }
+
+        /* Mini Gauges */
+        .mini-gauges {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 10px;
+        }
+
+        .mini-gauge-container {
+            background: linear-gradient(145deg, #1e2a3a 0%, #0d1520 100%);
+            border: 1px solid rgba(245, 166, 35, 0.2);
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+        }
+
+        .mini-gauge-wrapper {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+        }
+
+        .mini-gauge-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .mini-gauge-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 8px;
+        }
+
+        .mini-gauge-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            margin-top: 2px;
+        }
+
+        /* Stats Period Selector */
+        .stats-period {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .period-btn {
+            background: rgba(245, 166, 35, 0.1);
+            border: 1px solid rgba(245, 166, 35, 0.3);
+            color: #f5a623;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .period-btn:hover, .period-btn.active {
+            background: rgba(245, 166, 35, 0.3);
+            border-color: #f5a623;
+        }
+
+        /* Stats Cards */
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, #1e2a3a 0%, #0d1520 100%);
+            border: 1px solid rgba(245, 166, 35, 0.2);
+            border-radius: 12px;
+            padding: 20px 15px;
+            text-align: center;
+        }
+
+        .stat-card-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #f5a623;
+        }
+
+        .stat-card-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        .stat-card-change {
+            font-size: 12px;
+            margin-top: 8px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .stat-card-change.positive {
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+        }
+
+        .stat-card-change.negative {
+            background: rgba(255, 68, 68, 0.1);
+            color: #ff4444;
+        }
+
+        /* Header */
+        .dashboard-header {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 10px 0 20px;
+            border-bottom: 1px solid rgba(245, 166, 35, 0.2);
+            margin-bottom: 10px;
+        }
+
+        .dashboard-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #f5a623;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .dashboard-subtitle {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+
+            .server-panel {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+
+            .server-panel h2 {
+                grid-column: 1 / -1;
+            }
+        }
+
+        /* Service Manager Badge */
+        .service-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(145deg, #1e2a3a 0%, #0d1520 100%);
+            border: 1px solid rgba(245, 166, 35, 0.3);
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-size: 11px;
+            color: #888;
+        }
+
+        .service-badge .status {
+            color: #00ff88;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">Jubilee Enterprise Dashboard</h1>
+            <p class="dashboard-subtitle">Real-time Server Monitoring & Analytics</p>
+        </div>
+
+        <!-- Left Server Panel -->
+        <div class="server-panel" id="left-servers">
+            <h2>Production Servers</h2>
+            <!-- Servers will be populated by JavaScript -->
+        </div>
+
+        <!-- Center Panel -->
+        <div class="center-panel">
+            <!-- Main Speedometer -->
+            <div class="speedometer-container">
+                <div class="speedometer-wrapper">
+                    <canvas id="speedometer-canvas" width="400" height="280"></canvas>
+                    <div class="speedometer-value">
+                        <span class="speedometer-number" id="visitor-count">0</span>
+                        <span class="speedometer-unit">VPM</span>
+                    </div>
+                </div>
+
+                <div class="milestone-info">
+                    <div class="milestone-title">MILESTONE: <span id="milestone-range">JAN 1 - JAN 12, 2026</span></div>
+                    <div class="milestone-hours"><span id="working-hours">0</span> WORKING HOURS REMAINING</div>
+                </div>
+            </div>
+
+            <!-- Mini Gauges -->
+            <div class="mini-gauges">
+                <div class="mini-gauge-container">
+                    <div class="mini-gauge-wrapper">
+                        <canvas class="mini-gauge-canvas" id="fuel-gauge" width="80" height="80"></canvas>
+                    </div>
+                    <div class="mini-gauge-label">Fuel</div>
+                    <div class="mini-gauge-value" id="fuel-value">0h</div>
+                </div>
+                <div class="mini-gauge-container">
+                    <div class="mini-gauge-wrapper">
+                        <canvas class="mini-gauge-canvas" id="pressure-gauge" width="80" height="80"></canvas>
+                    </div>
+                    <div class="mini-gauge-label">Pressure</div>
+                    <div class="mini-gauge-value" id="pressure-value">0%</div>
+                </div>
+                <div class="mini-gauge-container">
+                    <div class="mini-gauge-wrapper">
+                        <canvas class="mini-gauge-canvas" id="confidence-gauge" width="80" height="80"></canvas>
+                    </div>
+                    <div class="mini-gauge-label">Confidence</div>
+                    <div class="mini-gauge-value" id="confidence-value">0%</div>
+                </div>
+                <div class="mini-gauge-container">
+                    <div class="mini-gauge-wrapper">
+                        <canvas class="mini-gauge-canvas" id="quality-gauge" width="80" height="80"></canvas>
+                    </div>
+                    <div class="mini-gauge-label">Quality</div>
+                    <div class="mini-gauge-value" id="quality-value">0%</div>
+                </div>
+            </div>
+
+            <!-- Period Selector -->
+            <div class="stats-period">
+                <button class="period-btn active" data-period="hourly">Hourly</button>
+                <button class="period-btn" data-period="daily">Daily</button>
+                <button class="period-btn" data-period="weekly">Weekly</button>
+                <button class="period-btn" data-period="monthly">Monthly</button>
+                <button class="period-btn" data-period="yearly">YTD</button>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-card-value" id="total-visitors">0</div>
+                    <div class="stat-card-label">Total Visitors</div>
+                    <div class="stat-card-change positive" id="visitors-change">+0%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="page-views">0</div>
+                    <div class="stat-card-label">Page Views</div>
+                    <div class="stat-card-change positive" id="views-change">+0%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="avg-session">0s</div>
+                    <div class="stat-card-label">Avg Session</div>
+                    <div class="stat-card-change positive" id="session-change">+0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Server Panel -->
+        <div class="server-panel" id="right-servers">
+            <h2>API Services</h2>
+            <!-- Servers will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Service Badge -->
+    <div class="service-badge">
+        Service Manager: <span class="status" id="manager-status">Checking...</span>
+    </div>
+
+    <script>
+        // Server Configuration
+        const servers = [
+            { name: 'JubileeVerse.com', description: 'Main Website', port: 3000, type: 'website' },
+            { name: 'JubileeInspire.com', description: 'Inspiration Platform', port: 3001, type: 'website' },
+            { name: 'wwBibleweb.com', description: 'Bible Web Platform', port: 3003, type: 'website' },
+            { name: 'JubileeWebsites.com', description: 'Website Generator', port: 3008, type: 'website' },
+            { name: 'JubileeParadox.com', description: 'Movie Website', port: 3009, type: 'website' },
+            { name: 'InspireCodex API', description: 'Identity & Config', port: 3100, type: 'api' },
+            { name: 'InspireContinuum API', description: 'Activity & Chat', port: 3101, type: 'api' },
+            { name: 'JubileeBrowser.com', description: 'Browser Downloads', port: 3200, type: 'website' },
+            { name: 'CelestialPaths.com', description: 'Celestial Paths', port: 3300, type: 'website' }
+        ];
+
+        // Stats data for different periods
+        const statsData = {
+            hourly: { visitors: 127, views: 384, session: '2m 34s', vChange: '+12%', pChange: '+8%', sChange: '+5%' },
+            daily: { visitors: 2847, views: 8541, session: '3m 12s', vChange: '+15%', pChange: '+11%', sChange: '+7%' },
+            weekly: { visitors: 18294, views: 54882, session: '2m 58s', vChange: '+22%', pChange: '+18%', sChange: '-3%' },
+            monthly: { visitors: 72156, views: 216468, session: '3m 05s', vChange: '+31%', pChange: '+27%', sChange: '+12%' },
+            yearly: { visitors: 847293, views: 2541879, session: '2m 47s', vChange: '+45%', pChange: '+38%', sChange: '+9%' }
+        };
+
+        // Server status cache
+        let serverStatuses = {};
+
+        // Initialize server panels
+        function initializeServers() {
+            const leftPanel = document.getElementById('left-servers');
+            const rightPanel = document.getElementById('right-servers');
+
+            // Split servers: websites on left, APIs and remaining on right
+            const leftServers = servers.slice(0, 5);
+            const rightServers = servers.slice(5);
+
+            leftServers.forEach(server => {
+                leftPanel.appendChild(createServerCard(server, 'left'));
+            });
+
+            rightServers.forEach(server => {
+                rightPanel.appendChild(createServerCard(server, 'right'));
+            });
+        }
+
+        function createServerCard(server, side) {
+            const card = document.createElement('div');
+            card.className = `server-card ${side}`;
+            card.dataset.port = server.port;
+            card.innerHTML = `
+                <div class="server-status-indicator" id="status-${server.port}"></div>
+                <div class="server-info">
+                    <div class="server-name">${server.name}</div>
+                    <div class="server-details">${server.description}</div>
+                </div>
+                <div class="server-port">:${server.port}</div>
+            `;
+            card.addEventListener('click', () => {
+                window.open(`http://localhost:${server.port}`, '_blank');
+            });
+            return card;
+        }
+
+        // Speedometer Drawing
+        class Speedometer {
+            constructor(canvasId, options = {}) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.min = options.min || 0;
+                this.max = options.max || 120;
+                this.value = options.value || 0;
+                this.width = this.canvas.width;
+                this.height = this.canvas.height;
+                this.centerX = this.width / 2;
+                this.centerY = this.height - 40;
+                this.radius = Math.min(this.width, this.height) * 0.7;
+            }
+
+            draw() {
+                this.ctx.clearRect(0, 0, this.width, this.height);
+                this.drawBackground();
+                this.drawScale();
+                this.drawNeedle();
+            }
+
+            drawBackground() {
+                const ctx = this.ctx;
+                const startAngle = Math.PI;
+                const endAngle = 2 * Math.PI;
+
+                // Outer glow
+                const gradient = ctx.createRadialGradient(
+                    this.centerX, this.centerY, this.radius * 0.5,
+                    this.centerX, this.centerY, this.radius * 1.1
+                );
+                gradient.addColorStop(0, 'rgba(245, 166, 35, 0.1)');
+                gradient.addColorStop(1, 'rgba(245, 166, 35, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.centerX, this.centerY, this.radius * 1.1, startAngle, endAngle);
+                ctx.fill();
+
+                // Background arc
+                ctx.beginPath();
+                ctx.arc(this.centerX, this.centerY, this.radius, startAngle, endAngle);
+                ctx.lineWidth = 30;
+                ctx.strokeStyle = '#1a1a2e';
+                ctx.stroke();
+
+                // Colored arc sections
+                // Green zone (0-40)
+                this.drawArcSection(0, 40, '#00ff88', 0.3);
+                // Yellow zone (40-80)
+                this.drawArcSection(40, 80, '#f5a623', 0.5);
+                // Red zone (80-120)
+                this.drawArcSection(80, 120, '#ff4444', 0.7);
+
+                // Inner border
+                ctx.beginPath();
+                ctx.arc(this.centerX, this.centerY, this.radius - 20, startAngle, endAngle);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'rgba(245, 166, 35, 0.5)';
+                ctx.stroke();
+
+                // Outer border
+                ctx.beginPath();
+                ctx.arc(this.centerX, this.centerY, this.radius + 15, startAngle, endAngle);
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#f5a623';
+                ctx.stroke();
+            }
+
+            drawArcSection(fromValue, toValue, color, opacity) {
+                const ctx = this.ctx;
+                const startAngle = this.valueToAngle(fromValue);
+                const endAngle = this.valueToAngle(toValue);
+
+                ctx.beginPath();
+                ctx.arc(this.centerX, this.centerY, this.radius, startAngle, endAngle);
+                ctx.lineWidth = 25;
+                ctx.strokeStyle = color;
+                ctx.globalAlpha = opacity;
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
+
+            drawScale() {
+                const ctx = this.ctx;
+                const step = 20;
+
+                for (let i = this.min; i <= this.max; i += step) {
+                    const angle = this.valueToAngle(i);
+                    const innerRadius = this.radius - 35;
+                    const outerRadius = this.radius - 45;
+
+                    const x1 = this.centerX + Math.cos(angle) * innerRadius;
+                    const y1 = this.centerY + Math.sin(angle) * innerRadius;
+                    const x2 = this.centerX + Math.cos(angle) * outerRadius;
+                    const y2 = this.centerY + Math.sin(angle) * outerRadius;
+
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#f5a623';
+                    ctx.stroke();
+
+                    // Labels
+                    const labelRadius = this.radius - 60;
+                    const labelX = this.centerX + Math.cos(angle) * labelRadius;
+                    const labelY = this.centerY + Math.sin(angle) * labelRadius;
+
+                    ctx.font = 'bold 14px Segoe UI';
+                    ctx.fillStyle = '#fff';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(i.toString(), labelX, labelY);
+                }
+
+                // Minor ticks
+                for (let i = this.min; i <= this.max; i += 10) {
+                    if (i % step !== 0) {
+                        const angle = this.valueToAngle(i);
+                        const innerRadius = this.radius - 35;
+                        const outerRadius = this.radius - 40;
+
+                        const x1 = this.centerX + Math.cos(angle) * innerRadius;
+                        const y1 = this.centerY + Math.sin(angle) * innerRadius;
+                        const x2 = this.centerX + Math.cos(angle) * outerRadius;
+                        const y2 = this.centerY + Math.sin(angle) * outerRadius;
+
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = 'rgba(245, 166, 35, 0.5)';
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            drawNeedle() {
+                const ctx = this.ctx;
+                const angle = this.valueToAngle(this.value);
+                const needleLength = this.radius - 50;
+
+                // Needle shadow
+                ctx.save();
+                ctx.translate(this.centerX + 2, this.centerY + 2);
+                ctx.rotate(angle + Math.PI / 2);
+                ctx.beginPath();
+                ctx.moveTo(0, -needleLength);
+                ctx.lineTo(-8, 20);
+                ctx.lineTo(8, 20);
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.fill();
+                ctx.restore();
+
+                // Needle
+                ctx.save();
+                ctx.translate(this.centerX, this.centerY);
+                ctx.rotate(angle + Math.PI / 2);
+
+                // Needle body
+                const gradient = ctx.createLinearGradient(0, -needleLength, 0, 20);
+                gradient.addColorStop(0, '#ff6600');
+                gradient.addColorStop(0.5, '#f5a623');
+                gradient.addColorStop(1, '#cc5500');
+
+                ctx.beginPath();
+                ctx.moveTo(0, -needleLength);
+                ctx.lineTo(-6, 20);
+                ctx.lineTo(6, 20);
+                ctx.closePath();
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                // Needle highlight
+                ctx.beginPath();
+                ctx.moveTo(0, -needleLength);
+                ctx.lineTo(-2, 15);
+                ctx.lineTo(2, 15);
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.fill();
+
+                ctx.restore();
+
+                // Center cap
+                const capGradient = ctx.createRadialGradient(
+                    this.centerX, this.centerY, 0,
+                    this.centerX, this.centerY, 20
+                );
+                capGradient.addColorStop(0, '#444');
+                capGradient.addColorStop(0.5, '#222');
+                capGradient.addColorStop(1, '#111');
+
+                ctx.beginPath();
+                ctx.arc(this.centerX, this.centerY, 18, 0, Math.PI * 2);
+                ctx.fillStyle = capGradient;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(this.centerX, this.centerY, 18, 0, Math.PI * 2);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#f5a623';
+                ctx.stroke();
+
+                // Inner cap highlight
+                ctx.beginPath();
+                ctx.arc(this.centerX - 4, this.centerY - 4, 6, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.fill();
+            }
+
+            valueToAngle(value) {
+                const range = this.max - this.min;
+                const percentage = (value - this.min) / range;
+                return Math.PI + (percentage * Math.PI);
+            }
+
+            setValue(value) {
+                this.value = Math.max(this.min, Math.min(this.max, value));
+                this.draw();
+            }
+
+            animateTo(targetValue, duration = 1000) {
+                const startValue = this.value;
+                const startTime = performance.now();
+
+                const animate = (currentTime) => {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    // Easing function
+                    const eased = 1 - Math.pow(1 - progress, 3);
+
+                    this.value = startValue + (targetValue - startValue) * eased;
+                    this.draw();
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    }
+                };
+
+                requestAnimationFrame(animate);
+            }
+        }
+
+        // Mini Gauge Drawing
+        class MiniGauge {
+            constructor(canvasId, options = {}) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.value = options.value || 0;
+                this.max = options.max || 100;
+                this.color = options.color || '#f5a623';
+                this.warningThreshold = options.warningThreshold || 30;
+                this.dangerThreshold = options.dangerThreshold || 15;
+                this.centerX = this.canvas.width / 2;
+                this.centerY = this.canvas.height / 2;
+                this.radius = Math.min(this.canvas.width, this.canvas.height) / 2 - 5;
+            }
+
+            draw() {
+                const ctx = this.ctx;
+                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                const startAngle = 0.75 * Math.PI;
+                const endAngle = 2.25 * Math.PI;
+                const valueAngle = startAngle + ((this.value / this.max) * (endAngle - startAngle));
+
+                // Background arc
+                ctx.beginPath();
+                ctx.arc(this.centerX, this.centerY, this.radius, startAngle, endAngle);
+                ctx.lineWidth = 8;
+                ctx.strokeStyle = '#1a1a2e';
+                ctx.lineCap = 'round';
+                ctx.stroke();
+
+                // Determine color based on value
+                let color = this.color;
+                if (this.value < this.dangerThreshold) {
+                    color = '#ff4444';
+                } else if (this.value < this.warningThreshold) {
+                    color = '#ffaa00';
+                }
+
+                // Value arc
+                ctx.beginPath();
+                ctx.arc(this.centerX, this.centerY, this.radius, startAngle, valueAngle);
+                ctx.lineWidth = 8;
+                ctx.strokeStyle = color;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+
+                // Draw needle
+                const needleAngle = valueAngle - Math.PI / 2;
+                const needleLength = this.radius - 15;
+                const needleX = this.centerX + Math.cos(needleAngle + Math.PI / 2) * needleLength;
+                const needleY = this.centerY + Math.sin(needleAngle + Math.PI / 2) * needleLength;
+
+                ctx.beginPath();
+                ctx.moveTo(this.centerX, this.centerY);
+                ctx.lineTo(needleX, needleY);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#fff';
+                ctx.stroke();
+
+                // Center dot
+                ctx.beginPath();
+                ctx.arc(this.centerX, this.centerY, 4, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+            }
+
+            setValue(value) {
+                this.value = Math.max(0, Math.min(this.max, value));
+                this.draw();
+            }
+        }
+
+        // Initialize speedometer
+        const speedometer = new Speedometer('speedometer-canvas', { min: 0, max: 120, value: 0 });
+
+        // Initialize mini gauges
+        const fuelGauge = new MiniGauge('fuel-gauge', { value: 0, max: 100, color: '#00ff88' });
+        const pressureGauge = new MiniGauge('pressure-gauge', { value: 0, max: 1000, color: '#4488ff' });
+        const confidenceGauge = new MiniGauge('confidence-gauge', { value: 0, max: 100, color: '#00ff88' });
+        const qualityGauge = new MiniGauge('quality-gauge', { value: 0, max: 100, color: '#00ff88' });
+
+        // Check server health
+        async function checkServerHealth() {
+            try {
+                const response = await fetch('http://localhost:3999/health');
+                const data = await response.json();
+
+                document.getElementById('manager-status').textContent = 'Online';
+
+                // Update server status indicators
+                data.services.forEach(service => {
+                    const indicator = document.getElementById(`status-${service.port}`);
+                    if (indicator) {
+                        if (service.status === 'running') {
+                            indicator.className = 'server-status-indicator online';
+                        } else {
+                            indicator.className = 'server-status-indicator offline';
+                        }
+                    }
+                    serverStatuses[service.port] = service;
+                });
+
+                // Update mini gauges based on service data
+                const totalServices = data.services.length;
+                const runningServices = data.services.filter(s => s.status === 'running').length;
+                const healthPercentage = (runningServices / totalServices) * 100;
+
+                fuelGauge.setValue(Math.round(data.manager.uptime / 36)); // Hours to percentage
+                document.getElementById('fuel-value').textContent = Math.round(data.manager.uptime / 3600) + 'h';
+
+                pressureGauge.setValue(667); // Mock pressure data
+                document.getElementById('pressure-value').textContent = '667%';
+
+                confidenceGauge.setValue(healthPercentage);
+                document.getElementById('confidence-value').textContent = Math.round(healthPercentage) + '%';
+
+                qualityGauge.setValue(38); // Mock quality data
+                document.getElementById('quality-value').textContent = '38%';
+
+            } catch (error) {
+                document.getElementById('manager-status').textContent = 'Offline';
+                console.error('Health check failed:', error);
+            }
+        }
+
+        // Simulate visitor count
+        function simulateVisitors() {
+            const baseVisitors = Math.floor(Math.random() * 60) + 10;
+            const variation = Math.floor(Math.random() * 20) - 10;
+            const visitors = Math.max(0, Math.min(120, baseVisitors + variation));
+
+            speedometer.animateTo(visitors, 800);
+            document.getElementById('visitor-count').textContent = visitors;
+        }
+
+        // Update stats based on period
+        function updateStats(period) {
+            const data = statsData[period];
+
+            document.getElementById('total-visitors').textContent = data.visitors.toLocaleString();
+            document.getElementById('page-views').textContent = data.views.toLocaleString();
+            document.getElementById('avg-session').textContent = data.session;
+
+            const vChangeEl = document.getElementById('visitors-change');
+            const pChangeEl = document.getElementById('views-change');
+            const sChangeEl = document.getElementById('session-change');
+
+            vChangeEl.textContent = data.vChange;
+            vChangeEl.className = 'stat-card-change ' + (data.vChange.startsWith('+') ? 'positive' : 'negative');
+
+            pChangeEl.textContent = data.pChange;
+            pChangeEl.className = 'stat-card-change ' + (data.pChange.startsWith('+') ? 'positive' : 'negative');
+
+            sChangeEl.textContent = data.sChange;
+            sChangeEl.className = 'stat-card-change ' + (data.sChange.startsWith('+') ? 'positive' : 'negative');
+        }
+
+        // Period button handlers
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                updateStats(btn.dataset.period);
+            });
+        });
+
+        // Update milestone dates
+        function updateMilestone() {
+            const now = new Date();
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+            const options = { month: 'short', day: 'numeric', year: 'numeric' };
+            const startStr = startOfMonth.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const endStr = endOfMonth.toLocaleDateString('en-US', options);
+
+            document.getElementById('milestone-range').textContent = `${startStr.toUpperCase()} - ${endStr.toUpperCase()}`;
+
+            // Calculate remaining working hours
+            const hoursRemaining = Math.max(0, (endOfMonth - now) / (1000 * 60 * 60));
+            const workingHours = Math.round(hoursRemaining * (8/24) * (5/7)); // Rough estimate
+            document.getElementById('working-hours').textContent = workingHours;
+        }
+
+        // Initialize
+        function init() {
+            initializeServers();
+            speedometer.draw();
+            fuelGauge.draw();
+            pressureGauge.draw();
+            confidenceGauge.draw();
+            qualityGauge.draw();
+
+            updateMilestone();
+            updateStats('hourly');
+            checkServerHealth();
+            simulateVisitors();
+
+            // Periodic updates
+            setInterval(checkServerHealth, 10000); // Every 10 seconds
+            setInterval(simulateVisitors, 5000); // Every 5 seconds
+        }
+
+        // Start when DOM is ready
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

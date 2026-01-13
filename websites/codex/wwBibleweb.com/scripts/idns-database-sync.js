@@ -1,17 +1,18 @@
 /**
  * IDNS Database Sync Script
  *
- * Syncs the idns.yaml file with the Codex PostgreSQL database.
+ * Syncs the idns.yaml file with the Codex PostgreSQL database via InspireCodex API.
  * The database becomes the source of truth, with YAML as a backup/export.
  *
+ * IMPORTANT: This script uses the InspireCodex.com API instead of direct database access.
+ * All database operations go through https://inspirecodex.com/api/v1/idns/*
+ *
  * Usage:
- *   node idns-database-sync.js migrate   - Create table and import YAML to database
- *   node idns-database-sync.js export    - Export database to YAML
- *   node idns-database-sync.js import    - Import YAML to database (overwrites)
- *   node idns-database-sync.js status    - Show sync status
+ *   node idns-database-sync.js export    - Export database to YAML via API
+ *   node idns-database-sync.js import    - Import YAML to database via API
+ *   node idns-database-sync.js status    - Show sync status via API
  */
 
-import { Pool } from 'pg';
 import fs from 'fs';
 import path from 'path';
 import YAML from 'yaml';
@@ -20,169 +21,109 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configuration
+// ============================================================================
+// CONFIGURATION - Uses InspireCodex API instead of direct database access
+// ============================================================================
 const CONFIG = {
-    database: {
-        host: process.env.DB_HOST || 'localhost',
-        port: parseInt(process.env.DB_PORT || '5432'),
-        database: process.env.DB_NAME || 'Codex',
-        user: process.env.DB_USER || 'guardian',
-        password: process.env.DB_PASSWORD || 'askShaddai4e!'
-    },
+    // InspireCodex API endpoint - the ONLY way to access Codex database
+    apiBaseUrl: process.env.INSPIRE_CODEX_API_URL || 'http://localhost:3100',
+    apiKey: process.env.INSPIRE_CODEX_API_KEY || '',
     yamlFile: path.join(__dirname, '..', 'idns.yaml')
 };
 
-// Database pool
-const pool = new Pool(CONFIG.database);
+// ============================================================================
+// API CLIENT - All database operations go through InspireCodex API
+// ============================================================================
 
-// =============================================================================
-// DATABASE SCHEMA
-// =============================================================================
+/**
+ * Make an API request to InspireCodex
+ */
+async function apiRequest(endpoint, options = {}) {
+    const url = `${CONFIG.apiBaseUrl}${endpoint}`;
+    const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    };
 
-const CREATE_TABLE_SQL = `
--- IDNS Domains table for Inspire Domain Name System
-CREATE TABLE IF NOT EXISTS idns_domains (
-    id SERIAL PRIMARY KEY,
+    if (CONFIG.apiKey) {
+        headers['X-API-Key'] = CONFIG.apiKey;
+    }
 
-    -- Domain identifier (e.g., 'apostle', 'baptist', 'webspace/jubileeverse')
-    domain_key VARCHAR(255) NOT NULL UNIQUE,
+    try {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                ...headers,
+                ...options.headers
+            }
+        });
 
-    -- Domain type: 'denomination', 'country', 'ministry', 'webspace', 'topic'
-    domain_type VARCHAR(50) DEFAULT 'denomination',
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`API Error ${response.status}: ${errorText}`);
+        }
 
-    -- Display name (human-readable)
-    display_name VARCHAR(255),
+        return await response.json();
+    } catch (error) {
+        if (error.code === 'ECONNREFUSED') {
+            throw new Error(`Cannot connect to InspireCodex API at ${CONFIG.apiBaseUrl}. Is the service running?`);
+        }
+        throw error;
+    }
+}
 
-    -- Description of the domain
-    description TEXT,
+/**
+ * Get all IDNS domains from API
+ */
+async function getDomainsFromAPI() {
+    const result = await apiRequest('/api/v1/idns/domains');
+    return result.domains || [];
+}
 
-    -- Masked Resolution URL (for webspaces)
-    mres VARCHAR(500),
+/**
+ * Create or update a domain via API
+ */
+async function upsertDomainViaAPI(domainKey, data) {
+    try {
+        // Try to update first
+        await apiRequest(`/api/v1/idns/domains/${encodeURIComponent(domainKey)}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    } catch (error) {
+        // If not found, create new
+        if (error.message.includes('404')) {
+            await apiRequest('/api/v1/idns/domains', {
+                method: 'POST',
+                body: JSON.stringify({ domainKey, ...data })
+            });
+        } else {
+            throw error;
+        }
+    }
+}
 
-    -- Is this domain managed by Jubilee?
-    managed BOOLEAN DEFAULT false,
+/**
+ * Trigger sync via API (if supported)
+ */
+async function triggerAPISync() {
+    return await apiRequest('/api/v1/idns/sync', {
+        method: 'POST',
+        body: JSON.stringify({})
+    });
+}
 
-    -- Is this domain active?
-    is_active BOOLEAN DEFAULT true,
+/**
+ * Get domain types from API
+ */
+async function getDomainTypes() {
+    const result = await apiRequest('/api/v1/idns/types');
+    return result.types || [];
+}
 
-    -- Parent domain key (for hierarchical domains like webspace/*)
-    parent_domain VARCHAR(255),
-
-    -- Sort order for display
-    sort_order INTEGER DEFAULT 0,
-
-    -- Metadata JSON for additional properties
-    metadata JSONB DEFAULT '{}',
-
-    -- Timestamps
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- Index for faster lookups
-CREATE INDEX IF NOT EXISTS idx_idns_domains_type ON idns_domains(domain_type);
-CREATE INDEX IF NOT EXISTS idx_idns_domains_parent ON idns_domains(parent_domain);
-CREATE INDEX IF NOT EXISTS idx_idns_domains_managed ON idns_domains(managed);
-CREATE INDEX IF NOT EXISTS idx_idns_domains_active ON idns_domains(is_active);
-
--- Trigger to update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_idns_domains_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS trigger_idns_domains_updated_at ON idns_domains;
-CREATE TRIGGER trigger_idns_domains_updated_at
-    BEFORE UPDATE ON idns_domains
-    FOR EACH ROW
-    EXECUTE FUNCTION update_idns_domains_updated_at();
-`;
-
-// =============================================================================
+// ============================================================================
 // HELPER FUNCTIONS
-// =============================================================================
-
-/**
- * Determine domain type based on the domain key
- */
-function inferDomainType(domainKey) {
-    // Countries (by common patterns)
-    const countries = [
-        'afghanistan', 'albania', 'algeria', 'andorra', 'angola', 'argentina', 'armenia',
-        'australia', 'austria', 'azerbaijan', 'bahamas', 'bahrain', 'bangladesh', 'barbados',
-        'belarus', 'belgium', 'belize', 'benin', 'bhutan', 'bolivia', 'botswana', 'brazil',
-        'brunei', 'bulgaria', 'cambodia', 'cameroon', 'canada', 'chad', 'chile', 'china',
-        'colombia', 'comoros', 'croatia', 'cuba', 'cyprus', 'denmark', 'djibouti', 'dominica',
-        'ecuador', 'egypt', 'eritrea', 'estonia', 'ethiopia', 'fiji', 'finland', 'france',
-        'gabon', 'gambia', 'georgia', 'germany', 'ghana', 'greece', 'grenada', 'guatemala',
-        'guinea', 'guyana', 'haiti', 'honduras', 'hungary', 'iceland', 'india', 'indonesia',
-        'iran', 'iraq', 'ireland', 'israel', 'italy', 'jamaica', 'japan', 'jordan',
-        'kazakhstan', 'kenya', 'kiribati', 'kosovo', 'kuwait', 'kyrgyzstan', 'laos', 'latvia',
-        'lebanon', 'lesotho', 'liberia', 'libya', 'liechtenstein', 'lithuania', 'luxembourg',
-        'madagascar', 'malawi', 'malaysia', 'maldives', 'mali', 'malta', 'mauritania',
-        'mauritius', 'mexico', 'micronesia', 'moldova', 'monaco', 'mongolia', 'montenegro',
-        'morocco', 'mozambique', 'myanmar', 'namibia', 'nauru', 'nepal', 'netherlands',
-        'newzealand', 'nicaragua', 'nigeria', 'norway', 'oman', 'pakistan', 'palau',
-        'palestine', 'panama', 'paraguay', 'peru', 'philippines', 'poland', 'portugal',
-        'qatar', 'romania', 'russia', 'rwanda', 'samoa', 'senegal', 'serbia', 'seychelles',
-        'singapore', 'slovakia', 'slovenia', 'somalia', 'spain', 'sudan', 'suriname',
-        'sweden', 'switzerland', 'taiwan', 'tajikistan', 'tanzania', 'thailand', 'togo',
-        'tonga', 'tunisia', 'turkey', 'turkmenistan', 'tuvalu', 'uganda', 'ukraine',
-        'uruguay', 'uzbekistan', 'vanuatu', 'venezuela', 'vietnam', 'yemen', 'zambia',
-        'zimbabwe', 'unitedstates', 'unitedkingdom', 'unitedarabemirates', 'southafrica',
-        'southkorea', 'northkorea', 'saudiarabia', 'srilanka', 'papuanewguinea', 'hongkong',
-        'northmacedonia', 'bosniaandherzegovina', 'centralafricanrepublic', 'congodemocraticrepublic',
-        'congorepublic', 'cookislands', 'czechrepublic', 'dominicanrepublic', 'easttimor',
-        'elsalvador', 'equatorialguinea', 'eswatini', 'guineabissau', 'ivorycoast',
-        'burkinafaso', 'burundi', 'capeverde', 'marshallislands', 'sanmarino',
-        'saotomeandprincipe', 'sierraleone', 'solomonislands', 'southsudan',
-        'trinidadandtobago', 'vaticancity', 'antiguaandbarbuda', 'saintkittsandnevis',
-        'saintlucia', 'saintvincentandthegrenadines'
-    ];
-
-    // Ministry/Topic types
-    const ministryTopics = [
-        'academy', 'bible', 'biblical', 'charity', 'children', 'church', 'coaching',
-        'community', 'conference', 'discipleship', 'events', 'family', 'fellowship',
-        'group', 'healing', 'inspire', 'kids', 'library', 'marriage', 'men', 'ministry',
-        'mission', 'music', 'news', 'pastor', 'podcast', 'praise', 'prayer', 'prophet',
-        'recovery', 'retreat', 'school', 'scriptural', 'sermon', 'serve', 'shepherd',
-        'teacher', 'testimony', 'women', 'worship', 'youth', 'apostle', 'evangelist'
-    ];
-
-    const lowerKey = domainKey.toLowerCase();
-
-    if (domainKey.includes('/')) {
-        return 'webspace';
-    }
-    if (countries.includes(lowerKey)) {
-        return 'country';
-    }
-    if (ministryTopics.includes(lowerKey)) {
-        return 'ministry';
-    }
-    return 'denomination';
-}
-
-/**
- * Generate display name from domain key
- */
-function generateDisplayName(domainKey) {
-    if (domainKey.includes('/')) {
-        const parts = domainKey.split('/');
-        return parts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' / ');
-    }
-
-    // Split camelCase and add spaces
-    const spaced = domainKey.replace(/([a-z])([A-Z])/g, '$1 $2');
-    // Capitalize first letter of each word
-    return spaced.split(' ').map(word =>
-        word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-}
+// ============================================================================
 
 /**
  * Read YAML configuration file
@@ -213,118 +154,40 @@ function writeYamlConfig(config) {
     fs.writeFileSync(CONFIG.yamlFile, YAML.stringify(config));
 }
 
-// =============================================================================
+// ============================================================================
 // COMMANDS
-// =============================================================================
+// ============================================================================
 
 /**
- * Create the database table and import existing YAML data
- */
-async function migrate() {
-    console.log('\n=== IDNS Database Migration ===\n');
-
-    try {
-        // Create the table
-        console.log('Creating idns_domains table...');
-        await pool.query(CREATE_TABLE_SQL);
-        console.log('✓ Table created successfully\n');
-
-        // Read existing YAML
-        const yamlConfig = readYamlConfig();
-        const idnsEntries = Object.entries(yamlConfig.idns || {});
-
-        console.log(`Found ${idnsEntries.length} IDNS entries in YAML\n`);
-
-        if (idnsEntries.length === 0) {
-            console.log('No entries to import.');
-            return;
-        }
-
-        // Import entries
-        let imported = 0;
-        let skipped = 0;
-
-        for (const [domainKey, data] of idnsEntries) {
-            const domainType = inferDomainType(domainKey);
-            const displayName = generateDisplayName(domainKey);
-            const parentDomain = domainKey.includes('/') ? domainKey.split('/')[0] : null;
-
-            try {
-                await pool.query(`
-                    INSERT INTO idns_domains (domain_key, domain_type, display_name, mres, managed, parent_domain, metadata)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7)
-                    ON CONFLICT (domain_key) DO UPDATE SET
-                        domain_type = EXCLUDED.domain_type,
-                        display_name = EXCLUDED.display_name,
-                        mres = EXCLUDED.mres,
-                        managed = EXCLUDED.managed,
-                        parent_domain = EXCLUDED.parent_domain,
-                        metadata = EXCLUDED.metadata
-                `, [
-                    domainKey,
-                    domainType,
-                    displayName,
-                    data.mres || null,
-                    data.managed || false,
-                    parentDomain,
-                    JSON.stringify(data)
-                ]);
-                imported++;
-            } catch (err) {
-                console.error(`  ✗ Error importing ${domainKey}:`, err.message);
-                skipped++;
-            }
-        }
-
-        console.log(`\n✓ Migration complete!`);
-        console.log(`  Imported: ${imported}`);
-        console.log(`  Skipped:  ${skipped}`);
-
-    } catch (error) {
-        console.error('Migration failed:', error.message);
-        throw error;
-    }
-}
-
-/**
- * Export database to YAML file
+ * Export database to YAML file via InspireCodex API
  */
 async function exportToYaml() {
-    console.log('\n=== Export Database to YAML ===\n');
+    console.log('\n=== Export Database to YAML (via InspireCodex API) ===\n');
+    console.log(`API Endpoint: ${CONFIG.apiBaseUrl}\n`);
 
     try {
-        const result = await pool.query(`
-            SELECT domain_key, mres, managed, metadata
-            FROM idns_domains
-            WHERE is_active = true
-            ORDER BY domain_key
-        `);
+        const domains = await getDomainsFromAPI();
 
         const idns = {};
-        for (const row of result.rows) {
+        for (const domain of domains) {
             const data = {};
-            if (row.mres) data.mres = row.mres;
-            if (row.managed) data.managed = true;
-            // Add any extra metadata fields
-            if (row.metadata && typeof row.metadata === 'object') {
-                Object.keys(row.metadata).forEach(key => {
-                    if (key !== 'mres' && key !== 'managed') {
-                        data[key] = row.metadata[key];
-                    }
-                });
-            }
-            idns[row.domain_key] = data;
+            if (domain.mres) data.mres = domain.mres;
+            if (domain.managed) data.managed = true;
+            if (domain.description) data.description = domain.description;
+            idns[domain.domain_key || domain.domainKey] = data;
         }
 
         const config = {
             version: '1.0',
             lastModified: new Date().toISOString(),
+            source: 'InspireCodex API',
             idns
         };
 
         writeYamlConfig(config);
 
-        console.log(`✓ Exported ${result.rows.length} entries to ${CONFIG.yamlFile}`);
+        console.log(`✓ Exported ${domains.length} entries to ${CONFIG.yamlFile}`);
+        console.log(`  Source: InspireCodex API (${CONFIG.apiBaseUrl})`);
 
     } catch (error) {
         console.error('Export failed:', error.message);
@@ -333,10 +196,11 @@ async function exportToYaml() {
 }
 
 /**
- * Import YAML to database (overwrites existing)
+ * Import YAML to database via InspireCodex API
  */
 async function importFromYaml() {
-    console.log('\n=== Import YAML to Database ===\n');
+    console.log('\n=== Import YAML to Database (via InspireCodex API) ===\n');
+    console.log(`API Endpoint: ${CONFIG.apiBaseUrl}\n`);
 
     try {
         const yamlConfig = readYamlConfig();
@@ -344,32 +208,28 @@ async function importFromYaml() {
 
         console.log(`Found ${idnsEntries.length} entries in YAML\n`);
 
-        // Clear existing entries
-        await pool.query('DELETE FROM idns_domains');
-        console.log('✓ Cleared existing entries\n');
-
         let imported = 0;
-        for (const [domainKey, data] of idnsEntries) {
-            const domainType = inferDomainType(domainKey);
-            const displayName = generateDisplayName(domainKey);
-            const parentDomain = domainKey.includes('/') ? domainKey.split('/')[0] : null;
+        let errors = 0;
 
-            await pool.query(`
-                INSERT INTO idns_domains (domain_key, domain_type, display_name, mres, managed, parent_domain, metadata)
-                VALUES ($1, $2, $3, $4, $5, $6, $7)
-            `, [
-                domainKey,
-                domainType,
-                displayName,
-                data.mres || null,
-                data.managed || false,
-                parentDomain,
-                JSON.stringify(data)
-            ]);
-            imported++;
+        for (const [domainKey, data] of idnsEntries) {
+            try {
+                await upsertDomainViaAPI(domainKey, {
+                    mres: data.mres || null,
+                    managed: data.managed || false,
+                    description: data.description || null
+                });
+                imported++;
+                process.stdout.write('.');
+            } catch (err) {
+                console.error(`\n  ✗ Error importing ${domainKey}:`, err.message);
+                errors++;
+            }
         }
 
-        console.log(`✓ Imported ${imported} entries to database`);
+        console.log(`\n\n✓ Import complete!`);
+        console.log(`  Imported: ${imported}`);
+        console.log(`  Errors:   ${errors}`);
+        console.log(`  Via:      InspireCodex API`);
 
     } catch (error) {
         console.error('Import failed:', error.message);
@@ -378,37 +238,41 @@ async function importFromYaml() {
 }
 
 /**
- * Show sync status
+ * Show sync status via InspireCodex API
  */
 async function showStatus() {
-    console.log('\n=== IDNS Sync Status ===\n');
+    console.log('\n=== IDNS Sync Status (via InspireCodex API) ===\n');
+    console.log(`API Endpoint: ${CONFIG.apiBaseUrl}\n`);
 
     try {
-        // Check if table exists
-        const tableCheck = await pool.query(`
-            SELECT EXISTS (
-                SELECT FROM information_schema.tables
-                WHERE table_schema = 'public' AND table_name = 'idns_domains'
-            )
-        `);
+        // Check API health
+        console.log('Checking InspireCodex API...');
+        const healthResponse = await fetch(`${CONFIG.apiBaseUrl}/health`);
+        const health = await healthResponse.json();
 
-        const tableExists = tableCheck.rows[0].exists;
-        console.log(`Database table: ${tableExists ? '✓ Exists' : '✗ Not found'}`);
+        console.log(`API Status: ${health.status === 'ok' ? '✓ Online' : '✗ ' + health.status}`);
+        console.log(`Codex DB:   ${health.databases?.codex || 'unknown'}`);
 
-        if (tableExists) {
-            const countResult = await pool.query('SELECT COUNT(*) FROM idns_domains');
-            const typeBreakdown = await pool.query(`
-                SELECT domain_type, COUNT(*) as count
-                FROM idns_domains
-                GROUP BY domain_type
-                ORDER BY count DESC
-            `);
+        // Get domain stats via API
+        try {
+            const domains = await getDomainsFromAPI();
+            console.log(`\nTotal IDNS entries (API): ${domains.length}`);
 
-            console.log(`Total entries: ${countResult.rows[0].count}`);
-            console.log('\nBy type:');
-            typeBreakdown.rows.forEach(row => {
-                console.log(`  ${row.domain_type}: ${row.count}`);
+            // Count by type
+            const typeCount = {};
+            domains.forEach(d => {
+                const type = d.domain_type || d.domainType || 'unknown';
+                typeCount[type] = (typeCount[type] || 0) + 1;
             });
+
+            console.log('\nBy type:');
+            Object.entries(typeCount)
+                .sort((a, b) => b[1] - a[1])
+                .forEach(([type, count]) => {
+                    console.log(`  ${type}: ${count}`);
+                });
+        } catch (err) {
+            console.log('\nCould not fetch domain stats:', err.message);
         }
 
         // Check YAML file
@@ -420,26 +284,33 @@ async function showStatus() {
             const yamlCount = Object.keys(yamlConfig.idns || {}).length;
             console.log(`YAML entries: ${yamlCount}`);
             console.log(`Last modified: ${yamlConfig.lastModified || 'Never'}`);
+            if (yamlConfig.source) {
+                console.log(`Source: ${yamlConfig.source}`);
+            }
         }
 
     } catch (error) {
         console.error('Status check failed:', error.message);
+        console.log('\nMake sure InspireCodex API is running on port 3100');
         throw error;
     }
 }
 
-// =============================================================================
+// ============================================================================
 // MAIN
-// =============================================================================
+// ============================================================================
 
 async function main() {
     const command = process.argv[2];
 
+    console.log('');
+    console.log('='.repeat(60));
+    console.log('  IDNS Database Sync Tool');
+    console.log('  Using InspireCodex API (NO DIRECT DATABASE ACCESS)');
+    console.log('='.repeat(60));
+
     try {
         switch (command) {
-            case 'migrate':
-                await migrate();
-                break;
             case 'export':
                 await exportToYaml();
                 break;
@@ -449,25 +320,34 @@ async function main() {
             case 'status':
                 await showStatus();
                 break;
+            case 'migrate':
+                console.log('\n⚠️  Migration is no longer needed.');
+                console.log('   Database schema is managed by InspireCodex API.');
+                console.log('   Use "import" to push YAML data to the database via API.');
+                break;
             default:
                 console.log(`
-IDNS Database Sync Tool
+IDNS Database Sync Tool (API Version)
+
+This tool syncs IDNS data through the InspireCodex API.
+NO DIRECT DATABASE ACCESS - all operations go through the API.
 
 Usage:
   node idns-database-sync.js <command>
 
 Commands:
-  migrate   Create table and import YAML to database
-  export    Export database to YAML file
-  import    Import YAML to database (clears existing)
-  status    Show sync status
+  export    Export database to YAML file (via API)
+  import    Import YAML to database (via API)
+  status    Show sync status (via API)
+
+Environment Variables:
+  INSPIRE_CODEX_API_URL   API base URL (default: http://localhost:3100)
+  INSPIRE_CODEX_API_KEY   Optional API key for authentication
                 `);
         }
     } catch (error) {
         console.error('\nError:', error.message);
         process.exit(1);
-    } finally {
-        await pool.end();
     }
 }
 

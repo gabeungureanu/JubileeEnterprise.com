@@ -787,6 +787,11 @@ const togglePlanFeaturePublish = asyncHandler(async (req, res) => {
  * GET /api/admin/tasks
  */
 const getTasks = asyncHandler(async (req, res) => {
+  // Prevent caching - always fetch fresh data
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+
   const filters = {
     status: req.query.status,
     taskType: req.query.taskType,
@@ -805,8 +810,11 @@ const getTasks = asyncHandler(async (req, res) => {
     if (filters[key] === undefined) delete filters[key];
   });
 
+  console.log('[getTasks] Fetching tasks with filters:', JSON.stringify(filters));
   const tasks = await AdminTaskService.getAllTasks(filters);
+  console.log('[getTasks] Got', tasks?.length || 0, 'tasks');
   const stats = await AdminTaskService.getStats();
+  console.log('[getTasks] Got stats:', JSON.stringify(stats));
 
   res.json({
     success: true,

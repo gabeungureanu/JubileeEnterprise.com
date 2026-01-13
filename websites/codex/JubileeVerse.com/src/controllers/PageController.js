@@ -20,8 +20,15 @@ function sendPage(res, pageName) {
 
 /**
  * Send admin HTML page from views/admin
+ * Includes no-cache headers to prevent browser caching issues
  */
 function sendAdminPage(res, pageName) {
+  // Force browser to always fetch fresh content
+  res.set({
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  });
   res.sendFile(path.join(ADMIN_VIEWS_DIR, `${pageName}.html`));
 }
 

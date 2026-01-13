@@ -25,6 +25,9 @@ const app = express();
 const PORT = process.env.PORT || 3101;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
+// Trust proxy for proper client IP detection behind Cloudflare/reverse proxy
+app.set('trust proxy', 1);
+
 // =============================================================================
 // DATABASE CONNECTIONS
 // =============================================================================

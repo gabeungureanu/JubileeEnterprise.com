@@ -9,6 +9,7 @@ InspireCodex serves as the foundational API layer for the Jubilee ecosystem, pro
 - **Configuration Storage**: Application settings and preferences
 - **Ministry Content**: Inspire database content access
 - **Semantic Search**: Qdrant RAG integration for AI-powered queries
+- **Developer Task Tracking**: API for the Jubilee Tasks VS Code extension
 
 ## Port
 
@@ -23,10 +24,22 @@ InspireCodex serves as the foundational API layer for the Jubilee ecosystem, pro
 - **Browser Sync**: Synchronize bookmarks, history, tabs across devices
 - **Profile Management**: User profiles with avatars and preferences
 
+### Developer Tasks API (v1.2.0+)
+- **Task Tracking**: Create and manage developer tasks
+- **EHH Estimation**: Track equivalent human hours
+- **Project Management**: Auto-detect and track projects
+- **Session Tracking**: Track tasks by session and machine
+
 ### Qdrant RAG Integration (v1.1.0+)
 - **Semantic Search**: Vector-based content search
 - **AI-Powered Queries**: Natural language query processing
 - **Collection Management**: Organized vector collections
+
+### New in v1.2.0 (2026-01-12)
+- **Developer Tasks API**: Full CRUD for developer task tracking
+- **PM2 Auto-Restart**: Automatic restart on crash with ecosystem.config.js
+- **Rate Limit Bypass**: Developer tasks API and local requests bypass rate limiting
+- **EHH Update Endpoint**: Dedicated endpoint to update EHH values
 
 ### New in v1.1.0 (2026-01-11)
 - **Qdrant Service Integration**: Vector database for RAG functionality
@@ -36,7 +49,7 @@ InspireCodex serves as the foundational API layer for the Jubilee ecosystem, pro
 ## Databases
 
 Connects to multiple PostgreSQL databases:
-- **Codex**: Identity and configuration (read/write)
+- **Codex**: Identity, configuration, and developer tasks (read/write)
 - **Inspire**: Ministry content (read/write)
 - **Legacy** (optional): JubileeVerse migration verification (read-only)
 
@@ -63,6 +76,21 @@ Connects to multiple PostgreSQL databases:
 - `POST /api/v2/sync/data` - Update sync data
 - `GET /api/v2/sync/preferences` - Get sync preferences
 - `PUT /api/v2/sync/preferences` - Update sync preferences
+
+### Developer Tasks
+- `GET /api/v1/developer/tasks` - List tasks (filterable by developer, status, date)
+- `POST /api/v1/developer/tasks` - Create a new task
+- `GET /api/v1/developer/tasks/:id` - Get task by ID
+- `PUT /api/v1/developer/tasks/:id` - Update task
+- `POST /api/v1/developer/tasks/:id/complete` - Complete a task with duration/EHH
+- `PUT /api/v1/developer/tasks/:id/activity` - Update task activity timestamp
+- `PUT /api/v1/developer/tasks/:id/ehh` - Update task EHH value
+- `GET /api/v1/developer/tasks/session/:sessionId/active` - Get active task for session
+- `GET /api/v1/developer/tasks/stats` - Get task statistics
+
+### Developer Projects
+- `GET /api/v1/developer/projects` - List projects
+- `POST /api/v1/developer/projects` - Create or get existing project
 
 ### RAG/Search
 - `POST /api/v1/rag/search` - Semantic search
@@ -104,21 +132,34 @@ CORS_ORIGINS=https://jubileeverse.com,https://wwbibleweb.com
 
 # Rate Limiting
 RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
+RATE_LIMIT_MAX_REQUESTS=10000
 ```
 
 ## Running Locally
 
+### Standard Start
 ```bash
 cd websites/codex/InspireCodex.com
 npm install
 npm start
 ```
 
-Or with PM2 for production:
+### With PM2 (Recommended for Production)
 ```bash
-pm2 start server.js --name inspirecodex
+npm run pm2:start     # Start with auto-restart
+npm run pm2:stop      # Stop the service
+npm run pm2:restart   # Restart the service
+npm run pm2:logs      # View logs
+npm run pm2:status    # Check status
 ```
+
+### PM2 Ecosystem Configuration
+The `ecosystem.config.js` provides:
+- Auto-restart on crash
+- Exponential backoff restart delay
+- Max 10 restarts before stopping
+- Memory limit of 500MB
+- Log rotation with timestamps
 
 ## CORS Configuration
 
@@ -129,18 +170,27 @@ Whitelisted domains (bypass rate limiting):
 - inspirecodex.com
 - localhost
 
+## Rate Limiting
+
+- Default: 10,000 requests per 15 minutes (increased from 100)
+- **Bypassed for**:
+  - Whitelisted domains
+  - Developer tasks API (`/api/v1/developer/*`)
+  - Local requests (no origin header)
+
 ## Technology Stack
 
 - Node.js with Express
 - PostgreSQL (via `pg` driver)
 - Qdrant for vector search
+- PM2 for process management
 - Helmet for security headers
 - Morgan for request logging
 - Express Rate Limit
 
 ## Security Features
 
-- Rate limiting (100 requests/15 minutes for non-whitelisted origins)
+- Rate limiting (10,000 requests/15 minutes for non-whitelisted origins)
 - CORS with origin validation
 - Helmet security headers
 - Session-based authentication
@@ -150,11 +200,13 @@ Whitelisted domains (bypass rate limiting):
 
 ```
 InspireCodex
-├── server.js           # Main Express application
+├── server.js              # Main Express application
+├── ecosystem.config.js    # PM2 configuration
 ├── services/
 │   └── qdrant-service.js  # Qdrant RAG integration
-├── scripts/            # Utility scripts
-└── public/             # Static assets (if any)
+├── scripts/               # Utility scripts
+├── logs/                  # PM2 log files
+└── public/                # Static assets (if any)
 ```
 
 ## License

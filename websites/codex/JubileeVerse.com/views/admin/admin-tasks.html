@@ -4,12 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Jubilee: Project Manager - JubileeVerse Admin">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Tasks - Admin - JubileeVerse</title>
   <link rel="icon" type="image/png" href="/images/personas/jubilee.png">
   <link rel="apple-touch-icon" href="/images/personas/jubilee.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/admin-header.css">
-  <link rel="stylesheet" href="/css/admin-sidebar.css">
+  <link rel="stylesheet" href="/css/admin-header.css?v=20260113">
+  <link rel="stylesheet" href="/css/admin-sidebar.css?v=20260113">
   <style>
     * {
       margin: 0;
@@ -84,70 +87,7 @@
       position: relative;
     }
 
-    /* Ambient dashboard glow overlay */
-    .velocity-dashboard::before {
-      content: '';
-      position: absolute;
-      inset: -2px;
-      border-radius: 22px;
-      background: linear-gradient(135deg,
-        rgba(255, 189, 89, 0.03) 0%,
-        transparent 50%,
-        rgba(34, 197, 94, 0.02) 100%);
-      pointer-events: none;
-      animation: ambientPulse 6s ease-in-out infinite;
-    }
-
-    @keyframes ambientPulse {
-      0%, 100% { opacity: 0.5; }
-      50% { opacity: 1; }
-    }
-
-    /* Dashboard Glow Animation */
-    @keyframes dashboardGlow {
-      0%, 100% { opacity: 0.8; }
-      50% { opacity: 1; }
-    }
-
-    @keyframes subtleFlicker {
-      0%, 100% { filter: brightness(1); }
-      50% { filter: brightness(1.05); }
-    }
-
-    @keyframes needleGlow {
-      0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 189, 89, 0.5)); }
-      50% { filter: drop-shadow(0 0 15px rgba(255, 189, 89, 0.8)); }
-    }
-
-    @keyframes textGlow {
-      0%, 100% { text-shadow: 0 0 8px rgba(255, 255, 255, 0.5), 0 0 16px rgba(255, 255, 255, 0.2); }
-      50% { text-shadow: 0 0 16px rgba(255, 255, 255, 0.8), 0 0 32px rgba(255, 255, 255, 0.4), 0 0 48px rgba(255, 255, 255, 0.2); }
-    }
-
-    @keyframes successGlow {
-      0%, 100% { text-shadow: 0 0 10px rgba(34, 197, 94, 0.6), 0 0 20px rgba(34, 197, 94, 0.3); }
-      50% { text-shadow: 0 0 20px rgba(34, 197, 94, 1), 0 0 40px rgba(34, 197, 94, 0.5), 0 0 60px rgba(34, 197, 94, 0.3); }
-    }
-
-    @keyframes cautionGlow {
-      0%, 100% { text-shadow: 0 0 10px rgba(249, 115, 22, 0.6), 0 0 20px rgba(249, 115, 22, 0.3); }
-      50% { text-shadow: 0 0 20px rgba(249, 115, 22, 1), 0 0 40px rgba(249, 115, 22, 0.5), 0 0 60px rgba(249, 115, 22, 0.3); }
-    }
-
-    @keyframes goldGlow {
-      0%, 100% { text-shadow: 0 0 15px rgba(255, 189, 89, 0.6), 0 0 30px rgba(255, 189, 89, 0.3); }
-      50% { text-shadow: 0 0 25px rgba(255, 189, 89, 1), 0 0 50px rgba(255, 189, 89, 0.5), 0 0 75px rgba(255, 189, 89, 0.3); }
-    }
-
-    @keyframes whiteGlow {
-      0%, 100% { text-shadow: 0 0 8px rgba(255, 255, 255, 0.6), 0 0 16px rgba(255, 255, 255, 0.3); }
-      50% { text-shadow: 0 0 16px rgba(255, 255, 255, 0.9), 0 0 32px rgba(255, 255, 255, 0.5), 0 0 48px rgba(255, 255, 255, 0.2); }
-    }
-
-    @keyframes borderGlow {
-      0%, 100% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.1), inset 0 0 10px rgba(255, 255, 255, 0.05); }
-      50% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.2), inset 0 0 15px rgba(255, 255, 255, 0.1); }
-    }
+    /* Ambient dashboard glow overlay - removed for cleaner UI */
 
     /* ==================== PAGE LOAD REVEAL ANIMATION ==================== */
     /* Initial state: reveal lines centered, content hidden */
@@ -250,33 +190,26 @@
 
     .dashboard-text-glow {
       color: #fff;
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-      animation: whiteGlow 3s ease-in-out infinite;
     }
 
     .dashboard-glow {
       color: #fff;
-      animation: goldGlow 3s ease-in-out infinite;
     }
 
     .dashboard-glow-subtle {
       color: #fff;
-      text-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
     }
 
     .success-glow {
-      color: #fff;
-      animation: successGlow 3.5s ease-in-out infinite;
+      color: #22c55e;
     }
 
     .caution-glow {
-      color: #fff;
-      animation: cautionGlow 3.5s ease-in-out infinite;
+      color: #f97316;
     }
 
     .text-success {
       color: #4ade80;
-      text-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
     }
 
     /* Success and caution indicators */
@@ -322,56 +255,12 @@
       overflow: hidden;
     }
 
-    /* Subtle edge glow for side panels */
-    .velocity-side-panel::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 1px;
-      pointer-events: none;
-      animation: panelEdgeGlow 4s ease-in-out infinite;
-    }
-
-    @keyframes panelEdgeGlow {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 0.7; }
-    }
-
     .velocity-side-panel.left-panel {
       border-left: 3px solid #f97316;
-      box-shadow:
-        -5px 0 30px rgba(249, 115, 22, 0.25),
-        inset 3px 0 20px rgba(249, 115, 22, 0.1);
-      animation: leftPanelGlow 4s ease-in-out infinite;
-    }
-
-    @keyframes leftPanelGlow {
-      0%, 100% { box-shadow: -5px 0 30px rgba(249, 115, 22, 0.25), inset 3px 0 20px rgba(249, 115, 22, 0.1); }
-      50% { box-shadow: -8px 0 40px rgba(249, 115, 22, 0.4), inset 5px 0 30px rgba(249, 115, 22, 0.15); }
-    }
-
-    .velocity-side-panel.left-panel::after {
-      left: 0;
-      background: linear-gradient(180deg, transparent, #f97316, transparent);
     }
 
     .velocity-side-panel.right-panel {
       border-right: 3px solid #22c55e;
-      box-shadow:
-        5px 0 30px rgba(34, 197, 94, 0.25),
-        inset -3px 0 20px rgba(34, 197, 94, 0.1);
-      animation: rightPanelGlow 4s ease-in-out infinite;
-    }
-
-    @keyframes rightPanelGlow {
-      0%, 100% { box-shadow: 5px 0 30px rgba(34, 197, 94, 0.25), inset -3px 0 20px rgba(34, 197, 94, 0.1); }
-      50% { box-shadow: 8px 0 40px rgba(34, 197, 94, 0.4), inset -5px 0 30px rgba(34, 197, 94, 0.15); }
-    }
-
-    .velocity-side-panel.right-panel::after {
-      right: 0;
-      background: linear-gradient(180deg, transparent, #22c55e, transparent);
     }
 
     .panel-header {
@@ -414,14 +303,11 @@
       color: #fff;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      text-shadow: 0 0 12px rgba(255, 255, 255, 0.6), 0 0 24px rgba(255, 255, 255, 0.3);
-      animation: whiteGlow 4s ease-in-out infinite;
     }
 
     .panel-week-label {
       font-size: 9px;
-      color: #fff;
-      text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+      color: #888;
       margin-left: auto;
     }
 
@@ -444,7 +330,6 @@
       padding: 8px 10px;
       background: rgba(0, 0, 0, 0.3);
       border-radius: 6px;
-      animation: borderGlow 5s ease-in-out infinite;
     }
 
     /* Compact stat items for Progress Made */
@@ -454,8 +339,7 @@
 
     .panel-stat-label {
       font-size: 11px;
-      color: #fff;
-      text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+      color: #aaa;
     }
 
     /* Reduced font size for compact stats */
@@ -476,15 +360,11 @@
     }
 
     .left-panel .panel-stat-value {
-      color: #fff;
-      text-shadow: 0 0 12px rgba(249, 115, 22, 0.8), 0 0 24px rgba(249, 115, 22, 0.4);
-      animation: cautionGlow 3s ease-in-out infinite;
+      color: #f97316;
     }
 
     .right-panel .panel-stat-value {
-      color: #fff;
-      text-shadow: 0 0 12px rgba(34, 197, 94, 0.8), 0 0 24px rgba(34, 197, 94, 0.4);
-      animation: successGlow 3s ease-in-out infinite;
+      color: #22c55e;
     }
 
     .panel-total {
@@ -502,24 +382,19 @@
     }
 
     .left-panel .panel-total-value {
-      color: #fff;
-      text-shadow: 0 0 20px rgba(249, 115, 22, 1), 0 0 40px rgba(249, 115, 22, 0.5), 0 0 60px rgba(249, 115, 22, 0.3);
-      animation: cautionGlow 3s ease-in-out infinite;
+      color: #f97316;
     }
 
     .right-panel .panel-total-value {
-      color: #fff;
-      text-shadow: 0 0 20px rgba(34, 197, 94, 1), 0 0 40px rgba(34, 197, 94, 0.5), 0 0 60px rgba(34, 197, 94, 0.3);
-      animation: successGlow 3s ease-in-out infinite;
+      color: #22c55e;
     }
 
     .panel-total-label {
       font-size: 10px;
-      color: #fff;
+      color: #888;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-top: -3px;
-      text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
     }
 
     .panel-fuel-context {
@@ -528,7 +403,6 @@
       font-weight: 600;
       margin-top: 4px;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      text-shadow: 0 0 12px rgba(249, 115, 22, 0.8), 0 0 24px rgba(249, 115, 22, 0.4);
     }
 
     /* Value Delivered - reduced font and moved down 10px */
@@ -550,7 +424,6 @@
       font-weight: 600;
       margin-top: 4px;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      text-shadow: 0 0 12px rgba(34, 197, 94, 0.8), 0 0 24px rgba(34, 197, 94, 0.4);
     }
 
     /* Center Speedometer Panel */
@@ -565,7 +438,7 @@
       position: relative;
       min-width: 360px;
       box-shadow: 0 0 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 189, 89, 0.1), inset 0 1px 0 rgba(255,255,255,0.1);
-      animation: borderGlow 6s ease-in-out infinite;
+      /* glow removed */
     }
 
     .speedometer-header {
@@ -579,11 +452,9 @@
     .speedometer-title {
       font-size: 10px;
       font-weight: 600;
-      color: #fff;
+      color: #888;
       text-transform: uppercase;
       letter-spacing: 1px;
-      text-shadow: 0 0 12px rgba(255, 255, 255, 0.7), 0 0 24px rgba(255, 255, 255, 0.4);
-      animation: whiteGlow 4s ease-in-out infinite;
     }
 
     .speedometer-badge {
@@ -596,10 +467,8 @@
       padding: 4px 10px;
       font-size: 12px;
       font-weight: 700;
-      color: #fff;
+      color: #ffbd59;
       font-family: 'Monaco', 'Menlo', monospace;
-      text-shadow: 0 0 15px rgba(255, 189, 89, 0.8), 0 0 30px rgba(255, 189, 89, 0.4);
-      animation: goldGlow 3s ease-in-out infinite;
       transition: all 0.2s ease;
     }
 
@@ -636,8 +505,6 @@
 
     .health-indicator.healthy {
       background-color: #ffd700;
-      box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
-      animation: heartbeatColor 1.8s ease-in-out infinite;
     }
 
     .health-indicator.healthy::after {
@@ -645,64 +512,27 @@
       position: absolute;
       inset: -3px;
       border-radius: 50%;
-      background: rgba(255, 165, 0, 0.3);
-      animation: heartbeatGlow 1.8s ease-in-out infinite;
+      background: rgba(255, 165, 0, 0.2);
     }
 
+    /* heartbeatColor animation removed for cleaner UI
     @keyframes heartbeatColor {
       0%, 100% {
         background-color: #ffd700;
-        box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
         transform: scale(1);
       }
       15% {
         background-color: #ff8c00;
-        box-shadow: 0 0 12px rgba(255, 140, 0, 0.9);
         transform: scale(1.15);
       }
       30% {
         background-color: #ffd700;
-        box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
         transform: scale(1);
       }
-      45% {
-        background-color: #ff8c00;
-        box-shadow: 0 0 10px rgba(255, 140, 0, 0.7);
-        transform: scale(1.1);
-      }
-      60%, 100% {
-        background-color: #ffd700;
-        box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
-        transform: scale(1);
-      }
-    }
-
-    @keyframes heartbeatGlow {
-      0%, 100% {
-        transform: scale(1);
-        opacity: 0.3;
-      }
-      15% {
-        transform: scale(1.5);
-        opacity: 0.6;
-      }
-      30% {
-        transform: scale(1);
-        opacity: 0.3;
-      }
-      45% {
-        transform: scale(1.3);
-        opacity: 0.5;
-      }
-      60%, 100% {
-        transform: scale(1);
-        opacity: 0.3;
-      }
-    }
+    /* heartbeat animations removed */
 
     .health-indicator.error {
       background-color: #ef4444;
-      box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
     }
 
     .health-indicator.error::after {
@@ -710,13 +540,11 @@
       position: absolute;
       inset: -3px;
       border-radius: 50%;
-      background: rgba(239, 68, 68, 0.3);
-      animation: none;
+      background: rgba(239, 68, 68, 0.2);
     }
 
     .health-indicator.unknown {
       background-color: #6b7280;
-      box-shadow: 0 0 4px rgba(107, 114, 128, 0.4);
     }
 
     .health-indicator.unknown::after {
@@ -725,19 +553,9 @@
       inset: -3px;
       border-radius: 50%;
       background: rgba(107, 114, 128, 0.2);
-      animation: healthPulse 3s ease-in-out infinite;
     }
 
-    @keyframes healthPulse {
-      0%, 100% {
-        transform: scale(1);
-        opacity: 0.8;
-      }
-      50% {
-        transform: scale(1.4);
-        opacity: 0.3;
-      }
-    }
+    /* healthPulse animation removed */
 
     /* Health indicator tooltip */
     .health-indicator-tooltip {
@@ -791,14 +609,11 @@
       width: 340px;
       height: 260px;
       filter: drop-shadow(0 0 20px rgba(255, 189, 89, 0.3));
-      animation: gaugeGlow 5s ease-in-out infinite;
+      /* glow removed */
       background: transparent;
     }
 
-    @keyframes gaugeGlow {
-      0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 189, 89, 0.3)); }
-      50% { filter: drop-shadow(0 0 35px rgba(255, 189, 89, 0.5)); }
-    }
+    /* gaugeGlow keyframes removed */
 
     .speedometer-canvas {
       display: block;
@@ -820,8 +635,7 @@
       color: #fff;
       font-family: 'Monaco', 'Menlo', monospace;
       line-height: 1;
-      text-shadow: 0 0 30px rgba(255, 189, 89, 1), 0 0 60px rgba(255, 189, 89, 0.6), 0 0 90px rgba(255, 189, 89, 0.3);
-      animation: goldGlow 3s ease-in-out infinite;
+      /* text-shadow glow removed */
       display: inline-block;
       position: relative;
       background: transparent;
@@ -837,7 +651,7 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       text-shadow: 0 0 10px rgba(255, 189, 89, 0.8), 0 0 20px rgba(255, 189, 89, 0.4);
-      animation: goldGlow 3s ease-in-out infinite;
+      /* glow removed */
     }
 
     .speedometer-unit {
@@ -847,7 +661,7 @@
       letter-spacing: 2px;
       margin-top: 4px;
       text-shadow: 0 0 12px rgba(255, 255, 255, 0.6), 0 0 24px rgba(255, 255, 255, 0.3);
-      animation: whiteGlow 4s ease-in-out infinite;
+      /* glow removed */
     }
 
     .speedometer-description {
@@ -999,7 +813,7 @@
       color: #fff;
       font-family: 'Monaco', 'Menlo', monospace;
       text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
-      animation: whiteGlow 4s ease-in-out infinite;
+      /* glow removed */
     }
 
     .gas-gauge-container {
@@ -1079,13 +893,13 @@
     .financial-value.earned {
       color: #fff;
       text-shadow: 0 0 12px rgba(34, 197, 94, 0.9), 0 0 24px rgba(34, 197, 94, 0.5), 0 0 36px rgba(34, 197, 94, 0.3);
-      animation: successGlow 3s ease-in-out infinite;
+      /* glow removed */
     }
 
     .financial-value.delivered {
       color: #fff;
       text-shadow: 0 0 12px rgba(255, 189, 89, 0.9), 0 0 24px rgba(255, 189, 89, 0.5), 0 0 36px rgba(255, 189, 89, 0.3);
-      animation: goldGlow 3s ease-in-out infinite;
+      /* glow removed */
     }
 
     .financial-label {
@@ -1216,7 +1030,7 @@
       min-width: 100px;
       flex: 1;
       box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
-      animation: borderGlow 5s ease-in-out infinite;
+      /* glow removed */
     }
 
     .stat-value {
@@ -1225,7 +1039,7 @@
       color: #fff;
       margin-bottom: 2px;
       text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-      animation: whiteGlow 4s ease-in-out infinite;
+      /* glow removed */
     }
 
     .stat-value.critical { color: #fff; text-shadow: 0 0 12px rgba(239, 68, 68, 0.9), 0 0 24px rgba(239, 68, 68, 0.5), 0 0 36px rgba(239, 68, 68, 0.3); }
@@ -5651,7 +5465,7 @@
     }
   </style>
 </head>
-<body>
+<body class="tasks-view-active">
   <!-- Custom Calendar Popup -->
   <div class="custom-calendar-overlay" id="calendarOverlay"></div>
   <div class="custom-calendar" id="customCalendar">
@@ -6218,12 +6032,12 @@
       <!-- Right Control Panel - Navigation for Views (Dashboard, Tasks, QA Tests) -->
       <div class="tasks-control-panel">
         <!-- Dashboard View (Primary - default view, shows velocity gauges and analytics) -->
-        <button class="control-btn active" data-view="dashboard" title="Dashboard - Velocity & Analytics">
+        <button class="control-btn" data-view="dashboard" title="Dashboard - Velocity & Analytics">
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
           <span class="control-btn-label">Dashboard</span>
         </button>
         <!-- Tasks View (shows task queue with full operational controls) -->
-        <button class="control-btn" data-view="tasks" title="Task Queue - Operational View">
+        <button class="control-btn active" data-view="tasks" title="Task Queue - Operational View">
           <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
           <span class="control-btn-label">Tasks</span>
         </button>
@@ -6470,8 +6284,13 @@
   </div>
 
   <script>
+    // Animations DISABLED - debugging freeze issue
+    const DEBUG_DISABLE_ANIMATIONS = true;
+    console.log('[DEBUG] Script starting - animations disabled');
+
     (function() {
       'use strict';
+      console.log('[DEBUG] IIFE starting');
 
       // ==================== PAGE LOAD REVEAL ANIMATION ====================
       // Animates the green and red vertical lines from center outward
@@ -6849,52 +6668,24 @@
           ctx.fill();
         }
 
-        let wiggleFrameCount = 0;
+        // Wiggle animation REMOVED - was causing page freezes
+        // Needle now stays stable at all times
         function startWiggle() {
-          if (isWiggling) return;
-          isWiggling = true;
-          isStabilized = false;  // Reset stabilization when starting new animation
-          wiggleFrameCount = 0;
-
-          // Clear any existing stabilization timer
-          if (stabilizationTimer) {
-            clearTimeout(stabilizationTimer);
-          }
-
-          // Set up stabilization timer - after 10 seconds, needle becomes stable
-          stabilizationTimer = setTimeout(() => {
-            stabilize();
-          }, STABILIZATION_DELAY);
-
-          function wiggle() {
-            if (!isWiggling) return;
-            wiggleFrameCount++;
-            // Only update every 20th frame (80% slower than previous)
-            if (wiggleFrameCount % 20 === 0) {
-              drawGauge();
-            }
-            requestAnimationFrame(wiggle);
-          }
-          wiggle();
+          // No-op - wiggle disabled
+          isStabilized = true;
         }
 
         function stopWiggle() {
-          isWiggling = false;
-          if (stabilizationTimer) {
-            clearTimeout(stabilizationTimer);
-            stabilizationTimer = null;
-          }
+          // No-op - wiggle disabled
           drawGauge();
         }
 
-        // Stabilize the needle - stop oscillation and hold at exact value
         function stabilize() {
           isStabilized = true;
           isWiggling = false;
           currentVibrationOffset = 0;
           drawGauge();
-          updateDisplayValue(currentValue);  // Show exact value
-          console.log('Velocity gauge stabilized at', currentValue, 'WPH');
+          updateDisplayValue(currentValue);
         }
 
         function animateTo(value) {
@@ -6910,7 +6701,7 @@
             isStabilized = false;  // Temporarily un-stabilize for animation
           }
 
-          // Start wiggle during animation
+          // Start wiggle during animation (now a no-op since wiggle is disabled)
           startWiggle();
 
           function animate() {
@@ -6960,6 +6751,13 @@
           if (newScale !== maxScale) {
             console.log('[VelocityGauge] Auto-rescaling required:', maxScale, '->', newScale);
             setMaxScale(newScale);
+          }
+
+          // DEBUG: Skip animation if flag set
+          if (typeof DEBUG_DISABLE_ANIMATIONS !== 'undefined' && DEBUG_DISABLE_ANIMATIONS) {
+            console.log('[VelocityGauge] DEBUG: Setting value instantly (no animation)');
+            setValueInstant(value);
+            return;
           }
 
           console.log('[VelocityGauge] Animating to:', value, '(max:', maxScale, ')');
@@ -7284,6 +7082,11 @@
         }
 
         setValue(percent) {
+          // DEBUG: Skip animation if flag set
+          if (typeof DEBUG_DISABLE_ANIMATIONS !== 'undefined' && DEBUG_DISABLE_ANIMATIONS) {
+            this.setValueInstant(percent);
+            return;
+          }
           this.animateTo(percent);
         }
 
@@ -7324,7 +7127,20 @@
       }
 
       // Count workdays between two dates (Mon-Fri only)
+      // Includes safety limit to prevent infinite loops
       function countWorkdays(startDate, endDate) {
+        // Safety: validate dates
+        if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          console.warn('[countWorkdays] Invalid dates provided');
+          return 0;
+        }
+
+        // Safety: ensure start is before end
+        if (startDate > endDate) {
+          console.warn('[countWorkdays] Start date is after end date');
+          return 0;
+        }
+
         let workdays = 0;
         let current = new Date(startDate);
         current.setHours(0, 0, 0, 0);
@@ -7332,13 +7148,23 @@
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
 
-        while (current <= end) {
+        // Safety limit: max 3 years (about 780 workdays) to prevent infinite loops
+        const MAX_ITERATIONS = 1100;
+        let iterations = 0;
+
+        while (current <= end && iterations < MAX_ITERATIONS) {
           const dayOfWeek = current.getDay();
           if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Mon-Fri only
             workdays++;
           }
           current.setDate(current.getDate() + 1);
+          iterations++;
         }
+
+        if (iterations >= MAX_ITERATIONS) {
+          console.warn('[countWorkdays] Hit iteration limit - date range may be too large');
+        }
+
         return workdays;
       }
 
@@ -7402,7 +7228,14 @@
       }
 
       // Store milestone data globally for recalculation
-      let milestoneData = calculateMilestoneTimeRemaining();
+      // Wrapped in try-catch to prevent page hang on calculation errors
+      let milestoneData;
+      try {
+        milestoneData = calculateMilestoneTimeRemaining();
+      } catch (e) {
+        console.error('[milestoneData] Calculation failed:', e);
+        milestoneData = { fuelPercent: 100, hoursRemaining: 40, totalMilestoneHours: 40, hoursSpent: 0, totalWorkdays: 5 };
+      }
 
       // Create gauge instances
       // Fuel gauge now uses 'milestone' type with gray fill and 10% red warning zone
@@ -7412,8 +7245,12 @@
         initialValue: milestoneData.fuelPercent,
         formatValue: (v) => {
           // Recalculate to get accurate remaining hours
-          const data = calculateMilestoneTimeRemaining();
-          return `${data.hoursRemaining}h`;
+          try {
+            const data = calculateMilestoneTimeRemaining();
+            return `${data.hoursRemaining}h`;
+          } catch (e) {
+            return '40h';
+          }
         }
       });
 
@@ -7454,10 +7291,12 @@
       });
 
       // Calculate new operational metrics based on live CW+ (AI-augmented) data
+      // Wrapped in try-catch to prevent page hang on errors
       function calculateOperationalHealth(tasks, stats) {
-        // Get milestone data for time-based calculations
-        const msData = calculateMilestoneTimeRemaining();
-        const hoursRemaining = msData.hoursRemaining || 24;
+        try {
+          // Get milestone data for time-based calculations
+          const msData = calculateMilestoneTimeRemaining();
+          const hoursRemaining = msData.hoursRemaining || 24;
 
         // ============================================
         // CW+ (Completed Work Plus) - AI-AUGMENTED DATA
@@ -7702,6 +7541,25 @@
           totalCWPlus: totalCWPlus,
           totalEHH: totalEHH
         };
+        } catch (error) {
+          console.error('[calculateOperationalHealth] Error:', error);
+          // Return safe defaults to prevent page hang
+          return {
+            pressure: { value: 0, zone: 'comfortable', gaugePercent: 0 },
+            confidence: { value: 100, zone: 'high', gaugePercent: 100 },
+            quality: { value: 100, zone: 'healthy', gaugePercent: 100 },
+            requiredWPH: 0,
+            currentWPH: 0,
+            pendingTasks: 0,
+            pendingHH: 0,
+            milestoneConfidence: 'On Track',
+            schedulePosition: 'On Track',
+            estCompletionDate: new Date(),
+            hoursRemaining: 40,
+            totalCWPlus: 0,
+            totalEHH: 0
+          };
+        }
       }
 
       // State
@@ -8468,16 +8326,35 @@
       // Add business days to a date (skips weekends)
       // Timeline Burst: Projects where the project would be if work had been done at human speed
       function addBusinessDays(startDate, businessDays) {
+        // Safety: validate inputs to prevent infinite loops
+        if (!startDate || isNaN(new Date(startDate).getTime())) {
+          console.warn('[addBusinessDays] Invalid start date');
+          return new Date();
+        }
+        if (!businessDays || businessDays < 0 || !isFinite(businessDays)) {
+          console.warn('[addBusinessDays] Invalid businessDays:', businessDays);
+          return new Date(startDate);
+        }
+
         const result = new Date(startDate);
         let daysAdded = 0;
 
-        while (daysAdded < businessDays) {
+        // Safety limit: max 10 years (about 2600 business days) to prevent infinite loops
+        const MAX_ITERATIONS = 3700;  // ~10 years including weekends
+        let iterations = 0;
+
+        while (daysAdded < businessDays && iterations < MAX_ITERATIONS) {
           result.setDate(result.getDate() + 1);
           const dayOfWeek = result.getDay();
           // Skip Saturday (6) and Sunday (0)
           if (dayOfWeek !== 0 && dayOfWeek !== 6) {
             daysAdded++;
           }
+          iterations++;
+        }
+
+        if (iterations >= MAX_ITERATIONS) {
+          console.warn('[addBusinessDays] Hit iteration limit - businessDays may be too large:', businessDays);
         }
 
         return result;
@@ -9447,50 +9324,71 @@
       });
 
       // Initialize
+      console.log('[DEBUG] Before initSidebar');
       initSidebar();
+      console.log('[DEBUG] After initSidebar, before initPanelResize');
       initPanelResize();
+      console.log('[DEBUG] After initPanelResize');
 
       // Initialize velocity gauge (speedometer) - start at 0, animate to value
+      console.log('[DEBUG] Before VelocityGauge.init');
       VelocityGauge.init('velocityGaugeCanvas');
+      console.log('[DEBUG] After VelocityGauge.init');
       VelocityGauge.setValueInstant(0);
+      console.log('[DEBUG] After VelocityGauge.setValueInstant');
 
       // Note: Main gauge value is set dynamically by loadDashboardMetrics()
       // which calculates WPH from database data. No hardcoded value here.
 
       // Initialize all 4 mini gauges - start at max, then animate to target
+      console.log('[DEBUG] Before FuelGauge.init');
       FuelGauge.init();
       FuelGauge.setValueInstant(100);  // Start at max (full fuel = 100% time remaining)
 
+      console.log('[DEBUG] Before TempGauge.init');
       TempGauge.init();
       TempGauge.setValueInstant(100);  // Start at max
 
+      console.log('[DEBUG] Before OilGauge.init');
       OilGauge.init();
       OilGauge.setValueInstant(100);  // Start at max
 
+      console.log('[DEBUG] Before RpmGauge.init');
       RpmGauge.init();
       RpmGauge.setValueInstant(100);  // Start at max
+      console.log('[DEBUG] All gauges initialized');
 
       // After a short delay, animate gauges to their actual values
       setTimeout(() => {
-        // Calculate milestone time remaining and set Fuel gauge
-        milestoneData = calculateMilestoneTimeRemaining();
-        FuelGauge.setValue(milestoneData.fuelPercent);
-        const fuelTextEl = document.getElementById('fuelGaugeText');
-        if (fuelTextEl) fuelTextEl.textContent = `${milestoneData.hoursRemaining}h`;
+        console.log('[DEBUG] Gauge value timeout started');
+        try {
+          // Calculate milestone time remaining and set Fuel gauge
+          milestoneData = calculateMilestoneTimeRemaining();
+          console.log('[DEBUG] Milestone calculated, setting FuelGauge');
+          FuelGauge.setValue(milestoneData.fuelPercent);
+          const fuelTextEl = document.getElementById('fuelGaugeText');
+          if (fuelTextEl) fuelTextEl.textContent = `${milestoneData.hoursRemaining}h`;
 
-        // Initialize operational metrics gauges with calculated values
-        // These will be properly updated once tasks are loaded
-        TempGauge.setValue(0);   // Execution Pressure: starts at 0%
-        OilGauge.setValue(100);  // Delivery Confidence: starts at 100% (high is good)
-        RpmGauge.setValue(100);  // Quality Control: starts at 100% (high is good)
+          // Initialize operational metrics gauges with calculated values
+          // These will be properly updated once tasks are loaded
+          console.log('[DEBUG] Setting Temp/Oil/Rpm gauges');
+          TempGauge.setValue(0);   // Execution Pressure: starts at 0%
+          OilGauge.setValue(100);  // Delivery Confidence: starts at 100% (high is good)
+          RpmGauge.setValue(100);  // Quality Control: starts at 100% (high is good)
+          console.log('[DEBUG] All gauge values set');
+        } catch (error) {
+          console.error('[gauge initialization] Error:', error);
+        }
       }, 500);
 
       // Update operational health gauges when tasks change
       function updateOperationalHealthGauges() {
-        const metrics = calculateOperationalHealth(tasks, stats);
+        try {
+          const metrics = calculateOperationalHealth(tasks, stats);
+          if (!metrics) return;
 
-        // Update TEMP (Execution Pressure) gauge
-        TempGauge.setValue(metrics.pressure.gaugePercent);
+          // Update TEMP (Execution Pressure) gauge
+          TempGauge.setValue(metrics.pressure.gaugePercent);
         const tempText = document.getElementById('tempGaugeText');
         if (tempText) tempText.textContent = `${Math.round(metrics.pressure.value)}%`;
 
@@ -9514,6 +9412,9 @@
           milestoneConfidence: metrics.milestoneConfidence,
           schedule: metrics.schedulePosition
         });
+        } catch (error) {
+          console.error('[updateOperationalHealthGauges] Error:', error);
+        }
       }
 
       // Update Work Remaining panel with calculated metrics
@@ -9614,21 +9515,49 @@
 
       // Helper: Calculate working hours between two dates (Mon-Fri, 8hrs/day)
       function calculateWorkingHours(startDate, endDate) {
+        // Safety: validate dates to prevent infinite loops
+        if (!startDate || !endDate || isNaN(new Date(startDate).getTime()) || isNaN(new Date(endDate).getTime())) {
+          console.warn('[calculateWorkingHours] Invalid dates provided');
+          return 0;
+        }
+
+        // Safety: ensure start is before end
+        if (new Date(startDate) > new Date(endDate)) {
+          console.warn('[calculateWorkingHours] Start date is after end date');
+          return 0;
+        }
+
         let hours = 0;
         const current = new Date(startDate);
-        while (current <= endDate) {
+        current.setHours(0, 0, 0, 0);
+
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        // Safety limit: max 10 years to prevent infinite loops
+        const MAX_ITERATIONS = 3700;
+        let iterations = 0;
+
+        while (current <= end && iterations < MAX_ITERATIONS) {
           const dayOfWeek = current.getDay();
           if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not weekend
             hours += 8;
           }
           current.setDate(current.getDate() + 1);
+          iterations++;
         }
+
+        if (iterations >= MAX_ITERATIONS) {
+          console.warn('[calculateWorkingHours] Hit iteration limit - date range may be too large');
+        }
+
         return hours;
       }
 
       // ==================== VIEW SWITCHING FUNCTIONALITY ====================
 
-      let currentView = 'dashboard';  // Default to Dashboard/Analytics view for this page
+      // Default to 'tasks' view since this is the /admin/tasks page
+      let currentView = 'tasks';
       let selectedTaskId = null;
       let taskQueueData = [];
 
@@ -9638,8 +9567,13 @@
       let qaTestsRunning = false;
       let expandedCategories = new Set();
 
-      // Set default view class on body (Dashboard/Analytics view for this page)
-      document.body.classList.add('dashboard-view-active');
+      // Set default view class on body - tasks view for this page
+      document.body.classList.add('tasks-view-active');
+
+      // Update button active states to match default view
+      document.querySelectorAll('.control-btn[data-view]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === 'tasks');
+      });
 
       // Switch between Analytics, Tasks, and QA Tests views
       function switchToView(viewName) {
@@ -12218,33 +12152,32 @@
       // Defer ALL data loading until after page renders
       // This prevents the "Page Unresponsive" error on initial load
       setTimeout(() => {
-        // Load data sequentially to reduce browser strain
-        loadDashboardMetrics()
-          .catch(e => console.error('loadDashboardMetrics error:', e))
+        // Default view is 'tasks', so load task queue first for best UX
+        loadTaskQueue()
+          .catch(e => console.error('loadTaskQueue error:', e))
           .finally(() => {
-            // Load tasks after dashboard metrics
+            loadAssignees().catch(e => console.error('loadAssignees error:', e));
+            restoreViewState();
+
+            // Then load dashboard metrics in background
             setTimeout(() => {
-              loadTasks()
-                .catch(e => console.error('loadTasks error:', e))
+              loadDashboardMetrics()
+                .catch(e => console.error('loadDashboardMetrics error:', e))
                 .finally(() => {
-                  // Load task queue after tasks
-                  setTimeout(() => {
-                    loadTaskQueue().catch(e => console.error('loadTaskQueue error:', e));
-                    loadAssignees().catch(e => console.error('loadAssignees error:', e));
-                    restoreViewState();
-
-                    // Update operational health gauges after data loads
-                    if (typeof updateOperationalHealthGauges === 'function') {
-                      setTimeout(() => updateOperationalHealthGauges(), 200);
-                    }
-
-                    // Defer QA tests loading (271 tests)
-                    setTimeout(() => {
-                      loadQATests().catch(e => console.error('loadQATests error:', e));
-                    }, 1000);
-                  }, 100);
+                  // Update operational health gauges after dashboard loads
+                  if (typeof updateOperationalHealthGauges === 'function') {
+                    setTimeout(() => updateOperationalHealthGauges(), 200);
+                  }
                 });
-            }, 100);
+
+              // Load tasks (for the old table - may be deprecated)
+              loadTasks().catch(e => console.error('loadTasks error:', e));
+
+              // Defer QA tests loading (271 tests)
+              setTimeout(() => {
+                loadQATests().catch(e => console.error('loadQATests error:', e));
+              }, 1000);
+            }, 200);
           });
       }, 50);  // Small delay to let page render first
     })();

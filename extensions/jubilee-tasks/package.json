@@ -1,0 +1,96 @@
+{
+  "name": "jubilee-tasks",
+  "displayName": "Jubilee Tasks",
+  "description": "Automated developer task tracking for Jubilee Enterprise",
+  "version": "1.0.0",
+  "publisher": "JubileeEnterprise",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:jubileeTasksPanel"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "jubilee-tasks",
+          "title": "Jubilee Task Manager",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "jubilee-tasks": [
+        {
+          "type": "webview",
+          "id": "jubileeTasksPanel",
+          "name": "Developer Tasks"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "jubileeTasks.showPanel",
+        "title": "Jubilee: Show Task Panel"
+      },
+      {
+        "command": "jubileeTasks.refreshTasks",
+        "title": "Jubilee: Refresh Tasks"
+      },
+      {
+        "command": "jubileeTasks.setInitials",
+        "title": "Jubilee: Set Developer Initials"
+      },
+      {
+        "command": "jubileeTasks.completeCurrentTask",
+        "title": "Jubilee: Complete Current Task"
+      }
+    ],
+    "configuration": {
+      "title": "Jubilee Tasks",
+      "properties": {
+        "jubileeTasks.apiBaseUrl": {
+          "type": "string",
+          "default": "http://localhost:3100",
+          "description": "Base URL for the InspireCodex API"
+        },
+        "jubileeTasks.inactivityThresholdMinutes": {
+          "type": "number",
+          "default": 20,
+          "description": "Minutes of inactivity before time is excluded from task duration"
+        },
+        "jubileeTasks.autoRefreshIntervalSeconds": {
+          "type": "number",
+          "default": 30,
+          "description": "Interval in seconds for auto-refreshing the task grid"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "package": "vsce package",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/vsce": "^2.21.0",
+    "eslint": "^8.45.0",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "openai": "^4.20.0"
+  }
+}

@@ -377,5 +377,27 @@
       "Bash(npm outdated:*)",
       "Bash(\"C:/Program Files/JubileeEnterprise/ClaudeBrowser/ClaudeBrowser.exe\" --url \"https://www.wwbibleweb.com/pentecostal/home/index.html\" --screenshot \"c:/temp/wwbibleweb_home.png\" --wait 5000 --size 1920x1080)"
     ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const fs=require('fs');const input=JSON.parse(require('fs').readFileSync(0,'utf8'));const msg={event:'UserPromptSubmit',prompt:input.prompt,session_id:input.session_id,timestamp:Date.now(),cwd:input.cwd};const dir=process.env.CLAUDE_PROJECT_DIR||'.';const file=dir+'/.claude/hook-messages.json';fs.writeFileSync(file,JSON.stringify(msg));\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const fs=require('fs');const input=JSON.parse(require('fs').readFileSync(0,'utf8'));const msg={event:'Stop',session_id:input.session_id,timestamp:Date.now(),stop_hook_active:input.stop_hook_active};const dir=process.env.CLAUDE_PROJECT_DIR||'.';const file=dir+'/.claude/hook-messages.json';fs.writeFileSync(file,JSON.stringify(msg));\""
+          }
+        ]
+      }
+    ]
   }
 }

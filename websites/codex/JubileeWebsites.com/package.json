@@ -2,7 +2,6 @@
   "name": "@jubilee/websites-generator",
   "version": "1.0.0",
   "description": "AI-powered complete website generation system with 12 writers, multiple categories, and 144+ articles",
-  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
