@@ -800,6 +800,142 @@ SelectedCategory = CategoryOptions[0];  // Default: Blue
 </StackPanel>
 ```
 
+### Email Preview Panel Behavior (v1.3.0)
+
+#### Initial Load - Blank State
+The email preview panel displays blank when the application first loads, matching standard email client behavior:
+
+```xaml
+<ScrollViewer x:Name="ReadingPane" VerticalScrollBarVisibility="Auto"
+              Visibility="{Binding MainViewModel.DisplayedMessage,
+                          Converter={StaticResource NullToVisibilityConverter}}">
+```
+
+**NullToVisibilityConverter Implementation**:
+```csharp
+public class NullToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return value != null ? Visibility.Visible : Visibility.Collapsed;
+    }
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+```
+
+#### Compose Close/Discard Behavior
+When closing or discarding a compose window, the email preview resets to blank:
+
+```csharp
+private void OnComposeCancelled(object? sender, EventArgs e)
+{
+    // Clear displayed message so reading pane shows blank after closing compose
+    _mainViewModel.DisplayedMessage = null;
+    _mainViewModel.SelectedMessage = null;
+
+    // User cancelled composition
+    HideComposePanel();
+}
+
+private void OnMailSent(object? sender, EventArgs e)
+{
+    // Clear displayed message so reading pane shows blank after sending
+    _mainViewModel.DisplayedMessage = null;
+    _mainViewModel.SelectedMessage = null;
+
+    // Mail was sent successfully
+    HideComposePanel();
+    MessageBox.Show("Mail sent successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+}
+```
+
+### Calendar Dynamic Date System (v1.3.0)
+
+#### Real-Time System Date Detection
+The calendar automatically detects and displays the actual current system date:
+
+**CalendarViewModel Updates**:
+```csharp
+public ObservableCollection<DayInfo> MiniCalendarDays { get; } = new();
+public ObservableCollection<DayInfo> MonthViewDays { get; } = new();
+
+private void UpdateMiniCalendar()
+{
+    var today = DateTime.Today;
+    var firstOfMonth = new DateTime(today.Year, today.Month, 1);
+    // Generate calendar days with IsToday flag
+}
+```
+
+#### Date Converters for Dynamic Highlighting
+Multiple converters ensure current date is visually highlighted:
+
+```csharp
+public class IsTodayConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is DateTime date)
+            return date.Date == DateTime.Today;
+        return false;
+    }
+}
+
+public class IsTodayToBackgroundConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is DateTime date && date.Date == DateTime.Today)
+            return new SolidColorBrush(Color.FromRgb(230, 172, 0)); // Gold
+        return Brushes.Transparent;
+    }
+}
+```
+
+### Consistent Event Rendering (v1.3.0)
+
+#### EventsForDayColumnConverter
+Filters events for specific day columns across all calendar views:
+
+```csharp
+public class EventsForDayColumnConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (values[0] is IEnumerable<CalendarEvent> events &&
+            values[1] is DateTime baseDate &&
+            parameter is string columnIndexStr &&
+            int.TryParse(columnIndexStr, out int columnIndex))
+        {
+            var targetDate = baseDate.AddDays(columnIndex).Date;
+            return events.Where(e => e.Start.Date == targetDate).ToList();
+        }
+        return new List<CalendarEvent>();
+    }
+}
+```
+
+#### EventHeightConverter
+Calculates event block height based on duration:
+
+```csharp
+public class EventHeightConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is CalendarEvent evt)
+        {
+            var duration = (evt.End - evt.Start).TotalHours;
+            return Math.Max(duration * 60, 20); // 60px per hour, minimum 20px
+        }
+        return 60.0;
+    }
+}
+```
+
 ### UI/UX Polish
 
 #### Dark Theme Consistency
@@ -852,6 +988,8 @@ SelectedCategory = CategoryOptions[0];  // Default: Blue
 |---------|------|-------------|
 | 1.0.0 | 2026-01 | Initial release with core email UI |
 | 1.1.0 | 2026-01 | Added split-button, window state persistence, animated accent bar |
+| 1.2.0 | 2026-01-12 | Calendar view enhancements, event validation, dynamic event rendering |
+| 1.3.0 | 2026-01-13 | Dynamic date system, consistent event rendering, email preview panel improvements |
 
 ---
 
@@ -865,4 +1003,4 @@ SelectedCategory = CategoryOptions[0];  // Default: Blue
 
 ---
 
-*Last Updated: January 2026*
+*Last Updated: January 13, 2026*

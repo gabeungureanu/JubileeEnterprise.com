@@ -490,6 +490,45 @@ This application is part of the Jubilee Enterprise suite. Refer to the root repo
 - Value converters for UI formatting
 - Theme fixes for white text on ribbon buttons and labels
 
+### Version 1.3.0 (2026-01-13)
+- **Calendar Dynamic Date System**:
+  - Calendar now detects and displays real system date automatically
+  - Mini calendar, header date range, and active day column synchronized to actual current date
+  - All views (Day, Work Week, Week, Month) default to current date on load
+  - Added dynamic date converters: IsTodayConverter, IsTodayToBackgroundConverter, IsTodayToForegroundConverter, IsTodayToFontWeightConverter
+  - MiniCalendarDays and MonthViewDays ObservableCollections for reactive date updates
+
+- **Consistent Event Rendering Across All Calendar Views**:
+  - Events now display correctly in all calendar views (Day, Work Week, Week, Month)
+  - Day view: Dynamic event rendering with proper time positioning
+  - Work Week view: Events rendered across all 5 weekday columns
+  - Week view: Events rendered across all 7 day columns (Sunday-Saturday)
+  - Month view: Event list display in each day cell
+  - Added EventHeightConverter for dynamic event block height calculation
+  - Added EventsForDayColumnConverter for filtering events by date column
+
+- **Email Preview Panel Improvements**:
+  - Email preview panel now displays blank on initial application load
+  - No email is auto-selected when opening the application
+  - Email content only appears after user explicitly clicks on a message
+  - Added NullToVisibilityConverter for conditional visibility binding
+  - Matches standard email client behavior (Outlook, Gmail, etc.)
+
+- **Compose Mail Close/Discard Behavior**:
+  - Email preview panel resets to blank when closing or discarding compose window
+  - Previously viewed email no longer redisplays after canceling composition
+  - Consistent blank state after sending email as well
+  - Prevents user confusion by clearing the preview area
+
+- **Value Converters Added**:
+  - NullToVisibilityConverter: Shows/hides elements based on null value check
+  - IsTodayConverter: Returns true if date matches current system date
+  - IsTodayToBackgroundConverter: Returns highlight background for today's date
+  - IsTodayToForegroundConverter: Returns accent color for today's date text
+  - IsTodayToFontWeightConverter: Returns bold weight for today's date
+  - EventHeightConverter: Calculates event block height from duration
+  - EventsForDayColumnConverter: Filters events for specific day columns
+
 ### Version 1.2.0 (2026-01-12)
 - **Calendar View Enhancements**:
   - Updated calendar to display current date correctly (January 12, 2026)
