@@ -12,10 +12,21 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
     private _view?: vscode.WebviewView;
     private refreshInterval?: NodeJS.Timeout;
     private currentTaskId?: string;
+    private developerInitials?: string;
 
     constructor(
         private readonly extensionUri: vscode.Uri
     ) {}
+
+    public setDeveloperInitials(initials: string | undefined): void {
+        this.developerInitials = initials;
+        if (this._view) {
+            this._view.webview.postMessage({
+                command: 'updateInitials',
+                initials: initials
+            });
+        }
+    }
 
     public resolveWebviewView(
         webviewView: vscode.WebviewView,
@@ -330,7 +341,7 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
 </head>
 <body>
     <div class="header">
-        <h2>Developer Tasks</h2>
+        <h2>Developer Tasks <span id="initials-display"></span></h2>
         <button class="refresh-btn" onclick="refresh()">Refresh</button>
     </div>
     <div id="content">
@@ -514,6 +525,13 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
                 case 'updateTasks':
                     console.log('Jubilee Tasks Webview: Rendering tasks');
                     renderTasks(message.tasks, message.currentTaskId);
+                    break;
+                case 'updateInitials':
+                    console.log('Jubilee Tasks Webview: Updating initials:', message.initials);
+                    const initialsDisplay = document.getElementById('initials-display');
+                    if (initialsDisplay) {
+                        initialsDisplay.textContent = message.initials ? '(' + message.initials + ')' : '';
+                    }
                     break;
                 case 'error':
                     console.log('Jubilee Tasks Webview: Showing error:', message.error);

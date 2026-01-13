@@ -47,9 +47,10 @@ export class InitialsManager {
      */
     async promptForInitials(): Promise<string | null> {
         const initials = await vscode.window.showInputBox({
-            title: 'Developer Initials',
-            prompt: 'Enter your 2-character developer initials (e.g., GU, JD)',
+            title: 'Jubilee Tasks - Developer Initials Required',
+            prompt: 'Enter your 2-character developer initials (e.g., GU, JD) for task tracking',
             placeHolder: 'XX',
+            ignoreFocusOut: true,  // Keep dialog open even if focus is lost
             validateInput: (value) => {
                 if (!value) {
                     return 'Initials are required';

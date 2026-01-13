@@ -131,9 +131,11 @@ export async function activate(context: vscode.ExtensionContext) {
 async function initializeAsync(): Promise<void> {
     // Check for existing initials and prompt if not set
     const hasInitials = initialsManager.hasValidInitials();
+    let initials: string | null = null;
+
     if (!hasInitials) {
         log('Developer initials not set, prompting user...');
-        const initials = await initialsManager.promptForInitials();
+        initials = await initialsManager.promptForInitials();
         if (!initials) {
             vscode.window.showWarningMessage(
                 'Jubilee Tasks: Developer initials not set. Task tracking disabled until initials are configured.'
@@ -141,6 +143,14 @@ async function initializeAsync(): Promise<void> {
         } else {
             log(`Developer initials set to: ${initials}`);
         }
+    } else {
+        // Get existing initials
+        initials = await initialsManager.getInitials();
+    }
+
+    // Update the webview with initials
+    if (initials) {
+        webviewProvider.setDeveloperInitials(initials);
     }
 
     // Check for existing active task for this session

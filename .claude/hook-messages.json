@@ -1,1 +1,1 @@
-{"event":"UserPromptSubmit","prompt":"do a push and pull","session_id":"9dcc4dd0-cd5e-4ead-afc0-36e30c08ce83","timestamp":1768268611227,"cwd":"c:\\data\\JubileeEnterprise.com Bibleweb"}
+{"event":"UserPromptSubmit","prompt":"<ide_opened_file>The user opened the file Anthropic.claude-code.Claude VSCode.log in the IDE. This may or may not be related to the current task.</ide_opened_file>\npull and push to github.","session_id":"887e9d8d-aa85-4562-8350-0250c40f8f63","timestamp":1768269696929,"cwd":"c:\\data\\JubileeEnterprise.com Bibleweb"}
