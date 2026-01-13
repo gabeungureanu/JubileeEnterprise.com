@@ -21,8 +21,9 @@ A production-ready Windows Service template for Node.js applications with:
 | jubileeinspire.exe | JubileeInspire.com | 3001 | 16 | Active |
 | inspirecodex-api | InspireCodex API | 3002 | PM2 | Active |
 | wwbibleweb.exe | wwBibleweb.com | 3003 | 16 | Active |
+| inspirewebserver | JubileeWebsites.com | 3008 | PM2 | Active |
+| jubileeparadox | JubileeParadox.com | 3009 | PM2 | Active |
 | jubileebrowser.exe | JubileeBrowser.com | 3200 | 16 | Active |
-| jubileewebsites | JubileeWebsites.com | 3008 | PM2 | Active |
 
 ## Quick Start
 
