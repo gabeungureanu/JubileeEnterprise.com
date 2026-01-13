@@ -49,7 +49,7 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
     setLoading(true);
 
     try {
-      const apiUrl = process.env.CODEX_API_URL || 'http://localhost:3100/api';
+      const apiUrl = process.env.CODEX_API_URL || 'https://inspirecodex.com/api';
 
       const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
@@ -116,7 +116,7 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
     setLoading(true);
 
     try {
-      const apiUrl = process.env.CODEX_API_URL || 'http://localhost:3100/api';
+      const apiUrl = process.env.CODEX_API_URL || 'https://inspirecodex.com/api';
 
       const response = await fetch(`${apiUrl}/auth/register`, {
         method: 'POST',

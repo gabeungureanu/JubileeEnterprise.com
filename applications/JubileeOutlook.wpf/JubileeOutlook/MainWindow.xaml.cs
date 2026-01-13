@@ -529,8 +529,8 @@ public partial class MainWindow : Window
             LogDebug($"Access token found: {tokens.AccessToken.Substring(0, Math.Min(20, tokens.AccessToken.Length))}...");
 
             using var httpClient = new HttpClient();
-            // Use local dev API for WWBW email (endpoint not yet deployed to production)
-            httpClient.BaseAddress = new Uri("http://localhost:3100/api/");
+            // Use production InspireCodex API for WWBW email
+            httpClient.BaseAddress = new Uri("https://inspirecodex.com/api/");
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
 
             LogDebug("Fetching WWBW email from API...");
