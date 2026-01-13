@@ -124,7 +124,7 @@ import { emailSchema, passwordSchema } from '@jubilee/shared/validation';
 
 ## Production Deployment (Windows Service)
 
-All production websites are managed by a **unified Windows Service** (`jubileeservices.exe`). This service automatically starts on Windows boot and manages all Node.js applications.
+All production websites are managed by a **unified Windows Service** with **Node.js cluster mode** (16 workers per service) (`jubileeservices.exe`). This service automatically starts on Windows boot and manages all Node.js applications.
 
 ### Service Management
 

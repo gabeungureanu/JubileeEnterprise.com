@@ -18,7 +18,7 @@ const os = require('os');
 const path = require('path');
 
 // Configuration
-const NUM_WORKERS = process.env.CLUSTER_WORKERS || os.cpus().length;
+const NUM_WORKERS = 16; // Fixed 16 workers for 16-core processor
 const WORKER_SCRIPT = path.join(__dirname, 'server.js');
 
 // Track workers for zero-downtime reload
