@@ -16,6 +16,7 @@
             <!-- Converters -->
             <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <helpers:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
+            <helpers:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
             <helpers:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
             <helpers:ReadToWeightConverter x:Key="ReadToWeightConverter"/>
             <helpers:ListToStringConverter x:Key="ListToStringConverter"/>
