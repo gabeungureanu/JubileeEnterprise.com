@@ -24,68 +24,114 @@ let currentTask: DeveloperTask | null = null;
 let sessionId: string;
 let isMonitoring = false;
 
+// Output channel for debugging
+let outputChannel: vscode.OutputChannel;
+
+export function log(message: string) {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] ${message}`;
+    console.log(logMessage);
+    if (outputChannel) {
+        outputChannel.appendLine(logMessage);
+    }
+}
+
 export async function activate(context: vscode.ExtensionContext) {
-    console.log('Jubilee Tasks extension activating...');
+    try {
+        // Create output channel first
+        outputChannel = vscode.window.createOutputChannel('Jubilee Tasks');
+        outputChannel.show(true);
+        log('Jubilee Tasks extension activating...');
 
-    // Initialize managers
-    initialsManager = new InitialsManager(context);
-    projectDetector = new ProjectDetector();
-    activityMonitor = new ActivityMonitor();
-    sessionId = projectDetector.generateSessionId();
+        // Show activation message to confirm extension is starting
+        vscode.window.showInformationMessage('Jubilee Tasks: Extension activating...');
 
-    // Check for existing initials or prompt
-    const initials = await initialsManager.getInitials();
-    if (!initials) {
+        // Initialize managers
+        initialsManager = new InitialsManager(context);
+        projectDetector = new ProjectDetector();
+        activityMonitor = new ActivityMonitor();
+        sessionId = projectDetector.generateSessionId();
+
+        log('Managers initialized, registering webview provider...');
+
+        // Register webview provider FIRST (before any async calls)
+        webviewProvider = new TasksWebviewProvider(context.extensionUri);
+        context.subscriptions.push(
+            vscode.window.registerWebviewViewProvider(
+                TasksWebviewProvider.viewType,
+                webviewProvider
+            )
+        );
+
+        log('Webview provider registered, registering commands...');
+
+        // Register commands
+        context.subscriptions.push(
+            vscode.commands.registerCommand('jubileeTasks.showPanel', () => {
+                vscode.commands.executeCommand('workbench.view.extension.jubilee-tasks');
+            }),
+
+            vscode.commands.registerCommand('jubileeTasks.refreshTasks', () => {
+                webviewProvider.refreshTasks();
+            }),
+
+            vscode.commands.registerCommand('jubileeTasks.setInitials', async () => {
+                await initialsManager.resetAndPrompt();
+            }),
+
+            vscode.commands.registerCommand('jubileeTasks.completeCurrentTask', async () => {
+                await completeCurrentTask();
+            })
+        );
+
+        log('Commands registered, starting activity monitoring...');
+
+        // Start activity monitoring
+        activityMonitor.start();
+        context.subscriptions.push({
+            dispose: () => activityMonitor.stop()
+        });
+
+        // Start terminal monitoring for Claude Code
+        startClaudeCodeMonitoring(context);
+
+        log('Jubilee Tasks extension activated successfully!');
+        vscode.window.showInformationMessage('Jubilee Tasks: Extension activated!');
+
+        // Do async initialization in background (don't block activation)
+        initializeAsync().catch(err => {
+            log('Async init error: ' + (err instanceof Error ? err.message : String(err)));
+        });
+    } catch (error) {
+        const errMsg = error instanceof Error ? error.message : String(error);
+        console.error('Jubilee Tasks activation error:', errMsg);
+        vscode.window.showErrorMessage(`Jubilee Tasks failed to activate: ${errMsg}`);
+        throw error;
+    }
+}
+
+async function initializeAsync(): Promise<void> {
+    // Check for existing initials (don't prompt on startup - let user do it manually)
+    const hasInitials = initialsManager.hasValidInitials();
+    if (!hasInitials) {
         vscode.window.showWarningMessage(
-            'Jubilee Tasks: Developer initials not set. Task tracking is disabled.'
+            'Jubilee Tasks: Developer initials not set. Run "Jubilee: Set Developer Initials" to enable task tracking.'
         );
     }
 
-    // Register webview provider
-    webviewProvider = new TasksWebviewProvider(context.extensionUri);
-    context.subscriptions.push(
-        vscode.window.registerWebviewViewProvider(
-            TasksWebviewProvider.viewType,
-            webviewProvider
-        )
-    );
-
-    // Register commands
-    context.subscriptions.push(
-        vscode.commands.registerCommand('jubileeTasks.showPanel', () => {
-            vscode.commands.executeCommand('workbench.view.extension.jubilee-tasks');
-        }),
-
-        vscode.commands.registerCommand('jubileeTasks.refreshTasks', () => {
-            webviewProvider.refreshTasks();
-        }),
-
-        vscode.commands.registerCommand('jubileeTasks.setInitials', async () => {
-            await initialsManager.resetAndPrompt();
-        }),
-
-        vscode.commands.registerCommand('jubileeTasks.completeCurrentTask', async () => {
-            await completeCurrentTask();
-        })
-    );
-
-    // Start activity monitoring
-    activityMonitor.start();
-    context.subscriptions.push({
-        dispose: () => activityMonitor.stop()
-    });
-
-    // Start terminal monitoring for Claude Code
-    startClaudeCodeMonitoring(context);
-
     // Check for existing active task for this session
-    await checkExistingTask();
+    try {
+        await checkExistingTask();
+    } catch (err) {
+        console.error('Failed to check existing task:', err);
+    }
 
     // Ensure project exists in database
-    await ensureProjectExists();
-
-    console.log('Jubilee Tasks extension activated');
-    vscode.window.showInformationMessage('Jubilee Tasks: Extension activated');
+    try {
+        await ensureProjectExists();
+    } catch (err) {
+        console.error('Failed to ensure project exists:', err);
+    }
 }
 
 export function deactivate() {

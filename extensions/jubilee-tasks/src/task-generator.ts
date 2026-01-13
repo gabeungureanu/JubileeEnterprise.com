@@ -3,35 +3,56 @@
  * Uses GPT-4o-mini to generate concise task titles from user prompts
  */
 
-import OpenAI from 'openai';
+// Lazy import to prevent blocking extension activation
+let OpenAI: any = null;
 
 export class TaskGenerator {
-    private openai: OpenAI | null = null;
+    private openai: any = null;
     private apiKey: string | null = null;
+    private initialized: boolean = false;
 
     constructor() {
         // Try to get API key from environment
         this.apiKey = process.env.OPENAI_API_KEY_PRIMARY ||
                       process.env.OPENAI_API_KEY ||
                       null;
+    }
 
-        if (this.apiKey) {
-            this.openai = new OpenAI({ apiKey: this.apiKey });
+    private async ensureInitialized(): Promise<void> {
+        if (this.initialized) return;
+
+        try {
+            if (!OpenAI) {
+                const module = await import('openai');
+                OpenAI = module.default;
+            }
+
+            if (this.apiKey && OpenAI) {
+                this.openai = new OpenAI({ apiKey: this.apiKey });
+            }
+        } catch (err) {
+            console.error('Failed to load OpenAI module:', err);
         }
+
+        this.initialized = true;
     }
 
     /**
      * Set the OpenAI API key
      */
-    setApiKey(apiKey: string): void {
+    async setApiKey(apiKey: string): Promise<void> {
         this.apiKey = apiKey;
-        this.openai = new OpenAI({ apiKey });
+        await this.ensureInitialized();
+        if (OpenAI) {
+            this.openai = new OpenAI({ apiKey });
+        }
     }
 
     /**
      * Check if the generator is configured
      */
-    isConfigured(): boolean {
+    async isConfigured(): Promise<boolean> {
+        await this.ensureInitialized();
         return this.openai !== null;
     }
 
@@ -39,6 +60,9 @@ export class TaskGenerator {
      * Generate a task title from a user prompt
      */
     async generateTaskTitle(userPrompt: string): Promise<string> {
+        // Ensure OpenAI is initialized
+        await this.ensureInitialized();
+
         // If OpenAI is not configured, use fallback
         if (!this.openai) {
             return this.generateFallbackTitle(userPrompt);

@@ -6,7 +6,6 @@
 import * as vscode from 'vscode';
 import { getTaskService } from './task-service';
 import { DeveloperTask } from './types';
-import { ActivityMonitor } from './activity-monitor';
 
 export class TasksWebviewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'jubileeTasksPanel';
@@ -23,6 +22,7 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
         _context: vscode.WebviewViewResolveContext,
         _token: vscode.CancellationToken
     ): void {
+        console.log('Jubilee Tasks: resolveWebviewView called');
         this._view = webviewView;
 
         webviewView.webview.options = {
@@ -31,9 +31,11 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
         };
 
         webviewView.webview.html = this.getHtmlContent();
+        console.log('Jubilee Tasks: HTML content set');
 
         // Handle messages from webview
         webviewView.webview.onDidReceiveMessage(async (message) => {
+            console.log('Jubilee Tasks: Received message from webview:', message);
             switch (message.command) {
                 case 'refresh':
                     await this.refreshTasks();
@@ -44,8 +46,11 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
             }
         });
 
-        // Initial load
-        this.refreshTasks();
+        // Initial load - use setTimeout to ensure webview is ready
+        setTimeout(() => {
+            console.log('Jubilee Tasks: Starting initial refresh');
+            this.refreshTasks();
+        }, 100);
 
         // Setup auto-refresh
         const config = vscode.workspace.getConfiguration('jubileeTasks');
@@ -55,6 +60,7 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
         }, intervalSeconds * 1000);
 
         webviewView.onDidDispose(() => {
+            console.log('Jubilee Tasks: Webview disposed');
             if (this.refreshInterval) {
                 clearInterval(this.refreshInterval);
             }
@@ -67,21 +73,44 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
     }
 
     public async refreshTasks(): Promise<void> {
+        console.log('Jubilee Tasks: refreshTasks called, _view exists:', !!this._view);
         if (!this._view) {
+            console.log('Jubilee Tasks: No view, returning');
             return;
         }
 
-        const taskService = getTaskService();
-        const response = await taskService.getTasks({ limit: 50 });
+        try {
+            console.log('Jubilee Tasks: Getting task service');
+            const taskService = getTaskService();
+            console.log('Jubilee Tasks: Fetching tasks from API');
+            const response = await taskService.getTasks({ limit: 50 });
+            console.log('Jubilee Tasks: API response:', JSON.stringify(response).substring(0, 200));
 
-        if (response.success && response.data) {
-            // Group tasks by date
-            const groupedTasks = this.groupTasksByDate(response.data);
+            if (response.success) {
+                // Group tasks by date (handle empty array)
+                const tasks = response.data || [];
+                console.log('Jubilee Tasks: Got', tasks.length, 'tasks');
+                const groupedTasks = this.groupTasksByDate(tasks);
 
+                console.log('Jubilee Tasks: Posting updateTasks message');
+                this._view.webview.postMessage({
+                    command: 'updateTasks',
+                    tasks: groupedTasks,
+                    currentTaskId: this.currentTaskId
+                });
+            } else {
+                // Send error to webview
+                console.log('Jubilee Tasks: API error:', response.error);
+                this._view.webview.postMessage({
+                    command: 'error',
+                    error: response.error || 'Failed to load tasks'
+                });
+            }
+        } catch (err) {
+            console.error('Jubilee Tasks: Failed to refresh tasks:', err);
             this._view.webview.postMessage({
-                command: 'updateTasks',
-                tasks: groupedTasks,
-                currentTaskId: this.currentTaskId
+                command: 'error',
+                error: err instanceof Error ? err.message : 'Unknown error'
             });
         }
     }
@@ -113,11 +142,13 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
     }
 
     private getHtmlContent(): string {
+        const nonce = this.getNonce();
         return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';">
     <title>Jubilee Tasks</title>
     <style>
         * {
@@ -241,10 +272,12 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
             font-size: 10px;
             font-weight: 500;
             text-transform: uppercase;
+            min-width: 80px;
+            text-align: center;
         }
 
         .status.complete {
-            background: var(--vscode-testing-iconPassed);
+            background: #1e6e1e;
             color: white;
         }
 
@@ -275,10 +308,13 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
         <div class="loading">Loading tasks...</div>
     </div>
 
-    <script>
+    <script nonce="${nonce}">
+        console.log('Jubilee Tasks Webview: Script loaded');
         const vscode = acquireVsCodeApi();
+        console.log('Jubilee Tasks Webview: vscode API acquired');
 
         function refresh() {
+            console.log('Jubilee Tasks Webview: Refresh clicked');
             vscode.postMessage({ command: 'refresh' });
         }
 
@@ -291,6 +327,7 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
             return date.toLocaleTimeString('en-US', {
                 hour: '2-digit',
                 minute: '2-digit',
+                second: '2-digit',
                 hour12: true
             });
         }
@@ -360,16 +397,36 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
         }
 
         window.addEventListener('message', event => {
+            console.log('Jubilee Tasks Webview: Message received:', event.data);
             const message = event.data;
 
             switch (message.command) {
                 case 'updateTasks':
+                    console.log('Jubilee Tasks Webview: Rendering tasks');
                     renderTasks(message.tasks, message.currentTaskId);
+                    break;
+                case 'error':
+                    console.log('Jubilee Tasks Webview: Showing error:', message.error);
+                    document.getElementById('content').innerHTML =
+                        '<div class="empty-state" style="color: var(--vscode-errorForeground);">Error: ' +
+                        escapeHtml(message.error) + '</div>';
                     break;
             }
         });
+
+        // Signal that the webview is ready
+        console.log('Jubilee Tasks Webview: Initialization complete');
     </script>
 </body>
 </html>`;
+    }
+
+    private getNonce(): string {
+        let text = '';
+        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        for (let i = 0; i < 32; i++) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        return text;
     }
 }

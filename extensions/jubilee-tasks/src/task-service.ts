@@ -71,7 +71,14 @@ export class TaskService {
                         const parsed = JSON.parse(data);
 
                         if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-                            resolve(parsed as ApiResponse<T>);
+                            // Normalize response: API returns tasks/task/projects/project, we need data
+                            const normalizedData = parsed.tasks || parsed.task || parsed.projects || parsed.project || parsed.stats || parsed.data;
+                            resolve({
+                                success: parsed.success !== false,
+                                data: normalizedData,
+                                error: parsed.error,
+                                message: parsed.message
+                            });
                         } else {
                             resolve({
                                 success: false,
