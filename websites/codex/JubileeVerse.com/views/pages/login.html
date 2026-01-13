@@ -193,26 +193,6 @@
       changeBackgroundImage();
       setInterval(changeBackgroundImage, 4000);
 
-      // Check if already authenticated on page load
-      (async function checkAuth() {
-        try {
-          var response = await fetch('/auth/me', {
-            method: 'GET',
-            credentials: 'same-origin',
-            headers: { 'Accept': 'application/json' }
-          });
-          var data = await response.json();
-          if (data.success && data.user) {
-            // User is already logged in, redirect
-            var params = new URLSearchParams(window.location.search);
-            var redirect = params.get('redirect') || '/dashboard';
-            window.location.href = redirect;
-          }
-        } catch (e) {
-          // Ignore errors, just proceed with login form
-        }
-      })();
-
       // Form elements
       var form = document.getElementById('login-form');
       var emailInput = document.getElementById('email');
