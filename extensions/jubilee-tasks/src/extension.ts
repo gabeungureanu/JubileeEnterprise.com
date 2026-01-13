@@ -344,20 +344,24 @@ async function completeCurrentTask(isAutoComplete: boolean = false): Promise<voi
     const ehhEstimator = getEHHEstimator();
     const activeDuration = activityMonitor.getActiveDuration();
 
+    // Ensure minimum duration of 1 minute (60000ms)
+    const minDurationMs = 60000;
+    const finalDuration = Math.max(activeDuration, minDurationMs);
+
     // Estimate EHH before completing
     log(`Estimating EHH for task ${currentTask.task_code}...`);
 
     // Update task with duration for EHH estimation
-    const taskForEHH = { ...currentTask, active_duration_ms: activeDuration };
+    const taskForEHH = { ...currentTask, active_duration_ms: finalDuration };
     const ehhMinutes = await ehhEstimator.estimateEHH(taskForEHH);
 
     const response = await taskService.completeTask(currentTask.id, {
-        active_duration_ms: activeDuration,
+        active_duration_ms: finalDuration,
         ehh_minutes: ehhMinutes || undefined
     });
 
     if (response.success && response.data) {
-        const formattedDuration = ActivityMonitor.formatDuration(activeDuration);
+        const formattedDuration = ActivityMonitor.formatDuration(finalDuration);
         const formattedEHH = ehhMinutes ? `${Math.floor(ehhMinutes / 60)}h ${ehhMinutes % 60}m` : 'N/A';
 
         const message = isAutoComplete
