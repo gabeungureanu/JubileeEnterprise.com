@@ -2,7 +2,7 @@
   "name": "jubilee-tasks",
   "displayName": "Jubilee Tasks",
   "description": "Automated developer task tracking for Jubilee Enterprise",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "publisher": "JubileeEnterprise",
   "engines": {
     "vscode": "^1.80.0"
@@ -57,7 +57,7 @@
       "properties": {
         "jubileeTasks.apiBaseUrl": {
           "type": "string",
-          "default": "https://www.inspirecodex.com",
+          "default": "https://inspirecodex.com",
           "description": "Base URL for the InspireCodex API"
         },
         "jubileeTasks.inactivityThresholdMinutes": {

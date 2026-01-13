@@ -28,7 +28,7 @@ export class TaskService {
 
     constructor() {
         const config = vscode.workspace.getConfiguration('jubileeTasks');
-        this.baseUrl = config.get('apiBaseUrl', 'http://localhost:3100');
+        this.baseUrl = config.get('apiBaseUrl', 'https://inspirecodex.com');
     }
 
     private makeRequest<T>(
