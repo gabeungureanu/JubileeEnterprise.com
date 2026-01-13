@@ -57,7 +57,7 @@
       "properties": {
         "jubileeTasks.apiBaseUrl": {
           "type": "string",
-          "default": "http://localhost:3100",
+          "default": "https://www.inspirecodex.com",
           "description": "Base URL for the InspireCodex API"
         },
         "jubileeTasks.inactivityThresholdMinutes": {

@@ -544,7 +544,8 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
             font-size: 12px;
             font-weight: 600;
             color: #ffd700;
-            margin-bottom: 4px;
+            margin-right: 8px;
+            white-space: nowrap;
         }
 
         .initials-row {
@@ -620,7 +621,7 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
 <body class="${this.initialsValidated ? '' : 'initials-required'}">
     <div class="header">
         <h2>Developer Tasks <span id="initials-display">${this.developerInitials ? '(' + this.developerInitials + ')' : ''}</span></h2>
-        <button class="refresh-btn" onclick="refresh()">Refresh</button>
+        <button id="refresh-btn" class="refresh-btn">Refresh</button>
     </div>
     <div id="content">
         <div class="loading">${this.initialsValidated ? 'Loading tasks...' : 'Enter your initials to begin tracking'}</div>
@@ -629,8 +630,8 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
     <!-- Inline Initials Input -->
     <div id="initials-overlay" class="initials-overlay ${this.initialsValidated ? 'hidden' : ''}">
         <div class="initials-container">
-            <div class="initials-label">Developer Initials</div>
             <div class="initials-row">
+                <span class="initials-label">Developer Initials</span>
                 <input type="text"
                        id="initials-input"
                        class="initials-input"
@@ -638,7 +639,7 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
                        placeholder="XX"
                        autocomplete="off"
                        spellcheck="false">
-                <button id="initials-submit" class="initials-submit" onclick="submitInitials()">Submit</button>
+                <button id="initials-submit" class="initials-submit">Submit</button>
             </div>
             <div id="initials-error" class="initials-error" style="display: none;"></div>
             <div class="initials-hint">Enter your 2-letter initials (e.g., GU, JD)</div>
@@ -658,8 +659,8 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
                 <input type="number" id="dialog-ehh" min="0" placeholder="Leave blank for auto-estimate">
             </div>
             <div class="task-dialog-buttons">
-                <button class="task-dialog-btn cancel" onclick="hideCompleteTaskDialog()">Cancel</button>
-                <button class="task-dialog-btn confirm" onclick="confirmCompleteTask()">Complete Task</button>
+                <button id="dialog-cancel-btn" class="task-dialog-btn cancel">Cancel</button>
+                <button id="dialog-confirm-btn" class="task-dialog-btn confirm">Complete Task</button>
             </div>
         </div>
     </div>
@@ -792,10 +793,65 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
             submitBtn.textContent = 'Submit';
         }
 
-        // Setup initials input event listeners
-        document.addEventListener('DOMContentLoaded', function() {
+        // Setup all event listeners immediately (document is already loaded in webview)
+        (function initEventListeners() {
+            console.log('Jubilee Tasks: Setting up event listeners');
+
+            // Refresh button
+            const refreshBtn = document.getElementById('refresh-btn');
+            if (refreshBtn) {
+                console.log('Jubilee Tasks: Found refresh button');
+                refreshBtn.addEventListener('click', function() {
+                    console.log('Jubilee Tasks: Refresh button clicked');
+                    refresh();
+                });
+            }
+
+            // Initials submit button
+            const submitBtn = document.getElementById('initials-submit');
+            if (submitBtn) {
+                console.log('Jubilee Tasks: Found submit button');
+                submitBtn.addEventListener('click', function() {
+                    console.log('Jubilee Tasks: Submit button clicked');
+                    submitInitials();
+                });
+            } else {
+                console.log('Jubilee Tasks: Submit button NOT found');
+            }
+
+            // Dialog cancel button
+            const cancelBtn = document.getElementById('dialog-cancel-btn');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    hideCompleteTaskDialog();
+                });
+            }
+
+            // Dialog confirm button
+            const confirmBtn = document.getElementById('dialog-confirm-btn');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function() {
+                    confirmCompleteTask();
+                });
+            }
+
+            // Event delegation for dynamically created task completion links
+            document.addEventListener('click', function(e) {
+                const target = e.target;
+                if (target && target.dataset && target.dataset.action === 'complete-task') {
+                    e.preventDefault();
+                    const taskId = target.dataset.taskId;
+                    const taskCode = target.dataset.taskCode;
+                    if (taskId && taskCode) {
+                        showCompleteTaskDialog(taskId, taskCode);
+                    }
+                }
+            });
+
+            // Initials input field
             const input = document.getElementById('initials-input');
             if (input) {
+                console.log('Jubilee Tasks: Found initials input');
                 // Auto-uppercase as user types
                 input.addEventListener('input', function(e) {
                     e.target.value = e.target.value.toUpperCase();
@@ -807,16 +863,19 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
                 // Submit on Enter key
                 input.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
+                        console.log('Jubilee Tasks: Enter pressed in input');
                         submitInitials();
                     }
                 });
 
                 // Focus the input if overlay is visible
                 if (!initialsValidated) {
-                    setTimeout(() => input.focus(), 100);
+                    setTimeout(function() { input.focus(); }, 100);
                 }
             }
-        });
+
+            console.log('Jubilee Tasks: Event listeners setup complete');
+        })();
 
         function formatTime(isoString) {
             const date = new Date(isoString);
@@ -902,7 +961,7 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
 
                     // Make in_progress status a clickable link to close the task
                     if (isInProgress) {
-                        html += '<td style="text-align: center;"><a href="#" class="status-link ' + task.status + '" onclick="showCompleteTaskDialog(\\'' + task.id + '\\', \\'' + escapeHtml(task.task_code) + '\\'); return false;">' + task.status.replace('_', ' ') + '</a></td>';
+                        html += '<td style="text-align: center;"><a href="#" class="status-link ' + task.status + '" data-action="complete-task" data-task-id="' + task.id + '" data-task-code="' + escapeHtml(task.task_code) + '">' + task.status.replace('_', ' ') + '</a></td>';
                     } else {
                         html += '<td style="text-align: center;"><span class="status ' + task.status + '">' + task.status.replace('_', ' ') + '</span></td>';
                     }
