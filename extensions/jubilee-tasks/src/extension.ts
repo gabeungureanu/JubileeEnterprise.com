@@ -242,9 +242,14 @@ function startClaudeCodeMonitoring(context: vscode.ExtensionContext) {
                     activityMonitor.onActivity();
                 }
             } else if (message.event === 'Stop') {
-                // Claude finished responding - could complete task or just update activity
-                log('Claude response completed');
+                // Claude finished responding - complete the current task
+                log('Claude response completed - completing current task');
                 activityMonitor.onActivity();
+
+                // Complete the task when Claude stops (task is finished)
+                if (currentTask) {
+                    await completeCurrentTask(false);
+                }
             }
         } catch (err) {
             // File might not exist yet or be in the process of being written
