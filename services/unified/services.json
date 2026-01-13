@@ -67,6 +67,14 @@
       "cwd": "C:/data/JubileeEnterprise.com/websites/codex/JubileeBrowser.com",
       "port": 3200,
       "enabled": true
+    },
+    {
+      "name": "celestialpaths",
+      "description": "CelestialPaths.com - Celestial Paths Website",
+      "script": "server.cjs",
+      "cwd": "C:/data/JubileeEnterprise.com/websites/codex/CelestialPaths.com",
+      "port": 3300,
+      "enabled": true
     }
   ]
 }
