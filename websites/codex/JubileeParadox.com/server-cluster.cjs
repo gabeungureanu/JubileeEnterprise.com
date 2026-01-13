@@ -28,7 +28,7 @@ const NUM_WORKERS = process.env.CLUSTER_WORKERS || os.cpus().length;
 const RELOAD_TRIGGER_FILE = path.join(__dirname, '.reload-trigger');
 const PID_FILE = path.join(__dirname, '.cluster-master.pid');
 
-if (cluster.isMaster || cluster.isPrimary) {
+if (cluster.isMaster) {
     console.log('');
     console.log('='.repeat(60));
     console.log('  JubileeParadox.com - Production Cluster');
