@@ -90,6 +90,9 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
                         }
                     }
                     break;
+                case 'completeTaskWithOptions':
+                    await this.completeTaskWithOptions(message.taskId, message.durationMs, message.ehhMinutes);
+                    break;
             }
         });
 
@@ -186,6 +189,31 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
     private async completeTask(taskId: string): Promise<void> {
         // This is called from the webview - emit event for extension to handle
         vscode.commands.executeCommand('jubileeTasks.completeCurrentTask');
+    }
+
+    private async completeTaskWithOptions(taskId: string, durationMs: number, ehhMinutes: number | null): Promise<void> {
+        // Complete a specific task with manual duration and optional EHH override
+        const taskService = getTaskService();
+
+        // Ensure minimum 1 minute duration
+        const minDurationMs = 60000;
+        const finalDurationMs = Math.max(durationMs, minDurationMs);
+
+        try {
+            const response = await taskService.completeTask(taskId, {
+                active_duration_ms: finalDurationMs,
+                ehh_minutes: ehhMinutes || undefined
+            });
+
+            if (response.success) {
+                vscode.window.showInformationMessage(`Task completed successfully`);
+                await this.refreshTasks();
+            } else {
+                vscode.window.showErrorMessage(`Failed to complete task: ${response.error}`);
+            }
+        } catch (err) {
+            vscode.window.showErrorMessage(`Error completing task: ${err instanceof Error ? err.message : String(err)}`);
+        }
     }
 
     private getHtmlContent(): string {
@@ -362,6 +390,118 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
             color: white;
         }
 
+        .status-link {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            min-width: 80px;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .status-link.in_progress {
+            background: #cc7700;
+            color: white;
+        }
+
+        .status-link.in_progress:hover {
+            background: #ff9900;
+            text-decoration: underline;
+        }
+
+        /* Complete Task Dialog */
+        .task-dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .task-dialog-overlay.hidden {
+            display: none;
+        }
+
+        .task-dialog {
+            background: var(--vscode-editor-background);
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            padding: 20px;
+            min-width: 300px;
+            max-width: 400px;
+        }
+
+        .task-dialog h3 {
+            margin: 0 0 15px 0;
+            color: #ffd700;
+            font-size: 14px;
+        }
+
+        .task-dialog-field {
+            margin-bottom: 15px;
+        }
+
+        .task-dialog-field label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: var(--vscode-foreground);
+        }
+
+        .task-dialog-field input {
+            width: 100%;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 4px;
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            box-sizing: border-box;
+        }
+
+        .task-dialog-field input:focus {
+            outline: none;
+            border-color: #ffd700;
+        }
+
+        .task-dialog-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .task-dialog-btn {
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .task-dialog-btn.cancel {
+            background: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+        }
+
+        .task-dialog-btn.confirm {
+            background: #ffd700;
+            color: #000;
+        }
+
+        .task-dialog-btn.confirm:hover {
+            background: #ffec8b;
+        }
+
         .empty-state {
             text-align: center;
             padding: 20px;
@@ -505,6 +645,25 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
         </div>
     </div>
 
+    <!-- Complete Task Dialog -->
+    <div id="task-dialog-overlay" class="task-dialog-overlay hidden">
+        <div class="task-dialog">
+            <h3>Complete Task: <span id="dialog-task-code"></span></h3>
+            <div class="task-dialog-field">
+                <label for="dialog-duration">Duration (minutes) - minimum 1:</label>
+                <input type="number" id="dialog-duration" min="1" value="1" placeholder="1">
+            </div>
+            <div class="task-dialog-field">
+                <label for="dialog-ehh">EHH (minutes) - optional override:</label>
+                <input type="number" id="dialog-ehh" min="0" placeholder="Leave blank for auto-estimate">
+            </div>
+            <div class="task-dialog-buttons">
+                <button class="task-dialog-btn cancel" onclick="hideCompleteTaskDialog()">Cancel</button>
+                <button class="task-dialog-btn confirm" onclick="confirmCompleteTask()">Complete Task</button>
+            </div>
+        </div>
+    </div>
+
     <script nonce="${nonce}">
         console.log('Jubilee Tasks Webview: Script loaded');
         const vscode = acquireVsCodeApi();
@@ -521,6 +680,55 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
         function completeTask(taskId) {
             vscode.postMessage({ command: 'completeTask', taskId: taskId });
         }
+
+        // Complete Task Dialog handling
+        let currentDialogTaskId = null;
+
+        function showCompleteTaskDialog(taskId, taskCode) {
+            currentDialogTaskId = taskId;
+            document.getElementById('dialog-task-code').textContent = taskCode;
+            document.getElementById('dialog-duration').value = '1';
+            document.getElementById('dialog-ehh').value = '';
+            document.getElementById('task-dialog-overlay').classList.remove('hidden');
+            document.getElementById('dialog-duration').focus();
+        }
+
+        function hideCompleteTaskDialog() {
+            currentDialogTaskId = null;
+            document.getElementById('task-dialog-overlay').classList.add('hidden');
+        }
+
+        function confirmCompleteTask() {
+            if (!currentDialogTaskId) return;
+
+            const durationInput = document.getElementById('dialog-duration');
+            const ehhInput = document.getElementById('dialog-ehh');
+
+            // Ensure minimum duration of 1 minute
+            let durationMinutes = parseInt(durationInput.value) || 1;
+            if (durationMinutes < 1) durationMinutes = 1;
+
+            const durationMs = durationMinutes * 60 * 1000;
+
+            // EHH is optional - if provided, use it; otherwise let the system estimate
+            const ehhMinutes = ehhInput.value ? parseInt(ehhInput.value) : null;
+
+            vscode.postMessage({
+                command: 'completeTaskWithOptions',
+                taskId: currentDialogTaskId,
+                durationMs: durationMs,
+                ehhMinutes: ehhMinutes
+            });
+
+            hideCompleteTaskDialog();
+        }
+
+        // Close dialog on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideCompleteTaskDialog();
+            }
+        });
 
         // Initials input handling
         function validateInitials(value) {
@@ -692,7 +900,12 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
                         html += '<td class="duration">' + formatEHH(task.ehh_minutes, task.ehh_formatted) + '</td>';
                     }
 
-                    html += '<td style="text-align: center;"><span class="status ' + task.status + '">' + task.status.replace('_', ' ') + '</span></td>';
+                    // Make in_progress status a clickable link to close the task
+                    if (isInProgress) {
+                        html += '<td style="text-align: center;"><a href="#" class="status-link ' + task.status + '" onclick="showCompleteTaskDialog(\\'' + task.id + '\\', \\'' + escapeHtml(task.task_code) + '\\'); return false;">' + task.status.replace('_', ' ') + '</a></td>';
+                    } else {
+                        html += '<td style="text-align: center;"><span class="status ' + task.status + '">' + task.status.replace('_', ' ') + '</span></td>';
+                    }
                     html += '</tr>';
                 }
 

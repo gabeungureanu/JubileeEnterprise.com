@@ -7,6 +7,11 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop inspirecodex-api",
+    "pm2:restart": "pm2 restart inspirecodex-api",
+    "pm2:logs": "pm2 logs inspirecodex-api",
+    "pm2:status": "pm2 status",
     "db:migrate": "node scripts/database-migration.js migrate-all",
     "db:create-codex": "node scripts/database-migration.js create-codex",
     "db:create-inspire": "node scripts/database-migration.js create-inspire",
