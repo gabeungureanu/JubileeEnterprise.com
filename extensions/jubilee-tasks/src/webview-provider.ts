@@ -526,7 +526,7 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
             z-index: 1000;
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
+            align-items: center;
         }
 
         .initials-overlay.hidden {
@@ -536,7 +536,7 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
         .initials-container {
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
+            align-items: center;
             gap: 8px;
         }
 
@@ -544,7 +544,8 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
             font-size: 12px;
             font-weight: 600;
             color: #ffd700;
-            margin-bottom: 4px;
+            margin-right: 8px;
+            white-space: nowrap;
         }
 
         .initials-row {
@@ -629,8 +630,8 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
     <!-- Inline Initials Input -->
     <div id="initials-overlay" class="initials-overlay ${this.initialsValidated ? 'hidden' : ''}">
         <div class="initials-container">
-            <div class="initials-label">Developer Initials</div>
             <div class="initials-row">
+                <span class="initials-label">Developer Initials</span>
                 <input type="text"
                        id="initials-input"
                        class="initials-input"
@@ -638,7 +639,7 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
                        placeholder="XX"
                        autocomplete="off"
                        spellcheck="false">
-                <button id="initials-submit" class="initials-submit" onclick="submitInitials()">Submit</button>
+                <button type="button" id="initials-submit" class="initials-submit">Submit</button>
             </div>
             <div id="initials-error" class="initials-error" style="display: none;"></div>
             <div class="initials-hint">Enter your 2-letter initials (e.g., GU, JD)</div>
@@ -745,14 +746,22 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
         }
 
         function submitInitials() {
+            console.log('Jubilee Tasks Webview: submitInitials() called');
             const input = document.getElementById('initials-input');
             const errorDiv = document.getElementById('initials-error');
             const submitBtn = document.getElementById('initials-submit');
 
+            if (!input || !errorDiv || !submitBtn) {
+                console.error('Jubilee Tasks Webview: Required elements not found');
+                return;
+            }
+
             const value = input.value.trim().toUpperCase();
+            console.log('Jubilee Tasks Webview: Initials value:', value);
             const error = validateInitials(value);
 
             if (error) {
+                console.log('Jubilee Tasks Webview: Validation error:', error);
                 input.classList.add('error');
                 errorDiv.textContent = error;
                 errorDiv.style.display = 'block';
@@ -768,6 +777,7 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
             submitBtn.textContent = 'Saving...';
 
             // Send to extension
+            console.log('Jubilee Tasks Webview: Posting submitInitials message with value:', value);
             vscode.postMessage({ command: 'submitInitials', initials: value });
         }
 
@@ -792,10 +802,25 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
             submitBtn.textContent = 'Submit';
         }
 
-        // Setup initials input event listeners
-        document.addEventListener('DOMContentLoaded', function() {
+        // Setup initials input event listeners (run immediately, not on DOMContentLoaded)
+        function setupInitialsInput() {
+            console.log('Jubilee Tasks Webview: setupInitialsInput() called');
             const input = document.getElementById('initials-input');
-            if (input) {
+            const submitBtn = document.getElementById('initials-submit');
+
+            if (input && submitBtn) {
+                console.log('Jubilee Tasks Webview: Found input and submit button elements');
+
+                // CRITICAL: Attach click handler to submit button programmatically
+                // This is required because inline onclick handlers may not work in VS Code webviews
+                submitBtn.addEventListener('click', function(e) {
+                    console.log('Jubilee Tasks Webview: Submit button clicked via addEventListener');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    submitInitials();
+                });
+                console.log('Jubilee Tasks Webview: Submit button click listener attached');
+
                 // Auto-uppercase as user types
                 input.addEventListener('input', function(e) {
                     e.target.value = e.target.value.toUpperCase();
@@ -807,6 +832,17 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
                 // Submit on Enter key
                 input.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
+                        console.log('Jubilee Tasks Webview: Enter key pressed (keypress)');
+                        e.preventDefault();
+                        submitInitials();
+                    }
+                });
+
+                // Also handle keydown for Enter key (backup)
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        console.log('Jubilee Tasks Webview: Enter key pressed (keydown)');
+                        e.preventDefault();
                         submitInitials();
                     }
                 });
@@ -815,8 +851,17 @@ export class TasksWebviewProvider implements vscode.WebviewViewProvider {
                 if (!initialsValidated) {
                     setTimeout(() => input.focus(), 100);
                 }
+
+                console.log('Jubilee Tasks Webview: All initials input event listeners attached successfully');
+            } else {
+                console.log('Jubilee Tasks Webview: Elements not found yet - input:', !!input, 'submitBtn:', !!submitBtn);
+                // Retry after a short delay if elements not found yet
+                setTimeout(setupInitialsInput, 100);
             }
-        });
+        }
+
+        // Run setup immediately since DOM is already loaded in webview
+        setupInitialsInput();
 
         function formatTime(isoString) {
             const date = new Date(isoString);
