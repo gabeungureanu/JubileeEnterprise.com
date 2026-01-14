@@ -64,12 +64,23 @@ public partial class NewEventWindow : Window
     {
         if (DataContext is NewEventViewModel viewModel)
         {
-            viewModel.DeleteEventCommand.Execute(null);
-            if (viewModel.CreatedEvent != null)
+            // Show confirmation dialog before deleting
+            var result = MessageBox.Show(
+                $"Are you sure you want to delete the event '{viewModel.EventTitle}'?\n\nThis action cannot be undone.",
+                "Delete Event",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning,
+                MessageBoxResult.No);
+
+            if (result == MessageBoxResult.Yes)
             {
-                IsDeleted = true;
-                DialogResult = true;
-                Close();
+                viewModel.DeleteEventCommand.Execute(null);
+                if (viewModel.CreatedEvent != null)
+                {
+                    IsDeleted = true;
+                    DialogResult = true;
+                    Close();
+                }
             }
         }
     }

@@ -9,7 +9,11 @@ namespace JubileeOutlook.ViewModels;
 
 public partial class CalendarViewModel : ObservableObject
 {
-    private readonly ICalendarService _calendarService;
+    private ICalendarService _calendarService;
+    private bool _isInitialized = false;
+    private bool _hasLoadedFromApi = false;
+    private DateTime _lastLoadTime = DateTime.MinValue;
+    private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(5);
 
     [ObservableProperty]
     private ObservableCollection<CalendarEvent> _events = new();
@@ -47,53 +51,156 @@ public partial class CalendarViewModel : ObservableObject
     [ObservableProperty]
     private bool _isLoading;
 
+    [ObservableProperty]
+    private string _loadingMessage = "Loading events...";
+
+    [ObservableProperty]
+    private string _errorMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool _hasError;
+
     public CalendarViewModel() : this(ServiceConfiguration.GetCalendarService())
     {
-        Console.WriteLine($"[CalendarViewModel] Constructor called (parameterless)");
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Constructor called (parameterless)");
     }
 
     public CalendarViewModel(ICalendarService calendarService)
     {
-        Console.WriteLine($"[CalendarViewModel] Constructor called with service: {calendarService.GetType().Name}");
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Constructor called with service: {calendarService.GetType().Name}");
         _calendarService = calendarService;
         InitializeCalendars();
-        _ = LoadEventsAsync();
         UpdateViewDates();
         UpdateMiniCalendar();
+
+        // Subscribe to service configuration changes
+        ServiceConfiguration.ServicesChanged += OnServicesChanged;
+        ServiceConfiguration.UserChanged += OnUserChanged;
+    }
+
+    /// <summary>
+    /// Called when the calendar view is activated/shown
+    /// Loads events from API if needed
+    /// </summary>
+    public async Task OnViewActivatedAsync()
+    {
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] OnViewActivatedAsync called. Initialized: {_isInitialized}, HasLoaded: {_hasLoadedFromApi}");
+
+        // Refresh service reference in case it changed
+        _calendarService = ServiceConfiguration.GetCalendarService();
+
+        // Check if we need to reload events
+        var needsReload = !_isInitialized ||
+                         !_hasLoadedFromApi ||
+                         DateTime.UtcNow - _lastLoadTime > _cacheExpiration;
+
+        if (needsReload)
+        {
+            await LoadEventsAsync();
+        }
+
+        _isInitialized = true;
+    }
+
+    /// <summary>
+    /// Handles service configuration changes
+    /// </summary>
+    private void OnServicesChanged(object? sender, EventArgs e)
+    {
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Services changed, resetting state");
+        _calendarService = ServiceConfiguration.GetCalendarService();
+        _hasLoadedFromApi = false;
+        _lastLoadTime = DateTime.MinValue;
+    }
+
+    /// <summary>
+    /// Handles user authentication changes
+    /// </summary>
+    private void OnUserChanged(object? sender, UserChangedEventArgs e)
+    {
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] User changed: {e.PreviousUserId} -> {e.NewUserId}");
+        _hasLoadedFromApi = false;
+        _lastLoadTime = DateTime.MinValue;
+
+        // Clear events when user changes
+        System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+        {
+            Events.Clear();
+        });
     }
 
     private async Task LoadEventsAsync()
     {
+        if (IsLoading) return;
+
         try
         {
             IsLoading = true;
+            HasError = false;
+            ErrorMessage = string.Empty;
+            LoadingMessage = "Loading calendar events...";
+
+            System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Loading events from {_calendarService.GetType().Name}");
+
             var startDate = DateTime.Today.AddMonths(-1);
             var endDate = DateTime.Today.AddMonths(3);
 
             var events = await _calendarService.GetEventsAsync(startDate, endDate);
 
-            Events.Clear();
-            foreach (var evt in events)
-            {
-                Events.Add(evt);
-            }
+            System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Loaded {events.Count} events from API");
 
-            OnPropertyChanged(nameof(Events));
+            // Update on UI thread
+            System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+            {
+                Events.Clear();
+                foreach (var evt in events)
+                {
+                    Events.Add(evt);
+                }
+                OnPropertyChanged(nameof(Events));
+            });
+
+            _hasLoadedFromApi = true;
+            _lastLoadTime = DateTime.UtcNow;
+
+            // Show success notification for API service
+            if (_calendarService is ApiCalendarService && events.Count > 0)
+            {
+                System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Successfully loaded {events.Count} events from API");
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[CalendarViewModel] Error loading events: {ex.Message}");
-            InitializeSampleEvents();
+            System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Error loading events: {ex.Message}");
+            HasError = true;
+            ErrorMessage = ResiliencePolicyService.GetFriendlyErrorMessage(ex);
+
+            // Show error notification
+            NotificationService.Instance.ShowError(
+                $"Failed to load calendar events: {ErrorMessage}",
+                "Calendar Error");
+
+            // Fall back to sample events if no events loaded
+            if (Events.Count == 0)
+            {
+                System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+                {
+                    InitializeSampleEvents();
+                });
+            }
         }
         finally
         {
             IsLoading = false;
+            LoadingMessage = string.Empty;
         }
     }
 
     [RelayCommand]
     private async Task RefreshEventsAsync()
     {
+        _hasLoadedFromApi = false;
+        _lastLoadTime = DateTime.MinValue;
         await LoadEventsAsync();
     }
 
@@ -248,31 +355,62 @@ public partial class CalendarViewModel : ObservableObject
     [RelayCommand]
     private async Task NewEventAsync()
     {
-        Console.WriteLine($"[CalendarViewModel] NewEventAsync called");
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] NewEventAsync called");
         var newEventWindow = new JubileeOutlook.Views.NewEventWindow();
         var dialogResult = newEventWindow.ShowDialog();
-        Console.WriteLine($"[CalendarViewModel] Dialog result: {dialogResult}");
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Dialog result: {dialogResult}");
 
         if (dialogResult == true)
         {
             var viewModel = newEventWindow.DataContext as JubileeOutlook.ViewModels.NewEventViewModel;
-            Console.WriteLine($"[CalendarViewModel] ViewModel: {viewModel != null}, CreatedEvent: {viewModel?.CreatedEvent != null}");
+            System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] ViewModel: {viewModel != null}, CreatedEvent: {viewModel?.CreatedEvent != null}");
 
             if (viewModel?.CreatedEvent != null)
             {
-                Console.WriteLine($"[CalendarViewModel] Creating event: {viewModel.CreatedEvent.Subject}");
+                System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Creating event: {viewModel.CreatedEvent.Subject}");
                 try
                 {
+                    IsLoading = true;
+                    LoadingMessage = "Creating event...";
+
+                    // Upload images and attachments before creating event
+                    if (viewModel.CreatedEvent.Images.Count > 0)
+                    {
+                        LoadingMessage = "Uploading images...";
+                        viewModel.CreatedEvent.Images = await ImageService.Instance.UploadEventImagesAsync(viewModel.CreatedEvent.Images);
+                    }
+
+                    if (viewModel.CreatedEvent.Attachments.Count > 0)
+                    {
+                        LoadingMessage = "Uploading attachments...";
+                        viewModel.CreatedEvent.Attachments = await ImageService.Instance.UploadEventAttachmentsAsync(viewModel.CreatedEvent.Attachments);
+                    }
+
+                    LoadingMessage = "Saving event...";
                     await _calendarService.CreateEventAsync(viewModel.CreatedEvent);
                     Events.Add(viewModel.CreatedEvent);
-                    Console.WriteLine($"[CalendarViewModel] Event added. Total events: {Events.Count}");
+                    System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Event added. Total events: {Events.Count}");
                     OnPropertyChanged(nameof(Events));
+
+                    NotificationService.Instance.ShowSuccess(
+                        $"Event '{viewModel.CreatedEvent.Subject}' created successfully",
+                        "Event Created");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[CalendarViewModel] Error creating event: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Error creating event: {ex.Message}");
+                    NotificationService.Instance.ShowError(
+                        $"Failed to save event to server: {ResiliencePolicyService.GetFriendlyErrorMessage(ex)}",
+                        "Create Event Error");
+
+                    // Still add locally for offline support
                     Events.Add(viewModel.CreatedEvent);
                     OnPropertyChanged(nameof(Events));
+                }
+                finally
+                {
+                    IsLoading = false;
+                    LoadingMessage = string.Empty;
                 }
             }
         }
@@ -291,17 +429,37 @@ public partial class CalendarViewModel : ObservableObject
             {
                 try
                 {
+                    IsLoading = true;
+
                     if (editEventWindow.IsDeleted)
                     {
+                        LoadingMessage = "Deleting event...";
                         await _calendarService.DeleteEventAsync(viewModel.CreatedEvent.Id);
                         var eventToRemove = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
                         if (eventToRemove != null)
                         {
                             Events.Remove(eventToRemove);
                         }
+                        NotificationService.Instance.ShowSuccess(
+                            $"Event '{viewModel.CreatedEvent.Subject}' deleted successfully",
+                            "Event Deleted");
                     }
                     else
                     {
+                        // Upload any new images and attachments before updating event
+                        if (viewModel.CreatedEvent.Images.Any(i => !i.IsUploaded))
+                        {
+                            LoadingMessage = "Uploading images...";
+                            viewModel.CreatedEvent.Images = await ImageService.Instance.UploadEventImagesAsync(viewModel.CreatedEvent.Images);
+                        }
+
+                        if (viewModel.CreatedEvent.Attachments.Any(a => !a.IsUploaded))
+                        {
+                            LoadingMessage = "Uploading attachments...";
+                            viewModel.CreatedEvent.Attachments = await ImageService.Instance.UploadEventAttachmentsAsync(viewModel.CreatedEvent.Attachments);
+                        }
+
+                        LoadingMessage = "Saving event...";
                         await _calendarService.UpdateEventAsync(viewModel.CreatedEvent);
                         var existingEvent = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
                         if (existingEvent != null)
@@ -310,11 +468,21 @@ public partial class CalendarViewModel : ObservableObject
                             Events.RemoveAt(index);
                             Events.Insert(index, viewModel.CreatedEvent);
                         }
+                        NotificationService.Instance.ShowSuccess(
+                            $"Event '{viewModel.CreatedEvent.Subject}' updated successfully",
+                            "Event Updated");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[CalendarViewModel] Error updating event: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Error updating event: {ex.Message}");
+
+                    var action = editEventWindow.IsDeleted ? "delete" : "update";
+                    NotificationService.Instance.ShowError(
+                        $"Failed to {action} event: {ResiliencePolicyService.GetFriendlyErrorMessage(ex)}",
+                        "Event Error");
+
+                    // Apply changes locally anyway for offline support
                     if (!editEventWindow.IsDeleted)
                     {
                         var existingEvent = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
@@ -325,6 +493,11 @@ public partial class CalendarViewModel : ObservableObject
                             Events.Insert(index, viewModel.CreatedEvent);
                         }
                     }
+                }
+                finally
+                {
+                    IsLoading = false;
+                    LoadingMessage = string.Empty;
                 }
 
                 OnPropertyChanged(nameof(Events));

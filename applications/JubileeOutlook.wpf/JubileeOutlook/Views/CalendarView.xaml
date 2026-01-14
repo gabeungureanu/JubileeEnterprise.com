@@ -1075,5 +1075,46 @@
                 </Grid>
             </Border>
         </Grid>
+
+        <!-- Loading Overlay -->
+        <Border Grid.Row="0" Grid.RowSpan="2"
+                Background="#CC1A1A1A"
+                Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
+                Panel.ZIndex="100">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <!-- Spinning loading indicator -->
+                <Border Width="48" Height="48" CornerRadius="24" Background="#0078D4" Margin="0,0,0,16">
+                    <Border.RenderTransform>
+                        <RotateTransform x:Name="LoadingRotate" CenterX="24" CenterY="24"/>
+                    </Border.RenderTransform>
+                    <Border.Triggers>
+                        <EventTrigger RoutedEvent="Loaded">
+                            <BeginStoryboard>
+                                <Storyboard RepeatBehavior="Forever">
+                                    <DoubleAnimation Storyboard.TargetName="LoadingRotate"
+                                                     Storyboard.TargetProperty="Angle"
+                                                     From="0" To="360" Duration="0:0:1"/>
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </Border.Triggers>
+                    <TextBlock Text="&#xe5d5;" FontFamily="{StaticResource MaterialIcons}"
+                               FontSize="24" Foreground="White"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <!-- Loading message -->
+                <TextBlock Text="{Binding LoadingMessage}"
+                           FontSize="14" Foreground="#CCCCCC"
+                           HorizontalAlignment="Center"/>
+
+                <!-- Error message if any -->
+                <TextBlock Text="{Binding ErrorMessage}"
+                           FontSize="12" Foreground="#FF6B6B"
+                           HorizontalAlignment="Center" Margin="0,8,0,0"
+                           Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}"
+                           TextWrapping="Wrap" MaxWidth="300"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </UserControl>
