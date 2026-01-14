@@ -1,0 +1,295 @@
+<UserControl x:Class="JubileeMusic.Views.LibraryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="1000"
+             Background="{DynamicResource BackgroundColor}">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header and Search -->
+        <Border Grid.Row="0" Background="{DynamicResource SurfaceColor}" Padding="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Text="My Library"
+                           FontSize="24"
+                           FontWeight="Bold"
+                           Foreground="{DynamicResource TextColor}"
+                           VerticalAlignment="Center"/>
+
+                <!-- Search Box -->
+                <Border Grid.Column="1"
+                        Background="{DynamicResource BackgroundColor}"
+                        CornerRadius="4"
+                        Margin="24,0"
+                        Padding="8,0"
+                        MaxWidth="400">
+                    <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Foreground="{DynamicResource TextColor}"
+                             VerticalAlignment="Center"/>
+                </Border>
+
+                <!-- Sort Options -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <ComboBox SelectedValue="{Binding SortBy}"
+                              Width="120" Margin="0,0,8,0">
+                        <ComboBoxItem Content="Date"/>
+                        <ComboBoxItem Content="Title"/>
+                        <ComboBoxItem Content="Duration"/>
+                        <ComboBoxItem Content="PlayCount"/>
+                    </ComboBox>
+                    <Button Content="Refresh"
+                            Command="{Binding LoadTracksCommand}"
+                            Style="{StaticResource ModernButtonStyle}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Track List -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="350"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Tracks Grid -->
+            <ListBox Grid.Column="0"
+                     ItemsSource="{Binding Tracks}"
+                     SelectedItem="{Binding SelectedTrack}"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Padding="8">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="{DynamicResource SurfaceColor}"
+                                CornerRadius="8"
+                                Padding="12"
+                                Margin="4"
+                                Cursor="Hand">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="48"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Album Art / Placeholder -->
+                                <Border Grid.Column="0"
+                                        Width="48" Height="48"
+                                        CornerRadius="4"
+                                        Background="{DynamicResource AccentColor}">
+                                    <TextBlock Text="&#9835;"
+                                               FontSize="24"
+                                               Foreground="White"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Border>
+
+                                <!-- Track Info -->
+                                <StackPanel Grid.Column="1" Margin="12,0">
+                                    <TextBlock Text="{Binding Title}"
+                                               FontWeight="Medium"
+                                               Foreground="{DynamicResource TextColor}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding StylePrompt}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextSecondaryColor}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:MMM d, yyyy}'}"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextMutedColor}"/>
+                                        <TextBlock Text=" | "
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextMutedColor}"/>
+                                        <TextBlock Text="{Binding Duration, StringFormat='{}{0:mm\\:ss}'}"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextMutedColor}"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Play Button -->
+                                <Button Grid.Column="2"
+                                        Content="&#9654;"
+                                        Command="{Binding DataContext.PlayTrackCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        Width="40" Height="40"
+                                        FontSize="16"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- Track Details Panel -->
+            <Border Grid.Column="1"
+                    Background="{DynamicResource SurfaceColor}"
+                    Visibility="{Binding SelectedTrack, Converter={StaticResource NullToVisConverter}}">
+                <ScrollViewer Padding="16">
+                    <StackPanel>
+                        <TextBlock Text="{Binding SelectedTrack.Title}"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource TextColor}"
+                                   TextWrapping="Wrap"/>
+
+                        <TextBlock Text="{Binding SelectedTrack.StylePrompt}"
+                                   FontSize="14"
+                                   Foreground="{DynamicResource AccentColor}"
+                                   Margin="0,8,0,0"/>
+
+                        <Separator Margin="0,16"/>
+
+                        <!-- Lyrics -->
+                        <TextBlock Text="Lyrics"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource TextSecondaryColor}"
+                                   Margin="0,0,0,8"/>
+                        <TextBlock Text="{Binding SelectedTrack.Lyrics}"
+                                   Foreground="{DynamicResource TextColor}"
+                                   TextWrapping="Wrap"
+                                   FontStyle="Italic"/>
+
+                        <Separator Margin="0,16"/>
+
+                        <!-- Metadata -->
+                        <TextBlock Text="Details"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource TextSecondaryColor}"
+                                   Margin="0,0,0,8"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Created"
+                                       Foreground="{DynamicResource TextMutedColor}"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1"
+                                       Text="{Binding SelectedTrack.CreatedAt, StringFormat='{}{0:f}'}"
+                                       Foreground="{DynamicResource TextColor}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Duration"
+                                       Foreground="{DynamicResource TextMutedColor}"
+                                       Margin="0,4,0,0"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1"
+                                       Text="{Binding SelectedTrack.Duration, StringFormat='{}{0:mm\\:ss}'}"
+                                       Foreground="{DynamicResource TextColor}"
+                                       Margin="0,4,0,0"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Play Count"
+                                       Foreground="{DynamicResource TextMutedColor}"
+                                       Margin="0,4,0,0"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1"
+                                       Text="{Binding SelectedTrack.PlayCount}"
+                                       Foreground="{DynamicResource TextColor}"
+                                       Margin="0,4,0,0"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Status"
+                                       Foreground="{DynamicResource TextMutedColor}"
+                                       Margin="0,4,0,0"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1"
+                                       Text="{Binding SelectedTrack.GenerationStatus}"
+                                       Foreground="{DynamicResource SuccessColor}"
+                                       Margin="0,4,0,0"/>
+                        </Grid>
+
+                        <Separator Margin="0,16"/>
+
+                        <!-- Actions -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Content="Play"
+                                    Command="{Binding PlayTrackCommand}"
+                                    Style="{StaticResource AccentButtonStyle}"
+                                    Width="80" Margin="4"/>
+                            <Button Content="Folder"
+                                    Command="{Binding OpenInExplorerCommand}"
+                                    Style="{StaticResource ModernButtonStyle}"
+                                    Width="80" Margin="4"/>
+                            <Button Content="Delete"
+                                    Command="{Binding DeleteTrackCommand}"
+                                    Style="{StaticResource ModernButtonStyle}"
+                                    Width="80" Margin="4"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- Playback Controls -->
+        <Border Grid.Row="2" Background="{DynamicResource SurfaceColor}" Padding="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Now Playing -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Now Playing:"
+                               Foreground="{DynamicResource TextSecondaryColor}"
+                               Margin="0,0,8,0"/>
+                    <TextBlock Text="{Binding NowPlayingTitle}"
+                               Foreground="{DynamicResource TextColor}"
+                               FontWeight="Medium"/>
+                </StackPanel>
+
+                <!-- Playback Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="&#9632;"
+                            Command="{Binding StopCommand}"
+                            Style="{StaticResource ModernButtonStyle}"
+                            Width="40" Height="40" Margin="4"/>
+                    <Button Content="{Binding IsPlaying, Converter={StaticResource PlayPauseConverter}}"
+                            Command="{Binding TogglePlayPauseCommand}"
+                            Style="{StaticResource AccentButtonStyle}"
+                            Width="50" Height="50" FontSize="20" Margin="4"/>
+                </StackPanel>
+
+                <!-- Volume and Progress -->
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding CurrentPosition, StringFormat='{}{0:mm\\:ss}'}"
+                                   Foreground="{DynamicResource TextSecondaryColor}"
+                                   Width="50"/>
+                        <Slider Value="{Binding CurrentPosition.TotalSeconds}"
+                                Maximum="{Binding TotalDuration.TotalSeconds}"
+                                Width="200" Margin="8,0"
+                                VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalDuration, StringFormat='{}{0:mm\\:ss}'}"
+                                   Foreground="{DynamicResource TextSecondaryColor}"
+                                   Width="50"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

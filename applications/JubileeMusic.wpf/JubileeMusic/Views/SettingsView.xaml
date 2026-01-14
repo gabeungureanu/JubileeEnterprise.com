@@ -1,0 +1,259 @@
+<UserControl x:Class="JubileeMusic.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="800"
+             Background="{DynamicResource BackgroundColor}"
+             Loaded="OnLoaded">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32">
+        <StackPanel MaxWidth="600" HorizontalAlignment="Left">
+
+            <!-- Header -->
+            <TextBlock Text="Settings"
+                       FontSize="28"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource TextColor}"
+                       Margin="0,0,0,24"/>
+
+            <!-- Credentials Section -->
+            <Border Background="{DynamicResource SurfaceColor}"
+                    CornerRadius="8"
+                    Padding="16"
+                    Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Suno Account"
+                               FontSize="18"
+                               FontWeight="Medium"
+                               Foreground="{DynamicResource TextColor}"
+                               Margin="0,0,0,16"/>
+
+                    <StackPanel Margin="0,0,0,12">
+                        <TextBlock Text="Email"
+                                   Foreground="{DynamicResource TextSecondaryColor}"
+                                   Margin="0,0,0,4"/>
+                        <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource ModernTextBoxStyle}"/>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,0,12">
+                        <TextBlock Text="Password"
+                                   Foreground="{DynamicResource TextSecondaryColor}"
+                                   Margin="0,0,0,4"/>
+                        <PasswordBox x:Name="PasswordBox"
+                                     Style="{StaticResource ModernPasswordBoxStyle}"
+                                     PasswordChanged="OnPasswordChanged"/>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,0,0,12">
+                        <TextBlock Text="Authentication Method"
+                                   Foreground="{DynamicResource TextSecondaryColor}"
+                                   Margin="0,0,0,4"/>
+                        <ComboBox SelectedIndex="{Binding AuthMethod, Converter={StaticResource EnumToIntConverter}}"
+                                  Width="200" HorizontalAlignment="Left">
+                            <ComboBoxItem Content="Interactive Login"/>
+                            <ComboBoxItem Content="Automatic Login"/>
+                            <ComboBoxItem Content="Config File"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Content="Save Credentials"
+                                Command="{Binding SaveCredentialsCommand}"
+                                Style="{StaticResource AccentButtonStyle}"
+                                Width="140" Margin="0,0,8,0"/>
+                        <Button Content="Clear"
+                                Command="{Binding ClearCredentialsCommand}"
+                                Style="{StaticResource ModernButtonStyle}"
+                                Width="80"/>
+                    </StackPanel>
+
+                    <TextBlock Margin="0,8,0,0"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextMutedColor}"
+                               TextWrapping="Wrap">
+                        Credentials are stored securely using Windows Data Protection API (DPAPI).
+                        They are encrypted at rest and only accessible by your Windows account.
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+
+            <!-- Config File Section -->
+            <Border Background="{DynamicResource SurfaceColor}"
+                    CornerRadius="8"
+                    Padding="16"
+                    Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Config File"
+                               FontSize="18"
+                               FontWeight="Medium"
+                               Foreground="{DynamicResource TextColor}"
+                               Margin="0,0,0,16"/>
+
+                    <TextBlock Text="Load credentials from a JSON config file:"
+                               Foreground="{DynamicResource TextSecondaryColor}"
+                               Margin="0,0,0,8"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding ConfigFilePath, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource ModernTextBoxStyle}"/>
+                        <Button Grid.Column="1"
+                                Content="Browse"
+                                Command="{Binding BrowseConfigFileCommand}"
+                                Style="{StaticResource ModernButtonStyle}"
+                                Width="80" Margin="8,0,0,0"/>
+                    </Grid>
+
+                    <Button Content="Load from Config"
+                            Command="{Binding LoadFromConfigFileCommand}"
+                            Style="{StaticResource ModernButtonStyle}"
+                            Width="140"
+                            HorizontalAlignment="Left"
+                            Margin="0,8,0,0"/>
+
+                    <TextBlock Margin="0,8,0,0"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextMutedColor}"
+                               TextWrapping="Wrap">
+                        Config file format: { "email": "your@email.com", "password": "..." }
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+
+            <!-- Library Section -->
+            <Border Background="{DynamicResource SurfaceColor}"
+                    CornerRadius="8"
+                    Padding="16"
+                    Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Library"
+                               FontSize="18"
+                               FontWeight="Medium"
+                               Foreground="{DynamicResource TextColor}"
+                               Margin="0,0,0,16"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Location"
+                                   Foreground="{DynamicResource TextSecondaryColor}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding LibraryPath}"
+                                   Foreground="{DynamicResource TextColor}"
+                                   TextWrapping="Wrap"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Tracks"
+                                   Foreground="{DynamicResource TextSecondaryColor}"
+                                   Margin="0,8,0,0"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TrackCount}"
+                                   Foreground="{DynamicResource TextColor}"
+                                   Margin="0,8,0,0"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Size"
+                                   Foreground="{DynamicResource TextSecondaryColor}"
+                                   Margin="0,8,0,0"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LibrarySize}"
+                                   Foreground="{DynamicResource TextColor}"
+                                   Margin="0,8,0,0"/>
+                    </Grid>
+
+                    <Button Content="Open Library Folder"
+                            Command="{Binding OpenLibraryFolderCommand}"
+                            Style="{StaticResource ModernButtonStyle}"
+                            Width="160"
+                            HorizontalAlignment="Left"
+                            Margin="0,16,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Logs Section -->
+            <Border Background="{DynamicResource SurfaceColor}"
+                    CornerRadius="8"
+                    Padding="16"
+                    Margin="0,0,0,16">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Logs"
+                                   FontSize="18"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource TextColor}"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="Refresh"
+                                    Command="{Binding RefreshLogsCommand}"
+                                    Style="{StaticResource ModernButtonStyle}"
+                                    Width="80" Margin="0,0,8,0"/>
+                            <Button Content="Open"
+                                    Command="{Binding OpenLogFileCommand}"
+                                    Style="{StaticResource ModernButtonStyle}"
+                                    Width="60"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="{Binding LogFilePath}"
+                               FontSize="11"
+                               Foreground="{DynamicResource TextMutedColor}"
+                               Margin="0,8,0,16"/>
+
+                    <Border Background="{DynamicResource BackgroundColor}"
+                            CornerRadius="4"
+                            Padding="8"
+                            MaxHeight="200">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <TextBlock Text="{Binding RecentLogs}"
+                                       FontFamily="Consolas"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextSecondaryColor}"
+                                       TextWrapping="Wrap"/>
+                        </ScrollViewer>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- About Section -->
+            <Border Background="{DynamicResource SurfaceColor}"
+                    CornerRadius="8"
+                    Padding="16">
+                <StackPanel>
+                    <TextBlock Text="About"
+                               FontSize="18"
+                               FontWeight="Medium"
+                               Foreground="{DynamicResource TextColor}"
+                               Margin="0,0,0,8"/>
+                    <TextBlock Text="Jubilee Music v1.0.0"
+                               Foreground="{DynamicResource TextColor}"/>
+                    <TextBlock Text="A desktop wrapper for Suno.com music generation"
+                               Foreground="{DynamicResource TextSecondaryColor}"
+                               Margin="0,4,0,0"/>
+                    <TextBlock Text="Jubilee Enterprise"
+                               Foreground="{DynamicResource TextMutedColor}"
+                               Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
