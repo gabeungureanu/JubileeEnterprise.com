@@ -12,7 +12,11 @@ public interface ISunoAutomationService
     Task<bool> NavigateToCreatePageAsync();
     Task<bool> EnterLyricsAsync(string lyrics);
     Task<bool> EnterStylePromptAsync(string stylePrompt);
+    Task<bool> EnterTitleAsync(string title);
     Task<bool> SetInstrumentalOnlyAsync(bool instrumental);
+    Task<bool> InsertIntoCreateFormAsync(string? title, string? style, string? lyrics, bool isInstrumental);
+    Task<bool> SelectOrCreateWorkspaceAsync(string workspaceName);
+    Task<bool> IsOnCreatePageAsync();
     Task<GenerationResult> SubmitGenerationAsync();
     Task<GenerationStatus> CheckGenerationStatusAsync(string jobId);
     Task<byte[]?> DownloadAudioAsync(string audioUrl);

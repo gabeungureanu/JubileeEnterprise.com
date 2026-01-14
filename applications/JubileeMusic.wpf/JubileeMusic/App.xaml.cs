@@ -10,6 +10,7 @@ namespace JubileeMusic;
 public partial class App : Application
 {
     private static IServiceProvider? _serviceProvider;
+    private static MainWindow? _mainWindow;
     public static IServiceProvider Services => _serviceProvider ?? throw new InvalidOperationException("Services not initialized");
 
     protected override void OnStartup(StartupEventArgs e)
@@ -29,8 +30,8 @@ public partial class App : Application
         credentialService.Initialize();
 
         // Create and show main window
-        var mainWindow = Services.GetRequiredService<MainWindow>();
-        mainWindow.Show();
+        _mainWindow = Services.GetRequiredService<MainWindow>();
+        _mainWindow.Show();
     }
 
     private static void ConfigureServices(IServiceCollection services)
@@ -50,6 +51,7 @@ public partial class App : Application
         services.AddSingleton<ISunoAutomationService, SunoAutomationService>();
         services.AddSingleton<IAudioPlayerService, AudioPlayerService>();
         services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<IWindowSettingsService, WindowSettingsService>();
 
         // ViewModels (as singletons to maintain state)
         services.AddSingleton<MainViewModel>();
@@ -66,6 +68,17 @@ public partial class App : Application
     {
         var logger = Services.GetService<ILogger<App>>();
         logger?.LogInformation("JubileeMusic application shutting down...");
+
+        // Ensure window settings are saved (backup in case Closing event didn't fire)
+        try
+        {
+            _mainWindow?.SaveCurrentSettings();
+            logger?.LogInformation("Window settings saved during app exit");
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Failed to save window settings during app exit");
+        }
 
         // Cleanup services
         var audioPlayer = Services.GetService<IAudioPlayerService>();

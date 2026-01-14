@@ -4,12 +4,15 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             xmlns:local="clr-namespace:JubileeMusic.Converters"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="1000"
              Background="{DynamicResource BackgroundColor}">
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <local:InverseBooleanConverter x:Key="InverseBoolConverter"/>
+        <local:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
     </UserControl.Resources>
 
     <Grid>
@@ -51,75 +54,255 @@
                             Style="{StaticResource ModernButtonStyle}"/>
                 </StackPanel>
 
-                <!-- URL Display -->
-                <Border Grid.Column="1"
-                        Background="{DynamicResource BackgroundColor}"
-                        CornerRadius="4"
-                        Margin="8,0"
-                        Padding="8,4">
-                    <TextBlock Text="{Binding CurrentUrl}"
-                               Foreground="{DynamicResource TextSecondaryColor}"
-                               VerticalAlignment="Center"
-                               TextTrimming="CharacterEllipsis"/>
-                </Border>
-
-                <!-- Action Buttons -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <Button Content="Create"
-                            Command="{Binding NavigateToCreateCommand}"
-                            Style="{StaticResource AccentButtonStyle}"
-                            Width="80" Margin="4"/>
-                    <Button Content="Login"
-                            Command="{Binding AutoLoginCommand}"
-                            Visibility="{Binding ShowLoginPrompt, Converter={StaticResource BoolToVis}}"
-                            Style="{StaticResource ModernButtonStyle}"
-                            Width="80" Margin="4"/>
-                </StackPanel>
+                <!-- Spacer (URL and Login removed but column kept for layout) -->
             </Grid>
         </Border>
 
-        <!-- WebView2 Browser -->
+        <!-- Main Content Area with WebView and Push-Layout Creator Panel -->
         <Grid Grid.Row="1">
-            <wv2:WebView2 x:Name="WebView"
-                          Source="https://suno.com"/>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition x:Name="CreatorPanelColumn" Width="0"/>
+            </Grid.ColumnDefinitions>
 
-            <!-- Loading Overlay -->
-            <Border Background="#80000000"
-                    Visibility="{Binding IsNavigating, Converter={StaticResource BoolToVis}}">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <ProgressBar IsIndeterminate="True"
-                                 Width="200" Height="4"
-                                 Foreground="{DynamicResource AccentColor}"/>
-                    <TextBlock Text="{Binding StatusMessage}"
-                               Foreground="{DynamicResource TextColor}"
-                               Margin="0,16,0,0"
-                               HorizontalAlignment="Center"/>
-                </StackPanel>
-            </Border>
+            <!-- WebView2 Browser (pushes left when panel opens) -->
+            <Grid Grid.Column="0">
+                <wv2:WebView2 x:Name="WebView"/>
 
-            <!-- Error Overlay -->
-            <Border Background="#80000000"
-                    Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
-                <Border Background="{DynamicResource SurfaceColor}"
-                        CornerRadius="8"
-                        Padding="24"
-                        MaxWidth="400"
-                        VerticalAlignment="Center"
-                        HorizontalAlignment="Center">
-                    <StackPanel>
-                        <TextBlock Text="Error"
-                                   FontSize="18"
-                                   FontWeight="Bold"
-                                   Foreground="{DynamicResource ErrorColor}"/>
-                        <TextBlock Text="{Binding ErrorMessage}"
-                                   TextWrapping="Wrap"
+                <!-- Loading Overlay -->
+                <Border Background="#80000000"
+                        Visibility="{Binding IsNavigating, Converter={StaticResource BoolToVis}}">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <ProgressBar IsIndeterminate="True"
+                                     Width="200" Height="4"
+                                     Foreground="{DynamicResource AccentColor}"/>
+                        <TextBlock Text="{Binding StatusMessage}"
                                    Foreground="{DynamicResource TextColor}"
-                                   Margin="0,8,0,16"/>
-                        <Button Content="Dismiss"
-                                Style="{StaticResource ModernButtonStyle}"
-                                HorizontalAlignment="Right"/>
+                                   Margin="0,16,0,0"
+                                   HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Border>
+
+                <!-- Error Overlay -->
+                <Border Background="#80000000"
+                        Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+                    <Border Background="{DynamicResource SurfaceColor}"
+                            CornerRadius="8"
+                            Padding="24"
+                            MaxWidth="400"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center">
+                        <StackPanel>
+                            <TextBlock Text="Error"
+                                       FontSize="18"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource ErrorColor}"/>
+                            <TextBlock Text="{Binding ErrorMessage}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextColor}"
+                                       Margin="0,8,0,16"/>
+                            <Button Content="Dismiss"
+                                    Command="{Binding DismissErrorCommand}"
+                                    Style="{StaticResource ModernButtonStyle}"
+                                    HorizontalAlignment="Right"/>
+                        </StackPanel>
+                    </Border>
+                </Border>
+            </Grid>
+
+            <!-- Creator Panel (Right Side - Pushes Content) -->
+            <Border x:Name="CreatorPanel"
+                    Grid.Column="1"
+                    Background="{DynamicResource SurfaceColor}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1,0,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Panel Header -->
+                    <Border Grid.Row="0"
+                            Background="{DynamicResource BackgroundColor}"
+                            Padding="16,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="Create Song"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextColor}"
+                                       VerticalAlignment="Center"/>
+
+                            <Button Grid.Column="1"
+                                    Content="&#x2715;"
+                                    Command="{Binding ToggleCreatorPanelCommand}"
+                                    ToolTip="Close Panel"
+                                    Width="28" Height="28"
+                                    FontSize="14"
+                                    Background="Transparent"
+                                    Foreground="{DynamicResource TextSecondaryColor}"
+                                    BorderThickness="0"
+                                    Cursor="Hand"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Panel Content -->
+                    <ScrollViewer Grid.Row="1"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="16">
+                        <StackPanel>
+                            <!-- Workspace Field -->
+                            <TextBlock Text="Workspace"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextColor}"
+                                       Margin="0,0,0,8"/>
+                            <TextBox x:Name="WorkspaceTextBox"
+                                     Text="{Binding Workspace, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                     Background="{DynamicResource BackgroundColor}"
+                                     Foreground="{DynamicResource TextColor}"
+                                     CaretBrush="{DynamicResource TextColor}"
+                                     BorderBrush="{DynamicResource BorderBrush}"
+                                     BorderThickness="1"
+                                     Padding="10,8"
+                                     Height="36"
+                                     VerticalContentAlignment="Center"
+                                     GotFocus="TextBox_GotFocus"
+                                     Margin="0,0,0,4"/>
+                            <TextBlock Text="Select or create a workspace to save your song"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextMutedColor}"
+                                       Margin="0,0,0,16"
+                                       TextWrapping="Wrap"/>
+
+                            <!-- Title Field (Optional) -->
+                            <TextBlock Text="Title (Optional)"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextColor}"
+                                       Margin="0,0,0,8"/>
+                            <TextBox x:Name="TitleTextBox"
+                                     Text="{Binding Title, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                     Background="{DynamicResource BackgroundColor}"
+                                     Foreground="{DynamicResource TextColor}"
+                                     CaretBrush="{DynamicResource TextColor}"
+                                     BorderBrush="{DynamicResource BorderBrush}"
+                                     BorderThickness="1"
+                                     Padding="10,8"
+                                     Height="36"
+                                     VerticalContentAlignment="Center"
+                                     GotFocus="TextBox_GotFocus"
+                                     Margin="0,0,0,16"/>
+
+                            <!-- Styles Field -->
+                            <TextBlock Text="Styles"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextColor}"
+                                       Margin="0,0,0,8"/>
+                            <TextBox x:Name="StylesTextBox"
+                                     Text="{Binding MusicStyle, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                     Background="{DynamicResource BackgroundColor}"
+                                     Foreground="{DynamicResource TextColor}"
+                                     CaretBrush="{DynamicResource TextColor}"
+                                     BorderBrush="{DynamicResource BorderBrush}"
+                                     BorderThickness="1"
+                                     Padding="10,8"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto"
+                                     MinHeight="60"
+                                     MaxHeight="120"
+                                     GotFocus="TextBox_GotFocus"
+                                     Margin="0,0,0,4"/>
+                            <TextBlock Text="e.g., pop, rock ballad, acoustic folk, electronic"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextMutedColor}"
+                                       Margin="0,0,0,16"
+                                       TextWrapping="Wrap"/>
+
+                            <!-- Lyrics Field -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Text="Lyrics"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextColor}"
+                                           VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="Instrumental"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextSecondaryColor}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,6,0"/>
+                                    <CheckBox IsChecked="{Binding IsInstrumental}"
+                                              VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBox x:Name="LyricsTextBox"
+                                     Text="{Binding Lyrics, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                     Background="{DynamicResource BackgroundColor}"
+                                     Foreground="{DynamicResource TextColor}"
+                                     CaretBrush="{DynamicResource TextColor}"
+                                     BorderBrush="{DynamicResource BorderBrush}"
+                                     BorderThickness="1"
+                                     Padding="10,8"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto"
+                                     MinHeight="150"
+                                     MaxHeight="300"
+                                     GotFocus="TextBox_GotFocus"
+                                     Margin="0,0,0,8">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsInstrumental}" Value="True">
+                                                <Setter Property="Opacity" Value="0.5"/>
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                            <TextBlock Text="Enter your song lyrics or check Instrumental for no vocals"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextMutedColor}"
+                                       Margin="0,0,0,16"
+                                       TextWrapping="Wrap"/>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Panel Footer with Action Buttons -->
+                    <Border Grid.Row="2"
+                            Background="{DynamicResource BackgroundColor}"
+                            Padding="16,12">
+                        <StackPanel>
+                            <Button Content="Insert"
+                                    Command="{Binding InsertIntoCreateFormCommand}"
+                                    Style="{StaticResource AccentButtonStyle}"
+                                    Height="40"
+                                    FontSize="14"
+                                    Margin="0,0,0,8"/>
+                            <Button Content="Reset"
+                                    Command="{Binding ClearCreatorFieldsCommand}"
+                                    Style="{StaticResource ModernButtonStyle}"
+                                    Height="36"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Border>
         </Grid>
     </Grid>

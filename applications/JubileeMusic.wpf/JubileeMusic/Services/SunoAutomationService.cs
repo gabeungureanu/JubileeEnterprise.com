@@ -304,58 +304,79 @@ public class SunoAutomationService : ISunoAutomationService
             var findScript = @"
                 (function() {
                     // Find all visible textareas sorted by vertical position
+                    // IMPORTANT: Filter out textareas at top <= 10 (hidden/utility elements)
                     const allTextareas = Array.from(document.querySelectorAll('textarea'))
                         .map(el => ({ el, rect: el.getBoundingClientRect() }))
-                        .filter(item => item.rect.height > 0 && item.rect.width > 0)
+                        .filter(item => item.rect.height > 0 && item.rect.width > 0 && item.rect.top > 10)
                         .sort((a, b) => a.rect.top - b.rect.top);
 
-                    console.log('[LYRICS] Found ' + allTextareas.length + ' visible textareas');
+                    console.log('[LYRICS] Found ' + allTextareas.length + ' visible textareas (filtered top > 10)');
 
                     // Log all textareas
                     allTextareas.forEach((item, i) => {
                         const marker = item.el.getAttribute('data-jubilee-field') || 'none';
                         console.log('[LYRICS] Textarea ' + i + ': top=' + Math.round(item.rect.top) +
-                            ', placeholder=' + (item.el.placeholder || 'none').substring(0, 30) +
+                            ', placeholder=' + (item.el.placeholder || 'none').substring(0, 40) +
                             ', marker=' + marker);
                     });
 
                     let lyricsTextarea = null;
+                    let foundBy = 'unknown';
 
-                    // Method 1: Find by placeholder containing 'lyrics'
+                    // Method 1: Find the LYRICS field specifically - look for 'Write some lyrics' placeholder
+                    // This is the Custom mode lyrics input in Suno
                     for (const item of allTextareas) {
                         const ph = (item.el.placeholder || '').toLowerCase();
-                        if (ph.includes('lyrics') || ph.includes('write your') || ph.includes('enter your song')) {
+                        if (ph.includes('write') && (ph.includes('lyrics') || ph.includes('prompt'))) {
                             lyricsTextarea = item.el;
-                            console.log('[LYRICS] Found by placeholder: ' + ph);
+                            foundBy = 'placeholder (write lyrics/prompt): ' + ph.substring(0, 40);
+                            console.log('[LYRICS] Found by Write lyrics/prompt placeholder');
                             break;
                         }
                     }
 
-                    // Method 2: Use the SECOND textarea, but ONLY if it's not already marked as styles
-                    if (!lyricsTextarea && allTextareas.length >= 2) {
-                        const secondTextarea = allTextareas[1].el;
-                        if (secondTextarea.getAttribute('data-jubilee-field') !== 'styles') {
-                            lyricsTextarea = secondTextarea;
-                            console.log('[LYRICS] Using second textarea by position');
-                        } else {
-                            console.log('[LYRICS] Second textarea is marked as styles, looking for alternative');
+                    // Method 2: Find by other lyrics-related placeholders
+                    if (!lyricsTextarea) {
+                        for (const item of allTextareas) {
+                            const ph = (item.el.placeholder || '').toLowerCase();
+                            // Skip if this looks like styles field
+                            if (ph.includes('describe') && ph.includes('sound')) continue;
+                            if (ph.includes('style') || ph.includes('genre')) continue;
+
+                            if (ph.includes('lyrics') || ph.includes('verse') || ph.includes('chorus')) {
+                                lyricsTextarea = item.el;
+                                foundBy = 'placeholder (lyrics keyword): ' + ph.substring(0, 40);
+                                console.log('[LYRICS] Found by lyrics keyword');
+                                break;
+                            }
                         }
                     }
 
-                    // Method 3: Find any unmarked textarea (not styles)
+                    // Method 3: Find textarea that is NOT already marked as styles
+                    // and is positioned BELOW the styles textarea
                     if (!lyricsTextarea) {
+                        const stylesTextarea = document.querySelector('[data-jubilee-field=""styles""]');
+                        const stylesTop = stylesTextarea ? stylesTextarea.getBoundingClientRect().top : 0;
+
                         for (const item of allTextareas) {
-                            if (item.el.getAttribute('data-jubilee-field') !== 'styles') {
-                                lyricsTextarea = item.el;
-                                console.log('[LYRICS] Using first unmarked textarea');
-                                break;
-                            }
+                            if (item.el.getAttribute('data-jubilee-field') === 'styles') continue;
+                            // Skip empty placeholders
+                            if (!(item.el.placeholder || '')) continue;
+                            // Lyrics should be BELOW styles
+                            if (stylesTop > 0 && item.rect.top <= stylesTop) continue;
+
+                            lyricsTextarea = item.el;
+                            foundBy = 'position below styles: top=' + Math.round(item.rect.top);
+                            console.log('[LYRICS] Using textarea below styles');
+                            break;
                         }
                     }
 
                     if (!lyricsTextarea) {
                         return { success: false, error: 'No lyrics textarea found (all marked as styles or none available)' };
                     }
+
+                    console.log('[LYRICS] Selected textarea found by: ' + foundBy);
 
                     // Mark this element as lyrics
                     lyricsTextarea.setAttribute('data-jubilee-field', 'lyrics');
@@ -364,7 +385,8 @@ public class SunoAutomationService : ISunoAutomationService
                     return {
                         success: true,
                         placeholder: lyricsTextarea.placeholder || '',
-                        top: Math.round(lyricsTextarea.getBoundingClientRect().top)
+                        top: Math.round(lyricsTextarea.getBoundingClientRect().top),
+                        foundBy: foundBy
                     };
                 })();
             ";
@@ -477,12 +499,14 @@ public class SunoAutomationService : ISunoAutomationService
                     console.log('[STYLES] Starting styles insertion, value length: ' + valueToSet.length);
 
                     // Find all visible textareas sorted by vertical position
+                    // IMPORTANT: Filter out textareas at top <= 10 (hidden/utility elements)
+                    // and require non-empty placeholder to identify actual input fields
                     const allTextareas = Array.from(document.querySelectorAll('textarea'))
                         .map(el => ({ el, rect: el.getBoundingClientRect() }))
-                        .filter(item => item.rect.height > 0 && item.rect.width > 0)
+                        .filter(item => item.rect.height > 0 && item.rect.width > 0 && item.rect.top > 10)
                         .sort((a, b) => a.rect.top - b.rect.top);
 
-                    console.log('[STYLES] Found ' + allTextareas.length + ' visible textareas');
+                    console.log('[STYLES] Found ' + allTextareas.length + ' visible textareas (filtered top > 10)');
 
                     if (allTextareas.length === 0) {
                         return { success: false, error: 'No textareas found on page', step: 'find' };
@@ -500,28 +524,71 @@ public class SunoAutomationService : ISunoAutomationService
                     let stylesTextarea = null;
                     let foundBy = 'unknown';
 
-                    // Method 1: Find by placeholder (expanded list of possible placeholders)
-                    const styleKeywords = ['style', 'genre', 'vibe', 'describe', 'music', 'sound', 'prompt', 'tags'];
-                    for (const item of allTextareas) {
-                        const ph = (item.el.placeholder || '').toLowerCase();
-                        for (const keyword of styleKeywords) {
-                            if (ph.includes(keyword)) {
-                                stylesTextarea = item.el;
-                                foundBy = 'placeholder: ' + ph;
-                                console.log('[STYLES] Found by placeholder keyword: ' + keyword);
-                                break;
-                            }
+                    // Helper to check if element is truly visible and interactable
+                    function isReallyVisible(el) {
+                        const style = window.getComputedStyle(el);
+                        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+                            return false;
                         }
-                        if (stylesTextarea) break;
+                        // Check if any parent is hidden
+                        let parent = el.parentElement;
+                        while (parent) {
+                            const parentStyle = window.getComputedStyle(parent);
+                            if (parentStyle.display === 'none' || parentStyle.visibility === 'hidden') {
+                                return false;
+                            }
+                            // Check for tab panels - if parent has role=tabpanel and is hidden
+                            if (parent.getAttribute('role') === 'tabpanel' && parent.getAttribute('aria-hidden') === 'true') {
+                                return false;
+                            }
+                            parent = parent.parentElement;
+                        }
+                        return true;
                     }
 
-                    // Method 2: Find by aria-label or data attributes
+                    // Filter to only truly visible textareas
+                    const visibleTextareas = allTextareas.filter(item => isReallyVisible(item.el));
+                    console.log('[STYLES] After visibility filter: ' + visibleTextareas.length + ' textareas');
+
+                    // Method 1: Find the STYLES field specifically - look for 'Describe the sound' placeholder
+                    // This is the Custom mode style input in Suno
+                    for (const item of visibleTextareas) {
+                        const ph = (item.el.placeholder || '').toLowerCase();
+                        if (ph.includes('describe') && ph.includes('sound')) {
+                            stylesTextarea = item.el;
+                            foundBy = 'placeholder (describe sound): ' + ph.substring(0, 40);
+                            console.log('[STYLES] Found by Describe the sound placeholder');
+                            break;
+                        }
+                    }
+
+                    // Method 2: Find by other style-related placeholders
                     if (!stylesTextarea) {
-                        for (const item of allTextareas) {
+                        const styleKeywords = ['style', 'genre', 'vibe', 'twerk', 'pop', 'rock', 'tags'];
+                        for (const item of visibleTextareas) {
+                            const ph = (item.el.placeholder || '').toLowerCase();
+                            // Skip if this looks like lyrics field
+                            if (ph.includes('lyrics') || ph.includes('write some')) continue;
+
+                            for (const keyword of styleKeywords) {
+                                if (ph.includes(keyword)) {
+                                    stylesTextarea = item.el;
+                                    foundBy = 'placeholder keyword: ' + keyword;
+                                    console.log('[STYLES] Found by placeholder keyword: ' + keyword);
+                                    break;
+                                }
+                            }
+                            if (stylesTextarea) break;
+                        }
+                    }
+
+                    // Method 3: Find by aria-label or data attributes
+                    if (!stylesTextarea) {
+                        for (const item of visibleTextareas) {
                             const ariaLabel = (item.el.getAttribute('aria-label') || '').toLowerCase();
                             const dataTestId = (item.el.getAttribute('data-testid') || '').toLowerCase();
                             if (ariaLabel.includes('style') || ariaLabel.includes('genre') ||
-                                dataTestId.includes('style') || dataTestId.includes('prompt')) {
+                                dataTestId.includes('style')) {
                                 stylesTextarea = item.el;
                                 foundBy = 'aria/data: ' + (ariaLabel || dataTestId);
                                 console.log('[STYLES] Found by aria-label/data-testid');
@@ -530,34 +597,18 @@ public class SunoAutomationService : ISunoAutomationService
                         }
                     }
 
-                    // Method 3: Find by parent label text
+                    // Method 4: Use the FIRST textarea with non-empty placeholder that is NOT lyrics
                     if (!stylesTextarea) {
-                        for (const item of allTextareas) {
-                            const parent = item.el.closest('div, section, fieldset');
-                            if (parent) {
-                                const labelEl = parent.querySelector('label, span, h3, h4');
-                                if (labelEl) {
-                                    const labelText = (labelEl.textContent || '').toLowerCase();
-                                    if (labelText.includes('style') || labelText.includes('genre') || labelText.includes('describe')) {
-                                        stylesTextarea = item.el;
-                                        foundBy = 'parent label: ' + labelText.substring(0, 30);
-                                        console.log('[STYLES] Found by parent label: ' + labelText);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
+                        for (const item of visibleTextareas) {
+                            const ph = (item.el.placeholder || '').toLowerCase();
+                            // Skip empty placeholders and lyrics fields
+                            if (!ph || ph.includes('lyrics') || ph.includes('write some')) continue;
 
-                    // Method 4: Use the FIRST textarea that is NOT already marked as lyrics
-                    // In Suno Custom mode, styles is typically the first/top textarea
-                    if (!stylesTextarea) {
-                        for (const item of allTextareas) {
                             const marker = item.el.getAttribute('data-jubilee-field');
                             if (marker !== 'lyrics') {
                                 stylesTextarea = item.el;
-                                foundBy = 'first available (position: ' + Math.round(item.rect.top) + ')';
-                                console.log('[STYLES] Using first non-lyrics textarea by position');
+                                foundBy = 'first non-lyrics with placeholder: ' + ph.substring(0, 30);
+                                console.log('[STYLES] Using first non-lyrics textarea with placeholder');
                                 break;
                             }
                         }
@@ -573,40 +624,75 @@ public class SunoAutomationService : ISunoAutomationService
                     // Mark this element for tracking
                     stylesTextarea.setAttribute('data-jubilee-field', 'styles');
 
-                    // Focus and clear existing value
+                    // Focus the textarea
                     stylesTextarea.focus();
                     stylesTextarea.select();
 
                     try {
-                        // Get the native setter to bypass React's controlled component
-                        const nativeSetter = Object.getOwnPropertyDescriptor(
-                            window.HTMLTextAreaElement.prototype, 'value'
-                        ).set;
+                        // CREATIVE APPROACH: Simulate a paste event with DataTransfer
+                        // This is the most realistic way to simulate user input
 
-                        // Set value using native setter
-                        nativeSetter.call(stylesTextarea, valueToSet);
+                        // First clear the field
+                        stylesTextarea.value = '';
 
-                        // CRITICAL: Create and dispatch InputEvent (not just Event) for React 17+
-                        // React uses a synthetic event system that listens for InputEvent specifically
-                        const inputEvent = new InputEvent('input', {
+                        // Create a synthetic paste event with DataTransfer
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.setData('text/plain', valueToSet);
+
+                        const pasteEvent = new ClipboardEvent('paste', {
                             bubbles: true,
                             cancelable: true,
-                            inputType: 'insertText',
-                            data: valueToSet
+                            clipboardData: dataTransfer
                         });
-                        stylesTextarea.dispatchEvent(inputEvent);
 
-                        // Also dispatch standard events for fallback
-                        stylesTextarea.dispatchEvent(new Event('change', { bubbles: true }));
+                        // Dispatch paste event
+                        const pasteHandled = !stylesTextarea.dispatchEvent(pasteEvent);
+                        console.log('[STYLES] Paste event dispatched, defaultPrevented=' + pasteHandled);
 
-                        // Trigger React's internal onChange by simulating keyboard activity
-                        stylesTextarea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'a' }));
-                        stylesTextarea.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: 'a' }));
+                        // If paste didn't work, try simulating individual key presses
+                        if (stylesTextarea.value !== valueToSet) {
+                            console.log('[STYLES] Paste didnt set value, trying character-by-character input simulation');
 
-                        // Small delay then blur to trigger onBlur handlers
-                        setTimeout(() => {
-                            stylesTextarea.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
-                        }, 50);
+                            // Clear again
+                            stylesTextarea.value = '';
+
+                            // Type each character with proper events
+                            for (let i = 0; i < valueToSet.length; i++) {
+                                const char = valueToSet[i];
+
+                                // Simulate keydown
+                                stylesTextarea.dispatchEvent(new KeyboardEvent('keydown', {
+                                    key: char,
+                                    code: 'Key' + char.toUpperCase(),
+                                    bubbles: true
+                                }));
+
+                                // Simulate beforeinput
+                                stylesTextarea.dispatchEvent(new InputEvent('beforeinput', {
+                                    data: char,
+                                    inputType: 'insertText',
+                                    bubbles: true,
+                                    cancelable: true
+                                }));
+
+                                // Actually insert the character
+                                stylesTextarea.value += char;
+
+                                // Simulate input event
+                                stylesTextarea.dispatchEvent(new InputEvent('input', {
+                                    data: char,
+                                    inputType: 'insertText',
+                                    bubbles: true
+                                }));
+
+                                // Simulate keyup
+                                stylesTextarea.dispatchEvent(new KeyboardEvent('keyup', {
+                                    key: char,
+                                    code: 'Key' + char.toUpperCase(),
+                                    bubbles: true
+                                }));
+                            }
+                        }
 
                         // Verify the value was set
                         const actualValue = stylesTextarea.value;

@@ -14,8 +14,20 @@ public partial class MainViewModel : BaseViewModel
     private readonly ILibraryService _libraryService;
     private readonly ILogger<MainViewModel> _logger;
 
-    [ObservableProperty]
     private string _currentViewName = "Browser";
+
+    public string CurrentViewName
+    {
+        get => _currentViewName;
+        set
+        {
+            if (SetProperty(ref _currentViewName, value))
+            {
+                // Also navigate to the view when set externally (e.g., from state restoration)
+                NavigateToViewByName(value);
+            }
+        }
+    }
 
     [ObservableProperty]
     private bool _isAuthenticated;
@@ -60,7 +72,10 @@ public partial class MainViewModel : BaseViewModel
 
     private void OnNavigationChanged(object? sender, NavigationEventArgs e)
     {
-        CurrentViewName = e.CurrentView;
+        // Don't trigger the setter's navigation logic
+        _currentViewName = e.CurrentView;
+        OnPropertyChanged(nameof(CurrentViewName));
+
         CurrentViewModel = e.CurrentView switch
         {
             "Browser" => BrowserViewModel,
@@ -73,6 +88,24 @@ public partial class MainViewModel : BaseViewModel
         _logger.LogInformation("View changed to {View}", e.CurrentView);
     }
 
+    private void NavigateToViewByName(string viewName)
+    {
+        var targetVm = viewName switch
+        {
+            "Browser" => (object?)BrowserViewModel,
+            "Create" => CreateViewModel,
+            "Library" => LibraryViewModel,
+            "Settings" => SettingsViewModel,
+            _ => BrowserViewModel
+        };
+
+        if (CurrentViewModel != targetVm)
+        {
+            CurrentViewModel = targetVm;
+            _logger.LogInformation("View set to {View} from state restoration", viewName);
+        }
+    }
+
     [RelayCommand]
     private void NavigateToBrowser()
     {
@@ -83,6 +116,20 @@ public partial class MainViewModel : BaseViewModel
     private void NavigateToCreate()
     {
         _navigationService.NavigateTo("Create");
+    }
+
+    [RelayCommand]
+    private void ToggleCreatePanel()
+    {
+        // Ensure we're on the Browser view first
+        if (CurrentViewModel != BrowserViewModel)
+        {
+            _navigationService.NavigateTo("Browser");
+        }
+
+        // Toggle the creator panel
+        BrowserViewModel.ToggleCreatorPanelCommand.Execute(null);
+        _logger.LogDebug("Create panel toggled from main nav");
     }
 
     [RelayCommand]

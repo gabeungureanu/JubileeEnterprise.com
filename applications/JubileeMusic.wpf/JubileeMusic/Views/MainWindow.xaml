@@ -50,22 +50,17 @@
                     <TextBlock Text="Jubilee Music"
                                FontSize="20"
                                FontWeight="Bold"
-                               Foreground="{DynamicResource AccentColor}"
-                               VerticalAlignment="Center"/>
-                    <TextBlock Text="| Suno Desktop"
-                               FontSize="14"
-                               Foreground="{DynamicResource TextSecondaryColor}"
-                               Margin="8,0,0,0"
+                               Foreground="White"
                                VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <!-- Navigation Buttons -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                <!-- Navigation Buttons (Right-Aligned) -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Content="Browser"
                             Command="{Binding NavigateToBrowserCommand}"
                             Style="{StaticResource NavButtonStyle}"/>
                     <Button Content="Create"
-                            Command="{Binding NavigateToCreateCommand}"
+                            Command="{Binding ToggleCreatePanelCommand}"
                             Style="{StaticResource NavButtonStyle}"/>
                     <Button Content="Library"
                             Command="{Binding NavigateToLibraryCommand}"
