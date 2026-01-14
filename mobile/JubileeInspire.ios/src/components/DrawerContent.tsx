@@ -34,6 +34,7 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
   const [isLoading, setIsLoading] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [editingConversationId, setEditingConversationId] = useState<string | null>(null);
 
   const styles = createStyles(colors, isCollapsed);
 
@@ -161,7 +162,38 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
     drawerNavigation.closeDrawer();
   };
 
-  // Group conversations by date
+  const handlePinToggle = async (conversationId: string) => {
+    console.log('[DrawerContent] Toggle pin for conversation:', conversationId);
+    try {
+      await storage.togglePinConversation(conversationId);
+      await loadConversations();
+    } catch (error) {
+      console.error('[DrawerContent] Error toggling pin:', error);
+    }
+  };
+
+  const handleRename = async (conversationId: string, newTitle: string) => {
+    console.log('[DrawerContent] Rename conversation:', conversationId, 'to:', newTitle);
+    try {
+      await storage.renameConversation(conversationId, newTitle);
+      setEditingConversationId(null);
+      await loadConversations();
+    } catch (error) {
+      console.error('[DrawerContent] Error renaming conversation:', error);
+    }
+  };
+
+  const handleStartEditing = (conversationId: string) => {
+    console.log('[DrawerContent] Start editing conversation:', conversationId);
+    setEditingConversationId(conversationId);
+  };
+
+  const handleCancelEditing = () => {
+    console.log('[DrawerContent] Cancel editing');
+    setEditingConversationId(null);
+  };
+
+  // Group conversations by date with pinned section first
   const groupConversationsByDate = (convs: Conversation[]) => {
     const today = new Date();
     const yesterday = new Date(today);
@@ -173,13 +205,30 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
 
     const groups: { title: string; conversations: Conversation[] }[] = [];
 
-    const todayConvs = convs.filter(
+    // Separate pinned and unpinned conversations
+    const pinnedConvs = convs
+      .filter(c => c.isPinned)
+      .sort((a, b) => {
+        // Sort pinned by pinnedAt (most recently pinned first)
+        const pinnedAtA = a.pinnedAt ? new Date(a.pinnedAt).getTime() : 0;
+        const pinnedAtB = b.pinnedAt ? new Date(b.pinnedAt).getTime() : 0;
+        return pinnedAtB - pinnedAtA;
+      });
+    const unpinnedConvs = convs.filter(c => !c.isPinned);
+
+    // Add pinned section first if there are pinned conversations
+    if (pinnedConvs.length > 0) {
+      groups.push({ title: 'Pinned', conversations: pinnedConvs });
+    }
+
+    // Group unpinned conversations by date
+    const todayConvs = unpinnedConvs.filter(
       c => new Date(c.updatedAt).toDateString() === today.toDateString()
     );
-    const yesterdayConvs = convs.filter(
+    const yesterdayConvs = unpinnedConvs.filter(
       c => new Date(c.updatedAt).toDateString() === yesterday.toDateString()
     );
-    const weekConvs = convs.filter(c => {
+    const weekConvs = unpinnedConvs.filter(c => {
       const date = new Date(c.updatedAt);
       return (
         date > weekAgo &&
@@ -187,11 +236,11 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
         date.toDateString() !== yesterday.toDateString()
       );
     });
-    const monthConvs = convs.filter(c => {
+    const monthConvs = unpinnedConvs.filter(c => {
       const date = new Date(c.updatedAt);
       return date <= weekAgo && date > monthAgo;
     });
-    const olderConvs = convs.filter(c => new Date(c.updatedAt) <= monthAgo);
+    const olderConvs = unpinnedConvs.filter(c => new Date(c.updatedAt) <= monthAgo);
 
     if (todayConvs.length > 0) groups.push({ title: 'Today', conversations: todayConvs });
     if (yesterdayConvs.length > 0) groups.push({ title: 'Yesterday', conversations: yesterdayConvs });
@@ -324,8 +373,13 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
                       key={conversation.id}
                       conversation={conversation}
                       isActive={currentConversationId === conversation.id}
+                      isEditing={editingConversationId === conversation.id}
                       onPress={() => handleConversationPress(conversation)}
                       onDelete={() => handleDeleteConversation(conversation.id)}
+                      onPinToggle={() => handlePinToggle(conversation.id)}
+                      onRename={(newTitle) => handleRename(conversation.id, newTitle)}
+                      onStartEditing={() => handleStartEditing(conversation.id)}
+                      onCancelEditing={handleCancelEditing}
                     />
                   ))}
                 </View>
