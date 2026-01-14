@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using JubileeOutlook.Models;
+using JubileeOutlook.Services;
 using System.Collections.ObjectModel;
 using System.Windows.Media;
 
@@ -8,6 +9,8 @@ namespace JubileeOutlook.ViewModels;
 
 public partial class CalendarViewModel : ObservableObject
 {
+    private readonly ICalendarService _calendarService;
+
     [ObservableProperty]
     private ObservableCollection<CalendarEvent> _events = new();
 
@@ -41,12 +44,55 @@ public partial class CalendarViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<DateTime> _monthViewDays = new();
 
-    public CalendarViewModel()
+    [ObservableProperty]
+    private bool _isLoading;
+
+    public CalendarViewModel() : this(ServiceConfiguration.GetCalendarService())
     {
+    }
+
+    public CalendarViewModel(ICalendarService calendarService)
+    {
+        _calendarService = calendarService;
         InitializeCalendars();
-        InitializeSampleEvents();
+        _ = LoadEventsAsync();
         UpdateViewDates();
         UpdateMiniCalendar();
+    }
+
+    private async Task LoadEventsAsync()
+    {
+        try
+        {
+            IsLoading = true;
+            var startDate = DateTime.Today.AddMonths(-1);
+            var endDate = DateTime.Today.AddMonths(3);
+
+            var events = await _calendarService.GetEventsAsync(startDate, endDate);
+
+            Events.Clear();
+            foreach (var evt in events)
+            {
+                Events.Add(evt);
+            }
+
+            OnPropertyChanged(nameof(Events));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CalendarViewModel] Error loading events: {ex.Message}");
+            InitializeSampleEvents();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task RefreshEventsAsync()
+    {
+        await LoadEventsAsync();
     }
 
     private void InitializeCalendars()
@@ -198,7 +244,7 @@ public partial class CalendarViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void NewEvent()
+    private async Task NewEventAsync()
     {
         var newEventWindow = new JubileeOutlook.Views.NewEventWindow();
         if (newEventWindow.ShowDialog() == true)
@@ -206,13 +252,24 @@ public partial class CalendarViewModel : ObservableObject
             var viewModel = newEventWindow.DataContext as JubileeOutlook.ViewModels.NewEventViewModel;
             if (viewModel?.CreatedEvent != null)
             {
-                Events.Add(viewModel.CreatedEvent);
+                try
+                {
+                    await _calendarService.CreateEventAsync(viewModel.CreatedEvent);
+                    Events.Add(viewModel.CreatedEvent);
+                    OnPropertyChanged(nameof(Events));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[CalendarViewModel] Error creating event: {ex.Message}");
+                    Events.Add(viewModel.CreatedEvent);
+                    OnPropertyChanged(nameof(Events));
+                }
             }
         }
     }
 
     [RelayCommand]
-    private void EditEvent(CalendarEvent eventToEdit)
+    private async Task EditEventAsync(CalendarEvent eventToEdit)
     {
         if (eventToEdit == null) return;
 
@@ -222,24 +279,45 @@ public partial class CalendarViewModel : ObservableObject
             var viewModel = editEventWindow.DataContext as JubileeOutlook.ViewModels.NewEventViewModel;
             if (viewModel?.CreatedEvent != null)
             {
-                if (editEventWindow.IsDeleted)
+                try
                 {
-                    var eventToRemove = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
-                    if (eventToRemove != null)
+                    if (editEventWindow.IsDeleted)
                     {
-                        Events.Remove(eventToRemove);
+                        await _calendarService.DeleteEventAsync(viewModel.CreatedEvent.Id);
+                        var eventToRemove = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
+                        if (eventToRemove != null)
+                        {
+                            Events.Remove(eventToRemove);
+                        }
+                    }
+                    else
+                    {
+                        await _calendarService.UpdateEventAsync(viewModel.CreatedEvent);
+                        var existingEvent = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
+                        if (existingEvent != null)
+                        {
+                            var index = Events.IndexOf(existingEvent);
+                            Events.RemoveAt(index);
+                            Events.Insert(index, viewModel.CreatedEvent);
+                        }
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    var existingEvent = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
-                    if (existingEvent != null)
+                    Console.WriteLine($"[CalendarViewModel] Error updating event: {ex.Message}");
+                    if (!editEventWindow.IsDeleted)
                     {
-                        var index = Events.IndexOf(existingEvent);
-                        Events.RemoveAt(index);
-                        Events.Insert(index, viewModel.CreatedEvent);
+                        var existingEvent = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
+                        if (existingEvent != null)
+                        {
+                            var index = Events.IndexOf(existingEvent);
+                            Events.RemoveAt(index);
+                            Events.Insert(index, viewModel.CreatedEvent);
+                        }
                     }
                 }
+
+                OnPropertyChanged(nameof(Events));
             }
         }
     }
