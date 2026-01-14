@@ -49,10 +49,12 @@ public partial class CalendarViewModel : ObservableObject
 
     public CalendarViewModel() : this(ServiceConfiguration.GetCalendarService())
     {
+        Console.WriteLine($"[CalendarViewModel] Constructor called (parameterless)");
     }
 
     public CalendarViewModel(ICalendarService calendarService)
     {
+        Console.WriteLine($"[CalendarViewModel] Constructor called with service: {calendarService.GetType().Name}");
         _calendarService = calendarService;
         InitializeCalendars();
         _ = LoadEventsAsync();
@@ -246,16 +248,24 @@ public partial class CalendarViewModel : ObservableObject
     [RelayCommand]
     private async Task NewEventAsync()
     {
+        Console.WriteLine($"[CalendarViewModel] NewEventAsync called");
         var newEventWindow = new JubileeOutlook.Views.NewEventWindow();
-        if (newEventWindow.ShowDialog() == true)
+        var dialogResult = newEventWindow.ShowDialog();
+        Console.WriteLine($"[CalendarViewModel] Dialog result: {dialogResult}");
+
+        if (dialogResult == true)
         {
             var viewModel = newEventWindow.DataContext as JubileeOutlook.ViewModels.NewEventViewModel;
+            Console.WriteLine($"[CalendarViewModel] ViewModel: {viewModel != null}, CreatedEvent: {viewModel?.CreatedEvent != null}");
+
             if (viewModel?.CreatedEvent != null)
             {
+                Console.WriteLine($"[CalendarViewModel] Creating event: {viewModel.CreatedEvent.Subject}");
                 try
                 {
                     await _calendarService.CreateEventAsync(viewModel.CreatedEvent);
                     Events.Add(viewModel.CreatedEvent);
+                    Console.WriteLine($"[CalendarViewModel] Event added. Total events: {Events.Count}");
                     OnPropertyChanged(nameof(Events));
                 }
                 catch (Exception ex)

@@ -76,8 +76,13 @@ public class MockCalendarService : ICalendarService
 
     public Task CreateEventAsync(CalendarEvent calendarEvent)
     {
-        calendarEvent.Id = Guid.NewGuid().ToString();
+        // Only generate ID if one wasn't already provided
+        if (string.IsNullOrEmpty(calendarEvent.Id))
+        {
+            calendarEvent.Id = Guid.NewGuid().ToString();
+        }
         _events.Add(calendarEvent);
+        Console.WriteLine($"[MockCalendarService] Created event: {calendarEvent.Subject} (ID: {calendarEvent.Id})");
         return Task.CompletedTask;
     }
 
@@ -88,6 +93,11 @@ public class MockCalendarService : ICalendarService
         {
             var index = _events.IndexOf(existingEvent);
             _events[index] = calendarEvent;
+            Console.WriteLine($"[MockCalendarService] Updated event: {calendarEvent.Subject} (ID: {calendarEvent.Id})");
+        }
+        else
+        {
+            Console.WriteLine($"[MockCalendarService] Update failed - event not found: {calendarEvent.Id}");
         }
         return Task.CompletedTask;
     }
@@ -98,6 +108,11 @@ public class MockCalendarService : ICalendarService
         if (calendarEvent != null)
         {
             _events.Remove(calendarEvent);
+            Console.WriteLine($"[MockCalendarService] Deleted event: {calendarEvent.Subject} (ID: {eventId})");
+        }
+        else
+        {
+            Console.WriteLine($"[MockCalendarService] Delete failed - event not found: {eventId}");
         }
         return Task.CompletedTask;
     }

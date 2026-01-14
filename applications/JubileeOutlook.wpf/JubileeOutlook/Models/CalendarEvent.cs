@@ -18,8 +18,11 @@ public class CalendarEvent
     public bool IsRecurring { get; set; }
     public RecurrencePattern? Recurrence { get; set; }
     public EventStatus Status { get; set; } = EventStatus.Free;
+    public bool IsPrivate { get; set; }
     public string CalendarName { get; set; } = "My Calendar";
     public Brush EventColor { get; set; } = new SolidColorBrush(Color.FromRgb(0, 120, 212));
+    public List<EventAttachment> Attachments { get; set; } = new();
+    public List<EventImage> Images { get; set; } = new();
 
     public double GetTopPosition(DateTime dayStart)
     {
@@ -52,6 +55,12 @@ public class CalendarEvent
             _ => new SolidColorBrush(Color.FromRgb(136, 136, 136))
         };
     }
+
+    // Display properties for private events - shows "Private" instead of actual content
+    public string DisplaySubject => IsPrivate ? "Private" : Subject;
+    public string DisplayLocation => IsPrivate ? "" : Location;
+    public string DisplayDescription => IsPrivate ? "" : Description;
+    public Brush DisplayEventColor => IsPrivate ? new SolidColorBrush(Color.FromRgb(128, 128, 128)) : EventColor;
 }
 
 public class RecurrencePattern
@@ -115,4 +124,57 @@ public enum CalendarViewMode
     WorkWeek,
     Week,
     Month
+}
+
+public class EventAttachment
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string FileName { get; set; } = string.Empty;
+    public string FilePath { get; set; } = string.Empty;
+    public long FileSize { get; set; }
+    public DateTime AddedDate { get; set; } = DateTime.Now;
+
+    public string FileSizeFormatted
+    {
+        get
+        {
+            if (FileSize < 1024)
+                return $"{FileSize} B";
+            if (FileSize < 1024 * 1024)
+                return $"{FileSize / 1024.0:F1} KB";
+            if (FileSize < 1024 * 1024 * 1024)
+                return $"{FileSize / (1024.0 * 1024.0):F1} MB";
+            return $"{FileSize / (1024.0 * 1024.0 * 1024.0):F1} GB";
+        }
+    }
+
+    public string FileIcon
+    {
+        get
+        {
+            var ext = System.IO.Path.GetExtension(FileName).ToLowerInvariant();
+            return ext switch
+            {
+                ".pdf" => "\ue873",      // PDF icon
+                ".doc" or ".docx" => "\ue873",  // Document
+                ".xls" or ".xlsx" => "\ue873",  // Spreadsheet
+                ".ppt" or ".pptx" => "\ue873",  // Presentation
+                ".jpg" or ".jpeg" or ".png" or ".gif" or ".bmp" => "\ue3f4",  // Image
+                ".mp3" or ".wav" or ".m4a" => "\ue405",  // Audio
+                ".mp4" or ".avi" or ".mov" or ".wmv" => "\ue04b",  // Video
+                ".zip" or ".rar" or ".7z" => "\ue2c4",  // Archive
+                ".txt" => "\ue873",      // Text
+                _ => "\ue226"            // Generic attachment
+            };
+        }
+    }
+}
+
+public class EventImage
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string FileName { get; set; } = string.Empty;
+    public string FilePath { get; set; } = string.Empty;
+    public byte[]? ImageData { get; set; }
+    public DateTime AddedDate { get; set; } = DateTime.Now;
 }

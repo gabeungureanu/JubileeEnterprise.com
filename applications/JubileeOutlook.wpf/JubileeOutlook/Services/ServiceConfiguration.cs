@@ -38,6 +38,11 @@ public static class ServiceConfiguration
             _calendarService = _useApiServices
                 ? new ApiCalendarService(_apiBaseUrl, _userId)
                 : new MockCalendarService();
+            Console.WriteLine($"[ServiceConfiguration] Created new CalendarService (UseAPI: {_useApiServices})");
+        }
+        else
+        {
+            Console.WriteLine($"[ServiceConfiguration] Returning existing CalendarService");
         }
         return _calendarService;
     }
