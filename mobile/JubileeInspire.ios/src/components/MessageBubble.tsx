@@ -8,6 +8,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, Platform, Pressable, Modal, TouchableWithoutFeedback, Share, TextInput, ScrollView } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import * as Speech from 'expo-speech';
 import { Ionicons } from '@expo/vector-icons';
 import { ChatMessage } from '../types';
 import { spacing, typography } from '../config';
@@ -117,6 +118,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [reportComments, setReportComments] = useState('');
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
+
+  // Read aloud states
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   // Reset feedback and copy states when message starts streaming (retry)
   useEffect(() => {
@@ -250,14 +254,63 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     }
   };
 
-  const handleReadAloud = () => {
+  const handleReadAloud = async () => {
     setShowMoreMenu(false);
+
+    // If already speaking, stop it
+    if (isSpeaking) {
+      await Speech.stop();
+      setIsSpeaking(false);
+      return;
+    }
+
+    // Start speaking
+    setIsSpeaking(true);
+
+    Speech.speak(message.content, {
+      language: 'en-US',
+      pitch: 1.0,
+      rate: 0.9,
+      onStart: () => {
+        console.log('[MessageBubble] Speech started');
+      },
+      onDone: () => {
+        console.log('[MessageBubble] Speech completed');
+        setIsSpeaking(false);
+      },
+      onStopped: () => {
+        console.log('[MessageBubble] Speech stopped');
+        setIsSpeaking(false);
+      },
+      onError: (error) => {
+        console.error('[MessageBubble] Speech error:', error);
+        setIsSpeaking(false);
+        Alert.alert('Error', 'Failed to read message aloud. Please try again.');
+      },
+    });
+
+    // Call the callback if provided
     if (onReadAloud) {
       onReadAloud(message.content);
-    } else {
-      Alert.alert('Read aloud', 'Text-to-speech functionality coming soon!');
     }
   };
+
+  // Stop speech when component unmounts or message changes
+  useEffect(() => {
+    return () => {
+      if (isSpeaking) {
+        Speech.stop();
+      }
+    };
+  }, [isSpeaking]);
+
+  // Stop speech when message starts streaming (retry)
+  useEffect(() => {
+    if (message.isStreaming && isSpeaking) {
+      Speech.stop();
+      setIsSpeaking(false);
+    }
+  }, [message.isStreaming, isSpeaking]);
 
   const handleReportMessage = () => {
     setShowMoreMenu(false);
@@ -336,9 +389,17 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 
       {/* Message Content */}
       <View style={dynamicStyles.contentContainer}>
-        <Text style={[dynamicStyles.roleLabel, isUser && dynamicStyles.userRoleLabel]}>
-          {isUser ? 'You' : 'Jubilee Inspire'}
-        </Text>
+        <View style={styles.roleLabelRow}>
+          <Text style={[dynamicStyles.roleLabel, isUser && dynamicStyles.userRoleLabel]}>
+            {isUser ? 'You' : 'Jubilee Inspire'}
+          </Text>
+          {isSpeaking && isAssistant && (
+            <View style={[styles.speakingIndicator, { backgroundColor: `${colors.primary}20` }]}>
+              <Ionicons name="volume-high" size={12} color={colors.primary} />
+              <Text style={[styles.speakingText, { color: colors.primary }]}>Speaking</Text>
+            </View>
+          )}
+        </View>
         <Text style={dynamicStyles.messageText}>
           {message.content}
           {message.isStreaming && <Text style={dynamicStyles.cursor}>|</Text>}
@@ -413,12 +474,20 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                     <Pressable
                       style={({ hovered }) => [
                         styles.menuItem,
-                        hovered && { backgroundColor: colors.surface || 'rgba(0,0,0,0.05)' }
+                        hovered && { backgroundColor: colors.surface || 'rgba(0,0,0,0.05)' },
+                        isSpeaking && { backgroundColor: `${colors.primary}15` }
                       ]}
                       onPress={handleReadAloud}
                     >
-                      <Ionicons name="volume-high-outline" size={16} color={colors.text} style={styles.menuIcon} />
-                      <Text style={[styles.menuText, { color: colors.text }]}>Read aloud</Text>
+                      <Ionicons
+                        name={isSpeaking ? "stop-circle-outline" : "volume-high-outline"}
+                        size={16}
+                        color={isSpeaking ? colors.primary : colors.text}
+                        style={styles.menuIcon}
+                      />
+                      <Text style={[styles.menuText, { color: isSpeaking ? colors.primary : colors.text }]}>
+                        {isSpeaking ? 'Stop reading' : 'Read aloud'}
+                      </Text>
                     </Pressable>
                     <Pressable
                       style={({ hovered }) => [
@@ -777,6 +846,23 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '500',
     textAlign: 'center',
+  },
+  roleLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  speakingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    gap: 4,
+  },
+  speakingText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
   moreOptionsWrapper: {
     position: 'relative',
