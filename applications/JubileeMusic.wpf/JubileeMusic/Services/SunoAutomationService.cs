@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using JubileeMusic.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Web.WebView2.Core;
@@ -39,6 +41,39 @@ public class SunoAutomationService : ISunoAutomationService
         }
 
         _webView = webView;
+
+        // Ensure WebView2 is initialized with persistent storage for cookies/sessions
+        if (_webView.CoreWebView2 == null)
+        {
+            // Create persistent user data folder for storing cookies, sessions, etc.
+            var userDataFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "JubileeMusic",
+                "WebView2Data");
+
+            Directory.CreateDirectory(userDataFolder);
+
+            var environment = await CoreWebView2Environment.CreateAsync(
+                userDataFolder: userDataFolder);
+
+            await _webView.EnsureCoreWebView2Async(environment);
+
+            _logger.LogInformation("WebView2 initialized with persistent storage at {Path}", userDataFolder);
+
+            // Configure WebView2 settings for OAuth popup handling
+            _webView.CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = true;
+            _webView.CoreWebView2.Settings.IsScriptEnabled = true;
+            _webView.CoreWebView2.Settings.AreDevToolsEnabled = true;
+            _webView.CoreWebView2.Settings.IsWebMessageEnabled = true;
+
+            // Handle new window requests (OAuth popups) by opening in the same WebView
+            _webView.CoreWebView2.NewWindowRequested += (sender, args) =>
+            {
+                args.Handled = true;
+                _webView.CoreWebView2.Navigate(args.Uri);
+                _logger.LogDebug("Redirected popup to main window: {Uri}", args.Uri);
+            };
+        }
 
         // Subscribe to navigation events
         _webView.NavigationStarting += OnNavigationStarting;
@@ -263,39 +298,150 @@ public class SunoAutomationService : ISunoAutomationService
 
         try
         {
-            _logger.LogInformation("Entering lyrics ({Length} chars)", lyrics.Length);
+            _logger.LogInformation("[LYRICS] Starting to enter lyrics ({Length} chars)", lyrics.Length);
 
-            var script = $@"
+            // Step 1: Find the lyrics textarea (NOT the one marked as styles)
+            var findScript = @"
+                (function() {
+                    // Find all visible textareas sorted by vertical position
+                    const allTextareas = Array.from(document.querySelectorAll('textarea'))
+                        .map(el => ({ el, rect: el.getBoundingClientRect() }))
+                        .filter(item => item.rect.height > 0 && item.rect.width > 0)
+                        .sort((a, b) => a.rect.top - b.rect.top);
+
+                    console.log('[LYRICS] Found ' + allTextareas.length + ' visible textareas');
+
+                    // Log all textareas
+                    allTextareas.forEach((item, i) => {
+                        const marker = item.el.getAttribute('data-jubilee-field') || 'none';
+                        console.log('[LYRICS] Textarea ' + i + ': top=' + Math.round(item.rect.top) +
+                            ', placeholder=' + (item.el.placeholder || 'none').substring(0, 30) +
+                            ', marker=' + marker);
+                    });
+
+                    let lyricsTextarea = null;
+
+                    // Method 1: Find by placeholder containing 'lyrics'
+                    for (const item of allTextareas) {
+                        const ph = (item.el.placeholder || '').toLowerCase();
+                        if (ph.includes('lyrics') || ph.includes('write your') || ph.includes('enter your song')) {
+                            lyricsTextarea = item.el;
+                            console.log('[LYRICS] Found by placeholder: ' + ph);
+                            break;
+                        }
+                    }
+
+                    // Method 2: Use the SECOND textarea, but ONLY if it's not already marked as styles
+                    if (!lyricsTextarea && allTextareas.length >= 2) {
+                        const secondTextarea = allTextareas[1].el;
+                        if (secondTextarea.getAttribute('data-jubilee-field') !== 'styles') {
+                            lyricsTextarea = secondTextarea;
+                            console.log('[LYRICS] Using second textarea by position');
+                        } else {
+                            console.log('[LYRICS] Second textarea is marked as styles, looking for alternative');
+                        }
+                    }
+
+                    // Method 3: Find any unmarked textarea (not styles)
+                    if (!lyricsTextarea) {
+                        for (const item of allTextareas) {
+                            if (item.el.getAttribute('data-jubilee-field') !== 'styles') {
+                                lyricsTextarea = item.el;
+                                console.log('[LYRICS] Using first unmarked textarea');
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!lyricsTextarea) {
+                        return { success: false, error: 'No lyrics textarea found (all marked as styles or none available)' };
+                    }
+
+                    // Mark this element as lyrics
+                    lyricsTextarea.setAttribute('data-jubilee-field', 'lyrics');
+                    lyricsTextarea.focus();
+
+                    return {
+                        success: true,
+                        placeholder: lyricsTextarea.placeholder || '',
+                        top: Math.round(lyricsTextarea.getBoundingClientRect().top)
+                    };
+                })();
+            ";
+
+            var findResult = await ExecuteScriptAsync<JsonElement>(findScript);
+            _logger.LogInformation("[LYRICS] Find result: {Result}", findResult.ToString());
+
+            if (!findResult.TryGetProperty("success", out var findSuccess) || !findSuccess.GetBoolean())
+            {
+                var findError = findResult.TryGetProperty("error", out var ep) ? ep.GetString() : "Unknown error finding textarea";
+                _logger.LogWarning("[LYRICS] Failed to find lyrics textarea: {Error}", findError);
+                return false;
+            }
+
+            // Step 2: Set the value
+            var escapedValue = lyrics
+                .Replace("\\", "\\\\")
+                .Replace("\"", "\\\"")
+                .Replace("\n", "\\n")
+                .Replace("\r", "\\r")
+                .Replace("\t", "\\t");
+
+            var setValueScript = $@"
                 (function() {{
-                    // Look for lyrics textarea - Suno typically uses a textarea for lyrics
-                    const lyricsInput = document.querySelector('textarea[placeholder*=""lyrics""]') ||
-                                       document.querySelector('textarea[data-testid=""lyrics-input""]') ||
-                                       document.querySelector('.lyrics-input textarea') ||
-                                       document.querySelector('textarea');
-
-                    if (lyricsInput) {{
-                        lyricsInput.value = {JsonSerializer.Serialize(lyrics)};
-                        lyricsInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                        lyricsInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                        return true;
+                    const textarea = document.querySelector('[data-jubilee-field=""lyrics""]');
+                    if (!textarea) {{
+                        return {{ success: false, error: 'Marked lyrics textarea not found' }};
                     }}
-                    return false;
+
+                    const valueToSet = ""{escapedValue}"";
+                    console.log('[LYRICS] Setting value: ' + valueToSet.substring(0, 50) + '...');
+
+                    try {{
+                        const nativeSetter = Object.getOwnPropertyDescriptor(
+                            window.HTMLTextAreaElement.prototype, 'value'
+                        ).set;
+
+                        nativeSetter.call(textarea, valueToSet);
+
+                        textarea.dispatchEvent(new Event('input', {{ bubbles: true, cancelable: true }}));
+                        textarea.dispatchEvent(new Event('change', {{ bubbles: true, cancelable: true }}));
+
+                        const actualValue = textarea.value;
+                        const valueSet = actualValue === valueToSet;
+
+                        console.log('[LYRICS] Value verification: match=' + valueSet);
+
+                        return {{
+                            success: valueSet,
+                            actualLength: actualValue.length,
+                            expectedLength: valueToSet.length
+                        }};
+                    }} catch (e) {{
+                        console.log('[LYRICS] Error: ' + e.message);
+                        return {{ success: false, error: e.message }};
+                    }}
                 }})();
             ";
 
-            var success = await ExecuteScriptAsync<bool>(script);
+            var setResult = await ExecuteScriptAsync<JsonElement>(setValueScript);
+            _logger.LogInformation("[LYRICS] Set value result: {Result}", setResult.ToString());
 
-            if (!success)
+            if (setResult.TryGetProperty("success", out var setSuccess) && setSuccess.GetBoolean())
             {
-                _logger.LogWarning("Could not find lyrics input field");
-                ErrorOccurred?.Invoke(this, "Could not find lyrics input field");
+                _logger.LogInformation("[LYRICS] Successfully inserted lyrics");
+                return true;
             }
-
-            return success;
+            else
+            {
+                var setError = setResult.TryGetProperty("error", out var se) ? se.GetString() : "Value not set correctly";
+                _logger.LogWarning("[LYRICS] Failed to set lyrics value: {Error}", setError);
+                return false;
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to enter lyrics");
+            _logger.LogError(ex, "[LYRICS] Exception while entering lyrics");
             ErrorOccurred?.Invoke(this, $"Failed to enter lyrics: {ex.Message}");
             return false;
         }
@@ -307,40 +453,207 @@ public class SunoAutomationService : ISunoAutomationService
 
         try
         {
-            _logger.LogInformation("Entering style prompt");
+            _logger.LogInformation("[STYLES] Starting to enter styles: '{Style}' ({Length} chars)", stylePrompt, stylePrompt?.Length ?? 0);
 
-            var script = $@"
-                (function() {{
-                    // Look for style/genre input
-                    const styleInput = document.querySelector('input[placeholder*=""style""]') ||
-                                      document.querySelector('input[placeholder*=""genre""]') ||
-                                      document.querySelector('input[data-testid=""style-input""]') ||
-                                      document.querySelector('.style-input input') ||
-                                      document.querySelector('input[type=""text""]');
-
-                    if (styleInput) {{
-                        styleInput.value = {JsonSerializer.Serialize(stylePrompt)};
-                        styleInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                        styleInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                        return true;
-                    }}
-                    return false;
-                }})();
-            ";
-
-            var success = await ExecuteScriptAsync<bool>(script);
-
-            if (!success)
+            if (string.IsNullOrWhiteSpace(stylePrompt))
             {
-                _logger.LogWarning("Could not find style prompt input field");
+                _logger.LogWarning("[STYLES] Style prompt is null or empty, skipping");
+                return false;
             }
 
-            return success;
+            // Combined find-and-set script to avoid race conditions
+            // This script finds the styles textarea, sets the value, and triggers React state update in one atomic operation
+            var escapedValue = stylePrompt
+                .Replace("\\", "\\\\")
+                .Replace("\"", "\\\"")
+                .Replace("\n", "\\n")
+                .Replace("\r", "\\r")
+                .Replace("\t", "\\t");
+
+            // Using verbatim string without interpolation to avoid escaping issues with JavaScript
+            var combinedScript = @"
+                (function() {
+                    const valueToSet = """ + escapedValue + @""";
+                    console.log('[STYLES] Starting styles insertion, value length: ' + valueToSet.length);
+
+                    // Find all visible textareas sorted by vertical position
+                    const allTextareas = Array.from(document.querySelectorAll('textarea'))
+                        .map(el => ({ el, rect: el.getBoundingClientRect() }))
+                        .filter(item => item.rect.height > 0 && item.rect.width > 0)
+                        .sort((a, b) => a.rect.top - b.rect.top);
+
+                    console.log('[STYLES] Found ' + allTextareas.length + ' visible textareas');
+
+                    if (allTextareas.length === 0) {
+                        return { success: false, error: 'No textareas found on page', step: 'find' };
+                    }
+
+                    // Log all textareas for debugging
+                    allTextareas.forEach((item, i) => {
+                        const marker = item.el.getAttribute('data-jubilee-field') || 'none';
+                        console.log('[STYLES] Textarea ' + i + ': top=' + Math.round(item.rect.top) +
+                            ', height=' + Math.round(item.rect.height) +
+                            ', placeholder=' + (item.el.placeholder || 'none').substring(0, 40) +
+                            ', marker=' + marker);
+                    });
+
+                    let stylesTextarea = null;
+                    let foundBy = 'unknown';
+
+                    // Method 1: Find by placeholder (expanded list of possible placeholders)
+                    const styleKeywords = ['style', 'genre', 'vibe', 'describe', 'music', 'sound', 'prompt', 'tags'];
+                    for (const item of allTextareas) {
+                        const ph = (item.el.placeholder || '').toLowerCase();
+                        for (const keyword of styleKeywords) {
+                            if (ph.includes(keyword)) {
+                                stylesTextarea = item.el;
+                                foundBy = 'placeholder: ' + ph;
+                                console.log('[STYLES] Found by placeholder keyword: ' + keyword);
+                                break;
+                            }
+                        }
+                        if (stylesTextarea) break;
+                    }
+
+                    // Method 2: Find by aria-label or data attributes
+                    if (!stylesTextarea) {
+                        for (const item of allTextareas) {
+                            const ariaLabel = (item.el.getAttribute('aria-label') || '').toLowerCase();
+                            const dataTestId = (item.el.getAttribute('data-testid') || '').toLowerCase();
+                            if (ariaLabel.includes('style') || ariaLabel.includes('genre') ||
+                                dataTestId.includes('style') || dataTestId.includes('prompt')) {
+                                stylesTextarea = item.el;
+                                foundBy = 'aria/data: ' + (ariaLabel || dataTestId);
+                                console.log('[STYLES] Found by aria-label/data-testid');
+                                break;
+                            }
+                        }
+                    }
+
+                    // Method 3: Find by parent label text
+                    if (!stylesTextarea) {
+                        for (const item of allTextareas) {
+                            const parent = item.el.closest('div, section, fieldset');
+                            if (parent) {
+                                const labelEl = parent.querySelector('label, span, h3, h4');
+                                if (labelEl) {
+                                    const labelText = (labelEl.textContent || '').toLowerCase();
+                                    if (labelText.includes('style') || labelText.includes('genre') || labelText.includes('describe')) {
+                                        stylesTextarea = item.el;
+                                        foundBy = 'parent label: ' + labelText.substring(0, 30);
+                                        console.log('[STYLES] Found by parent label: ' + labelText);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Method 4: Use the FIRST textarea that is NOT already marked as lyrics
+                    // In Suno Custom mode, styles is typically the first/top textarea
+                    if (!stylesTextarea) {
+                        for (const item of allTextareas) {
+                            const marker = item.el.getAttribute('data-jubilee-field');
+                            if (marker !== 'lyrics') {
+                                stylesTextarea = item.el;
+                                foundBy = 'first available (position: ' + Math.round(item.rect.top) + ')';
+                                console.log('[STYLES] Using first non-lyrics textarea by position');
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!stylesTextarea) {
+                        console.log('[STYLES] ERROR: No styles textarea found');
+                        return { success: false, error: 'No styles textarea found', step: 'find' };
+                    }
+
+                    console.log('[STYLES] Selected textarea found by: ' + foundBy);
+
+                    // Mark this element for tracking
+                    stylesTextarea.setAttribute('data-jubilee-field', 'styles');
+
+                    // Focus and clear existing value
+                    stylesTextarea.focus();
+                    stylesTextarea.select();
+
+                    try {
+                        // Get the native setter to bypass React's controlled component
+                        const nativeSetter = Object.getOwnPropertyDescriptor(
+                            window.HTMLTextAreaElement.prototype, 'value'
+                        ).set;
+
+                        // Set value using native setter
+                        nativeSetter.call(stylesTextarea, valueToSet);
+
+                        // CRITICAL: Create and dispatch InputEvent (not just Event) for React 17+
+                        // React uses a synthetic event system that listens for InputEvent specifically
+                        const inputEvent = new InputEvent('input', {
+                            bubbles: true,
+                            cancelable: true,
+                            inputType: 'insertText',
+                            data: valueToSet
+                        });
+                        stylesTextarea.dispatchEvent(inputEvent);
+
+                        // Also dispatch standard events for fallback
+                        stylesTextarea.dispatchEvent(new Event('change', { bubbles: true }));
+
+                        // Trigger React's internal onChange by simulating keyboard activity
+                        stylesTextarea.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'a' }));
+                        stylesTextarea.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: 'a' }));
+
+                        // Small delay then blur to trigger onBlur handlers
+                        setTimeout(() => {
+                            stylesTextarea.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+                        }, 50);
+
+                        // Verify the value was set
+                        const actualValue = stylesTextarea.value;
+                        const valueSet = actualValue === valueToSet;
+
+                        console.log('[STYLES] Value verification: expected=' + valueToSet.length + ' chars, actual=' + actualValue.length + ' chars, match=' + valueSet);
+                        console.log('[STYLES] Actual value preview: ' + actualValue.substring(0, 50));
+
+                        return {
+                            success: valueSet,
+                            foundBy: foundBy,
+                            actualValue: actualValue.substring(0, 100),
+                            expectedLength: valueToSet.length,
+                            actualLength: actualValue.length,
+                            step: 'set'
+                        };
+                    } catch (e) {
+                        console.log('[STYLES] Error setting value: ' + e.message);
+                        return { success: false, error: e.message, step: 'set' };
+                    }
+                })();
+            ";
+
+            var result = await ExecuteScriptAsync<JsonElement>(combinedScript);
+            _logger.LogInformation("[STYLES] Combined script result: {Result}", result.ToString());
+
+            if (result.TryGetProperty("success", out var successProp) && successProp.GetBoolean())
+            {
+                var foundBy = result.TryGetProperty("foundBy", out var fb) ? fb.GetString() : "unknown";
+                _logger.LogInformation("[STYLES] Successfully inserted styles (found by: {FoundBy})", foundBy);
+                return true;
+            }
+            else
+            {
+                var error = result.TryGetProperty("error", out var ep) ? ep.GetString() : "Unknown error";
+                var step = result.TryGetProperty("step", out var sp) ? sp.GetString() : "unknown";
+                var actualLen = result.TryGetProperty("actualLength", out var al) ? al.GetInt32() : -1;
+                var expectedLen = result.TryGetProperty("expectedLength", out var el) ? el.GetInt32() : -1;
+                _logger.LogWarning("[STYLES] Failed at step '{Step}': {Error}, actualLen={Actual}, expectedLen={Expected}",
+                    step, error, actualLen, expectedLen);
+                return false;
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to enter style prompt");
-            ErrorOccurred?.Invoke(this, $"Failed to enter style prompt: {ex.Message}");
+            _logger.LogError(ex, "[STYLES] Exception while entering styles");
+            ErrorOccurred?.Invoke(this, $"Failed to enter styles: {ex.Message}");
             return false;
         }
     }
@@ -376,6 +689,449 @@ public class SunoAutomationService : ISunoAutomationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to set instrumental mode");
+            return false;
+        }
+    }
+
+    public async Task<bool> EnterTitleAsync(string title)
+    {
+        EnsureInitialized();
+
+        try
+        {
+            _logger.LogInformation("[TITLE] Starting to enter title: {Title}", title);
+
+            // Single unified script that finds the element AND sets the value atomically
+            // This prevents the race condition where activeElement changes between find and set
+            var script = $@"
+                (function() {{
+                    console.log('[TITLE] Starting title insertion');
+
+                    // Find all inputs that could be the title field
+                    const allInputs = Array.from(document.querySelectorAll('input[type=""text""], input:not([type])'));
+
+                    console.log('[TITLE] Found ' + allInputs.length + ' input fields');
+
+                    let titleField = null;
+
+                    // IMPORTANT: Filter out any element already marked
+                    const availableFields = allInputs.filter(el => {{
+                        const marker = el.getAttribute('data-jubilee-field');
+                        if (marker) {{
+                            console.log('[TITLE] Skipping element marked as: ' + marker);
+                            return false;
+                        }}
+                        return true;
+                    }});
+
+                    console.log('[TITLE] ' + availableFields.length + ' fields available after filtering');
+
+                    // Method 1: Find by placeholder containing 'title', 'name', or 'song'
+                    for (const el of availableFields) {{
+                        const placeholder = (el.placeholder || el.getAttribute('placeholder') || '').toLowerCase();
+                        console.log('[TITLE] Checking input with placeholder: ' + placeholder);
+                        if (placeholder.includes('title') || placeholder.includes('song name') ||
+                            placeholder.includes('name your') || placeholder.includes('track name')) {{
+                            titleField = el;
+                            console.log('[TITLE] Found by placeholder: ' + placeholder);
+                            break;
+                        }}
+                    }}
+
+                    // Method 2: Look for input near a 'Title' label
+                    if (!titleField) {{
+                        const labels = document.querySelectorAll('label, span, div, p');
+                        for (const label of labels) {{
+                            const text = (label.textContent || '').trim().toLowerCase();
+                            if ((text === 'title' || text.startsWith('title') || text.includes('song name')) && text.length < 30) {{
+                                // Look for input in same container or nearby
+                                const container = label.closest('div[class]') || label.parentElement;
+                                if (container) {{
+                                    const field = container.querySelector('input[type=""text""], input:not([type])');
+                                    if (field && !field.getAttribute('data-jubilee-field')) {{
+                                        titleField = field;
+                                        console.log('[TITLE] Found near label: ' + text);
+                                        break;
+                                    }}
+                                }}
+                            }}
+                        }}
+                    }}
+
+                    // Method 3: Title is often at the bottom - look for unmarked input in later DOM position
+                    if (!titleField && availableFields.length > 0) {{
+                        // Use the last available input (title often at bottom of form)
+                        titleField = availableFields[availableFields.length - 1];
+                        console.log('[TITLE] Using last available input field');
+                    }}
+
+                    if (!titleField) {{
+                        console.log('[TITLE] No title field found - this may be intentional as title is optional');
+                        return {{ success: false, error: 'No title field found', fieldCount: availableFields.length }};
+                    }}
+
+                    // Mark this element as title field for tracking
+                    titleField.setAttribute('data-jubilee-field', 'title');
+
+                    // Now set the value using React-compatible method
+                    try {{
+                        titleField.focus();
+                        titleField.select();
+
+                        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+                            window.HTMLInputElement.prototype,
+                            'value'
+                        ).set;
+                        nativeInputValueSetter.call(titleField, {JsonSerializer.Serialize(title)});
+
+                        titleField.dispatchEvent(new Event('input', {{ bubbles: true, cancelable: true }}));
+                        titleField.dispatchEvent(new Event('change', {{ bubbles: true, cancelable: true }}));
+
+                        // Blur to trigger any onBlur handlers
+                        titleField.blur();
+
+                        console.log('[TITLE] Successfully set title value');
+                        return {{ success: true, placeholder: titleField.placeholder || 'none' }};
+                    }} catch (e) {{
+                        console.log('[TITLE] ERROR setting value: ' + e.message);
+                        return {{ success: false, error: e.message }};
+                    }}
+                }})();
+            ";
+
+            var result = await ExecuteScriptAsync<JsonElement>(script);
+
+            if (result.TryGetProperty("success", out var successProp) && successProp.GetBoolean())
+            {
+                _logger.LogInformation("[TITLE] Successfully inserted title");
+                return true;
+            }
+            else
+            {
+                var error = result.TryGetProperty("error", out var errorProp) ? errorProp.GetString() : "Unknown error";
+                _logger.LogWarning("[TITLE] Failed to insert title: {Error}", error);
+                // Don't invoke error - title is optional
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[TITLE] Exception while entering title");
+            ErrorOccurred?.Invoke(this, $"Failed to enter title: {ex.Message}");
+            return false;
+        }
+    }
+
+    public async Task<bool> SelectOrCreateWorkspaceAsync(string workspaceName)
+    {
+        EnsureInitialized();
+
+        try
+        {
+            _logger.LogInformation("[WORKSPACE] Starting workspace selection/creation for: {Name}", workspaceName);
+
+            // Step 1: Click on workspace button to open the workspace panel
+            var clickWorkspaceScript = @"
+                (function() {
+                    console.log('[WORKSPACE] Looking for workspace button');
+
+                    // Helper function to find clickable element
+                    function findClickableParent(el) {
+                        let current = el;
+                        for (let i = 0; i < 5 && current; i++) {
+                            if (current.onclick || current.tagName === 'BUTTON' ||
+                                current.getAttribute('role') === 'button' ||
+                                getComputedStyle(current).cursor === 'pointer') {
+                                return current;
+                            }
+                            current = current.parentElement;
+                        }
+                        return el;
+                    }
+
+                    // Find the workspace button (shows 'My Workspace' or similar)
+                    const allElements = document.querySelectorAll('button, [role=""button""], div, span');
+                    for (const el of allElements) {
+                        const text = (el.textContent || '').trim();
+                        if ((text.includes('My Workspace') || text === 'Workspace' ||
+                             (text.includes('Workspace') && text.length < 40)) &&
+                            !text.includes('Create') && !text.includes('New')) {
+                            const clickable = findClickableParent(el);
+                            clickable.click();
+                            console.log('[WORKSPACE] Clicked workspace button: ' + text);
+                            return { success: true, clicked: text };
+                        }
+                    }
+
+                    console.log('[WORKSPACE] ERROR: Workspace button not found');
+                    return { success: false, error: 'Workspace button not found' };
+                })();
+            ";
+
+            var clickResult = await ExecuteScriptAsync<JsonElement>(clickWorkspaceScript);
+            if (!clickResult.TryGetProperty("success", out var clickSuccess) || !clickSuccess.GetBoolean())
+            {
+                _logger.LogWarning("[WORKSPACE] Could not find workspace button");
+                return false;
+            }
+
+            await Task.Delay(800); // Wait for panel to open
+
+            // Step 2: Look for existing workspace or Create New Workspace option
+            var targetNameLower = workspaceName.ToLowerInvariant().Trim();
+            var findWorkspaceScript = $@"
+                (function() {{
+                    console.log('[WORKSPACE] Looking for workspace or Create New option');
+                    const targetName = '{EscapeJsString(targetNameLower)}';
+
+                    // Helper function
+                    function findClickableParent(el) {{
+                        let current = el;
+                        for (let i = 0; i < 5 && current; i++) {{
+                            if (current.onclick || current.tagName === 'BUTTON' ||
+                                current.getAttribute('role') === 'button' ||
+                                getComputedStyle(current).cursor === 'pointer') {{
+                                return current;
+                            }}
+                            current = current.parentElement;
+                        }}
+                        return el;
+                    }}
+
+                    const allElements = document.querySelectorAll('div, span, button, a, li');
+                    let createNewFound = false;
+
+                    for (const el of allElements) {{
+                        const text = (el.textContent || '').trim();
+                        const lowerText = text.toLowerCase();
+                        const firstLine = text.split('\\n')[0].trim().toLowerCase();
+
+                        // Check for exact workspace match
+                        if (firstLine === targetName && !lowerText.includes('create')) {{
+                            const clickable = findClickableParent(el);
+                            clickable.click();
+                            console.log('[WORKSPACE] Found and clicked existing workspace: ' + text);
+                            return {{ success: true, action: 'selected', workspace: firstLine }};
+                        }}
+
+                        // Remember if we found Create New Workspace
+                        if (lowerText.includes('create') && lowerText.includes('workspace')) {{
+                            createNewFound = true;
+                        }}
+                    }}
+
+                    // If workspace not found, click Create New Workspace
+                    if (createNewFound) {{
+                        for (const el of allElements) {{
+                            const text = (el.textContent || '').trim().toLowerCase();
+                            if (text.includes('create') && text.includes('workspace')) {{
+                                const clickable = findClickableParent(el);
+                                clickable.click();
+                                console.log('[WORKSPACE] Clicked Create New Workspace');
+                                return {{ success: true, action: 'create_new' }};
+                            }}
+                        }}
+                    }}
+
+                    return {{ success: false, error: 'Neither workspace nor Create New found' }};
+                }})();
+            ";
+
+            var findResult = await ExecuteScriptAsync<JsonElement>(findWorkspaceScript);
+            if (!findResult.TryGetProperty("success", out var findSuccess) || !findSuccess.GetBoolean())
+            {
+                _logger.LogWarning("[WORKSPACE] Could not find workspace or Create New option");
+                return false;
+            }
+
+            // Check if we selected existing workspace
+            if (findResult.TryGetProperty("action", out var action) && action.GetString() == "selected")
+            {
+                _logger.LogInformation("[WORKSPACE] Selected existing workspace");
+                return true;
+            }
+
+            // If we clicked Create New, we need to type the name
+            await Task.Delay(600); // Wait for dialog
+
+            // Step 3: Focus on the input field
+            var focusInputScript = @"
+                (function() {
+                    console.log('[WORKSPACE] Looking for name input field');
+
+                    // Try to find and focus the input
+                    const inputs = document.querySelectorAll('input[type=""text""], input:not([type])');
+                    for (const inp of inputs) {
+                        const rect = inp.getBoundingClientRect();
+                        if (rect.width > 0 && rect.height > 0) {
+                            inp.focus();
+                            inp.select();
+                            console.log('[WORKSPACE] Focused input field');
+                            return { success: true };
+                        }
+                    }
+
+                    return { success: false, error: 'No input field found' };
+                })();
+            ";
+
+            var focusResult = await ExecuteScriptAsync<JsonElement>(focusInputScript);
+            if (!focusResult.TryGetProperty("success", out var focusSuccess) || !focusSuccess.GetBoolean())
+            {
+                _logger.LogWarning("[WORKSPACE] Could not focus input field");
+                return false;
+            }
+
+            await Task.Delay(100);
+
+            // Step 4: Use SendKeys to type the workspace name
+            _logger.LogInformation("[WORKSPACE] Using SendKeys to type workspace name");
+
+            // Escape special SendKeys characters
+            var escapedName = workspaceName
+                .Replace("+", "{+}")
+                .Replace("^", "{^}")
+                .Replace("%", "{%}")
+                .Replace("~", "{~}")
+                .Replace("(", "{(}")
+                .Replace(")", "{)}")
+                .Replace("{", "{{}}")
+                .Replace("}", "{}}");
+
+            SendKeys.SendWait(escapedName);
+            await Task.Delay(300);
+
+            // Step 5: Press Enter to confirm
+            SendKeys.SendWait("{ENTER}");
+            _logger.LogInformation("[WORKSPACE] Pressed Enter to confirm workspace creation");
+
+            await Task.Delay(500);
+
+            _logger.LogInformation("[WORKSPACE] Successfully created workspace '{Name}'", workspaceName);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[WORKSPACE] Exception while selecting/creating workspace");
+            ErrorOccurred?.Invoke(this, $"Failed to set workspace: {ex.Message}");
+            return false;
+        }
+    }
+
+    public Task<bool> IsOnCreatePageAsync()
+    {
+        EnsureInitialized();
+
+        try
+        {
+            var currentUrl = _webView?.Source?.ToString() ?? "";
+            return Task.FromResult(currentUrl.Contains("suno.com/create", StringComparison.OrdinalIgnoreCase));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to check if on create page");
+            return Task.FromResult(false);
+        }
+    }
+
+    public async Task<bool> InsertIntoCreateFormAsync(string? title, string? style, string? lyrics, bool isInstrumental)
+    {
+        EnsureInitialized();
+
+        try
+        {
+            // First check if we're on the create page
+            if (!await IsOnCreatePageAsync())
+            {
+                _logger.LogWarning("[FORM] Not on create page, cannot insert form data");
+                return false;
+            }
+
+            _logger.LogInformation("[FORM] Inserting data into create form - Title: '{Title}', Style: '{Style}' ({StyleLen} chars), Lyrics: ({LyricsLen} chars), Instrumental: {Instrumental}",
+                title ?? "(empty)", style ?? "(empty)", style?.Length ?? 0, lyrics?.Length ?? 0, isInstrumental);
+
+            var success = true;
+
+            // Clear any previous markers first
+            _logger.LogDebug("[FORM] Clearing previous field markers");
+            await ExecuteScriptAsync<object>(@"
+                document.querySelectorAll('[data-jubilee-field]').forEach(el => el.removeAttribute('data-jubilee-field'));
+            ");
+
+            // Wait for DOM to stabilize after clearing markers
+            await Task.Delay(100);
+
+            // Insert STYLES FIRST (top textarea in Suno Custom mode)
+            if (!string.IsNullOrWhiteSpace(style))
+            {
+                _logger.LogInformation("[FORM] Inserting style: '{Style}'", style);
+                var styleResult = await EnterStylePromptAsync(style);
+                if (!styleResult)
+                {
+                    _logger.LogWarning("[FORM] Failed to insert style");
+                    success = false;
+                }
+                else
+                {
+                    _logger.LogInformation("[FORM] Style inserted successfully");
+                }
+                await Task.Delay(300); // Human-like delay between fields
+            }
+            else
+            {
+                _logger.LogDebug("[FORM] Style is empty, skipping");
+            }
+
+            // Insert LYRICS SECOND (bottom textarea in Suno Custom mode)
+            if (!isInstrumental && !string.IsNullOrWhiteSpace(lyrics))
+            {
+                _logger.LogInformation("[FORM] Inserting lyrics ({Length} chars)", lyrics.Length);
+                var lyricsResult = await EnterLyricsAsync(lyrics);
+                if (!lyricsResult)
+                {
+                    _logger.LogWarning("[FORM] Failed to insert lyrics");
+                    success = false;
+                }
+                else
+                {
+                    _logger.LogInformation("[FORM] Lyrics inserted successfully");
+                }
+                await Task.Delay(300); // Human-like delay between fields
+            }
+            else
+            {
+                _logger.LogDebug("[FORM] Lyrics skipped (instrumental={IsInstrumental}, lyrics empty={IsEmpty})",
+                    isInstrumental, string.IsNullOrWhiteSpace(lyrics));
+            }
+
+            // Insert title LAST (usually at the bottom of create form, input field)
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                _logger.LogInformation("[FORM] Inserting title: '{Title}'", title);
+                var titleResult = await EnterTitleAsync(title);
+                if (!titleResult)
+                {
+                    _logger.LogWarning("[FORM] Failed to insert title - field may not exist on this page");
+                    // Don't fail the whole operation if title fails, it's optional
+                }
+                else
+                {
+                    _logger.LogInformation("[FORM] Title inserted successfully");
+                }
+                await Task.Delay(200);
+            }
+
+            // Set instrumental mode last
+            _logger.LogDebug("[FORM] Setting instrumental mode: {Instrumental}", isInstrumental);
+            await SetInstrumentalOnlyAsync(isInstrumental);
+
+            _logger.LogInformation("[FORM] Form data insertion completed, success: {Success}", success);
+            return success;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[FORM] Failed to insert into create form");
+            ErrorOccurred?.Invoke(this, $"Failed to insert form data: {ex.Message}");
             return false;
         }
     }
