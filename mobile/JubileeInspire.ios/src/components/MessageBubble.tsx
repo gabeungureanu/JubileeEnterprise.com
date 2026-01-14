@@ -255,16 +255,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   };
 
   const handleReadAloud = async () => {
-    setShowMoreMenu(false);
-
-    // If already speaking, stop it
+    // If already speaking, stop it (keep menu open)
     if (isSpeaking) {
       await Speech.stop();
       setIsSpeaking(false);
       return;
     }
 
-    // Start speaking
+    // Start speaking (keep menu open so user can stop from same menu)
     setIsSpeaking(true);
 
     Speech.speak(message.content, {
@@ -277,6 +275,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       onDone: () => {
         console.log('[MessageBubble] Speech completed');
         setIsSpeaking(false);
+        // Close menu when speech completes naturally
+        setShowMoreMenu(false);
       },
       onStopped: () => {
         console.log('[MessageBubble] Speech stopped');
@@ -285,6 +285,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       onError: (error) => {
         console.error('[MessageBubble] Speech error:', error);
         setIsSpeaking(false);
+        setShowMoreMenu(false);
         Alert.alert('Error', 'Failed to read message aloud. Please try again.');
       },
     });
