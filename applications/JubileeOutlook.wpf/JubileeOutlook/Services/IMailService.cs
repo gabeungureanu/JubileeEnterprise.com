@@ -10,7 +10,7 @@ public interface IMailService
     Task DeleteMessageAsync(string messageId);
     Task MoveMessageAsync(string messageId, string targetFolderId);
     Task MarkAsReadAsync(string messageId, bool isRead);
-    Task ToggleFlagAsync(string messageId);
+    Task ToggleFlagAsync(string messageId, bool? isFlagged = null);
     List<MailFolder> GetFolders();
     Task<List<MailFolder>> GetFoldersAsync();
     Task<List<EmailMessage>> SearchMessagesAsync(string query);

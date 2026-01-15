@@ -230,12 +230,12 @@ public class MockMailService : IMailService
         return Task.CompletedTask;
     }
 
-    public Task ToggleFlagAsync(string messageId)
+    public Task ToggleFlagAsync(string messageId, bool? isFlagged = null)
     {
         var message = _messages.FirstOrDefault(m => m.Id == messageId);
         if (message != null)
         {
-            message.IsFlagged = !message.IsFlagged;
+            message.IsFlagged = isFlagged ?? !message.IsFlagged;
         }
         return Task.CompletedTask;
     }

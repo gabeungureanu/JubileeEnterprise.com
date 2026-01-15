@@ -268,8 +268,9 @@ public partial class MainViewModel : ObservableObject
     {
         if (SelectedMessage == null) return;
 
-        await _mailService.ToggleFlagAsync(SelectedMessage.Id);
-        SelectedMessage.IsFlagged = !SelectedMessage.IsFlagged;
+        var newFlagState = !SelectedMessage.IsFlagged;
+        await _mailService.ToggleFlagAsync(SelectedMessage.Id, newFlagState);
+        SelectedMessage.IsFlagged = newFlagState;
     }
 
     [RelayCommand]

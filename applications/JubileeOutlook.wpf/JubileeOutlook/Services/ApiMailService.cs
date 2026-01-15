@@ -144,12 +144,12 @@ public class ApiMailService : IMailService
     }
 
     /// <summary>
-    /// Toggles the flag status of a message
-    /// PUT /api/outlook/messages/{id}/flag
+    /// Toggles or sets the flag status of a message
+    /// PATCH /api/v1/outlook/messages/{id} with is_flagged field
     /// </summary>
-    public async Task ToggleFlagAsync(string messageId)
+    public async Task ToggleFlagAsync(string messageId, bool? isFlagged = null)
     {
-        await ToggleFlagWithResultAsync(messageId);
+        await ToggleFlagWithResultAsync(messageId, isFlagged);
     }
 
     /// <summary>
@@ -577,7 +577,7 @@ public class ApiMailService : IMailService
 
     /// <summary>
     /// Moves a message to a different folder with detailed result
-    /// PUT /api/outlook/messages/{id}/move
+    /// PATCH /api/v1/outlook/messages/{id} with folder_id field
     /// </summary>
     public async Task<MailServiceResult<bool>> MoveMessageWithResultAsync(string messageId, string targetFolderId)
     {
@@ -603,12 +603,12 @@ public class ApiMailService : IMailService
                 };
             }
 
-            var endpoint = $"outlook/messages/{Uri.EscapeDataString(messageId)}/move";
-            var payload = new { targetFolderId };
+            var endpoint = $"outlook/messages/{Uri.EscapeDataString(messageId)}";
+            var payload = new { folder_id = targetFolderId };
 
-            System.Diagnostics.Debug.WriteLine($"[ApiMailService] PUT {endpoint} -> {targetFolderId}");
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] PATCH {endpoint} -> folder_id={targetFolderId}");
 
-            var response = await _httpClientFactory.PutAsync(ApiEndpoint.InspireContinuum, endpoint, payload);
+            var response = await _httpClientFactory.PatchAsync(ApiEndpoint.InspireContinuum, endpoint, payload);
 
             if (response.IsSuccessStatusCode)
             {
@@ -645,7 +645,7 @@ public class ApiMailService : IMailService
 
     /// <summary>
     /// Marks a message as read/unread with detailed result
-    /// PUT /api/outlook/messages/{id}/read
+    /// PATCH /api/v1/outlook/messages/{id} with is_read field
     /// </summary>
     public async Task<MailServiceResult<bool>> MarkAsReadWithResultAsync(string messageId, bool isRead)
     {
@@ -661,12 +661,12 @@ public class ApiMailService : IMailService
                 };
             }
 
-            var endpoint = $"outlook/messages/{Uri.EscapeDataString(messageId)}/read";
-            var payload = new { isRead };
+            var endpoint = $"outlook/messages/{Uri.EscapeDataString(messageId)}";
+            var payload = new { is_read = isRead };
 
-            System.Diagnostics.Debug.WriteLine($"[ApiMailService] PUT {endpoint} -> isRead={isRead}");
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] PATCH {endpoint} -> is_read={isRead}");
 
-            var response = await _httpClientFactory.PutAsync(ApiEndpoint.InspireContinuum, endpoint, payload);
+            var response = await _httpClientFactory.PatchAsync(ApiEndpoint.InspireContinuum, endpoint, payload);
 
             if (response.IsSuccessStatusCode)
             {
@@ -702,10 +702,11 @@ public class ApiMailService : IMailService
     }
 
     /// <summary>
-    /// Toggles the flag status with detailed result
-    /// PUT /api/outlook/messages/{id}/flag
+    /// Toggles or sets the flag status with detailed result
+    /// PATCH /api/v1/outlook/messages/{id} with is_flagged field
+    /// If isFlagged is null, fetches current state and toggles it
     /// </summary>
-    public async Task<MailServiceResult<bool>> ToggleFlagWithResultAsync(string messageId)
+    public async Task<MailServiceResult<bool>> ToggleFlagWithResultAsync(string messageId, bool? isFlagged = null)
     {
         try
         {
@@ -719,14 +720,38 @@ public class ApiMailService : IMailService
                 };
             }
 
-            var endpoint = $"outlook/messages/{Uri.EscapeDataString(messageId)}/flag";
-            System.Diagnostics.Debug.WriteLine($"[ApiMailService] PUT {endpoint}");
+            // If no flag value provided, we need to get current state and toggle
+            bool newFlagValue;
+            if (isFlagged.HasValue)
+            {
+                newFlagValue = isFlagged.Value;
+            }
+            else
+            {
+                // Fetch current message to get its flag state
+                var currentMessage = await GetMessageByIdAsync(messageId);
+                if (currentMessage == null)
+                {
+                    return new MailServiceResult<bool>
+                    {
+                        Success = false,
+                        Error = "Message not found",
+                        Data = false
+                    };
+                }
+                newFlagValue = !currentMessage.IsFlagged;
+            }
 
-            var response = await _httpClientFactory.PutAsync(ApiEndpoint.InspireContinuum, endpoint, new { });
+            var endpoint = $"outlook/messages/{Uri.EscapeDataString(messageId)}";
+            var payload = new { is_flagged = newFlagValue };
+
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] PATCH {endpoint} -> is_flagged={newFlagValue}");
+
+            var response = await _httpClientFactory.PatchAsync(ApiEndpoint.InspireContinuum, endpoint, payload);
 
             if (response.IsSuccessStatusCode)
             {
-                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Toggled flag for message {messageId}");
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Set flag for message {messageId} to {newFlagValue}");
                 return new MailServiceResult<bool>
                 {
                     Success = true,
