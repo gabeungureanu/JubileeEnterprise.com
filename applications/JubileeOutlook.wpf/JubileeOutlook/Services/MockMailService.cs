@@ -246,6 +246,12 @@ public class MockMailService : IMailService
         return _folders;
     }
 
+    public Task<List<MailFolder>> GetFoldersAsync()
+    {
+        UpdateFolderCounts();
+        return Task.FromResult(_folders);
+    }
+
     public Task<List<EmailMessage>> SearchMessagesAsync(string query)
     {
         var results = _messages.Where(m =>

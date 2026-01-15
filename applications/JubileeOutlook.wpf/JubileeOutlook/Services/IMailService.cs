@@ -12,5 +12,6 @@ public interface IMailService
     Task MarkAsReadAsync(string messageId, bool isRead);
     Task ToggleFlagAsync(string messageId);
     List<MailFolder> GetFolders();
+    Task<List<MailFolder>> GetFoldersAsync();
     Task<List<EmailMessage>> SearchMessagesAsync(string query);
 }

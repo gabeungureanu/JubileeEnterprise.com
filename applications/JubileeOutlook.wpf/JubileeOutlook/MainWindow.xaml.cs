@@ -108,9 +108,10 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        // Initialize services and ViewModels
-        var mailService = new MockMailService();
-        var calendarService = new MockCalendarService();
+        // Initialize services and ViewModels using ServiceConfiguration
+        // ServiceConfiguration determines whether to use API or Mock services based on config
+        var mailService = ServiceConfiguration.GetMailService();
+        var calendarService = ServiceConfiguration.GetCalendarService();
         _mainViewModel = new MainViewModel(mailService, calendarService);
 
         // Create ApplicationViewModel and wire it up

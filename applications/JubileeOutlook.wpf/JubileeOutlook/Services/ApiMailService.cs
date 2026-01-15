@@ -78,6 +78,16 @@ public class ApiMailService : IMailService
     }
 
     /// <summary>
+    /// Gets mail folders asynchronously
+    /// GET /api/outlook/folders
+    /// </summary>
+    public async Task<List<MailFolder>> GetFoldersAsync()
+    {
+        var result = await GetFoldersWithResultAsync();
+        return result.Data ?? new List<MailFolder>();
+    }
+
+    /// <summary>
     /// Gets messages for a folder
     /// GET /api/outlook/messages?folderId={folderId}
     /// </summary>
