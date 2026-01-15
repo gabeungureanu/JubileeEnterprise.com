@@ -353,6 +353,26 @@ public class IsTodayToForegroundConverter : IValueConverter
 }
 
 /// <summary>
+/// Converts a DateTime to check if it's today and returns appropriate font weight
+/// </summary>
+public class IsTodayToFontWeightConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is DateTime date)
+        {
+            return date.Date == DateTime.Today ? FontWeights.Bold : FontWeights.Normal;
+        }
+        return FontWeights.Normal;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
 /// Adds days to a DateTime value
 /// </summary>
 public class AddDaysConverter : IValueConverter
@@ -481,6 +501,33 @@ public class MiniCalendarDayBackgroundConverter : IValueConverter
             }
         }
         return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Transparent);
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Converts an EventCategory to its corresponding color brush
+/// </summary>
+public class EventColorConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is JubileeOutlook.Models.EventCategory category)
+        {
+            return category switch
+            {
+                JubileeOutlook.Models.EventCategory.Business => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 120, 212)),
+                JubileeOutlook.Models.EventCategory.Personal => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(16, 124, 16)),
+                JubileeOutlook.Models.EventCategory.Holiday => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(209, 52, 56)),
+                JubileeOutlook.Models.EventCategory.Birthday => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 189, 89)),
+                _ => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(136, 136, 136))
+            };
+        }
+        return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(136, 136, 136));
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

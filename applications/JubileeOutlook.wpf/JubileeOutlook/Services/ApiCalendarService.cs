@@ -1,147 +1,561 @@
-using JubileeOutlook.Models;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using JubileeOutlook.Models;
 
 namespace JubileeOutlook.Services;
 
+/// <summary>
+/// API service for calendar operations via InspireContinuum API
+/// Uses HttpClientFactory for centralized HTTP client management with auto-auth
+/// </summary>
 public class ApiCalendarService : ICalendarService
 {
-    private readonly HttpClient _httpClient;
-    private readonly string _baseUrl;
-    private readonly string? _userId;
+    private static ApiCalendarService? _instance;
+    private static readonly object _lock = new();
+
+    private readonly HttpClientFactory _httpClientFactory;
+    private readonly ConfigurationService _config;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public ApiCalendarService(string? baseUrl = null, string? userId = null)
+    /// <summary>
+    /// Singleton instance of the calendar service
+    /// </summary>
+    public static ApiCalendarService Instance
     {
-        _baseUrl = baseUrl ?? Environment.GetEnvironmentVariable("CONTINUUM_API_URL") ?? "https://inspirecontinuum.com/api";
-        _userId = userId ?? Environment.GetEnvironmentVariable("JUBILEE_USER_ID");
-
-        _httpClient = new HttpClient
+        get
         {
-            BaseAddress = new Uri(_baseUrl),
-            Timeout = TimeSpan.FromSeconds(30)
-        };
+            if (_instance == null)
+            {
+                lock (_lock)
+                {
+                    _instance ??= new ApiCalendarService();
+                }
+            }
+            return _instance;
+        }
+    }
+
+    public ApiCalendarService()
+    {
+        _httpClientFactory = HttpClientFactory.Instance;
+        _config = ConfigurationService.Instance;
 
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             PropertyNameCaseInsensitive = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
         };
+
+        System.Diagnostics.Debug.WriteLine($"ApiCalendarService initialized with HttpClientFactory");
+        System.Diagnostics.Debug.WriteLine($"  InspireContinuum API: {_config.Api.InspireContinuum.BaseUrl}");
     }
 
+    // Legacy constructor for compatibility
+    public ApiCalendarService(string? baseUrl = null, string? userId = null) : this()
+    {
+    }
+
+    #region ICalendarService Implementation
+
+    /// <summary>
+    /// Gets calendar events for a date range
+    /// GET /api/outlook/events
+    /// </summary>
     public async Task<List<CalendarEvent>> GetEventsAsync(DateTime startDate, DateTime endDate)
     {
-        try
-        {
-            var response = await _httpClient.GetAsync(
-                $"/outlook/events?userId={_userId}&startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                Console.WriteLine($"[ApiCalendarService] Failed to get events: {response.StatusCode}");
-                return new List<CalendarEvent>();
-            }
-
-            var apiEvents = await response.Content.ReadFromJsonAsync<List<CalendarEventDto>>(_jsonOptions);
-            return apiEvents?.Select(MapToCalendarEvent).ToList() ?? new List<CalendarEvent>();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ApiCalendarService] Error getting events: {ex.Message}");
-            return new List<CalendarEvent>();
-        }
+        var result = await GetEventsWithResultAsync(startDate, endDate);
+        return result.Data ?? new List<CalendarEvent>();
     }
 
+    /// <summary>
+    /// Gets a single calendar event by ID
+    /// GET /api/outlook/events/{id}
+    /// </summary>
     public async Task<CalendarEvent?> GetEventByIdAsync(string eventId)
     {
-        try
-        {
-            var response = await _httpClient.GetAsync($"/outlook/events/{eventId}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                Console.WriteLine($"[ApiCalendarService] Failed to get event {eventId}: {response.StatusCode}");
-                return null;
-            }
-
-            var apiEvent = await response.Content.ReadFromJsonAsync<CalendarEventDto>(_jsonOptions);
-            return apiEvent != null ? MapToCalendarEvent(apiEvent) : null;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ApiCalendarService] Error getting event: {ex.Message}");
-            return null;
-        }
+        var result = await GetEventByIdWithResultAsync(eventId);
+        return result.Data;
     }
 
+    /// <summary>
+    /// Creates a new calendar event
+    /// POST /api/outlook/events
+    /// </summary>
     public async Task CreateEventAsync(CalendarEvent calendarEvent)
     {
-        try
+        var result = await CreateEventWithResultAsync(calendarEvent);
+        if (result.Success && result.Data != null)
         {
-            var dto = MapToDto(calendarEvent);
-            dto.UserId = _userId;
-
-            var response = await _httpClient.PostAsJsonAsync("/outlook/events", dto, _jsonOptions);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"[ApiCalendarService] Failed to create event: {response.StatusCode} - {error}");
-            }
-            else
-            {
-                var createdEvent = await response.Content.ReadFromJsonAsync<CalendarEventDto>(_jsonOptions);
-                if (createdEvent != null)
-                {
-                    calendarEvent.Id = createdEvent.Id ?? calendarEvent.Id;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ApiCalendarService] Error creating event: {ex.Message}");
+            calendarEvent.Id = result.Data.Id;
         }
     }
 
+    /// <summary>
+    /// Updates an existing calendar event
+    /// PUT /api/outlook/events/{id}
+    /// </summary>
     public async Task UpdateEventAsync(CalendarEvent calendarEvent)
     {
-        try
-        {
-            var dto = MapToDto(calendarEvent);
-
-            var response = await _httpClient.PutAsJsonAsync($"/outlook/events/{calendarEvent.Id}", dto, _jsonOptions);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"[ApiCalendarService] Failed to update event: {response.StatusCode} - {error}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ApiCalendarService] Error updating event: {ex.Message}");
-        }
+        await UpdateEventWithResultAsync(calendarEvent);
     }
 
+    /// <summary>
+    /// Deletes a calendar event
+    /// DELETE /api/outlook/events/{id}
+    /// </summary>
     public async Task DeleteEventAsync(string eventId)
+    {
+        await DeleteEventWithResultAsync(eventId);
+    }
+
+    #endregion
+
+    #region Extended Methods with Result Objects
+
+    /// <summary>
+    /// Gets calendar events for a date range with detailed result
+    /// GET /api/outlook/events?startDate={startDate}&endDate={endDate}
+    /// </summary>
+    public async Task<CalendarServiceResult<List<CalendarEvent>>> GetEventsWithResultAsync(
+        DateTime startDate,
+        DateTime endDate,
+        string? calendarName = null)
     {
         try
         {
-            var response = await _httpClient.DeleteAsync($"/outlook/events/{eventId}");
-
-            if (!response.IsSuccessStatusCode)
+            var queryParams = new List<string>
             {
-                Console.WriteLine($"[ApiCalendarService] Failed to delete event {eventId}: {response.StatusCode}");
+                $"startDate={startDate:yyyy-MM-ddTHH:mm:ss}Z",
+                $"endDate={endDate:yyyy-MM-ddTHH:mm:ss}Z"
+            };
+
+            if (!string.IsNullOrEmpty(calendarName))
+                queryParams.Add($"calendar={Uri.EscapeDataString(calendarName)}");
+
+            var endpoint = $"outlook/events?{string.Join("&", queryParams)}";
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] GET {endpoint}");
+
+            var response = await _httpClientFactory.GetAsync(ApiEndpoint.InspireContinuum, endpoint);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Try to parse as API response wrapper first
+                try
+                {
+                    var apiResponse = JsonSerializer.Deserialize<ApiEventsListResponse>(content, _jsonOptions);
+                    if (apiResponse?.Events != null)
+                    {
+                        var events = apiResponse.Events.Select(MapToCalendarEvent).ToList();
+                        System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Retrieved {events.Count} events");
+                        return new CalendarServiceResult<List<CalendarEvent>>
+                        {
+                            Success = true,
+                            Data = events
+                        };
+                    }
+                }
+                catch
+                {
+                    // Fall back to direct list parsing
+                }
+
+                // Try parsing as direct list
+                var directEvents = JsonSerializer.Deserialize<List<CalendarEventDto>>(content, _jsonOptions);
+                if (directEvents != null)
+                {
+                    var events = directEvents.Select(MapToCalendarEvent).ToList();
+                    System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Retrieved {events.Count} events (direct)");
+                    return new CalendarServiceResult<List<CalendarEvent>>
+                    {
+                        Success = true,
+                        Data = events
+                    };
+                }
+
+                return new CalendarServiceResult<List<CalendarEvent>>
+                {
+                    Success = false,
+                    Error = "Failed to parse events response",
+                    Data = new List<CalendarEvent>()
+                };
             }
+
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] GET events failed: {response.StatusCode}");
+            return new CalendarServiceResult<List<CalendarEvent>>
+            {
+                Success = false,
+                Error = $"Failed to get events: {response.StatusCode}",
+                StatusCode = response.StatusCode,
+                Data = new List<CalendarEvent>()
+            };
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[ApiCalendarService] Error deleting event: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] GetEvents error: {ex.Message}");
+            return new CalendarServiceResult<List<CalendarEvent>>
+            {
+                Success = false,
+                Error = ex.Message,
+                Data = new List<CalendarEvent>()
+            };
         }
     }
+
+    /// <summary>
+    /// Gets a single calendar event by ID with detailed result
+    /// GET /api/outlook/events/{id}
+    /// </summary>
+    public async Task<CalendarServiceResult<CalendarEvent>> GetEventByIdWithResultAsync(string eventId)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(eventId))
+            {
+                return new CalendarServiceResult<CalendarEvent>
+                {
+                    Success = false,
+                    Error = "Event ID is required"
+                };
+            }
+
+            var endpoint = $"outlook/events/{Uri.EscapeDataString(eventId)}";
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] GET {endpoint}");
+
+            var response = await _httpClientFactory.GetAsync(ApiEndpoint.InspireContinuum, endpoint);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Try API response wrapper first
+                try
+                {
+                    var apiResponse = JsonSerializer.Deserialize<ApiEventSingleResponse>(content, _jsonOptions);
+                    if (apiResponse?.Event != null)
+                    {
+                        return new CalendarServiceResult<CalendarEvent>
+                        {
+                            Success = true,
+                            Data = MapToCalendarEvent(apiResponse.Event)
+                        };
+                    }
+                }
+                catch { }
+
+                // Try direct parsing
+                var dto = JsonSerializer.Deserialize<CalendarEventDto>(content, _jsonOptions);
+                if (dto != null)
+                {
+                    return new CalendarServiceResult<CalendarEvent>
+                    {
+                        Success = true,
+                        Data = MapToCalendarEvent(dto)
+                    };
+                }
+
+                return new CalendarServiceResult<CalendarEvent>
+                {
+                    Success = false,
+                    Error = "Failed to parse event response"
+                };
+            }
+
+            return new CalendarServiceResult<CalendarEvent>
+            {
+                Success = false,
+                Error = $"Failed to get event: {response.StatusCode}",
+                StatusCode = response.StatusCode
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] GetEventById error: {ex.Message}");
+            return new CalendarServiceResult<CalendarEvent>
+            {
+                Success = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    /// <summary>
+    /// Creates a new calendar event with detailed result
+    /// POST /api/outlook/events
+    /// </summary>
+    public async Task<CalendarServiceResult<CalendarEvent>> CreateEventWithResultAsync(CalendarEvent calendarEvent)
+    {
+        try
+        {
+            if (calendarEvent == null)
+            {
+                return new CalendarServiceResult<CalendarEvent>
+                {
+                    Success = false,
+                    Error = "Calendar event is required"
+                };
+            }
+
+            var dto = MapToDto(calendarEvent);
+            var endpoint = "outlook/events";
+
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] POST {endpoint} - {calendarEvent.Subject}");
+
+            var response = await _httpClientFactory.PostAsync(ApiEndpoint.InspireContinuum, endpoint, dto);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Try API response wrapper first
+                try
+                {
+                    var apiResponse = JsonSerializer.Deserialize<ApiEventSingleResponse>(content, _jsonOptions);
+                    if (apiResponse?.Event != null)
+                    {
+                        var createdEvent = MapToCalendarEvent(apiResponse.Event);
+                        System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Created event: {createdEvent.Id}");
+                        return new CalendarServiceResult<CalendarEvent>
+                        {
+                            Success = true,
+                            Data = createdEvent
+                        };
+                    }
+                }
+                catch { }
+
+                // Try direct parsing
+                var createdDto = JsonSerializer.Deserialize<CalendarEventDto>(content, _jsonOptions);
+                if (createdDto != null)
+                {
+                    var createdEvent = MapToCalendarEvent(createdDto);
+                    System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Created event: {createdEvent.Id}");
+                    return new CalendarServiceResult<CalendarEvent>
+                    {
+                        Success = true,
+                        Data = createdEvent
+                    };
+                }
+
+                // If no response body, return original with success
+                return new CalendarServiceResult<CalendarEvent>
+                {
+                    Success = true,
+                    Data = calendarEvent
+                };
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Create failed: {response.StatusCode} - {content}");
+            return new CalendarServiceResult<CalendarEvent>
+            {
+                Success = false,
+                Error = $"Failed to create event: {response.StatusCode}",
+                StatusCode = response.StatusCode
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] CreateEvent error: {ex.Message}");
+            return new CalendarServiceResult<CalendarEvent>
+            {
+                Success = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    /// <summary>
+    /// Updates an existing calendar event with detailed result
+    /// PUT /api/outlook/events/{id}
+    /// </summary>
+    public async Task<CalendarServiceResult<CalendarEvent>> UpdateEventWithResultAsync(CalendarEvent calendarEvent)
+    {
+        try
+        {
+            if (calendarEvent == null)
+            {
+                return new CalendarServiceResult<CalendarEvent>
+                {
+                    Success = false,
+                    Error = "Calendar event is required"
+                };
+            }
+
+            if (string.IsNullOrEmpty(calendarEvent.Id))
+            {
+                return new CalendarServiceResult<CalendarEvent>
+                {
+                    Success = false,
+                    Error = "Event ID is required for update"
+                };
+            }
+
+            var dto = MapToDto(calendarEvent);
+            var endpoint = $"outlook/events/{Uri.EscapeDataString(calendarEvent.Id)}";
+
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] PUT {endpoint} - {calendarEvent.Subject}");
+
+            var response = await _httpClientFactory.PutAsync(ApiEndpoint.InspireContinuum, endpoint, dto);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Try API response wrapper first
+                try
+                {
+                    var apiResponse = JsonSerializer.Deserialize<ApiEventSingleResponse>(content, _jsonOptions);
+                    if (apiResponse?.Event != null)
+                    {
+                        var updatedEvent = MapToCalendarEvent(apiResponse.Event);
+                        System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Updated event: {updatedEvent.Id}");
+                        return new CalendarServiceResult<CalendarEvent>
+                        {
+                            Success = true,
+                            Data = updatedEvent
+                        };
+                    }
+                }
+                catch { }
+
+                // Try direct parsing
+                var updatedDto = JsonSerializer.Deserialize<CalendarEventDto>(content, _jsonOptions);
+                if (updatedDto != null)
+                {
+                    var updatedEvent = MapToCalendarEvent(updatedDto);
+                    System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Updated event: {updatedEvent.Id}");
+                    return new CalendarServiceResult<CalendarEvent>
+                    {
+                        Success = true,
+                        Data = updatedEvent
+                    };
+                }
+
+                // If no response body, return original with success
+                System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Updated event (no body): {calendarEvent.Id}");
+                return new CalendarServiceResult<CalendarEvent>
+                {
+                    Success = true,
+                    Data = calendarEvent
+                };
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Update failed: {response.StatusCode} - {content}");
+            return new CalendarServiceResult<CalendarEvent>
+            {
+                Success = false,
+                Error = $"Failed to update event: {response.StatusCode}",
+                StatusCode = response.StatusCode
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] UpdateEvent error: {ex.Message}");
+            return new CalendarServiceResult<CalendarEvent>
+            {
+                Success = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    /// <summary>
+    /// Deletes a calendar event with detailed result
+    /// DELETE /api/outlook/events/{id}
+    /// </summary>
+    public async Task<CalendarServiceResult<bool>> DeleteEventWithResultAsync(string eventId)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(eventId))
+            {
+                return new CalendarServiceResult<bool>
+                {
+                    Success = false,
+                    Error = "Event ID is required",
+                    Data = false
+                };
+            }
+
+            var endpoint = $"outlook/events/{Uri.EscapeDataString(eventId)}";
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] DELETE {endpoint}");
+
+            var response = await _httpClientFactory.DeleteAsync(ApiEndpoint.InspireContinuum, endpoint);
+
+            if (response.IsSuccessStatusCode)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Deleted event: {eventId}");
+                return new CalendarServiceResult<bool>
+                {
+                    Success = true,
+                    Data = true
+                };
+            }
+
+            // 404 is acceptable - event may already be deleted
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Event not found (already deleted?): {eventId}");
+                return new CalendarServiceResult<bool>
+                {
+                    Success = true,
+                    Data = true,
+                    Error = "Event not found"
+                };
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Delete failed: {response.StatusCode} - {content}");
+
+            return new CalendarServiceResult<bool>
+            {
+                Success = false,
+                Error = $"Failed to delete event: {response.StatusCode}",
+                StatusCode = response.StatusCode,
+                Data = false
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] DeleteEvent error: {ex.Message}");
+            return new CalendarServiceResult<bool>
+            {
+                Success = false,
+                Error = ex.Message,
+                Data = false
+            };
+        }
+    }
+
+    #endregion
+
+    #region Convenience Methods
+
+    /// <summary>
+    /// Gets events for a specific day
+    /// </summary>
+    public Task<List<CalendarEvent>> GetEventsForDayAsync(DateTime date)
+    {
+        var startOfDay = date.Date;
+        var endOfDay = date.Date.AddDays(1).AddTicks(-1);
+        return GetEventsAsync(startOfDay, endOfDay);
+    }
+
+    /// <summary>
+    /// Gets events for a specific month
+    /// </summary>
+    public Task<List<CalendarEvent>> GetEventsForMonthAsync(int year, int month)
+    {
+        var startOfMonth = new DateTime(year, month, 1);
+        var endOfMonth = startOfMonth.AddMonths(1).AddTicks(-1);
+        return GetEventsAsync(startOfMonth, endOfMonth);
+    }
+
+    #endregion
+
+    #region Mapping Methods
 
     private static CalendarEvent MapToCalendarEvent(CalendarEventDto dto)
     {
@@ -162,6 +576,8 @@ public class ApiCalendarService : ICalendarService
             CalendarName = dto.CalendarName ?? "My Calendar",
             EventColor = eventColor,
             Attendees = dto.Attendees ?? new List<string>(),
+            Organizer = dto.Organizer ?? string.Empty,
+            IsPrivate = dto.IsPrivate,
             Attachments = dto.Attachments?.Select(a => new EventAttachment
             {
                 Id = a.Id ?? Guid.NewGuid().ToString(),
@@ -191,6 +607,8 @@ public class ApiCalendarService : ICalendarService
             CalendarName = calendarEvent.CalendarName,
             EventColor = GetColorHex(calendarEvent.EventColor),
             Attendees = calendarEvent.Attendees,
+            Organizer = calendarEvent.Organizer,
+            IsPrivate = calendarEvent.IsPrivate,
             Attachments = calendarEvent.Attachments?.Select(a => new AttachmentDto
             {
                 Id = a.Id,
@@ -286,8 +704,62 @@ public class ApiCalendarService : ICalendarService
             _ => -1
         };
     }
+
+    #endregion
+
+    #region Static Methods
+
+    /// <summary>
+    /// Resets the singleton instance (useful for testing)
+    /// </summary>
+    public static void Reset()
+    {
+        lock (_lock)
+        {
+            _instance = null;
+        }
+    }
+
+    #endregion
 }
 
+#region Service Result and DTOs
+
+/// <summary>
+/// Generic result wrapper for calendar service operations
+/// </summary>
+public class CalendarServiceResult<T>
+{
+    public bool Success { get; set; }
+    public T? Data { get; set; }
+    public string? Error { get; set; }
+    public HttpStatusCode StatusCode { get; set; } = HttpStatusCode.OK;
+}
+
+/// <summary>
+/// API response for events list
+/// </summary>
+internal class ApiEventsListResponse
+{
+    public bool Success { get; set; }
+    public string? Error { get; set; }
+    public List<CalendarEventDto>? Events { get; set; }
+    public int? TotalCount { get; set; }
+}
+
+/// <summary>
+/// API response for single event
+/// </summary>
+internal class ApiEventSingleResponse
+{
+    public bool Success { get; set; }
+    public string? Error { get; set; }
+    public CalendarEventDto? Event { get; set; }
+}
+
+/// <summary>
+/// Calendar event data transfer object for API communication
+/// </summary>
 public class CalendarEventDto
 {
     public string? Id { get; set; }
@@ -304,11 +776,18 @@ public class CalendarEventDto
     public string? CalendarName { get; set; }
     public string? EventColor { get; set; }
     public List<string>? Attendees { get; set; }
+    public string? Organizer { get; set; }
+    public bool IsPrivate { get; set; }
     public List<AttachmentDto>? Attachments { get; set; }
     public bool IsRecurring { get; set; }
     public int? ReminderMinutes { get; set; }
+    public DateTime? CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }
 
+/// <summary>
+/// Attachment data transfer object
+/// </summary>
 public class AttachmentDto
 {
     public string? Id { get; set; }
@@ -318,3 +797,5 @@ public class AttachmentDto
     public DateTime AddedDate { get; set; }
     public string? StorageKey { get; set; }
 }
+
+#endregion
