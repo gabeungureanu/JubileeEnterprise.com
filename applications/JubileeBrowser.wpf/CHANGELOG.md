@@ -5,6 +5,63 @@ All notable changes to Jubilee Browser will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.0.9] - 2026-01-15
+
+### Added
+- **History Tab Feature**: Complete browsing history panel with improved UI
+  - History panel moved to correct designated sidebar location
+  - Redesigned UI for better usability and readability
+  - Toggle behavior - clicking history icon again closes the panel
+  - Works for both Bible Web and Worldwide Web modes
+
+- **Tab System Improvements**:
+  - Yellow tabs for Bible Web mode; Blue tabs for Worldwide Web mode
+  - Plus button creates tab matching currently active mode
+  - Inspire-prefixed URLs remain within Bible Web mode
+  - Visual indicators during tab drag operations
+  - Dynamic tab width shrinking as tab count increases
+  - All tabs display favicon or default globe icon
+
+- **Mode Switching Enhancements**:
+  - Switching between globe and Bible icons reuses the last active tab
+  - No new tabs created when switching modes
+  - Icon state always reflects active browsing mode
+
+- **Sidebar Improvements**:
+  - Smooth slide in/out animations (no abrupt appearance/disappearance)
+  - Toggle button closes sidebar when clicked again
+  - Consistent behavior across all browser modes
+
+- **Toolbar & Visual Fixes**:
+  - Fixed hamburger/menu icon color contrast on yellow background
+  - All icons remain visible and accessible in all themes
+
+### Changed
+- **Sign-Out Flow**: Redesigned confirmation dialog following Jubilee theme
+  - Consistent colors, typography, and spacing
+  - Messaging intact with local data retention notice
+  - Popup consistent with other modal dialogs
+
+- **Sign-In Experience**:
+  - Sign-in UI matches Jubilee Browser design language
+  - Replaced 'Jubilee Outlook' branding with approved sub-slogan
+  - Error states communicated via themed modal dialogs
+
+- **TabState Model**: Added `IsInspireUrl` property for inspire:// URL detection
+  - Used for displaying WWBW icon on WWW mode tabs with inspire:// URLs
+
+### Technical
+- Simplified MainWindow.xaml by removing unused storyboard animations
+- Streamlined tab width calculation logic
+- Fixed JavaScript bridge script to use JSON.stringify for WebView2 message passing
+- Removed redundant `UpdateTabWidths()` calls and dynamic tab width logic
+- Cleaned up unused drag-drop tracking variables
+
+### Fixed
+- Tab drag-drop operation visual feedback
+- Sidebar animation smoothness
+- Icon visibility in different theme contexts
+
 ## [8.0.8] - 2026-01-11
 
 ### Added
@@ -306,10 +363,8 @@ We follow [Semantic Versioning](https://semver.org/):
 
 ## Download
 
-Current version: **8.0.7**
+Current version: **8.0.9**
 
-Download: [https://jubileebrowser.com/downloads/JubileeBrowser-Setup-8.0.7.msi](https://jubileebrowser.com/downloads/JubileeBrowser-Setup-8.0.7.msi)
+Download: [https://jubileebrowser.com/downloads/JubileeBrowser-8.0.9-win-x64.zip](https://jubileebrowser.com/downloads/JubileeBrowser-8.0.9-win-x64.zip)
 
 Auto-update manifest: [https://jubileebrowser.com/downloads/stable/releases.json](https://jubileebrowser.com/downloads/stable/releases.json)
-
-SHA256: `D3D2724711E17B60F42321E641FD5A69C3E0D9081C3D34EDB661CF2CE9FDB33C`

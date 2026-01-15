@@ -20,6 +20,7 @@ public class TabState : INotifyPropertyChanged
     private bool _isAudible;
     private string? _groupId;
     private bool _isMobileEmulationEnabled;
+    private double _tabWidth = 200;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -133,5 +134,14 @@ public class TabState : INotifyPropertyChanged
     {
         get => _isMobileEmulationEnabled;
         set { if (_isMobileEmulationEnabled != value) { _isMobileEmulationEnabled = value; OnPropertyChanged(); } }
+    }
+
+    /// <summary>
+    /// Dynamic tab width calculated based on available space.
+    /// </summary>
+    public double TabWidth
+    {
+        get => _tabWidth;
+        set { if (Math.Abs(_tabWidth - value) > 0.1) { _tabWidth = value; OnPropertyChanged(); } }
     }
 }

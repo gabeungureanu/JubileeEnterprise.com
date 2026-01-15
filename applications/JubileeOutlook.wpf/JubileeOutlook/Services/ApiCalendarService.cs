@@ -128,8 +128,10 @@ public class ApiCalendarService : ICalendarService
     {
         try
         {
+            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
             var queryParams = new List<string>
             {
+                $"userId={Uri.EscapeDataString(userId)}",
                 $"startDate={startDate:yyyy-MM-ddTHH:mm:ss}Z",
                 $"endDate={endDate:yyyy-MM-ddTHH:mm:ss}Z"
             };
@@ -596,6 +598,7 @@ public class ApiCalendarService : ICalendarService
         return new CalendarEventDto
         {
             Id = calendarEvent.Id,
+            UserId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001",
             Subject = calendarEvent.Subject,
             Location = calendarEvent.Location,
             StartTime = calendarEvent.StartTime,

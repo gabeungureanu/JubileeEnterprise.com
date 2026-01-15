@@ -1434,8 +1434,10 @@ app.post('/api/v1/outlook/messages', requireUserId, async (req, res) => {
         try {
             await client.query('BEGIN');
 
-            // Get or create drafts folder if saving as draft
+            // Get or create appropriate folder based on message type
             let folderId = folder_id;
+
+            // If saving as draft, use drafts folder
             if (!folderId && is_draft) {
                 const folderResult = await client.query(`
                     SELECT id FROM outlook_email_folders
@@ -1446,6 +1448,25 @@ app.post('/api/v1/outlook/messages', requireUserId, async (req, res) => {
                     const newFolder = await client.query(`
                         INSERT INTO outlook_email_folders (user_id, name, folder_type, is_system)
                         VALUES ($1, 'Drafts', 'drafts', true)
+                        RETURNING id
+                    `, [req.userId]);
+                    folderId = newFolder.rows[0].id;
+                } else {
+                    folderId = folderResult.rows[0].id;
+                }
+            }
+
+            // If sending (not draft) and no folder specified, use sent folder
+            if (!folderId && !is_draft) {
+                const folderResult = await client.query(`
+                    SELECT id FROM outlook_email_folders
+                    WHERE user_id = $1 AND folder_type = 'sent'
+                `, [req.userId]);
+
+                if (folderResult.rows.length === 0) {
+                    const newFolder = await client.query(`
+                        INSERT INTO outlook_email_folders (user_id, name, folder_type, is_system)
+                        VALUES ($1, 'Sent Items', 'sent', true)
                         RETURNING id
                     `, [req.userId]);
                     folderId = newFolder.rows[0].id;
@@ -1717,6 +1738,148 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Serve index.html for root path
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// =============================================================================
+// DATABASE MIGRATION ENDPOINT
+// =============================================================================
+
+const MIGRATE_SECRET = process.env.MIGRATE_SECRET || 'jubilee-migrate-2026';
+const fs = require('fs');
+
+app.post('/api/v1/migrate', async (req, res) => {
+    // Verify migration secret
+    const providedSecret = req.headers['x-migrate-secret'] || req.body.secret;
+    if (providedSecret !== MIGRATE_SECRET) {
+        console.log('Migration endpoint: Unauthorized attempt');
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const { migration } = req.body;
+    console.log(`Migration endpoint: Running migration ${migration || 'all'}...`);
+
+    const results = {
+        success: true,
+        migrations: [],
+        errors: []
+    };
+
+    try {
+        // Check which tables already exist
+        const existingTables = await continuumPool.query(`
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+        `);
+        const tableNames = existingTables.rows.map(r => r.table_name);
+
+        // Migration: outlook_schema (0003)
+        if (!migration || migration === 'outlook_schema' || migration === '0003') {
+            if (!tableNames.includes('outlook_calendars')) {
+                console.log('Running outlook_schema migration...');
+
+                // First ensure the update_updated_at_column function exists
+                await continuumPool.query(`
+                    CREATE OR REPLACE FUNCTION update_updated_at_column()
+                    RETURNS TRIGGER AS $$
+                    BEGIN
+                        NEW.updated_at = NOW();
+                        RETURN NEW;
+                    END;
+                    $$ language 'plpgsql';
+                `);
+
+                // Enable required extensions
+                await continuumPool.query(`CREATE EXTENSION IF NOT EXISTS "citext"`);
+                await continuumPool.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
+
+                // Read and execute the migration file
+                const migrationPath = path.join(__dirname, '..', '..', '..', 'infrastructure', 'migrations', 'continuum', '0003_jubilee_outlook_schema.sql');
+
+                if (fs.existsSync(migrationPath)) {
+                    let sql = fs.readFileSync(migrationPath, 'utf8');
+                    // Remove the DOWN MIGRATION comments section
+                    const downIndex = sql.indexOf('-- ============================================================================\n-- DOWN MIGRATION');
+                    if (downIndex > 0) {
+                        sql = sql.substring(0, downIndex);
+                    }
+
+                    await continuumPool.query(sql);
+                    results.migrations.push({ name: 'outlook_schema (0003)', status: 'applied' });
+                    console.log('✅ outlook_schema migration applied');
+                } else {
+                    // Run inline if file not found
+                    results.migrations.push({ name: 'outlook_schema (0003)', status: 'skipped', reason: 'Migration file not found' });
+                    console.log('⚠️ Migration file not found at:', migrationPath);
+                }
+            } else {
+                results.migrations.push({ name: 'outlook_schema (0003)', status: 'already_applied' });
+                console.log('ℹ️ outlook_schema already applied');
+            }
+        }
+
+        // Add activity_sessions columns if missing (for browser heartbeat support)
+        if (!migration || migration === 'activity_sessions_update') {
+            try {
+                await continuumPool.query(`
+                    ALTER TABLE activity_sessions
+                    ADD COLUMN IF NOT EXISTS client_type VARCHAR(50),
+                    ADD COLUMN IF NOT EXISTS browser_id VARCHAR(255),
+                    ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true,
+                    ADD COLUMN IF NOT EXISTS last_heartbeat TIMESTAMPTZ DEFAULT NOW()
+                `);
+
+                // Add unique constraint for browser sessions
+                await continuumPool.query(`
+                    CREATE UNIQUE INDEX IF NOT EXISTS idx_activity_sessions_user_browser
+                    ON activity_sessions(user_id, browser_id) WHERE browser_id IS NOT NULL
+                `);
+
+                results.migrations.push({ name: 'activity_sessions_update', status: 'applied' });
+            } catch (err) {
+                if (!err.message.includes('already exists')) {
+                    results.errors.push({ migration: 'activity_sessions_update', error: err.message });
+                } else {
+                    results.migrations.push({ name: 'activity_sessions_update', status: 'already_applied' });
+                }
+            }
+        }
+
+        res.json(results);
+    } catch (err) {
+        console.error('Migration error:', err);
+        results.success = false;
+        results.errors.push({ migration: migration || 'all', error: err.message });
+        res.status(500).json(results);
+    }
+});
+
+// Get migration status
+app.get('/api/v1/migrate/status', async (req, res) => {
+    try {
+        const existingTables = await continuumPool.query(`
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+            ORDER BY table_name
+        `);
+
+        const outlookTables = existingTables.rows
+            .filter(r => r.table_name.startsWith('outlook_'))
+            .map(r => r.table_name);
+
+        const migrations = {
+            'outlook_schema (0003)': outlookTables.length > 0 ? 'applied' : 'pending',
+            'activity_sessions_update': existingTables.rows.some(r => r.table_name === 'activity_sessions') ? 'check_columns' : 'pending'
+        };
+
+        res.json({
+            success: true,
+            totalTables: existingTables.rows.length,
+            outlookTables: outlookTables,
+            migrations: migrations
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 // =============================================================================
