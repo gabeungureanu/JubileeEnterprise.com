@@ -60,6 +60,11 @@ public class ConfigurationService
     public StorageConfig Storage => _rootConfig.Storage;
 
     /// <summary>
+    /// Gets the local cache configuration for PostgreSQL offline support
+    /// </summary>
+    public LocalCacheSettings LocalCache => _rootConfig.LocalCache;
+
+    /// <summary>
     /// Gets the raw IConfiguration for advanced scenarios
     /// </summary>
     public IConfiguration Configuration => _configuration;
@@ -164,6 +169,22 @@ public class ConfigurationService
     }
 
     /// <summary>
+    /// Checks if offline mode is enabled
+    /// </summary>
+    public bool IsOfflineModeEnabled()
+    {
+        return LocalCache.EnableOfflineMode;
+    }
+
+    /// <summary>
+    /// Gets the PostgreSQL connection string for local cache
+    /// </summary>
+    public string GetLocalCacheConnectionString()
+    {
+        return LocalCache.ConnectionString;
+    }
+
+    /// <summary>
     /// Checks if the current environment is Development
     /// </summary>
     public bool IsDevelopment()
@@ -211,6 +232,8 @@ public class ConfigurationService
         System.Diagnostics.Debug.WriteLine($"Database Integration: {Features.EnableDatabaseIntegration}");
         System.Diagnostics.Debug.WriteLine($"Debug Logging: {Features.EnableDebugLogging}");
         System.Diagnostics.Debug.WriteLine($"Telemetry: {Features.EnableTelemetry}");
+        System.Diagnostics.Debug.WriteLine($"Offline Mode: {LocalCache.EnableOfflineMode}");
+        System.Diagnostics.Debug.WriteLine($"Sync Interval: {LocalCache.SyncIntervalSeconds}s");
         System.Diagnostics.Debug.WriteLine("====================================");
     }
 }

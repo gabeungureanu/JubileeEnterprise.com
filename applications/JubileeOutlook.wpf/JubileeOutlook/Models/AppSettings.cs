@@ -90,4 +90,5 @@ public class RootConfig
     public ApiConfig Api { get; set; } = new();
     public FeaturesConfig Features { get; set; } = new();
     public StorageConfig Storage { get; set; } = new();
+    public LocalCacheSettings LocalCache { get; set; } = new();
 }
