@@ -43,6 +43,7 @@ export const storage = {
           ...conv,
           createdAt: new Date(conv.createdAt),
           updatedAt: new Date(conv.updatedAt),
+          pinnedAt: conv.pinnedAt ? new Date(conv.pinnedAt) : undefined,
           messages: conv.messages.map(msg => ({
             ...msg,
             timestamp: new Date(msg.timestamp),
@@ -249,6 +250,98 @@ export const storage = {
       await this.clearPendingConversation();
     } catch (error) {
       console.error('Failed to promote pending conversation:', error);
+    }
+  },
+
+  /**
+   * Pin a conversation
+   * Pinned conversations appear at the top of the chat list
+   */
+  async pinConversation(conversationId: string): Promise<void> {
+    try {
+      const conversations = await this.loadConversations();
+      const index = conversations.findIndex(c => c.id === conversationId);
+
+      if (index >= 0 && !conversations[index].isPinned) {
+        conversations[index] = {
+          ...conversations[index],
+          isPinned: true,
+          pinnedAt: new Date(),
+        };
+        await this.saveConversations(conversations);
+      }
+    } catch (error) {
+      console.error('Failed to pin conversation:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Unpin a conversation
+   */
+  async unpinConversation(conversationId: string): Promise<void> {
+    try {
+      const conversations = await this.loadConversations();
+      const index = conversations.findIndex(c => c.id === conversationId);
+
+      if (index >= 0 && conversations[index].isPinned) {
+        conversations[index] = {
+          ...conversations[index],
+          isPinned: false,
+          pinnedAt: undefined,
+        };
+        await this.saveConversations(conversations);
+      }
+    } catch (error) {
+      console.error('Failed to unpin conversation:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Toggle pin state for a conversation
+   * Returns the new pinned state
+   */
+  async togglePinConversation(conversationId: string): Promise<boolean> {
+    try {
+      const conversation = await this.getConversation(conversationId);
+      if (!conversation) return false;
+
+      if (conversation.isPinned) {
+        await this.unpinConversation(conversationId);
+        return false;
+      } else {
+        await this.pinConversation(conversationId);
+        return true;
+      }
+    } catch (error) {
+      console.error('Failed to toggle pin conversation:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Rename a conversation
+   * Updates the title and persists to storage
+   */
+  async renameConversation(conversationId: string, newTitle: string): Promise<void> {
+    try {
+      const conversations = await this.loadConversations();
+      const index = conversations.findIndex(c => c.id === conversationId);
+
+      if (index >= 0) {
+        const trimmedTitle = newTitle.trim();
+        if (trimmedTitle.length > 0) {
+          conversations[index] = {
+            ...conversations[index],
+            title: trimmedTitle,
+          };
+          await this.saveConversations(conversations);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to rename conversation:', error);
+      throw error;
     }
   },
 };

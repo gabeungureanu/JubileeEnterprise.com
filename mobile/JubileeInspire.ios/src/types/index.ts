@@ -59,6 +59,8 @@ export interface Conversation {
   createdAt: Date;
   updatedAt: Date;
   preview?: string;
+  isPinned?: boolean;
+  pinnedAt?: Date;
 }
 
 // Environment Configuration
