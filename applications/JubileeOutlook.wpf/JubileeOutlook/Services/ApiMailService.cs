@@ -424,7 +424,8 @@ public class ApiMailService : IMailService
 
     /// <summary>
     /// Sends a message with detailed result
-    /// POST /api/outlook/messages
+    /// POST /api/v1/outlook/messages
+    /// Creates message in Sent Items folder and stores recipients/attachments
     /// </summary>
     public async Task<MailServiceResult<EmailMessage>> SendMessageWithResultAsync(EmailMessage message)
     {
@@ -439,12 +440,65 @@ public class ApiMailService : IMailService
                 };
             }
 
-            var dto = MapToDto(message);
+            // Build recipients list from To, Cc, Bcc fields
+            var recipients = new List<RecipientDto>();
+
+            if (message.To != null)
+            {
+                foreach (var email in message.To)
+                {
+                    recipients.Add(new RecipientDto { Email = email, Type = "to" });
+                }
+            }
+
+            if (message.Cc != null)
+            {
+                foreach (var email in message.Cc)
+                {
+                    recipients.Add(new RecipientDto { Email = email, Type = "cc" });
+                }
+            }
+
+            if (message.Bcc != null)
+            {
+                foreach (var email in message.Bcc)
+                {
+                    recipients.Add(new RecipientDto { Email = email, Type = "bcc" });
+                }
+            }
+
+            // Build attachments list
+            var attachments = message.Attachments?.Select(a => new AttachmentCreateDto
+            {
+                FileName = a.FileName,
+                FilePath = a.FilePath,
+                FileSize = a.FileSize,
+                MimeType = a.ContentType,
+                IsInline = false
+            }).ToList();
+
+            // Create the request DTO in API format
+            var request = new CreateMessageRequest
+            {
+                FolderId = message.FolderId, // Will be set to "sent" folder by API if not specified
+                Subject = message.Subject,
+                BodyText = message.IsHtml ? null : message.Body,
+                BodyHtml = message.IsHtml ? message.Body : null,
+                SenderEmail = message.FromEmail,
+                SenderName = message.From,
+                IsDraft = false, // Sending, not saving as draft
+                Importance = message.Priority.ToString().ToLower(),
+                Recipients = recipients.Count > 0 ? recipients : null,
+                Attachments = attachments?.Count > 0 ? attachments : null
+            };
+
             var endpoint = "outlook/messages";
 
             System.Diagnostics.Debug.WriteLine($"[ApiMailService] POST {endpoint} - {message.Subject}");
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService]   Recipients: {recipients.Count} (To: {message.To?.Count ?? 0}, Cc: {message.Cc?.Count ?? 0}, Bcc: {message.Bcc?.Count ?? 0})");
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService]   Attachments: {attachments?.Count ?? 0}");
 
-            var response = await _httpClientFactory.PostAsync(ApiEndpoint.InspireContinuum, endpoint, dto);
+            var response = await _httpClientFactory.PostAsync(ApiEndpoint.InspireContinuum, endpoint, request);
             var content = await response.Content.ReadAsStringAsync();
 
             if (response.IsSuccessStatusCode)
@@ -466,20 +520,42 @@ public class ApiMailService : IMailService
                 }
                 catch { }
 
-                // Try direct parsing
-                var sentDto = JsonSerializer.Deserialize<EmailMessageDto>(content, _jsonOptions);
-                if (sentDto != null)
+                // Try direct parsing (API returns the created message directly)
+                try
                 {
-                    var sentMessage = MapToEmailMessage(sentDto);
-                    System.Diagnostics.Debug.WriteLine($"[ApiMailService] Sent message: {sentMessage.Id}");
-                    return new MailServiceResult<EmailMessage>
+                    var createdMessage = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(content, _jsonOptions);
+                    if (createdMessage != null && createdMessage.ContainsKey("id"))
                     {
-                        Success = true,
-                        Data = sentMessage
-                    };
+                        // Map API response to EmailMessage
+                        var sentMessage = new EmailMessage
+                        {
+                            Id = createdMessage["id"].GetString() ?? Guid.NewGuid().ToString(),
+                            Subject = message.Subject,
+                            From = message.From,
+                            FromEmail = message.FromEmail,
+                            To = message.To ?? new List<string>(),
+                            Cc = message.Cc ?? new List<string>(),
+                            Bcc = message.Bcc ?? new List<string>(),
+                            Body = message.Body,
+                            IsHtml = message.IsHtml,
+                            SentDate = DateTime.Now,
+                            ReceivedDate = DateTime.Now,
+                            IsRead = true,
+                            FolderId = "sent",
+                            HasAttachments = message.HasAttachments,
+                            Attachments = message.Attachments ?? new List<EmailAttachment>()
+                        };
+                        System.Diagnostics.Debug.WriteLine($"[ApiMailService] Sent message: {sentMessage.Id}");
+                        return new MailServiceResult<EmailMessage>
+                        {
+                            Success = true,
+                            Data = sentMessage
+                        };
+                    }
                 }
+                catch { }
 
-                // If no response body, return original with success
+                // If no response body parseable, return original with success
                 System.Diagnostics.Debug.WriteLine($"[ApiMailService] Message sent successfully");
                 return new MailServiceResult<EmailMessage>
                 {
@@ -492,7 +568,7 @@ public class ApiMailService : IMailService
             return new MailServiceResult<EmailMessage>
             {
                 Success = false,
-                Error = $"Failed to send message: {response.StatusCode}",
+                Error = $"Failed to send message: {response.StatusCode} - {content}",
                 StatusCode = response.StatusCode
             };
         }
@@ -1157,6 +1233,79 @@ public class EmailAttachmentDto
     public long FileSize { get; set; }
     public string? ContentType { get; set; }
     public string? StorageKey { get; set; }
+}
+
+/// <summary>
+/// DTO for creating a new email message via POST API
+/// Maps to InspireContinuum API format with snake_case fields
+/// </summary>
+internal class CreateMessageRequest
+{
+    [System.Text.Json.Serialization.JsonPropertyName("folder_id")]
+    public string? FolderId { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("subject")]
+    public string? Subject { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("body_text")]
+    public string? BodyText { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("body_html")]
+    public string? BodyHtml { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("sender_email")]
+    public string? SenderEmail { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("sender_name")]
+    public string? SenderName { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("is_draft")]
+    public bool IsDraft { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("importance")]
+    public string Importance { get; set; } = "normal";
+
+    [System.Text.Json.Serialization.JsonPropertyName("recipients")]
+    public List<RecipientDto>? Recipients { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("attachments")]
+    public List<AttachmentCreateDto>? Attachments { get; set; }
+}
+
+/// <summary>
+/// DTO for email recipient in create message request
+/// </summary>
+internal class RecipientDto
+{
+    [System.Text.Json.Serialization.JsonPropertyName("email")]
+    public string Email { get; set; } = string.Empty;
+
+    [System.Text.Json.Serialization.JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("type")]
+    public string Type { get; set; } = "to"; // "to", "cc", "bcc"
+}
+
+/// <summary>
+/// DTO for attachment in create message request
+/// </summary>
+internal class AttachmentCreateDto
+{
+    [System.Text.Json.Serialization.JsonPropertyName("fileName")]
+    public string FileName { get; set; } = string.Empty;
+
+    [System.Text.Json.Serialization.JsonPropertyName("filePath")]
+    public string? FilePath { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("fileSize")]
+    public long FileSize { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("mimeType")]
+    public string? MimeType { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("isInline")]
+    public bool IsInline { get; set; }
 }
 
 #endregion

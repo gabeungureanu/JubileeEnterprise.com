@@ -941,10 +941,11 @@ public partial class MainWindow : Window
                 Cc = e.Cc,
                 Bcc = e.Bcc,
                 Body = e.Body,
+                IsHtml = false, // Plain text from compose
                 SentDate = DateTime.Now,
                 ReceivedDate = DateTime.Now,
                 IsRead = true,
-                FolderId = "sent",
+                FolderId = "sent", // Will be placed in Sent Items folder
                 Preview = e.Body.Length > 100 ? e.Body.Substring(0, 100) + "..." : e.Body,
                 HasAttachments = e.Attachments.Count > 0
             };
@@ -956,26 +957,26 @@ public partial class MainWindow : Window
                 {
                     Id = Guid.NewGuid().ToString(),
                     FileName = a.FileName,
+                    FilePath = a.FilePath,
                     ContentType = GetContentType(a.FileName),
                     FileSize = System.IO.File.Exists(a.FilePath) ? new System.IO.FileInfo(a.FilePath).Length : 0
                 }).ToList();
             }
 
-            // Send the message via the mail service (saves to Sent Items)
-            var mailService = ((WindowDataContext)DataContext).MainViewModel;
-            await Task.Run(() =>
-            {
-                // Simulate a brief delay for sending (in real implementation, this would be SMTP)
-                System.Threading.Thread.Sleep(500);
-            });
+            // Get the mail service and send the message via API
+            var mailService = Services.ServiceConfiguration.GetMailService();
 
-            // The MockMailService.SendMessageAsync will add the message to Sent Items
-            // For now, we directly add to the internal messages list via reflection or a public method
-            // In production, this would go through actual SMTP
-
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Email sent successfully to: {string.Join(", ", e.To)}");
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Sending email to: {string.Join(", ", e.To)}");
             System.Diagnostics.Debug.WriteLine($"[MainWindow] Subject: {emailMessage.Subject}");
             System.Diagnostics.Debug.WriteLine($"[MainWindow] Attachments: {emailMessage.Attachments.Count}");
+
+            // Send the message - this will save to Sent Items via API
+            await mailService.SendMessageAsync(emailMessage);
+
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Email sent successfully!");
+
+            // Show success notification (optional)
+            // MessageBox.Show("Email sent successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
