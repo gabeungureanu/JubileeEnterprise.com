@@ -1,24 +1,23 @@
 version: 8.0.8
 files:
-  - url: JubileeBrowser-Setup-8.0.8.msi
-    sha512: 5768a151d9624997b122bc1a60222a917d15bc68a8e0e9136803a920b99ee07e28ef5c2390dc4b53af573e32ec9d964f8b06a42c724bd997f8eaa5cca211e6e5
-    size: 61576540
-path: JubileeBrowser-Setup-8.0.8.msi
-sha512: 5768a151d9624997b122bc1a60222a917d15bc68a8e0e9136803a920b99ee07e28ef5c2390dc4b53af573e32ec9d964f8b06a42c724bd997f8eaa5cca211e6e5
-sha256: ED4CC126BE3F496F175C3DB50C8CB1AF0D3C21E46381C417D9865CDA0D7B8E81
+  - url: JubileeBrowser-8.0.8-win-x64.zip
+    sha512: 24acafce2c6f349d481a7cf5c0856b9c70a19c48648fee366b36c510e0d0ce8bd97b53ee7aee76e76542a0c4d89bcb8ae58b88d76b2eb02adbbf46b3e7323ab9
+    size: 75491693
+path: JubileeBrowser-8.0.8-win-x64.zip
+sha512: 24acafce2c6f349d481a7cf5c0856b9c70a19c48648fee366b36c510e0d0ce8bd97b53ee7aee76e76542a0c4d89bcb8ae58b88d76b2eb02adbbf46b3e7323ab9
+sha256: 4593AB6509CEEE76AC3A8ECC814B0D92B1865F2FD2AF711D9467424E6CF65978
 releaseNotes: |
   ## JubileeBrowser 8.0.8
 
   ### What's New
-  - Fixed: Installer banner text now properly aligned (profile picture moved to right side)
-  - Spiritual Nutrition Panel - AI-powered biblical evaluation of web content with 10 health indicators
-  - Persistent caching for Spiritual Nutrition evaluations (survives browser restarts)
-  - Improved popup window focus handling
-  - Updated authentication to use InspireCodex.com API
+  - Resizable To-Do List panel with drag handle
+  - Enhanced menu icon visibility in both browsing modes
+  - Spiritual Nutrition Panel improvements
+  - Updated authentication with InspireCodex.com API
   - Self-contained deployment (no .NET installation required)
   - Content filtering with 309,000+ blocked sites
   - Dual-mode navigation (Internet/Jubilee Bible)
 
   See https://jubileebrowser.com/releases for full release notes.
-releaseDate: '2026-01-08T07:42:00.000Z'
+releaseDate: '2026-01-15T10:00:00.000Z'
 minimumSystemVersion: '10.0.17763'

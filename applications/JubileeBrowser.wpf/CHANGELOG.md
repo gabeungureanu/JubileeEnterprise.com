@@ -5,7 +5,7 @@ All notable changes to Jubilee Browser will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [8.0.8] - 2026-01-11
+## [8.0.8] - 2026-01-15
 
 ### Added
 - **jubilee://settings Internal Page**: Full Chrome/Edge-style Settings page with comprehensive UI
@@ -33,6 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Session end notification on sign-out
   - Browser ID and version tracking
 
+- **Resizable To-Do List Panel**: Added GridSplitter for adjustable panel width
+  - Drag handle between To-Do panel and main content
+  - Width persists during session
+
 ### Changed
 - **Settings Page Typography**: Updated design system with CSS custom properties
   - Primary text color: white (#ffffff)
@@ -41,11 +45,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improved visual hierarchy and accessibility
   - Focus-visible states for keyboard navigation
 
+### Fixed
+- **Check for Updates Button**: Now fully functional in About Jubilee dialog
+  - Added missing click event handler to button
+  - Fixed update server URL (was `www.jubileebrowser.com`, now `jubileebrowser.com`)
+  - Fixed HttpClient URL path construction (trailing slash + no leading slash)
+  - UI now dynamically shows checking/available/up-to-date/error states
+  - Last checked timestamp displays correctly
+  - Download button appears when update is available
+
+- **Menu Icon Visibility**: Enhanced icon color handling in WWBW mode
+  - Explicit SetCurrentValue for proper color override
+
 ### Technical
 - Added `InternalPageHandler` integration in navigation flow
 - Implemented `OnWebMessageReceived` handler for Settings-to-C# communication
 - Added heartbeat timer to `SyncEngine.cs` with non-blocking async execution
 - Updated `InspireContinuum.com/server.js` with proper upsert for heartbeat endpoint
+- AboutWindow.xaml.cs now creates UpdateManager instance and handles state changes
+- UpdateManager.cs uses proper trailing slash in BaseAddress for correct URL resolution
 
 ## [8.0.7] - 2026-01-05
 
@@ -306,10 +324,14 @@ We follow [Semantic Versioning](https://semver.org/):
 
 ## Download
 
-Current version: **8.0.7**
+Current version: **8.0.8**
 
-Download: [https://jubileebrowser.com/downloads/JubileeBrowser-Setup-8.0.7.msi](https://jubileebrowser.com/downloads/JubileeBrowser-Setup-8.0.7.msi)
+### Installer (Recommended)
+Download: [JubileeBrowser-Setup-8.0.8.msi](https://jubileebrowser.com/downloads/JubileeBrowser-Setup-8.0.8.msi)
+
+### Portable ZIP
+Download: [JubileeBrowser-8.0.8-win-x64.zip](https://jubileebrowser.com/downloads/JubileeBrowser-8.0.8-win-x64.zip)
+
+SHA256: `4593AB6509CEEE76AC3A8ECC814B0D92B1865F2FD2AF711D9467424E6CF65978`
 
 Auto-update manifest: [https://jubileebrowser.com/downloads/stable/releases.json](https://jubileebrowser.com/downloads/stable/releases.json)
-
-SHA256: `D3D2724711E17B60F42321E641FD5A69C3E0D9081C3D34EDB661CF2CE9FDB33C`
