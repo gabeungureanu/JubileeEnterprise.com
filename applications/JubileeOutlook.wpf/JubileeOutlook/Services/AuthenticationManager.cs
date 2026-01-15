@@ -13,8 +13,7 @@ namespace JubileeOutlook.Services;
 /// </summary>
 public class AuthenticationManager
 {
-    private const string AuthEndpoint = "https://inspirecodex.com/api/auth/";
-    private const int TokenRefreshBufferMinutes = 5;
+    private readonly int _tokenRefreshBufferMinutes;
 
     private readonly SecureTokenStorage _tokenStorage;
     private readonly HttpClient _httpClient;
@@ -28,12 +27,45 @@ public class AuthenticationManager
 
     public AuthenticationManager()
     {
+        // Load configuration from ConfigurationService
+        var config = ConfigurationService.Instance;
+        _tokenRefreshBufferMinutes = config.Api.Auth.TokenRefreshBufferMinutes;
+
         _tokenStorage = new SecureTokenStorage();
-        _httpClient = new HttpClient
+
+        // Use HttpClientFactory for centralized HTTP client management
+        _httpClient = HttpClientFactory.Instance.Auth;
+
+        // Subscribe to authentication events from HttpClientFactory
+        HttpClientFactory.Instance.AuthenticationRequired += OnAuthenticationRequired;
+        HttpClientFactory.Instance.TokenRefreshed += OnTokenRefreshed;
+
+        System.Diagnostics.Debug.WriteLine($"AuthenticationManager initialized with HttpClientFactory");
+    }
+
+    /// <summary>
+    /// Handles authentication required event from HttpClientFactory
+    /// </summary>
+    private void OnAuthenticationRequired(object? sender, EventArgs e)
+    {
+        _session.State = AuthenticationState.TokenExpired;
+        OnSessionChanged();
+    }
+
+    /// <summary>
+    /// Handles token refreshed event from HttpClientFactory
+    /// </summary>
+    private void OnTokenRefreshed(object? sender, EventArgs e)
+    {
+        // Token was refreshed by HttpClientFactory, update our timer
+        _ = Task.Run(async () =>
         {
-            BaseAddress = new Uri(AuthEndpoint),
-            Timeout = TimeSpan.FromSeconds(30)
-        };
+            var tokens = await _tokenStorage.LoadTokensAsync();
+            if (tokens != null)
+            {
+                StartTokenRefreshTimer(tokens);
+            }
+        });
     }
 
     /// <summary>
@@ -379,6 +411,8 @@ public class AuthenticationManager
 
     /// <summary>
     /// Request password reset
+    /// Note: For security, this always returns true to prevent email enumeration attacks.
+    /// The actual email will only be sent if the account exists on the backend.
     /// </summary>
     public async Task<bool> RequestPasswordResetAsync(string email)
     {
@@ -388,12 +422,19 @@ public class AuthenticationManager
             var response = await _httpClient.PostAsync("forgot-password",
                 new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"));
 
-            return response.IsSuccessStatusCode;
+            // Log the actual result for debugging
+            System.Diagnostics.Debug.WriteLine($"Password reset request for {email}: {response.StatusCode}");
+
+            // Always return true to prevent email enumeration attacks
+            // If the email exists, the user will receive a reset link
+            // If not, they simply won't receive anything
+            return true;
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error requesting password reset: {ex.Message}");
-            return false;
+            // Still return true for security - don't reveal if the service is down
+            return true;
         }
     }
 
@@ -505,7 +546,7 @@ public class AuthenticationManager
         StopTokenRefreshTimer();
 
         var expiresAt = DateTimeOffset.FromUnixTimeMilliseconds(tokens.ExpiresAt);
-        var refreshTime = expiresAt.AddMinutes(-TokenRefreshBufferMinutes);
+        var refreshTime = expiresAt.AddMinutes(-_tokenRefreshBufferMinutes);
         var delay = refreshTime - DateTimeOffset.UtcNow;
 
         if (delay.TotalMilliseconds <= 0)
@@ -564,6 +605,16 @@ public class AuthenticationManager
 
     private void OnSessionChanged()
     {
+        // Update ServiceConfiguration with authenticated user
+        if (_session.IsAuthenticated && _session.Profile != null)
+        {
+            ServiceConfiguration.SetAuthenticatedUser(_session.Profile.UserId, _session.Profile.Email);
+        }
+        else
+        {
+            ServiceConfiguration.ClearAuthenticatedUser();
+        }
+
         SessionChanged?.Invoke(this, _session);
     }
 }

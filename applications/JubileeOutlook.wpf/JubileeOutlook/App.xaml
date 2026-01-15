@@ -36,6 +36,8 @@
             <helpers:IsCurrentMonthConverter x:Key="IsCurrentMonthConverter"/>
             <helpers:MiniCalendarDayForegroundConverter x:Key="MiniCalendarDayForegroundConverter"/>
             <helpers:MiniCalendarDayBackgroundConverter x:Key="MiniCalendarDayBackgroundConverter"/>
+            <helpers:IsTodayToFontWeightConverter x:Key="IsTodayToFontWeightConverter"/>
+            <helpers:EventColorConverter x:Key="EventColorConverter"/>
 
         </ResourceDictionary>
     </Application.Resources>
