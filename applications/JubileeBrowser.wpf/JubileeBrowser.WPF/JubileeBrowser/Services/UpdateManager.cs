@@ -7,7 +7,7 @@ namespace JubileeBrowser.Services;
 
 public class UpdateManager
 {
-    private const string UpdateEndpoint = "https://www.jubileebrowser.com/downloads";
+    private const string UpdateEndpoint = "https://jubileebrowser.com/downloads/";
     private const int CheckIntervalHours = 4;
     private const int InitialDelaySeconds = 30;
 
@@ -109,7 +109,7 @@ public class UpdateManager
             Log("Checking for updates...");
 
             var channel = _state.Channel == UpdateChannel.Beta ? "beta" : "stable";
-            var response = await _httpClient.GetAsync($"/{channel}/releases.json");
+            var response = await _httpClient.GetAsync($"{channel}/releases.json");
 
             if (!response.IsSuccessStatusCode)
             {
