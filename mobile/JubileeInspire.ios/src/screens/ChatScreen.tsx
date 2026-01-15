@@ -225,12 +225,53 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
     handleSend(prompt);
   };
 
+  const handleRetry = useCallback(async (messageId: string) => {
+    // Find the assistant message to regenerate
+    const messageIndex = messages.findIndex(m => m.id === messageId);
+    if (messageIndex === -1) return;
+
+    const assistantMessage = messages[messageIndex];
+    if (assistantMessage.role !== 'assistant') return;
+
+    // Find the user message that prompted this response (should be immediately before)
+    let userMessageIndex = messageIndex - 1;
+    while (userMessageIndex >= 0 && messages[userMessageIndex].role !== 'user') {
+      userMessageIndex--;
+    }
+
+    if (userMessageIndex < 0) {
+      console.warn('[ChatScreen] Could not find user message for retry');
+      return;
+    }
+
+    // Set the assistant message to streaming state with empty content
+    setMessages(prev =>
+      prev.map((msg, idx) =>
+        idx === messageIndex
+          ? { ...msg, content: '', isStreaming: true }
+          : msg
+      )
+    );
+    setStreamingMessageId(messageId);
+
+    // Show typing indicator briefly
+    setIsTyping(true);
+    await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 300));
+    setIsTyping(false);
+
+    // Get a different random response (try to avoid the same one)
+    let response = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
+
+    // Stream the new response into the existing message
+    await simulateStreaming(response, messageId);
+  }, [messages, simulateStreaming]);
+
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
   };
 
   const renderMessage = ({ item }: { item: ChatMessage }) => (
-    <MessageBubble message={item} />
+    <MessageBubble message={item} onRetry={handleRetry} />
   );
 
   const styles = createStyles(colors);

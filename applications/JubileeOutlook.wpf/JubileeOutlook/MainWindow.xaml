@@ -899,5 +899,12 @@
                 </StackPanel>
             </Border>
         </Popup>
+
+        <!-- Notification Container (overlays everything) -->
+        <Grid x:Name="NotificationContainer"
+              Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2"
+              VerticalAlignment="Top" HorizontalAlignment="Right"
+              IsHitTestVisible="True"
+              Panel.ZIndex="1000"/>
     </Grid>
 </Window>
