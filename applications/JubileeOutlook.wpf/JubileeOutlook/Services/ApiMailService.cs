@@ -162,6 +162,17 @@ public class ApiMailService : IMailService
         return result.Data ?? new List<EmailMessage>();
     }
 
+    /// <summary>
+    /// Saves a message as draft
+    /// POST /api/v1/outlook/messages (with is_draft=true) for new drafts
+    /// PATCH /api/v1/outlook/messages/{id} for updating existing drafts
+    /// </summary>
+    public async Task<EmailMessage> SaveDraftAsync(EmailMessage draft, string? existingDraftId = null)
+    {
+        var result = await SaveDraftWithResultAsync(draft, existingDraftId);
+        return result.Data ?? draft;
+    }
+
     #endregion
 
     #region Extended Methods with Result Objects
@@ -575,6 +586,212 @@ public class ApiMailService : IMailService
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[ApiMailService] SendMessage error: {ex.Message}");
+            return new MailServiceResult<EmailMessage>
+            {
+                Success = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    /// <summary>
+    /// Saves a draft message with detailed result
+    /// POST /api/v1/outlook/messages (with is_draft=true) for new drafts
+    /// PATCH /api/v1/outlook/messages/{id} for updating existing drafts
+    /// </summary>
+    public async Task<MailServiceResult<EmailMessage>> SaveDraftWithResultAsync(EmailMessage draft, string? existingDraftId = null)
+    {
+        try
+        {
+            if (draft == null)
+            {
+                return new MailServiceResult<EmailMessage>
+                {
+                    Success = false,
+                    Error = "Draft message is required"
+                };
+            }
+
+            // If we have an existing draft ID, update it via PATCH
+            if (!string.IsNullOrEmpty(existingDraftId))
+            {
+                return await UpdateDraftAsync(draft, existingDraftId);
+            }
+
+            // Create new draft via POST with is_draft=true
+            // Build recipients list from To, Cc, Bcc fields
+            var recipients = new List<RecipientDto>();
+
+            if (draft.To != null)
+            {
+                foreach (var email in draft.To)
+                {
+                    recipients.Add(new RecipientDto { Email = email, Type = "to" });
+                }
+            }
+
+            if (draft.Cc != null)
+            {
+                foreach (var email in draft.Cc)
+                {
+                    recipients.Add(new RecipientDto { Email = email, Type = "cc" });
+                }
+            }
+
+            if (draft.Bcc != null)
+            {
+                foreach (var email in draft.Bcc)
+                {
+                    recipients.Add(new RecipientDto { Email = email, Type = "bcc" });
+                }
+            }
+
+            // Build attachments list
+            var attachments = draft.Attachments?.Select(a => new AttachmentCreateDto
+            {
+                FileName = a.FileName,
+                FilePath = a.FilePath,
+                FileSize = a.FileSize,
+                MimeType = a.ContentType,
+                IsInline = false
+            }).ToList();
+
+            // Create the request DTO for draft
+            var request = new CreateMessageRequest
+            {
+                FolderId = null, // API will auto-create/select Drafts folder
+                Subject = draft.Subject,
+                BodyText = draft.IsHtml ? null : draft.Body,
+                BodyHtml = draft.IsHtml ? draft.Body : null,
+                SenderEmail = draft.FromEmail,
+                SenderName = draft.From,
+                IsDraft = true, // This is a draft
+                Importance = draft.Priority.ToString().ToLower(),
+                Recipients = recipients.Count > 0 ? recipients : null,
+                Attachments = attachments?.Count > 0 ? attachments : null
+            };
+
+            var endpoint = "outlook/messages";
+
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] POST {endpoint} (draft) - {draft.Subject}");
+
+            var response = await _httpClientFactory.PostAsync(ApiEndpoint.InspireContinuum, endpoint, request);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Try to parse the response to get the draft ID
+                try
+                {
+                    var createdMessage = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(content, _jsonOptions);
+                    if (createdMessage != null && createdMessage.ContainsKey("id"))
+                    {
+                        var savedDraft = new EmailMessage
+                        {
+                            Id = createdMessage["id"].GetString() ?? Guid.NewGuid().ToString(),
+                            Subject = draft.Subject,
+                            From = draft.From,
+                            FromEmail = draft.FromEmail,
+                            To = draft.To ?? new List<string>(),
+                            Cc = draft.Cc ?? new List<string>(),
+                            Bcc = draft.Bcc ?? new List<string>(),
+                            Body = draft.Body,
+                            IsHtml = draft.IsHtml,
+                            SentDate = DateTime.Now,
+                            ReceivedDate = DateTime.Now,
+                            IsRead = true,
+                            FolderId = "drafts",
+                            HasAttachments = draft.HasAttachments,
+                            Attachments = draft.Attachments ?? new List<EmailAttachment>()
+                        };
+                        System.Diagnostics.Debug.WriteLine($"[ApiMailService] Draft saved: {savedDraft.Id}");
+                        return new MailServiceResult<EmailMessage>
+                        {
+                            Success = true,
+                            Data = savedDraft
+                        };
+                    }
+                }
+                catch { }
+
+                // Return original with success if parsing fails
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Draft saved successfully");
+                return new MailServiceResult<EmailMessage>
+                {
+                    Success = true,
+                    Data = draft
+                };
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] Save draft failed: {response.StatusCode} - {content}");
+            return new MailServiceResult<EmailMessage>
+            {
+                Success = false,
+                Error = $"Failed to save draft: {response.StatusCode} - {content}",
+                StatusCode = response.StatusCode
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] SaveDraft error: {ex.Message}");
+            return new MailServiceResult<EmailMessage>
+            {
+                Success = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    /// <summary>
+    /// Updates an existing draft message
+    /// PATCH /api/v1/outlook/messages/{id}
+    /// </summary>
+    private async Task<MailServiceResult<EmailMessage>> UpdateDraftAsync(EmailMessage draft, string draftId)
+    {
+        try
+        {
+            var endpoint = $"outlook/messages/{Uri.EscapeDataString(draftId)}";
+
+            // Build update payload - API expects specific fields
+            var payload = new Dictionary<string, object?>
+            {
+                ["subject"] = draft.Subject,
+                ["body_text"] = draft.IsHtml ? null : draft.Body,
+                ["body_html"] = draft.IsHtml ? draft.Body : null,
+                ["sender_email"] = draft.FromEmail,
+                ["sender_name"] = draft.From,
+                ["importance"] = draft.Priority.ToString().ToLower()
+            };
+
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] PATCH {endpoint} (update draft) - {draft.Subject}");
+
+            var response = await _httpClientFactory.PatchAsync(ApiEndpoint.InspireContinuum, endpoint, payload);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Return the draft with updated ID
+                draft.Id = draftId;
+                draft.FolderId = "drafts";
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Draft updated: {draftId}");
+                return new MailServiceResult<EmailMessage>
+                {
+                    Success = true,
+                    Data = draft
+                };
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] Update draft failed: {response.StatusCode} - {content}");
+            return new MailServiceResult<EmailMessage>
+            {
+                Success = false,
+                Error = $"Failed to update draft: {response.StatusCode} - {content}",
+                StatusCode = response.StatusCode
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] UpdateDraft error: {ex.Message}");
             return new MailServiceResult<EmailMessage>
             {
                 Success = false,

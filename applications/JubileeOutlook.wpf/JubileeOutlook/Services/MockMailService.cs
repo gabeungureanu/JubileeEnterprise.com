@@ -199,6 +199,33 @@ public class MockMailService : IMailService
         return Task.CompletedTask;
     }
 
+    public Task<EmailMessage> SaveDraftAsync(EmailMessage draft, string? existingDraftId = null)
+    {
+        if (!string.IsNullOrEmpty(existingDraftId))
+        {
+            // Update existing draft
+            var existing = _messages.FirstOrDefault(m => m.Id == existingDraftId);
+            if (existing != null)
+            {
+                existing.Subject = draft.Subject;
+                existing.Body = draft.Body;
+                existing.To = draft.To;
+                existing.Cc = draft.Cc;
+                existing.Bcc = draft.Bcc;
+                existing.Attachments = draft.Attachments;
+                return Task.FromResult(existing);
+            }
+        }
+
+        // Create new draft
+        draft.Id = Guid.NewGuid().ToString();
+        draft.FolderId = "drafts";
+        draft.ReceivedDate = DateTime.Now;
+        _messages.Add(draft);
+        UpdateFolderCounts();
+        return Task.FromResult(draft);
+    }
+
     public Task DeleteMessageAsync(string messageId)
     {
         var message = _messages.FirstOrDefault(m => m.Id == messageId);

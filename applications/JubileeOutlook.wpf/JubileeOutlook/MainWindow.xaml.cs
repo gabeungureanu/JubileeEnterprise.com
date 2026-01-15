@@ -875,6 +875,7 @@ public partial class MainWindow : Window
             _composeMailViewModel.MailSent += OnMailSent;
             _composeMailViewModel.ComposeCancelled += OnComposeCancelled;
             _composeMailViewModel.SendMailRequested += OnSendMailRequested;
+            _composeMailViewModel.SaveDraftRequested += OnSaveDraftRequested;
         }
 
         // Get the authenticated user's email
@@ -882,6 +883,43 @@ public partial class MainWindow : Window
 
         // Reset the form and start composing with the user's email
         _composeMailViewModel.StartComposing(userEmail);
+
+        // Set the DataContext for the compose panel
+        if (ComposeMailPanel != null)
+        {
+            ComposeMailPanel.DataContext = _composeMailViewModel;
+        }
+
+        // Hide reading pane, show compose panel
+        if (ReadingPane != null) ReadingPane.Visibility = Visibility.Collapsed;
+        if (ComposeMailPanel != null) ComposeMailPanel.Visibility = Visibility.Visible;
+    }
+
+    private void ShowComposePanelWithDraft(Models.EmailMessage draft)
+    {
+        // Create a new compose view model if needed
+        if (_composeMailViewModel == null)
+        {
+            _composeMailViewModel = new ViewModels.ComposeMailViewModel();
+            _composeMailViewModel.MailSent += OnMailSent;
+            _composeMailViewModel.ComposeCancelled += OnComposeCancelled;
+            _composeMailViewModel.SendMailRequested += OnSendMailRequested;
+            _composeMailViewModel.SaveDraftRequested += OnSaveDraftRequested;
+        }
+
+        // Get the authenticated user's email
+        var userEmail = _authManager.Session?.Profile?.Email;
+
+        // Load the draft into the compose form
+        _composeMailViewModel.LoadDraft(
+            draftId: draft.Id,
+            to: string.Join("; ", draft.To ?? new List<string>()),
+            cc: string.Join("; ", draft.Cc ?? new List<string>()),
+            bcc: string.Join("; ", draft.Bcc ?? new List<string>()),
+            subject: draft.Subject ?? string.Empty,
+            body: draft.Body ?? string.Empty,
+            fromEmail: userEmail
+        );
 
         // Set the DataContext for the compose panel
         if (ComposeMailPanel != null)
@@ -985,6 +1023,66 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void OnSaveDraftRequested(object? sender, ViewModels.SaveDraftEventArgs e)
+    {
+        try
+        {
+            // Get sender display name from profile or use email
+            var senderName = _authManager.Session?.Profile?.DisplayName ?? "You";
+            var senderEmail = e.From;
+
+            // Create the draft email message
+            var draftMessage = new Models.EmailMessage
+            {
+                Id = e.DraftId ?? Guid.NewGuid().ToString(),
+                Subject = string.IsNullOrWhiteSpace(e.Subject) ? "(No Subject)" : e.Subject,
+                From = senderName,
+                FromEmail = senderEmail,
+                To = e.To,
+                Cc = e.Cc,
+                Bcc = e.Bcc,
+                Body = e.Body,
+                IsHtml = false,
+                ReceivedDate = DateTime.Now,
+                IsRead = true,
+                FolderId = "drafts",
+                Preview = e.Body.Length > 100 ? e.Body.Substring(0, 100) + "..." : e.Body,
+                HasAttachments = e.Attachments.Count > 0
+            };
+
+            // Add attachments if any
+            if (e.Attachments.Count > 0)
+            {
+                draftMessage.Attachments = e.Attachments.Select(a => new Models.EmailAttachment
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    FileName = a.FileName,
+                    FilePath = a.FilePath,
+                    ContentType = GetContentType(a.FileName),
+                    FileSize = System.IO.File.Exists(a.FilePath) ? new System.IO.FileInfo(a.FilePath).Length : 0
+                }).ToList();
+            }
+
+            // Get the mail service and save the draft via API
+            var mailService = Services.ServiceConfiguration.GetMailService();
+
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Saving draft: {draftMessage.Subject}");
+
+            // Save the draft - this will create or update the draft
+            var savedDraft = await mailService.SaveDraftAsync(draftMessage, e.DraftId);
+
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Draft saved with ID: {savedDraft.Id}");
+
+            // Update the compose view model with the saved draft ID
+            _composeMailViewModel?.SetDraftId(savedDraft.Id);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Error saving draft: {ex.Message}");
+            // Don't show error dialog for auto-save, just log it
+        }
+    }
+
     private static string GetContentType(string fileName)
     {
         var extension = System.IO.Path.GetExtension(fileName).ToLowerInvariant();
@@ -1017,6 +1115,21 @@ public partial class MainWindow : Window
         NewDropdownButton.IsChecked = false;
         // Execute the new meeting command (placeholder for now)
         MessageBox.Show("New Meeting functionality coming soon!", "New Meeting", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void MessageListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        // Check if a message is selected
+        if (_mainViewModel.SelectedMessage == null) return;
+
+        // Check if the message is in the Drafts folder
+        if (_mainViewModel.SelectedFolder?.Type == Models.FolderType.Drafts)
+        {
+            // Open the draft for editing in compose panel
+            ShowComposePanelWithDraft(_mainViewModel.SelectedMessage);
+        }
+        // For other folders, double-click could open in a new window (future enhancement)
+        // For now, just keep the reading pane visible
     }
 
     #endregion
