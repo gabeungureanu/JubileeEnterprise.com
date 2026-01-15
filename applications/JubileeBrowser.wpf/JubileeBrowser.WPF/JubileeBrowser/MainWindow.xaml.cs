@@ -1092,6 +1092,9 @@ public partial class MainWindow : Window
             await NavigateToAsync(url);
         }
 
+        // Save session state after new tab created
+        SaveSessionState();
+
         return tabState;
     }
 
@@ -1241,6 +1244,9 @@ public partial class MainWindow : Window
         }
 
         UpdateWelcomePanel();
+
+        // Save session state when switching tabs (active tab changed)
+        SaveSessionState();
     }
 
     private void CloseTab(string tabId)
@@ -1276,6 +1282,9 @@ public partial class MainWindow : Window
         }
 
         UpdateWelcomePanel();
+
+        // Save session state after tab close
+        SaveSessionState();
     }
 
     private void CloseCurrentTab()
@@ -1519,6 +1528,12 @@ public partial class MainWindow : Window
         if (e.IsSuccess && _webViews.TryGetValue(tabId, out var emulationWebView))
         {
             _ = _mobileEmulationManager.ReapplyEmulationAfterNavigationAsync(tabId, emulationWebView);
+        }
+
+        // Save session state after navigation completes (URL changed)
+        if (e.IsSuccess)
+        {
+            SaveSessionState();
         }
     }
 
@@ -2529,9 +2544,11 @@ public partial class MainWindow : Window
         TitleBar.Background = darkBgBrush;
 
         // Update the UI to reflect the current mode
+        System.Diagnostics.Debug.WriteLine($"[UpdateModeVisuals] Current mode: {_currentMode}");
         if (_currentMode == BrowserMode.JubileeBibles)
         {
             // === WORLDWIDE BIBLE WEB MODE ===
+            System.Diagnostics.Debug.WriteLine("[UpdateModeVisuals] Applying WWBW mode visuals");
             // Navigation bar: Yellow (#FFD700)
             NavigationBar.Background = wwbwYellowBrush;
 
@@ -2575,10 +2592,8 @@ public partial class MainWindow : Window
             ProfileIconHead.Fill = wwbwYellowBrush;
             ProfileIconBody.Fill = wwbwYellowBrush;
             ProfileDefaultAvatar.Fill = new SolidColorBrush(Color.FromRgb(37, 37, 69)); // #252545
-            // Menu dots: Black on yellow nav bar in WWBW mode
-            MenuDot1.Fill = blackBrush;
-            MenuDot2.Fill = blackBrush;
-            MenuDot3.Fill = blackBrush;
+            // Force MenuIcon to black (XAML binding may not update when style is dynamically changed)
+            MenuIcon.SetCurrentValue(TextBlock.ForegroundProperty, blackBrush);
             ApplyWWBWButtonStyle(ProfileButton);
 
             // Chat button: Yellow chat icon on dark circular background in WWBW mode
@@ -2632,10 +2647,8 @@ public partial class MainWindow : Window
             ProfileIconHead.Fill = System.Windows.Media.Brushes.White;
             ProfileIconBody.Fill = System.Windows.Media.Brushes.White;
             ProfileDefaultAvatar.Fill = new SolidColorBrush(Color.FromRgb(37, 37, 69)); // #252545
-            // Menu dots: White on blue nav bar in WWW mode
-            MenuDot1.Fill = System.Windows.Media.Brushes.White;
-            MenuDot2.Fill = System.Windows.Media.Brushes.White;
-            MenuDot3.Fill = System.Windows.Media.Brushes.White;
+            // Force MenuIcon to white (XAML binding may not update when style is dynamically changed)
+            MenuIcon.SetCurrentValue(TextBlock.ForegroundProperty, System.Windows.Media.Brushes.White);
             ApplyInternetButtonStyle(ProfileButton);
 
             // Chat button: White chat icon on dark circular background in WWW mode
@@ -2667,6 +2680,8 @@ public partial class MainWindow : Window
         var contentPresenter = new FrameworkElementFactory(typeof(ContentPresenter));
         contentPresenter.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
         contentPresenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+        // Bind TextElement.Foreground to the Button's Foreground so icons inherit the color
+        contentPresenter.SetBinding(System.Windows.Documents.TextElement.ForegroundProperty, new System.Windows.Data.Binding("Foreground") { RelativeSource = new System.Windows.Data.RelativeSource(System.Windows.Data.RelativeSourceMode.TemplatedParent) });
         border.AppendChild(contentPresenter);
 
         template.VisualTree = border;
@@ -2716,6 +2731,8 @@ public partial class MainWindow : Window
         var contentPresenter = new FrameworkElementFactory(typeof(ContentPresenter));
         contentPresenter.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
         contentPresenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+        // Bind TextElement.Foreground to the Button's Foreground so icons inherit the color
+        contentPresenter.SetBinding(System.Windows.Documents.TextElement.ForegroundProperty, new System.Windows.Data.Binding("Foreground") { RelativeSource = new System.Windows.Data.RelativeSource(System.Windows.Data.RelativeSourceMode.TemplatedParent) });
         border.AppendChild(contentPresenter);
 
         template.VisualTree = border;
@@ -2748,20 +2765,29 @@ public partial class MainWindow : Window
         // Find the TextBlock inside the button and set its foreground
         if (button.Content is TextBlock textBlock)
         {
-            textBlock.Foreground = brush;
+            // Use SetCurrentValue to override any template/style bindings
+            textBlock.SetCurrentValue(TextBlock.ForegroundProperty, brush);
         }
     }
 
     private string GetHomepage()
     {
-        var defaultHomepage = "http://www.jubileeverse.com";
+        var defaultInternetHomepage = "https://www.jubileeinspire.com";
+        var defaultWWBWHomepage = "inspire://jubilee.inspire";
         var homepage = _settingsManager?.Settings?.Homepage;
-        if (homepage == null)
-            return defaultHomepage;
 
-        return _currentMode == BrowserMode.JubileeBibles
-            ? homepage.JubileeBibles ?? defaultHomepage
-            : homepage.Internet ?? defaultHomepage;
+        string result;
+        if (_currentMode == BrowserMode.JubileeBibles)
+        {
+            result = homepage?.JubileeBibles ?? defaultWWBWHomepage;
+            System.Diagnostics.Debug.WriteLine($"[GetHomepage] Mode=JubileeBibles, Settings={homepage?.JubileeBibles ?? "null"}, Default={defaultWWBWHomepage}, Result={result}");
+        }
+        else
+        {
+            result = homepage?.Internet ?? defaultInternetHomepage;
+            System.Diagnostics.Debug.WriteLine($"[GetHomepage] Mode=Internet, Settings={homepage?.Internet ?? "null"}, Default={defaultInternetHomepage}, Result={result}");
+        }
+        return result;
     }
 
     private string GetUserDataFolder(BrowserMode mode)
@@ -6926,6 +6952,246 @@ public partial class MainWindow : Window
 
     #endregion
 
+    #region Sidebar Rail Panel
+
+    private bool _isSidebarOpen = false;
+
+    private void SidebarToggleButton_Checked(object sender, RoutedEventArgs e)
+    {
+        OpenSidebarRail();
+    }
+
+    private void SidebarToggleButton_Unchecked(object sender, RoutedEventArgs e)
+    {
+        CloseSidebarRail();
+    }
+
+    private void OpenSidebarRail()
+    {
+        _isSidebarOpen = true;
+        SidebarRailPanel.Visibility = Visibility.Visible;
+        SidebarRailColumn.Width = new GridLength(48);
+        SidebarToggleButton.ToolTip = "Hide Sidebar";
+    }
+
+    private void CloseSidebarRail()
+    {
+        _isSidebarOpen = false;
+        SidebarRailPanel.Visibility = Visibility.Collapsed;
+        SidebarRailColumn.Width = new GridLength(0);
+        SidebarToggleButton.ToolTip = "Show Sidebar";
+
+        // Also close chat panel if open
+        if (_isChatPanelOpen)
+        {
+            CloseChatPanel();
+        }
+    }
+
+    private void SidebarChatButton_Click(object sender, RoutedEventArgs e)
+    {
+        // Toggle chat panel from sidebar
+        if (_isChatPanelOpen)
+        {
+            CloseChatPanel();
+            SidebarChatButton.Tag = null; // Remove active state
+        }
+        else
+        {
+            OpenChatPanel();
+            SidebarChatButton.Tag = "Active"; // Set active state
+        }
+    }
+
+    private void SidebarHistoryButton_Click(object sender, RoutedEventArgs e)
+    {
+        // Open history panel
+        HistoryButton_Click(sender, e);
+    }
+
+    private void SidebarBookmarksButton_Click(object sender, RoutedEventArgs e)
+    {
+        // Open bookmarks panel
+        BookmarksButton_Click(sender, e);
+    }
+
+    #endregion
+
+    #region Todo Panel
+
+    private bool _isTodoPanelOpen = false;
+    private List<TodoItem> _todoItems = new();
+
+    private void SidebarTodoButton_Click(object sender, RoutedEventArgs e)
+    {
+        // Toggle todo panel from sidebar
+        if (_isTodoPanelOpen)
+        {
+            CloseTodoPanel();
+            SidebarTodoButton.Tag = null; // Remove active state
+        }
+        else
+        {
+            OpenTodoPanel();
+            SidebarTodoButton.Tag = "Active"; // Set active state
+        }
+    }
+
+    private async void OpenTodoPanel()
+    {
+        _isTodoPanelOpen = true;
+
+        // Close other panels if open
+        if (SidePanel.Visibility == Visibility.Visible)
+        {
+            SidePanel.Visibility = Visibility.Collapsed;
+            SidePanelColumn.Width = new GridLength(0);
+        }
+
+        TodoPanel.Visibility = Visibility.Visible;
+        TodoPanelSplitter.Visibility = Visibility.Visible;
+        TodoPanelColumn.Width = new GridLength(320);
+        TodoSplitterColumn.Width = new GridLength(4);
+        SidebarTodoActiveIndicator.Visibility = Visibility.Visible;
+
+        // Load todos from API
+        await LoadTodosAsync();
+    }
+
+    private void CloseTodoPanel()
+    {
+        _isTodoPanelOpen = false;
+        TodoPanel.Visibility = Visibility.Collapsed;
+        TodoPanelSplitter.Visibility = Visibility.Collapsed;
+        TodoPanelColumn.Width = new GridLength(0);
+        TodoSplitterColumn.Width = new GridLength(0);
+        SidebarTodoActiveIndicator.Visibility = Visibility.Collapsed;
+        SidebarTodoButton.Tag = null;
+    }
+
+    private void CloseTodoPanel_Click(object sender, RoutedEventArgs e)
+    {
+        CloseTodoPanel();
+    }
+
+    private async Task LoadTodosAsync()
+    {
+        try
+        {
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+            // Get current user email if logged in
+            var userEmail = _profileAuthService.CurrentProfile?.Email ?? "";
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                _todoItems = new List<TodoItem>();
+                TodoItemsControl.ItemsSource = _todoItems;
+                return;
+            }
+
+            var response = await client.GetAsync($"{_apiBaseUrl}/api/todos?email={Uri.EscapeDataString(userEmail)}");
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                _todoItems = System.Text.Json.JsonSerializer.Deserialize<List<TodoItem>>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<TodoItem>();
+                TodoItemsControl.ItemsSource = _todoItems;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading todos: {ex.Message}");
+            _todoItems = new List<TodoItem>();
+            TodoItemsControl.ItemsSource = _todoItems;
+        }
+    }
+
+    private async void AddTodoButton_Click(object sender, RoutedEventArgs e)
+    {
+        await AddNewTodoAsync();
+    }
+
+    private async void NewTodoTextBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            await AddNewTodoAsync();
+        }
+    }
+
+    private async Task AddNewTodoAsync()
+    {
+        var title = NewTodoTextBox.Text?.Trim();
+        if (string.IsNullOrEmpty(title)) return;
+
+        var userEmail = _profileAuthService.CurrentProfile?.Email ?? "";
+        if (string.IsNullOrEmpty(userEmail))
+        {
+            MessageBox.Show("Please sign in to add todos.", "Sign In Required", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        try
+        {
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+            var todo = new { title = title, email = userEmail };
+            var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(todo), System.Text.Encoding.UTF8, "application/json");
+
+            var response = await client.PostAsync($"{_apiBaseUrl}/api/todos", content);
+            if (response.IsSuccessStatusCode)
+            {
+                NewTodoTextBox.Text = "";
+                await LoadTodosAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error adding todo: {ex.Message}");
+        }
+    }
+
+    private async void TodoCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (sender is CheckBox checkBox && checkBox.DataContext is TodoItem todo)
+        {
+            try
+            {
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+                var update = new { isCompleted = todo.IsCompleted };
+                var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(update), System.Text.Encoding.UTF8, "application/json");
+
+                await client.PutAsync($"{_apiBaseUrl}/api/todos/{todo.Id}", content);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error updating todo: {ex.Message}");
+            }
+        }
+    }
+
+    private async void DeleteTodoButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button button && button.Tag is int todoId)
+        {
+            try
+            {
+                using var client = new HttpClient();
+                await client.DeleteAsync($"{_apiBaseUrl}/api/todos/{todoId}");
+                await LoadTodosAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error deleting todo: {ex.Message}");
+            }
+        }
+    }
+
+    #endregion
+
     #region Jubilee Chat Panel
 
     private bool _isChatPanelOpen = false;
@@ -6971,6 +7237,10 @@ public partial class MainWindow : Window
         // Update chat icon state immediately
         ChatActiveIndicator.Visibility = Visibility.Visible;
         ChatIcon.Foreground = new SolidColorBrush(Color.FromRgb(0, 191, 255)); // Cyan when active
+
+        // Update sidebar chat button state
+        SidebarChatButton.Tag = "Active";
+        SidebarChatActiveIndicator.Visibility = Visibility.Visible;
 
         // Initialize session if not already
         if (string.IsNullOrEmpty(_chatSessionId))
@@ -7100,6 +7370,10 @@ public partial class MainWindow : Window
         // Update chat icon state immediately
         ChatActiveIndicator.Visibility = Visibility.Collapsed;
         UpdateChatIconColor(); // Reset to mode-appropriate color
+
+        // Update sidebar chat button state
+        SidebarChatButton.Tag = null;
+        SidebarChatActiveIndicator.Visibility = Visibility.Collapsed;
 
         // Start the fade-to-black transition sequence for closing
         StartChatPanelCloseTransition();

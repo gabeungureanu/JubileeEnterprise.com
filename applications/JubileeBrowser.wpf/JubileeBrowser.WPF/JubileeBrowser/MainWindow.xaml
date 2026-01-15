@@ -6,6 +6,7 @@
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         xmlns:local="clr-namespace:JubileeBrowser"
         xmlns:controls="clr-namespace:JubileeBrowser.Controls"
+        xmlns:converters="clr-namespace:JubileeBrowser.Converters"
         mc:Ignorable="d"
         Title="Jubilee Browser"
         Height="800" Width="1280"
@@ -25,6 +26,10 @@
         PreviewMouseWheel="Window_PreviewMouseWheel">
 
     <Window.Resources>
+        <!-- Value Converters -->
+        <converters:BoolToStrikethroughConverter x:Key="BoolToStrikethroughConverter"/>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+
         <!-- Color Definitions matching Electron app -->
         <Color x:Key="BgPrimaryColor">#000000</Color>
         <Color x:Key="BgSecondaryColor">#16213e</Color>
@@ -110,6 +115,74 @@
                         <Border Background="Transparent" Padding="2">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Sidebar Toggle Button Style with Active State -->
+        <Style x:Key="SidebarToggleButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="4"
+                                Padding="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3a3a5e"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#4a4a6e"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#0f3460"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Sidebar Rail Button Style -->
+        <Style x:Key="SidebarRailButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Padding="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2a2a4e"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3a3a5e"/>
+                            </Trigger>
+                            <Trigger Property="Tag" Value="Active">
+                                <Setter TargetName="border" Property="Background" Value="#0f3460"/>
+                                <Setter Property="Foreground" Value="#E6AC00"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -998,36 +1071,18 @@
 
             <!-- Tab Strip with Jubilee Logo and New Tab Button -->
             <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,0" VerticalAlignment="Bottom">
-                <!-- Jubilee Profile Logo (50% reduced size) -->
+                <!-- Jubilee Logo Image -->
                 <Border x:Name="JubileeLogoButton"
                         Background="Transparent"
-                        Width="18" Height="18"
-                        Margin="6,-3,4,0"
+                        Width="22" Height="22"
+                        Margin="6,-4,4,0"
                         VerticalAlignment="Center"
                         Cursor="Hand"
                         ToolTip="Jubilee Favorites"
                         MouseLeftButtonDown="JubileeLogoButton_Click">
-                    <Grid>
-                        <!-- Outer glow ring -->
-                        <Ellipse Width="15" Height="15" StrokeThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Ellipse.Stroke>
-                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                    <GradientStop Color="#E6AC00" Offset="0"/>
-                                    <GradientStop Color="#FFD700" Offset="0.5"/>
-                                    <GradientStop Color="#E6AC00" Offset="1"/>
-                                </LinearGradientBrush>
-                            </Ellipse.Stroke>
-                        </Ellipse>
-                        <!-- Inner circle with J -->
-                        <Ellipse Width="12" Height="12" Fill="#1a1a2e" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        <TextBlock Text="J"
-                                   FontFamily="Georgia"
-                                   FontSize="7"
-                                   FontWeight="Bold"
-                                   Foreground="#E6AC00"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"/>
-                    </Grid>
+                    <Image Source="Resources/Icons/jubilee-logo.png"
+                           Width="20" Height="20"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
                 </Border>
                 <ListBox x:Name="TabStrip"
                          VerticalAlignment="Bottom"
@@ -1112,6 +1167,14 @@
 
             <!-- Navigation Buttons -->
             <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="12,0,8,0">
+                <!-- Sidebar Toggle Button (Firefox-style) -->
+                <ToggleButton x:Name="SidebarToggleButton"
+                              Style="{StaticResource SidebarToggleButtonStyle}"
+                              Checked="SidebarToggleButton_Checked"
+                              Unchecked="SidebarToggleButton_Unchecked"
+                              ToolTip="Show Sidebar">
+                    <TextBlock x:Name="SidebarToggleIcon" Text="&#xE700;" FontFamily="Segoe MDL2 Assets" FontSize="16"/>
+                </ToggleButton>
                 <Button x:Name="BackButton"
                         Style="{StaticResource NavButtonStyle}"
                         Click="BackButton_Click"
@@ -1327,11 +1390,12 @@
                         ToolTip="Bookmarks (Ctrl+Shift+B)">
                     <TextBlock Text="&#xE728;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
                 </Button>
-                <!-- Jubilee Chat Button - circular styling matching sign-in icon -->
+                <!-- Jubilee Chat Button - HIDDEN (moved to sidebar rail) -->
                 <Button x:Name="ChatButton"
                         Style="{StaticResource ProfileButtonStyle}"
                         Click="ChatButton_Click"
-                        AutomationProperties.Name="Jubilee Chat">
+                        AutomationProperties.Name="Jubilee Chat"
+                        Visibility="Collapsed">
                     <Button.ToolTip>
                         <ToolTip Style="{StaticResource NavBarTooltipStyle}" Content="Jubilee Chat"/>
                     </Button.ToolTip>
@@ -1403,21 +1467,17 @@
                                 Visibility="Collapsed"/>
                     </Grid>
                 </Button>
-                <!-- Menu Button (Material Symbols more_vert - 3 vertical dots) -->
+                <!-- Menu Button (Segoe MDL2 Assets More icon - 3 vertical dots) -->
                 <Button x:Name="MenuButton"
                         Style="{StaticResource NavButtonStyle}"
                         Click="MenuButton_Click"
                         AutomationProperties.Name="Menu"
-                        Margin="0,0,4,0">
+                        Margin="0,0,9,0">
                     <Button.ToolTip>
                         <ToolTip Style="{StaticResource NavBarTooltipStyle}" Content="Menu"/>
                     </Button.ToolTip>
-                    <Canvas Width="16" Height="16">
-                        <!-- Three vertical dots (more_vert icon from Material Symbols) -->
-                        <Ellipse x:Name="MenuDot1" Width="4" Height="4" Fill="White" Canvas.Left="6" Canvas.Top="1"/>
-                        <Ellipse x:Name="MenuDot2" Width="4" Height="4" Fill="White" Canvas.Left="6" Canvas.Top="6"/>
-                        <Ellipse x:Name="MenuDot3" Width="4" Height="4" Fill="White" Canvas.Left="6" Canvas.Top="11"/>
-                    </Canvas>
+                    <TextBlock x:Name="MenuIcon" Text="&#xE712;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                 </Button>
             </StackPanel>
         </Grid>
@@ -1500,8 +1560,14 @@
         <!-- Main Content Area -->
         <Grid x:Name="MainContentGrid" Grid.Row="3">
             <Grid.ColumnDefinitions>
+                <!-- Sidebar Rail (Firefox-style icon rail) -->
+                <ColumnDefinition x:Name="SidebarRailColumn" Width="0"/>
                 <!-- Side Panel (History/Bookmarks) -->
                 <ColumnDefinition x:Name="SidePanelColumn" Width="0"/>
+                <!-- Todo Panel -->
+                <ColumnDefinition x:Name="TodoPanelColumn" Width="0"/>
+                <!-- Todo Panel Splitter -->
+                <ColumnDefinition x:Name="TodoSplitterColumn" Width="0"/>
                 <!-- Browser Content -->
                 <ColumnDefinition Width="*"/>
                 <!-- Chat Panel Splitter -->
@@ -1510,10 +1576,90 @@
                 <ColumnDefinition x:Name="ChatPanelColumn" Width="0"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Side Panel (Bookmarks/History) - Redesigned -->
-            <Border x:Name="SidePanel"
+            <!-- Sidebar Rail Panel (Firefox-style) -->
+            <Border x:Name="SidebarRailPanel"
                     Grid.Column="0"
-                    Background="#0a0a14"
+                    Background="#1a1a2e"
+                    BorderBrush="#2a2a4e"
+                    BorderThickness="0,0,1,0"
+                    Width="48"
+                    Visibility="Collapsed">
+                <StackPanel Orientation="Vertical" Margin="4,8,4,8">
+                    <!-- Jubilee Chat Icon (moved from right nav) -->
+                    <Button x:Name="SidebarChatButton"
+                            Style="{StaticResource SidebarRailButtonStyle}"
+                            Click="SidebarChatButton_Click"
+                            ToolTip="Jubilee Chat">
+                        <Grid>
+                            <TextBlock x:Name="SidebarChatIcon"
+                                      Text="&#xE8BD;"
+                                      FontFamily="Segoe MDL2 Assets"
+                                      FontSize="18"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+                            <!-- Active indicator dot -->
+                            <Ellipse x:Name="SidebarChatActiveIndicator"
+                                    Width="8" Height="8"
+                                    Fill="#00BFFF"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Margin="0,-2,-2,0"
+                                    Visibility="Collapsed">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="#00BFFF" BlurRadius="6" ShadowDepth="0" Opacity="0.8"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                        </Grid>
+                    </Button>
+                    <!-- To-Do List Icon -->
+                    <Button x:Name="SidebarTodoButton"
+                            Style="{StaticResource SidebarRailButtonStyle}"
+                            Click="SidebarTodoButton_Click"
+                            ToolTip="To-Do List">
+                        <Grid>
+                            <TextBlock x:Name="SidebarTodoIcon"
+                                      Text="&#xE762;"
+                                      FontFamily="Segoe MDL2 Assets"
+                                      FontSize="18"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+                            <!-- Active indicator dot -->
+                            <Ellipse x:Name="SidebarTodoActiveIndicator"
+                                    Width="8" Height="8"
+                                    Fill="#00BFFF"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Margin="0,-2,-2,0"
+                                    Visibility="Collapsed">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="#00BFFF" BlurRadius="6" ShadowDepth="0" Opacity="0.8"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                        </Grid>
+                    </Button>
+                    <!-- Separator -->
+                    <Border Height="1" Background="#2a2a4e" Margin="4,8,4,8"/>
+                    <!-- History Icon -->
+                    <Button x:Name="SidebarHistoryButton"
+                            Style="{StaticResource SidebarRailButtonStyle}"
+                            Click="SidebarHistoryButton_Click"
+                            ToolTip="History">
+                        <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="18"/>
+                    </Button>
+                    <!-- Bookmarks Icon -->
+                    <Button x:Name="SidebarBookmarksButton"
+                            Style="{StaticResource SidebarRailButtonStyle}"
+                            Click="SidebarBookmarksButton_Click"
+                            ToolTip="Bookmarks">
+                        <TextBlock Text="&#xE728;" FontFamily="Segoe MDL2 Assets" FontSize="18"/>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <!-- Side Panel -->
+            <Border x:Name="SidePanel"
+                    Grid.Column="1"
+                    Background="{StaticResource BgSecondaryBrush}"
                     BorderBrush="{StaticResource BorderBrush}"
                     BorderThickness="0,0,1,0"
                     Visibility="Collapsed">
@@ -1877,8 +2023,160 @@
                 </Grid>
             </Border>
 
+            <!-- To-Do List Panel -->
+            <Border x:Name="TodoPanel"
+                    Grid.Column="2"
+                    Background="{StaticResource BgSecondaryBrush}"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="0,0,0,0"
+                    Visibility="Collapsed">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="40"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Todo Panel Header -->
+                    <Border Grid.Row="0"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="0,0,0,1">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
+                                <TextBlock Text="&#xE762;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                          Foreground="{StaticResource AccentBrush}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="To-Do List"
+                                          Foreground="{StaticResource TextPrimaryBrush}"
+                                          FontSize="14"
+                                          FontWeight="SemiBold"
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Button Style="{StaticResource NavButtonStyle}"
+                                    HorizontalAlignment="Right"
+                                    Margin="4"
+                                    Click="CloseTodoPanel_Click">
+                                <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Add New Todo Section -->
+                    <Border Grid.Row="1" Padding="12,8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="NewTodoTextBox"
+                                    Grid.Column="0"
+                                    Padding="8,6"
+                                    Background="#1a1a2e"
+                                    Foreground="{StaticResource TextPrimaryBrush}"
+                                    BorderBrush="{StaticResource BorderBrush}"
+                                    BorderThickness="1"
+                                    FontSize="13"
+                                    VerticalContentAlignment="Center"
+                                    KeyDown="NewTodoTextBox_KeyDown">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="TextBox">
+                                                    <Border Background="{TemplateBinding Background}"
+                                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                                            CornerRadius="4">
+                                                        <ScrollViewer x:Name="PART_ContentHost" Margin="0"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                            <Button Grid.Column="1"
+                                    Margin="8,0,0,0"
+                                    Padding="12,6"
+                                    Background="{StaticResource AccentBrush}"
+                                    Foreground="White"
+                                    Click="AddTodoButton_Click"
+                                    Cursor="Hand">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Button.Style>
+                                <TextBlock Text="Add" FontSize="12" FontWeight="SemiBold"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Todo List -->
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="TodoItemsControl" Padding="8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#252545" CornerRadius="6" Margin="4" Padding="12,10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <CheckBox Grid.Column="0"
+                                                     IsChecked="{Binding IsCompleted, Mode=TwoWay}"
+                                                     VerticalAlignment="Center"
+                                                     Margin="0,0,10,0"
+                                                     Checked="TodoCheckBox_Changed"
+                                                     Unchecked="TodoCheckBox_Changed"/>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Title}"
+                                                          Foreground="{StaticResource TextPrimaryBrush}"
+                                                          FontSize="13"
+                                                          TextWrapping="Wrap"
+                                                          TextDecorations="{Binding IsCompleted, Converter={StaticResource BoolToStrikethroughConverter}}"/>
+                                                <TextBlock Text="{Binding DueDate, StringFormat='Due: {0:MMM dd, yyyy}'}"
+                                                          Foreground="{StaticResource TextSecondaryBrush}"
+                                                          FontSize="11"
+                                                          Margin="0,2,0,0"
+                                                          Visibility="{Binding DueDate, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="2"
+                                                   Style="{StaticResource NavButtonStyle}"
+                                                   Click="DeleteTodoButton_Click"
+                                                   Tag="{Binding Id}"
+                                                   ToolTip="Delete">
+                                                <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#ff6b6b"/>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Todo Panel Resize Splitter -->
+            <GridSplitter x:Name="TodoPanelSplitter"
+                          Grid.Column="3"
+                          Width="4"
+                          Background="#2a2a4e"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Stretch"
+                          Cursor="SizeWE"
+                          Visibility="Collapsed"/>
+
             <!-- WebView Container with Mobile Emulation -->
-            <DockPanel Grid.Column="1" Background="{StaticResource BgPrimaryBrush}">
+            <DockPanel Grid.Column="4" Background="{StaticResource BgPrimaryBrush}">
                 <!-- Mobile Emulation Panel (docked at top, initially hidden) -->
                 <controls:MobileEmulationPanel x:Name="MobileEmulationPanel"
                                                DockPanel.Dock="Top"
@@ -1983,7 +2281,7 @@
 
             <!-- Chat Panel Splitter -->
             <GridSplitter x:Name="ChatSplitter"
-                         Grid.Column="2"
+                         Grid.Column="5"
                          Width="4"
                          Background="#2a2a4e"
                          HorizontalAlignment="Stretch"
@@ -1992,7 +2290,7 @@
 
             <!-- Jubilee Chat Panel - JubileeVerse.com Style -->
             <Border x:Name="ChatPanel"
-                    Grid.Column="3"
+                    Grid.Column="6"
                     Background="#000000"
                     BorderBrush="#333333"
                     BorderThickness="1,0,0,0"

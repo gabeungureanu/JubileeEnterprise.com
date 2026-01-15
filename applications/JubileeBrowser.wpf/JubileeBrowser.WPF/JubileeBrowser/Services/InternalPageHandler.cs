@@ -627,7 +627,7 @@ public class InternalPageHandler
                             <div class='title'>Jubilee Bibles Homepage</div>
                             <div class='description'>The page shown when you open a new tab in Jubilee Bibles mode</div>
                         </div>
-                        <input type='text' data-setting='homepage.jubileeBibles' id='homepageJubileeBibles' placeholder='inspire://jubileeverse.webspace'>
+                        <input type='text' data-setting='homepage.jubileeBibles' id='homepageJubileeBibles' placeholder='inspire://jubilee.inspire'>
                     </div>
                 </div>
 
