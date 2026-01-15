@@ -159,6 +159,10 @@ public partial class MainWindow : Window
             ShowTabContent("HomeTab");
             // Ensure Mail module is visible on start
             ShowModuleContent(AppModule.Mail);
+            // Initialize service configuration (reads from environment and config)
+            ServiceConfiguration.Initialize();
+            // Initialize notification service for user-friendly error messages
+            NotificationService.Instance.Initialize(NotificationContainer);
             // Initialize authentication state
             await _authManager.InitializeAsync();
             UpdateProfileUI();
@@ -1079,7 +1083,7 @@ public partial class MainWindow : Window
         var mainBorder = new Border
         {
             Width = 405,
-            Height = 477,
+            Height = 590,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             Background = new LinearGradientBrush

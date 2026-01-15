@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using JubileeOutlook.Models;
+using JubileeOutlook.Services;
 using System.Collections.ObjectModel;
 using System.Windows.Media.Imaging;
 
@@ -85,6 +86,12 @@ public partial class NewEventViewModel : ObservableObject
     [ObservableProperty]
     private string _validationError = string.Empty;
 
+    [ObservableProperty]
+    private bool _isLoadingImages;
+
+    [ObservableProperty]
+    private string _loadingImagesMessage = string.Empty;
+
     public ObservableCollection<EventAttachment> Attachments { get; } = new();
 
     public ObservableCollection<EventImageViewModel> Images { get; } = new();
@@ -142,55 +149,60 @@ public partial class NewEventViewModel : ObservableObject
             }
         }
 
-        // Load existing images
+        // Load existing images (sync for local data, async for URLs)
         Images.Clear();
-        if (eventToEdit.Images != null)
+        if (eventToEdit.Images != null && eventToEdit.Images.Count > 0)
         {
-            foreach (var image in eventToEdit.Images)
-            {
-                try
-                {
-                    BitmapImage? bitmapImage = null;
-
-                    // Try to load from ImageData first (stored bytes)
-                    if (image.ImageData != null && image.ImageData.Length > 0)
-                    {
-                        bitmapImage = new BitmapImage();
-                        using var stream = new System.IO.MemoryStream(image.ImageData);
-                        bitmapImage.BeginInit();
-                        bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                        bitmapImage.StreamSource = stream;
-                        bitmapImage.EndInit();
-                        bitmapImage.Freeze();
-                    }
-                    // Fallback to file path if available
-                    else if (!string.IsNullOrEmpty(image.FilePath) && System.IO.File.Exists(image.FilePath))
-                    {
-                        bitmapImage = new BitmapImage();
-                        bitmapImage.BeginInit();
-                        bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                        bitmapImage.UriSource = new Uri(image.FilePath);
-                        bitmapImage.EndInit();
-                        bitmapImage.Freeze();
-                    }
-
-                    if (bitmapImage != null)
-                    {
-                        Images.Add(new EventImageViewModel
-                        {
-                            EventImage = image,
-                            ImageSource = bitmapImage
-                        });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[NewEventViewModel] Error loading image: {ex.Message}");
-                }
-            }
+            LoadImagesAsync(eventToEdit.Images);
         }
 
         CalculateEventPosition();
+    }
+
+    /// <summary>
+    /// Loads images asynchronously, downloading from URLs if necessary
+    /// </summary>
+    private async void LoadImagesAsync(List<EventImage> imagesToLoad)
+    {
+        try
+        {
+            IsLoadingImages = true;
+            LoadingImagesMessage = "Loading images...";
+
+            // Use ImageService to load images for display
+            var loadedImages = await ImageService.Instance.LoadEventImagesForDisplayAsync(imagesToLoad);
+
+            int loadedCount = 0;
+            foreach (var (image, bitmap) in loadedImages)
+            {
+                loadedCount++;
+                LoadingImagesMessage = $"Loading image {loadedCount} of {imagesToLoad.Count}...";
+
+                if (bitmap != null)
+                {
+                    Images.Add(new EventImageViewModel
+                    {
+                        EventImage = image,
+                        ImageSource = bitmap
+                    });
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[NewEventViewModel] Failed to load image: {image.FileName}");
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[NewEventViewModel] Loaded {Images.Count} images successfully");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[NewEventViewModel] Error loading images: {ex.Message}");
+        }
+        finally
+        {
+            IsLoadingImages = false;
+            LoadingImagesMessage = string.Empty;
+        }
     }
 
     private static string GetColorHexFromBrush(System.Windows.Media.Brush brush)

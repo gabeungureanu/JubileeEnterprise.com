@@ -134,6 +134,21 @@ public class EventAttachment
     public long FileSize { get; set; }
     public DateTime AddedDate { get; set; } = DateTime.Now;
 
+    /// <summary>
+    /// URL of the uploaded attachment on the server
+    /// </summary>
+    public string? Url { get; set; }
+
+    /// <summary>
+    /// Content type (MIME type)
+    /// </summary>
+    public string ContentType { get; set; } = "application/octet-stream";
+
+    /// <summary>
+    /// Whether the attachment has been uploaded to the server
+    /// </summary>
+    public bool IsUploaded => !string.IsNullOrEmpty(Url);
+
     public string FileSizeFormatted
     {
         get
@@ -177,4 +192,29 @@ public class EventImage
     public string FilePath { get; set; } = string.Empty;
     public byte[]? ImageData { get; set; }
     public DateTime AddedDate { get; set; } = DateTime.Now;
+
+    /// <summary>
+    /// URL of the uploaded image on the server
+    /// </summary>
+    public string? Url { get; set; }
+
+    /// <summary>
+    /// Thumbnail URL for preview
+    /// </summary>
+    public string? ThumbnailUrl { get; set; }
+
+    /// <summary>
+    /// Content type (e.g., "image/jpeg", "image/png")
+    /// </summary>
+    public string ContentType { get; set; } = "image/jpeg";
+
+    /// <summary>
+    /// Size of the image in bytes
+    /// </summary>
+    public long FileSize { get; set; }
+
+    /// <summary>
+    /// Whether the image has been uploaded to the server
+    /// </summary>
+    public bool IsUploaded => !string.IsNullOrEmpty(Url);
 }

@@ -1075,6 +1075,45 @@
                                 </StackPanel>
                             </Border>
 
+                            <!-- Images Loading Indicator (Row 3) -->
+                            <Border Grid.Row="3" Background="#252525" CornerRadius="8" Margin="0,12,0,0" Padding="16"
+                                    Visibility="{Binding IsLoadingImages, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <!-- Spinning indicator -->
+                                    <Border Width="20" Height="20" Margin="0,0,10,0">
+                                        <Border.RenderTransform>
+                                            <RotateTransform x:Name="LoadingImagesSpinnerRotate" />
+                                        </Border.RenderTransform>
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsLoadingImages}" Value="True">
+                                                        <DataTrigger.EnterActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard RepeatBehavior="Forever">
+                                                                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Angle"
+                                                                                     From="0" To="360" Duration="0:0:1" />
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </DataTrigger.EnterActions>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Ellipse Width="20" Height="20" StrokeThickness="3">
+                                            <Ellipse.Stroke>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#0078D4" Offset="0"/>
+                                                    <GradientStop Color="Transparent" Offset="0.75"/>
+                                                </LinearGradientBrush>
+                                            </Ellipse.Stroke>
+                                        </Ellipse>
+                                    </Border>
+                                    <TextBlock Text="{Binding LoadingImagesMessage}" Foreground="#AAAAAA"
+                                               FontSize="12" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+
                             <!-- Images Gallery (Row 3) -->
                             <ItemsControl Grid.Row="3" ItemsSource="{Binding Images}" Margin="0,12,0,0">
                                 <ItemsControl.Style>

@@ -1,8 +1,20 @@
 # JubileeOutlook Database Integration
 
+**Last Updated:** January 15, 2026
+**Version:** 1.5.0
+
 ## Overview
 
 JubileeOutlook integrates with the Jubilee Enterprise database architecture through the InspireContinuum API. This document describes the database schema, API endpoints, and integration patterns for calendar events, email messages, and contacts.
+
+## Current Integration Status
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| ApiCalendarService | ✅ Complete | Full CRUD with caching |
+| ApiMailService | 🔄 In Progress | HTTP client ready |
+| ImageService | ✅ Complete | Upload/download with retry |
+| Date Range Caching | ✅ Complete | Month-based, 5-min expiry |
 
 ## Database Architecture
 
@@ -224,6 +236,35 @@ psql -h localhost -p 5434 -U guardian -d continuum -f continuum/0003_jubilee_out
 - File attachments are stored with checksums for integrity verification
 - Email body content uses parameterized queries to prevent SQL injection
 - CORS is configured to allow only trusted origins
+
+## Implemented Features (v1.5.0)
+
+### Date Range Caching
+The CalendarViewModel implements intelligent date range caching:
+- **Month-based cache keys**: `YYYY-MM` format
+- **5-minute expiration**: `DateRangeCacheEntry.ExpiresAt`
+- **Buffer days**: Loads 7-14 extra days for smooth navigation
+- **Thread-safe**: Uses `lock(_cacheLock)` for concurrent access
+
+```csharp
+// Cache structure
+private readonly Dictionary<string, DateRangeCacheEntry> _dateRangeCache;
+
+// Loading visible range
+await LoadEventsForVisibleRangeAsync();
+```
+
+### Image Handling
+The ImageService provides robust image upload/download:
+- **Multipart upload**: For new event images
+- **Async download**: With loading indicators
+- **Retry logic**: Exponential backoff on failures
+
+### Error Handling
+All API services implement:
+- **Global error handling**: Try/catch with user-friendly messages
+- **Retry policies**: Configurable attempt counts
+- **HTTP status handling**: Proper 4xx/5xx response processing
 
 ## Future Enhancements
 
