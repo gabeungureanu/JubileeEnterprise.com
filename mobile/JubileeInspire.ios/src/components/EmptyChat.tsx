@@ -87,11 +87,10 @@ const EmptyChat: React.FC<EmptyChatProps> = ({ onSuggestionPress }) => {
 
 const createStyles = (colors: any) => StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    paddingBottom: 100,
+    paddingBottom: spacing.md,
     backgroundColor: colors.background,
   },
   logoContainer: {

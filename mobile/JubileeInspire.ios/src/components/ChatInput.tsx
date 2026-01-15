@@ -36,15 +36,17 @@ interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  centered?: boolean; // When true, center the input and limit width
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
   onSend,
   disabled = false,
   placeholder = 'Message Jubilee Inspire...',
+  centered = false,
 }) => {
   const { colors } = useTheme();
-  const styles = createStyles(colors);
+  const styles = createStyles(colors, centered);
 
   const [text, setText] = useState('');
   const [showToolsMenu, setShowToolsMenu] = useState(false);
@@ -305,58 +307,60 @@ const ChatInput: React.FC<ChatInputProps> = ({
           }}
         />
 
-        {/* Send Button, Voice Mode, or Microphone */}
-        {canSend ? (
-          <TouchableOpacity
-            style={[styles.sendButton, styles.sendButtonActive]}
-            onPress={handleSend}
-            disabled={!canSend}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-up" size={20} color="#000000" />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.rightButtons}>
-            {/* Voice Mode Button */}
+        {/* Right side buttons - always show mic and voice, replace voice with send when text exists */}
+        <View style={styles.rightButtons}>
+          {/* Microphone Button - always visible */}
+          <View style={styles.micButtonContainer}>
+            <TouchableOpacity
+              style={[styles.micButton, isListening && styles.micButtonActive]}
+              onPress={handleVoiceInput}
+              disabled={disabled}
+              {...(Platform.OS === 'web' ? {
+                onMouseEnter: () => setShowMicTooltip(true),
+                onMouseLeave: () => setShowMicTooltip(false)
+              } as any : {})}
+            >
+              <Ionicons
+                name={isListening ? "mic" : "mic-outline"}
+                size={22}
+                color={isListening ? "#ef4444" : colors.textSecondary}
+              />
+            </TouchableOpacity>
+            {showMicTooltip && Platform.OS === 'web' && (
+              <View style={styles.tooltip}>
+                <Text style={styles.tooltipText}>
+                  {isListening ? 'Stop listening' : 'Voice input'}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Voice Mode Button (wave icon) OR Send Button */}
+          {canSend ? (
+            <TouchableOpacity
+              style={[styles.sendButton, styles.sendButtonActive]}
+              onPress={handleSend}
+              disabled={!canSend}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-up" size={20} color="#000000" />
+            </TouchableOpacity>
+          ) : (
             <TouchableOpacity
               style={[styles.voiceModeButton, showVoiceMode && styles.voiceModeButtonActive]}
               onPress={handleVoiceModeToggle}
               disabled={disabled}
             >
-              <Ionicons
-                name="headset-outline"
-                size={22}
-                color={showVoiceMode ? colors.primary : colors.textSecondary}
-              />
+              <View style={styles.voiceWaveIcon}>
+                <View style={[styles.voiceBar, styles.voiceBar1, showVoiceMode && styles.voiceBarActive]} />
+                <View style={[styles.voiceBar, styles.voiceBar2, showVoiceMode && styles.voiceBarActive]} />
+                <View style={[styles.voiceBar, styles.voiceBar3, showVoiceMode && styles.voiceBarActive]} />
+                <View style={[styles.voiceBar, styles.voiceBar4, showVoiceMode && styles.voiceBarActive]} />
+                <View style={[styles.voiceBar, styles.voiceBar5, showVoiceMode && styles.voiceBarActive]} />
+              </View>
             </TouchableOpacity>
-
-            {/* Microphone Button */}
-            <View style={styles.micButtonContainer}>
-              <TouchableOpacity
-                style={[styles.micButton, isListening && styles.micButtonActive]}
-                onPress={handleVoiceInput}
-                disabled={disabled}
-                {...(Platform.OS === 'web' ? {
-                  onMouseEnter: () => setShowMicTooltip(true),
-                  onMouseLeave: () => setShowMicTooltip(false)
-                } as any : {})}
-              >
-                <Ionicons
-                  name={isListening ? "mic" : "mic-outline"}
-                  size={22}
-                  color={isListening ? "#ef4444" : colors.textSecondary}
-                />
-              </TouchableOpacity>
-              {showMicTooltip && Platform.OS === 'web' && (
-                <View style={styles.tooltip}>
-                  <Text style={styles.tooltipText}>
-                    {isListening ? 'Stop listening' : 'Voice input'}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
-        )}
+          )}
+        </View>
       </View>
 
       {/* Tools Menu Modal */}
@@ -463,13 +467,14 @@ const ChatInput: React.FC<ChatInputProps> = ({
   );
 };
 
-const createStyles = (colors: any) => StyleSheet.create({
+const createStyles = (colors: any, centered: boolean) => StyleSheet.create({
   container: {
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
+    paddingTop: centered ? 20 : spacing.sm,
     paddingBottom: Platform.OS === 'ios' ? spacing.md : spacing.sm,
     backgroundColor: colors.background,
     borderTopWidth: 0,
+    ...(centered ? { alignItems: 'center', width: '100%' } : {}),
   },
   attachmentPreview: {
     flexDirection: 'row',
@@ -516,6 +521,10 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingRight: spacing.xs,
     paddingVertical: spacing.xs,
     minHeight: 48,
+    ...(centered ? {
+      maxWidth: 650,
+      width: '100%',
+    } : {}),
   },
   plusButton: {
     padding: spacing.xs,
@@ -531,6 +540,10 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: spacing.xs,
     textAlignVertical: 'center',
     lineHeight: Platform.OS === 'web' ? 20 : undefined,
+    ...(Platform.OS === 'web' ? {
+      outlineStyle: 'none',
+      outlineWidth: 0,
+    } as any : {}),
   },
   rightButtons: {
     flexDirection: 'row',
@@ -640,6 +653,37 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   chevron: {
     marginLeft: 'auto',
+  },
+  voiceWaveIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+    height: 22,
+    width: 22,
+  },
+  voiceBar: {
+    width: 3,
+    backgroundColor: colors.textSecondary,
+    borderRadius: 1.5,
+  },
+  voiceBar1: {
+    height: 8,
+  },
+  voiceBar2: {
+    height: 14,
+  },
+  voiceBar3: {
+    height: 20,
+  },
+  voiceBar4: {
+    height: 14,
+  },
+  voiceBar5: {
+    height: 8,
+  },
+  voiceBarActive: {
+    backgroundColor: colors.primary,
   },
 });
 
