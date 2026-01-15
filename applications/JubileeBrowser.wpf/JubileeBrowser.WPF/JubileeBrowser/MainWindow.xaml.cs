@@ -2592,11 +2592,8 @@ public partial class MainWindow : Window
             ProfileIconHead.Fill = wwbwYellowBrush;
             ProfileIconBody.Fill = wwbwYellowBrush;
             ProfileDefaultAvatar.Fill = new SolidColorBrush(Color.FromRgb(37, 37, 69)); // #252545
-            // Menu icon: Black on yellow nav bar in WWBW mode (using TextBlock like other nav buttons)
-            System.Diagnostics.Debug.WriteLine($"[UpdateModeVisuals] Setting MenuIcon.Foreground to Black. Current value: {MenuIcon.Foreground}");
-            MenuIcon.Foreground = new SolidColorBrush(Colors.Black);
-            MenuButton.Foreground = new SolidColorBrush(Colors.Black);
-            System.Diagnostics.Debug.WriteLine($"[UpdateModeVisuals] After setting MenuIcon.Foreground: {MenuIcon.Foreground}");
+            // Force MenuIcon to black (XAML binding may not update when style is dynamically changed)
+            MenuIcon.SetCurrentValue(TextBlock.ForegroundProperty, blackBrush);
             ApplyWWBWButtonStyle(ProfileButton);
 
             // Chat button: Yellow chat icon on dark circular background in WWBW mode
@@ -2650,9 +2647,8 @@ public partial class MainWindow : Window
             ProfileIconHead.Fill = System.Windows.Media.Brushes.White;
             ProfileIconBody.Fill = System.Windows.Media.Brushes.White;
             ProfileDefaultAvatar.Fill = new SolidColorBrush(Color.FromRgb(37, 37, 69)); // #252545
-            // Menu icon: White on blue nav bar in WWW mode (using TextBlock like other nav buttons)
-            MenuIcon.Foreground = new SolidColorBrush(Colors.White);
-            MenuButton.Foreground = new SolidColorBrush(Colors.White);
+            // Force MenuIcon to white (XAML binding may not update when style is dynamically changed)
+            MenuIcon.SetCurrentValue(TextBlock.ForegroundProperty, System.Windows.Media.Brushes.White);
             ApplyInternetButtonStyle(ProfileButton);
 
             // Chat button: White chat icon on dark circular background in WWW mode
@@ -6917,10 +6913,13 @@ public partial class MainWindow : Window
         if (SidePanel.Visibility == Visibility.Visible)
         {
             SidePanel.Visibility = Visibility.Collapsed;
+            SidePanelColumn.Width = new GridLength(0);
         }
 
         TodoPanel.Visibility = Visibility.Visible;
-        SidePanelColumn.Width = new GridLength(320);
+        TodoPanelSplitter.Visibility = Visibility.Visible;
+        TodoPanelColumn.Width = new GridLength(320);
+        TodoSplitterColumn.Width = new GridLength(4);
         SidebarTodoActiveIndicator.Visibility = Visibility.Visible;
 
         // Load todos from API
@@ -6931,7 +6930,9 @@ public partial class MainWindow : Window
     {
         _isTodoPanelOpen = false;
         TodoPanel.Visibility = Visibility.Collapsed;
-        SidePanelColumn.Width = new GridLength(0);
+        TodoPanelSplitter.Visibility = Visibility.Collapsed;
+        TodoPanelColumn.Width = new GridLength(0);
+        TodoSplitterColumn.Width = new GridLength(0);
         SidebarTodoActiveIndicator.Visibility = Visibility.Collapsed;
         SidebarTodoButton.Tag = null;
     }

@@ -1476,7 +1476,8 @@
                     <Button.ToolTip>
                         <ToolTip Style="{StaticResource NavBarTooltipStyle}" Content="Menu"/>
                     </Button.ToolTip>
-                    <TextBlock x:Name="MenuIcon" Text="&#xE712;" FontFamily="Segoe MDL2 Assets" FontSize="16"/>
+                    <TextBlock x:Name="MenuIcon" Text="&#xE712;" FontFamily="Segoe MDL2 Assets" FontSize="16"
+                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                 </Button>
             </StackPanel>
         </Grid>
@@ -1563,6 +1564,10 @@
                 <ColumnDefinition x:Name="SidebarRailColumn" Width="0"/>
                 <!-- Side Panel (History/Bookmarks) -->
                 <ColumnDefinition x:Name="SidePanelColumn" Width="0"/>
+                <!-- Todo Panel -->
+                <ColumnDefinition x:Name="TodoPanelColumn" Width="0"/>
+                <!-- Todo Panel Splitter -->
+                <ColumnDefinition x:Name="TodoSplitterColumn" Width="0"/>
                 <!-- Browser Content -->
                 <ColumnDefinition Width="*"/>
                 <!-- Chat Panel Splitter -->
@@ -1698,10 +1703,10 @@
 
             <!-- To-Do List Panel -->
             <Border x:Name="TodoPanel"
-                    Grid.Column="1"
+                    Grid.Column="2"
                     Background="{StaticResource BgSecondaryBrush}"
                     BorderBrush="{StaticResource BorderBrush}"
-                    BorderThickness="0,0,1,0"
+                    BorderThickness="0,0,0,0"
                     Visibility="Collapsed">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -1838,8 +1843,18 @@
                 </Grid>
             </Border>
 
+            <!-- Todo Panel Resize Splitter -->
+            <GridSplitter x:Name="TodoPanelSplitter"
+                          Grid.Column="3"
+                          Width="4"
+                          Background="#2a2a4e"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Stretch"
+                          Cursor="SizeWE"
+                          Visibility="Collapsed"/>
+
             <!-- WebView Container with Mobile Emulation -->
-            <DockPanel Grid.Column="2" Background="{StaticResource BgPrimaryBrush}">
+            <DockPanel Grid.Column="4" Background="{StaticResource BgPrimaryBrush}">
                 <!-- Mobile Emulation Panel (docked at top, initially hidden) -->
                 <controls:MobileEmulationPanel x:Name="MobileEmulationPanel"
                                                DockPanel.Dock="Top"
@@ -1944,7 +1959,7 @@
 
             <!-- Chat Panel Splitter -->
             <GridSplitter x:Name="ChatSplitter"
-                         Grid.Column="3"
+                         Grid.Column="5"
                          Width="4"
                          Background="#2a2a4e"
                          HorizontalAlignment="Stretch"
@@ -1953,7 +1968,7 @@
 
             <!-- Jubilee Chat Panel - JubileeVerse.com Style -->
             <Border x:Name="ChatPanel"
-                    Grid.Column="4"
+                    Grid.Column="6"
                     Background="#000000"
                     BorderBrush="#333333"
                     BorderThickness="1,0,0,0"
