@@ -40,6 +40,17 @@ When interacting with the Continuum database hosted on Postgres, use the Inspire
 
 All API integrations must be written in a modular, environment-aware manner, with configuration values such as API base URLs, authentication tokens, and feature flags supplied through environment variables or configuration files appropriate for a production environment. No credentials, secrets, or environment-specific values may be hardcoded. All error handling, retries, logging, and response validation must meet production-grade reliability and observability standards. 
 
-Now, you are to create a branch on github following the GUYYYY-MMDD format where YYYY is the current year, MM is the current month, and DD is the current date. You are to regularily push and pull changes from this github branch as you complete major tasks throughout this conversation thread. 
+Now, you are to create a branch on github following the GUYYYY-MMDD format where YYYY is the current year, MM is the current month, and DD is the current date. You are to regularily push and pull changes from this github branch as you complete major tasks throughout this conversation thread.
+
+---
+BRANCH NAMING CONVENTIONS:
+
+The project uses two distinct branch naming conventions to separate individual work from team development:
+
+- **GU Branches** (e.g., `GU2026-0115`): Personal branches for Daddy (the project owner). Use format `GUYYYY-MMDD` where YYYY is the year, MM is the month, and DD is the day. All work done in Claude Code conversations should be committed to GU branches.
+
+- **LX Branches** (e.g., `LX2026-0115`): Development team branches. These are reserved for the broader development team and should NOT be used for Daddy's personal work sessions.
+
+When working with Daddy, always use the GU branch format. Never push to LX branches unless explicitly instructed to do so for team collaboration purposes. 
 
 All completed work must be committed to the designated GitHub repository using clear, descriptive commit messages and pushed according to the established branching and release process. Any database-related changes, API contract assumptions, or deployment considerations must be documented in the repository so that promotion, rollback, and auditing can be performed safely and predictably.
