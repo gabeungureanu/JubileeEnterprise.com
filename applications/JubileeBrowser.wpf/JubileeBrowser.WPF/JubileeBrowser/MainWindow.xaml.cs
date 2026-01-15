@@ -54,10 +54,19 @@ public partial class MainWindow : Window
     private const double MinZoom = 25;
     private const double MaxZoom = 500;
 
+    // Dynamic tab width settings
+    private const double MinTabWidth = 60;
+    private const double MaxTabWidth = 240;
+    private const double PreferredTabWidth = 200;
+    private const double ActiveTabWidthBonus = 20;  // Extra width for active tab when space is limited
+    private const double TabStripReservedWidth = 80; // Logo + New Tab button + padding
+
     // Tab drag-drop tracking
     private Point _dragStartPoint;
     private bool _isDragging;
     private TabState? _draggedTab;
+    private int _dropTargetIndex = -1;
+    private ListBoxItem? _dragSourceContainer;
 
     // Tab groups and vertical tabs
     private readonly ObservableCollection<TabGroup> _tabGroups = new();
@@ -719,6 +728,9 @@ public partial class MainWindow : Window
         {
             _restoreBounds = new Rect(Left, Top, Width, Height);
         }
+
+        // Recalculate tab widths when window size changes
+        UpdateTabWidths();
     }
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
@@ -1068,6 +1080,9 @@ public partial class MainWindow : Window
 
         Tabs.Add(tabState);
 
+        // Recalculate tab widths after adding new tab
+        UpdateTabWidths();
+
         // Create WebView2 for this tab
         // Add margin to expose resize borders (WebView2 HWND intercepts mouse events)
         var webView = new WebView2
@@ -1129,6 +1144,9 @@ public partial class MainWindow : Window
 
     private static string GetJubileeBridgeScript()
     {
+        // Note: postMessage with an object (not JSON.stringify) is correct.
+        // WebView2's WebMessageAsJson property automatically serializes objects.
+        // Using JSON.stringify would double-encode the message.
         return @"
 (function() {
     if (window.jubilee) return;
@@ -1141,11 +1159,12 @@ public partial class MainWindow : Window
                 const id = Math.random().toString(36).substr(2, 9);
                 pendingRequests.set(id, { resolve, reject });
 
-                window.chrome.webview.postMessage(JSON.stringify({
+                // Pass object directly - WebMessageAsJson will serialize it
+                window.chrome.webview.postMessage({
                     channel: channel,
                     args: args || {},
                     id: id
-                }));
+                });
 
                 setTimeout(() => {
                     if (pendingRequests.has(id)) {
@@ -1157,10 +1176,11 @@ public partial class MainWindow : Window
         },
 
         send: function(channel, args) {
-            window.chrome.webview.postMessage(JSON.stringify({
+            // Pass object directly - WebMessageAsJson will serialize it
+            window.chrome.webview.postMessage({
                 channel: channel,
                 args: args || {}
-            }));
+            });
         },
 
         on: function(channel, callback) {
@@ -1189,6 +1209,27 @@ public partial class MainWindow : Window
     console.log('Jubilee Bridge initialized');
 })();
 ";
+    }
+
+    /// <summary>
+    /// Manually injects the Jubilee bridge script into a WebView.
+    /// This is needed for pages loaded via NavigateToString() because
+    /// AddScriptToExecuteOnDocumentCreatedAsync doesn't work for those.
+    /// </summary>
+    private async Task InjectBridgeScriptAsync(Microsoft.Web.WebView2.Wpf.WebView2 webView)
+    {
+        try
+        {
+            // Wait a bit for the page to start loading
+            await Task.Delay(50);
+
+            // Inject the bridge script
+            await webView.CoreWebView2.ExecuteScriptAsync(GetJubileeBridgeScript());
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to inject bridge script: {ex.Message}");
+        }
     }
 
     private void SwitchToTab(string tabId)
@@ -1263,6 +1304,9 @@ public partial class MainWindow : Window
         // Remove tab
         Tabs.Remove(tab);
 
+        // Recalculate tab widths after removing tab
+        UpdateTabWidths();
+
         // Cleanup WebView
         if (_webViews.TryGetValue(tabId, out var webView))
         {
@@ -1309,6 +1353,93 @@ public partial class MainWindow : Window
         if (TabStrip.SelectedItem is TabState tab && _isInitialized)
         {
             SwitchToTab(tab.Id);
+            // Update tab widths when active tab changes (for visual priority)
+            UpdateTabWidths();
+        }
+    }
+
+    /// <summary>
+    /// Dynamically calculates and updates tab widths based on available space.
+    /// Active tabs get slightly more width when space is constrained.
+    /// </summary>
+    private void UpdateTabWidths()
+    {
+        if (Tabs.Count == 0) return;
+
+        // Get available width for tabs
+        // TitleBar column 0 has the tabs area, column 1 is window controls (138px)
+        var availableWidth = TitleBar.ActualWidth - 138 - TabStripReservedWidth;
+        if (availableWidth <= 0) availableWidth = 800; // Default if not yet rendered
+
+        var tabCount = Tabs.Count;
+        var activeTab = Tabs.FirstOrDefault(t => t.Id == _activeTabId);
+
+        // Calculate ideal width per tab
+        var idealWidthPerTab = availableWidth / tabCount;
+
+        // Determine the actual width to use
+        double baseTabWidth;
+        bool useActiveBonus = false;
+
+        if (idealWidthPerTab >= MaxTabWidth)
+        {
+            // Plenty of space - use max width
+            baseTabWidth = MaxTabWidth;
+        }
+        else if (idealWidthPerTab >= PreferredTabWidth)
+        {
+            // Good space - use preferred width
+            baseTabWidth = PreferredTabWidth;
+        }
+        else if (idealWidthPerTab >= MinTabWidth + ActiveTabWidthBonus)
+        {
+            // Limited space - shrink tabs but give active tab bonus
+            baseTabWidth = idealWidthPerTab;
+            useActiveBonus = true;
+        }
+        else if (idealWidthPerTab >= MinTabWidth)
+        {
+            // Very limited space - use calculated width, active gets small bonus
+            baseTabWidth = idealWidthPerTab;
+            useActiveBonus = true;
+        }
+        else
+        {
+            // Extremely limited - use minimum width
+            baseTabWidth = MinTabWidth;
+        }
+
+        // Calculate active tab bonus (only when space is constrained)
+        double activeBonus = 0;
+        if (useActiveBonus && tabCount > 1)
+        {
+            // Take a bit from inactive tabs to give to active tab
+            var bonusPerInactiveTab = ActiveTabWidthBonus / (tabCount - 1);
+            activeBonus = ActiveTabWidthBonus;
+
+            // Ensure inactive tabs don't go below minimum
+            if (baseTabWidth - bonusPerInactiveTab < MinTabWidth)
+            {
+                activeBonus = (baseTabWidth - MinTabWidth) * (tabCount - 1);
+                bonusPerInactiveTab = baseTabWidth - MinTabWidth;
+            }
+
+            // Apply widths with animation-friendly updates
+            foreach (var tab in Tabs)
+            {
+                var newWidth = tab.Id == _activeTabId
+                    ? Math.Min(baseTabWidth + activeBonus, MaxTabWidth)
+                    : Math.Max(baseTabWidth - bonusPerInactiveTab, MinTabWidth);
+                tab.TabWidth = newWidth;
+            }
+        }
+        else
+        {
+            // Apply uniform width to all tabs
+            foreach (var tab in Tabs)
+            {
+                tab.TabWidth = Math.Min(Math.Max(baseTabWidth, MinTabWidth), MaxTabWidth);
+            }
         }
     }
 
@@ -1333,6 +1464,7 @@ public partial class MainWindow : Window
                 return;
             }
             _draggedTab = tab;
+            _dragSourceContainer = listBoxItem;
         }
     }
 
@@ -1353,8 +1485,27 @@ public partial class MainWindow : Window
             if (!_isDragging)
             {
                 _isDragging = true;
+
+                // Apply visual effect to dragged tab (reduce opacity)
+                if (_dragSourceContainer != null)
+                {
+                    _dragSourceContainer.Opacity = 0.5;
+                }
+
                 var data = new DataObject("TabState", _draggedTab);
                 DragDrop.DoDragDrop(TabStrip, data, DragDropEffects.Move);
+
+                // Reset visual effects after drag ends
+                if (_dragSourceContainer != null)
+                {
+                    _dragSourceContainer.Opacity = 1.0;
+                    _dragSourceContainer = null;
+                }
+
+                // Hide drop indicator
+                TabDropIndicator.Visibility = Visibility.Collapsed;
+                _dropTargetIndex = -1;
+
                 _isDragging = false;
                 _draggedTab = null;
             }
@@ -1366,12 +1517,63 @@ public partial class MainWindow : Window
         if (e.Data.GetDataPresent("TabState"))
         {
             e.Effects = DragDropEffects.Move;
+
+            // Calculate and show drop indicator position
+            var dropPos = e.GetPosition(TabStrip);
+            double indicatorX = 0;
+            int newTargetIndex = Tabs.Count;
+
+            // Find which tab we're hovering near
+            for (int i = 0; i < Tabs.Count; i++)
+            {
+                var container = TabStrip.ItemContainerGenerator.ContainerFromIndex(i) as ListBoxItem;
+                if (container != null)
+                {
+                    var tabPos = container.TranslatePoint(new Point(0, 0), TabStrip);
+                    var tabWidth = container.ActualWidth;
+
+                    if (dropPos.X < tabPos.X + tabWidth / 2)
+                    {
+                        indicatorX = tabPos.X - 1.5; // Center the 3px indicator
+                        newTargetIndex = i;
+                        break;
+                    }
+                    else
+                    {
+                        // Position after this tab
+                        indicatorX = tabPos.X + tabWidth - 1.5;
+                    }
+                }
+            }
+
+            // Update drop indicator position if changed
+            if (newTargetIndex != _dropTargetIndex)
+            {
+                _dropTargetIndex = newTargetIndex;
+                TabDropIndicator.Margin = new Thickness(indicatorX, 0, 0, 2);
+                TabDropIndicator.Visibility = Visibility.Visible;
+            }
         }
         else
         {
             e.Effects = DragDropEffects.None;
+            TabDropIndicator.Visibility = Visibility.Collapsed;
         }
         e.Handled = true;
+    }
+
+    private void TabStrip_DragEnter(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent("TabState"))
+        {
+            TabDropIndicator.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void TabStrip_DragLeave(object sender, DragEventArgs e)
+    {
+        TabDropIndicator.Visibility = Visibility.Collapsed;
+        _dropTargetIndex = -1;
     }
 
     private void TabStrip_Drop(object sender, DragEventArgs e)
@@ -1429,6 +1631,10 @@ public partial class MainWindow : Window
             TabStrip.Items.Refresh();
             TabStrip.SelectedItem = droppedTab;
         }
+
+        // Hide drop indicator after drop
+        TabDropIndicator.Visibility = Visibility.Collapsed;
+        _dropTargetIndex = -1;
 
         e.Handled = true;
     }
@@ -1777,6 +1983,10 @@ public partial class MainWindow : Window
                     tab.Url = url;
                     tab.Title = GetInternalPageTitle(url);
                 }
+
+                // For NavigateToString pages, AddScriptToExecuteOnDocumentCreatedAsync doesn't work
+                // We need to manually inject the bridge script after the page loads
+                _ = InjectBridgeScriptAsync(webView);
                 return;
             }
 
@@ -2585,6 +2795,9 @@ public partial class MainWindow : Window
             SetButtonIconForeground(BookmarksButton, blackBrush);
             SetButtonIconForeground(MenuButton, blackBrush);
 
+            // Sidebar toggle icon: Black on yellow nav bar
+            SidebarToggleIcon.Foreground = blackBrush;
+
             // Zoom level text should be yellow on black address bar
             ZoomLevelText.Foreground = wwbwYellowBrush;
 
@@ -2639,6 +2852,9 @@ public partial class MainWindow : Window
             SetButtonIconForeground(HistoryButton, System.Windows.Media.Brushes.White);
             SetButtonIconForeground(BookmarksButton, System.Windows.Media.Brushes.White);
             SetButtonIconForeground(MenuButton, System.Windows.Media.Brushes.White);
+
+            // Sidebar toggle icon: White on blue nav bar
+            SidebarToggleIcon.Foreground = System.Windows.Media.Brushes.White;
 
             // Zoom level text should be white on blue address bar
             ZoomLevelText.Foreground = System.Windows.Media.Brushes.White;
@@ -2946,7 +3162,15 @@ public partial class MainWindow : Window
 
     private void BookmarksButton_Click(object sender, RoutedEventArgs e)
     {
-        ShowBookmarks();
+        // Toggle bookmarks panel with smooth animation - close if already showing bookmarks, otherwise open
+        if (SidePanel.Visibility == Visibility.Visible && SidePanelTitle.Text == "Bookmarks" && !_isSidePanelAnimating)
+        {
+            HideSidePanel();
+        }
+        else if (!_isSidePanelAnimating)
+        {
+            ShowBookmarks();
+        }
     }
 
     private void ShowHistory()
@@ -2981,16 +3205,41 @@ public partial class MainWindow : Window
         ShowSidePanel();
     }
 
+    private bool _isSidePanelAnimating;
+
     private void ShowSidePanel()
     {
+        if (_isSidePanelAnimating) return;
+
         SidePanel.Visibility = Visibility.Visible;
-        SidePanelColumn.Width = new GridLength(320); // Slightly wider for better layout
+        SidePanelColumn.Width = new GridLength(320);
+
+        // Play slide-in animation
+        var slideIn = (System.Windows.Media.Animation.Storyboard)FindResource("SidePanelSlideIn");
+        _isSidePanelAnimating = true;
+        slideIn.Completed += (s, e) => _isSidePanelAnimating = false;
+        slideIn.Begin(this);
+    }
+
+    private void HideSidePanel()
+    {
+        if (_isSidePanelAnimating || SidePanel.Visibility != Visibility.Visible) return;
+
+        // Play slide-out animation
+        var slideOut = (System.Windows.Media.Animation.Storyboard)FindResource("SidePanelSlideOut");
+        _isSidePanelAnimating = true;
+        slideOut.Completed += (s, e) =>
+        {
+            SidePanel.Visibility = Visibility.Collapsed;
+            SidePanelColumn.Width = new GridLength(0);
+            _isSidePanelAnimating = false;
+        };
+        slideOut.Begin(this);
     }
 
     private void CloseSidePanel_Click(object sender, RoutedEventArgs e)
     {
-        SidePanel.Visibility = Visibility.Collapsed;
-        SidePanelColumn.Width = new GridLength(0);
+        HideSidePanel();
     }
 
     private void SidePanelList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -3722,6 +3971,7 @@ public partial class MainWindow : Window
         try
         {
             var json = e.WebMessageAsJson;
+            System.Diagnostics.Debug.WriteLine($"[Bridge] Received message: {json}");
             if (string.IsNullOrEmpty(json)) return;
 
             var message = System.Text.Json.JsonDocument.Parse(json);
@@ -3731,6 +3981,8 @@ public partial class MainWindow : Window
             var id = root.TryGetProperty("id", out var idProp) ? idProp.GetString() : null;
             var args = root.TryGetProperty("args", out var argsProp) ? argsProp : default;
 
+            System.Diagnostics.Debug.WriteLine($"[Bridge] Channel: {channel}, Id: {id}, TabId: {tabId}");
+
             if (string.IsNullOrEmpty(channel)) return;
 
             object? result = null;
@@ -3739,23 +3991,33 @@ public partial class MainWindow : Window
             try
             {
                 result = await HandleBridgeMessage(channel, args, tabId);
+                System.Diagnostics.Debug.WriteLine($"[Bridge] Result type: {result?.GetType().Name ?? "null"}");
             }
             catch (Exception ex)
             {
                 error = ex.Message;
+                System.Diagnostics.Debug.WriteLine($"[Bridge] Error: {error}");
             }
 
             // Send response if there was an id
-            if (!string.IsNullOrEmpty(id) && _webViews.TryGetValue(tabId, out var webView))
+            if (!string.IsNullOrEmpty(id))
             {
-                var response = System.Text.Json.JsonSerializer.Serialize(new { id, result, error });
-                var script = $"window.dispatchEvent(new CustomEvent('jubilee-response', {{ detail: {response} }}));";
-                await webView.CoreWebView2.ExecuteScriptAsync(script);
+                if (_webViews.TryGetValue(tabId, out var webView))
+                {
+                    var response = System.Text.Json.JsonSerializer.Serialize(new { id, result, error });
+                    var script = $"window.dispatchEvent(new CustomEvent('jubilee-response', {{ detail: {response} }}));";
+                    System.Diagnostics.Debug.WriteLine($"[Bridge] Sending response: {response.Substring(0, Math.Min(200, response.Length))}...");
+                    await webView.CoreWebView2.ExecuteScriptAsync(script);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Bridge] WebView not found for tabId: {tabId}. Available tabs: {string.Join(", ", _webViews.Keys)}");
+                }
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error handling web message: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error handling web message: {ex.Message}\n{ex.StackTrace}");
         }
     }
 
@@ -3844,12 +4106,12 @@ public partial class MainWindow : Window
         var entries = _historyManager.GetEntries(null, 1000);
         return entries.Select(e => new
         {
-            e.Id,
-            e.Url,
-            e.Title,
-            e.Timestamp,
-            e.Favicon,
-            Mode = (int)e.Mode
+            id = e.Id,
+            url = e.Url,
+            title = e.Title,
+            timestamp = e.Timestamp,
+            favicon = e.Favicon,
+            mode = (int)e.Mode
         }).ToList();
     }
 
@@ -6839,115 +7101,208 @@ public partial class MainWindow : Window
         switchDialog.ShowDialog();
     }
 
-    private async void ProfileSyncSettings_Click(object sender, RoutedEventArgs e)
+    private void ProfileSyncSettings_Click(object sender, RoutedEventArgs e)
     {
         ProfilePopup.IsOpen = false;
-
-        // Show sync settings dialog
-        var syncDialog = new Window
-        {
-            Title = "Sync Settings",
-            Width = 400,
-            Height = 400,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            Owner = this,
-            Background = new SolidColorBrush(Color.FromRgb(30, 30, 46)),
-            WindowStyle = WindowStyle.ToolWindow,
-            ResizeMode = ResizeMode.NoResize
-        };
-
-        var prefs = _syncEngine.Preferences;
-        var panel = new StackPanel { Margin = new Thickness(20) };
-        panel.Children.Add(new TextBlock
-        {
-            Text = "Choose what to sync",
-            FontSize = 18,
-            FontWeight = FontWeights.SemiBold,
-            Foreground = Brushes.White,
-            Margin = new Thickness(0, 0, 0, 20)
-        });
-
-        var checkboxStyle = new Style(typeof(CheckBox));
-        checkboxStyle.Setters.Add(new Setter(CheckBox.ForegroundProperty, Brushes.White));
-        checkboxStyle.Setters.Add(new Setter(CheckBox.MarginProperty, new Thickness(0, 8, 0, 8)));
-        checkboxStyle.Setters.Add(new Setter(CheckBox.FontSizeProperty, 14d));
-
-        var bookmarksCheck = new CheckBox { Content = "Bookmarks", IsChecked = prefs.SyncBookmarks, Style = checkboxStyle };
-        var historyCheck = new CheckBox { Content = "History", IsChecked = prefs.SyncHistory, Style = checkboxStyle };
-        var passwordsCheck = new CheckBox { Content = "Passwords", IsChecked = prefs.SyncPasswords, Style = checkboxStyle };
-        var autofillCheck = new CheckBox { Content = "Autofill", IsChecked = prefs.SyncAutofill, Style = checkboxStyle };
-        var extensionsCheck = new CheckBox { Content = "Extensions", IsChecked = prefs.SyncExtensions, Style = checkboxStyle };
-        var themesCheck = new CheckBox { Content = "Themes", IsChecked = prefs.SyncThemes, Style = checkboxStyle };
-        var settingsCheck = new CheckBox { Content = "Settings", IsChecked = prefs.SyncSettings, Style = checkboxStyle };
-
-        panel.Children.Add(bookmarksCheck);
-        panel.Children.Add(historyCheck);
-        panel.Children.Add(passwordsCheck);
-        panel.Children.Add(autofillCheck);
-        panel.Children.Add(extensionsCheck);
-        panel.Children.Add(themesCheck);
-        panel.Children.Add(settingsCheck);
-
-        var buttonPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 20, 0, 0) };
-        var cancelBtn = new Button
-        {
-            Content = "Cancel",
-            Width = 80,
-            Height = 32,
-            Margin = new Thickness(0, 0, 8, 0)
-        };
-        cancelBtn.Click += (s, args) => syncDialog.Close();
-
-        var saveBtn = new Button
-        {
-            Content = "Save",
-            Width = 80,
-            Height = 32,
-            Background = new SolidColorBrush(Color.FromRgb(0, 120, 212)),
-            Foreground = Brushes.White
-        };
-        saveBtn.Click += async (s, args) =>
-        {
-            var newPrefs = new SyncPreferences
-            {
-                SyncBookmarks = bookmarksCheck.IsChecked ?? false,
-                SyncHistory = historyCheck.IsChecked ?? false,
-                SyncPasswords = passwordsCheck.IsChecked ?? false,
-                SyncAutofill = autofillCheck.IsChecked ?? false,
-                SyncExtensions = extensionsCheck.IsChecked ?? false,
-                SyncThemes = themesCheck.IsChecked ?? false,
-                SyncSettings = settingsCheck.IsChecked ?? false
-            };
-            await _syncEngine.UpdatePreferencesAsync(newPrefs);
-            syncDialog.Close();
-        };
-
-        buttonPanel.Children.Add(cancelBtn);
-        buttonPanel.Children.Add(saveBtn);
-        panel.Children.Add(buttonPanel);
-
-        syncDialog.Content = panel;
-        syncDialog.ShowDialog();
+        ShowSyncSettingsModal();
     }
 
-    private async void ProfileSignOut_Click(object sender, RoutedEventArgs e)
+    #region Sync Settings Modal
+
+    private bool _isSyncSettingsAnimating;
+
+    // Track current sync state
+    private bool _syncBookmarks;
+    private bool _syncHistory;
+    private bool _syncPasswords;
+    private bool _syncAutofill;
+    private bool _syncExtensions;
+    private bool _syncThemes;
+    private bool _syncSettingsOption;
+
+    private void ShowSyncSettingsModal()
+    {
+        if (_isSyncSettingsAnimating) return;
+
+        // Load current preferences
+        var prefs = _syncEngine.Preferences;
+        _syncBookmarks = prefs.SyncBookmarks;
+        _syncHistory = prefs.SyncHistory;
+        _syncPasswords = prefs.SyncPasswords;
+        _syncAutofill = prefs.SyncAutofill;
+        _syncExtensions = prefs.SyncExtensions;
+        _syncThemes = prefs.SyncThemes;
+        _syncSettingsOption = prefs.SyncSettings;
+
+        // Update UI to reflect current state
+        UpdateSyncCheckboxUI();
+
+        // Set overlay size
+        SyncSettingsOverlay.Width = this.ActualWidth;
+        SyncSettingsOverlay.Height = this.ActualHeight;
+
+        // Reset transforms for animation
+        SyncSettingsScaleTransform.ScaleX = 0.9;
+        SyncSettingsScaleTransform.ScaleY = 0.9;
+        SyncSettingsTranslateTransform.Y = -20;
+        SyncSettingsOverlay.Opacity = 0;
+
+        // Show popup
+        SyncSettingsPopup.IsOpen = true;
+
+        // Start animation
+        var fadeIn = (System.Windows.Media.Animation.Storyboard)FindResource("SyncSettingsFadeIn");
+        _isSyncSettingsAnimating = true;
+
+        EventHandler? completedHandler = null;
+        completedHandler = (s, e) =>
+        {
+            _isSyncSettingsAnimating = false;
+            fadeIn.Completed -= completedHandler;
+        };
+        fadeIn.Completed += completedHandler;
+        fadeIn.Begin(this);
+    }
+
+    private void HideSyncSettingsModal()
+    {
+        if (_isSyncSettingsAnimating || !SyncSettingsPopup.IsOpen) return;
+
+        var fadeOut = (System.Windows.Media.Animation.Storyboard)FindResource("SyncSettingsFadeOut");
+        _isSyncSettingsAnimating = true;
+
+        EventHandler? completedHandler = null;
+        completedHandler = (s, e) =>
+        {
+            SyncSettingsPopup.IsOpen = false;
+            SyncSettingsOverlay.Opacity = 1;
+            _isSyncSettingsAnimating = false;
+            fadeOut.Completed -= completedHandler;
+        };
+        fadeOut.Completed += completedHandler;
+        fadeOut.Begin(this);
+    }
+
+    private void UpdateSyncCheckboxUI()
+    {
+        // Update checkbox visual states
+        SetSyncCheckboxState(SyncBookmarksCheck, SyncBookmarksCheckmark, _syncBookmarks);
+        SetSyncCheckboxState(SyncHistoryCheck, SyncHistoryCheckmark, _syncHistory);
+        SetSyncCheckboxState(SyncPasswordsCheck, SyncPasswordsCheckmark, _syncPasswords);
+        SetSyncCheckboxState(SyncAutofillCheck, SyncAutofillCheckmark, _syncAutofill);
+        SetSyncCheckboxState(SyncExtensionsCheck, SyncExtensionsCheckmark, _syncExtensions);
+        SetSyncCheckboxState(SyncThemesCheck, SyncThemesCheckmark, _syncThemes);
+        SetSyncCheckboxState(SyncSettingsCheck, SyncSettingsCheckmark, _syncSettingsOption);
+    }
+
+    private void SetSyncCheckboxState(Border checkbox, TextBlock checkmark, bool isChecked)
+    {
+        if (isChecked)
+        {
+            checkbox.Background = new SolidColorBrush(Color.FromRgb(230, 172, 0)); // #E6AC00
+            checkbox.BorderBrush = new SolidColorBrush(Color.FromRgb(230, 172, 0));
+            checkmark.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            checkbox.Background = new SolidColorBrush(Color.FromRgb(42, 42, 78)); // #2a2a4e
+            checkbox.BorderBrush = new SolidColorBrush(Color.FromRgb(58, 58, 94)); // #3a3a5e
+            checkmark.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void SyncOptionRow_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button button && button.Tag is string option)
+        {
+            // Toggle the corresponding option
+            switch (option)
+            {
+                case "Bookmarks":
+                    _syncBookmarks = !_syncBookmarks;
+                    break;
+                case "History":
+                    _syncHistory = !_syncHistory;
+                    break;
+                case "Passwords":
+                    _syncPasswords = !_syncPasswords;
+                    break;
+                case "Autofill":
+                    _syncAutofill = !_syncAutofill;
+                    break;
+                case "Extensions":
+                    _syncExtensions = !_syncExtensions;
+                    break;
+                case "Themes":
+                    _syncThemes = !_syncThemes;
+                    break;
+                case "Settings":
+                    _syncSettingsOption = !_syncSettingsOption;
+                    break;
+            }
+
+            // Update UI
+            UpdateSyncCheckboxUI();
+        }
+    }
+
+    private void SyncSettingsOverlay_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource == SyncSettingsOverlay)
+        {
+            HideSyncSettingsModal();
+        }
+    }
+
+    private void SyncSettingsCloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        HideSyncSettingsModal();
+    }
+
+    private void SyncSettingsCancelButton_Click(object sender, RoutedEventArgs e)
+    {
+        HideSyncSettingsModal();
+    }
+
+    private async void SyncSettingsSaveButton_Click(object sender, RoutedEventArgs e)
+    {
+        // Save preferences
+        var newPrefs = new SyncPreferences
+        {
+            SyncBookmarks = _syncBookmarks,
+            SyncHistory = _syncHistory,
+            SyncPasswords = _syncPasswords,
+            SyncAutofill = _syncAutofill,
+            SyncExtensions = _syncExtensions,
+            SyncThemes = _syncThemes,
+            SyncSettings = _syncSettingsOption
+        };
+
+        await _syncEngine.UpdatePreferencesAsync(newPrefs);
+        HideSyncSettingsModal();
+    }
+
+    #endregion
+
+    private void ProfileSignOut_Click(object sender, RoutedEventArgs e)
     {
         ProfilePopup.IsOpen = false;
 
-        var result = MessageBox.Show(
-            "Are you sure you want to sign out?\n\nYour local data will be kept, but syncing will stop.",
+        ShowModal(
             "Sign Out",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
+            "Are you sure you want to sign out?\n\nYour local data will be kept, but syncing will stop.",
+            ModalType.Warning,
+            "Sign Out",
+            async () =>
+            {
+                await _profileAuthService.SignOutAsync();
+                _syncEngine.StopSyncTimer();
 
-        if (result == MessageBoxResult.Yes)
-        {
-            await _profileAuthService.SignOutAsync();
-            _syncEngine.StopSyncTimer();
-
-            // Update chat panel state when signing out
-            UpdateChatPanelAuthState();
-        }
+                // Update chat panel state when signing out
+                UpdateChatPanelAuthState();
+            },
+            "Cancel",
+            null);
     }
 
     #endregion
@@ -6966,19 +7321,29 @@ public partial class MainWindow : Window
         CloseSidebarRail();
     }
 
+    private bool _isSidebarAnimating;
+
     private void OpenSidebarRail()
     {
+        if (_isSidebarAnimating) return;
+
         _isSidebarOpen = true;
         SidebarRailPanel.Visibility = Visibility.Visible;
         SidebarRailColumn.Width = new GridLength(48);
         SidebarToggleButton.ToolTip = "Hide Sidebar";
+
+        // Play slide-in animation
+        var slideIn = (System.Windows.Media.Animation.Storyboard)FindResource("SidebarSlideIn");
+        _isSidebarAnimating = true;
+        slideIn.Completed += (s, e) => _isSidebarAnimating = false;
+        slideIn.Begin(this);
     }
 
     private void CloseSidebarRail()
     {
+        if (_isSidebarAnimating) return;
+
         _isSidebarOpen = false;
-        SidebarRailPanel.Visibility = Visibility.Collapsed;
-        SidebarRailColumn.Width = new GridLength(0);
         SidebarToggleButton.ToolTip = "Show Sidebar";
 
         // Also close chat panel if open
@@ -6986,6 +7351,17 @@ public partial class MainWindow : Window
         {
             CloseChatPanel();
         }
+
+        // Play slide-out animation
+        var slideOut = (System.Windows.Media.Animation.Storyboard)FindResource("SidebarSlideOut");
+        _isSidebarAnimating = true;
+        slideOut.Completed += (s, e) =>
+        {
+            SidebarRailPanel.Visibility = Visibility.Collapsed;
+            SidebarRailColumn.Width = new GridLength(0);
+            _isSidebarAnimating = false;
+        };
+        slideOut.Begin(this);
     }
 
     private void SidebarChatButton_Click(object sender, RoutedEventArgs e)
@@ -7127,7 +7503,7 @@ public partial class MainWindow : Window
         var userEmail = _profileAuthService.CurrentProfile?.Email ?? "";
         if (string.IsNullOrEmpty(userEmail))
         {
-            MessageBox.Show("Please sign in to add todos.", "Sign In Required", MessageBoxButton.OK, MessageBoxImage.Information);
+            ShowModal("Sign In Required", "Please sign in to add todos.", ModalType.Information);
             return;
         }
 
@@ -8012,10 +8388,11 @@ public partial class MainWindow : Window
         };
 
         // Main container with gradient background (dark theme)
+        // Wider layout for better visual balance
         var mainBorder = new Border
         {
-            Width = 245,
-            Height = 380,
+            Width = 360,
+            Height = 320,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             Background = new LinearGradientBrush
@@ -8031,34 +8408,34 @@ public partial class MainWindow : Window
             },
             BorderBrush = new SolidColorBrush(goldColor),
             BorderThickness = new Thickness(2),
-            CornerRadius = new CornerRadius(20)
+            CornerRadius = new CornerRadius(16)
         };
 
         // Prevent clicks on the popup from closing it
         mainBorder.MouseLeftButtonDown += (s, args) => args.Handled = true;
 
-        // Main vertical layout
+        // Main vertical layout with proportional padding
         var mainPanel = new StackPanel
         {
             VerticalAlignment = VerticalAlignment.Center,
             HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(30, 40, 30, 30)
+            Margin = new Thickness(40, 32, 40, 32)
         };
 
         // Large checkmark icon with subtle background
         var iconContainer = new Border
         {
-            Width = 100,
-            Height = 100,
-            CornerRadius = new CornerRadius(20),
+            Width = 80,
+            Height = 80,
+            CornerRadius = new CornerRadius(16),
             Background = new SolidColorBrush(Color.FromArgb(40, 76, 175, 80)),
             HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(0, 0, 0, 25)
+            Margin = new Thickness(0, 0, 0, 20)
         };
         var iconTextBlock = new TextBlock
         {
             Text = iconText,
-            FontSize = 50,
+            FontSize = 42,
             FontWeight = FontWeights.Bold,
             Foreground = new SolidColorBrush(accentColor),
             HorizontalAlignment = HorizontalAlignment.Center,
@@ -8071,28 +8448,28 @@ public partial class MainWindow : Window
         var titleText = new TextBlock
         {
             Text = title,
-            FontSize = 26,
+            FontSize = 24,
             FontWeight = FontWeights.Bold,
             Foreground = new SolidColorBrush(goldColor),
             HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(0, 0, 0, 12)
+            Margin = new Thickness(0, 0, 0, 10)
         };
         mainPanel.Children.Add(titleText);
 
-        // Message text - centered, lighter color
+        // Message text - centered, lighter color, single line
         var messageText = new TextBlock
         {
             Text = message,
             FontSize = 14,
-            Foreground = new SolidColorBrush(Color.FromRgb(160, 160, 160)),
-            TextWrapping = TextWrapping.Wrap,
+            Foreground = new SolidColorBrush(Color.FromRgb(180, 180, 180)),
+            TextWrapping = TextWrapping.NoWrap,
             TextAlignment = TextAlignment.Center,
             HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(0, 0, 0, 30)
+            Margin = new Thickness(0, 0, 0, 24)
         };
         mainPanel.Children.Add(messageText);
 
-        // Full-width gold button at bottom
+        // Gold button with content-based width
         var okButtonText = new TextBlock
         {
             Text = "Continue",
@@ -8104,8 +8481,8 @@ public partial class MainWindow : Window
         };
         var okButton = new Border
         {
-            Width = 165,
-            Height = 45,
+            Width = 140,
+            Height = 44,
             CornerRadius = new CornerRadius(10),
             Background = new SolidColorBrush(goldColor),
             HorizontalAlignment = HorizontalAlignment.Center,
@@ -8136,6 +8513,156 @@ public partial class MainWindow : Window
         Info,
         Warning,
         Error
+    }
+
+    #endregion
+
+    #region Custom Modal Popup
+
+    public enum ModalType
+    {
+        Information,
+        Warning,
+        Error,
+        Question,
+        Success
+    }
+
+    private Action? _modalPrimaryAction;
+    private Action? _modalSecondaryAction;
+    private bool _isModalAnimating;
+
+    /// <summary>
+    /// Shows a custom themed modal popup with a single OK button.
+    /// </summary>
+    private void ShowModal(string title, string message, ModalType type = ModalType.Information, string primaryButtonText = "OK")
+    {
+        ShowModal(title, message, type, primaryButtonText, null, null, null);
+    }
+
+    /// <summary>
+    /// Shows a custom themed modal popup with primary and optional secondary button.
+    /// </summary>
+    private void ShowModal(string title, string message, ModalType type, string primaryButtonText, Action? primaryAction, string? secondaryButtonText = null, Action? secondaryAction = null)
+    {
+        if (_isModalAnimating) return;
+
+        // Set title and message
+        ModalTitle.Text = title;
+        ModalMessage.Text = message;
+
+        // Set icon based on type
+        ModalIcon.Text = type switch
+        {
+            ModalType.Information => "\uE946", // Info
+            ModalType.Warning => "\uE7BA",     // Warning
+            ModalType.Error => "\uEA39",       // Error
+            ModalType.Question => "\uE9CE",    // Question
+            ModalType.Success => "\uE73E",     // Checkmark
+            _ => "\uE946"
+        };
+
+        // Set button text
+        ModalPrimaryButtonText.Text = primaryButtonText;
+        _modalPrimaryAction = primaryAction;
+
+        // Handle secondary button
+        if (!string.IsNullOrEmpty(secondaryButtonText))
+        {
+            ModalSecondaryButtonText.Text = secondaryButtonText;
+            ModalSecondaryButton.Visibility = Visibility.Visible;
+            _modalSecondaryAction = secondaryAction;
+        }
+        else
+        {
+            ModalSecondaryButton.Visibility = Visibility.Collapsed;
+            _modalSecondaryAction = null;
+        }
+
+        // Set overlay size to match window
+        ModalOverlay.Width = this.ActualWidth;
+        ModalOverlay.Height = this.ActualHeight;
+
+        // Reset transforms to initial state for animation
+        ModalScaleTransform.ScaleX = 0.9;
+        ModalScaleTransform.ScaleY = 0.9;
+        ModalTranslateTransform.Y = -20;
+        ModalOverlay.Opacity = 0;
+
+        // Show the popup
+        ModalPopup.IsOpen = true;
+
+        // Start fade-in animation
+        var fadeIn = (System.Windows.Media.Animation.Storyboard)FindResource("ModalFadeIn");
+        _isModalAnimating = true;
+
+        // Use a local handler to avoid accumulating event handlers
+        EventHandler? completedHandler = null;
+        completedHandler = (s, e) =>
+        {
+            _isModalAnimating = false;
+            fadeIn.Completed -= completedHandler;
+        };
+        fadeIn.Completed += completedHandler;
+        fadeIn.Begin(this);
+    }
+
+    /// <summary>
+    /// Shows a confirmation modal with Yes/No buttons.
+    /// </summary>
+    private void ShowConfirmModal(string title, string message, Action onConfirm, Action? onCancel = null)
+    {
+        ShowModal(title, message, ModalType.Question, "Yes", onConfirm, "No", onCancel);
+    }
+
+    private void HideModal()
+    {
+        if (_isModalAnimating || !ModalPopup.IsOpen) return;
+
+        var fadeOut = (System.Windows.Media.Animation.Storyboard)FindResource("ModalFadeOut");
+        _isModalAnimating = true;
+
+        // Use a local handler to avoid accumulating event handlers
+        EventHandler? completedHandler = null;
+        completedHandler = (s, e) =>
+        {
+            ModalPopup.IsOpen = false;
+            ModalOverlay.Opacity = 1; // Reset opacity for next show
+            _isModalAnimating = false;
+            _modalPrimaryAction = null;
+            _modalSecondaryAction = null;
+            fadeOut.Completed -= completedHandler;
+        };
+        fadeOut.Completed += completedHandler;
+        fadeOut.Begin(this);
+    }
+
+    private void ModalOverlay_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        // Close modal when clicking outside the modal card (on the backdrop)
+        if (e.OriginalSource == ModalOverlay)
+        {
+            HideModal();
+        }
+    }
+
+    private void ModalCloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        HideModal();
+    }
+
+    private void ModalPrimaryButton_Click(object sender, RoutedEventArgs e)
+    {
+        var action = _modalPrimaryAction;
+        HideModal();
+        action?.Invoke();
+    }
+
+    private void ModalSecondaryButton_Click(object sender, RoutedEventArgs e)
+    {
+        var action = _modalSecondaryAction;
+        HideModal();
+        action?.Invoke();
     }
 
     #endregion

@@ -26,6 +26,190 @@
         PreviewMouseWheel="Window_PreviewMouseWheel">
 
     <Window.Resources>
+        <!-- Side Panel Animation Storyboards -->
+        <Storyboard x:Key="SidePanelSlideIn">
+            <DoubleAnimation Storyboard.TargetName="SidePanel"
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                             From="-320" To="0"
+                             Duration="0:0:0.25">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="SidePanel"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0" To="1"
+                             Duration="0:0:0.2"/>
+        </Storyboard>
+        <Storyboard x:Key="SidePanelSlideOut">
+            <DoubleAnimation Storyboard.TargetName="SidePanel"
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                             From="0" To="-320"
+                             Duration="0:0:0.2">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseIn"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="SidePanel"
+                             Storyboard.TargetProperty="Opacity"
+                             From="1" To="0"
+                             Duration="0:0:0.15"/>
+        </Storyboard>
+
+        <!-- Sidebar Rail Animation Storyboards -->
+        <Storyboard x:Key="SidebarSlideIn">
+            <DoubleAnimation Storyboard.TargetName="SidebarRailPanel"
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                             From="-48" To="0"
+                             Duration="0:0:0.2">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="SidebarRailPanel"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0" To="1"
+                             Duration="0:0:0.15"/>
+        </Storyboard>
+        <Storyboard x:Key="SidebarSlideOut">
+            <DoubleAnimation Storyboard.TargetName="SidebarRailPanel"
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                             From="0" To="-48"
+                             Duration="0:0:0.15">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseIn"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="SidebarRailPanel"
+                             Storyboard.TargetProperty="Opacity"
+                             From="1" To="0"
+                             Duration="0:0:0.12"/>
+        </Storyboard>
+
+        <!-- Modal Popup Animation Storyboards -->
+        <Storyboard x:Key="ModalFadeIn">
+            <DoubleAnimation Storyboard.TargetName="ModalOverlay"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0" To="1"
+                             Duration="0:0:0.2"/>
+            <DoubleAnimation Storyboard.TargetName="ModalScaleTransform"
+                             Storyboard.TargetProperty="ScaleX"
+                             From="0.9" To="1"
+                             Duration="0:0:0.25">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="ModalScaleTransform"
+                             Storyboard.TargetProperty="ScaleY"
+                             From="0.9" To="1"
+                             Duration="0:0:0.25">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="ModalTranslateTransform"
+                             Storyboard.TargetProperty="Y"
+                             From="-20" To="0"
+                             Duration="0:0:0.25">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+        <Storyboard x:Key="ModalFadeOut">
+            <DoubleAnimation Storyboard.TargetName="ModalOverlay"
+                             Storyboard.TargetProperty="Opacity"
+                             From="1" To="0"
+                             Duration="0:0:0.15"/>
+            <DoubleAnimation Storyboard.TargetName="ModalScaleTransform"
+                             Storyboard.TargetProperty="ScaleX"
+                             From="1" To="0.9"
+                             Duration="0:0:0.15">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseIn"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="ModalScaleTransform"
+                             Storyboard.TargetProperty="ScaleY"
+                             From="1" To="0.9"
+                             Duration="0:0:0.15">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseIn"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="ModalTranslateTransform"
+                             Storyboard.TargetProperty="Y"
+                             From="0" To="-20"
+                             Duration="0:0:0.15">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseIn"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+
+        <!-- Sync Settings Modal Animation Storyboards -->
+        <Storyboard x:Key="SyncSettingsFadeIn">
+            <DoubleAnimation Storyboard.TargetName="SyncSettingsOverlay"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0" To="1"
+                             Duration="0:0:0.2"/>
+            <DoubleAnimation Storyboard.TargetName="SyncSettingsScaleTransform"
+                             Storyboard.TargetProperty="ScaleX"
+                             From="0.9" To="1"
+                             Duration="0:0:0.25">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="SyncSettingsScaleTransform"
+                             Storyboard.TargetProperty="ScaleY"
+                             From="0.9" To="1"
+                             Duration="0:0:0.25">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="SyncSettingsTranslateTransform"
+                             Storyboard.TargetProperty="Y"
+                             From="-20" To="0"
+                             Duration="0:0:0.25">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+        <Storyboard x:Key="SyncSettingsFadeOut">
+            <DoubleAnimation Storyboard.TargetName="SyncSettingsOverlay"
+                             Storyboard.TargetProperty="Opacity"
+                             From="1" To="0"
+                             Duration="0:0:0.15"/>
+            <DoubleAnimation Storyboard.TargetName="SyncSettingsScaleTransform"
+                             Storyboard.TargetProperty="ScaleX"
+                             From="1" To="0.9"
+                             Duration="0:0:0.15">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseIn"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="SyncSettingsScaleTransform"
+                             Storyboard.TargetProperty="ScaleY"
+                             From="1" To="0.9"
+                             Duration="0:0:0.15">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseIn"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="SyncSettingsTranslateTransform"
+                             Storyboard.TargetProperty="Y"
+                             From="0" To="-20"
+                             Duration="0:0:0.15">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseIn"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+
         <!-- Value Converters -->
         <converters:BoolToStrikethroughConverter x:Key="BoolToStrikethroughConverter"/>
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
@@ -48,6 +232,47 @@
         <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}"/>
         <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
         <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
+
+        <!-- Sync Settings Modal Styles -->
+        <Style x:Key="SyncCheckboxStyle" TargetType="Border">
+            <Setter Property="Width" Value="22"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Background" Value="#2a2a4e"/>
+            <Setter Property="BorderBrush" Value="#3a3a5e"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Margin" Value="0,0,14,0"/>
+        </Style>
+
+        <Style x:Key="SyncOptionRowStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="Margin" Value="-12,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                             VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2a2a4e"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3a3a5e"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <!-- Custom Scrollbar Style for Menu -->
         <Style x:Key="MenuScrollBarThumb" TargetType="Thumb">
@@ -664,13 +889,15 @@
             <Setter Property="Background" Value="#252545"/>
             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
             <Setter Property="Height" Value="32"/>
-            <Setter Property="MinWidth" Value="120"/>
+            <Setter Property="Width" Value="{Binding TabWidth}"/>
+            <Setter Property="MinWidth" Value="60"/>
             <Setter Property="MaxWidth" Value="240"/>
             <Setter Property="Margin" Value="0,0,0,0"/>
             <Setter Property="VerticalAlignment" Value="Bottom"/>
             <Setter Property="Opacity" Value="0.5"/>
             <Setter Property="Panel.ZIndex" Value="0"/>
             <Setter Property="ContextMenu" Value="{StaticResource TabContextMenu}"/>
+            <Setter Property="ToolTip" Value="{Binding Title}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
@@ -724,6 +951,24 @@
                                                Source="Resources/Icons/wwbw-white.png"
                                                Width="14" Height="14"
                                                Visibility="Collapsed"/>
+                                        <!-- Default globe icon for WWW tabs without favicon (active - dark) -->
+                                        <TextBlock x:Name="tabDefaultGlobeIconActive"
+                                                   Text="&#xE774;"
+                                                   FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="14"
+                                                   Foreground="#1a1a2e"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Center"
+                                                   Visibility="Collapsed"/>
+                                        <!-- Default globe icon for WWW tabs without favicon (inactive - white) -->
+                                        <TextBlock x:Name="tabDefaultGlobeIconInactive"
+                                                   Text="&#xE774;"
+                                                   FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="14"
+                                                   Foreground="White"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Center"
+                                                   Visibility="Collapsed"/>
                                     </Grid>
                                     <TextBlock x:Name="titleText" Grid.Column="1"
                                               Text="{Binding Title}"
@@ -866,6 +1111,44 @@
                                     <Condition Binding="{Binding Favicon}" Value=""/>
                                 </MultiDataTrigger.Conditions>
                                 <Setter TargetName="tabDefaultInspireIcon" Property="Visibility" Value="Visible"/>
+                            </MultiDataTrigger>
+                            <!-- Show dark globe icon for ACTIVE Internet tabs (not inspire://) when no favicon -->
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Mode}" Value="Internet"/>
+                                    <Condition Binding="{Binding IsInspireUrl}" Value="False"/>
+                                    <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsSelected}" Value="True"/>
+                                    <Condition Binding="{Binding Favicon}" Value="{x:Null}"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="tabDefaultGlobeIconActive" Property="Visibility" Value="Visible"/>
+                            </MultiDataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Mode}" Value="Internet"/>
+                                    <Condition Binding="{Binding IsInspireUrl}" Value="False"/>
+                                    <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsSelected}" Value="True"/>
+                                    <Condition Binding="{Binding Favicon}" Value=""/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="tabDefaultGlobeIconActive" Property="Visibility" Value="Visible"/>
+                            </MultiDataTrigger>
+                            <!-- Show white globe icon for INACTIVE Internet tabs (not inspire://) when no favicon -->
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Mode}" Value="Internet"/>
+                                    <Condition Binding="{Binding IsInspireUrl}" Value="False"/>
+                                    <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsSelected}" Value="False"/>
+                                    <Condition Binding="{Binding Favicon}" Value="{x:Null}"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="tabDefaultGlobeIconInactive" Property="Visibility" Value="Visible"/>
+                            </MultiDataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding Mode}" Value="Internet"/>
+                                    <Condition Binding="{Binding IsInspireUrl}" Value="False"/>
+                                    <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsSelected}" Value="False"/>
+                                    <Condition Binding="{Binding Favicon}" Value=""/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="tabDefaultGlobeIconInactive" Property="Visibility" Value="Visible"/>
                             </MultiDataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -1084,25 +1367,44 @@
                            Width="20" Height="20"
                            RenderOptions.BitmapScalingMode="HighQuality"/>
                 </Border>
-                <ListBox x:Name="TabStrip"
-                         VerticalAlignment="Bottom"
-                         Background="Transparent"
-                         BorderThickness="0"
-                         ItemContainerStyle="{StaticResource BrowserTabStyle}"
-                         SelectionChanged="TabStrip_SelectionChanged"
-                         AllowDrop="True"
-                         PreviewMouseLeftButtonDown="TabStrip_PreviewMouseLeftButtonDown"
-                         PreviewMouseMove="TabStrip_PreviewMouseMove"
-                         Drop="TabStrip_Drop"
-                         DragOver="TabStrip_DragOver"
-                         ScrollViewer.HorizontalScrollBarVisibility="Hidden"
-                         ScrollViewer.VerticalScrollBarVisibility="Disabled">
-                    <ListBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
-                </ListBox>
+                <Grid>
+                    <ListBox x:Name="TabStrip"
+                             VerticalAlignment="Bottom"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             ItemContainerStyle="{StaticResource BrowserTabStyle}"
+                             SelectionChanged="TabStrip_SelectionChanged"
+                             AllowDrop="True"
+                             PreviewMouseLeftButtonDown="TabStrip_PreviewMouseLeftButtonDown"
+                             PreviewMouseMove="TabStrip_PreviewMouseMove"
+                             Drop="TabStrip_Drop"
+                             DragOver="TabStrip_DragOver"
+                             DragEnter="TabStrip_DragEnter"
+                             DragLeave="TabStrip_DragLeave"
+                             ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                             ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                    </ListBox>
+                    <!-- Tab Drop Indicator Line -->
+                    <Border x:Name="TabDropIndicator"
+                            Width="3"
+                            Height="28"
+                            Background="#FFD700"
+                            CornerRadius="1.5"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Bottom"
+                            Margin="0,0,0,2"
+                            Visibility="Collapsed"
+                            IsHitTestVisible="False">
+                        <Border.Effect>
+                            <DropShadowEffect Color="#FFD700" BlurRadius="8" ShadowDepth="0" Opacity="0.7"/>
+                        </Border.Effect>
+                    </Border>
+                </Grid>
 
                 <!-- New Tab Button - styled as a permanent black tab -->
                 <Border x:Name="NewTabButton"
@@ -1583,7 +1885,11 @@
                     BorderBrush="#2a2a4e"
                     BorderThickness="0,0,1,0"
                     Width="48"
-                    Visibility="Collapsed">
+                    Visibility="Collapsed"
+                    RenderTransformOrigin="0,0.5">
+                <Border.RenderTransform>
+                    <TranslateTransform X="0"/>
+                </Border.RenderTransform>
                 <StackPanel Orientation="Vertical" Margin="4,8,4,8">
                     <!-- Jubilee Chat Icon (moved from right nav) -->
                     <Button x:Name="SidebarChatButton"
@@ -1662,7 +1968,11 @@
                     Background="{StaticResource BgSecondaryBrush}"
                     BorderBrush="{StaticResource BorderBrush}"
                     BorderThickness="0,0,1,0"
-                    Visibility="Collapsed">
+                    Visibility="Collapsed"
+                    RenderTransformOrigin="0,0.5">
+                <Border.RenderTransform>
+                    <TranslateTransform X="0"/>
+                </Border.RenderTransform>
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="52"/>
@@ -2610,16 +2920,16 @@
                     <!-- Signed In State -->
                     <StackPanel x:Name="ProfileSignedInPanel" Visibility="Collapsed">
                         <!-- Profile Header -->
-                        <StackPanel Orientation="Horizontal" Margin="20,20,20,8">
-                            <Ellipse x:Name="ProfilePopupAvatar" Width="48" Height="48" Margin="0,0,16,0">
+                        <StackPanel Orientation="Horizontal" Margin="16,14,16,4">
+                            <Ellipse x:Name="ProfilePopupAvatar" Width="48" Height="48" Margin="0,0,14,0">
                                 <Ellipse.Fill>
                                     <ImageBrush x:Name="ProfilePopupAvatarImage" Stretch="UniformToFill"/>
                                 </Ellipse.Fill>
                             </Ellipse>
                             <StackPanel VerticalAlignment="Center" MaxWidth="200">
                                 <TextBlock x:Name="ProfilePopupName" Text="User Name" FontSize="16" FontWeight="SemiBold" Foreground="White"/>
-                                <TextBlock x:Name="ProfilePopupEmail" Text="user@example.com" FontSize="12" Foreground="White" Margin="0,2,0,0"/>
-                                <TextBlock x:Name="ProfileSignedInLabel" Text="Signed in to your Jubilee account" FontSize="10" Foreground="#22c55e" Margin="0,4,0,0"/>
+                                <TextBlock x:Name="ProfilePopupEmail" Text="user@example.com" FontSize="12" Foreground="White" Margin="0,1,0,0"/>
+                                <TextBlock x:Name="ProfileSignedInLabel" Text="Signed in to your Jubilee account" FontSize="10" Foreground="#22c55e" Margin="0,2,0,0"/>
                             </StackPanel>
                             <Button Style="{StaticResource NavButtonStyle}"
                                     Width="28" Height="28"
@@ -2636,8 +2946,8 @@
                         <Border x:Name="ProfileSyncStatusBorder"
                                 Background="#1a3a1a"
                                 CornerRadius="6"
-                                Margin="16,8,16,12"
-                                Padding="12,10">
+                                Margin="12,4,12,6"
+                                Padding="10,8">
                             <Grid>
                                 <!-- Success State (Syncing is on) -->
                                 <StackPanel x:Name="ProfileSyncSuccessState" Orientation="Horizontal">
@@ -2697,7 +3007,7 @@
                         </Border>
 
                         <!-- Soft divider -->
-                        <Border Height="1" Background="#2a2a3a" Margin="16,4,16,12" Opacity="0.5"/>
+                        <Border Height="1" Background="#2a2a3a" Margin="12,2,12,6" Opacity="0.5"/>
 
                         <!-- Account Management Group -->
                         <Button Style="{StaticResource MainMenuItemStyle}" Click="ProfileManageAccount_Click" Margin="4,0">
@@ -2714,7 +3024,7 @@
                         </Button>
 
                         <!-- Soft divider -->
-                        <Border Height="1" Background="#2a2a3a" Margin="16,8,16,8" Opacity="0.5"/>
+                        <Border Height="1" Background="#2a2a3a" Margin="12,4,12,4" Opacity="0.5"/>
 
                         <!-- Sync Settings -->
                         <Button Style="{StaticResource MainMenuItemStyle}" Click="ProfileSyncSettings_Click" Margin="4,0">
@@ -2725,10 +3035,10 @@
                         </Button>
 
                         <!-- Soft divider -->
-                        <Border Height="1" Background="#2a2a3a" Margin="16,8,16,8" Opacity="0.5"/>
+                        <Border Height="1" Background="#2a2a3a" Margin="12,4,12,4" Opacity="0.5"/>
 
                         <!-- Sign Out -->
-                        <Button Style="{StaticResource MainMenuItemStyle}" Click="ProfileSignOut_Click" Margin="4,0,4,12">
+                        <Button Style="{StaticResource MainMenuItemStyle}" Click="ProfileSignOut_Click" Margin="4,0,4,8">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xF3B1;" FontFamily="Segoe MDL2 Assets" FontSize="14" Width="24" Foreground="#FFD700"/>
                                 <TextBlock Text="Sign out" VerticalAlignment="Center" Foreground="#FFD700"/>
@@ -3075,6 +3385,500 @@
                     </StackPanel>
                 </ScrollViewer>
             </Border>
+        </Popup>
+
+        <!-- Custom Modal Popup - Uses Popup to render on top of WebView2 -->
+        <Popup x:Name="ModalPopup"
+               Placement="Center"
+               PlacementTarget="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+               StaysOpen="True"
+               AllowsTransparency="True"
+               PopupAnimation="None">
+            <Grid x:Name="ModalOverlay"
+                  Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}}"
+                  Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Window}}"
+                  Background="#80000000"
+                  MouseLeftButtonDown="ModalOverlay_MouseLeftButtonDown">
+                <!-- Modal Card -->
+                <Border x:Name="ModalCard"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="#1a1a2e"
+                        BorderBrush="#2a2a4e"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        MinWidth="360"
+                        MaxWidth="480"
+                        Padding="0"
+                        RenderTransformOrigin="0.5,0.5">
+                    <Border.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="ModalScaleTransform" ScaleX="1" ScaleY="1"/>
+                            <TranslateTransform x:Name="ModalTranslateTransform" Y="0"/>
+                        </TransformGroup>
+                    </Border.RenderTransform>
+                    <Border.Effect>
+                        <DropShadowEffect Color="Black" BlurRadius="40" ShadowDepth="0" Opacity="0.5"/>
+                    </Border.Effect>
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <Border Grid.Row="0"
+                                Background="#0f0f1a"
+                                CornerRadius="12,12,0,0"
+                                Padding="20,16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Icon -->
+                                <Border Grid.Column="0"
+                                        Width="40" Height="40"
+                                        CornerRadius="8"
+                                        Margin="0,0,14,0"
+                                        VerticalAlignment="Center">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#E6AC00"/>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock x:Name="ModalIcon"
+                                              Text="&#xE946;"
+                                              FontFamily="Segoe MDL2 Assets"
+                                              FontSize="18"
+                                              Foreground="#1a1a2e"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                                </Border>
+
+                                <!-- Title -->
+                                <TextBlock x:Name="ModalTitle"
+                                          Grid.Column="1"
+                                          Text="Modal Title"
+                                          Foreground="White"
+                                          FontSize="18"
+                                          FontWeight="SemiBold"
+                                          VerticalAlignment="Center"/>
+
+                                <!-- Close Button -->
+                                <Button Grid.Column="2"
+                                        Style="{StaticResource NavButtonStyle}"
+                                        Width="32" Height="32"
+                                        Click="ModalCloseButton_Click"
+                                        ToolTip="Close">
+                                    <TextBlock Text="&#xE8BB;"
+                                              FontFamily="Segoe MDL2 Assets"
+                                              FontSize="12"
+                                              Foreground="#a0a0a0"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <!-- Content -->
+                        <StackPanel Grid.Row="1" Margin="24,20,24,24">
+                            <TextBlock x:Name="ModalMessage"
+                                      Text="Modal message content goes here."
+                                      Foreground="#e0e0e0"
+                                      FontSize="14"
+                                      LineHeight="22"
+                                      TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <!-- Footer with Buttons -->
+                        <Border Grid.Row="2"
+                                Background="#0f0f1a"
+                                CornerRadius="0,0,12,12"
+                                Padding="20,14">
+                            <StackPanel x:Name="ModalButtonsPanel"
+                                       Orientation="Horizontal"
+                                       HorizontalAlignment="Right">
+                                <!-- Secondary Button (hidden by default) -->
+                                <Button x:Name="ModalSecondaryButton"
+                                        Visibility="Collapsed"
+                                        Click="ModalSecondaryButton_Click"
+                                        Margin="0,0,12,0"
+                                        Padding="20,10"
+                                        MinWidth="100"
+                                        Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="#2a2a4e"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="FontSize" Value="14"/>
+                                            <Setter Property="FontWeight" Value="Medium"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="border"
+                                                                Background="{TemplateBinding Background}"
+                                                                CornerRadius="8"
+                                                                Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center"
+                                                                             VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#3a3a5e"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#4a4a6e"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                    <TextBlock x:Name="ModalSecondaryButtonText" Text="Cancel"/>
+                                </Button>
+
+                                <!-- Primary Button -->
+                                <Button x:Name="ModalPrimaryButton"
+                                        Click="ModalPrimaryButton_Click"
+                                        Padding="20,10"
+                                        MinWidth="100"
+                                        Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="#E6AC00"/>
+                                            <Setter Property="Foreground" Value="#1a1a2e"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="FontSize" Value="14"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="border"
+                                                                Background="{TemplateBinding Background}"
+                                                                CornerRadius="8"
+                                                                Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center"
+                                                                             VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#d49c00"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#c48c00"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                    <TextBlock x:Name="ModalPrimaryButtonText" Text="OK"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Popup>
+
+        <!-- Sync Settings Modal Popup - Custom themed to match browser -->
+        <Popup x:Name="SyncSettingsPopup"
+               Placement="Center"
+               PlacementTarget="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+               StaysOpen="True"
+               AllowsTransparency="True"
+               PopupAnimation="None">
+            <Grid x:Name="SyncSettingsOverlay"
+                  Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Window}}"
+                  Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Window}}"
+                  Background="#80000000"
+                  MouseLeftButtonDown="SyncSettingsOverlay_MouseLeftButtonDown">
+                <!-- Sync Settings Card -->
+                <Border x:Name="SyncSettingsCard"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Background="#1a1a2e"
+                        BorderBrush="#2a2a4e"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Width="420"
+                        MaxHeight="560"
+                        Padding="0"
+                        RenderTransformOrigin="0.5,0.5">
+                    <Border.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="SyncSettingsScaleTransform" ScaleX="1" ScaleY="1"/>
+                            <TranslateTransform x:Name="SyncSettingsTranslateTransform" Y="0"/>
+                        </TransformGroup>
+                    </Border.RenderTransform>
+                    <Border.Effect>
+                        <DropShadowEffect Color="Black" BlurRadius="40" ShadowDepth="0" Opacity="0.5"/>
+                    </Border.Effect>
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <Border Grid.Row="0"
+                                Background="#0f0f1a"
+                                CornerRadius="12,12,0,0"
+                                Padding="20,16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Icon -->
+                                <Border Grid.Column="0"
+                                        Width="40" Height="40"
+                                        CornerRadius="8"
+                                        Background="#E6AC00"
+                                        Margin="0,0,14,0"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="&#xE895;"
+                                              FontFamily="Segoe MDL2 Assets"
+                                              FontSize="18"
+                                              Foreground="#1a1a2e"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                                </Border>
+
+                                <!-- Title -->
+                                <TextBlock Grid.Column="1"
+                                          Text="Sync Settings"
+                                          Foreground="White"
+                                          FontSize="18"
+                                          FontWeight="SemiBold"
+                                          VerticalAlignment="Center"/>
+
+                                <!-- Close Button -->
+                                <Button Grid.Column="2"
+                                        Style="{StaticResource NavButtonStyle}"
+                                        Width="32" Height="32"
+                                        Click="SyncSettingsCloseButton_Click"
+                                        ToolTip="Close">
+                                    <TextBlock Text="&#xE8BB;"
+                                              FontFamily="Segoe MDL2 Assets"
+                                              FontSize="12"
+                                              Foreground="#a0a0a0"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <!-- Content - Sync Options -->
+                        <StackPanel Grid.Row="1" Margin="24,20,24,16">
+                            <TextBlock Text="Choose what to sync"
+                                      Foreground="White"
+                                      FontSize="16"
+                                      FontWeight="SemiBold"
+                                      Margin="0,0,0,16"/>
+
+                            <!-- Sync option rows with custom checkboxes -->
+                            <Button x:Name="SyncBookmarksRow" Style="{StaticResource SyncOptionRowStyle}" Click="SyncOptionRow_Click" Tag="Bookmarks">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="SyncBookmarksCheck" Grid.Column="0" Style="{StaticResource SyncCheckboxStyle}">
+                                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                                  Foreground="#1a1a2e" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  Visibility="Collapsed" x:Name="SyncBookmarksCheckmark"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="Bookmarks" Foreground="White" FontSize="14" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Button>
+
+                            <Button x:Name="SyncHistoryRow" Style="{StaticResource SyncOptionRowStyle}" Click="SyncOptionRow_Click" Tag="History">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="SyncHistoryCheck" Grid.Column="0" Style="{StaticResource SyncCheckboxStyle}">
+                                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                                  Foreground="#1a1a2e" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  Visibility="Collapsed" x:Name="SyncHistoryCheckmark"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="History" Foreground="White" FontSize="14" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Button>
+
+                            <Button x:Name="SyncPasswordsRow" Style="{StaticResource SyncOptionRowStyle}" Click="SyncOptionRow_Click" Tag="Passwords">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="SyncPasswordsCheck" Grid.Column="0" Style="{StaticResource SyncCheckboxStyle}">
+                                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                                  Foreground="#1a1a2e" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  Visibility="Collapsed" x:Name="SyncPasswordsCheckmark"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="Passwords" Foreground="White" FontSize="14" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Button>
+
+                            <Button x:Name="SyncAutofillRow" Style="{StaticResource SyncOptionRowStyle}" Click="SyncOptionRow_Click" Tag="Autofill">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="SyncAutofillCheck" Grid.Column="0" Style="{StaticResource SyncCheckboxStyle}">
+                                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                                  Foreground="#1a1a2e" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  Visibility="Collapsed" x:Name="SyncAutofillCheckmark"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="Autofill" Foreground="White" FontSize="14" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Button>
+
+                            <Button x:Name="SyncExtensionsRow" Style="{StaticResource SyncOptionRowStyle}" Click="SyncOptionRow_Click" Tag="Extensions">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="SyncExtensionsCheck" Grid.Column="0" Style="{StaticResource SyncCheckboxStyle}">
+                                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                                  Foreground="#1a1a2e" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  Visibility="Collapsed" x:Name="SyncExtensionsCheckmark"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="Extensions" Foreground="White" FontSize="14" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Button>
+
+                            <Button x:Name="SyncThemesRow" Style="{StaticResource SyncOptionRowStyle}" Click="SyncOptionRow_Click" Tag="Themes">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="SyncThemesCheck" Grid.Column="0" Style="{StaticResource SyncCheckboxStyle}">
+                                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                                  Foreground="#1a1a2e" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  Visibility="Collapsed" x:Name="SyncThemesCheckmark"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="Themes" Foreground="White" FontSize="14" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Button>
+
+                            <Button x:Name="SyncSettingsOptionRow" Style="{StaticResource SyncOptionRowStyle}" Click="SyncOptionRow_Click" Tag="Settings">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="SyncSettingsCheck" Grid.Column="0" Style="{StaticResource SyncCheckboxStyle}">
+                                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                                  Foreground="#1a1a2e" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                  Visibility="Collapsed" x:Name="SyncSettingsCheckmark"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="Settings" Foreground="White" FontSize="14" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Footer with Buttons -->
+                        <Border Grid.Row="2"
+                                Background="#0f0f1a"
+                                CornerRadius="0,0,12,12"
+                                Padding="20,14">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <!-- Cancel Button -->
+                                <Button Click="SyncSettingsCancelButton_Click"
+                                        Margin="0,0,12,0"
+                                        Padding="20,10"
+                                        MinWidth="100"
+                                        Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="#2a2a4e"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="FontSize" Value="14"/>
+                                            <Setter Property="FontWeight" Value="Medium"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="border"
+                                                                Background="{TemplateBinding Background}"
+                                                                CornerRadius="8"
+                                                                Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center"
+                                                                             VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#3a3a5e"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#4a4a6e"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                    <TextBlock Text="Cancel"/>
+                                </Button>
+
+                                <!-- Save Button -->
+                                <Button Click="SyncSettingsSaveButton_Click"
+                                        Padding="20,10"
+                                        MinWidth="100"
+                                        Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="#E6AC00"/>
+                                            <Setter Property="Foreground" Value="#1a1a2e"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="FontSize" Value="14"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="border"
+                                                                Background="{TemplateBinding Background}"
+                                                                CornerRadius="8"
+                                                                Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center"
+                                                                             VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#d49c00"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#c48c00"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                    <TextBlock Text="Save"/>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
         </Popup>
 
     </Grid>

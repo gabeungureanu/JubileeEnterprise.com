@@ -477,6 +477,142 @@ public class InternalPageHandler
             transform: translateY(0);
         }}
 
+        /* ===== Custom Modal ===== */
+        .modal-overlay {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }}
+        .modal-overlay.show {{
+            opacity: 1;
+            visibility: visible;
+        }}
+        .modal-card {{
+            background: var(--color-bg-primary);
+            border-radius: 12px;
+            min-width: 360px;
+            max-width: 440px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9) translateY(-20px);
+            transition: transform 0.2s ease;
+            overflow: hidden;
+        }}
+        .modal-overlay.show .modal-card {{
+            transform: scale(1) translateY(0);
+        }}
+        .modal-header {{
+            background: #0f0f1a;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }}
+        .modal-icon {{
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--color-accent-gold), #d49c00);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }}
+        .modal-icon.warning {{
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+        }}
+        .modal-title {{
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-primary-text);
+            flex: 1;
+        }}
+        .modal-close {{
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: #a0a0a0;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: background 0.15s ease, color 0.15s ease;
+        }}
+        .modal-close:hover {{
+            background: var(--color-bg-tertiary);
+            color: var(--color-primary-text);
+        }}
+        .modal-body {{
+            padding: 20px 24px 24px;
+        }}
+        .modal-message-primary {{
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--color-primary-text);
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }}
+        .modal-message-secondary {{
+            font-size: 14px;
+            color: var(--color-primary-text);
+            opacity: 0.7;
+            line-height: 1.5;
+        }}
+        .modal-footer {{
+            background: #0f0f1a;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }}
+        .modal-btn {{
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            min-width: 100px;
+            transition: background 0.15s ease, transform 0.1s ease;
+        }}
+        .modal-btn:active {{
+            transform: scale(0.98);
+        }}
+        .modal-btn-secondary {{
+            background: var(--color-bg-tertiary);
+            color: var(--color-primary-text);
+        }}
+        .modal-btn-secondary:hover {{
+            background: var(--color-bg-hover);
+        }}
+        .modal-btn-primary {{
+            background: var(--color-accent-gold);
+            color: var(--color-bg-primary);
+        }}
+        .modal-btn-primary:hover {{
+            background: #d49c00;
+        }}
+        .modal-btn-danger {{
+            background: var(--color-accent-red);
+            color: white;
+        }}
+        .modal-btn-danger:hover {{
+            background: #d13a55;
+        }}
+
         /* ===== Accessibility: Focus Visible ===== */
         a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, .toggle:focus-visible {{
             outline: 2px solid var(--color-accent-gold);
@@ -921,6 +1057,25 @@ public class InternalPageHandler
 
     <div class='saved-indicator' id='savedIndicator'>Settings saved</div>
 
+    <!-- Custom Confirmation Modal -->
+    <div class='modal-overlay' id='confirmModal'>
+        <div class='modal-card'>
+            <div class='modal-header'>
+                <div class='modal-icon warning' id='modalIcon'>⚠️</div>
+                <div class='modal-title' id='modalTitle'>Confirm</div>
+                <button class='modal-close' id='modalClose'>✕</button>
+            </div>
+            <div class='modal-body'>
+                <div class='modal-message-primary' id='modalMessagePrimary'>Are you sure?</div>
+                <div class='modal-message-secondary' id='modalMessageSecondary'></div>
+            </div>
+            <div class='modal-footer'>
+                <button class='modal-btn modal-btn-secondary' id='modalCancelBtn'>Cancel</button>
+                <button class='modal-btn modal-btn-primary' id='modalConfirmBtn'>Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Settings state
         let settings = {{}};
@@ -1135,25 +1290,114 @@ public class InternalPageHandler
             setTimeout(() => indicator.classList.remove('show'), 2000);
         }}
 
+        // Custom Modal Functions
+        let modalCallback = null;
+
+        function showConfirmModal(options) {{
+            const modal = document.getElementById('confirmModal');
+            const icon = document.getElementById('modalIcon');
+            const title = document.getElementById('modalTitle');
+            const msgPrimary = document.getElementById('modalMessagePrimary');
+            const msgSecondary = document.getElementById('modalMessageSecondary');
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            const cancelBtn = document.getElementById('modalCancelBtn');
+
+            // Set content
+            title.textContent = options.title || 'Confirm';
+            msgPrimary.textContent = options.messagePrimary || 'Are you sure?';
+            msgSecondary.textContent = options.messageSecondary || '';
+            msgSecondary.style.display = options.messageSecondary ? 'block' : 'none';
+
+            // Set icon
+            icon.textContent = options.icon || '⚠️';
+            icon.className = 'modal-icon' + (options.iconType === 'warning' ? ' warning' : '');
+
+            // Set button text and style
+            confirmBtn.textContent = options.confirmText || 'Confirm';
+            cancelBtn.textContent = options.cancelText || 'Cancel';
+
+            // Set button style based on type
+            confirmBtn.className = 'modal-btn ' + (options.confirmStyle === 'danger' ? 'modal-btn-danger' : 'modal-btn-primary');
+
+            // Store callback
+            modalCallback = options.onConfirm;
+
+            // Show modal
+            modal.classList.add('show');
+        }}
+
+        function hideConfirmModal() {{
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('show');
+            modalCallback = null;
+        }}
+
+        // Modal event listeners
+        document.getElementById('modalClose')?.addEventListener('click', hideConfirmModal);
+        document.getElementById('modalCancelBtn')?.addEventListener('click', hideConfirmModal);
+        document.getElementById('modalConfirmBtn')?.addEventListener('click', function() {{
+            if (modalCallback) {{
+                modalCallback();
+            }}
+            hideConfirmModal();
+        }});
+        document.getElementById('confirmModal')?.addEventListener('click', function(e) {{
+            if (e.target === this) {{
+                hideConfirmModal();
+            }}
+        }});
+
         // Button handlers
         document.getElementById('manageAccountBtn')?.addEventListener('click', function() {{
             window.jubilee?.send('account:manage');
         }});
 
         document.getElementById('signOutBtn')?.addEventListener('click', function() {{
-            if (confirm('Are you sure you want to sign out?')) {{
-                window.jubilee?.send('auth:signOut');
-            }}
+            showConfirmModal({{
+                title: 'Sign Out',
+                messagePrimary: 'Are you sure you want to sign out?',
+                messageSecondary: 'Your local data will be kept, but syncing will stop.',
+                icon: '⚠️',
+                iconType: 'warning',
+                confirmText: 'Sign Out',
+                cancelText: 'Cancel',
+                confirmStyle: 'danger',
+                onConfirm: function() {{
+                    window.jubilee?.send('auth:signOut');
+                }}
+            }});
         }});
 
         document.getElementById('clearDataBtn')?.addEventListener('click', function() {{
-            window.jubilee?.send('privacy:clearData');
+            showConfirmModal({{
+                title: 'Clear Browsing Data',
+                messagePrimary: 'Clear all browsing data?',
+                messageSecondary: 'This will delete your history, cookies, and cached files. This cannot be undone.',
+                icon: '🗑️',
+                iconType: 'warning',
+                confirmText: 'Clear Data',
+                cancelText: 'Cancel',
+                confirmStyle: 'danger',
+                onConfirm: function() {{
+                    window.jubilee?.send('privacy:clearData');
+                }}
+            }});
         }});
 
         document.getElementById('resetSettingsBtn')?.addEventListener('click', function() {{
-            if (confirm('Reset all settings to defaults? This cannot be undone.')) {{
-                window.jubilee?.send('settings:reset');
-            }}
+            showConfirmModal({{
+                title: 'Reset Settings',
+                messagePrimary: 'Reset all settings to defaults?',
+                messageSecondary: 'All your custom settings will be restored to their original values. This cannot be undone.',
+                icon: '🔄',
+                iconType: 'warning',
+                confirmText: 'Reset Settings',
+                cancelText: 'Cancel',
+                confirmStyle: 'danger',
+                onConfirm: function() {{
+                    window.jubilee?.send('settings:reset');
+                }}
+            }});
         }});
 
         // Search functionality
@@ -1924,11 +2168,15 @@ public class InternalPageHandler
     </div>
 
     <script>
-        // Jubilee Bridge - enables communication with the C# backend
+        // Jubilee Bridge - embedded directly for NavigateToString pages
         (function() {
             if (window.jubilee) return;
 
             const pendingRequests = new Map();
+
+            // Check if WebView2 bridge is available
+            console.log('chrome.webview available:', !!window.chrome?.webview);
+            console.log('postMessage available:', !!window.chrome?.webview?.postMessage);
 
             window.jubilee = {
                 invoke: function(channel, args) {
@@ -1936,14 +2184,26 @@ public class InternalPageHandler
                         const id = Math.random().toString(36).substr(2, 9);
                         pendingRequests.set(id, { resolve, reject });
 
-                        window.chrome.webview.postMessage(JSON.stringify({
+                        console.log('Sending message:', { channel, args, id });
+
+                        if (!window.chrome?.webview?.postMessage) {
+                            console.error('postMessage not available!');
+                            reject(new Error('WebView bridge not available'));
+                            return;
+                        }
+
+                        // Pass object directly - WebMessageAsJson will serialize it
+                        window.chrome.webview.postMessage({
                             channel: channel,
                             args: args || {},
                             id: id
-                        }));
+                        });
+
+                        console.log('Message sent successfully');
 
                         setTimeout(() => {
                             if (pendingRequests.has(id)) {
+                                console.log('Request timed out for id:', id);
                                 pendingRequests.delete(id);
                                 reject(new Error('Request timeout'));
                             }
@@ -1952,10 +2212,11 @@ public class InternalPageHandler
                 },
 
                 send: function(channel, args) {
-                    window.chrome.webview.postMessage(JSON.stringify({
+                    // Pass object directly - WebMessageAsJson will serialize it
+                    window.chrome.webview.postMessage({
                         channel: channel,
                         args: args || {}
-                    }));
+                    });
                 },
 
                 on: function(channel, callback) {
@@ -1981,7 +2242,7 @@ public class InternalPageHandler
                 }
             });
 
-            console.log('Jubilee Bridge initialized');
+            console.log('Jubilee Bridge initialized (inline)');
         })();
 
         let historyData = [];
@@ -1989,7 +2250,12 @@ public class InternalPageHandler
         let searchQuery = '';
 
         document.addEventListener('DOMContentLoaded', async function() {
-            await loadHistory();
+            try {
+                await loadHistory();
+            } catch (e) {
+                console.error('Failed to load history:', e);
+                showError();
+            }
             setupEventListeners();
         });
 
@@ -2008,6 +2274,8 @@ public class InternalPageHandler
             try {
                 if (window.jubilee) {
                     historyData = await window.jubilee.invoke('history:getAll');
+                } else {
+                    throw new Error('Jubilee bridge not available');
                 }
                 renderHistory();
             } catch (e) {
