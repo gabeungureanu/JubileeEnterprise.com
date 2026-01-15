@@ -180,12 +180,17 @@ async function initializeAsync(): Promise<void> {
     }
 }
 
-export function deactivate() {
+export async function deactivate(): Promise<void> {
     console.log('Jubilee Tasks extension deactivating...');
 
-    // Complete any active task
+    // Complete any active task - MUST await to ensure it finishes before shutdown
     if (currentTask) {
-        completeCurrentTask();
+        try {
+            await completeCurrentTask(false);
+            console.log('Active task completed successfully on deactivation');
+        } catch (err) {
+            console.error('Failed to complete task on deactivation:', err);
+        }
     }
 
     activityMonitor.stop();

@@ -4,7 +4,7 @@
  * IMPORTANT: This module routes ALL database operations through the InspireCodex API.
  * NO DIRECT PostgreSQL connections are made from this application.
  *
- * The InspireCodex API (http://localhost:3100) is the ONLY authorized way to access
+ * The InspireCodex API (https://inspirecodex.com) is the ONLY authorized way to access
  * the Codex and Inspire PostgreSQL databases.
  */
 
@@ -15,7 +15,7 @@ import { getLogger } from '../utils/logger.js';
 // CONFIGURATION
 // ============================================================================
 
-const API_BASE_URL = process.env.INSPIRE_CODEX_API_URL || 'http://localhost:3100';
+const API_BASE_URL = process.env.INSPIRE_CODEX_API_URL || 'https://inspirecodex.com';
 const API_KEY = process.env.INSPIRE_CODEX_API_KEY || '';
 
 // ============================================================================

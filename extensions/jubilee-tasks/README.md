@@ -11,7 +11,7 @@ Automated developer task tracking for Jubilee Enterprise. This extension monitor
 - **Clickable In-Progress Tasks**: Click any "in progress" status to manually complete with custom duration/EHH
 - **Time Tracking**: Tracks active working time with minimum 1-minute duration
 - **EHH Estimation**: Automatic equivalent human hours estimation using GPT-4o-mini
-- **API Integration**: Connects to InspireCodex API on port 3100
+- **API Integration**: Connects to InspireCodex API (default: https://www.inspirecodex.com)
 - **Auto-refresh**: Automatically refreshes task list every 30 seconds
 
 ## Installation
@@ -38,15 +38,14 @@ The extension can be configured via VS Code settings:
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `jubileeTasks.apiBaseUrl` | `http://localhost:3100` | Base URL for the InspireCodex API |
+| `jubileeTasks.apiBaseUrl` | `https://www.inspirecodex.com` | Base URL for the InspireCodex API |
 | `jubileeTasks.inactivityThresholdMinutes` | `20` | Minutes of inactivity before time is excluded |
 | `jubileeTasks.autoRefreshIntervalSeconds` | `30` | Auto-refresh interval for task grid |
 
 ## Requirements
 
 - VS Code 1.80.0 or higher
-- InspireCodex API running on configured port (default: 3100)
-- PostgreSQL database with developer_tasks and developer_projects tables
+- Internet connection to access InspireCodex API (or local API for development)
 - Claude Code with hooks enabled (for automatic task tracking)
 
 ## Usage
@@ -116,6 +115,11 @@ npm run package
 This creates a new `jubilee-tasks-1.0.0.vsix` file.
 
 ## Version History
+
+### 1.0.1 (2026-01-13)
+- Changed default API URL to production (https://www.inspirecodex.com)
+- Fixed Submit button for developer initials (CSP compliance)
+- Moved "Developer Initials" label to left of input field
 
 ### 1.0.0 (2026-01-12)
 - Initial release with full feature set

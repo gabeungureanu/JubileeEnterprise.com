@@ -82,12 +82,12 @@ CREATE TABLE IF NOT EXISTS role_permissions (
 CREATE TABLE IF NOT EXISTS user_roles (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     role_id UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
-    resource_scope CITEXT,
+    resource_scope CITEXT NOT NULL DEFAULT '',
     valid_from TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     valid_until TIMESTAMPTZ,
     assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     assigned_by UUID REFERENCES users(id),
-    PRIMARY KEY (user_id, role_id, COALESCE(resource_scope, ''))
+    PRIMARY KEY (user_id, role_id, resource_scope)
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_roles_user ON user_roles(user_id);
@@ -342,7 +342,7 @@ CREATE TABLE IF NOT EXISTS admin_task_history (
 CREATE TABLE IF NOT EXISTS safety_thresholds (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     category VARCHAR(50) NOT NULL,
-    subcategory VARCHAR(50),
+    subcategory VARCHAR(50) NOT NULL DEFAULT '',
     alert_confidence_threshold INTEGER NOT NULL DEFAULT 70,
     severity_escalation_threshold INTEGER NOT NULL DEFAULT 85,
     repeat_count_threshold INTEGER NOT NULL DEFAULT 3,
@@ -352,7 +352,7 @@ CREATE TABLE IF NOT EXISTS safety_thresholds (
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    UNIQUE (category, COALESCE(subcategory, ''))
+    UNIQUE (category, subcategory)
 );
 
 -- ============================================================================
