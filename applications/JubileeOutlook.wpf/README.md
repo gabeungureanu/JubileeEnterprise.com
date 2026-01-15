@@ -490,6 +490,35 @@ This application is part of the Jubilee Enterprise suite. Refer to the root repo
 - Value converters for UI formatting
 - Theme fixes for white text on ribbon buttons and labels
 
+### Version 1.5.0 (2026-01-15)
+- **PostgreSQL Offline Cache Infrastructure**:
+  - Added comprehensive PostgreSQL-based local caching system for offline support
+  - Created detailed execution plan documentation (JubileeOutlook_Execution_Plan.md)
+  - Created implementation guide (JubileeOutlook_Offline_Cache_PostgreSQL.md)
+  - Database schema designed for cached_emails, cached_folders, cached_events, cached_contacts tables
+  - Sync queue table for offline operation queuing
+  - Sync state table for delta synchronization tracking
+  - Full-text search indexing for cached emails
+  - JSONB columns for flexible payload storage (recipients, attachments, attendees)
+  - Planned services: LocalCacheService, SyncQueueService, NetworkStatusService, SyncService
+  - Configuration model (LocalCacheSettings) for cache management
+  - Added utility scripts: check_indexes.ps1, test_cache_service.ps1
+
+- **Email Operations via API**:
+  - Implemented email sending via InspireContinuum API
+  - Added Sent Items folder support with proper message persistence
+  - Fixed message operations to use PATCH API endpoint
+  - Implemented draft saving functionality with auto-save support
+
+- **Sync Settings Enhancements**:
+  - Fixed Sync Settings modal button visibility
+  - Added TabWidth property for improved layout control
+
+- **Documentation Updates**:
+  - Created Feature Status HTML report (JubileeOutlook_Feature_Status.html)
+  - Updated README with comprehensive feature documentation
+  - Added PDF generation capability for documentation
+
 ### Version 1.4.0 (2026-01-14)
 - **Image Insertion in Events**:
   - Added EventImage model class for storing image data with events
