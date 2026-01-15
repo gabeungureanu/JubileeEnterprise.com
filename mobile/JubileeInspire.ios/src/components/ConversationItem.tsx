@@ -5,12 +5,13 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, Modal, TextInput, Share } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, Modal, TextInput, Share, Dimensions } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { Conversation } from '../types';
 import { spacing, typography } from '../config';
 import { useTheme } from '../contexts/ThemeContext';
+import { useDrawer } from '../contexts/DrawerContext';
 
 interface ConversationItemProps {
   conversation: Conversation;
@@ -23,6 +24,10 @@ interface ConversationItemProps {
   onStartEditing: () => void;
   onCancelEditing: () => void;
   searchQuery?: string;
+  // Menu state controlled by parent
+  isMenuOpen?: boolean;
+  onMenuOpen?: (position: { top: number; left: number }) => void;
+  onMenuClose?: () => void;
 }
 
 // Helper component to highlight search matches
@@ -78,12 +83,21 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
   onStartEditing,
   onCancelEditing,
   searchQuery = '',
+  isMenuOpen = false,
+  onMenuOpen,
+  onMenuClose,
 }) => {
   const { colors } = useTheme();
+  const { isMobileView } = useDrawer();
   const styles = createStyles(colors);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  // Use parent-controlled menu state if provided, otherwise use local state
+  const [localShowOptionsMenu, setLocalShowOptionsMenu] = useState(false);
+  const showOptionsMenu = onMenuOpen ? isMenuOpen : localShowOptionsMenu;
+  const setShowOptionsMenu = onMenuOpen
+    ? (show: boolean) => { if (show && onMenuOpen) onMenuOpen({ top: 0, left: 0 }); else if (onMenuClose) onMenuClose(); }
+    : setLocalShowOptionsMenu;
   const [showShareModal, setShowShareModal] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -140,20 +154,28 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
     setShowDeleteConfirm(false);
   };
 
+  const closeMenu = () => {
+    if (onMenuClose) {
+      onMenuClose();
+    } else {
+      setLocalShowOptionsMenu(false);
+    }
+  };
+
   const handleOptionPress = (option: string) => {
     switch (option) {
       case 'share':
-        setShowOptionsMenu(false);
+        closeMenu();
         setLinkCopied(false);
         setShowShareModal(true);
         break;
       case 'group':
-        setShowOptionsMenu(false);
+        closeMenu();
         Alert.alert('Start a group chat', 'Group chat functionality coming soon!');
         break;
       case 'rename':
         // Close menu and notify parent to enter edit mode
-        setShowOptionsMenu(false);
+        closeMenu();
         setEditTitle(conversation.title);
         // Use setTimeout to ensure modal is fully closed before entering edit mode
         setTimeout(() => {
@@ -161,19 +183,19 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
         }, 50);
         break;
       case 'pin':
-        setShowOptionsMenu(false);
+        closeMenu();
         onPinToggle();
         break;
       case 'archive':
-        setShowOptionsMenu(false);
+        closeMenu();
         Alert.alert('Archive', 'Archive functionality coming soon!');
         break;
       case 'delete':
-        setShowOptionsMenu(false);
+        closeMenu();
         handleDelete();
         break;
       default:
-        setShowOptionsMenu(false);
+        closeMenu();
     }
   };
 
@@ -342,7 +364,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
             )}
           </View>
 
-          {(isHovered || Platform.OS !== 'web') && (
+          {(isHovered || isMobileView || Platform.OS !== 'web') && (
             <TouchableOpacity
               ref={menuButtonRef}
               style={styles.menuButton}
@@ -350,12 +372,24 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
                 e.stopPropagation();
                 if (Platform.OS === 'web' && e.target) {
                   const rect = e.target.getBoundingClientRect();
-                  setMenuPosition({
-                    top: rect.bottom + 10,
-                    left: rect.left - 160,
-                  });
+                  // Position menu above the button, aligned to left edge of ellipsis
+                  // Menu height is approximately 280px (6 items + divider)
+                  const menuHeight = 280;
+                  const position = {
+                    top: rect.top - menuHeight - 5,
+                    left: rect.left,
+                  };
+                  setMenuPosition(position);
+                  // If parent controls menu, pass position to parent
+                  if (onMenuOpen) {
+                    onMenuOpen(position);
+                    return;
+                  }
                 }
-                setShowOptionsMenu(!showOptionsMenu);
+                // For local state control
+                if (!onMenuOpen) {
+                  setLocalShowOptionsMenu(true);
+                }
               }}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
@@ -366,77 +400,82 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
 
       </View>
 
-      {/* Options Menu Modal */}
-      <Modal
-        visible={showOptionsMenu}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowOptionsMenu(false)}
-      >
-        <TouchableOpacity
-          style={styles.menuOverlay}
-          activeOpacity={1}
-          onPress={() => setShowOptionsMenu(false)}
+      {/* Options Menu Modal - Only render if using local state (not parent-controlled) */}
+      {!onMenuOpen ? (
+        <Modal
+          visible={localShowOptionsMenu}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={closeMenu}
         >
-          <View style={[styles.menuContent, { position: 'absolute', top: menuPosition.top, left: menuPosition.left }]}>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => handleOptionPress('share')}
-            >
-              <Ionicons name="share-outline" size={20} color={colors.text} />
-              <Text style={styles.menuItemText}>Share</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuOverlay}
+            activeOpacity={1}
+            onPress={closeMenu}
+          >
+            <View style={[
+              styles.menuContent,
+              { position: 'absolute', top: menuPosition.top, left: menuPosition.left }
+            ]}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleOptionPress('share')}
+              >
+                <Ionicons name="share-outline" size={20} color={colors.text} />
+                <Text style={styles.menuItemText}>Share</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => handleOptionPress('group')}
-            >
-              <Ionicons name="people-outline" size={20} color={colors.text} />
-              <Text style={styles.menuItemText}>Start a group chat</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleOptionPress('group')}
+              >
+                <Ionicons name="people-outline" size={20} color={colors.text} />
+                <Text style={styles.menuItemText}>Start a group chat</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => handleOptionPress('rename')}
-            >
-              <Ionicons name="create-outline" size={20} color={colors.text} />
-              <Text style={styles.menuItemText}>Rename</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleOptionPress('rename')}
+              >
+                <Ionicons name="create-outline" size={20} color={colors.text} />
+                <Text style={styles.menuItemText}>Rename</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => handleOptionPress('pin')}
-            >
-              <Ionicons
-                name={conversation.isPinned ? "pin" : "pin-outline"}
-                size={20}
-                color={colors.text}
-              />
-              <Text style={styles.menuItemText}>
-                {conversation.isPinned ? 'Unpin chat' : 'Pin chat'}
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleOptionPress('pin')}
+              >
+                <Ionicons
+                  name={conversation.isPinned ? "pin" : "pin-outline"}
+                  size={20}
+                  color={colors.text}
+                />
+                <Text style={styles.menuItemText}>
+                  {conversation.isPinned ? 'Unpin chat' : 'Pin chat'}
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => handleOptionPress('archive')}
-            >
-              <Ionicons name="archive-outline" size={20} color={colors.text} />
-              <Text style={styles.menuItemText}>Archive</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleOptionPress('archive')}
+              >
+                <Ionicons name="archive-outline" size={20} color={colors.text} />
+                <Text style={styles.menuItemText}>Archive</Text>
+              </TouchableOpacity>
 
-            <View style={styles.menuDivider} />
+              <View style={styles.menuDivider} />
 
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => handleOptionPress('delete')}
-            >
-              <Ionicons name="trash-outline" size={20} color="#ef4444" />
-              <Text style={[styles.menuItemText, styles.deleteText]}>Delete</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => handleOptionPress('delete')}
+              >
+                <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                <Text style={[styles.menuItemText, styles.deleteText]}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      ) : null}
 
       {/* Delete Confirmation Modal for Web */}
       {Platform.OS === 'web' && (

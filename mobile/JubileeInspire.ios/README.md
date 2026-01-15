@@ -118,7 +118,8 @@ JubileeInspire.ios/
     │   └── index.ts
     ├── contexts/           # React contexts
     │   ├── AuthContext.tsx     # Authentication state
-    │   └── ThemeContext.tsx    # Theme management (System/Light/Dark)
+    │   ├── ThemeContext.tsx    # Theme management (System/Light/Dark)
+    │   └── DrawerContext.tsx   # Drawer state (responsive 768px breakpoint)
     ├── navigation/         # React Navigation setup
     │   ├── AppNavigator.tsx
     │   └── index.ts
@@ -533,6 +534,28 @@ npx expo start --clear --verbose
 ### Version 1.0.0 - Latest Updates (January 2026)
 
 #### New Features
+- ✅ **Responsive Sidebar**: Platform-aware drawer behavior
+  - Permanently visible on desktop (≥768px width)
+  - Hidden by default on mobile with hamburger toggle
+  - DrawerContext for shared drawer state management
+  - Automatic detection of screen size changes
+- ✅ **Centered Chat Input on Empty State**: ChatGPT-style initial chat layout
+  - Chat textbox positioned 20px below quick action buttons on new chat
+  - Maximum width of 650px, horizontally centered
+  - Input returns to bottom on conversations with messages
+- ✅ **Voice Wave Icon**: Custom audio equalizer-style icon
+  - 5 vertical bars with varying heights (8, 14, 20, 14, 8 pixels)
+  - Replaces headphone icon for voice mode button
+  - Voice icon positioned to right of microphone icon
+- ✅ **Persistent Microphone Button**: Mic icon always visible in chat input
+  - Mic icon no longer disappears when typing
+  - Voice/Send button swaps based on input state
+- ✅ **No Focus Outline**: Removed outline on web text input focus
+  - Platform-specific styling for cleaner appearance
+- ✅ **Centralized Menu State**: Single-click menu switching in sidebar
+  - Parent-controlled menu props for ConversationItem
+  - Only one menu can be open at a time
+  - Click on another item closes previous menu
 - ✅ **Search Chats**: Real-time search filtering for conversation history
   - Search input field replaces button in drawer sidebar
   - Filters by conversation title and preview text
@@ -619,6 +642,7 @@ npx expo start --clear --verbose
 #### New Files Added
 - `src/config/theme.ts` - Theme color definitions for light and dark modes
 - `src/contexts/ThemeContext.tsx` - Theme management context with persistence
+- `src/contexts/DrawerContext.tsx` - Drawer state management with 768px responsive breakpoint
 - `src/screens/AppearanceScreen.tsx` - Theme selection UI with visual previews
 - `src/screens/HomeScreen.tsx` - Home/landing screen
 

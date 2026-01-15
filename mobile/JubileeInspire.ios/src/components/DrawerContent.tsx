@@ -14,6 +14,7 @@ import {
   SafeAreaView,
   Platform,
   TextInput,
+  Modal,
 } from 'react-native';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,19 +22,20 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 import { spacing, typography } from '../config';
 import { useTheme } from '../contexts/ThemeContext';
+import { useDrawer } from '../contexts/DrawerContext';
 import { Conversation } from '../types';
 import ConversationItem from './ConversationItem';
 import { storage } from '../services/storage';
 
 const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: drawerNavigation }) => {
   const { colors } = useTheme();
+  const { isCollapsed, setIsCollapsed, toggleCollapse, isMobileView } = useDrawer();
 
   const navigation = useNavigation();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [pendingConversation, setPendingConversation] = useState<Conversation | null>(null);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [editingConversationId, setEditingConversationId] = useState<string | null>(null);
 
@@ -42,7 +44,11 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchInputRef = useRef<TextInput>(null);
 
-  const styles = createStyles(colors, isCollapsed);
+  // Menu state - controlled centrally to allow switching between menus with single click
+  const [openMenuConversationId, setOpenMenuConversationId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+
+  const styles = createStyles(colors, isCollapsed, isMobileView);
 
   const loadConversations = useCallback(async () => {
     if (isLoading) return; // Prevent multiple simultaneous loads
@@ -126,7 +132,10 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
         timestamp
       }
     } as any);
-    drawerNavigation.closeDrawer();
+    // Only close drawer automatically on non-mobile views
+    if (!isMobileView) {
+      drawerNavigation.closeDrawer();
+    }
 
     // Reload conversations after a short delay to pick up the new one
     setTimeout(() => {
@@ -141,7 +150,10 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
       screen: 'Chat',
       params: { conversationId: conversation.id }
     } as any);
-    drawerNavigation.closeDrawer();
+    // Only close drawer automatically on non-mobile views
+    if (!isMobileView) {
+      drawerNavigation.closeDrawer();
+    }
   };
 
   const handleDeleteConversation = async (conversationId: string) => {
@@ -165,7 +177,10 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
     drawerNavigation.navigate('HomeStack', {
       screen: 'Settings'
     } as any);
-    drawerNavigation.closeDrawer();
+    // Only close drawer automatically on non-mobile views
+    if (!isMobileView) {
+      drawerNavigation.closeDrawer();
+    }
   };
 
   const handlePinToggle = async (conversationId: string) => {
@@ -198,6 +213,22 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
     console.log('[DrawerContent] Cancel editing');
     setEditingConversationId(null);
   };
+
+  // Menu handlers for centralized control
+  const handleMenuOpen = (conversationId: string, position: { top: number; left: number }) => {
+    setOpenMenuConversationId(conversationId);
+    setMenuPosition(position);
+  };
+
+  const handleMenuClose = () => {
+    setOpenMenuConversationId(null);
+  };
+
+  // Get the conversation for the open menu
+  const openMenuConversation = useMemo(() => {
+    if (!openMenuConversationId) return null;
+    return [...conversations, pendingConversation].find(c => c?.id === openMenuConversationId) || null;
+  }, [openMenuConversationId, conversations, pendingConversation]);
 
   // Filter conversations based on search query
   const filteredConversations = useMemo(() => {
@@ -279,10 +310,6 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
 
   const groupedConversations = groupConversationsByDate(filteredConversations);
 
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
   const handleSearchFocus = () => {
     setIsSearchFocused(true);
   };
@@ -307,22 +334,33 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header with collapse toggle */}
+      {/* Header with collapse toggle (desktop) or close button (mobile) */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.collapseButton}
-          onPress={toggleCollapse}
-        >
-          <Ionicons
-            name={isCollapsed ? "chevron-forward" : "chevron-back"}
-            size={20}
-            color={colors.text}
-          />
-        </TouchableOpacity>
+        {isMobileView ? (
+          // Mobile: show close button to dismiss drawer
+          <TouchableOpacity
+            style={styles.collapseButton}
+            onPress={() => drawerNavigation.closeDrawer()}
+          >
+            <Ionicons name="close" size={24} color={colors.text} />
+          </TouchableOpacity>
+        ) : (
+          // Desktop: show collapse/expand toggle
+          <TouchableOpacity
+            style={styles.collapseButton}
+            onPress={toggleCollapse}
+          >
+            <Ionicons
+              name={isCollapsed ? "chevron-forward" : "chevron-back"}
+              size={20}
+              color={colors.text}
+            />
+          </TouchableOpacity>
+        )}
       </View>
 
-      {/* Menu Options */}
-      {isCollapsed ? (
+      {/* Menu Options - always show expanded menu on mobile */}
+      {!isMobileView && isCollapsed ? (
         <View style={styles.collapsedMenu}>
           <TouchableOpacity
             style={styles.collapsedMenuItem}
@@ -472,6 +510,9 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
                       onStartEditing={() => handleStartEditing(conversation.id)}
                       onCancelEditing={handleCancelEditing}
                       searchQuery={searchQuery}
+                      isMenuOpen={openMenuConversationId === conversation.id}
+                      onMenuOpen={(position) => handleMenuOpen(conversation.id, position)}
+                      onMenuClose={handleMenuClose}
                     />
                   ))}
                 </View>
@@ -507,20 +548,121 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Centralized Options Menu Modal */}
+      <Modal
+        visible={!!openMenuConversationId}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleMenuClose}
+      >
+        <TouchableOpacity
+          style={styles.menuOverlay}
+          activeOpacity={1}
+          onPress={handleMenuClose}
+        >
+          <View style={[
+            styles.menuContent,
+            { position: 'absolute', top: menuPosition.top, left: menuPosition.left }
+          ]}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                handleMenuClose();
+                // Share functionality would go here
+              }}
+            >
+              <Ionicons name="share-outline" size={20} color={colors.text} />
+              <Text style={styles.menuItemText}>Share</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                handleMenuClose();
+                // Group chat functionality
+              }}
+            >
+              <Ionicons name="people-outline" size={20} color={colors.text} />
+              <Text style={styles.menuItemText}>Start a group chat</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                if (openMenuConversationId) {
+                  handleMenuClose();
+                  handleStartEditing(openMenuConversationId);
+                }
+              }}
+            >
+              <Ionicons name="create-outline" size={20} color={colors.text} />
+              <Text style={styles.menuItemText}>Rename</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                if (openMenuConversationId) {
+                  handleMenuClose();
+                  handlePinToggle(openMenuConversationId);
+                }
+              }}
+            >
+              <Ionicons
+                name={openMenuConversation?.isPinned ? "pin" : "pin-outline"}
+                size={20}
+                color={colors.text}
+              />
+              <Text style={styles.menuItemText}>
+                {openMenuConversation?.isPinned ? 'Unpin chat' : 'Pin chat'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                handleMenuClose();
+                // Archive functionality
+              }}
+            >
+              <Ionicons name="archive-outline" size={20} color={colors.text} />
+              <Text style={styles.menuItemText}>Archive</Text>
+            </TouchableOpacity>
+
+            <View style={styles.menuDivider} />
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                if (openMenuConversationId) {
+                  handleMenuClose();
+                  handleDeleteConversation(openMenuConversationId);
+                }
+              }}
+            >
+              <Ionicons name="trash-outline" size={20} color="#ef4444" />
+              <Text style={[styles.menuItemText, styles.deleteText]}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 };
 
-const createStyles = (colors: any, isCollapsed: boolean) => StyleSheet.create({
+const createStyles = (colors: any, isCollapsed: boolean, isMobileView: boolean) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,
-    width: isCollapsed ? 56 : undefined,
+    // On mobile view, always use full width; on desktop, use collapsed or full width
+    width: isMobileView ? '100%' : (isCollapsed ? 56 : '100%'),
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: isCollapsed ? 'center' : 'flex-end',
+    // On mobile: left-align close button; on desktop: center when collapsed, right when expanded
+    justifyContent: isMobileView ? 'flex-start' : (isCollapsed ? 'center' : 'flex-end'),
     padding: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -639,6 +781,11 @@ const createStyles = (colors: any, isCollapsed: boolean) => StyleSheet.create({
     color: colors.text,
     fontSize: typography.fontSize.sm,
     fontWeight: '500',
+    ...Platform.select({
+      web: {
+        whiteSpace: 'nowrap',
+      },
+    }),
   },
   newChatText: {
     marginLeft: spacing.sm,
@@ -701,6 +848,44 @@ const createStyles = (colors: any, isCollapsed: boolean) => StyleSheet.create({
     alignItems: 'center',
     fontSize: typography.fontSize.base,
     color: colors.text,
+  },
+  // Menu styles
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  menuContent: {
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    paddingVertical: spacing.xs,
+    minWidth: 200,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+      },
+    }),
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
+  },
+  menuItemText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text,
+    fontWeight: '400',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.xs,
+  },
+  deleteText: {
+    color: '#ef4444',
   },
 });
 
