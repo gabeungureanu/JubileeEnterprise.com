@@ -22,7 +22,50 @@ interface ConversationItemProps {
   onRename: (newTitle: string) => void;
   onStartEditing: () => void;
   onCancelEditing: () => void;
+  searchQuery?: string;
 }
+
+// Helper component to highlight search matches
+const HighlightedText: React.FC<{
+  text: string;
+  highlight: string;
+  style: any;
+  highlightStyle: any;
+  numberOfLines?: number;
+}> = ({ text, highlight, style, highlightStyle, numberOfLines }) => {
+  if (!highlight.trim()) {
+    return <Text style={style} numberOfLines={numberOfLines}>{text}</Text>;
+  }
+
+  const query = highlight.toLowerCase();
+  const parts: { text: string; isMatch: boolean }[] = [];
+  let lastIndex = 0;
+  const lowerText = text.toLowerCase();
+
+  let index = lowerText.indexOf(query);
+  while (index !== -1) {
+    if (index > lastIndex) {
+      parts.push({ text: text.slice(lastIndex, index), isMatch: false });
+    }
+    parts.push({ text: text.slice(index, index + query.length), isMatch: true });
+    lastIndex = index + query.length;
+    index = lowerText.indexOf(query, lastIndex);
+  }
+
+  if (lastIndex < text.length) {
+    parts.push({ text: text.slice(lastIndex), isMatch: false });
+  }
+
+  return (
+    <Text style={style} numberOfLines={numberOfLines}>
+      {parts.map((part, i) => (
+        <Text key={i} style={part.isMatch ? highlightStyle : undefined}>
+          {part.text}
+        </Text>
+      ))}
+    </Text>
+  );
+};
 
 const ConversationItem: React.FC<ConversationItemProps> = ({
   conversation,
@@ -34,6 +77,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
   onRename,
   onStartEditing,
   onCancelEditing,
+  searchQuery = '',
 }) => {
   const { colors } = useTheme();
   const styles = createStyles(colors);
@@ -279,17 +323,22 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
                 />
               </TouchableOpacity>
             ) : (
-              <Text
+              <HighlightedText
+                text={conversation.title}
+                highlight={searchQuery}
                 style={[styles.title, isActive && styles.activeTitle]}
+                highlightStyle={styles.highlightedText}
                 numberOfLines={1}
-              >
-                {conversation.title}
-              </Text>
+              />
             )}
             {conversation.preview && !isEditing && (
-              <Text style={styles.preview} numberOfLines={1}>
-                {conversation.preview}
-              </Text>
+              <HighlightedText
+                text={conversation.preview}
+                highlight={searchQuery}
+                style={styles.preview}
+                highlightStyle={styles.highlightedPreview}
+                numberOfLines={1}
+              />
             )}
           </View>
 
@@ -571,6 +620,16 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: typography.fontSize.xs,
     color: colors.textSecondary,
     marginTop: 2,
+  },
+  highlightedText: {
+    backgroundColor: `${colors.primary}30`,
+    color: colors.primary,
+    fontWeight: '600',
+    borderRadius: 2,
+  },
+  highlightedPreview: {
+    backgroundColor: `${colors.primary}25`,
+    color: colors.primary,
   },
   deleteButton: {
     padding: spacing.xs,

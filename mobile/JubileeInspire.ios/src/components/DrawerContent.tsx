@@ -4,7 +4,7 @@
  * Sidebar with conversation history, like ChatGPT.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Platform,
+  TextInput,
 } from 'react-native';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,6 +36,11 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [editingConversationId, setEditingConversationId] = useState<string | null>(null);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchInputRef = useRef<TextInput>(null);
 
   const styles = createStyles(colors, isCollapsed);
 
@@ -193,6 +199,26 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
     setEditingConversationId(null);
   };
 
+  // Filter conversations based on search query
+  const filteredConversations = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return conversations;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    return conversations.filter(conv => {
+      // Search in title
+      if (conv.title.toLowerCase().includes(query)) {
+        return true;
+      }
+      // Search in preview (last message)
+      if (conv.preview && conv.preview.toLowerCase().includes(query)) {
+        return true;
+      }
+      return false;
+    });
+  }, [conversations, searchQuery]);
+
   // Group conversations by date with pinned section first
   const groupConversationsByDate = (convs: Conversation[]) => {
     const today = new Date();
@@ -251,15 +277,27 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
     return groups;
   };
 
-  const groupedConversations = groupConversationsByDate(conversations);
+  const groupedConversations = groupConversationsByDate(filteredConversations);
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
   };
 
-  const handleSearchChats = () => {
-    console.log('[DrawerContent] Search chats');
-    // TODO: Implement search functionality
+  const handleSearchFocus = () => {
+    setIsSearchFocused(true);
+  };
+
+  const handleSearchBlur = () => {
+    // Only unfocus if search is empty
+    if (!searchQuery) {
+      setIsSearchFocused(false);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setIsSearchFocused(false);
+    searchInputRef.current?.blur();
   };
 
   const handleImages = () => {
@@ -304,7 +342,10 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
 
           <TouchableOpacity
             style={styles.collapsedMenuItem}
-            onPress={handleSearchChats}
+            onPress={() => {
+              setIsCollapsed(false);
+              setTimeout(() => searchInputRef.current?.focus(), 100);
+            }}
             {...(Platform.OS === 'web' ? {
               onMouseEnter: () => setHoveredItem('search'),
               onMouseLeave: () => setHoveredItem(null)
@@ -341,10 +382,35 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
             <Text style={styles.menuText}>New chat</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} onPress={handleSearchChats}>
-            <Ionicons name="search-outline" size={20} color={colors.text} />
-            <Text style={styles.menuText}>Search chats</Text>
-          </TouchableOpacity>
+          {/* Search Input */}
+          <View style={[
+            styles.searchContainer,
+            isSearchFocused && styles.searchContainerFocused,
+            { borderColor: isSearchFocused ? colors.primary : colors.border }
+          ]}>
+            <Ionicons
+              name="search-outline"
+              size={18}
+              color={isSearchFocused ? colors.primary : colors.textSecondary}
+              style={styles.searchIcon}
+            />
+            <TextInput
+              ref={searchInputRef}
+              style={[styles.searchInput, { color: colors.text }]}
+              placeholder="Search chats"
+              placeholderTextColor={colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onFocus={handleSearchFocus}
+              onBlur={handleSearchBlur}
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={handleClearSearch} style={styles.clearButton}>
+                <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
 
           <TouchableOpacity style={styles.menuItem} onPress={handleImages}>
             <Ionicons name="image-outline" size={20} color={colors.text} />
@@ -356,14 +422,39 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
       {/* Conversation List - Only show in expanded state */}
       {!isCollapsed ? (
         <>
+          {/* Search Results Header */}
+          {searchQuery.trim() && (
+            <View style={styles.searchResultsHeader}>
+              <Text style={[styles.searchResultsText, { color: colors.textSecondary }]}>
+                {filteredConversations.length === 0
+                  ? 'No results found'
+                  : `${filteredConversations.length} result${filteredConversations.length !== 1 ? 's' : ''} for "${searchQuery}"`
+                }
+              </Text>
+              <TouchableOpacity onPress={handleClearSearch}>
+                <Text style={[styles.clearSearchText, { color: colors.primary }]}>Clear</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           <ScrollView style={styles.conversationList} showsVerticalScrollIndicator={false}>
             {/* Show existing conversations or empty state */}
             {groupedConversations.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Ionicons name="chatbubbles-outline" size={48} color={colors.border} />
-                <Text style={styles.emptyText}>No conversations yet</Text>
-                <Text style={styles.emptySubtext}>Start a new chat to begin</Text>
-              </View>
+              searchQuery.trim() ? (
+                // Empty search results
+                <View style={styles.emptyState}>
+                  <Ionicons name="search-outline" size={48} color={colors.border} />
+                  <Text style={styles.emptyText}>No matching chats</Text>
+                  <Text style={styles.emptySubtext}>Try a different search term</Text>
+                </View>
+              ) : (
+                // No conversations at all
+                <View style={styles.emptyState}>
+                  <Ionicons name="chatbubbles-outline" size={48} color={colors.border} />
+                  <Text style={styles.emptyText}>No conversations yet</Text>
+                  <Text style={styles.emptySubtext}>Start a new chat to begin</Text>
+                </View>
+              )
             ) : (
               groupedConversations.map((group, groupIndex) => (
                 <View key={groupIndex} style={styles.group}>
@@ -380,6 +471,7 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
                       onRename={(newTitle) => handleRename(conversation.id, newTitle)}
                       onStartEditing={() => handleStartEditing(conversation.id)}
                       onCancelEditing={handleCancelEditing}
+                      searchQuery={searchQuery}
                     />
                   ))}
                 </View>
@@ -477,6 +569,54 @@ const createStyles = (colors: any, isCollapsed: boolean) => StyleSheet.create({
     fontSize: typography.fontSize.sm,
     color: colors.text,
     fontWeight: '400',
+  },
+  // Search styles
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    marginVertical: spacing.xs,
+  },
+  searchContainerFocused: {
+    borderWidth: 1.5,
+  },
+  searchIcon: {
+    marginRight: spacing.xs,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: typography.fontSize.sm,
+    paddingVertical: spacing.xs,
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+      },
+      default: {},
+    }),
+  },
+  clearButton: {
+    padding: spacing.xs,
+  },
+  searchResultsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  searchResultsText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: '500',
+  },
+  clearSearchText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: '600',
   },
   tooltip: {
     position: 'absolute',
