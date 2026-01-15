@@ -133,6 +133,20 @@ public partial class MainViewModel : BaseViewModel
     }
 
     [RelayCommand]
+    private void ToggleChatGptPanel()
+    {
+        // Ensure we're on the Browser view first
+        if (CurrentViewModel != BrowserViewModel)
+        {
+            _navigationService.NavigateTo("Browser");
+        }
+
+        // Toggle the ChatGPT panel
+        BrowserViewModel.ToggleChatGptPanelCommand.Execute(null);
+        _logger.LogDebug("ChatGPT panel toggled from main nav");
+    }
+
+    [RelayCommand]
     private async Task NavigateToLibrary()
     {
         _navigationService.NavigateTo("Library");

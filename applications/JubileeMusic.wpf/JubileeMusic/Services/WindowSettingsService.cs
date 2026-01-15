@@ -53,9 +53,10 @@ public class WindowSettingsService : IWindowSettingsService
                     settings = ValidateSettings(settings);
 
                     _logger.LogInformation(
-                        "Application state loaded: {Width}x{Height} at ({Left},{Top}), State: {State}, View: {View}, PanelOpen: {PanelOpen}",
+                        "Application state loaded: {Width}x{Height} at ({Left},{Top}), State: {State}, View: {View}, CreatorPanel: {CreatorPanelOpen}, ChatGptPanel: {ChatGptPanelOpen} ({ChatGptPanelWidth}px)",
                         settings.Width, settings.Height, settings.Left, settings.Top,
-                        settings.WindowState, settings.LastView, settings.IsCreatorPanelOpen);
+                        settings.WindowState, settings.LastView, settings.IsCreatorPanelOpen,
+                        settings.IsChatGptPanelOpen, settings.ChatGptPanelWidth);
 
                     return settings;
                 }
@@ -84,9 +85,10 @@ public class WindowSettingsService : IWindowSettingsService
             settings.Version = CurrentVersion;
 
             _logger.LogInformation(
-                "Saving application state: {Width}x{Height} at ({Left},{Top}), State: {State}, View: {View}, PanelOpen: {PanelOpen}",
+                "Saving application state: {Width}x{Height} at ({Left},{Top}), State: {State}, View: {View}, CreatorPanel: {CreatorPanelOpen}, ChatGptPanel: {ChatGptPanelOpen} ({ChatGptPanelWidth}px)",
                 settings.Width, settings.Height, settings.Left, settings.Top,
-                settings.WindowState, settings.LastView, settings.IsCreatorPanelOpen);
+                settings.WindowState, settings.LastView, settings.IsCreatorPanelOpen,
+                settings.IsChatGptPanelOpen, settings.ChatGptPanelWidth);
 
             var json = JsonSerializer.Serialize(settings, _jsonOptions);
 
@@ -159,9 +161,14 @@ public class WindowSettingsService : IWindowSettingsService
             }
         }
 
-        // Validate panel width
+        // Validate Creator panel width
         if (settings.CreatorPanelWidth < 280) settings.CreatorPanelWidth = 280;
         if (settings.CreatorPanelWidth > 500) settings.CreatorPanelWidth = 500;
+
+        // Validate ChatGPT panel width (min 300, max 50% of screen)
+        var maxChatGptWidth = virtualWidth * 0.5;
+        if (settings.ChatGptPanelWidth < 300) settings.ChatGptPanelWidth = 300;
+        if (settings.ChatGptPanelWidth > maxChatGptWidth) settings.ChatGptPanelWidth = maxChatGptWidth;
 
         // Validate last view
         var validViews = new[] { "Browser", "Create", "Library", "Settings" };

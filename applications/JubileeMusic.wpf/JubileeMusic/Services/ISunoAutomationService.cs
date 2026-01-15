@@ -17,6 +17,7 @@ public interface ISunoAutomationService
     Task<bool> InsertIntoCreateFormAsync(string? title, string? style, string? lyrics, bool isInstrumental);
     Task<bool> SelectOrCreateWorkspaceAsync(string workspaceName);
     Task<bool> IsOnCreatePageAsync();
+    Task<bool> ClickCreateIconAsync();
     Task<GenerationResult> SubmitGenerationAsync();
     Task<GenerationStatus> CheckGenerationStatusAsync(string jobId);
     Task<byte[]?> DownloadAudioAsync(string audioUrl);

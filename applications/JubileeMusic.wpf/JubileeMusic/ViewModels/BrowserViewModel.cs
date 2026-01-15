@@ -33,7 +33,14 @@ public partial class BrowserViewModel : BaseViewModel
     [ObservableProperty]
     private string _pageTitle = "Suno";
 
-    // Creator Panel Properties
+    // ChatGPT Panel Properties (left side)
+    [ObservableProperty]
+    private bool _isChatGptPanelOpen;
+
+    [ObservableProperty]
+    private double _chatGptPanelWidth = 400;
+
+    // Creator Panel Properties (right side)
     [ObservableProperty]
     private bool _isCreatorPanelOpen;
 
@@ -192,6 +199,13 @@ public partial class BrowserViewModel : BaseViewModel
     {
         IsCreatorPanelOpen = !IsCreatorPanelOpen;
         _logger.LogDebug("Creator panel toggled: {IsOpen}", IsCreatorPanelOpen);
+    }
+
+    [RelayCommand]
+    private void ToggleChatGptPanel()
+    {
+        IsChatGptPanelOpen = !IsChatGptPanelOpen;
+        _logger.LogDebug("ChatGPT panel toggled: {IsOpen}", IsChatGptPanelOpen);
     }
 
     [RelayCommand]

@@ -59,6 +59,9 @@
                     <Button Content="Browser"
                             Command="{Binding NavigateToBrowserCommand}"
                             Style="{StaticResource NavButtonStyle}"/>
+                    <Button Content="ChatGPT"
+                            Command="{Binding ToggleChatGptPanelCommand}"
+                            Style="{StaticResource NavButtonStyle}"/>
                     <Button Content="Create"
                             Command="{Binding ToggleCreatePanelCommand}"
                             Style="{StaticResource NavButtonStyle}"/>

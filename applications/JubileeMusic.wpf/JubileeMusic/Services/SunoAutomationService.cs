@@ -1120,6 +1120,111 @@ public class SunoAutomationService : ISunoAutomationService
         }
     }
 
+    public async Task<bool> ClickCreateIconAsync()
+    {
+        EnsureInitialized();
+
+        try
+        {
+            _logger.LogInformation("[CREATE-ICON] Attempting to click Create icon (musical note with star)");
+
+            // Wait for page to be ready
+            await Task.Delay(1500);
+
+            var script = @"
+                (function() {
+                    console.log('[CREATE-ICON] Searching for Create button...');
+
+                    // Find clickable parent helper
+                    function findClickableParent(el) {
+                        let current = el;
+                        for (let i = 0; i < 5 && current; i++) {
+                            if (current.onclick || current.tagName === 'BUTTON' ||
+                                current.tagName === 'A' ||
+                                current.getAttribute('role') === 'button' ||
+                                current.getAttribute('role') === 'tab' ||
+                                current.classList.contains('clickable') ||
+                                getComputedStyle(current).cursor === 'pointer') {
+                                return current;
+                            }
+                            current = current.parentElement;
+                        }
+                        return el;
+                    }
+
+                    // Method 1: Look for the Create tab/button in the sidebar
+                    // Suno uses a sidebar with icons including a 'Create' button
+                    const allElements = document.querySelectorAll('a, button, div, span, [role=""tab""], [role=""button""]');
+
+                    for (const el of allElements) {
+                        const text = (el.textContent || '').trim().toLowerCase();
+                        const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+                        const title = (el.getAttribute('title') || '').toLowerCase();
+                        const href = (el.getAttribute('href') || '').toLowerCase();
+
+                        // Look for Create link/button
+                        if (href.includes('/create') ||
+                            text === 'create' ||
+                            ariaLabel.includes('create') ||
+                            title.includes('create')) {
+
+                            const clickable = findClickableParent(el);
+                            console.log('[CREATE-ICON] Found Create element: ' + (el.tagName) + ', text=' + text + ', href=' + href);
+                            clickable.click();
+                            return { success: true, method: 'direct-create', element: el.tagName };
+                        }
+                    }
+
+                    // Method 2: Look for SVG with music note or star (icon-based navigation)
+                    const svgs = document.querySelectorAll('svg');
+                    for (const svg of svgs) {
+                        const parent = svg.closest('a, button, [role=""button""], [role=""tab""]');
+                        if (parent) {
+                            const href = (parent.getAttribute('href') || '').toLowerCase();
+                            const ariaLabel = (parent.getAttribute('aria-label') || '').toLowerCase();
+
+                            if (href.includes('/create') || ariaLabel.includes('create')) {
+                                console.log('[CREATE-ICON] Found Create via SVG parent');
+                                parent.click();
+                                return { success: true, method: 'svg-parent', element: 'svg' };
+                            }
+                        }
+                    }
+
+                    // Method 3: Navigate directly if on suno.com
+                    if (window.location.hostname.includes('suno.com') && !window.location.pathname.includes('/create')) {
+                        console.log('[CREATE-ICON] Navigating directly to /create');
+                        window.location.href = 'https://suno.com/create';
+                        return { success: true, method: 'direct-navigation', element: 'url' };
+                    }
+
+                    console.log('[CREATE-ICON] Create button not found');
+                    return { success: false, error: 'Create button not found' };
+                })();
+            ";
+
+            var result = await ExecuteScriptAsync<System.Text.Json.JsonElement>(script);
+
+            if (result.TryGetProperty("success", out var successProp) && successProp.GetBoolean())
+            {
+                var method = result.TryGetProperty("method", out var mp) ? mp.GetString() : "unknown";
+                _logger.LogInformation("[CREATE-ICON] Successfully clicked Create icon via {Method}", method);
+                return true;
+            }
+            else
+            {
+                var error = result.TryGetProperty("error", out var ep) ? ep.GetString() : "Unknown error";
+                _logger.LogWarning("[CREATE-ICON] Failed to click Create icon: {Error}", error);
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[CREATE-ICON] Exception while clicking Create icon");
+            return false;
+        }
+    }
+
     public async Task<bool> InsertIntoCreateFormAsync(string? title, string? style, string? lyrics, bool isInstrumental)
     {
         EnsureInitialized();

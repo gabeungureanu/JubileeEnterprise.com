@@ -28,9 +28,13 @@ public class WindowSettings
     public string LastView { get; set; } = "Browser";
     public string? LastUrl { get; set; }
 
-    // Create panel state
+    // Create panel state (right side)
     public bool IsCreatorPanelOpen { get; set; } = false;
     public double CreatorPanelWidth { get; set; } = 320;
+
+    // ChatGPT panel state (left side)
+    public bool IsChatGptPanelOpen { get; set; } = false;
+    public double ChatGptPanelWidth { get; set; } = 400;
 
     // Form data state (transient but useful for session continuity)
     public CreateFormState? CreateFormState { get; set; }

@@ -58,15 +58,76 @@
             </Grid>
         </Border>
 
-        <!-- Main Content Area with WebView and Push-Layout Creator Panel -->
+        <!-- Main Content Area with ChatGPT Panel, WebView, and Creator Panel -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="ChatGptPanelColumn" Width="0"/>
+                <ColumnDefinition x:Name="ChatGptSplitterColumn" Width="0"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition x:Name="CreatorPanelColumn" Width="0"/>
             </Grid.ColumnDefinitions>
 
-            <!-- WebView2 Browser (pushes left when panel opens) -->
-            <Grid Grid.Column="0">
+            <!-- ChatGPT Panel (Left Side) -->
+            <Border x:Name="ChatGptPanel"
+                    Grid.Column="0"
+                    Background="{DynamicResource SurfaceColor}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="0,0,1,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- ChatGPT Panel Header -->
+                    <Border Grid.Row="0"
+                            Background="{DynamicResource BackgroundColor}"
+                            Padding="16,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Text="ChatGPT"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextColor}"
+                                       VerticalAlignment="Center"/>
+
+                            <Button Grid.Column="1"
+                                    Content="&#x2715;"
+                                    Command="{Binding ToggleChatGptPanelCommand}"
+                                    ToolTip="Close ChatGPT Panel"
+                                    Width="28" Height="28"
+                                    FontSize="14"
+                                    Background="Transparent"
+                                    Foreground="{DynamicResource TextSecondaryColor}"
+                                    BorderThickness="0"
+                                    Cursor="Hand"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- ChatGPT WebView -->
+                    <wv2:WebView2 x:Name="ChatGptWebView"
+                                  Grid.Row="1"/>
+                </Grid>
+            </Border>
+
+            <!-- Resizable Splitter for ChatGPT Panel -->
+            <GridSplitter x:Name="ChatGptSplitter"
+                          Grid.Column="1"
+                          Width="5"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Stretch"
+                          Background="{DynamicResource BorderBrush}"
+                          Cursor="SizeWE"
+                          ShowsPreview="True"
+                          ResizeBehavior="PreviousAndNext"
+                          DragCompleted="ChatGptSplitter_DragCompleted"/>
+
+            <!-- WebView2 Browser (center - Suno) -->
+            <Grid Grid.Column="2">
                 <wv2:WebView2 x:Name="WebView"/>
 
                 <!-- Loading Overlay -->
@@ -112,7 +173,7 @@
 
             <!-- Creator Panel (Right Side - Pushes Content) -->
             <Border x:Name="CreatorPanel"
-                    Grid.Column="1"
+                    Grid.Column="3"
                     Background="{DynamicResource SurfaceColor}"
                     BorderBrush="{DynamicResource BorderBrush}"
                     BorderThickness="1,0,0,0">

@@ -84,8 +84,12 @@ public partial class MainWindow : Window
         // Restore panel state and form data via the BrowserViewModel
         if (_viewModel.BrowserViewModel != null)
         {
-            // Restore panel state
+            // Restore Creator panel state
             _viewModel.BrowserViewModel.IsCreatorPanelOpen = settings.IsCreatorPanelOpen;
+
+            // Restore ChatGPT panel state
+            _viewModel.BrowserViewModel.IsChatGptPanelOpen = settings.IsChatGptPanelOpen;
+            _viewModel.BrowserViewModel.ChatGptPanelWidth = settings.ChatGptPanelWidth;
 
             // Restore form data if it was persisted
             if (settings.CreateFormState != null)
@@ -159,6 +163,10 @@ public partial class MainWindow : Window
         if (_viewModel.BrowserViewModel != null)
         {
             settings.IsCreatorPanelOpen = _viewModel.BrowserViewModel.IsCreatorPanelOpen;
+
+            // Save ChatGPT panel state
+            settings.IsChatGptPanelOpen = _viewModel.BrowserViewModel.IsChatGptPanelOpen;
+            settings.ChatGptPanelWidth = _viewModel.BrowserViewModel.ChatGptPanelWidth;
 
             // Only persist form data if the panel is open and has content
             if (_viewModel.BrowserViewModel.IsCreatorPanelOpen)
