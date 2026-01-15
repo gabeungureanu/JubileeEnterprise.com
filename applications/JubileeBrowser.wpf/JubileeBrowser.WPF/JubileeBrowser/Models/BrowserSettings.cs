@@ -2,8 +2,8 @@ namespace JubileeBrowser.Models;
 
 public class HomepageSettings
 {
-    public string Internet { get; set; } = "http://www.jubileeverse.com";
-    public string JubileeBibles { get; set; } = "inspire://jubileeverse.webspace";
+    public string Internet { get; set; } = "https://www.jubileeinspire.com";
+    public string JubileeBibles { get; set; } = "inspire://jubilee.inspire";
 }
 
 public class AutofillSettings

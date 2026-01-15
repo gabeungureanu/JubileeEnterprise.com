@@ -4908,6 +4908,113 @@ app.get('/api/v1/developer/tasks/session/:sessionId/active', async (req, res) =>
 });
 
 // =============================================================================
+// USER TODOS API ROUTES
+// =============================================================================
+
+// Get all todos for a user
+app.get('/api/todos', async (req, res) => {
+    try {
+        const { email } = req.query;
+        if (!email) {
+            return res.status(400).json({ success: false, error: 'Email parameter required' });
+        }
+
+        const result = await codexPool.query(
+            `SELECT id, title, description, is_completed as "isCompleted", priority,
+                    due_date as "dueDate", created_at as "createdAt", updated_at as "updatedAt",
+                    user_email as "userEmail"
+             FROM user_todos
+             WHERE user_email = $1
+             ORDER BY is_completed ASC, created_at DESC`,
+            [email.toLowerCase()]
+        );
+
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Get todos error:', err);
+        res.status(500).json({ success: false, error: 'Failed to fetch todos' });
+    }
+});
+
+// Create a new todo
+app.post('/api/todos', async (req, res) => {
+    try {
+        const { email, title, description, priority, dueDate } = req.body;
+
+        if (!email || !title) {
+            return res.status(400).json({ success: false, error: 'Email and title are required' });
+        }
+
+        const result = await codexPool.query(
+            `INSERT INTO user_todos (user_email, title, description, priority, due_date)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id, title, description, is_completed as "isCompleted", priority,
+                       due_date as "dueDate", created_at as "createdAt", updated_at as "updatedAt",
+                       user_email as "userEmail"`,
+            [email.toLowerCase(), title, description || null, priority || 'medium', dueDate || null]
+        );
+
+        res.status(201).json({ success: true, todo: result.rows[0] });
+    } catch (err) {
+        console.error('Create todo error:', err);
+        res.status(500).json({ success: false, error: 'Failed to create todo' });
+    }
+});
+
+// Update a todo
+app.put('/api/todos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, description, isCompleted, priority, dueDate } = req.body;
+
+        const result = await codexPool.query(
+            `UPDATE user_todos
+             SET title = COALESCE($1, title),
+                 description = COALESCE($2, description),
+                 is_completed = COALESCE($3, is_completed),
+                 priority = COALESCE($4, priority),
+                 due_date = COALESCE($5, due_date),
+                 updated_at = NOW()
+             WHERE id = $6
+             RETURNING id, title, description, is_completed as "isCompleted", priority,
+                       due_date as "dueDate", created_at as "createdAt", updated_at as "updatedAt",
+                       user_email as "userEmail"`,
+            [title, description, isCompleted, priority, dueDate, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Todo not found' });
+        }
+
+        res.json({ success: true, todo: result.rows[0] });
+    } catch (err) {
+        console.error('Update todo error:', err);
+        res.status(500).json({ success: false, error: 'Failed to update todo' });
+    }
+});
+
+// Delete a todo
+app.delete('/api/todos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await codexPool.query(
+            'DELETE FROM user_todos WHERE id = $1 RETURNING id',
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Todo not found' });
+        }
+
+        res.json({ success: true, message: 'Todo deleted' });
+    } catch (err) {
+        console.error('Delete todo error:', err);
+        res.status(500).json({ success: false, error: 'Failed to delete todo' });
+    }
+});
+
+// =============================================================================
 // ERROR HANDLING
 // =============================================================================
 
@@ -4976,6 +5083,42 @@ async function startServer() {
     try {
         await codexPool.query('SELECT 1');
         console.log('✅ Codex database connected');
+
+        // Ensure user_todos table exists
+        await codexPool.query(`
+            CREATE TABLE IF NOT EXISTS user_todos (
+                id SERIAL PRIMARY KEY,
+                user_email VARCHAR(255) NOT NULL,
+                title VARCHAR(500) NOT NULL,
+                description TEXT,
+                is_completed BOOLEAN DEFAULT FALSE,
+                priority VARCHAR(20) DEFAULT 'medium',
+                due_date TIMESTAMPTZ,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            );
+            CREATE INDEX IF NOT EXISTS idx_user_todos_email ON user_todos(user_email);
+            CREATE INDEX IF NOT EXISTS idx_user_todos_completed ON user_todos(is_completed);
+        `);
+
+        // Insert sample todos for gabe.ungureanu@outlook.com if none exist
+        const existingSamples = await codexPool.query(
+            "SELECT COUNT(*) FROM user_todos WHERE user_email = 'gabe.ungureanu@outlook.com'"
+        );
+        if (parseInt(existingSamples.rows[0].count) === 0) {
+            await codexPool.query(`
+                INSERT INTO user_todos (user_email, title, description, priority, is_completed)
+                VALUES
+                    ('gabe.ungureanu@outlook.com', 'Review JubileeBrowser feature updates', 'Check the new sidebar panel and todo functionality', 'high', false),
+                    ('gabe.ungureanu@outlook.com', 'Test InspireCodex API endpoints', 'Verify all CRUD operations work correctly', 'high', false),
+                    ('gabe.ungureanu@outlook.com', 'Update documentation for Jubilee platform', 'Document the new todo feature and API changes', 'medium', false),
+                    ('gabe.ungureanu@outlook.com', 'Schedule team sync meeting', 'Discuss upcoming sprint goals and priorities', 'medium', true),
+                    ('gabe.ungureanu@outlook.com', 'Deploy latest changes to production', 'Push all updates to the live server', 'high', true)
+            `);
+            console.log('✅ Sample todos created for gabe.ungureanu@outlook.com');
+        }
+
+        console.log('✅ User todos table ready');
     } catch (err) {
         console.error('❌ Codex database connection failed:', err.message);
         process.exit(1);
