@@ -11,8 +11,8 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Load .env from project root
-config({ path: resolve(__dirname, '../../../../.env') });
+// Load .env from project root (override: true to override any existing shell env vars)
+config({ path: resolve(__dirname, '../../../../.env'), override: true });
 
 export type DatabaseName = 'codex' | 'inspire' | 'continuum';
 export type Environment = 'development' | 'staging' | 'production';

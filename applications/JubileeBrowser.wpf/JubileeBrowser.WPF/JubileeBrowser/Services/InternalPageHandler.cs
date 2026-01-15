@@ -19,6 +19,7 @@ public class InternalPageHandler
         _pageGenerators["blocked"] = GenerateBlockedPage;
         _pageGenerators["error"] = GenerateErrorPage;
         _pageGenerators["welcome"] = GenerateWelcomePage;
+        _pageGenerators["history"] = GenerateHistoryPage;
     }
 
     public bool CanHandle(string url)
@@ -1474,6 +1475,812 @@ public class InternalPageHandler
         <h1>Page Not Found</h1>
         <p>The page 'jubilee://{System.Web.HttpUtility.HtmlEncode(pageName)}' does not exist.</p>
     </div>
+</body>
+</html>";
+    }
+
+    private string GenerateHistoryPage(string? query)
+    {
+        return @"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <title>History - Jubilee Browser</title>
+    <style>
+        /* ===== CSS Custom Properties (Design Tokens) ===== */
+        :root {
+            --color-primary-text: #ffffff;
+            --color-accent-gold: #E6AC00;
+            --color-accent-red: #e94560;
+            --color-bg-primary: #1a1a2e;
+            --color-bg-secondary: #16213e;
+            --color-bg-tertiary: #2a2a4e;
+            --color-bg-hover: #3a3a5e;
+            --color-border: rgba(255, 255, 255, 0.08);
+            --color-success: #4CAF50;
+            --color-error: #f44336;
+            --scrollbar-track: var(--color-bg-secondary);
+            --scrollbar-thumb: var(--color-bg-tertiary);
+            --scrollbar-thumb-hover: var(--color-accent-gold);
+            --font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--scrollbar-track); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 5px; border: 2px solid var(--scrollbar-track); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+        * { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); }
+
+        /* Base Reset */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-family);
+            background: var(--color-bg-primary);
+            color: var(--color-primary-text);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--color-accent-red), var(--color-accent-gold));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 400;
+        }
+        .header .subtitle {
+            color: var(--color-primary-text);
+            opacity: 0.7;
+            font-size: 14px;
+        }
+
+        /* Search Box */
+        .search-box {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            transition: border-color 0.2s ease;
+        }
+        .search-box:focus-within { border-color: var(--color-accent-gold); }
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: var(--color-primary-text);
+            font-size: 14px;
+            flex: 1;
+            outline: none;
+        }
+        .search-box input::placeholder { color: var(--color-primary-text); opacity: 0.5; }
+        .search-icon { color: var(--color-accent-gold); margin-right: 12px; font-size: 18px; }
+
+        /* Bulk Actions Bar */
+        .bulk-actions {
+            background: var(--color-bg-secondary);
+            border-radius: 10px;
+            padding: 12px 20px;
+            margin-bottom: 24px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--color-accent-gold);
+        }
+        .bulk-actions.visible { display: flex; }
+        .bulk-actions .selected-count {
+            color: var(--color-accent-gold);
+            font-weight: 500;
+        }
+        .bulk-actions .actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: var(--color-accent-gold);
+            color: var(--color-bg-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:hover { background: #d49c00; }
+        .btn:active { transform: scale(0.98); }
+        .btn-danger { background: var(--color-accent-red); color: white; }
+        .btn-danger:hover { background: #d13a55; }
+        .btn-secondary { background: var(--color-bg-tertiary); color: var(--color-primary-text); }
+        .btn-secondary:hover { background: var(--color-bg-hover); }
+
+        /* Date Group */
+        .date-group {
+            margin-bottom: 32px;
+        }
+        .date-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .date-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-accent-gold);
+        }
+        .date-header .count {
+            background: var(--color-bg-tertiary);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--color-primary-text);
+            opacity: 0.8;
+        }
+
+        /* History Item */
+        .history-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            background: var(--color-bg-secondary);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 2px solid transparent;
+        }
+        .history-item:hover { background: var(--color-bg-tertiary); }
+        .history-item.selected {
+            border-color: var(--color-accent-gold);
+            background: rgba(230, 172, 0, 0.1);
+        }
+
+        /* Checkbox */
+        .checkbox-wrapper {
+            margin-right: 14px;
+            display: flex;
+            align-items: center;
+        }
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--color-bg-hover);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+        .checkbox:hover { border-color: var(--color-accent-gold); }
+        .checkbox.checked {
+            background: var(--color-accent-gold);
+            border-color: var(--color-accent-gold);
+        }
+        .checkbox.checked::after {
+            content: '✓';
+            color: var(--color-bg-primary);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Favicon */
+        .favicon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: var(--color-bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 14px;
+            font-size: 16px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .favicon img {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+
+        /* Item Content */
+        .item-content {
+            flex: 1;
+            min-width: 0;
+            margin-right: 16px;
+        }
+        .item-title {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+        .item-url {
+            font-size: 12px;
+            color: var(--color-primary-text);
+            opacity: 0.6;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Item Time */
+        .item-time {
+            font-size: 12px;
+            color: var(--color-primary-text);
+            opacity: 0.5;
+            white-space: nowrap;
+            margin-right: 12px;
+        }
+
+        /* Delete Button (per item) */
+        .item-delete {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: transparent;
+            border: none;
+            color: var(--color-primary-text);
+            opacity: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            font-size: 16px;
+        }
+        .history-item:hover .item-delete { opacity: 0.5; }
+        .item-delete:hover { opacity: 1 !important; color: var(--color-accent-red); background: rgba(233, 69, 96, 0.1); }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .empty-state .icon { font-size: 64px; margin-bottom: 24px; opacity: 0.3; }
+        .empty-state h2 { font-size: 24px; font-weight: 400; margin-bottom: 12px; }
+        .empty-state p { color: var(--color-primary-text); opacity: 0.6; margin-bottom: 24px; }
+
+        /* Retry Button - Premium Styling */
+        .retry-btn {
+            background: linear-gradient(135deg, var(--color-accent-gold), #d49c00);
+            color: var(--color-bg-primary);
+            border: none;
+            padding: 14px 32px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 140px;
+            box-shadow: 0 4px 12px rgba(230, 172, 0, 0.3);
+        }
+        .retry-btn:hover {
+            background: linear-gradient(135deg, #f0b800, var(--color-accent-gold));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(230, 172, 0, 0.4);
+        }
+        .retry-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(230, 172, 0, 0.3);
+        }
+        .retry-btn:disabled {
+            background: var(--color-bg-tertiary);
+            color: var(--color-primary-text);
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .retry-icon { font-size: 16px; }
+
+        /* Button Spinner */
+        .btn-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--color-primary-text);
+            opacity: 0.7;
+        }
+        .loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--color-bg-tertiary);
+            border-top-color: var(--color-accent-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-accent-gold);
+            padding: 16px 24px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast .icon { font-size: 20px; }
+        .toast.success { border-color: var(--color-success); }
+        .toast.success .icon { color: var(--color-success); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 24px; }
+            .header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .item-time { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <div class='header-left'>
+                <div class='header-icon'>🕐</div>
+                <div>
+                    <h1>History</h1>
+                    <p class='subtitle'>Your browsing activity</p>
+                </div>
+            </div>
+            <button class='btn btn-secondary' id='clearAllBtn' style='display: none;'>
+                <span>🗑️</span> Clear All History
+            </button>
+        </div>
+
+        <div class='search-box'>
+            <span class='search-icon'>🔍</span>
+            <input type='text' placeholder='Search history...' id='searchInput'>
+        </div>
+
+        <div class='bulk-actions' id='bulkActions'>
+            <span class='selected-count'><span id='selectedCount'>0</span> items selected</span>
+            <div class='actions'>
+                <button class='btn btn-secondary' id='selectAllBtn'>Select All</button>
+                <button class='btn btn-danger' id='deleteSelectedBtn'>
+                    <span>🗑️</span> Delete Selected
+                </button>
+            </div>
+        </div>
+
+        <div id='historyContainer'>
+            <div class='loading'>
+                <div class='spinner'></div>
+                <p>Loading history...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class='toast' id='toast'>
+        <span class='icon'>✓</span>
+        <span class='message' id='toastMessage'>Items deleted</span>
+    </div>
+
+    <script>
+        // Jubilee Bridge - enables communication with the C# backend
+        (function() {
+            if (window.jubilee) return;
+
+            const pendingRequests = new Map();
+
+            window.jubilee = {
+                invoke: function(channel, args) {
+                    return new Promise((resolve, reject) => {
+                        const id = Math.random().toString(36).substr(2, 9);
+                        pendingRequests.set(id, { resolve, reject });
+
+                        window.chrome.webview.postMessage(JSON.stringify({
+                            channel: channel,
+                            args: args || {},
+                            id: id
+                        }));
+
+                        setTimeout(() => {
+                            if (pendingRequests.has(id)) {
+                                pendingRequests.delete(id);
+                                reject(new Error('Request timeout'));
+                            }
+                        }, 30000);
+                    });
+                },
+
+                send: function(channel, args) {
+                    window.chrome.webview.postMessage(JSON.stringify({
+                        channel: channel,
+                        args: args || {}
+                    }));
+                },
+
+                on: function(channel, callback) {
+                    window.addEventListener('jubilee-message', function(e) {
+                        if (e.detail && e.detail.channel === channel) {
+                            callback(e.detail.data);
+                        }
+                    });
+                }
+            };
+
+            window.addEventListener('jubilee-response', function(e) {
+                const response = e.detail;
+                if (response.id && pendingRequests.has(response.id)) {
+                    const { resolve, reject } = pendingRequests.get(response.id);
+                    pendingRequests.delete(response.id);
+
+                    if (response.error) {
+                        reject(new Error(response.error));
+                    } else {
+                        resolve(response.result);
+                    }
+                }
+            });
+
+            console.log('Jubilee Bridge initialized');
+        })();
+
+        let historyData = [];
+        let selectedIds = new Set();
+        let searchQuery = '';
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadHistory();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                searchQuery = e.target.value.toLowerCase();
+                renderHistory();
+            });
+
+            document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelected);
+            document.getElementById('selectAllBtn').addEventListener('click', toggleSelectAll);
+            document.getElementById('clearAllBtn').addEventListener('click', clearAllHistory);
+        }
+
+        async function loadHistory() {
+            try {
+                if (window.jubilee) {
+                    historyData = await window.jubilee.invoke('history:getAll');
+                }
+                renderHistory();
+            } catch (e) {
+                console.error('Failed to load history:', e);
+                showError();
+            }
+        }
+
+        function showError() {
+            document.getElementById('historyContainer').innerHTML = `
+                <div class='empty-state'>
+                    <div class='icon'>⚠️</div>
+                    <h2>Failed to load history</h2>
+                    <p>Please try again later</p>
+                    <button class='btn retry-btn' id='retryBtn' onclick='retryLoad()'>
+                        <span class='retry-icon'>🔄</span>
+                        <span class='retry-text'>Retry</span>
+                    </button>
+                </div>
+            `;
+        }
+
+        async function retryLoad() {
+            const retryBtn = document.getElementById('retryBtn');
+            if (retryBtn) {
+                retryBtn.disabled = true;
+                retryBtn.innerHTML = `
+                    <span class='btn-spinner'></span>
+                    <span>Loading...</span>
+                `;
+            }
+            await loadHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyContainer');
+            const clearAllBtn = document.getElementById('clearAllBtn');
+
+            // Filter by search (using camelCase properties from C# serialization)
+            let filtered = historyData;
+            if (searchQuery) {
+                filtered = historyData.filter(item =>
+                    (item.title || '').toLowerCase().includes(searchQuery) ||
+                    (item.url || '').toLowerCase().includes(searchQuery)
+                );
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class='empty-state'>
+                        <div class='icon'>🕐</div>
+                        <h2>${searchQuery ? 'No results found' : 'No history yet'}</h2>
+                        <p>${searchQuery ? 'Try a different search term' : 'Your browsing history will appear here'}</p>
+                    </div>
+                `;
+                clearAllBtn.style.display = 'none';
+                return;
+            }
+
+            clearAllBtn.style.display = 'flex';
+
+            // Group by date
+            const groups = groupByDate(filtered);
+            let html = '';
+
+            for (const [date, items] of Object.entries(groups)) {
+                html += `
+                    <div class='date-group'>
+                        <div class='date-header'>
+                            <h2>${date}</h2>
+                            <span class='count'>${items.length} ${items.length === 1 ? 'page' : 'pages'}</span>
+                        </div>
+                `;
+
+                for (const item of items) {
+                    const isSelected = selectedIds.has(item.id);
+                    const time = formatTime(item.timestamp);
+                    const faviconHtml = item.favicon
+                        ? `<img src='${escapeHtml(item.favicon)}' onerror=""this.parentElement.innerHTML='🌐'"" />`
+                        : '🌐';
+
+                    html += `
+                        <div class='history-item ${isSelected ? 'selected' : ''}' data-id='${item.id}'>
+                            <div class='checkbox-wrapper'>
+                                <div class='checkbox ${isSelected ? 'checked' : ''}' data-id='${item.id}'></div>
+                            </div>
+                            <div class='favicon'>${faviconHtml}</div>
+                            <div class='item-content' data-url='${escapeHtml(item.url)}'>
+                                <div class='item-title'>${escapeHtml(item.title || item.url)}</div>
+                                <div class='item-url'>${escapeHtml(item.url)}</div>
+                            </div>
+                            <div class='item-time'>${time}</div>
+                            <button class='item-delete' data-id='${item.id}' title='Delete'>🗑️</button>
+                        </div>
+                    `;
+                }
+
+                html += '</div>';
+            }
+
+            container.innerHTML = html;
+
+            // Attach event listeners
+            container.querySelectorAll('.checkbox').forEach(cb => {
+                cb.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleSelect(cb.dataset.id);
+                });
+            });
+
+            container.querySelectorAll('.item-content').forEach(content => {
+                content.addEventListener('click', () => {
+                    const url = content.dataset.url;
+                    if (url && window.jubilee) {
+                        window.jubilee.send('nav:go', { url });
+                    }
+                });
+            });
+
+            container.querySelectorAll('.item-delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteItem(btn.dataset.id);
+                });
+            });
+
+            updateBulkActions();
+        }
+
+        function groupByDate(items) {
+            const groups = {};
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            for (const item of items) {
+                const date = new Date(item.timestamp);
+                let label;
+
+                if (isSameDay(date, today)) {
+                    label = 'Today';
+                } else if (isSameDay(date, yesterday)) {
+                    label = 'Yesterday';
+                } else if (isThisWeek(date)) {
+                    label = date.toLocaleDateString('en-US', { weekday: 'long' });
+                } else {
+                    label = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                }
+
+                if (!groups[label]) groups[label] = [];
+                groups[label].push(item);
+            }
+
+            return groups;
+        }
+
+        function isSameDay(d1, d2) {
+            return d1.getFullYear() === d2.getFullYear() &&
+                   d1.getMonth() === d2.getMonth() &&
+                   d1.getDate() === d2.getDate();
+        }
+
+        function isThisWeek(date) {
+            const today = new Date();
+            const weekAgo = new Date(today);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            return date > weekAgo;
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/""/g, '&quot;');
+        }
+
+        function toggleSelect(id) {
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+            } else {
+                selectedIds.add(id);
+            }
+            renderHistory();
+        }
+
+        function toggleSelectAll() {
+            const allIds = historyData.map(item => item.id);
+            if (selectedIds.size === allIds.length) {
+                selectedIds.clear();
+            } else {
+                allIds.forEach(id => selectedIds.add(id));
+            }
+            renderHistory();
+        }
+
+        function updateBulkActions() {
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            const selectAllBtn = document.getElementById('selectAllBtn');
+
+            if (selectedIds.size > 0) {
+                bulkActions.classList.add('visible');
+                selectedCount.textContent = selectedIds.size;
+                selectAllBtn.textContent = selectedIds.size === historyData.length ? 'Deselect All' : 'Select All';
+            } else {
+                bulkActions.classList.remove('visible');
+            }
+        }
+
+        async function deleteItem(id) {
+            try {
+                if (window.jubilee) {
+                    await window.jubilee.invoke('history:delete', { ids: [id] });
+                }
+                historyData = historyData.filter(item => item.id !== id);
+                selectedIds.delete(id);
+                renderHistory();
+                showToast('Item deleted');
+            } catch (e) {
+                console.error('Failed to delete item:', e);
+            }
+        }
+
+        async function deleteSelected() {
+            if (selectedIds.size === 0) return;
+
+            try {
+                const ids = Array.from(selectedIds);
+                if (window.jubilee) {
+                    await window.jubilee.invoke('history:delete', { ids });
+                }
+                historyData = historyData.filter(item => !selectedIds.has(item.id));
+                const count = selectedIds.size;
+                selectedIds.clear();
+                renderHistory();
+                showToast(`${count} ${count === 1 ? 'item' : 'items'} deleted`);
+            } catch (e) {
+                console.error('Failed to delete items:', e);
+            }
+        }
+
+        async function clearAllHistory() {
+            if (!confirm('Are you sure you want to clear all browsing history? This cannot be undone.')) {
+                return;
+            }
+
+            try {
+                if (window.jubilee) {
+                    await window.jubilee.invoke('history:clearAll');
+                }
+                historyData = [];
+                selectedIds.clear();
+                renderHistory();
+                showToast('All history cleared');
+            } catch (e) {
+                console.error('Failed to clear history:', e);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.classList.add('show', 'success');
+
+            setTimeout(() => {
+                toast.classList.remove('show', 'success');
+            }, 3000);
+        }
+    </script>
 </body>
 </html>";
     }

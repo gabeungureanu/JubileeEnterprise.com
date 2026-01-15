@@ -2912,9 +2912,10 @@ public partial class MainWindow : Window
         }
     }
 
-    private void HistoryButton_Click(object sender, RoutedEventArgs e)
+    private async void HistoryButton_Click(object sender, RoutedEventArgs e)
     {
-        ShowHistory();
+        // Open History in a new tab instead of side panel
+        await CreateTabAsync("jubilee://history");
     }
 
     private void BookmarksButton_Click(object sender, RoutedEventArgs e)
@@ -2924,24 +2925,40 @@ public partial class MainWindow : Window
 
     private void ShowHistory()
     {
-        SidePanelTitle.Text = "History";
-        SidePanelList.ItemsSource = _historyManager.GetEntries(_currentMode, 100)
-            .Select(h => new { h.Title, h.Url, Display = $"{h.Title}\n{h.Url}" });
-        ShowSidePanel();
+        // Open history in a new tab
+        _ = CreateTabAsync("jubilee://history");
     }
 
     private void ShowBookmarks()
     {
         SidePanelTitle.Text = "Bookmarks";
-        SidePanelList.ItemsSource = _bookmarkManager.GetBookmarks(_currentMode)
-            .Select(b => new { b.Title, b.Url, Display = $"{b.Title}\n{b.Url}" });
+        SidePanelIcon.Text = "\uE728"; // Star icon for bookmarks
+
+        var bookmarks = _bookmarkManager.GetBookmarks(_currentMode)
+            .Select(b => new { b.Title, b.Url, Display = $"{b.Title}\n{b.Url}" })
+            .ToList();
+
+        SidePanelList.ItemsSource = bookmarks;
+
+        // Show/hide empty state
+        if (bookmarks.Count == 0)
+        {
+            SidePanelEmptyState.Visibility = Visibility.Visible;
+            SidePanelEmptyTitle.Text = "No bookmarks yet";
+            SidePanelEmptySubtitle.Text = "Press Ctrl+D to bookmark a page";
+        }
+        else
+        {
+            SidePanelEmptyState.Visibility = Visibility.Collapsed;
+        }
+
         ShowSidePanel();
     }
 
     private void ShowSidePanel()
     {
         SidePanel.Visibility = Visibility.Visible;
-        SidePanelColumn.Width = new GridLength(300);
+        SidePanelColumn.Width = new GridLength(320); // Slightly wider for better layout
     }
 
     private void CloseSidePanel_Click(object sender, RoutedEventArgs e)
@@ -2961,6 +2978,63 @@ public partial class MainWindow : Window
                 NavigateTo(url);
             }
             SidePanelList.SelectedItem = null;
+        }
+    }
+
+    // Store the current bookmark URL for context menu operations
+    private string? _currentContextMenuBookmarkUrl;
+
+    private void BookmarkMoreButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button button && button.ContextMenu != null)
+        {
+            _currentContextMenuBookmarkUrl = button.Tag as string;
+
+            // Set PlacementTarget to the button for proper positioning
+            button.ContextMenu.PlacementTarget = button;
+            button.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+            button.ContextMenu.HorizontalOffset = -152; // Align right edge of menu with button
+            button.ContextMenu.VerticalOffset = 4;
+            button.ContextMenu.IsOpen = true;
+
+            e.Handled = true; // Prevent ListBox selection
+        }
+    }
+
+    private void BookmarkContextMenu_OpenNewTab_Click(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(_currentContextMenuBookmarkUrl))
+        {
+            _ = CreateTabAsync(_currentContextMenuBookmarkUrl);
+        }
+    }
+
+    private void BookmarkContextMenu_CopyUrl_Click(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(_currentContextMenuBookmarkUrl))
+        {
+            System.Windows.Clipboard.SetText(_currentContextMenuBookmarkUrl);
+        }
+    }
+
+    private void BookmarkContextMenu_Delete_Click(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(_currentContextMenuBookmarkUrl))
+        {
+            _bookmarkManager.RemoveBookmark(_currentContextMenuBookmarkUrl);
+
+            // Refresh the bookmarks list
+            ShowBookmarks();
+
+            // Update the bookmark icon if the current page was the deleted bookmark
+            if (_activeTabId != null)
+            {
+                var tab = Tabs.FirstOrDefault(t => t.Id == _activeTabId);
+                if (tab != null && tab.Url == _currentContextMenuBookmarkUrl)
+                {
+                    BookmarkIcon.Text = "\uE734"; // Empty star
+                }
+            }
         }
     }
 
@@ -3043,10 +3117,11 @@ public partial class MainWindow : Window
         ShowBookmarks();
     }
 
-    private void MainMenu_History_Click(object sender, RoutedEventArgs e)
+    private async void MainMenu_History_Click(object sender, RoutedEventArgs e)
     {
         MainMenuPopup.IsOpen = false;
-        ShowHistory();
+        // Open History in a new tab instead of side panel
+        await CreateTabAsync("jubilee://history");
     }
 
     private void MainMenu_Downloads_Click(object sender, RoutedEventArgs e)
@@ -3698,8 +3773,65 @@ public partial class MainWindow : Window
                 // TODO: Implement clear browsing data
                 return new { success = true };
 
+            case "nav:go":
+                {
+                    var url = args.TryGetProperty("url", out var urlProp) ? urlProp.GetString() : null;
+                    if (!string.IsNullOrEmpty(url))
+                    {
+                        await Dispatcher.InvokeAsync(() => NavigateTo(url));
+                    }
+                    return null;
+                }
+
+            case "history:getAll":
+                return GetAllHistory();
+
+            case "history:delete":
+                {
+                    var ids = new List<string>();
+                    if (args.TryGetProperty("ids", out var idsProp) && idsProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+                    {
+                        foreach (var item in idsProp.EnumerateArray())
+                        {
+                            var id = item.GetString();
+                            if (!string.IsNullOrEmpty(id))
+                            {
+                                ids.Add(id);
+                            }
+                        }
+                    }
+                    await DeleteHistoryItemsAsync(ids);
+                    return new { success = true };
+                }
+
+            case "history:clearAll":
+                await _historyManager.ClearAsync();
+                return new { success = true };
+
             default:
                 return null;
+        }
+    }
+
+    private object GetAllHistory()
+    {
+        var entries = _historyManager.GetEntries(null, 1000);
+        return entries.Select(e => new
+        {
+            e.Id,
+            e.Url,
+            e.Title,
+            e.Timestamp,
+            e.Favicon,
+            Mode = (int)e.Mode
+        }).ToList();
+    }
+
+    private async Task DeleteHistoryItemsAsync(List<string> ids)
+    {
+        foreach (var id in ids)
+        {
+            await _historyManager.RemoveEntryAsync(id);
         }
     }
 

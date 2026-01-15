@@ -1510,48 +1510,370 @@
                 <ColumnDefinition x:Name="ChatPanelColumn" Width="0"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Side Panel -->
+            <!-- Side Panel (Bookmarks/History) - Redesigned -->
             <Border x:Name="SidePanel"
                     Grid.Column="0"
-                    Background="{StaticResource BgSecondaryBrush}"
+                    Background="#0a0a14"
                     BorderBrush="{StaticResource BorderBrush}"
                     BorderThickness="0,0,1,0"
                     Visibility="Collapsed">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="40"/>
+                        <RowDefinition Height="52"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Side Panel Header -->
+                    <!-- Side Panel Header - Premium Design -->
                     <Border Grid.Row="0"
-                            BorderBrush="{StaticResource BorderBrush}"
+                            Background="#0f0f1a"
+                            BorderBrush="#1a1a2e"
                             BorderThickness="0,0,0,1">
-                        <Grid>
-                            <TextBlock x:Name="SidePanelTitle"
-                                      Text="History"
-                                      Foreground="{StaticResource TextPrimaryBrush}"
-                                      FontSize="14"
-                                      FontWeight="SemiBold"
-                                      VerticalAlignment="Center"
-                                      Margin="12,0"/>
+                        <Grid Margin="16,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <!-- Dynamic Icon based on panel type -->
+                                <TextBlock x:Name="SidePanelIcon"
+                                          Text="&#xE728;"
+                                          FontFamily="Segoe MDL2 Assets"
+                                          FontSize="16"
+                                          Foreground="{StaticResource JubileeAccentBrush}"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,10,0"/>
+                                <TextBlock x:Name="SidePanelTitle"
+                                          Text="Bookmarks"
+                                          Foreground="White"
+                                          FontSize="15"
+                                          FontWeight="SemiBold"
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
                             <Button Style="{StaticResource NavButtonStyle}"
                                     HorizontalAlignment="Right"
-                                    Margin="4"
+                                    Width="32" Height="32"
+                                    ToolTip="Close Panel"
                                     Click="CloseSidePanel_Click">
-                                <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
+                                <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="White"/>
                             </Button>
                         </Grid>
                     </Border>
 
-                    <!-- Side Panel Content -->
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <!-- Side Panel Content - Styled ListBox -->
+                    <ScrollViewer Grid.Row="1"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Background="Transparent"
+                                  Padding="8,8,8,8">
+                        <ScrollViewer.Resources>
+                            <!-- Custom Scrollbar for Side Panel -->
+                            <Style TargetType="ScrollBar">
+                                <Setter Property="Width" Value="8"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                            </Style>
+                        </ScrollViewer.Resources>
                         <ListBox x:Name="SidePanelList"
                                 Background="Transparent"
                                 BorderThickness="0"
                                 Foreground="{StaticResource TextPrimaryBrush}"
-                                SelectionChanged="SidePanelList_SelectionChanged"/>
+                                SelectionChanged="SidePanelList_SelectionChanged"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                VirtualizingPanel.IsVirtualizing="True"
+                                VirtualizingPanel.VirtualizationMode="Recycling">
+                            <ListBox.Resources>
+                                <!-- Remove default selection highlight -->
+                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="Transparent"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="White"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="Transparent"/>
+                            </ListBox.Resources>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="Margin" Value="0,0,0,4"/>
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border x:Name="ItemBorder"
+                                                        Background="#12121f"
+                                                        CornerRadius="8"
+                                                        Padding="12,10"
+                                                        BorderThickness="1"
+                                                        BorderBrush="#1a1a2e">
+                                                    <Border.Effect>
+                                                        <DropShadowEffect Color="Black" BlurRadius="4" ShadowDepth="1" Opacity="0.2"/>
+                                                    </Border.Effect>
+                                                    <ContentPresenter/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ItemBorder" Property="Background" Value="#1a1a30"/>
+                                                        <Setter TargetName="ItemBorder" Property="BorderBrush" Value="{StaticResource JubileeAccentBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="ItemBorder" Property="Background" Value="#1f1f35"/>
+                                                        <Setter TargetName="ItemBorder" Property="BorderBrush" Value="{StaticResource JubileeAccentBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid x:Name="BookmarkItemGrid">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Favicon/Icon Container -->
+                                        <Border Grid.Column="0"
+                                                Width="36" Height="36"
+                                                Background="#1a1a2e"
+                                                CornerRadius="6"
+                                                Margin="0,0,12,0"
+                                                VerticalAlignment="Center">
+                                            <!-- Fallback Star Icon (for bookmarks without favicon) -->
+                                            <TextBlock Text="&#xE734;"
+                                                      FontFamily="Segoe MDL2 Assets"
+                                                      FontSize="16"
+                                                      Foreground="{StaticResource JubileeAccentBrush}"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+                                        </Border>
+
+                                        <!-- Title and URL -->
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}"
+                                                      Foreground="White"
+                                                      FontSize="13"
+                                                      FontWeight="Medium"
+                                                      TextTrimming="CharacterEllipsis"
+                                                      MaxWidth="180"/>
+                                            <TextBlock Text="{Binding Url}"
+                                                      Foreground="#808090"
+                                                      FontSize="11"
+                                                      TextTrimming="CharacterEllipsis"
+                                                      MaxWidth="180"
+                                                      Margin="0,3,0,0"/>
+                                        </StackPanel>
+
+                                        <!-- Three-dot Menu Button -->
+                                        <Button x:Name="BookmarkMoreButton"
+                                                Grid.Column="2"
+                                                Width="28" Height="28"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Cursor="Hand"
+                                                VerticalAlignment="Center"
+                                                Opacity="0.5"
+                                                Tag="{Binding Url}"
+                                                Click="BookmarkMoreButton_Click"
+                                                ToolTip="More options">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="MoreBtnBorder"
+                                                                        Background="Transparent"
+                                                                        CornerRadius="4"
+                                                                        Padding="4">
+                                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="MoreBtnBorder" Property="Background" Value="#2a2a4e"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </Button.Style>
+                                            <TextBlock Text="&#xE712;"
+                                                      FontFamily="Segoe MDL2 Assets"
+                                                      FontSize="14"
+                                                      Foreground="White"/>
+                                            <Button.ContextMenu>
+                                                <ContextMenu HasDropShadow="True"
+                                                             Padding="6">
+                                                    <ContextMenu.Template>
+                                                        <ControlTemplate TargetType="ContextMenu">
+                                                            <Border Background="#0f0f1a"
+                                                                    BorderBrush="#2a2a4e"
+                                                                    BorderThickness="1"
+                                                                    CornerRadius="10"
+                                                                    Padding="6"
+                                                                    MinWidth="180">
+                                                                <Border.Effect>
+                                                                    <DropShadowEffect Color="Black" BlurRadius="20" ShadowDepth="4" Opacity="0.6"/>
+                                                                </Border.Effect>
+                                                                <StackPanel IsItemsHost="True"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </ContextMenu.Template>
+                                                    <ContextMenu.Resources>
+                                                        <!-- Standard MenuItem Style -->
+                                                        <Style x:Key="BookmarkMenuItemStyle" TargetType="MenuItem">
+                                                            <Setter Property="Foreground" Value="White"/>
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                            <Setter Property="FontSize" Value="13"/>
+                                                            <Setter Property="Cursor" Value="Hand"/>
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="MenuItem">
+                                                                        <Border x:Name="MenuItemBorder"
+                                                                                Background="Transparent"
+                                                                                CornerRadius="6"
+                                                                                Padding="12,10"
+                                                                                Margin="0,1">
+                                                                            <Grid>
+                                                                                <Grid.ColumnDefinitions>
+                                                                                    <ColumnDefinition Width="28"/>
+                                                                                    <ColumnDefinition Width="*"/>
+                                                                                </Grid.ColumnDefinitions>
+                                                                                <ContentPresenter Grid.Column="0"
+                                                                                                  Content="{TemplateBinding Icon}"
+                                                                                                  VerticalAlignment="Center"
+                                                                                                  HorizontalAlignment="Center"/>
+                                                                                <ContentPresenter Grid.Column="1"
+                                                                                                  ContentSource="Header"
+                                                                                                  VerticalAlignment="Center"/>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsHighlighted" Value="True">
+                                                                                <Setter TargetName="MenuItemBorder" Property="Background" Value="#1a1a30"/>
+                                                                            </Trigger>
+                                                                            <Trigger Property="IsPressed" Value="True">
+                                                                                <Setter TargetName="MenuItemBorder" Property="Background" Value="#252540"/>
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                        <!-- Delete MenuItem Style (with warning color) -->
+                                                        <Style x:Key="DeleteMenuItemStyle" TargetType="MenuItem">
+                                                            <Setter Property="Foreground" Value="#ff6b6b"/>
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                            <Setter Property="FontSize" Value="13"/>
+                                                            <Setter Property="Cursor" Value="Hand"/>
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="MenuItem">
+                                                                        <Border x:Name="MenuItemBorder"
+                                                                                Background="Transparent"
+                                                                                CornerRadius="6"
+                                                                                Padding="12,10"
+                                                                                Margin="0,1">
+                                                                            <Grid>
+                                                                                <Grid.ColumnDefinitions>
+                                                                                    <ColumnDefinition Width="28"/>
+                                                                                    <ColumnDefinition Width="*"/>
+                                                                                </Grid.ColumnDefinitions>
+                                                                                <ContentPresenter Grid.Column="0"
+                                                                                                  Content="{TemplateBinding Icon}"
+                                                                                                  VerticalAlignment="Center"
+                                                                                                  HorizontalAlignment="Center"/>
+                                                                                <TextBlock Grid.Column="1"
+                                                                                          Text="{TemplateBinding Header}"
+                                                                                          Foreground="#ff6b6b"
+                                                                                          VerticalAlignment="Center"/>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsHighlighted" Value="True">
+                                                                                <Setter TargetName="MenuItemBorder" Property="Background" Value="#2a1515"/>
+                                                                            </Trigger>
+                                                                            <Trigger Property="IsPressed" Value="True">
+                                                                                <Setter TargetName="MenuItemBorder" Property="Background" Value="#3a1a1a"/>
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                        <!-- Separator Style -->
+                                                        <Style TargetType="Separator">
+                                                            <Setter Property="Background" Value="#252540"/>
+                                                            <Setter Property="Margin" Value="12,6"/>
+                                                            <Setter Property="Height" Value="1"/>
+                                                        </Style>
+                                                    </ContextMenu.Resources>
+                                                    <MenuItem Header="Open in new tab"
+                                                              Style="{StaticResource BookmarkMenuItemStyle}"
+                                                              Click="BookmarkContextMenu_OpenNewTab_Click">
+                                                        <MenuItem.Icon>
+                                                            <TextBlock Text="&#xE8AD;"
+                                                                      FontFamily="Segoe MDL2 Assets"
+                                                                      FontSize="14"
+                                                                      Foreground="#E6AC00"
+                                                                      VerticalAlignment="Center"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <MenuItem Header="Copy URL"
+                                                              Style="{StaticResource BookmarkMenuItemStyle}"
+                                                              Click="BookmarkContextMenu_CopyUrl_Click">
+                                                        <MenuItem.Icon>
+                                                            <TextBlock Text="&#xE8C8;"
+                                                                      FontFamily="Segoe MDL2 Assets"
+                                                                      FontSize="14"
+                                                                      Foreground="#808090"
+                                                                      VerticalAlignment="Center"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <MenuItem Header="Delete bookmark"
+                                                              Style="{StaticResource DeleteMenuItemStyle}"
+                                                              Click="BookmarkContextMenu_Delete_Click">
+                                                        <MenuItem.Icon>
+                                                            <TextBlock Text="&#xE74D;"
+                                                                      FontFamily="Segoe MDL2 Assets"
+                                                                      FontSize="14"
+                                                                      Foreground="#ff6b6b"
+                                                                      VerticalAlignment="Center"/>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                </ContextMenu>
+                                            </Button.ContextMenu>
+                                        </Button>
+                                    </Grid>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsMouseOver}" Value="True">
+                                            <Setter TargetName="BookmarkMoreButton" Property="Opacity" Value="1"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </ScrollViewer>
+
+                    <!-- Empty State Message -->
+                    <StackPanel x:Name="SidePanelEmptyState"
+                               Grid.Row="1"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"
+                               Visibility="Collapsed">
+                        <TextBlock Text="&#xE735;"
+                                  FontFamily="Segoe MDL2 Assets"
+                                  FontSize="48"
+                                  Foreground="#2a2a4e"
+                                  HorizontalAlignment="Center"
+                                  Margin="0,0,0,16"/>
+                        <TextBlock x:Name="SidePanelEmptyTitle"
+                                  Text="No bookmarks yet"
+                                  Foreground="#606070"
+                                  FontSize="14"
+                                  FontWeight="Medium"
+                                  HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="SidePanelEmptySubtitle"
+                                  Text="Press Ctrl+D to bookmark a page"
+                                  Foreground="#404050"
+                                  FontSize="12"
+                                  HorizontalAlignment="Center"
+                                  Margin="0,6,0,0"/>
+                    </StackPanel>
                 </Grid>
             </Border>
 
@@ -2341,14 +2663,14 @@
                                 <ColumnDefinition Width="50"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="&#xE71E;" FontFamily="Segoe MDL2 Assets" FontSize="14" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                            <TextBlock Grid.Column="1" Text="Zoom" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="0" Text="&#xE71E;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="White" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBlock Grid.Column="1" Text="Zoom" Foreground="White" VerticalAlignment="Center"/>
                             <Button Grid.Column="2" Style="{StaticResource NavButtonStyle}" Width="28" Height="28" Click="MainMenu_ZoomOut_Click" ToolTip="Zoom out (Ctrl+-)">
-                                <TextBlock Text="&#xE738;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                <TextBlock Text="&#xE738;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="White"/>
                             </Button>
-                            <TextBlock x:Name="MainMenuZoomLevel" Grid.Column="3" Text="100%" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                            <TextBlock x:Name="MainMenuZoomLevel" Grid.Column="3" Text="100%" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
                             <Button Grid.Column="4" Style="{StaticResource NavButtonStyle}" Width="28" Height="28" Click="MainMenu_ZoomIn_Click" ToolTip="Zoom in (Ctrl++)">
-                                <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="12"/>
+                                <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="White"/>
                             </Button>
                         </Grid>
 
