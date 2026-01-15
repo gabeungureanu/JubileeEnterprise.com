@@ -1767,8 +1767,9 @@ app.post('/api/v1/migrate', async (req, res) => {
                     $$ language 'plpgsql';
                 `);
 
-                // Enable citext extension for case-insensitive email
+                // Enable required extensions
                 await continuumPool.query(`CREATE EXTENSION IF NOT EXISTS "citext"`);
+                await continuumPool.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
 
                 // Read and execute the migration file
                 const migrationPath = path.join(__dirname, '..', '..', '..', 'infrastructure', 'migrations', 'continuum', '0003_jubilee_outlook_schema.sql');
