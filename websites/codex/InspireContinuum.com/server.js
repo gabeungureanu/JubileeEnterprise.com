@@ -1434,8 +1434,10 @@ app.post('/api/v1/outlook/messages', requireUserId, async (req, res) => {
         try {
             await client.query('BEGIN');
 
-            // Get or create drafts folder if saving as draft
+            // Get or create appropriate folder based on message type
             let folderId = folder_id;
+
+            // If saving as draft, use drafts folder
             if (!folderId && is_draft) {
                 const folderResult = await client.query(`
                     SELECT id FROM outlook_email_folders
@@ -1446,6 +1448,25 @@ app.post('/api/v1/outlook/messages', requireUserId, async (req, res) => {
                     const newFolder = await client.query(`
                         INSERT INTO outlook_email_folders (user_id, name, folder_type, is_system)
                         VALUES ($1, 'Drafts', 'drafts', true)
+                        RETURNING id
+                    `, [req.userId]);
+                    folderId = newFolder.rows[0].id;
+                } else {
+                    folderId = folderResult.rows[0].id;
+                }
+            }
+
+            // If sending (not draft) and no folder specified, use sent folder
+            if (!folderId && !is_draft) {
+                const folderResult = await client.query(`
+                    SELECT id FROM outlook_email_folders
+                    WHERE user_id = $1 AND folder_type = 'sent'
+                `, [req.userId]);
+
+                if (folderResult.rows.length === 0) {
+                    const newFolder = await client.query(`
+                        INSERT INTO outlook_email_folders (user_id, name, folder_type, is_system)
+                        VALUES ($1, 'Sent Items', 'sent', true)
                         RETURNING id
                     `, [req.userId]);
                     folderId = newFolder.rows[0].id;

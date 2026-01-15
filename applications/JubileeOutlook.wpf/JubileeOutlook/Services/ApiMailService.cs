@@ -78,6 +78,16 @@ public class ApiMailService : IMailService
     }
 
     /// <summary>
+    /// Gets mail folders asynchronously
+    /// GET /api/outlook/folders
+    /// </summary>
+    public async Task<List<MailFolder>> GetFoldersAsync()
+    {
+        var result = await GetFoldersWithResultAsync();
+        return result.Data ?? new List<MailFolder>();
+    }
+
+    /// <summary>
     /// Gets messages for a folder
     /// GET /api/outlook/messages?folderId={folderId}
     /// </summary>
@@ -134,12 +144,12 @@ public class ApiMailService : IMailService
     }
 
     /// <summary>
-    /// Toggles the flag status of a message
-    /// PUT /api/outlook/messages/{id}/flag
+    /// Toggles or sets the flag status of a message
+    /// PATCH /api/v1/outlook/messages/{id} with is_flagged field
     /// </summary>
-    public async Task ToggleFlagAsync(string messageId)
+    public async Task ToggleFlagAsync(string messageId, bool? isFlagged = null)
     {
-        await ToggleFlagWithResultAsync(messageId);
+        await ToggleFlagWithResultAsync(messageId, isFlagged);
     }
 
     /// <summary>
@@ -150,6 +160,17 @@ public class ApiMailService : IMailService
     {
         var result = await SearchMessagesWithResultAsync(query);
         return result.Data ?? new List<EmailMessage>();
+    }
+
+    /// <summary>
+    /// Saves a message as draft
+    /// POST /api/v1/outlook/messages (with is_draft=true) for new drafts
+    /// PATCH /api/v1/outlook/messages/{id} for updating existing drafts
+    /// </summary>
+    public async Task<EmailMessage> SaveDraftAsync(EmailMessage draft, string? existingDraftId = null)
+    {
+        var result = await SaveDraftWithResultAsync(draft, existingDraftId);
+        return result.Data ?? draft;
     }
 
     #endregion
@@ -414,7 +435,8 @@ public class ApiMailService : IMailService
 
     /// <summary>
     /// Sends a message with detailed result
-    /// POST /api/outlook/messages
+    /// POST /api/v1/outlook/messages
+    /// Creates message in Sent Items folder and stores recipients/attachments
     /// </summary>
     public async Task<MailServiceResult<EmailMessage>> SendMessageWithResultAsync(EmailMessage message)
     {
@@ -429,12 +451,65 @@ public class ApiMailService : IMailService
                 };
             }
 
-            var dto = MapToDto(message);
+            // Build recipients list from To, Cc, Bcc fields
+            var recipients = new List<RecipientDto>();
+
+            if (message.To != null)
+            {
+                foreach (var email in message.To)
+                {
+                    recipients.Add(new RecipientDto { Email = email, Type = "to" });
+                }
+            }
+
+            if (message.Cc != null)
+            {
+                foreach (var email in message.Cc)
+                {
+                    recipients.Add(new RecipientDto { Email = email, Type = "cc" });
+                }
+            }
+
+            if (message.Bcc != null)
+            {
+                foreach (var email in message.Bcc)
+                {
+                    recipients.Add(new RecipientDto { Email = email, Type = "bcc" });
+                }
+            }
+
+            // Build attachments list
+            var attachments = message.Attachments?.Select(a => new AttachmentCreateDto
+            {
+                FileName = a.FileName,
+                FilePath = a.FilePath,
+                FileSize = a.FileSize,
+                MimeType = a.ContentType,
+                IsInline = false
+            }).ToList();
+
+            // Create the request DTO in API format
+            var request = new CreateMessageRequest
+            {
+                FolderId = message.FolderId, // Will be set to "sent" folder by API if not specified
+                Subject = message.Subject,
+                BodyText = message.IsHtml ? null : message.Body,
+                BodyHtml = message.IsHtml ? message.Body : null,
+                SenderEmail = message.FromEmail,
+                SenderName = message.From,
+                IsDraft = false, // Sending, not saving as draft
+                Importance = message.Priority.ToString().ToLower(),
+                Recipients = recipients.Count > 0 ? recipients : null,
+                Attachments = attachments?.Count > 0 ? attachments : null
+            };
+
             var endpoint = "outlook/messages";
 
             System.Diagnostics.Debug.WriteLine($"[ApiMailService] POST {endpoint} - {message.Subject}");
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService]   Recipients: {recipients.Count} (To: {message.To?.Count ?? 0}, Cc: {message.Cc?.Count ?? 0}, Bcc: {message.Bcc?.Count ?? 0})");
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService]   Attachments: {attachments?.Count ?? 0}");
 
-            var response = await _httpClientFactory.PostAsync(ApiEndpoint.InspireContinuum, endpoint, dto);
+            var response = await _httpClientFactory.PostAsync(ApiEndpoint.InspireContinuum, endpoint, request);
             var content = await response.Content.ReadAsStringAsync();
 
             if (response.IsSuccessStatusCode)
@@ -456,20 +531,42 @@ public class ApiMailService : IMailService
                 }
                 catch { }
 
-                // Try direct parsing
-                var sentDto = JsonSerializer.Deserialize<EmailMessageDto>(content, _jsonOptions);
-                if (sentDto != null)
+                // Try direct parsing (API returns the created message directly)
+                try
                 {
-                    var sentMessage = MapToEmailMessage(sentDto);
-                    System.Diagnostics.Debug.WriteLine($"[ApiMailService] Sent message: {sentMessage.Id}");
-                    return new MailServiceResult<EmailMessage>
+                    var createdMessage = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(content, _jsonOptions);
+                    if (createdMessage != null && createdMessage.ContainsKey("id"))
                     {
-                        Success = true,
-                        Data = sentMessage
-                    };
+                        // Map API response to EmailMessage
+                        var sentMessage = new EmailMessage
+                        {
+                            Id = createdMessage["id"].GetString() ?? Guid.NewGuid().ToString(),
+                            Subject = message.Subject,
+                            From = message.From,
+                            FromEmail = message.FromEmail,
+                            To = message.To ?? new List<string>(),
+                            Cc = message.Cc ?? new List<string>(),
+                            Bcc = message.Bcc ?? new List<string>(),
+                            Body = message.Body,
+                            IsHtml = message.IsHtml,
+                            SentDate = DateTime.Now,
+                            ReceivedDate = DateTime.Now,
+                            IsRead = true,
+                            FolderId = "sent",
+                            HasAttachments = message.HasAttachments,
+                            Attachments = message.Attachments ?? new List<EmailAttachment>()
+                        };
+                        System.Diagnostics.Debug.WriteLine($"[ApiMailService] Sent message: {sentMessage.Id}");
+                        return new MailServiceResult<EmailMessage>
+                        {
+                            Success = true,
+                            Data = sentMessage
+                        };
+                    }
                 }
+                catch { }
 
-                // If no response body, return original with success
+                // If no response body parseable, return original with success
                 System.Diagnostics.Debug.WriteLine($"[ApiMailService] Message sent successfully");
                 return new MailServiceResult<EmailMessage>
                 {
@@ -482,13 +579,219 @@ public class ApiMailService : IMailService
             return new MailServiceResult<EmailMessage>
             {
                 Success = false,
-                Error = $"Failed to send message: {response.StatusCode}",
+                Error = $"Failed to send message: {response.StatusCode} - {content}",
                 StatusCode = response.StatusCode
             };
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[ApiMailService] SendMessage error: {ex.Message}");
+            return new MailServiceResult<EmailMessage>
+            {
+                Success = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    /// <summary>
+    /// Saves a draft message with detailed result
+    /// POST /api/v1/outlook/messages (with is_draft=true) for new drafts
+    /// PATCH /api/v1/outlook/messages/{id} for updating existing drafts
+    /// </summary>
+    public async Task<MailServiceResult<EmailMessage>> SaveDraftWithResultAsync(EmailMessage draft, string? existingDraftId = null)
+    {
+        try
+        {
+            if (draft == null)
+            {
+                return new MailServiceResult<EmailMessage>
+                {
+                    Success = false,
+                    Error = "Draft message is required"
+                };
+            }
+
+            // If we have an existing draft ID, update it via PATCH
+            if (!string.IsNullOrEmpty(existingDraftId))
+            {
+                return await UpdateDraftAsync(draft, existingDraftId);
+            }
+
+            // Create new draft via POST with is_draft=true
+            // Build recipients list from To, Cc, Bcc fields
+            var recipients = new List<RecipientDto>();
+
+            if (draft.To != null)
+            {
+                foreach (var email in draft.To)
+                {
+                    recipients.Add(new RecipientDto { Email = email, Type = "to" });
+                }
+            }
+
+            if (draft.Cc != null)
+            {
+                foreach (var email in draft.Cc)
+                {
+                    recipients.Add(new RecipientDto { Email = email, Type = "cc" });
+                }
+            }
+
+            if (draft.Bcc != null)
+            {
+                foreach (var email in draft.Bcc)
+                {
+                    recipients.Add(new RecipientDto { Email = email, Type = "bcc" });
+                }
+            }
+
+            // Build attachments list
+            var attachments = draft.Attachments?.Select(a => new AttachmentCreateDto
+            {
+                FileName = a.FileName,
+                FilePath = a.FilePath,
+                FileSize = a.FileSize,
+                MimeType = a.ContentType,
+                IsInline = false
+            }).ToList();
+
+            // Create the request DTO for draft
+            var request = new CreateMessageRequest
+            {
+                FolderId = null, // API will auto-create/select Drafts folder
+                Subject = draft.Subject,
+                BodyText = draft.IsHtml ? null : draft.Body,
+                BodyHtml = draft.IsHtml ? draft.Body : null,
+                SenderEmail = draft.FromEmail,
+                SenderName = draft.From,
+                IsDraft = true, // This is a draft
+                Importance = draft.Priority.ToString().ToLower(),
+                Recipients = recipients.Count > 0 ? recipients : null,
+                Attachments = attachments?.Count > 0 ? attachments : null
+            };
+
+            var endpoint = "outlook/messages";
+
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] POST {endpoint} (draft) - {draft.Subject}");
+
+            var response = await _httpClientFactory.PostAsync(ApiEndpoint.InspireContinuum, endpoint, request);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Try to parse the response to get the draft ID
+                try
+                {
+                    var createdMessage = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(content, _jsonOptions);
+                    if (createdMessage != null && createdMessage.ContainsKey("id"))
+                    {
+                        var savedDraft = new EmailMessage
+                        {
+                            Id = createdMessage["id"].GetString() ?? Guid.NewGuid().ToString(),
+                            Subject = draft.Subject,
+                            From = draft.From,
+                            FromEmail = draft.FromEmail,
+                            To = draft.To ?? new List<string>(),
+                            Cc = draft.Cc ?? new List<string>(),
+                            Bcc = draft.Bcc ?? new List<string>(),
+                            Body = draft.Body,
+                            IsHtml = draft.IsHtml,
+                            SentDate = DateTime.Now,
+                            ReceivedDate = DateTime.Now,
+                            IsRead = true,
+                            FolderId = "drafts",
+                            HasAttachments = draft.HasAttachments,
+                            Attachments = draft.Attachments ?? new List<EmailAttachment>()
+                        };
+                        System.Diagnostics.Debug.WriteLine($"[ApiMailService] Draft saved: {savedDraft.Id}");
+                        return new MailServiceResult<EmailMessage>
+                        {
+                            Success = true,
+                            Data = savedDraft
+                        };
+                    }
+                }
+                catch { }
+
+                // Return original with success if parsing fails
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Draft saved successfully");
+                return new MailServiceResult<EmailMessage>
+                {
+                    Success = true,
+                    Data = draft
+                };
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] Save draft failed: {response.StatusCode} - {content}");
+            return new MailServiceResult<EmailMessage>
+            {
+                Success = false,
+                Error = $"Failed to save draft: {response.StatusCode} - {content}",
+                StatusCode = response.StatusCode
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] SaveDraft error: {ex.Message}");
+            return new MailServiceResult<EmailMessage>
+            {
+                Success = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    /// <summary>
+    /// Updates an existing draft message
+    /// PATCH /api/v1/outlook/messages/{id}
+    /// </summary>
+    private async Task<MailServiceResult<EmailMessage>> UpdateDraftAsync(EmailMessage draft, string draftId)
+    {
+        try
+        {
+            var endpoint = $"outlook/messages/{Uri.EscapeDataString(draftId)}";
+
+            // Build update payload - API expects specific fields
+            var payload = new Dictionary<string, object?>
+            {
+                ["subject"] = draft.Subject,
+                ["body_text"] = draft.IsHtml ? null : draft.Body,
+                ["body_html"] = draft.IsHtml ? draft.Body : null,
+                ["sender_email"] = draft.FromEmail,
+                ["sender_name"] = draft.From,
+                ["importance"] = draft.Priority.ToString().ToLower()
+            };
+
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] PATCH {endpoint} (update draft) - {draft.Subject}");
+
+            var response = await _httpClientFactory.PatchAsync(ApiEndpoint.InspireContinuum, endpoint, payload);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Return the draft with updated ID
+                draft.Id = draftId;
+                draft.FolderId = "drafts";
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Draft updated: {draftId}");
+                return new MailServiceResult<EmailMessage>
+                {
+                    Success = true,
+                    Data = draft
+                };
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] Update draft failed: {response.StatusCode} - {content}");
+            return new MailServiceResult<EmailMessage>
+            {
+                Success = false,
+                Error = $"Failed to update draft: {response.StatusCode} - {content}",
+                StatusCode = response.StatusCode
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] UpdateDraft error: {ex.Message}");
             return new MailServiceResult<EmailMessage>
             {
                 Success = false,
@@ -567,7 +870,7 @@ public class ApiMailService : IMailService
 
     /// <summary>
     /// Moves a message to a different folder with detailed result
-    /// PUT /api/outlook/messages/{id}/move
+    /// PATCH /api/v1/outlook/messages/{id} with folder_id field
     /// </summary>
     public async Task<MailServiceResult<bool>> MoveMessageWithResultAsync(string messageId, string targetFolderId)
     {
@@ -593,12 +896,12 @@ public class ApiMailService : IMailService
                 };
             }
 
-            var endpoint = $"outlook/messages/{Uri.EscapeDataString(messageId)}/move";
-            var payload = new { targetFolderId };
+            var endpoint = $"outlook/messages/{Uri.EscapeDataString(messageId)}";
+            var payload = new { folder_id = targetFolderId };
 
-            System.Diagnostics.Debug.WriteLine($"[ApiMailService] PUT {endpoint} -> {targetFolderId}");
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] PATCH {endpoint} -> folder_id={targetFolderId}");
 
-            var response = await _httpClientFactory.PutAsync(ApiEndpoint.InspireContinuum, endpoint, payload);
+            var response = await _httpClientFactory.PatchAsync(ApiEndpoint.InspireContinuum, endpoint, payload);
 
             if (response.IsSuccessStatusCode)
             {
@@ -635,7 +938,7 @@ public class ApiMailService : IMailService
 
     /// <summary>
     /// Marks a message as read/unread with detailed result
-    /// PUT /api/outlook/messages/{id}/read
+    /// PATCH /api/v1/outlook/messages/{id} with is_read field
     /// </summary>
     public async Task<MailServiceResult<bool>> MarkAsReadWithResultAsync(string messageId, bool isRead)
     {
@@ -651,12 +954,12 @@ public class ApiMailService : IMailService
                 };
             }
 
-            var endpoint = $"outlook/messages/{Uri.EscapeDataString(messageId)}/read";
-            var payload = new { isRead };
+            var endpoint = $"outlook/messages/{Uri.EscapeDataString(messageId)}";
+            var payload = new { is_read = isRead };
 
-            System.Diagnostics.Debug.WriteLine($"[ApiMailService] PUT {endpoint} -> isRead={isRead}");
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] PATCH {endpoint} -> is_read={isRead}");
 
-            var response = await _httpClientFactory.PutAsync(ApiEndpoint.InspireContinuum, endpoint, payload);
+            var response = await _httpClientFactory.PatchAsync(ApiEndpoint.InspireContinuum, endpoint, payload);
 
             if (response.IsSuccessStatusCode)
             {
@@ -692,10 +995,11 @@ public class ApiMailService : IMailService
     }
 
     /// <summary>
-    /// Toggles the flag status with detailed result
-    /// PUT /api/outlook/messages/{id}/flag
+    /// Toggles or sets the flag status with detailed result
+    /// PATCH /api/v1/outlook/messages/{id} with is_flagged field
+    /// If isFlagged is null, fetches current state and toggles it
     /// </summary>
-    public async Task<MailServiceResult<bool>> ToggleFlagWithResultAsync(string messageId)
+    public async Task<MailServiceResult<bool>> ToggleFlagWithResultAsync(string messageId, bool? isFlagged = null)
     {
         try
         {
@@ -709,14 +1013,38 @@ public class ApiMailService : IMailService
                 };
             }
 
-            var endpoint = $"outlook/messages/{Uri.EscapeDataString(messageId)}/flag";
-            System.Diagnostics.Debug.WriteLine($"[ApiMailService] PUT {endpoint}");
+            // If no flag value provided, we need to get current state and toggle
+            bool newFlagValue;
+            if (isFlagged.HasValue)
+            {
+                newFlagValue = isFlagged.Value;
+            }
+            else
+            {
+                // Fetch current message to get its flag state
+                var currentMessage = await GetMessageByIdAsync(messageId);
+                if (currentMessage == null)
+                {
+                    return new MailServiceResult<bool>
+                    {
+                        Success = false,
+                        Error = "Message not found",
+                        Data = false
+                    };
+                }
+                newFlagValue = !currentMessage.IsFlagged;
+            }
 
-            var response = await _httpClientFactory.PutAsync(ApiEndpoint.InspireContinuum, endpoint, new { });
+            var endpoint = $"outlook/messages/{Uri.EscapeDataString(messageId)}";
+            var payload = new { is_flagged = newFlagValue };
+
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] PATCH {endpoint} -> is_flagged={newFlagValue}");
+
+            var response = await _httpClientFactory.PatchAsync(ApiEndpoint.InspireContinuum, endpoint, payload);
 
             if (response.IsSuccessStatusCode)
             {
-                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Toggled flag for message {messageId}");
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Set flag for message {messageId} to {newFlagValue}");
                 return new MailServiceResult<bool>
                 {
                     Success = true,
@@ -1122,6 +1450,79 @@ public class EmailAttachmentDto
     public long FileSize { get; set; }
     public string? ContentType { get; set; }
     public string? StorageKey { get; set; }
+}
+
+/// <summary>
+/// DTO for creating a new email message via POST API
+/// Maps to InspireContinuum API format with snake_case fields
+/// </summary>
+internal class CreateMessageRequest
+{
+    [System.Text.Json.Serialization.JsonPropertyName("folder_id")]
+    public string? FolderId { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("subject")]
+    public string? Subject { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("body_text")]
+    public string? BodyText { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("body_html")]
+    public string? BodyHtml { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("sender_email")]
+    public string? SenderEmail { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("sender_name")]
+    public string? SenderName { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("is_draft")]
+    public bool IsDraft { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("importance")]
+    public string Importance { get; set; } = "normal";
+
+    [System.Text.Json.Serialization.JsonPropertyName("recipients")]
+    public List<RecipientDto>? Recipients { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("attachments")]
+    public List<AttachmentCreateDto>? Attachments { get; set; }
+}
+
+/// <summary>
+/// DTO for email recipient in create message request
+/// </summary>
+internal class RecipientDto
+{
+    [System.Text.Json.Serialization.JsonPropertyName("email")]
+    public string Email { get; set; } = string.Empty;
+
+    [System.Text.Json.Serialization.JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("type")]
+    public string Type { get; set; } = "to"; // "to", "cc", "bcc"
+}
+
+/// <summary>
+/// DTO for attachment in create message request
+/// </summary>
+internal class AttachmentCreateDto
+{
+    [System.Text.Json.Serialization.JsonPropertyName("fileName")]
+    public string FileName { get; set; } = string.Empty;
+
+    [System.Text.Json.Serialization.JsonPropertyName("filePath")]
+    public string? FilePath { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("fileSize")]
+    public long FileSize { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("mimeType")]
+    public string? MimeType { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("isInline")]
+    public bool IsInline { get; set; }
 }
 
 #endregion

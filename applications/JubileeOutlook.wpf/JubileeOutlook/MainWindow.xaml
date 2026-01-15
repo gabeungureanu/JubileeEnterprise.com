@@ -581,7 +581,7 @@
                                 <TextBlock Text="{Binding MainViewModel.SelectedFolder.Name}" FontSize="{StaticResource HeaderFontSize}" FontWeight="SemiBold" Foreground="{StaticResource GoldBrandBrush}"/>
                             </Border>
 
-                            <ListBox Grid.Row="1" ItemsSource="{Binding MainViewModel.Messages}" SelectedItem="{Binding MainViewModel.SelectedMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource OutlookListBoxStyle}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox x:Name="MessageListBox" Grid.Row="1" ItemsSource="{Binding MainViewModel.Messages}" SelectedItem="{Binding MainViewModel.SelectedMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource OutlookListBoxStyle}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" MouseDoubleClick="MessageListBox_MouseDoubleClick">
                                 <ListBox.ItemContainerStyle>
                                     <Style TargetType="ListBoxItem" BasedOn="{StaticResource OutlookListBoxItemStyle}"/>
                                 </ListBox.ItemContainerStyle>

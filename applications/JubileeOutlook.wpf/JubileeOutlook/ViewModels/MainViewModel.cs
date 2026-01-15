@@ -81,11 +81,22 @@ public partial class MainViewModel : ObservableObject
 
     private void RebuildFolderStructure()
     {
-        // Get the base folders from the mail service
+        // Get the base folders from the mail service (synchronous, uses cache)
         var baseFolders = _mailService.GetFolders();
+        BuildFolderStructure(baseFolders);
+    }
 
+    private async Task RebuildFolderStructureAsync()
+    {
+        // Get the base folders from the mail service asynchronously
+        var baseFolders = await _mailService.GetFoldersAsync();
+        BuildFolderStructure(baseFolders);
+    }
+
+    private void BuildFolderStructure(List<MailFolder> baseFolders)
+    {
         var folderName = !string.IsNullOrEmpty(WwbwEmailAddress) ? WwbwEmailAddress : "My Account";
-        System.Diagnostics.Debug.WriteLine($"[MainViewModel] RebuildFolderStructure - Creating folder with name: '{folderName}'");
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] BuildFolderStructure - Creating folder with name: '{folderName}', {baseFolders.Count} subfolders");
 
         // Create the account root folder with WWBW email
         var rootFolder = new MailFolder
@@ -112,8 +123,8 @@ public partial class MainViewModel : ObservableObject
 
     private async void InitializeData()
     {
-        // Build initial folder structure
-        RebuildFolderStructure();
+        // Build initial folder structure asynchronously to properly load from API
+        await RebuildFolderStructureAsync();
 
         // Select inbox by default (look in subfolders of root)
         var inbox = AccountRootFolder?.SubFolders.FirstOrDefault(f => f.Type == FolderType.Inbox);
@@ -257,8 +268,9 @@ public partial class MainViewModel : ObservableObject
     {
         if (SelectedMessage == null) return;
 
-        await _mailService.ToggleFlagAsync(SelectedMessage.Id);
-        SelectedMessage.IsFlagged = !SelectedMessage.IsFlagged;
+        var newFlagState = !SelectedMessage.IsFlagged;
+        await _mailService.ToggleFlagAsync(SelectedMessage.Id, newFlagState);
+        SelectedMessage.IsFlagged = newFlagState;
     }
 
     [RelayCommand]
@@ -307,9 +319,9 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void RefreshFolders()
+    private async Task RefreshFolders()
     {
-        RebuildFolderStructure();
+        await RebuildFolderStructureAsync();
     }
 
     // Home Tab - Move & Organize
@@ -364,7 +376,7 @@ public partial class MainViewModel : ObservableObject
         {
             await LoadMessagesAsync(SelectedFolder.Id);
         }
-        RefreshFolders();
+        await RefreshFolders();
     }
 
     [RelayCommand]
