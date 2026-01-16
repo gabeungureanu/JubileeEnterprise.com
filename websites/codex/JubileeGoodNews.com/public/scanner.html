@@ -1322,9 +1322,9 @@
                     topStory = allStories.reduce((max, s) =>
                         s.score.normalized > max.score.normalized ? s : max, allStories[0]);
 
-                    updateScanStatus('scanning', 'Downloading image...');
+                    updateScanStatus('scanning', 'Downloading image to server...');
 
-                    // Download the image for the top story
+                    // Download the image for the top story to /images/prominence folder
                     await downloadStoryImage(topStory);
 
                     // Render the top story
@@ -1404,48 +1404,39 @@
         }
 
         async function downloadStoryImage(story) {
-            // Download/cache the image for the top story
+            // Download image to server's /images/prominence folder
             if (!story.imageUrl) {
                 downloadedImageUrl = null;
                 return;
             }
 
             try {
-                // Create a promise to load the image
-                const loadPromise = new Promise((resolve, reject) => {
-                    const img = new Image();
-                    img.crossOrigin = 'anonymous';
-                    img.onload = () => {
-                        // Create canvas to "download" the image as a data URL
-                        const canvas = document.createElement('canvas');
-                        canvas.width = img.naturalWidth;
-                        canvas.height = img.naturalHeight;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0);
+                // Generate a unique filename based on source and timestamp
+                const filename = `${story.source}_${Date.now()}`;
 
-                        try {
-                            // Convert to data URL (this is our "downloaded" image)
-                            downloadedImageUrl = canvas.toDataURL('image/jpeg', 0.9);
-                            story.downloadedImage = downloadedImageUrl;
-                            resolve(downloadedImageUrl);
-                        } catch (e) {
-                            // If canvas export fails (CORS), use original URL
-                            downloadedImageUrl = story.imageUrl;
-                            story.downloadedImage = story.imageUrl;
-                            resolve(story.imageUrl);
-                        }
-                    };
-                    img.onerror = () => {
-                        downloadedImageUrl = null;
-                        reject(new Error('Failed to load image'));
-                    };
-                    img.src = story.imageUrl;
+                // Call server endpoint to download the image
+                const response = await fetch('/api/scanner/download-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        imageUrl: story.imageUrl,
+                        filename: filename
+                    })
                 });
 
-                await Promise.race([
-                    loadPromise,
-                    delay(5000).then(() => { throw new Error('Image load timeout'); })
-                ]);
+                const result = await response.json();
+
+                if (result.success && result.localPath) {
+                    // Image downloaded successfully to server
+                    downloadedImageUrl = result.localPath;
+                    story.downloadedImage = result.localPath;
+                    console.log(`Image downloaded to: ${result.localPath} (${result.size || 0} bytes)`);
+                } else {
+                    console.warn('Server failed to download image:', result.error || result.message);
+                    downloadedImageUrl = null;
+                }
             } catch (error) {
                 console.warn('Image download failed:', error);
                 downloadedImageUrl = null;

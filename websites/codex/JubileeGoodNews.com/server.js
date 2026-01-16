@@ -6,6 +6,8 @@
  */
 
 const path = require('path');
+const fs = require('fs');
+const https = require('https');
 require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
 const express = require('express');
 const cors = require('cors');
@@ -202,6 +204,137 @@ app.get('/api/daily-verse', async (req, res) => {
     const verse = verses[dayOfYear % verses.length];
 
     res.json(verse);
+});
+
+// =============================================================================
+// SCANNER IMAGE DOWNLOAD
+// =============================================================================
+
+// Ensure prominence images directory exists
+const PROMINENCE_DIR = path.join(__dirname, 'public', 'images', 'prominence');
+if (!fs.existsSync(PROMINENCE_DIR)) {
+    fs.mkdirSync(PROMINENCE_DIR, { recursive: true });
+}
+
+// Download image from URL and save to prominence folder
+app.post('/api/scanner/download-image', async (req, res) => {
+    try {
+        const { imageUrl, filename } = req.body;
+
+        if (!imageUrl || !filename) {
+            return res.status(400).json({ error: 'imageUrl and filename are required' });
+        }
+
+        // Sanitize filename
+        const safeFilename = filename.replace(/[^a-zA-Z0-9_-]/g, '_') + '.jpg';
+        const localPath = path.join(PROMINENCE_DIR, safeFilename);
+        const publicPath = `/images/prominence/${safeFilename}`;
+
+        // Check if file already exists
+        if (fs.existsSync(localPath)) {
+            return res.json({
+                success: true,
+                localPath: publicPath,
+                message: 'Image already exists'
+            });
+        }
+
+        // Download the image
+        const downloadImage = (url) => {
+            return new Promise((resolve, reject) => {
+                const protocol = url.startsWith('https') ? https : http;
+
+                const request = protocol.get(url, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'Accept': 'image/*,*/*;q=0.8'
+                    },
+                    timeout: 15000
+                }, (response) => {
+                    // Handle redirects
+                    if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+                        downloadImage(response.headers.location).then(resolve).catch(reject);
+                        return;
+                    }
+
+                    if (response.statusCode !== 200) {
+                        reject(new Error(`HTTP ${response.statusCode}`));
+                        return;
+                    }
+
+                    const chunks = [];
+                    response.on('data', chunk => chunks.push(chunk));
+                    response.on('end', () => {
+                        const buffer = Buffer.concat(chunks);
+                        resolve(buffer);
+                    });
+                    response.on('error', reject);
+                });
+
+                request.on('error', reject);
+                request.on('timeout', () => {
+                    request.destroy();
+                    reject(new Error('Request timeout'));
+                });
+            });
+        };
+
+        const imageBuffer = await downloadImage(imageUrl);
+
+        // Save to file
+        fs.writeFileSync(localPath, imageBuffer);
+
+        console.log(`Downloaded image: ${safeFilename} (${imageBuffer.length} bytes)`);
+
+        res.json({
+            success: true,
+            localPath: publicPath,
+            size: imageBuffer.length,
+            message: 'Image downloaded successfully'
+        });
+
+    } catch (err) {
+        console.error('Error downloading image:', err.message);
+        res.status(500).json({
+            error: 'Failed to download image',
+            message: err.message
+        });
+    }
+});
+
+// List downloaded prominence images
+app.get('/api/scanner/images', (req, res) => {
+    try {
+        const files = fs.readdirSync(PROMINENCE_DIR)
+            .filter(f => /\.(jpg|jpeg|png|gif|webp)$/i.test(f))
+            .map(f => ({
+                filename: f,
+                path: `/images/prominence/${f}`,
+                size: fs.statSync(path.join(PROMINENCE_DIR, f)).size,
+                modified: fs.statSync(path.join(PROMINENCE_DIR, f)).mtime
+            }));
+
+        res.json({ images: files });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to list images', message: err.message });
+    }
+});
+
+// Delete a prominence image
+app.delete('/api/scanner/images/:filename', (req, res) => {
+    try {
+        const safeFilename = req.params.filename.replace(/[^a-zA-Z0-9_.-]/g, '_');
+        const filePath = path.join(PROMINENCE_DIR, safeFilename);
+
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            res.json({ success: true, message: 'Image deleted' });
+        } else {
+            res.status(404).json({ error: 'Image not found' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete image', message: err.message });
+    }
 });
 
 // =============================================================================
