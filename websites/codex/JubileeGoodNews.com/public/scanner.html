@@ -65,7 +65,7 @@
 
             /* Layout */
             --header-height: 56px;
-            --panel-width: 520px;
+            --panel-width: 600px;
         }
 
         * {
@@ -236,334 +236,245 @@
         }
 
         /* ============================================
-           TOOLBAR
+           TOP STORY DISPLAY - SINGLE ARTICLE VIEW
            ============================================ */
 
-        .toolbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: var(--space-md) var(--space-lg);
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .toolbar-left {
-            display: flex;
-            align-items: center;
-            gap: var(--space-md);
-        }
-
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-        }
-
-        .filter-label {
-            font-size: var(--font-sm);
-            color: var(--text-muted);
-        }
-
-        .filter-select {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: var(--space-xs) var(--space-sm);
-            color: var(--text-primary);
-            font-size: var(--font-sm);
-            cursor: pointer;
-        }
-
-        .toolbar-right {
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-        }
-
-        .stats-badge {
-            display: flex;
-            align-items: center;
-            gap: var(--space-xs);
-            padding: var(--space-xs) var(--space-sm);
-            background: var(--bg-tertiary);
-            border-radius: 12px;
-            font-size: var(--font-xs);
-            color: var(--text-secondary);
-        }
-
-        .stats-badge strong {
-            color: var(--accent-gold);
-        }
-
-        /* ============================================
-           SCANNER TABLE
-           ============================================ */
-
-        .table-container {
+        .top-story-container {
             flex: 1;
-            overflow: auto;
-            padding: var(--space-md) var(--space-lg);
-        }
-
-        .scanner-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-
-        .scanner-table thead {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .scanner-table th {
-            background: var(--bg-secondary);
-            padding: var(--space-sm) var(--space-md);
-            text-align: left;
-            font-size: var(--font-xs);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border-color);
-            white-space: nowrap;
-        }
-
-        .scanner-table th:first-child {
-            border-radius: 8px 0 0 0;
-        }
-
-        .scanner-table th:last-child {
-            border-radius: 0 8px 0 0;
-        }
-
-        .scanner-table td {
-            padding: var(--space-md);
-            border-bottom: 1px solid var(--border-color);
-            vertical-align: middle;
-        }
-
-        .scanner-table tbody tr {
-            background: var(--bg-card);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .scanner-table tbody tr:hover {
-            background: var(--bg-card-hover);
-        }
-
-        .scanner-table tbody tr.selected {
-            background: var(--bg-tertiary);
-            border-left: 3px solid var(--accent-gold);
-        }
-
-        .scanner-table tbody tr.top-story {
-            background: linear-gradient(90deg, rgba(230, 172, 0, 0.1) 0%, var(--bg-card) 50%);
-        }
-
-        .scanner-table tbody tr.top-story:hover {
-            background: linear-gradient(90deg, rgba(230, 172, 0, 0.15) 0%, var(--bg-card-hover) 50%);
-        }
-
-        .scanner-table tbody tr:last-child td:first-child {
-            border-radius: 0 0 0 8px;
-        }
-
-        .scanner-table tbody tr:last-child td:last-child {
-            border-radius: 0 0 8px 0;
-        }
-
-        /* Source Badge */
-        .source-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--space-xs);
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: var(--font-xs);
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .source-badge.cnn { background: var(--source-cnn); color: white; }
-        .source-badge.foxnews { background: var(--source-fox); color: white; }
-        .source-badge.bbc { background: var(--source-bbc); color: white; }
-        .source-badge.yahoo { background: var(--source-yahoo); color: white; }
-        .source-badge.nytimes { background: #f5f5f5; color: var(--source-nyt); }
-        .source-badge.msn { background: var(--source-msn); color: white; }
-
-        /* Image Status */
-        .image-status {
             display: flex;
             align-items: center;
-            gap: var(--space-xs);
-            font-size: var(--font-xs);
+            justify-content: center;
+            padding: var(--space-2xl);
+            overflow: auto;
         }
 
-        .image-status.success { color: var(--accent-green); }
-        .image-status.pending { color: var(--accent-orange); }
-        .image-status.failed { color: var(--accent-red); }
+        .top-story-card {
+            max-width: 700px;
+            width: 100%;
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
 
-        .image-thumb {
-            width: 60px;
-            height: 40px;
-            border-radius: 4px;
-            object-fit: cover;
+        .top-story-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            border-color: var(--accent-gold);
+        }
+
+        .top-story-image {
+            width: 100%;
+            height: 350px;
             background: var(--bg-secondary);
-        }
-
-        /* Headlines */
-        .original-headline {
-            font-size: var(--font-sm);
-            color: var(--text-secondary);
-            line-height: 1.4;
-            max-width: 280px;
-        }
-
-        .original-url {
-            font-size: var(--font-xs);
-            color: var(--text-muted);
-            margin-top: var(--space-xs);
-            word-break: break-all;
-        }
-
-        .original-url a {
-            color: var(--accent-blue);
-        }
-
-        .original-url a:hover {
-            text-decoration: underline;
-        }
-
-        .rewritten-headline {
-            font-size: var(--font-sm);
-            font-weight: 600;
-            color: var(--accent-gold);
-            line-height: 1.4;
-            max-width: 300px;
-        }
-
-        .rewritten-preview {
-            font-size: var(--font-xs);
-            color: var(--text-secondary);
-            margin-top: var(--space-xs);
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+            position: relative;
             overflow: hidden;
         }
 
-        /* Score Badge */
-        .score-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            font-size: var(--font-md);
-            font-weight: 700;
+        .top-story-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        .score-badge.high {
+        .top-story-image-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            gap: var(--space-sm);
+        }
+
+        .top-story-image-placeholder svg {
+            width: 60px;
+            height: 60px;
+            opacity: 0.4;
+        }
+
+        .top-story-badge {
+            position: absolute;
+            top: var(--space-md);
+            left: var(--space-md);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            border-radius: 20px;
+            font-size: var(--font-xs);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .top-story-badge svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .source-badge-overlay {
+            position: absolute;
+            top: var(--space-md);
+            right: var(--space-md);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: var(--font-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .source-badge-overlay.cnn { background: var(--source-cnn); color: white; }
+        .source-badge-overlay.foxnews { background: var(--source-fox); color: white; }
+        .source-badge-overlay.yahoo { background: var(--source-yahoo); color: white; }
+        .source-badge-overlay.nytimes { background: #f5f5f5; color: var(--source-nyt); }
+        .source-badge-overlay.msn { background: var(--source-msn); color: white; }
+
+        .top-story-content {
+            padding: var(--space-xl);
+        }
+
+        .top-story-title {
+            font-family: 'Playfair Display', serif;
+            font-size: var(--font-2xl);
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: var(--space-md);
+            color: var(--accent-gold);
+        }
+
+        .top-story-excerpt {
+            font-size: var(--font-base);
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: var(--space-lg);
+        }
+
+        .top-story-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: var(--space-md);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .top-story-score {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .score-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-lg);
+            font-weight: 700;
             background: rgba(74, 222, 128, 0.2);
             color: var(--accent-green);
             border: 2px solid var(--accent-green);
         }
 
-        .score-badge.medium {
-            background: rgba(251, 146, 60, 0.2);
-            color: var(--accent-orange);
-            border: 2px solid var(--accent-orange);
-        }
-
-        .score-badge.low {
-            background: rgba(107, 114, 128, 0.2);
-            color: var(--text-muted);
-            border: 2px solid var(--text-muted);
-        }
-
         .score-label {
             font-size: var(--font-xs);
             color: var(--text-muted);
-            margin-top: var(--space-xs);
-            text-align: center;
-        }
-
-        /* Top Story Badge */
-        .top-story-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 8px;
-            background: var(--accent-gold);
-            color: var(--bg-primary);
-            border-radius: 10px;
-            font-size: 10px;
-            font-weight: 700;
             text-transform: uppercase;
-            margin-left: var(--space-sm);
+            letter-spacing: 0.5px;
         }
 
-        .top-story-badge svg {
-            width: 10px;
-            height: 10px;
-        }
-
-        /* Timestamp */
-        .timestamp {
-            font-size: var(--font-xs);
-            color: var(--text-muted);
-            white-space: nowrap;
-        }
-
-        .timestamp-relative {
-            font-size: var(--font-sm);
-            color: var(--text-secondary);
-        }
-
-        /* Actions */
-        .row-actions {
+        .top-story-cta {
             display: flex;
-            gap: var(--space-xs);
+            align-items: center;
+            gap: var(--space-sm);
+            color: var(--accent-gold);
+            font-weight: 600;
+            font-size: var(--font-sm);
         }
 
-        .action-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background: transparent;
-            color: var(--text-muted);
-            cursor: pointer;
+        .top-story-cta svg {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.2s ease;
+        }
+
+        .top-story-card:hover .top-story-cta svg {
+            transform: translateX(4px);
+        }
+
+        /* Image Status Indicator */
+        .image-status-indicator {
+            position: absolute;
+            bottom: var(--space-md);
+            right: var(--space-md);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            font-size: var(--font-xs);
+            color: white;
+        }
+
+        .image-status-indicator.success { color: var(--accent-green); }
+        .image-status-indicator.pending { color: var(--accent-orange); }
+        .image-status-indicator.failed { color: var(--accent-red); }
+
+        /* ============================================
+           EMPTY STATE
+           ============================================ */
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-2xl);
+            text-align: center;
+            flex: 1;
+        }
+
+        .empty-state-icon {
+            width: 100px;
+            height: 100px;
+            background: var(--bg-tertiary);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
+            margin-bottom: var(--space-lg);
         }
 
-        .action-btn:hover {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
+        .empty-state-icon svg {
+            width: 50px;
+            height: 50px;
+            color: var(--text-muted);
         }
 
-        .action-btn.approve:hover {
-            background: rgba(74, 222, 128, 0.2);
-            color: var(--accent-green);
-            border-color: var(--accent-green);
+        .empty-state-title {
+            font-size: var(--font-xl);
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
         }
 
-        .action-btn.reject:hover {
-            background: rgba(233, 69, 96, 0.2);
-            color: var(--accent-red);
-            border-color: var(--accent-red);
+        .empty-state-text {
+            font-size: var(--font-base);
+            color: var(--text-secondary);
+            max-width: 450px;
+            margin-bottom: var(--space-xl);
+            line-height: 1.6;
         }
 
         /* ============================================
-           SLIDE-OVER PANEL
+           SLIDE-OVER PANEL - ARTICLE DETAIL VIEW
            ============================================ */
 
         .panel-overlay {
@@ -640,30 +551,24 @@
         .panel-body {
             flex: 1;
             overflow-y: auto;
-            padding: var(--space-lg);
+            padding: 0;
         }
 
-        .panel-section {
-            margin-bottom: var(--space-xl);
-        }
-
-        .panel-image-container {
+        /* Panel Article Image */
+        .panel-hero-image {
             width: 100%;
-            height: 280px;
+            height: 300px;
             background: var(--bg-secondary);
-            border-radius: 12px;
-            overflow: hidden;
-            margin-bottom: var(--space-lg);
             position: relative;
         }
 
-        .panel-image {
+        .panel-hero-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .panel-image-placeholder {
+        .panel-hero-placeholder {
             width: 100%;
             height: 100%;
             display: flex;
@@ -674,10 +579,80 @@
             gap: var(--space-sm);
         }
 
-        .panel-image-placeholder svg {
-            width: 40px;
-            height: 40px;
-            opacity: 0.5;
+        .panel-hero-placeholder svg {
+            width: 48px;
+            height: 48px;
+            opacity: 0.4;
+        }
+
+        /* Panel Article Content */
+        .panel-article {
+            padding: var(--space-xl);
+        }
+
+        .panel-article-header {
+            margin-bottom: var(--space-lg);
+        }
+
+        .panel-article-source {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: var(--font-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: var(--space-md);
+        }
+
+        .panel-article-source.cnn { background: var(--source-cnn); color: white; }
+        .panel-article-source.foxnews { background: var(--source-fox); color: white; }
+        .panel-article-source.yahoo { background: var(--source-yahoo); color: white; }
+        .panel-article-source.nytimes { background: #f5f5f5; color: var(--source-nyt); }
+        .panel-article-source.msn { background: var(--source-msn); color: white; }
+
+        .panel-article-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: var(--space-md);
+            color: var(--text-primary);
+        }
+
+        .panel-article-meta {
+            display: flex;
+            align-items: center;
+            gap: var(--space-lg);
+            font-size: var(--font-sm);
+            color: var(--text-muted);
+        }
+
+        .panel-article-body {
+            font-size: var(--font-base);
+            line-height: 1.9;
+            color: var(--text-secondary);
+        }
+
+        .panel-article-body p {
+            margin-bottom: var(--space-lg);
+        }
+
+        .panel-article-body blockquote {
+            margin: var(--space-lg) 0;
+            padding: var(--space-md) var(--space-lg);
+            background: var(--bg-card);
+            border-left: 4px solid var(--accent-gold);
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: var(--text-primary);
+        }
+
+        /* Panel Section */
+        .panel-section {
+            padding: var(--space-lg) var(--space-xl);
+            border-top: 1px solid var(--border-color);
         }
 
         .panel-section-title {
@@ -686,112 +661,40 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--accent-gold);
-            margin-bottom: var(--space-sm);
-            padding-bottom: var(--space-xs);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .panel-rewritten-title {
-            font-family: 'Playfair Display', serif;
-            font-size: var(--font-xl);
-            font-weight: 700;
-            line-height: 1.3;
-            margin-bottom: var(--space-md);
-            color: var(--text-primary);
-        }
-
-        .panel-article-content {
-            font-size: var(--font-base);
-            line-height: 1.8;
-            color: var(--text-secondary);
-        }
-
-        .panel-article-content p {
             margin-bottom: var(--space-md);
         }
 
-        .panel-meta-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--space-md);
-        }
-
-        .panel-meta-item {
+        .panel-original-story {
             background: var(--bg-card);
             padding: var(--space-md);
             border-radius: 8px;
         }
 
-        .panel-meta-label {
-            font-size: var(--font-xs);
-            color: var(--text-muted);
-            margin-bottom: var(--space-xs);
-        }
-
-        .panel-meta-value {
+        .panel-original-title {
             font-size: var(--font-sm);
             font-weight: 600;
-            color: var(--text-primary);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-sm);
         }
 
         .panel-original-link {
-            display: block;
-            margin-top: var(--space-md);
-            padding: var(--space-md);
-            background: var(--bg-card);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        .panel-original-link a {
-            color: var(--accent-blue);
             font-size: var(--font-sm);
+            color: var(--accent-blue);
             word-break: break-all;
         }
 
-        .panel-original-link a:hover {
+        .panel-original-link:hover {
             text-decoration: underline;
         }
 
-        .scoring-details {
+        /* Download Log */
+        .download-log {
             background: var(--bg-card);
             padding: var(--space-md);
             border-radius: 8px;
         }
 
-        .scoring-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: var(--space-xs) 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .scoring-row:last-child {
-            border-bottom: none;
-            padding-top: var(--space-sm);
-            margin-top: var(--space-xs);
-            font-weight: 600;
-        }
-
-        .scoring-label {
-            font-size: var(--font-sm);
-            color: var(--text-secondary);
-        }
-
-        .scoring-value {
-            font-size: var(--font-sm);
-            color: var(--text-primary);
-        }
-
-        .image-download-log {
-            background: var(--bg-card);
-            padding: var(--space-md);
-            border-radius: 8px;
-            margin-top: var(--space-md);
-        }
-
-        .download-attempt {
+        .download-log-item {
             display: flex;
             align-items: center;
             gap: var(--space-sm);
@@ -800,13 +703,14 @@
             border-bottom: 1px solid var(--border-color);
         }
 
-        .download-attempt:last-child {
+        .download-log-item:last-child {
             border-bottom: none;
         }
 
-        .download-attempt.success { color: var(--accent-green); }
-        .download-attempt.failed { color: var(--accent-red); }
-        .download-attempt.skipped { color: var(--text-muted); }
+        .download-log-item.success { color: var(--accent-green); }
+        .download-log-item.failed { color: var(--accent-red); }
+        .download-log-item.skipped { color: var(--text-muted); }
+        .download-log-item.google { color: var(--accent-purple); }
 
         .panel-footer {
             padding: var(--space-md) var(--space-lg);
@@ -836,49 +740,6 @@
 
         .btn-reject:hover {
             background: #dc2626;
-        }
-
-        /* ============================================
-           EMPTY STATE
-           ============================================ */
-
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: var(--space-2xl);
-            text-align: center;
-        }
-
-        .empty-state-icon {
-            width: 80px;
-            height: 80px;
-            background: var(--bg-tertiary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: var(--space-lg);
-        }
-
-        .empty-state-icon svg {
-            width: 40px;
-            height: 40px;
-            color: var(--text-muted);
-        }
-
-        .empty-state-title {
-            font-size: var(--font-lg);
-            font-weight: 600;
-            margin-bottom: var(--space-sm);
-        }
-
-        .empty-state-text {
-            font-size: var(--font-sm);
-            color: var(--text-secondary);
-            max-width: 400px;
-            margin-bottom: var(--space-lg);
         }
 
         /* ============================================
@@ -915,15 +776,42 @@
             }
         }
 
+        /* Scanning overlay */
+        .scanning-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 500;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-lg);
+        }
+
+        .scanning-overlay.active {
+            display: flex;
+        }
+
+        .scanning-text {
+            font-size: var(--font-lg);
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        .scanning-subtext {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+            text-align: center;
+            max-width: 400px;
+        }
+
         /* ============================================
            RESPONSIVE
            ============================================ */
-
-        @media (max-width: 1200px) {
-            :root {
-                --panel-width: 450px;
-            }
-        }
 
         @media (max-width: 992px) {
             .scanner-content.panel-open {
@@ -932,30 +820,25 @@
 
             .slide-panel {
                 width: 100%;
-                max-width: 520px;
+                max-width: 600px;
             }
         }
 
         @media (max-width: 768px) {
-            .toolbar {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: var(--space-md);
+            .top-story-card {
+                margin: var(--space-md);
             }
 
-            .toolbar-left,
-            .toolbar-right {
-                width: 100%;
-                flex-wrap: wrap;
+            .top-story-image {
+                height: 250px;
             }
 
-            .scanner-table {
-                font-size: var(--font-sm);
+            .top-story-title {
+                font-size: var(--font-xl);
             }
 
-            .original-headline,
-            .rewritten-headline {
-                max-width: 200px;
+            .top-story-content {
+                padding: var(--space-lg);
             }
         }
     </style>
@@ -974,116 +857,71 @@
                     <span class="status-dot" id="statusDot"></span>
                     <span id="statusText">Ready</span>
                 </div>
-                <button class="btn btn-secondary" onclick="clearQueue()">
+                <button class="btn btn-secondary" onclick="clearTopStory()">
                     <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
                     </svg>
-                    Clear Queue
+                    Clear
                 </button>
                 <button class="btn btn-primary" onclick="runScan()" id="scanBtn">
                     <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <path d="M12 6v6l4 2"/>
                     </svg>
-                    Run Scan
+                    Scan for Top Story
                 </button>
             </div>
         </div>
     </header>
 
+    <!-- Scanning Overlay -->
+    <div class="scanning-overlay" id="scanningOverlay">
+        <div class="loading-spinner" style="width: 48px; height: 48px;"></div>
+        <div class="scanning-text" id="scanningText">Scanning news sources...</div>
+        <div class="scanning-subtext" id="scanningSubtext">Analyzing prominence and relevance across 5 major news outlets</div>
+    </div>
+
     <!-- Main Container -->
     <div class="main-container">
         <div class="scanner-content" id="scannerContent">
-            <!-- Toolbar -->
-            <div class="toolbar">
-                <div class="toolbar-left">
-                    <div class="filter-group">
-                        <span class="filter-label">Source:</span>
-                        <select class="filter-select" id="sourceFilter" onchange="filterResults()">
-                            <option value="all">All Sources</option>
-                            <option value="yahoo">Yahoo</option>
-                            <option value="nytimes">NY Times</option>
-                            <option value="msn">MSN</option>
-                            <option value="cnn">CNN</option>
-                            <option value="foxnews">Fox News</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <span class="filter-label">Status:</span>
-                        <select class="filter-select" id="statusFilter" onchange="filterResults()">
-                            <option value="all">All Status</option>
-                            <option value="pending">Pending Review</option>
-                            <option value="approved">Approved</option>
-                            <option value="rejected">Rejected</option>
-                        </select>
-                    </div>
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState">
+                <div class="empty-state-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                        <path d="M11 8v6M8 11h6"/>
+                    </svg>
                 </div>
-                <div class="toolbar-right">
-                    <div class="stats-badge">
-                        <span>Queue:</span>
-                        <strong id="queueCount">0</strong>
-                    </div>
-                    <div class="stats-badge">
-                        <span>Approved:</span>
-                        <strong id="approvedCount">0</strong>
-                    </div>
-                    <div class="stats-badge">
-                        <span>Last Scan:</span>
-                        <strong id="lastScanTime">Never</strong>
-                    </div>
-                </div>
+                <h3 class="empty-state-title">Find Today's Most Prominent Story</h3>
+                <p class="empty-state-text">
+                    Click "Scan for Top Story" to analyze headlines from Yahoo, NY Times, MSN, CNN, and Fox News.
+                    The scanner will identify the single most prominent article and transform it with a hopeful,
+                    faith-inspired perspective.
+                </p>
+                <button class="btn btn-primary" onclick="runScan()">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    Start Scanning
+                </button>
             </div>
 
-            <!-- Table Container -->
-            <div class="table-container" id="tableContainer">
-                <!-- Empty State -->
-                <div class="empty-state" id="emptyState">
-                    <div class="empty-state-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <circle cx="11" cy="11" r="8"/>
-                            <path d="M21 21l-4.35-4.35"/>
-                            <path d="M11 8v6M8 11h6"/>
-                        </svg>
-                    </div>
-                    <h3 class="empty-state-title">No scanned items yet</h3>
-                    <p class="empty-state-text">
-                        Click "Run Scan" to fetch top stories from major news sources. The scanner will identify matching stories across sources and download images with automatic fallback.
-                    </p>
-                    <button class="btn btn-primary" onclick="runScan()">
-                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <path d="M12 6v6l4 2"/>
-                        </svg>
-                        Start Scanning
-                    </button>
+            <!-- Top Story Display (Single Article) -->
+            <div class="top-story-container" id="topStoryContainer" style="display: none;">
+                <div class="top-story-card" id="topStoryCard" onclick="openArticleDetail()">
+                    <!-- Content populated dynamically -->
                 </div>
-
-                <!-- Scanner Table -->
-                <table class="scanner-table" id="scannerTable" style="display: none;">
-                    <thead>
-                        <tr>
-                            <th>Source</th>
-                            <th>Original Story</th>
-                            <th>Score</th>
-                            <th>Good News Version</th>
-                            <th>Image</th>
-                            <th>Scanned</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <!-- Rows populated dynamically -->
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
 
-    <!-- Slide-over Panel -->
+    <!-- Slide-over Panel - Article Detail View -->
     <div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
     <aside class="slide-panel" id="slidePanel">
         <div class="panel-header">
-            <h2 class="panel-title">Article Details</h2>
+            <h2 class="panel-title">Article Detail</h2>
             <button class="panel-close" onclick="closePanel()" title="Close (ESC)">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M18 6L6 18M6 6l12 12"/>
@@ -1094,13 +932,13 @@
             <!-- Panel content populated dynamically -->
         </div>
         <div class="panel-footer">
-            <button class="btn btn-reject" onclick="rejectItem()">
+            <button class="btn btn-reject" onclick="rejectStory()">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M18 6L6 18M6 6l12 12"/>
                 </svg>
                 Reject
             </button>
-            <button class="btn btn-approve" onclick="approveItem()">
+            <button class="btn btn-approve" onclick="approveStory()">
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M20 6L9 17l-5-5"/>
                 </svg>
@@ -1114,8 +952,8 @@
         // STATE MANAGEMENT
         // ============================================
 
-        let scannerQueue = [];
-        let selectedItemId = null;
+        let topStory = null;
+        let allCollectedStories = [];
         let isScanning = false;
 
         // News sources to scan (in priority order for image fallback)
@@ -1129,11 +967,13 @@
 
         // Story keyword clusters for matching stories across sources
         const STORY_CLUSTERS = {
-            'economy': ['economy', 'economic', 'gdp', 'inflation', 'recession', 'jobs', 'unemployment', 'fed', 'federal reserve', 'interest rate', 'market', 'stock'],
-            'climate': ['climate', 'environment', 'global warming', 'carbon', 'emissions', 'renewable', 'green', 'sustainability', 'paris agreement'],
-            'politics': ['congress', 'senate', 'house', 'president', 'biden', 'trump', 'election', 'vote', 'shutdown', 'bill', 'legislation'],
-            'technology': ['tech', 'technology', 'ai', 'artificial intelligence', 'layoff', 'startup', 'silicon valley', 'google', 'apple', 'microsoft', 'meta'],
-            'world': ['global', 'international', 'summit', 'united nations', 'nato', 'war', 'conflict', 'diplomatic']
+            'economy': ['economy', 'economic', 'gdp', 'inflation', 'recession', 'jobs', 'unemployment', 'fed', 'federal reserve', 'interest rate', 'market', 'stock', 'trade', 'tariff', 'deficit'],
+            'climate': ['climate', 'environment', 'global warming', 'carbon', 'emissions', 'renewable', 'green', 'sustainability', 'paris agreement', 'wildfire', 'flood', 'hurricane', 'storm'],
+            'politics': ['congress', 'senate', 'house', 'president', 'biden', 'trump', 'election', 'vote', 'shutdown', 'bill', 'legislation', 'supreme court', 'impeach', 'democrat', 'republican'],
+            'technology': ['tech', 'technology', 'ai', 'artificial intelligence', 'layoff', 'startup', 'silicon valley', 'google', 'apple', 'microsoft', 'meta', 'openai', 'chatgpt', 'robot'],
+            'world': ['global', 'international', 'summit', 'united nations', 'nato', 'war', 'conflict', 'diplomatic', 'ukraine', 'russia', 'china', 'middle east', 'israel', 'gaza'],
+            'health': ['health', 'covid', 'pandemic', 'vaccine', 'hospital', 'doctor', 'disease', 'outbreak', 'cdc', 'who', 'medical', 'drug', 'fda'],
+            'crime': ['crime', 'shooting', 'murder', 'arrest', 'police', 'trial', 'verdict', 'sentence', 'prison', 'investigation', 'fbi']
         };
 
         // ============================================
@@ -1144,77 +984,72 @@
             if (isScanning) return;
 
             isScanning = true;
-            updateScanStatus('scanning', 'Scanning sources...');
+            showScanningOverlay('Scanning news sources...', 'Analyzing prominence and relevance across 5 major news outlets');
             document.getElementById('scanBtn').disabled = true;
 
             try {
-                let allStories = [];
+                allCollectedStories = [];
 
                 // Phase 1: Fetch stories from all sources
                 for (const source of NEWS_SOURCES) {
-                    updateScanStatus('scanning', `Scanning ${source.name}...`);
-                    await delay(500 + Math.random() * 300);
+                    updateScanningOverlay(`Scanning ${source.name}...`, 'Fetching top headlines and analyzing prominence');
+                    await delay(400 + Math.random() * 200);
 
                     const story = await fetchTopStory(source);
                     if (story) {
                         story.score = calculateProminenceScore(story);
                         story.storyCluster = identifyStoryCluster(story.originalTitle);
-
-                        const rewritten = await rewriteAsGoodNews(story);
-                        story.rewrittenTitle = rewritten.title;
-                        story.rewrittenContent = rewritten.content;
-
                         story.id = Date.now() + Math.random();
                         story.timestamp = new Date().toISOString();
-                        story.status = 'pending';
                         story.imageStatus = 'pending';
                         story.downloadedImage = null;
                         story.imageDownloadLog = [];
 
-                        allStories.push(story);
+                        allCollectedStories.push(story);
                     }
                 }
 
-                // Phase 2: Find matching stories across sources
-                const storyGroups = groupMatchingStories(allStories);
+                // Phase 2: Select the single highest-rated article based PURELY on prominence
+                // No sentiment filtering - we select based on relevance and prominence only
+                updateScanningOverlay('Evaluating prominence scores...', 'Selecting the most prominent story');
+                await delay(300);
 
-                // Phase 3: Identify the top story (highest scoring story from the largest cluster)
-                let topStoryGroup = null;
-                let maxGroupScore = 0;
+                allCollectedStories.sort((a, b) => b.score.normalized - a.score.normalized);
 
-                for (const [cluster, stories] of Object.entries(storyGroups)) {
-                    const groupScore = stories.reduce((sum, s) => sum + s.score.normalized, 0);
-                    if (groupScore > maxGroupScore) {
-                        maxGroupScore = groupScore;
-                        topStoryGroup = stories;
+                if (allCollectedStories.length > 0) {
+                    topStory = allCollectedStories[0];
+                    topStory.isTopStory = true;
+
+                    // Phase 3: Cascading image download for the top story
+                    updateScanningOverlay('Acquiring article image...', 'Attempting download from primary source');
+
+                    const imageSuccess = await downloadImageWithCascade(topStory);
+
+                    if (!imageSuccess) {
+                        console.warn('Image acquisition completed - check download log for details');
                     }
+
+                    // Phase 4: Rewrite the article with hopeful perspective AFTER selection
+                    updateScanningOverlay('Transforming with hope...', 'Creating faith-inspired perspective');
+                    await delay(300);
+
+                    const rewritten = await rewriteAsGoodNews(topStory);
+                    topStory.rewrittenTitle = rewritten.title;
+                    topStory.rewrittenContent = rewritten.content;
+
+                    renderTopStory();
                 }
 
-                // Mark top story and its matches
-                if (topStoryGroup && topStoryGroup.length > 0) {
-                    // Sort by score to get the primary top story
-                    topStoryGroup.sort((a, b) => b.score.normalized - a.score.normalized);
-                    topStoryGroup[0].isTopStory = true;
-
-                    // Phase 4: Cascading image download for top story
-                    updateScanStatus('scanning', 'Downloading image for top story...');
-                    await downloadImageWithFallback(topStoryGroup[0], topStoryGroup);
-                }
-
-                // Add all stories to queue
-                scannerQueue = allStories;
-
+                hideScanningOverlay();
                 updateScanStatus('ready', 'Scan complete');
-                document.getElementById('lastScanTime').textContent = formatTime(new Date());
 
             } catch (error) {
                 console.error('Scan error:', error);
+                hideScanningOverlay();
                 updateScanStatus('error', 'Scan failed');
             } finally {
                 isScanning = false;
                 document.getElementById('scanBtn').disabled = false;
-                renderTable();
-                updateStats();
             }
         }
 
@@ -1227,7 +1062,7 @@
                 let score = 0;
                 for (const keyword of keywords) {
                     if (titleLower.includes(keyword)) {
-                        score += keyword.length; // Longer matches are more significant
+                        score += keyword.length;
                     }
                 }
                 if (score > bestScore) {
@@ -1239,78 +1074,152 @@
             return bestMatch || 'general';
         }
 
-        function groupMatchingStories(stories) {
-            const groups = {};
-
-            for (const story of stories) {
-                const cluster = story.storyCluster;
-                if (!groups[cluster]) {
-                    groups[cluster] = [];
-                }
-                groups[cluster].push(story);
-            }
-
-            return groups;
+        function findMatchingStories(targetStory) {
+            // Find other stories covering the same story cluster
+            return allCollectedStories.filter(story =>
+                story.id !== targetStory.id &&
+                story.storyCluster === targetStory.storyCluster
+            );
         }
 
-        async function downloadImageWithFallback(topStory, matchingStories) {
-            // Sort matching stories by score for fallback order
-            const sortedStories = [...matchingStories].sort((a, b) => b.score.normalized - a.score.normalized);
+        async function downloadImageWithCascade(story) {
+            // Step 1: Try to download from the primary source
+            if (story.imageUrl) {
+                updateScanningOverlay('Acquiring article image...', `Downloading from ${story.sourceName}`);
 
-            for (const story of sortedStories) {
-                if (!story.imageUrl) {
-                    topStory.imageDownloadLog.push({
+                const primaryResult = await downloadAndVerifyImage(story.imageUrl, story.source);
+
+                if (primaryResult.success && primaryResult.verified) {
+                    story.downloadedImage = primaryResult.localPath;
+                    story.imageStatus = 'success';
+                    story.imageSource = story.sourceName;
+                    story.imageDownloadLog.push({
                         source: story.sourceName,
+                        status: 'success',
+                        message: `Downloaded ${primaryResult.size} bytes`,
+                        path: primaryResult.localPath
+                    });
+                    console.log(`Image verified from primary source ${story.sourceName}: ${primaryResult.localPath}`);
+                    return true;
+                } else {
+                    story.imageDownloadLog.push({
+                        source: story.sourceName,
+                        status: 'failed',
+                        message: primaryResult.error || 'Download failed'
+                    });
+                }
+            } else {
+                story.imageDownloadLog.push({
+                    source: story.sourceName,
+                    status: 'skipped',
+                    message: 'No image URL available'
+                });
+            }
+
+            // Step 2: Try matching stories from other sources
+            const matchingStories = findMatchingStories(story);
+
+            for (const matchStory of matchingStories) {
+                if (!matchStory.imageUrl) {
+                    story.imageDownloadLog.push({
+                        source: matchStory.sourceName,
                         status: 'skipped',
                         message: 'No image URL available'
                     });
                     continue;
                 }
 
-                updateScanStatus('scanning', `Trying image from ${story.sourceName}...`);
+                updateScanningOverlay('Acquiring article image...', `Trying fallback: ${matchStory.sourceName}`);
 
-                try {
-                    const result = await downloadAndVerifyImage(story.imageUrl, story.source);
+                const fallbackResult = await downloadAndVerifyImage(matchStory.imageUrl, matchStory.source);
 
-                    if (result.success && result.verified) {
-                        // Image successfully downloaded and verified
-                        topStory.downloadedImage = result.localPath;
-                        topStory.imageStatus = 'success';
-                        topStory.imageSource = story.sourceName;
-                        topStory.imageDownloadLog.push({
-                            source: story.sourceName,
-                            status: 'success',
-                            message: `Downloaded ${result.size} bytes`,
-                            path: result.localPath
-                        });
-
-                        // Also update the source story if different
-                        if (story.id !== topStory.id) {
-                            story.downloadedImage = result.localPath;
-                            story.imageStatus = 'success';
-                        }
-
-                        console.log(`Image verified from ${story.sourceName}: ${result.localPath}`);
-                        return true;
-                    } else {
-                        topStory.imageDownloadLog.push({
-                            source: story.sourceName,
-                            status: 'failed',
-                            message: result.error || 'Verification failed'
-                        });
-                    }
-                } catch (error) {
-                    topStory.imageDownloadLog.push({
-                        source: story.sourceName,
+                if (fallbackResult.success && fallbackResult.verified) {
+                    story.downloadedImage = fallbackResult.localPath;
+                    story.imageStatus = 'success';
+                    story.imageSource = matchStory.sourceName + ' (fallback)';
+                    story.imageDownloadLog.push({
+                        source: matchStory.sourceName,
+                        status: 'success',
+                        message: `Downloaded ${fallbackResult.size} bytes (fallback)`,
+                        path: fallbackResult.localPath
+                    });
+                    console.log(`Image verified from fallback source ${matchStory.sourceName}: ${fallbackResult.localPath}`);
+                    return true;
+                } else {
+                    story.imageDownloadLog.push({
+                        source: matchStory.sourceName,
                         status: 'failed',
-                        message: error.message
+                        message: fallbackResult.error || 'Download failed'
                     });
                 }
             }
 
-            // All sources failed
-            topStory.imageStatus = 'failed';
-            console.warn('Failed to download image from all sources');
+            // Step 3: Try all remaining sources not yet tried
+            const triedSources = new Set([story.source, ...matchingStories.map(s => s.source)]);
+            const remainingSources = allCollectedStories.filter(s => !triedSources.has(s.source));
+
+            for (const remainingStory of remainingSources) {
+                if (!remainingStory.imageUrl) {
+                    story.imageDownloadLog.push({
+                        source: remainingStory.sourceName,
+                        status: 'skipped',
+                        message: 'No image URL available'
+                    });
+                    continue;
+                }
+
+                updateScanningOverlay('Acquiring article image...', `Trying additional source: ${remainingStory.sourceName}`);
+
+                const result = await downloadAndVerifyImage(remainingStory.imageUrl, remainingStory.source);
+
+                if (result.success && result.verified) {
+                    story.downloadedImage = result.localPath;
+                    story.imageStatus = 'success';
+                    story.imageSource = remainingStory.sourceName + ' (alternate)';
+                    story.imageDownloadLog.push({
+                        source: remainingStory.sourceName,
+                        status: 'success',
+                        message: `Downloaded ${result.size} bytes (alternate)`,
+                        path: result.localPath
+                    });
+                    return true;
+                } else {
+                    story.imageDownloadLog.push({
+                        source: remainingStory.sourceName,
+                        status: 'failed',
+                        message: result.error || 'Download failed'
+                    });
+                }
+            }
+
+            // Step 4: Google Image search fallback
+            updateScanningOverlay('Acquiring article image...', 'Searching Google Images as final fallback');
+
+            const googleResult = await searchGoogleImage(story.originalTitle, story.source);
+
+            if (googleResult.success && googleResult.verified) {
+                story.downloadedImage = googleResult.localPath;
+                story.imageStatus = 'success';
+                story.imageSource = 'Google Images';
+                story.imageDownloadLog.push({
+                    source: 'Google Images',
+                    status: 'success',
+                    message: `Downloaded ${googleResult.size} bytes`,
+                    path: googleResult.localPath
+                });
+                console.log(`Image verified from Google Images: ${googleResult.localPath}`);
+                return true;
+            } else {
+                story.imageDownloadLog.push({
+                    source: 'Google Images',
+                    status: 'failed',
+                    message: googleResult.error || 'Search/download failed'
+                });
+            }
+
+            // All attempts failed
+            story.imageStatus = 'failed';
+            console.warn('Failed to acquire image from any source including Google');
             return false;
         }
 
@@ -1318,7 +1227,6 @@
             const filename = `${sourceId}_${Date.now()}`;
 
             try {
-                // Call server endpoint to download the image
                 const response = await fetch('/api/scanner/download-image', {
                     method: 'POST',
                     headers: {
@@ -1336,7 +1244,7 @@
                     return { success: false, error: result.message || 'Download failed' };
                 }
 
-                // Verify the image was actually saved by checking it exists
+                // Verify the image was actually saved
                 const verifyResponse = await fetch(result.localPath, { method: 'HEAD' });
 
                 if (verifyResponse.ok) {
@@ -1347,7 +1255,7 @@
                         size: result.size
                     };
                 } else {
-                    return { success: false, error: 'Image verification failed - file not accessible' };
+                    return { success: false, error: 'Verification failed - file not accessible' };
                 }
 
             } catch (error) {
@@ -1355,9 +1263,36 @@
             }
         }
 
+        async function searchGoogleImage(headline, sourceId) {
+            // Build a search query from the headline
+            const searchQuery = headline
+                .replace(/[^\w\s]/g, '')
+                .split(' ')
+                .slice(0, 6)
+                .join(' ');
+
+            // Curated stock images as Google fallback simulation
+            // In production, this would use Google Custom Search API
+            const stockImages = [
+                'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&h=450&fit=crop', // News desk
+                'https://images.unsplash.com/photo-1495020689067-958852a7765e?w=800&h=450&fit=crop', // Newspaper
+                'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&h=450&fit=crop', // World map
+                'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=450&fit=crop', // Business meeting
+                'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&h=450&fit=crop'  // Globe
+            ];
+
+            const randomImage = stockImages[Math.floor(Math.random() * stockImages.length)];
+
+            try {
+                const result = await downloadAndVerifyImage(randomImage, `google_${sourceId}`);
+                return result;
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
         async function fetchTopStory(source) {
-            // Simulated top stories from each source with image URLs
-            // In production, this would fetch actual RSS feeds or scrape headlines
+            // Simulated top stories - in production, fetch actual RSS/scrape
             const simulatedStories = {
                 'yahoo': {
                     originalTitle: 'Markets React to Federal Reserve Policy Announcement on Interest Rates',
@@ -1442,42 +1377,64 @@
         }
 
         async function rewriteAsGoodNews(story) {
+            // Sentiment transformation happens AFTER selection
+            // This transforms ANY story (positive, negative, or tragic) into hopeful perspective
             const transformations = {
                 'economy': {
                     title: 'Opportunities Emerge as Markets Adapt to New Economic Landscape',
                     content: `<p>In times of economic change, we are reminded that God's provision remains constant. While markets fluctuate, our faith provides a stable foundation that transcends financial uncertainty.</p>
                     <p>Financial experts encourage a long-term perspective, reminding us that economies have historically shown remarkable resilience. This is a time to focus on what truly matters: faith, family, and community.</p>
-                    <p>"Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God." - Philippians 4:6</p>`
+                    <blockquote>"Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God." — Philippians 4:6</blockquote>
+                    <p>Communities across the nation are coming together to support one another, demonstrating the enduring strength of human connection and mutual aid during challenging times.</p>`
                 },
                 'climate': {
                     title: 'World Leaders Unite in Hopeful Collaboration for Environmental Stewardship',
                     content: `<p>Leaders from around the globe are coming together with renewed commitment to caring for God's creation. This gathering represents an encouraging step toward collaborative stewardship of our planet.</p>
-                    <p>As people of faith, we recognize our calling to be good stewards of the earth. "The earth is the LORD's, and everything in it" (Psalm 24:1).</p>
-                    <p>The summit highlights how communities worldwide are finding innovative, hopeful solutions for future generations.</p>`
+                    <p>As people of faith, we recognize our calling to be good stewards of the earth. The discussions happening today highlight how communities worldwide are finding innovative, hopeful solutions for future generations.</p>
+                    <blockquote>"The earth is the LORD's, and everything in it." — Psalm 24:1</blockquote>
+                    <p>Scientists and faith leaders alike are discovering common ground, working together to protect the environment while honoring our responsibility to care for creation.</p>`
                 },
                 'politics': {
                     title: 'A Call for Unity: Citizens Across the Nation Choose Hope Over Division',
                     content: `<p>While headlines often focus on political disagreements, a deeper story is emerging: ordinary Americans are finding common ground in their shared values and commitment to community.</p>
-                    <p>"If it is possible, as far as it depends on you, live at peace with everyone." - Romans 12:18</p>
-                    <p>Faith communities are playing a vital role in bridge-building, reminding us that we are called to love our neighbors.</p>`
+                    <p>Faith communities are playing a vital role in bridge-building, reminding us that we are called to love our neighbors regardless of political affiliation.</p>
+                    <blockquote>"If it is possible, as far as it depends on you, live at peace with everyone." — Romans 12:18</blockquote>
+                    <p>Across the country, people are choosing to focus on what unites rather than divides, creating spaces for respectful dialogue and mutual understanding.</p>`
                 },
                 'technology': {
                     title: 'New Beginnings: How Communities Support Those in Career Transitions',
                     content: `<p>When companies restructure, it can feel unsettling. Yet countless stories remind us that these transitions often lead to unexpected blessings and new opportunities.</p>
-                    <p>"For I know the plans I have for you," declares the LORD, "plans to prosper you and not to harm you, plans to give you hope and a future." - Jeremiah 29:11</p>
-                    <p>Communities are rallying to support affected workers with job fairs, retraining programs, and networking opportunities.</p>`
+                    <p>Communities are rallying to support affected workers with job fairs, retraining programs, and networking opportunities. Churches and community organizations are opening their doors to offer both practical help and spiritual encouragement.</p>
+                    <blockquote>"For I know the plans I have for you," declares the LORD, "plans to prosper you and not to harm you, plans to give you hope and a future." — Jeremiah 29:11</blockquote>
+                    <p>Many who have experienced career transitions share stories of discovering new passions, stronger relationships, and deeper faith through the journey.</p>`
                 },
                 'world': {
                     title: 'International Community Comes Together in Spirit of Cooperation',
                     content: `<p>Nations around the world are finding common ground on critical issues, demonstrating that cooperation can overcome seemingly insurmountable challenges.</p>
-                    <p>"Blessed are the peacemakers, for they will be called children of God." - Matthew 5:9</p>
-                    <p>This spirit of collaboration offers hope for addressing global challenges through unified action.</p>`
+                    <p>Humanitarian organizations report that despite conflicts, countless acts of kindness and bravery occur daily as ordinary people help their neighbors.</p>
+                    <blockquote>"Blessed are the peacemakers, for they will be called children of God." — Matthew 5:9</blockquote>
+                    <p>This spirit of collaboration offers hope for addressing global challenges through unified action, reminding us that peace is always possible when hearts are open.</p>`
+                },
+                'health': {
+                    title: 'Medical Advances Bring Hope as Communities Rally for Wellness',
+                    content: `<p>Healthcare professionals and researchers continue to make remarkable strides, bringing hope to patients and families facing health challenges.</p>
+                    <p>Communities are coming together to support wellness initiatives, demonstrating the power of collective care and compassion.</p>
+                    <blockquote>"He heals the brokenhearted and binds up their wounds." — Psalm 147:3</blockquote>
+                    <p>Stories of recovery, resilience, and medical breakthroughs remind us that healing takes many forms and hope endures even in difficult circumstances.</p>`
+                },
+                'crime': {
+                    title: 'Communities United: Finding Strength and Healing Together',
+                    content: `<p>In the face of tragedy, communities demonstrate remarkable resilience and compassion. Neighbors are coming together to support one another, showing that love is stronger than fear.</p>
+                    <p>Faith communities are opening their doors to provide comfort, counseling, and hope to those affected by violence and loss.</p>
+                    <blockquote>"The LORD is close to the brokenhearted and saves those who are crushed in spirit." — Psalm 34:18</blockquote>
+                    <p>Across the nation, people are choosing to respond to darkness with light, finding ways to honor victims through acts of kindness and renewed commitment to building safer, more caring communities.</p>`
                 },
                 'general': {
                     title: 'Finding Hope and Purpose in Today\'s Headlines',
                     content: `<p>In every news cycle, there are stories of resilience, compassion, and human connection that remind us of the good in the world.</p>
-                    <p>"And we know that in all things God works for the good of those who love him." - Romans 8:28</p>
-                    <p>As we navigate today's challenges, we can find peace knowing that hope endures.</p>`
+                    <p>Today's events, whatever their nature, offer opportunities for reflection, growth, and renewed commitment to our values.</p>
+                    <blockquote>"And we know that in all things God works for the good of those who love him." — Romans 8:28</blockquote>
+                    <p>As we navigate today's challenges, we can find peace knowing that hope endures and that every difficulty carries within it the seeds of positive change.</p>`
                 }
             };
 
@@ -1489,132 +1446,101 @@
         // UI RENDERING
         // ============================================
 
-        function renderTable() {
-            const tableBody = document.getElementById('tableBody');
+        function renderTopStory() {
             const emptyState = document.getElementById('emptyState');
-            const table = document.getElementById('scannerTable');
+            const container = document.getElementById('topStoryContainer');
+            const card = document.getElementById('topStoryCard');
 
-            // Apply filters
-            const sourceFilter = document.getElementById('sourceFilter').value;
-            const statusFilter = document.getElementById('statusFilter').value;
-
-            let filteredQueue = scannerQueue.filter(item => {
-                if (sourceFilter !== 'all' && item.source !== sourceFilter) return false;
-                if (statusFilter !== 'all' && item.status !== statusFilter) return false;
-                return true;
-            });
-
-            if (filteredQueue.length === 0) {
+            if (!topStory) {
                 emptyState.style.display = 'flex';
-                table.style.display = 'none';
+                container.style.display = 'none';
                 return;
             }
 
             emptyState.style.display = 'none';
-            table.style.display = 'table';
+            container.style.display = 'flex';
 
-            // Sort: top story first, then by score
-            filteredQueue.sort((a, b) => {
-                if (a.isTopStory && !b.isTopStory) return -1;
-                if (!a.isTopStory && b.isTopStory) return 1;
-                return b.score.normalized - a.score.normalized;
-            });
+            const imageHtml = topStory.downloadedImage
+                ? `<img src="${topStory.downloadedImage}" alt="Article image">`
+                : `<div class="top-story-image-placeholder">
+                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                           <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                           <circle cx="8.5" cy="8.5" r="1.5"/>
+                           <polyline points="21 15 16 10 5 21"/>
+                       </svg>
+                       <span>Image unavailable</span>
+                   </div>`;
 
-            tableBody.innerHTML = filteredQueue.map(item => `
-                <tr class="${item.id === selectedItemId ? 'selected' : ''} ${item.isTopStory ? 'top-story' : ''}"
-                    onclick="selectItem('${item.id}')">
-                    <td>
-                        <span class="source-badge ${item.source}">${item.sourceName}</span>
-                        ${item.isTopStory ? `
-                            <span class="top-story-badge">
-                                <svg viewBox="0 0 24 24" fill="currentColor">
-                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                                </svg>
-                                TOP
-                            </span>
-                        ` : ''}
-                    </td>
-                    <td>
-                        <div class="original-headline">${item.originalTitle}</div>
-                        <div class="original-url">
-                            <a href="${item.originalUrl}" target="_blank" onclick="event.stopPropagation()">
-                                ${truncateUrl(item.originalUrl)}
-                            </a>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="score-badge ${getScoreClass(item.score.normalized)}">${item.score.normalized}</div>
-                        <div class="score-label">Prominence</div>
-                    </td>
-                    <td>
-                        <div class="rewritten-headline">${item.rewrittenTitle}</div>
-                        <div class="rewritten-preview">${stripHtml(item.rewrittenContent).substring(0, 80)}...</div>
-                    </td>
-                    <td>
-                        ${renderImageStatus(item)}
-                    </td>
-                    <td>
-                        <div class="timestamp-relative">${formatRelativeTime(item.timestamp)}</div>
-                        <div class="timestamp">${formatTime(new Date(item.timestamp))}</div>
-                    </td>
-                    <td>
-                        <div class="row-actions">
-                            <button class="action-btn approve" onclick="event.stopPropagation(); approveItemById('${item.id}')" title="Approve">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20 6L9 17l-5-5"/>
-                                </svg>
-                            </button>
-                            <button class="action-btn reject" onclick="event.stopPropagation(); rejectItemById('${item.id}')" title="Reject">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M18 6L6 18M6 6l12 12"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
+            const imageStatusHtml = topStory.imageStatus === 'success'
+                ? `<div class="image-status-indicator success">
+                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <path d="M20 6L9 17l-5-5"/>
+                       </svg>
+                       Image verified
+                   </div>`
+                : topStory.imageStatus === 'pending'
+                ? `<div class="image-status-indicator pending">
+                       <div class="loading-spinner small"></div>
+                       Loading...
+                   </div>`
+                : `<div class="image-status-indicator failed">
+                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                           <path d="M18 6L6 18M6 6l12 12"/>
+                       </svg>
+                       No image
+                   </div>`;
 
-        function renderImageStatus(item) {
-            if (item.downloadedImage) {
-                return `
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <img class="image-thumb" src="${item.downloadedImage}" alt="Thumbnail" onerror="this.style.display='none'">
-                        <span class="image-status success">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 6L9 17l-5-5"/>
-                            </svg>
-                        </span>
-                    </div>
-                `;
-            } else if (item.imageStatus === 'pending') {
-                return `
-                    <span class="image-status pending">
-                        <div class="loading-spinner small"></div>
-                        Pending
-                    </span>
-                `;
-            } else {
-                return `
-                    <span class="image-status failed">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 6L6 18M6 6l12 12"/>
+            const excerptText = stripHtml(topStory.rewrittenContent).substring(0, 200) + '...';
+
+            card.innerHTML = `
+                <div class="top-story-image">
+                    ${imageHtml}
+                    <div class="top-story-badge">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                         </svg>
-                        Failed
-                    </span>
-                `;
-            }
+                        Top Story
+                    </div>
+                    <div class="source-badge-overlay ${topStory.source}">${topStory.sourceName}</div>
+                    ${imageStatusHtml}
+                </div>
+                <div class="top-story-content">
+                    <h2 class="top-story-title">${topStory.rewrittenTitle}</h2>
+                    <p class="top-story-excerpt">${excerptText}</p>
+                    <div class="top-story-meta">
+                        <div class="top-story-score">
+                            <div class="score-circle">${topStory.score.normalized}</div>
+                            <div>
+                                <div style="font-weight: 600; font-size: 14px;">Prominence Score</div>
+                                <div class="score-label">Based on position, source, & relevance</div>
+                            </div>
+                        </div>
+                        <div class="top-story-cta">
+                            Read Full Article
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        function renderPanel(item) {
+        function openArticleDetail() {
+            if (!topStory) return;
+            renderPanel();
+            openPanel();
+        }
+
+        function renderPanel() {
             const panelBody = document.getElementById('panelBody');
 
-            const imageHtml = item.downloadedImage
-                ? `<div class="panel-image-container">
-                       <img class="panel-image" src="${item.downloadedImage}" alt="Article image">
+            const imageHtml = topStory.downloadedImage
+                ? `<div class="panel-hero-image">
+                       <img src="${topStory.downloadedImage}" alt="Article image">
                    </div>`
-                : `<div class="panel-image-container">
-                       <div class="panel-image-placeholder">
+                : `<div class="panel-hero-image">
+                       <div class="panel-hero-placeholder">
                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                                <circle cx="8.5" cy="8.5" r="1.5"/>
@@ -1624,12 +1550,12 @@
                        </div>
                    </div>`;
 
-            const downloadLogHtml = item.imageDownloadLog && item.imageDownloadLog.length > 0
+            const downloadLogHtml = topStory.imageDownloadLog && topStory.imageDownloadLog.length > 0
                 ? `<div class="panel-section">
-                       <h3 class="panel-section-title">Image Download Log</h3>
-                       <div class="image-download-log">
-                           ${item.imageDownloadLog.map(log => `
-                               <div class="download-attempt ${log.status}">
+                       <h3 class="panel-section-title">Image Acquisition Log</h3>
+                       <div class="download-log">
+                           ${topStory.imageDownloadLog.map(log => `
+                               <div class="download-log-item ${log.status} ${log.source === 'Google Images' ? 'google' : ''}">
                                    <strong>${log.source}:</strong>
                                    <span>${log.message}</span>
                                </div>
@@ -1641,74 +1567,27 @@
             panelBody.innerHTML = `
                 ${imageHtml}
 
-                <div class="panel-section">
-                    <h3 class="panel-section-title">Good News Rewrite</h3>
-                    <h1 class="panel-rewritten-title">${item.rewrittenTitle}</h1>
-                    <div class="panel-article-content">
-                        ${item.rewrittenContent}
+                <div class="panel-article">
+                    <div class="panel-article-header">
+                        <div class="panel-article-source ${topStory.source}">${topStory.sourceName}</div>
+                        <h1 class="panel-article-title">${topStory.rewrittenTitle}</h1>
+                        <div class="panel-article-meta">
+                            <span>Prominence: ${topStory.score.normalized}%</span>
+                            <span>Category: ${topStory.storyCluster || 'General'}</span>
+                            <span>${formatRelativeTime(topStory.timestamp)}</span>
+                        </div>
+                    </div>
+
+                    <div class="panel-article-body">
+                        ${topStory.rewrittenContent}
                     </div>
                 </div>
 
                 <div class="panel-section">
-                    <h3 class="panel-section-title">Source Information</h3>
-                    <div class="panel-meta-grid">
-                        <div class="panel-meta-item">
-                            <div class="panel-meta-label">Source</div>
-                            <div class="panel-meta-value">
-                                <span class="source-badge ${item.source}">${item.sourceName}</span>
-                            </div>
-                        </div>
-                        <div class="panel-meta-item">
-                            <div class="panel-meta-label">Story Cluster</div>
-                            <div class="panel-meta-value" style="text-transform: capitalize;">${item.storyCluster || 'General'}</div>
-                        </div>
-                        <div class="panel-meta-item">
-                            <div class="panel-meta-label">Status</div>
-                            <div class="panel-meta-value" style="text-transform: capitalize; color: ${getStatusColor(item.status)}">${item.status}</div>
-                        </div>
-                        <div class="panel-meta-item">
-                            <div class="panel-meta-label">Prominence Score</div>
-                            <div class="panel-meta-value">
-                                <span class="score-badge ${getScoreClass(item.score.normalized)}" style="width: 32px; height: 32px; font-size: 14px;">${item.score.normalized}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel-original-link">
-                        <div class="panel-meta-label">Original Article</div>
-                        <div style="margin-top: 4px;">
-                            <strong style="font-size: 13px; color: var(--text-secondary);">${item.originalTitle}</strong>
-                        </div>
-                        <a href="${item.originalUrl}" target="_blank">${item.originalUrl}</a>
-                    </div>
-                </div>
-
-                <div class="panel-section">
-                    <h3 class="panel-section-title">Scoring Details</h3>
-                    <div class="scoring-details">
-                        <div class="scoring-row">
-                            <span class="scoring-label">Page Position</span>
-                            <span class="scoring-value">${item.score.position} pts</span>
-                        </div>
-                        <div class="scoring-row">
-                            <span class="scoring-label">Featured Image</span>
-                            <span class="scoring-value">${item.score.hasImage} pts</span>
-                        </div>
-                        <div class="scoring-row">
-                            <span class="scoring-label">Title Quality</span>
-                            <span class="scoring-value">${item.score.titleLength} pts</span>
-                        </div>
-                        <div class="scoring-row">
-                            <span class="scoring-label">Source Weight</span>
-                            <span class="scoring-value">${item.score.sourceWeight} pts</span>
-                        </div>
-                        <div class="scoring-row">
-                            <span class="scoring-label">Recency</span>
-                            <span class="scoring-value">${item.score.recency} pts</span>
-                        </div>
-                        <div class="scoring-row">
-                            <span class="scoring-label">Total Score</span>
-                            <span class="scoring-value" style="color: var(--accent-gold);">${item.score.total} / 30 (${item.score.normalized}%)</span>
-                        </div>
+                    <h3 class="panel-section-title">Original Source</h3>
+                    <div class="panel-original-story">
+                        <div class="panel-original-title">${topStory.originalTitle}</div>
+                        <a href="${topStory.originalUrl}" target="_blank" class="panel-original-link">${topStory.originalUrl}</a>
                     </div>
                 </div>
 
@@ -1720,17 +1599,6 @@
         // PANEL MANAGEMENT
         // ============================================
 
-        function selectItem(id) {
-            selectedItemId = id;
-            const item = scannerQueue.find(i => i.id == id);
-
-            if (item) {
-                renderPanel(item);
-                openPanel();
-                renderTable();
-            }
-        }
-
         function openPanel() {
             document.getElementById('slidePanel').classList.add('open');
             document.getElementById('panelOverlay').classList.add('visible');
@@ -1741,69 +1609,36 @@
             document.getElementById('slidePanel').classList.remove('open');
             document.getElementById('panelOverlay').classList.remove('visible');
             document.getElementById('scannerContent').classList.remove('panel-open');
-            selectedItemId = null;
-            renderTable();
         }
 
         // ============================================
         // ACTIONS
         // ============================================
 
-        function approveItem() {
-            if (selectedItemId) {
-                approveItemById(selectedItemId);
-            }
+        function approveStory() {
+            if (!topStory) return;
+
+            topStory.status = 'approved';
+            showNotification('Article approved and published!', 'success');
+            console.log('Approved and publishing:', topStory.rewrittenTitle);
+            closePanel();
         }
 
-        function rejectItem() {
-            if (selectedItemId) {
-                rejectItemById(selectedItemId);
-            }
+        function rejectStory() {
+            if (!topStory) return;
+
+            topStory.status = 'rejected';
+            showNotification('Article rejected.', 'info');
+            closePanel();
         }
 
-        function approveItemById(id) {
-            const item = scannerQueue.find(i => i.id == id);
-            if (item) {
-                item.status = 'approved';
-                updateStats();
-                renderTable();
-
-                if (selectedItemId == id) {
-                    renderPanel(item);
-                }
-
-                showNotification('Article approved and published!', 'success');
-                console.log('Approved and publishing:', item.rewrittenTitle);
-            }
-        }
-
-        function rejectItemById(id) {
-            const item = scannerQueue.find(i => i.id == id);
-            if (item) {
-                item.status = 'rejected';
-                updateStats();
-                renderTable();
-
-                if (selectedItemId == id) {
-                    renderPanel(item);
-                }
-
-                showNotification('Article rejected.', 'info');
-            }
-        }
-
-        function clearQueue() {
-            if (confirm('Are you sure you want to clear the scanner queue?')) {
-                scannerQueue = [];
-                selectedItemId = null;
+        function clearTopStory() {
+            if (topStory && confirm('Are you sure you want to clear the current story?')) {
+                topStory = null;
+                allCollectedStories = [];
                 closePanel();
-                renderTable();
-                updateStats();
+                renderTopStory();
             }
-        }
-
-        function filterResults() {
-            renderTable();
         }
 
         function showNotification(message, type = 'info') {
@@ -1834,6 +1669,26 @@
         }
 
         // ============================================
+        // SCANNING OVERLAY
+        // ============================================
+
+        function showScanningOverlay(text, subtext) {
+            const overlay = document.getElementById('scanningOverlay');
+            document.getElementById('scanningText').textContent = text;
+            document.getElementById('scanningSubtext').textContent = subtext;
+            overlay.classList.add('active');
+        }
+
+        function updateScanningOverlay(text, subtext) {
+            document.getElementById('scanningText').textContent = text;
+            document.getElementById('scanningSubtext').textContent = subtext;
+        }
+
+        function hideScanningOverlay() {
+            document.getElementById('scanningOverlay').classList.remove('active');
+        }
+
+        // ============================================
         // UTILITY FUNCTIONS
         // ============================================
 
@@ -1854,61 +1709,10 @@
             statusText.textContent = text;
         }
 
-        function updateStats() {
-            document.getElementById('queueCount').textContent = scannerQueue.filter(i => i.status === 'pending').length;
-            document.getElementById('approvedCount').textContent = scannerQueue.filter(i => i.status === 'approved').length;
-        }
-
-        function getScoreClass(score) {
-            if (score >= 70) return 'high';
-            if (score >= 40) return 'medium';
-            return 'low';
-        }
-
-        function getStatusColor(status) {
-            const colors = {
-                'pending': 'var(--accent-orange)',
-                'approved': 'var(--accent-green)',
-                'rejected': 'var(--accent-red)'
-            };
-            return colors[status] || 'var(--text-secondary)';
-        }
-
-        function truncateUrl(url) {
-            try {
-                const parsed = new URL(url);
-                const path = parsed.pathname.length > 30
-                    ? parsed.pathname.substring(0, 30) + '...'
-                    : parsed.pathname;
-                return parsed.hostname + path;
-            } catch {
-                return url.substring(0, 50) + '...';
-            }
-        }
-
         function stripHtml(html) {
             const tmp = document.createElement('div');
             tmp.innerHTML = html;
             return tmp.textContent || tmp.innerText || '';
-        }
-
-        function formatTime(date) {
-            return date.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-            });
-        }
-
-        function formatDateTime(isoString) {
-            const date = new Date(isoString);
-            return date.toLocaleString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-            });
         }
 
         function formatRelativeTime(isoString) {
@@ -1951,8 +1755,7 @@
         // ============================================
 
         document.addEventListener('DOMContentLoaded', () => {
-            renderTable();
-            updateStats();
+            renderTopStory();
         });
     </script>
 </body>
