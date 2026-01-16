@@ -31,6 +31,7 @@ public partial class MainWindow : Window
     private readonly SyncEngine _syncEngine;
     private readonly CredentialManager _credentialManager;
     private readonly InternalPageHandler _internalPageHandler;
+    private readonly ThemeManager _themeManager;
     private OpenAIChatService? _openAIChatService;
     private SpiritualNutritionService? _spiritualNutritionService;
     private string _apiBaseUrl = "https://inspirecodex.com";
@@ -169,6 +170,11 @@ public partial class MainWindow : Window
         _syncEngine = new SyncEngine(_profileAuthService);
         _credentialManager = new CredentialManager(_syncEngine);
         _internalPageHandler = new InternalPageHandler();
+
+        // Initialize theme manager
+        _themeManager = new ThemeManager();
+        _themeManager.Initialize();
+        _themeManager.ThemeChanged += OnThemeChanged;
 
         // Defer OpenAI service initialization to background (involves file I/O for .env)
         Task.Run(InitializeOpenAIChatService);
@@ -412,6 +418,9 @@ public partial class MainWindow : Window
             // Wait only for settings (fast, needed for homepage URL)
             await settingsTask;
 
+            // Apply the saved theme immediately
+            ApplySavedTheme();
+
             // Get session state to restore window position quickly
             var sessionState = await sessionTask;
 
@@ -421,43 +430,53 @@ public partial class MainWindow : Window
                 RestoreWindowState(sessionState);
             }
 
-            // Apply settings - use startup mode if specified, otherwise use settings default
+            // Apply settings - use startup mode if specified, otherwise use DefaultMode setting
             var settings = _settingsManager.Settings;
             if (_startupMode.HasValue)
             {
                 _currentMode = _startupMode.Value;
             }
-            else if (sessionState != null)
-            {
-                _currentMode = sessionState.CurrentMode;
-            }
             else
             {
+                // Always respect the DefaultMode setting ("Start in Jubilee Bibles mode" toggle)
                 _currentMode = settings?.DefaultMode ?? BrowserMode.Internet;
             }
             UpdateModeRadioButtons();
             UpdateModeVisuals();
 
-            // Phase 2: Create the first tab immediately (user sees content fast)
+            // Phase 2: Create the first tab based on startup settings
             if (_startupMode.HasValue)
             {
+                // Command-line mode override - open homepage for that mode
                 await CreateTabAsync(GetHomepage(), _startupMode.Value);
-            }
-            else if (sessionState != null && sessionState.Tabs != null && sessionState.Tabs.Count > 0)
-            {
-                // Restore first tab immediately for fast perceived launch
-                var firstTab = sessionState.Tabs[0];
-                await CreateTabAsync(firstTab.Url, firstTab.Mode);
-
-                // Restore remaining tabs in background
-                if (sessionState.Tabs.Count > 1)
-                {
-                    _ = RestoreRemainingTabsAsync(sessionState);
-                }
             }
             else
             {
-                await CreateTabAsync(GetHomepage());
+                // Check startup behavior setting for current mode
+                var startupBehavior = GetStartupBehavior(_currentMode);
+
+                if (startupBehavior == "continue" && sessionState != null && sessionState.Tabs != null && sessionState.Tabs.Count > 0)
+                {
+                    // "Continue where you left off" - restore session
+                    var firstTab = sessionState.Tabs[0];
+                    await CreateTabAsync(firstTab.Url, firstTab.Mode);
+
+                    // Restore remaining tabs in background
+                    if (sessionState.Tabs.Count > 1)
+                    {
+                        _ = RestoreRemainingTabsAsync(sessionState);
+                    }
+                }
+                else if (startupBehavior == "newtab")
+                {
+                    // "Open new tab page" - open blank/new tab page
+                    await CreateTabAsync(GetNewTabPageUrl(), _currentMode);
+                }
+                else
+                {
+                    // "homepage" (default) - open configured homepage
+                    await CreateTabAsync(GetHomepage());
+                }
             }
 
             _isInitialized = true;
@@ -692,6 +711,12 @@ public partial class MainWindow : Window
 
         // Save zoom settings
         await _zoomSettingsManager.FlushAsync();
+
+        // Clear browsing data on exit if the setting is enabled
+        if (_settingsManager.Settings.Privacy.ClearOnExit)
+        {
+            await ClearBrowsingDataOnExitAsync();
+        }
 
         // Cleanup WebViews
         foreach (var webView in _webViews.Values)
@@ -1127,6 +1152,15 @@ public partial class MainWindow : Window
         settings.IsZoomControlEnabled = true;
         settings.IsBuiltInErrorPageEnabled = true;
 
+        // Apply system settings (spell check)
+        ApplySystemSettings(webView);
+
+        // Apply privacy settings
+        ApplyPrivacySettings(webView);
+
+        // Setup Do Not Track header if enabled
+        SetupDoNotTrackHeader(webView);
+
         // Setup event handlers
         webView.CoreWebView2.NavigationStarting += (s, e) => OnNavigationStarting(tabState.Id, e);
         webView.CoreWebView2.NavigationCompleted += (s, e) => OnNavigationCompleted(tabState.Id, e);
@@ -1134,12 +1168,20 @@ public partial class MainWindow : Window
         webView.CoreWebView2.DocumentTitleChanged += (s, e) => OnDocumentTitleChanged(tabState.Id);
         webView.CoreWebView2.FaviconChanged += async (s, e) => await OnFaviconChangedAsync(tabState.Id);
         webView.CoreWebView2.NewWindowRequested += OnNewWindowRequested;
+        webView.CoreWebView2.PermissionRequested += OnPermissionRequested;
+        webView.CoreWebView2.DownloadStarting += OnDownloadStarting;
+
+        // Apply download settings to the profile
+        ApplyDownloadSettings(webView);
 
         // Setup message bridge for JavaScript communication
         webView.CoreWebView2.WebMessageReceived += (s, e) => OnWebMessageReceived(tabState.Id, e);
 
         // Inject the Jubilee bridge script for all pages
         await webView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(GetJubileeBridgeScript());
+
+        // Apply the current font size setting to this WebView
+        ApplyFontSizeToWebView(webView);
     }
 
     private static string GetJubileeBridgeScript()
@@ -1685,6 +1727,26 @@ public partial class MainWindow : Window
         var tab = Tabs.FirstOrDefault(t => t.Id == tabId);
         if (tab == null) return;
 
+        // Handle internal jubilee:// URLs (including clicks from within settings page)
+        if (e.Uri.StartsWith("jubilee://", StringComparison.OrdinalIgnoreCase))
+        {
+            e.Cancel = true;
+            if (_webViews.TryGetValue(tabId, out var webView) && _internalPageHandler.CanHandle(e.Uri))
+            {
+                var content = _internalPageHandler.GetPageContent(e.Uri);
+                webView.NavigateToString(content);
+
+                // Update tab and address bar
+                tab.Url = e.Uri;
+                tab.Title = GetInternalPageTitle(e.Uri);
+                if (tabId == _activeTabId)
+                {
+                    AddressBar.Text = e.Uri;
+                }
+            }
+            return;
+        }
+
         // Check blacklist
         if (_blacklistManager.IsBlocked(e.Uri, tab.Mode))
         {
@@ -1886,8 +1948,171 @@ public partial class MainWindow : Window
 
     private void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
     {
+        var popupSetting = _settingsManager.Settings.Permissions.Popups;
+
+        if (popupSetting == "block")
+        {
+            // Block the pop-up
+            e.Handled = true;
+            System.Diagnostics.Debug.WriteLine($"Pop-up blocked: {e.Uri}");
+            return;
+        }
+
+        // Allow the pop-up by opening it in a new tab
         e.Handled = true;
         _ = CreateTabAsync(e.Uri);
+    }
+
+    /// <summary>
+    /// Handles permission requests from websites (camera, microphone, location, notifications, etc.)
+    /// </summary>
+    private void OnPermissionRequested(object? sender, CoreWebView2PermissionRequestedEventArgs e)
+    {
+        var permissionSettings = _settingsManager.Settings.Permissions;
+        string settingValue;
+
+        // Map WebView2 permission kinds to our settings
+        switch (e.PermissionKind)
+        {
+            case CoreWebView2PermissionKind.Camera:
+                settingValue = permissionSettings.Camera;
+                break;
+            case CoreWebView2PermissionKind.Microphone:
+                settingValue = permissionSettings.Microphone;
+                break;
+            case CoreWebView2PermissionKind.Geolocation:
+                settingValue = permissionSettings.Location;
+                break;
+            case CoreWebView2PermissionKind.Notifications:
+                settingValue = permissionSettings.Notifications;
+                break;
+            case CoreWebView2PermissionKind.ClipboardRead:
+                // Default to ask for clipboard permissions
+                settingValue = "ask";
+                break;
+            default:
+                // For any other permission types, default to ask
+                settingValue = "ask";
+                break;
+        }
+
+        // Apply the permission decision
+        switch (settingValue.ToLower())
+        {
+            case "allow":
+                e.State = CoreWebView2PermissionState.Allow;
+                System.Diagnostics.Debug.WriteLine($"Permission {e.PermissionKind} allowed for {e.Uri}");
+                break;
+            case "block":
+                e.State = CoreWebView2PermissionState.Deny;
+                System.Diagnostics.Debug.WriteLine($"Permission {e.PermissionKind} denied for {e.Uri}");
+                break;
+            case "ask":
+            default:
+                // Let WebView2 show its default permission prompt
+                e.State = CoreWebView2PermissionState.Default;
+                System.Diagnostics.Debug.WriteLine($"Permission {e.PermissionKind} prompt shown for {e.Uri}");
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Applies download settings to a WebView's profile.
+    /// </summary>
+    private void ApplyDownloadSettings(Microsoft.Web.WebView2.Wpf.WebView2 webView)
+    {
+        if (webView?.CoreWebView2?.Profile == null) return;
+
+        try
+        {
+            var downloadSettings = _settingsManager.Settings.Advanced;
+            var profile = webView.CoreWebView2.Profile;
+
+            // Set the default download folder path
+            profile.DefaultDownloadFolderPath = downloadSettings.DownloadPath;
+
+            System.Diagnostics.Debug.WriteLine($"Download folder set to: {profile.DefaultDownloadFolderPath}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to apply download settings: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Handles download starting events to apply download settings.
+    /// </summary>
+    private void OnDownloadStarting(object? sender, CoreWebView2DownloadStartingEventArgs e)
+    {
+        try
+        {
+            var downloadSettings = _settingsManager.Settings.Advanced;
+
+            if (downloadSettings.AskDownloadLocation)
+            {
+                // Show the save dialog by using a deferral and letting the user choose
+                var deferral = e.GetDeferral();
+
+                Dispatcher.Invoke(() =>
+                {
+                    try
+                    {
+                        var saveDialog = new Microsoft.Win32.SaveFileDialog
+                        {
+                            FileName = System.IO.Path.GetFileName(e.ResultFilePath),
+                            InitialDirectory = downloadSettings.DownloadPath,
+                            Title = "Save Download As"
+                        };
+
+                        // Try to set filter based on file extension
+                        var extension = System.IO.Path.GetExtension(e.ResultFilePath);
+                        if (!string.IsNullOrEmpty(extension))
+                        {
+                            saveDialog.Filter = $"{extension.TrimStart('.').ToUpper()} files (*{extension})|*{extension}|All files (*.*)|*.*";
+                        }
+                        else
+                        {
+                            saveDialog.Filter = "All files (*.*)|*.*";
+                        }
+
+                        if (saveDialog.ShowDialog() == true)
+                        {
+                            e.ResultFilePath = saveDialog.FileName;
+                            e.Handled = true;
+                        }
+                        else
+                        {
+                            // User cancelled - cancel the download
+                            e.Cancel = true;
+                            e.Handled = true;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error in save dialog: {ex.Message}");
+                    }
+                    finally
+                    {
+                        deferral.Complete();
+                    }
+                });
+            }
+            else
+            {
+                // Use default download path without prompting
+                // Ensure file goes to configured download folder
+                var fileName = System.IO.Path.GetFileName(e.ResultFilePath);
+                var targetPath = System.IO.Path.Combine(downloadSettings.DownloadPath, fileName);
+                e.ResultFilePath = targetPath;
+                e.Handled = true;
+
+                System.Diagnostics.Debug.WriteLine($"Download started: {fileName} -> {targetPath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error handling download: {ex.Message}");
+        }
     }
 
     private void UpdateNavigationState(TabState tab)
@@ -3024,6 +3249,33 @@ public partial class MainWindow : Window
         return result;
     }
 
+    /// <summary>
+    /// Gets the startup behavior setting for the specified mode.
+    /// Returns: "homepage", "newtab", or "continue"
+    /// </summary>
+    private string GetStartupBehavior(BrowserMode mode)
+    {
+        var startup = _settingsManager?.Settings?.Startup;
+
+        if (mode == BrowserMode.JubileeBibles)
+        {
+            return startup?.JubileeBibles ?? "homepage";
+        }
+        else
+        {
+            return startup?.Internet ?? "homepage";
+        }
+    }
+
+    /// <summary>
+    /// Gets the URL for the new tab page based on current mode.
+    /// </summary>
+    private string GetNewTabPageUrl()
+    {
+        // Return internal new tab page or about:blank
+        return "jubilee://newtab";
+    }
+
     private string GetUserDataFolder(BrowserMode mode)
     {
         var baseFolder = Path.Combine(
@@ -4071,8 +4323,20 @@ public partial class MainWindow : Window
                 await Dispatcher.InvokeAsync(() => ShowAccountManagementWindowAsync());
                 return null;
 
+            case "auth:signIn":
+                await Dispatcher.InvokeAsync(() => ShowJubileeVerseSignInDialog());
+                return null;
+
             case "auth:signOut":
-                await Dispatcher.InvokeAsync(async () => await _profileAuthService.SignOutAsync());
+                await Dispatcher.InvokeAsync(async () =>
+                {
+                    // Immediately stop sync and sign out
+                    _syncEngine.StopSyncTimer();
+                    await _profileAuthService.SignOutAsync();
+
+                    // Update all UI immediately (WPF + settings page)
+                    UpdateSettingsPageAuthState(false);
+                });
                 return null;
 
             case "privacy:clearData":
@@ -4215,14 +4479,24 @@ public partial class MainWindow : Window
 
                 // Appearance
                 case "appearance.theme":
-                    s.Appearance.Theme = value.GetString() ?? s.Appearance.Theme;
+                    var themeValue = value.GetString() ?? s.Appearance.Theme;
+                    s.Appearance.Theme = themeValue;
+                    // Apply theme immediately to WPF UI
+                    _themeManager.SetTheme(themeValue);
+                    // Broadcast theme to all open WebViews
+                    BroadcastThemeToWebViews(themeValue);
                     break;
                 case "appearance.fontSize":
                     if (int.TryParse(value.GetString(), out var fontSize))
+                    {
                         s.Appearance.FontSize = fontSize;
+                        // Apply font size immediately to all WebViews
+                        ApplyFontSizeToAllWebViews(fontSize);
+                    }
                     break;
                 case "appearance.showBookmarksBar":
                     s.Appearance.ShowBookmarksBar = value.GetBoolean();
+                    SetBookmarksBarVisible(s.Appearance.ShowBookmarksBar);
                     break;
 
                 // Search
@@ -4236,9 +4510,12 @@ public partial class MainWindow : Window
                 // Privacy
                 case "privacy.trackingProtection":
                     s.Privacy.TrackingProtection = value.GetBoolean();
+                    ApplyPrivacySettingsToAllWebViews();
                     break;
                 case "privacy.doNotTrack":
                     s.Privacy.DoNotTrack = value.GetBoolean();
+                    // Note: DNT header changes require browser restart to take effect for existing tabs
+                    // New tabs will use the updated setting
                     break;
                 case "privacy.clearOnExit":
                     s.Privacy.ClearOnExit = value.GetBoolean();
@@ -4255,9 +4532,15 @@ public partial class MainWindow : Window
                 // Advanced
                 case "advanced.hardwareAcceleration":
                     s.Advanced.HardwareAcceleration = value.GetBoolean();
+                    // Note: Hardware acceleration changes require browser restart to take effect
                     break;
                 case "advanced.spellcheck":
                     s.Advanced.Spellcheck = value.GetBoolean();
+                    ApplySystemSettingsToAllWebViews();
+                    break;
+                case "resetSettings":
+                    // Handle reset settings request
+                    _ = ResetSettingsAsync();
                     break;
 
                 // Permissions
@@ -4316,6 +4599,324 @@ public partial class MainWindow : Window
         }
         await _syncEngine.UpdatePreferencesAsync(prefs);
     }
+
+    #region Theme Management
+
+    /// <summary>
+    /// Handles theme changes from the ThemeManager.
+    /// </summary>
+    private void OnThemeChanged(object? sender, ThemeChangedEventArgs e)
+    {
+        // Theme has been applied to WPF resources by ThemeManager
+        // Broadcast the change to all WebViews so they can update their CSS
+        Dispatcher.Invoke(() =>
+        {
+            BroadcastThemeToWebViews(e.Theme);
+        });
+    }
+
+    /// <summary>
+    /// Broadcasts theme changes to all open WebView2 instances.
+    /// </summary>
+    private void BroadcastThemeToWebViews(string theme)
+    {
+        foreach (var webView in _webViews.Values)
+        {
+            if (webView?.CoreWebView2 != null)
+            {
+                try
+                {
+                    var currentUrl = webView.CoreWebView2.Source;
+                    // Only apply to internal pages (settings, etc.)
+                    if (currentUrl?.StartsWith("jubilee://") == true)
+                    {
+                        var script = $"if (typeof window.setTheme === 'function') {{ window.setTheme('{theme}'); }}";
+                        _ = webView.CoreWebView2.ExecuteScriptAsync(script);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to broadcast theme to WebView: {ex.Message}");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Applies the saved theme and appearance settings on startup.
+    /// </summary>
+    private void ApplySavedTheme()
+    {
+        var appearance = _settingsManager.Settings?.Appearance;
+
+        // Apply theme
+        var theme = appearance?.Theme ?? "dark";
+        _themeManager.SetTheme(theme);
+
+        // Apply bookmarks bar visibility
+        var showBookmarksBar = appearance?.ShowBookmarksBar ?? false;
+        SetBookmarksBarVisible(showBookmarksBar);
+
+        // Font size will be applied when WebViews are created
+        // Store it for later use
+        _currentFontSize = appearance?.FontSize ?? 16;
+    }
+
+    private int _currentFontSize = 16;
+
+    /// <summary>
+    /// Converts font size setting (12, 14, 16, 18, 20) to WebView2 zoom factor.
+    /// Base font size is 16 (100% zoom / 1.0 factor).
+    /// </summary>
+    private double GetZoomFactorFromFontSize(int fontSize)
+    {
+        // Map font sizes to zoom factors
+        // 12 = Very small (75%), 14 = Small (87.5%), 16 = Medium (100%), 18 = Large (112.5%), 20 = Very large (125%)
+        return fontSize switch
+        {
+            12 => 0.75,
+            14 => 0.875,
+            16 => 1.0,
+            18 => 1.125,
+            20 => 1.25,
+            _ => 1.0
+        };
+    }
+
+    /// <summary>
+    /// Applies font size (as zoom factor) to all open WebView2 instances.
+    /// </summary>
+    private void ApplyFontSizeToAllWebViews(int fontSize)
+    {
+        _currentFontSize = fontSize;
+        var zoomFactor = GetZoomFactorFromFontSize(fontSize);
+
+        foreach (var webView in _webViews.Values)
+        {
+            if (webView?.CoreWebView2 != null)
+            {
+                try
+                {
+                    webView.ZoomFactor = zoomFactor;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to apply font size to WebView: {ex.Message}");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Applies the current font size setting to a specific WebView.
+    /// Called when a new WebView is created.
+    /// </summary>
+    private void ApplyFontSizeToWebView(Microsoft.Web.WebView2.Wpf.WebView2 webView)
+    {
+        if (webView != null)
+        {
+            var zoomFactor = GetZoomFactorFromFontSize(_currentFontSize);
+            webView.ZoomFactor = zoomFactor;
+        }
+    }
+
+    #endregion
+
+    #region System Settings
+
+    /// <summary>
+    /// Applies system settings to a WebView.
+    /// Note: Spell check in WebView2 is controlled at the profile level and may require
+    /// specific WebView2 versions. Hardware acceleration requires restart.
+    /// </summary>
+    private void ApplySystemSettings(Microsoft.Web.WebView2.Wpf.WebView2 webView)
+    {
+        if (webView?.CoreWebView2 == null) return;
+
+        try
+        {
+            // Note: WebView2's spell check is controlled at a different level
+            // For now, we just log that settings were applied
+            var advancedSettings = _settingsManager.Settings.Advanced;
+            System.Diagnostics.Debug.WriteLine($"System settings applied - Spellcheck: {advancedSettings.Spellcheck}, HW Accel: {advancedSettings.HardwareAcceleration}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to apply system settings: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Applies system settings to all existing WebViews.
+    /// Called when system settings are changed.
+    /// </summary>
+    private void ApplySystemSettingsToAllWebViews()
+    {
+        foreach (var webView in _webViews.Values)
+        {
+            ApplySystemSettings(webView);
+        }
+    }
+
+    /// <summary>
+    /// Resets all settings to their default values.
+    /// </summary>
+    private async Task ResetSettingsAsync()
+    {
+        try
+        {
+            // Create new default settings
+            var defaultSettings = new BrowserSettings();
+
+            // Update settings file with defaults
+            await _settingsManager.UpdateAsync(s =>
+            {
+                s.Homepage = defaultSettings.Homepage;
+                s.Autofill = defaultSettings.Autofill;
+                s.Privacy = defaultSettings.Privacy;
+                s.Permissions = defaultSettings.Permissions;
+                s.Appearance = defaultSettings.Appearance;
+                s.Search = defaultSettings.Search;
+                s.Startup = defaultSettings.Startup;
+                s.Advanced = defaultSettings.Advanced;
+            });
+
+            // Apply the reset settings to the UI
+            ApplySystemSettingsToAllWebViews();
+            ApplyPrivacySettingsToAllWebViews();
+            ApplyFontSizeToAllWebViews(defaultSettings.Appearance.FontSize);
+
+            // Reset theme
+            _themeManager.SetTheme(defaultSettings.Appearance.Theme);
+
+            // Reset bookmarks bar visibility
+            SetBookmarksBarVisible(defaultSettings.Appearance.ShowBookmarksBar);
+
+            System.Diagnostics.Debug.WriteLine("Settings have been reset to defaults.");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to reset settings: {ex.Message}");
+        }
+    }
+
+    #endregion
+
+    #region Privacy Settings
+
+    /// <summary>
+    /// Applies privacy settings (tracking prevention, DNT) to a WebView.
+    /// </summary>
+    private void ApplyPrivacySettings(Microsoft.Web.WebView2.Wpf.WebView2 webView)
+    {
+        if (webView?.CoreWebView2 == null) return;
+
+        try
+        {
+            var privacySettings = _settingsManager.Settings.Privacy;
+
+            // Apply Tracking Prevention Level to the profile
+            var profile = webView.CoreWebView2.Profile;
+            profile.PreferredTrackingPreventionLevel = privacySettings.TrackingProtection
+                ? CoreWebView2TrackingPreventionLevel.Balanced
+                : CoreWebView2TrackingPreventionLevel.None;
+
+            System.Diagnostics.Debug.WriteLine($"Tracking Prevention set to: {profile.PreferredTrackingPreventionLevel}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to apply privacy settings: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Applies privacy settings to all existing WebViews.
+    /// Called when privacy settings are changed.
+    /// </summary>
+    private void ApplyPrivacySettingsToAllWebViews()
+    {
+        foreach (var webView in _webViews.Values)
+        {
+            ApplyPrivacySettings(webView);
+        }
+    }
+
+    /// <summary>
+    /// Sets up the Do Not Track header for a WebView.
+    /// Adds DNT: 1 header to all requests if the setting is enabled.
+    /// </summary>
+    private void SetupDoNotTrackHeader(Microsoft.Web.WebView2.Wpf.WebView2 webView)
+    {
+        if (webView?.CoreWebView2 == null) return;
+
+        try
+        {
+            var privacySettings = _settingsManager.Settings.Privacy;
+
+            if (privacySettings.DoNotTrack)
+            {
+                // Add filter for all web resources
+                webView.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
+                webView.CoreWebView2.WebResourceRequested += OnWebResourceRequested_AddDNTHeader;
+                System.Diagnostics.Debug.WriteLine("Do Not Track header enabled for WebView");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to setup DNT header: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Handles WebResourceRequested to add the DNT header to all requests.
+    /// </summary>
+    private void OnWebResourceRequested_AddDNTHeader(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
+    {
+        try
+        {
+            // Add the Do Not Track header (DNT: 1)
+            e.Request.Headers.SetHeader("DNT", "1");
+            // Also add Sec-GPC header for Global Privacy Control
+            e.Request.Headers.SetHeader("Sec-GPC", "1");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to add DNT header: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Clears browsing data for all profiles.
+    /// Called on exit if clearOnExit setting is enabled.
+    /// </summary>
+    private async Task ClearBrowsingDataOnExitAsync()
+    {
+        try
+        {
+            var dataKinds = CoreWebView2BrowsingDataKinds.BrowsingHistory |
+                           CoreWebView2BrowsingDataKinds.CacheStorage |
+                           CoreWebView2BrowsingDataKinds.Cookies |
+                           CoreWebView2BrowsingDataKinds.DownloadHistory |
+                           CoreWebView2BrowsingDataKinds.LocalStorage |
+                           CoreWebView2BrowsingDataKinds.IndexedDb;
+
+            foreach (var webView in _webViews.Values)
+            {
+                if (webView?.CoreWebView2?.Profile != null)
+                {
+                    await webView.CoreWebView2.Profile.ClearBrowsingDataAsync(dataKinds);
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine("Browsing data cleared on exit.");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to clear browsing data on exit: {ex.Message}");
+        }
+    }
+
+    #endregion
 
     private object GetProfileInfo()
     {
@@ -4397,9 +4998,202 @@ public partial class MainWindow : Window
 
     #endregion
 
+    #region Search Suggestions
+
+    private CancellationTokenSource? _suggestionsCts;
+    private readonly HttpClient _suggestionsHttpClient = new();
+    private bool _isSelectingSuggestion;
+
+    private async void AddressBar_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        // Cancel any pending suggestion requests
+        _suggestionsCts?.Cancel();
+
+        var text = AddressBar.Text?.Trim();
+
+        // Don't show suggestions if disabled, empty, or looks like a URL
+        if (!(_settingsManager.Settings?.Search?.SuggestionsEnabled ?? true) ||
+            string.IsNullOrWhiteSpace(text) ||
+            text.Length < 2 ||
+            text.Contains("://") ||
+            (text.Contains('.') && !text.Contains(' ')))
+        {
+            SuggestionsPopup.IsOpen = false;
+            return;
+        }
+
+        // Debounce - wait a bit before fetching
+        _suggestionsCts = new CancellationTokenSource();
+        var token = _suggestionsCts.Token;
+
+        try
+        {
+            await Task.Delay(250, token);
+
+            if (token.IsCancellationRequested) return;
+
+            var suggestions = await FetchSearchSuggestionsAsync(text, token);
+
+            if (token.IsCancellationRequested) return;
+
+            if (suggestions.Count > 0)
+            {
+                SuggestionsList.ItemsSource = suggestions;
+                SuggestionsPopup.IsOpen = true;
+            }
+            else
+            {
+                SuggestionsPopup.IsOpen = false;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when typing quickly
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error fetching suggestions: {ex.Message}");
+            SuggestionsPopup.IsOpen = false;
+        }
+    }
+
+    private async Task<List<string>> FetchSearchSuggestionsAsync(string query, CancellationToken token)
+    {
+        var suggestions = new List<string>();
+        var encodedQuery = Uri.EscapeDataString(query);
+
+        try
+        {
+            var defaultEngine = _settingsManager.Settings?.Search?.DefaultEngine ?? "google";
+
+            // Use appropriate suggestion API based on search engine
+            string url;
+            if (defaultEngine == "bing")
+            {
+                // Bing Autosuggest API (public endpoint)
+                url = $"https://api.bing.com/osjson.aspx?query={encodedQuery}";
+            }
+            else
+            {
+                // Google Suggest API (public endpoint)
+                url = $"https://suggestqueries.google.com/complete/search?client=firefox&q={encodedQuery}";
+            }
+
+            var response = await _suggestionsHttpClient.GetStringAsync(url, token);
+
+            // Parse JSON response - format is ["query", ["suggestion1", "suggestion2", ...]]
+            if (!string.IsNullOrEmpty(response))
+            {
+                var json = System.Text.Json.JsonDocument.Parse(response);
+                var root = json.RootElement;
+
+                if (root.ValueKind == System.Text.Json.JsonValueKind.Array && root.GetArrayLength() > 1)
+                {
+                    var suggestionsArray = root[1];
+                    foreach (var item in suggestionsArray.EnumerateArray())
+                    {
+                        var suggestion = item.GetString();
+                        if (!string.IsNullOrEmpty(suggestion))
+                        {
+                            suggestions.Add(suggestion);
+                            if (suggestions.Count >= 8) break; // Limit to 8 suggestions
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error parsing suggestions: {ex.Message}");
+        }
+
+        return suggestions;
+    }
+
+    private void AddressBar_LostFocus(object sender, RoutedEventArgs e)
+    {
+        // Delay closing to allow click on suggestion
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (!SuggestionsList.IsKeyboardFocusWithin && !_isSelectingSuggestion)
+            {
+                SuggestionsPopup.IsOpen = false;
+            }
+        }), System.Windows.Threading.DispatcherPriority.Background);
+    }
+
+    private void AddressBar_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (!SuggestionsPopup.IsOpen) return;
+
+        if (e.Key == Key.Down)
+        {
+            if (SuggestionsList.Items.Count > 0)
+            {
+                SuggestionsList.SelectedIndex = 0;
+                var item = SuggestionsList.ItemContainerGenerator.ContainerFromIndex(0) as ListBoxItem;
+                item?.Focus();
+            }
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape)
+        {
+            SuggestionsPopup.IsOpen = false;
+            e.Handled = true;
+        }
+    }
+
+    private void SuggestionsList_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            SelectCurrentSuggestion();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape)
+        {
+            SuggestionsPopup.IsOpen = false;
+            AddressBar.Focus();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Up && SuggestionsList.SelectedIndex == 0)
+        {
+            // Move focus back to address bar
+            AddressBar.Focus();
+            AddressBar.CaretIndex = AddressBar.Text?.Length ?? 0;
+            SuggestionsList.SelectedIndex = -1;
+            e.Handled = true;
+        }
+    }
+
+    private void SuggestionsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // Don't navigate on selection change - wait for enter or click
+    }
+
+    private void SuggestionsList_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        SelectCurrentSuggestion();
+    }
+
+    private void SelectCurrentSuggestion()
+    {
+        if (SuggestionsList.SelectedItem is string suggestion)
+        {
+            _isSelectingSuggestion = true;
+            SuggestionsPopup.IsOpen = false;
+            AddressBar.Text = suggestion;
+            AddressBar.CaretIndex = suggestion.Length;
+            NavigateTo(suggestion);
+            _isSelectingSuggestion = false;
+        }
+    }
+
+    #endregion
+
     #region Helpers
 
-    private static string EnsureValidUrl(string input)
+    private string EnsureValidUrl(string input)
     {
         if (string.IsNullOrWhiteSpace(input))
             return "about:blank";
@@ -4433,8 +5227,27 @@ public partial class MainWindow : Window
             return "https://" + input;
         }
 
-        // Treat as search query
-        return $"https://www.google.com/search?q={Uri.EscapeDataString(input)}";
+        // Treat as search query - use the configured search engine
+        return GetSearchUrl(input);
+    }
+
+    /// <summary>
+    /// Gets the search URL for a query using the configured default search engine.
+    /// </summary>
+    private string GetSearchUrl(string query)
+    {
+        var encodedQuery = Uri.EscapeDataString(query);
+        var defaultEngine = _settingsManager.Settings?.Search?.DefaultEngine ?? "google";
+
+        // Get the search URL template based on the selected engine
+        var searchUrl = defaultEngine.ToLowerInvariant() switch
+        {
+            "bing" => $"https://www.bing.com/search?q={encodedQuery}",
+            "google" => $"https://www.google.com/search?q={encodedQuery}",
+            _ => $"https://www.google.com/search?q={encodedQuery}" // Default to Google
+        };
+
+        return searchUrl;
     }
 
     private static string GetInternalPageTitle(string url)
@@ -4454,6 +5267,7 @@ public partial class MainWindow : Window
                 "welcome" => "Welcome - Jubilee Browser",
                 "blocked" => "Blocked - Jubilee Browser",
                 "error" => "Error - Jubilee Browser",
+                "newtab" => "New Tab - Jubilee Browser",
                 _ => $"{char.ToUpper(pageName[0])}{pageName.Substring(1)} - Jubilee Browser"
             };
         }
@@ -4926,6 +5740,43 @@ public partial class MainWindow : Window
             ProfileSignedInPanel.Visibility = Visibility.Collapsed;
 
             ProfileButton.ToolTip = "Sign in to sync your data";
+        }
+    }
+
+    /// <summary>
+    /// Updates the settings page auth state immediately via JavaScript injection.
+    /// Call this after sign-in or sign-out to update the profile section without a page reload.
+    /// </summary>
+    private void UpdateSettingsPageAuthState(bool isSignedIn)
+    {
+        // Also update the WPF profile UI
+        UpdateProfileUI();
+        UpdateChatPanelAuthState();
+
+        // Find any open settings page and update its auth state
+        foreach (var kvp in _webViews)
+        {
+            var webView = kvp.Value;
+            if (webView?.CoreWebView2 != null)
+            {
+                var currentUrl = webView.CoreWebView2.Source;
+                if (currentUrl?.StartsWith("jubilee://settings") == true)
+                {
+                    try
+                    {
+                        // Inject JavaScript to update UI without page reload
+                        var script = isSignedIn
+                            ? "if (typeof updateProfileUI === 'function') { updateProfileUI({ isSignedIn: true }); }"
+                            : "if (typeof updateProfileUI === 'function') { updateProfileUI({ isSignedIn: false }); }";
+                        _ = webView.CoreWebView2.ExecuteScriptAsync(script);
+                        System.Diagnostics.Debug.WriteLine($"Settings page auth state updated: isSignedIn={isSignedIn}");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Failed to update settings page auth state: {ex.Message}");
+                    }
+                }
+            }
         }
     }
 
@@ -6100,6 +6951,8 @@ public partial class MainWindow : Window
                                     _profileAuthService.SignInDemoMode(demoName, signInEmail);
                                     authDialog.Close();
                                     ShowDemoModeWelcomeDialog(demoName);
+                                    // Update the settings page UI immediately via JavaScript
+                                    UpdateSettingsPageAuthState(true);
                                 }
                                 return;
                             }
@@ -6172,6 +7025,9 @@ public partial class MainWindow : Window
                                 // Also trigger via SyncEngine
                                 System.Diagnostics.Debug.WriteLine("[MainWindow] Triggering SyncEngine.SyncNowAsync...");
                                 _ = _syncEngine.SyncNowAsync();
+
+                                // Update the settings page UI immediately via JavaScript
+                                UpdateSettingsPageAuthState(true);
                             }
                             else
                             {
@@ -6193,6 +7049,8 @@ public partial class MainWindow : Window
                                     _profileAuthService.SignInDemoMode(demoName, signInEmail);
                                     authDialog.Close();
                                     ShowDemoModeWelcomeDialog(demoName);
+                                    // Update the settings page UI immediately via JavaScript
+                                    UpdateSettingsPageAuthState(true);
                                 }
                             }
                         });
@@ -7338,265 +8196,271 @@ public partial class MainWindow : Window
 
     private async Task ShowAccountManagementWindowAsync()
     {
-        var goldColor = Color.FromRgb(218, 165, 32);
-        var bgColor = Color.FromRgb(30, 30, 46);
-        var cardBgColor = Color.FromRgb(45, 45, 68);
-        var textColor = Color.FromRgb(200, 200, 200);
+        var goldColor = Color.FromRgb(230, 172, 0);
+        var roseColor = Color.FromRgb(233, 69, 96);
+        var bgColor = Color.FromRgb(26, 26, 46);
+        var cardBgColor = Color.FromRgb(22, 33, 62);
+        var textColor = Color.FromRgb(160, 160, 160);
+        var borderColor = Color.FromRgb(60, 60, 80);
 
         var accountWindow = new Window
         {
             Title = "Manage your Jubilee Account",
-            Width = 650,
-            Height = 600,
+            Width = 500,
+            Height = 550,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Owner = this,
             Background = new SolidColorBrush(bgColor),
             WindowStyle = WindowStyle.SingleBorderWindow,
-            ResizeMode = ResizeMode.CanResize
+            ResizeMode = ResizeMode.NoResize
         };
 
         var mainScrollViewer = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        var mainPanel = new StackPanel { Margin = new Thickness(24) };
+        var mainPanel = new StackPanel { Margin = new Thickness(32) };
 
-        // Header
-        var headerPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 24) };
+        // Profile Header Card
+        var headerCard = new Border
+        {
+            Background = new SolidColorBrush(cardBgColor),
+            CornerRadius = new CornerRadius(12),
+            Padding = new Thickness(24),
+            Margin = new Thickness(0, 0, 0, 24),
+            BorderBrush = new SolidColorBrush(borderColor),
+            BorderThickness = new Thickness(1)
+        };
+
+        var headerPanel = new StackPanel { Orientation = Orientation.Horizontal };
+
+        // Avatar with gradient background
         var avatarBorder = new Border
         {
-            Width = 64, Height = 64,
-            CornerRadius = new CornerRadius(32),
-            Background = new SolidColorBrush(Color.FromRgb(100, 100, 100)),
-            Margin = new Thickness(0, 0, 16, 0)
+            Width = 72, Height = 72,
+            CornerRadius = new CornerRadius(36),
+            Margin = new Thickness(0, 0, 20, 0)
         };
+        var gradientBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(1, 1)
+        };
+        gradientBrush.GradientStops.Add(new GradientStop(roseColor, 0));
+        gradientBrush.GradientStops.Add(new GradientStop(goldColor, 1));
+        avatarBorder.Background = gradientBrush;
+
+        // Avatar initial
+        var avatarInitial = new TextBlock
+        {
+            Text = (_profileAuthService.CurrentProfile?.DisplayName?.Substring(0, 1).ToUpper() ?? "?"),
+            FontSize = 28,
+            FontWeight = FontWeights.Light,
+            Foreground = Brushes.White,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        avatarBorder.Child = avatarInitial;
+
         var profileTextPanel = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         var profileNameText = new TextBlock
         {
-            Text = _profileAuthService.CurrentProfile?.DisplayName ?? "Loading...",
-            FontSize = 20, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White
+            Text = _profileAuthService.CurrentProfile?.DisplayName ?? "User",
+            FontSize = 22, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White
         };
         var profileEmailText = new TextBlock
         {
             Text = _profileAuthService.CurrentProfile?.Email ?? "",
-            FontSize = 13, Foreground = new SolidColorBrush(textColor)
+            FontSize = 13, Foreground = new SolidColorBrush(textColor),
+            Margin = new Thickness(0, 4, 0, 0)
         };
         profileTextPanel.Children.Add(profileNameText);
         profileTextPanel.Children.Add(profileEmailText);
         headerPanel.Children.Add(avatarBorder);
         headerPanel.Children.Add(profileTextPanel);
-        mainPanel.Children.Add(headerPanel);
+        headerCard.Child = headerPanel;
+        mainPanel.Children.Add(headerCard);
 
-        // Loading indicator
-        var loadingText = new TextBlock
-        {
-            Text = "Loading account details...",
-            Foreground = new SolidColorBrush(textColor),
-            FontSize = 14,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(0, 20, 0, 20)
-        };
-        mainPanel.Children.Add(loadingText);
-
-        // Devices section (will be populated)
-        var devicesSection = new StackPanel { Visibility = Visibility.Collapsed };
-        var devicesSectionTitle = new TextBlock
-        {
-            Text = "Connected Devices",
-            FontSize = 16, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White,
-            Margin = new Thickness(0, 0, 0, 12)
-        };
-        devicesSection.Children.Add(devicesSectionTitle);
-        var devicesListPanel = new StackPanel();
-        devicesSection.Children.Add(devicesListPanel);
-        mainPanel.Children.Add(devicesSection);
-
-        // Sync Status section
-        var syncSection = new StackPanel { Visibility = Visibility.Collapsed, Margin = new Thickness(0, 24, 0, 0) };
+        // Sync Status Section
         var syncSectionTitle = new TextBlock
         {
-            Text = "Sync Status",
-            FontSize = 16, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White,
+            Text = "SYNC STATUS",
+            FontSize = 12,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = new SolidColorBrush(goldColor),
             Margin = new Thickness(0, 0, 0, 12)
         };
-        syncSection.Children.Add(syncSectionTitle);
-        var syncStatusPanel = new StackPanel();
-        syncSection.Children.Add(syncStatusPanel);
-        mainPanel.Children.Add(syncSection);
+        mainPanel.Children.Add(syncSectionTitle);
 
-        // Account Actions section
-        var actionsSection = new StackPanel { Visibility = Visibility.Collapsed, Margin = new Thickness(0, 24, 0, 0) };
+        var syncCard = new Border
+        {
+            Background = new SolidColorBrush(cardBgColor),
+            CornerRadius = new CornerRadius(12),
+            Padding = new Thickness(20),
+            Margin = new Thickness(0, 0, 0, 24),
+            BorderBrush = new SolidColorBrush(borderColor),
+            BorderThickness = new Thickness(1)
+        };
+
+        var syncPanel = new StackPanel();
+
+        // Last sync time
+        var lastSyncPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 12) };
+        lastSyncPanel.Children.Add(new TextBlock
+        {
+            Text = "Last sync:",
+            Foreground = new SolidColorBrush(textColor),
+            FontSize = 13,
+            Width = 100
+        });
+        lastSyncPanel.Children.Add(new TextBlock
+        {
+            Text = _syncEngine.LastSyncTime.HasValue ? _syncEngine.LastSyncTime.Value.ToLocalTime().ToString("g") : "Never",
+            Foreground = Brushes.White,
+            FontSize = 13
+        });
+        syncPanel.Children.Add(lastSyncPanel);
+
+        // Sync enabled items
+        var syncPrefs = _syncEngine.Preferences;
+        var enabledItems = new List<string>();
+        if (syncPrefs.SyncBookmarks) enabledItems.Add("Bookmarks");
+        if (syncPrefs.SyncHistory) enabledItems.Add("History");
+        if (syncPrefs.SyncPasswords) enabledItems.Add("Passwords");
+        if (syncPrefs.SyncSettings) enabledItems.Add("Settings");
+
+        var syncingPanel = new StackPanel { Orientation = Orientation.Horizontal };
+        syncingPanel.Children.Add(new TextBlock
+        {
+            Text = "Syncing:",
+            Foreground = new SolidColorBrush(textColor),
+            FontSize = 13,
+            Width = 100
+        });
+        syncingPanel.Children.Add(new TextBlock
+        {
+            Text = enabledItems.Count > 0 ? string.Join(", ", enabledItems) : "Nothing enabled",
+            Foreground = Brushes.White,
+            FontSize = 13,
+            TextWrapping = TextWrapping.Wrap
+        });
+        syncPanel.Children.Add(syncingPanel);
+
+        syncCard.Child = syncPanel;
+        mainPanel.Children.Add(syncCard);
+
+        // Account Actions Section
         var actionsSectionTitle = new TextBlock
         {
-            Text = "Account Actions",
-            FontSize = 16, FontWeight = FontWeights.SemiBold, Foreground = Brushes.White,
+            Text = "ACCOUNT ACTIONS",
+            FontSize = 12,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = new SolidColorBrush(goldColor),
             Margin = new Thickness(0, 0, 0, 12)
         };
-        actionsSection.Children.Add(actionsSectionTitle);
+        mainPanel.Children.Add(actionsSectionTitle);
 
-        var signOutAllBtn = new Button
+        var actionsCard = new Border
         {
-            Content = "Sign out from all other devices",
-            Height = 36, Margin = new Thickness(0, 0, 0, 8),
             Background = new SolidColorBrush(cardBgColor),
-            Foreground = Brushes.White,
-            BorderThickness = new Thickness(1),
-            BorderBrush = new SolidColorBrush(Color.FromRgb(80, 80, 100)),
-            Cursor = Cursors.Hand, HorizontalContentAlignment = HorizontalAlignment.Left,
-            Padding = new Thickness(12, 0, 12, 0)
+            CornerRadius = new CornerRadius(12),
+            Padding = new Thickness(8),
+            BorderBrush = new SolidColorBrush(borderColor),
+            BorderThickness = new Thickness(1)
         };
 
-        var changePasswordBtn = new Button
-        {
-            Content = "Change password",
-            Height = 36, Margin = new Thickness(0, 0, 0, 8),
-            Background = new SolidColorBrush(cardBgColor),
-            Foreground = Brushes.White,
-            BorderThickness = new Thickness(1),
-            BorderBrush = new SolidColorBrush(Color.FromRgb(80, 80, 100)),
-            Cursor = Cursors.Hand, HorizontalContentAlignment = HorizontalAlignment.Left,
-            Padding = new Thickness(12, 0, 12, 0)
-        };
+        var actionsPanel = new StackPanel();
 
-        actionsSection.Children.Add(signOutAllBtn);
-        actionsSection.Children.Add(changePasswordBtn);
-        mainPanel.Children.Add(actionsSection);
+        // Sync Now button
+        var syncNowBtn = CreateAccountActionButton("🔄", "Sync now", "Manually sync your data across devices");
+        syncNowBtn.Cursor = Cursors.Hand;
+        syncNowBtn.MouseLeftButtonUp += async (s, args) =>
+        {
+            await _syncEngine.SyncNowAsync();
+            MessageBox.Show("Sync completed!", "Sync", MessageBoxButton.OK, MessageBoxImage.Information);
+        };
+        actionsPanel.Children.Add(syncNowBtn);
+
+        // Manage Sync Settings button
+        var manageSyncBtn = CreateAccountActionButton("⚙️", "Manage sync settings", "Choose what to sync across devices");
+        manageSyncBtn.Cursor = Cursors.Hand;
+        manageSyncBtn.MouseLeftButtonUp += (s, args) =>
+        {
+            accountWindow.Close();
+            NavigateTo("jubilee://settings/sync");
+        };
+        actionsPanel.Children.Add(manageSyncBtn);
+
+        // Sign Out button
+        var signOutBtn = CreateAccountActionButton("🚪", "Sign out", "Sign out of your Jubilee account");
+        signOutBtn.Cursor = Cursors.Hand;
+        signOutBtn.MouseLeftButtonUp += async (s, args) =>
+        {
+            var result = MessageBox.Show(
+                "Are you sure you want to sign out?",
+                "Sign Out", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result == MessageBoxResult.Yes)
+            {
+                await _profileAuthService.SignOutAsync();
+                UpdateProfileUI();
+                UpdateChatPanelAuthState();
+                accountWindow.Close();
+            }
+        };
+        actionsPanel.Children.Add(signOutBtn);
+
+        actionsCard.Child = actionsPanel;
+        mainPanel.Children.Add(actionsCard);
 
         mainScrollViewer.Content = mainPanel;
         accountWindow.Content = mainScrollViewer;
 
-        // Show window and load data
-        accountWindow.Show();
+        accountWindow.ShowDialog();
+    }
 
-        // Load account data from API
-        try
+    private Border CreateAccountActionButton(string icon, string title, string description)
+    {
+        var textColor = Color.FromRgb(160, 160, 160);
+
+        var actionBorder = new Border
         {
-            var token = await _profileAuthService.GetAccessTokenAsync();
-            if (string.IsNullOrEmpty(token))
-            {
-                loadingText.Text = "Authentication required. Please sign in again.";
-                return;
-            }
+            Padding = new Thickness(12),
+            CornerRadius = new CornerRadius(8),
+            Margin = new Thickness(0, 2, 0, 2),
+            Background = Brushes.Transparent
+        };
 
-            using var httpClient = new System.Net.Http.HttpClient();
-            httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        // Hover effect
+        actionBorder.MouseEnter += (s, e) => actionBorder.Background = new SolidColorBrush(Color.FromRgb(40, 50, 70));
+        actionBorder.MouseLeave += (s, e) => actionBorder.Background = Brushes.Transparent;
 
-            var response = await httpClient.GetAsync("https://inspirecodex.com/api/account");
-            if (!response.IsSuccessStatusCode)
-            {
-                loadingText.Text = "Failed to load account details.";
-                return;
-            }
+        var actionPanel = new StackPanel { Orientation = Orientation.Horizontal };
 
-            var json = await response.Content.ReadAsStringAsync();
-            var accountData = System.Text.Json.JsonSerializer.Deserialize<AccountDetailsResponse>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            if (accountData?.Success != true)
-            {
-                loadingText.Text = "Failed to load account details.";
-                return;
-            }
-
-            // Hide loading, show sections
-            loadingText.Visibility = Visibility.Collapsed;
-            devicesSection.Visibility = Visibility.Visible;
-            syncSection.Visibility = Visibility.Visible;
-            actionsSection.Visibility = Visibility.Visible;
-
-            // Update profile info
-            profileNameText.Text = accountData.Account?.DisplayName ?? "User";
-            profileEmailText.Text = accountData.Account?.Email ?? "";
-
-            // Populate devices
-            if (accountData.Devices != null)
-            {
-                foreach (var device in accountData.Devices)
-                {
-                    var deviceCard = CreateDeviceCard(device, token, devicesListPanel, cardBgColor, textColor);
-                    devicesListPanel.Children.Add(deviceCard);
-                }
-            }
-
-            // Populate sync status
-            if (accountData.SyncPreferences != null)
-            {
-                var syncInfoCard = new Border
-                {
-                    Background = new SolidColorBrush(cardBgColor),
-                    CornerRadius = new CornerRadius(8),
-                    Padding = new Thickness(16),
-                    Margin = new Thickness(0, 0, 0, 8)
-                };
-                var syncInfoPanel = new StackPanel();
-                syncInfoPanel.Children.Add(new TextBlock
-                {
-                    Text = $"Last sync: {(accountData.SyncPreferences.LastSyncAt.HasValue ? accountData.SyncPreferences.LastSyncAt.Value.ToLocalTime().ToString("g") : "Never")}",
-                    Foreground = new SolidColorBrush(textColor), FontSize = 13
-                });
-
-                var enabledTypes = new List<string>();
-                if (accountData.SyncPreferences.SyncBookmarks) enabledTypes.Add("Bookmarks");
-                if (accountData.SyncPreferences.SyncHistory) enabledTypes.Add("History");
-                if (accountData.SyncPreferences.SyncPasswords) enabledTypes.Add("Passwords");
-                if (accountData.SyncPreferences.SyncAutofill) enabledTypes.Add("Autofill");
-                if (accountData.SyncPreferences.SyncSettings) enabledTypes.Add("Settings");
-
-                syncInfoPanel.Children.Add(new TextBlock
-                {
-                    Text = $"Syncing: {(enabledTypes.Count > 0 ? string.Join(", ", enabledTypes) : "Nothing")}",
-                    Foreground = new SolidColorBrush(textColor), FontSize = 13, Margin = new Thickness(0, 8, 0, 0),
-                    TextWrapping = TextWrapping.Wrap
-                });
-                syncInfoCard.Child = syncInfoPanel;
-                syncStatusPanel.Children.Add(syncInfoCard);
-            }
-
-            // Wire up action buttons
-            signOutAllBtn.Click += async (s, args) =>
-            {
-                var result = MessageBox.Show(
-                    "This will sign you out from all other devices. Continue?",
-                    "Sign Out All Devices", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (result == MessageBoxResult.Yes)
-                {
-                    try
-                    {
-                        var signOutResponse = await httpClient.PostAsync(
-                            $"https://inspirecodex.com/api/account/signout-all?device_id={_syncEngine.DeviceId}",
-                            new System.Net.Http.StringContent("{\"exceptCurrent\":true}", System.Text.Encoding.UTF8, "application/json"));
-                        if (signOutResponse.IsSuccessStatusCode)
-                        {
-                            MessageBox.Show("Successfully signed out from all other devices.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                            // Refresh devices list
-                            devicesListPanel.Children.Clear();
-                            var refreshResponse = await httpClient.GetAsync("https://inspirecodex.com/api/account/devices");
-                            if (refreshResponse.IsSuccessStatusCode)
-                            {
-                                var refreshJson = await refreshResponse.Content.ReadAsStringAsync();
-                                var devicesData = System.Text.Json.JsonSerializer.Deserialize<DevicesListResponse>(refreshJson, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                                if (devicesData?.Devices != null)
-                                {
-                                    foreach (var device in devicesData.Devices)
-                                    {
-                                        devicesListPanel.Children.Add(CreateDeviceCard(device, token, devicesListPanel, cardBgColor, textColor));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Failed to sign out: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
-            };
-
-            changePasswordBtn.Click += (s, args) =>
-            {
-                ShowChangePasswordDialog(accountWindow, token);
-            };
-        }
-        catch (Exception ex)
+        var iconText = new TextBlock
         {
-            loadingText.Text = $"Error: {ex.Message}";
-        }
+            Text = icon,
+            FontSize = 20,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 16, 0),
+            Width = 28
+        };
+
+        var textPanel = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        textPanel.Children.Add(new TextBlock
+        {
+            Text = title,
+            FontSize = 14,
+            Foreground = Brushes.White
+        });
+        textPanel.Children.Add(new TextBlock
+        {
+            Text = description,
+            FontSize = 12,
+            Foreground = new SolidColorBrush(textColor)
+        });
+
+        actionPanel.Children.Add(iconText);
+        actionPanel.Children.Add(textPanel);
+        actionBorder.Child = actionPanel;
+
+        return actionBorder;
     }
 
     private Border CreateDeviceCard(ConnectedDevice device, string token, StackPanel parentPanel, Color cardBgColor, Color textColor)
@@ -8242,11 +9106,32 @@ public partial class MainWindow : Window
             "Sign Out",
             async () =>
             {
-                await _profileAuthService.SignOutAsync();
+                // Immediately stop sync and sign out
                 _syncEngine.StopSyncTimer();
+                await _profileAuthService.SignOutAsync();
 
-                // Update chat panel state when signing out
-                UpdateChatPanelAuthState();
+                // Force immediate UI update on the UI thread
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    // Update all profile-related UI elements
+                    UpdateProfileUI();
+
+                    // Update chat panel state
+                    UpdateChatPanelAuthState();
+
+                    // Update sidebar chat state if open
+                    if (_isSidebarChatOpen)
+                    {
+                        // Clear sidebar chat welcome state for signed out user
+                        SidebarChatWelcome.Visibility = Visibility.Visible;
+                    }
+
+                    // Close any open settings panels that show profile info
+                    if (ModalOverlay.Visibility == Visibility.Visible)
+                    {
+                        HideModal();
+                    }
+                });
             },
             "Cancel",
             null);
@@ -9609,6 +10494,175 @@ public partial class MainWindow : Window
     private void FavoritesCloseButton_Click(object sender, MouseButtonEventArgs e)
     {
         CloseFavoritesBar();
+    }
+
+    #endregion
+
+    #region Bookmarks Bar
+
+    private bool _isBookmarksBarVisible;
+
+    /// <summary>
+    /// Shows or hides the bookmarks bar based on the setting
+    /// </summary>
+    private void SetBookmarksBarVisible(bool visible)
+    {
+        _isBookmarksBarVisible = visible;
+
+        if (visible)
+        {
+            BookmarksBar.Visibility = Visibility.Visible;
+            BookmarksBarRow.Height = new GridLength(32);
+            RefreshBookmarksBar();
+        }
+        else
+        {
+            BookmarksBar.Visibility = Visibility.Collapsed;
+            BookmarksBarRow.Height = new GridLength(0);
+        }
+    }
+
+    /// <summary>
+    /// Refreshes the bookmarks bar with current bookmarks
+    /// </summary>
+    private void RefreshBookmarksBar()
+    {
+        BookmarksBarItems.Children.Clear();
+
+        // Get all bookmarks (limited to first 15 for the bar)
+        var bookmarks = _bookmarkManager.GetBookmarks().Take(15).ToList();
+
+        foreach (var bookmark in bookmarks)
+        {
+            var itemBorder = new Border
+            {
+                Background = Brushes.Transparent,
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(8, 4, 8, 4),
+                Margin = new Thickness(0, 0, 4, 0),
+                Cursor = Cursors.Hand,
+                Tag = bookmark.Url
+            };
+
+            var stack = new StackPanel { Orientation = Orientation.Horizontal };
+
+            // Favicon or default icon
+            var icon = new TextBlock
+            {
+                Text = "\uE774", // Globe icon
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = 12,
+                Foreground = (Brush)FindResource("TextMutedBrush"),
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 6, 0)
+            };
+
+            // Title (truncated)
+            var title = new TextBlock
+            {
+                Text = bookmark.Title?.Length > 20 ? bookmark.Title.Substring(0, 17) + "..." : bookmark.Title ?? "Untitled",
+                FontSize = 12,
+                Foreground = (Brush)FindResource("TextPrimaryBrush"),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            stack.Children.Add(icon);
+            stack.Children.Add(title);
+            itemBorder.Child = stack;
+
+            // Set tooltip with full title
+            itemBorder.ToolTip = bookmark.Title;
+
+            // Event handlers
+            itemBorder.MouseEnter += BookmarkBarItem_MouseEnter;
+            itemBorder.MouseLeave += BookmarkBarItem_MouseLeave;
+            itemBorder.MouseLeftButtonDown += BookmarkBarItem_Click;
+
+            BookmarksBarItems.Children.Add(itemBorder);
+        }
+
+        // If no bookmarks, show a hint
+        if (bookmarks.Count == 0)
+        {
+            var hintText = new TextBlock
+            {
+                Text = "No bookmarks yet. Click + to add one!",
+                FontSize = 12,
+                Foreground = (Brush)FindResource("TextMutedBrush"),
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(4, 0, 0, 0)
+            };
+            BookmarksBarItems.Children.Add(hintText);
+        }
+    }
+
+    private void BookmarkBarItem_MouseEnter(object sender, MouseEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = (Brush)FindResource("BgHoverBrush");
+        }
+    }
+
+    private void BookmarkBarItem_MouseLeave(object sender, MouseEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = Brushes.Transparent;
+        }
+    }
+
+    private void BookmarkBarItem_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is Border border && border.Tag is string url)
+        {
+            NavigateTo(url);
+        }
+    }
+
+    private void BookmarksBarAddButton_MouseEnter(object sender, MouseEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = (Brush)FindResource("BgHoverBrush");
+        }
+    }
+
+    private void BookmarksBarAddButton_MouseLeave(object sender, MouseEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = Brushes.Transparent;
+        }
+    }
+
+    private void BookmarksBarAddButton_Click(object sender, MouseButtonEventArgs e)
+    {
+        // Add current page to bookmarks
+        var currentTab = GetCurrentTab();
+        if (currentTab != null && _webViews.TryGetValue(currentTab.Id, out var webView) && webView?.CoreWebView2 != null)
+        {
+            var url = webView.CoreWebView2.Source;
+            var title = webView.CoreWebView2.DocumentTitle;
+
+            if (!string.IsNullOrEmpty(url) && !url.StartsWith("jubilee://"))
+            {
+                if (_bookmarkManager.IsBookmarked(url))
+                {
+                    ShowStyledNotification("This page is already bookmarked", "Bookmark", NotificationType.Info);
+                }
+                else
+                {
+                    _bookmarkManager.AddBookmark(url, title, _currentMode);
+                    RefreshBookmarksBar();
+                    ShowStyledNotification($"Added \"{title}\" to bookmarks", "Bookmark Added", NotificationType.Success);
+                }
+            }
+            else if (url?.StartsWith("jubilee://") == true)
+            {
+                ShowStyledNotification("Internal pages cannot be bookmarked", "Bookmark", NotificationType.Info);
+            }
+        }
     }
 
     #endregion

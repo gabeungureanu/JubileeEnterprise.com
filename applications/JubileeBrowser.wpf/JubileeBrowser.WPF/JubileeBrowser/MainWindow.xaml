@@ -14,7 +14,7 @@
         WindowStyle="None"
         ResizeMode="CanResize"
         AllowsTransparency="False"
-        Background="#000000"
+        Background="{DynamicResource BgPrimaryBrush}"
         WindowStartupLocation="Manual"
         SizeToContent="Manual"
         Loaded="Window_Loaded"
@@ -1337,8 +1337,10 @@
             <RowDefinition x:Name="TitleBarRow" Height="36"/>
             <!-- Navigation Bar: 38px -->
             <RowDefinition x:Name="NavBarRow" Height="38"/>
-            <!-- Favorites Bar: 0 initially, expands to 40px -->
+            <!-- Favorites Bar: 0 initially, expands to 28px -->
             <RowDefinition x:Name="FavoritesBarRow" Height="0"/>
+            <!-- Bookmarks Bar: 0 initially, expands to 32px when enabled -->
+            <RowDefinition x:Name="BookmarksBarRow" Height="0"/>
             <!-- Content Area -->
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -1507,6 +1509,9 @@
                          Style="{StaticResource AddressBarStyle}"
                          KeyDown="AddressBar_KeyDown"
                          GotFocus="AddressBar_GotFocus"
+                         TextChanged="AddressBar_TextChanged"
+                         LostFocus="AddressBar_LostFocus"
+                         PreviewKeyDown="AddressBar_PreviewKeyDown"
                          Padding="18,0,32,0"/>
                 <!-- Mode Icon overlay - positioned inside the textbox on the left -->
                 <Grid Width="28" HorizontalAlignment="Left" Margin="4,0,0,0" IsHitTestVisible="False">
@@ -1597,6 +1602,74 @@
                         ToolTip="Spiritual Nutrition">
                     <TextBlock x:Name="SpiritualNutritionIcon" Text="&#xECAD;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
                 </Button>
+
+                <!-- Search Suggestions Popup -->
+                <Popup x:Name="SuggestionsPopup"
+                       PlacementTarget="{Binding ElementName=AddressBar}"
+                       Placement="Bottom"
+                       StaysOpen="False"
+                       AllowsTransparency="True"
+                       PopupAnimation="Fade">
+                    <Border Background="{DynamicResource BgSecondaryBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="0,0,8,8"
+                            MaxHeight="300"
+                            MinWidth="400">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Color="#000000" Opacity="0.4"/>
+                        </Border.Effect>
+                        <ListBox x:Name="SuggestionsList"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 SelectionChanged="SuggestionsList_SelectionChanged"
+                                 PreviewKeyDown="SuggestionsList_PreviewKeyDown"
+                                 PreviewMouseLeftButtonUp="SuggestionsList_MouseLeftButtonUp">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="12,8"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border x:Name="Bd"
+                                                        Background="Transparent"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BgHoverBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BgActiveBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE721;"
+                                                   FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="14"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,10,0"/>
+                                        <TextBlock Text="{Binding}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   FontSize="13"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+                </Popup>
             </Grid>
 
             <!-- Mode Switch Button (after address bar) -->
@@ -1859,8 +1932,42 @@
             </Grid>
         </Border>
 
+        <!-- Bookmarks Bar - Shows user's saved bookmarks -->
+        <Border x:Name="BookmarksBar"
+                Grid.Row="3"
+                Background="{DynamicResource BgSecondaryBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,0,0,1"
+                Height="32"
+                Visibility="Collapsed">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <!-- Bookmarks Items Panel - scrollable -->
+                <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="8,0,0,0">
+                    <StackPanel x:Name="BookmarksBarItems" Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Bookmark items will be dynamically populated -->
+                    </StackPanel>
+                </ScrollViewer>
+                <!-- Add Bookmark Button -->
+                <Border Grid.Column="1" Background="Transparent" CornerRadius="4" Padding="8,4" Margin="4,0,8,0" Cursor="Hand"
+                        VerticalAlignment="Center"
+                        x:Name="BookmarksBarAddButton"
+                        MouseEnter="BookmarksBarAddButton_MouseEnter"
+                        MouseLeave="BookmarksBarAddButton_MouseLeave"
+                        MouseLeftButtonDown="BookmarksBarAddButton_Click"
+                        ToolTip="Add current page to bookmarks">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
         <!-- Main Content Area -->
-        <Grid x:Name="MainContentGrid" Grid.Row="3">
+        <Grid x:Name="MainContentGrid" Grid.Row="4">
             <Grid.ColumnDefinitions>
                 <!-- Sidebar Rail (Firefox-style icon rail) -->
                 <ColumnDefinition x:Name="SidebarRailColumn" Width="0"/>

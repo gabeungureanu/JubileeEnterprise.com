@@ -6,24 +6,10 @@
              ShutdownMode="OnLastWindowClose">
     <Application.Resources>
         <ResourceDictionary>
-            <!-- Global Color Definitions -->
-            <Color x:Key="BgPrimaryColor">#1a1a2e</Color>
-            <Color x:Key="BgSecondaryColor">#16213e</Color>
-            <Color x:Key="BgTertiaryColor">#0f3460</Color>
-            <Color x:Key="AccentColor">#e94560</Color>
-            <Color x:Key="JubileeAccentColor">#E6AC00</Color>
-            <Color x:Key="TextPrimaryColor">#ffffff</Color>
-            <Color x:Key="TextSecondaryColor">#a0a0a0</Color>
-            <Color x:Key="BorderColor">#2a2a4e</Color>
-
-            <SolidColorBrush x:Key="BgPrimaryBrush" Color="{StaticResource BgPrimaryColor}"/>
-            <SolidColorBrush x:Key="BgSecondaryBrush" Color="{StaticResource BgSecondaryColor}"/>
-            <SolidColorBrush x:Key="BgTertiaryBrush" Color="{StaticResource BgTertiaryColor}"/>
-            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
-            <SolidColorBrush x:Key="JubileeAccentBrush" Color="{StaticResource JubileeAccentColor}"/>
-            <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}"/>
-            <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
-            <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Default theme - will be swapped at runtime by ThemeManager -->
+                <ResourceDictionary Source="Themes/DarkTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
 
             <!-- Global ScrollBar Style -->
             <Style TargetType="ScrollBar">
@@ -33,30 +19,30 @@
 
             <!-- Global ContextMenu Style -->
             <Style TargetType="ContextMenu">
-                <Setter Property="Background" Value="{StaticResource BgSecondaryBrush}"/>
-                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+                <Setter Property="Background" Value="{DynamicResource BgSecondaryBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="Padding" Value="2"/>
             </Style>
 
             <!-- Global MenuItem Style -->
             <Style TargetType="MenuItem">
-                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                 <Setter Property="Padding" Value="8,6"/>
             </Style>
 
             <!-- Global Separator Style -->
             <Style TargetType="Separator">
-                <Setter Property="Background" Value="{StaticResource BorderBrush}"/>
+                <Setter Property="Background" Value="{DynamicResource BorderBrush}"/>
                 <Setter Property="Margin" Value="4,2"/>
             </Style>
 
             <!-- Global ToolTip Style -->
             <Style TargetType="ToolTip">
-                <Setter Property="Background" Value="{StaticResource BgSecondaryBrush}"/>
-                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+                <Setter Property="Background" Value="{DynamicResource BgSecondaryBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
                 <Setter Property="Padding" Value="8,4"/>
             </Style>
         </ResourceDictionary>
