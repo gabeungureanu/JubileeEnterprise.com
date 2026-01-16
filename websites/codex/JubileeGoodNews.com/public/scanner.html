@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Jubilee Good News Scanner - Transform news with a hopeful perspective">
+    <title>News Scanner - Jubilee Good News</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================
+           JUBILEE GOOD NEWS SCANNER - DARK THEME
+           ============================================ */
+
+        :root {
+            /* Dark Theme Colors */
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #0f3460;
+            --bg-card: #1c1c33;
+            --bg-card-hover: #252545;
+            --bg-panel: #141428;
+
+            /* Text Colors */
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0c0;
+            --text-muted: #6a6a7a;
+
+            /* Accent Colors */
+            --accent-gold: #E6AC00;
+            --accent-gold-hover: #F5C518;
+            --accent-blue: #4a9eff;
+            --accent-red: #e94560;
+            --accent-green: #4ade80;
+            --accent-purple: #a855f7;
+            --accent-orange: #fb923c;
+
+            /* Source Colors */
+            --source-cnn: #cc0000;
+            --source-fox: #003366;
+            --source-bbc: #bb1919;
+            --source-yahoo: #6001d2;
+            --source-nyt: #1a1a1a;
+            --source-msn: #0078d4;
+
+            /* Borders */
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.15);
+
+            /* Spacing */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-2xl: 48px;
+
+            /* Font Sizes */
+            --font-xs: 11px;
+            --font-sm: 13px;
+            --font-base: 15px;
+            --font-md: 17px;
+            --font-lg: 20px;
+            --font-xl: 24px;
+            --font-2xl: 32px;
+
+            /* Layout */
+            --header-height: 56px;
+            --panel-width: 480px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            overflow: hidden;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* ============================================
+           HEADER
+           ============================================ */
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            height: var(--header-height);
+        }
+
+        .header-inner {
+            max-width: 100%;
+            padding: 0 var(--space-lg);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-gold) 0%, #cc8800 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-size: var(--font-lg);
+            font-weight: 700;
+        }
+
+        .logo-text span {
+            color: var(--accent-gold);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .btn {
+            padding: var(--space-sm) var(--space-md);
+            border-radius: 8px;
+            font-size: var(--font-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .btn-primary {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-gold-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .btn-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .scan-status {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+        }
+
+        .status-dot.scanning {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ============================================
+           MAIN LAYOUT
+           ============================================ */
+
+        .main-container {
+            display: flex;
+            height: 100vh;
+            padding-top: var(--header-height);
+        }
+
+        .scanner-content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: margin-right 0.3s ease;
+        }
+
+        .scanner-content.panel-open {
+            margin-right: var(--panel-width);
+        }
+
+        /* ============================================
+           TOOLBAR
+           ============================================ */
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-md) var(--space-lg);
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .filter-label {
+            font-size: var(--font-sm);
+            color: var(--text-muted);
+        }
+
+        .filter-select {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: var(--space-xs) var(--space-sm);
+            color: var(--text-primary);
+            font-size: var(--font-sm);
+            cursor: pointer;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .stats-badge {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-xs) var(--space-sm);
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            font-size: var(--font-xs);
+            color: var(--text-secondary);
+        }
+
+        .stats-badge strong {
+            color: var(--accent-gold);
+        }
+
+        /* ============================================
+           SCANNER TABLE
+           ============================================ */
+
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            padding: var(--space-md) var(--space-lg);
+        }
+
+        .scanner-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .scanner-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .scanner-table th {
+            background: var(--bg-secondary);
+            padding: var(--space-sm) var(--space-md);
+            text-align: left;
+            font-size: var(--font-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .scanner-table th:first-child {
+            border-radius: 8px 0 0 0;
+        }
+
+        .scanner-table th:last-child {
+            border-radius: 0 8px 0 0;
+        }
+
+        .scanner-table td {
+            padding: var(--space-md);
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        .scanner-table tbody tr {
+            background: var(--bg-card);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .scanner-table tbody tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .scanner-table tbody tr.selected {
+            background: var(--bg-tertiary);
+            border-left: 3px solid var(--accent-gold);
+        }
+
+        .scanner-table tbody tr:last-child td:first-child {
+            border-radius: 0 0 0 8px;
+        }
+
+        .scanner-table tbody tr:last-child td:last-child {
+            border-radius: 0 0 8px 0;
+        }
+
+        /* Source Badge */
+        .source-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: var(--font-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .source-badge.cnn { background: var(--source-cnn); color: white; }
+        .source-badge.foxnews { background: var(--source-fox); color: white; }
+        .source-badge.bbc { background: var(--source-bbc); color: white; }
+        .source-badge.yahoo { background: var(--source-yahoo); color: white; }
+        .source-badge.nytimes { background: #f5f5f5; color: var(--source-nyt); }
+        .source-badge.msn { background: var(--source-msn); color: white; }
+
+        /* Headlines */
+        .original-headline {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+            line-height: 1.4;
+            max-width: 280px;
+        }
+
+        .original-url {
+            font-size: var(--font-xs);
+            color: var(--text-muted);
+            margin-top: var(--space-xs);
+            word-break: break-all;
+        }
+
+        .original-url a {
+            color: var(--accent-blue);
+        }
+
+        .original-url a:hover {
+            text-decoration: underline;
+        }
+
+        .rewritten-headline {
+            font-size: var(--font-sm);
+            font-weight: 600;
+            color: var(--accent-gold);
+            line-height: 1.4;
+            max-width: 300px;
+        }
+
+        .rewritten-preview {
+            font-size: var(--font-xs);
+            color: var(--text-secondary);
+            margin-top: var(--space-xs);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Score Badge */
+        .score-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: var(--font-md);
+            font-weight: 700;
+        }
+
+        .score-badge.high {
+            background: rgba(74, 222, 128, 0.2);
+            color: var(--accent-green);
+            border: 2px solid var(--accent-green);
+        }
+
+        .score-badge.medium {
+            background: rgba(251, 146, 60, 0.2);
+            color: var(--accent-orange);
+            border: 2px solid var(--accent-orange);
+        }
+
+        .score-badge.low {
+            background: rgba(107, 114, 128, 0.2);
+            color: var(--text-muted);
+            border: 2px solid var(--text-muted);
+        }
+
+        .score-label {
+            font-size: var(--font-xs);
+            color: var(--text-muted);
+            margin-top: var(--space-xs);
+            text-align: center;
+        }
+
+        /* Timestamp */
+        .timestamp {
+            font-size: var(--font-xs);
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .timestamp-relative {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+        }
+
+        /* Actions */
+        .row-actions {
+            display: flex;
+            gap: var(--space-xs);
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .action-btn.approve:hover {
+            background: rgba(74, 222, 128, 0.2);
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .action-btn.reject:hover {
+            background: rgba(233, 69, 96, 0.2);
+            color: var(--accent-red);
+            border-color: var(--accent-red);
+        }
+
+        /* ============================================
+           SLIDE-OVER PANEL
+           ============================================ */
+
+        .panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .panel-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .slide-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: var(--panel-width);
+            height: 100vh;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border-color);
+            z-index: 300;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .slide-panel.open {
+            transform: translateX(0);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-md) var(--space-lg);
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .panel-title {
+            font-size: var(--font-md);
+            font-weight: 600;
+        }
+
+        .panel-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .panel-close:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-lg);
+        }
+
+        .panel-section {
+            margin-bottom: var(--space-xl);
+        }
+
+        .panel-section-title {
+            font-size: var(--font-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--accent-gold);
+            margin-bottom: var(--space-sm);
+            padding-bottom: var(--space-xs);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .panel-rewritten-title {
+            font-family: 'Playfair Display', serif;
+            font-size: var(--font-xl);
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: var(--space-md);
+            color: var(--text-primary);
+        }
+
+        .panel-article-content {
+            font-size: var(--font-base);
+            line-height: 1.8;
+            color: var(--text-secondary);
+        }
+
+        .panel-article-content p {
+            margin-bottom: var(--space-md);
+        }
+
+        .panel-meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-md);
+        }
+
+        .panel-meta-item {
+            background: var(--bg-card);
+            padding: var(--space-md);
+            border-radius: 8px;
+        }
+
+        .panel-meta-label {
+            font-size: var(--font-xs);
+            color: var(--text-muted);
+            margin-bottom: var(--space-xs);
+        }
+
+        .panel-meta-value {
+            font-size: var(--font-sm);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .panel-original-link {
+            display: block;
+            margin-top: var(--space-md);
+            padding: var(--space-md);
+            background: var(--bg-card);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .panel-original-link a {
+            color: var(--accent-blue);
+            font-size: var(--font-sm);
+            word-break: break-all;
+        }
+
+        .panel-original-link a:hover {
+            text-decoration: underline;
+        }
+
+        .scoring-details {
+            background: var(--bg-card);
+            padding: var(--space-md);
+            border-radius: 8px;
+        }
+
+        .scoring-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-xs) 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .scoring-row:last-child {
+            border-bottom: none;
+            padding-top: var(--space-sm);
+            margin-top: var(--space-xs);
+            font-weight: 600;
+        }
+
+        .scoring-label {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+        }
+
+        .scoring-value {
+            font-size: var(--font-sm);
+            color: var(--text-primary);
+        }
+
+        .panel-footer {
+            padding: var(--space-md) var(--space-lg);
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            display: flex;
+            gap: var(--space-sm);
+        }
+
+        .panel-footer .btn {
+            flex: 1;
+        }
+
+        .btn-approve {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+        }
+
+        .btn-approve:hover {
+            background: #22c55e;
+        }
+
+        .btn-reject {
+            background: var(--accent-red);
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background: #dc2626;
+        }
+
+        /* ============================================
+           EMPTY STATE
+           ============================================ */
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-2xl);
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--bg-tertiary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--space-lg);
+        }
+
+        .empty-state-icon svg {
+            width: 40px;
+            height: 40px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-title {
+            font-size: var(--font-lg);
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+        }
+
+        .empty-state-text {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+            max-width: 400px;
+            margin-bottom: var(--space-lg);
+        }
+
+        /* ============================================
+           LOADING STATES
+           ============================================ */
+
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+
+        @media (max-width: 1200px) {
+            :root {
+                --panel-width: 400px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .scanner-content.panel-open {
+                margin-right: 0;
+            }
+
+            .slide-panel {
+                width: 100%;
+                max-width: 480px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--space-md);
+            }
+
+            .toolbar-left,
+            .toolbar-right {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            .scanner-table {
+                font-size: var(--font-sm);
+            }
+
+            .original-headline,
+            .rewritten-headline {
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <a href="/" class="logo">
+                <div class="logo-icon">+</div>
+                <div class="logo-text">Good News <span>Scanner</span></div>
+            </a>
+
+            <div class="header-actions">
+                <div class="scan-status">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Ready</span>
+                </div>
+                <button class="btn btn-secondary" onclick="clearQueue()">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                    </svg>
+                    Clear Queue
+                </button>
+                <button class="btn btn-primary" onclick="runScan()" id="scanBtn">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    Run Scan
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <div class="scanner-content" id="scannerContent">
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <div class="filter-group">
+                        <span class="filter-label">Source:</span>
+                        <select class="filter-select" id="sourceFilter" onchange="filterResults()">
+                            <option value="all">All Sources</option>
+                            <option value="yahoo">Yahoo</option>
+                            <option value="nytimes">NY Times</option>
+                            <option value="msn">MSN</option>
+                            <option value="cnn">CNN</option>
+                            <option value="foxnews">Fox News</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Status:</span>
+                        <select class="filter-select" id="statusFilter" onchange="filterResults()">
+                            <option value="all">All Status</option>
+                            <option value="pending">Pending Review</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="toolbar-right">
+                    <div class="stats-badge">
+                        <span>Queue:</span>
+                        <strong id="queueCount">0</strong>
+                    </div>
+                    <div class="stats-badge">
+                        <span>Approved:</span>
+                        <strong id="approvedCount">0</strong>
+                    </div>
+                    <div class="stats-badge">
+                        <span>Last Scan:</span>
+                        <strong id="lastScanTime">Never</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="table-container" id="tableContainer">
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-state-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                            <path d="M11 8v6M8 11h6"/>
+                        </svg>
+                    </div>
+                    <h3 class="empty-state-title">No scanned items yet</h3>
+                    <p class="empty-state-text">
+                        Click "Run Scan" to fetch top stories from major news sources and transform them with a hopeful, faith-forward perspective.
+                    </p>
+                    <button class="btn btn-primary" onclick="runScan()">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                        Start Scanning
+                    </button>
+                </div>
+
+                <!-- Scanner Table -->
+                <table class="scanner-table" id="scannerTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Source</th>
+                            <th>Original Story</th>
+                            <th>Score</th>
+                            <th>Good News Version</th>
+                            <th>Scanned</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Rows populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide-over Panel -->
+    <div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+    <aside class="slide-panel" id="slidePanel">
+        <div class="panel-header">
+            <h2 class="panel-title">Article Details</h2>
+            <button class="panel-close" onclick="closePanel()" title="Close (ESC)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="panel-body" id="panelBody">
+            <!-- Panel content populated dynamically -->
+        </div>
+        <div class="panel-footer">
+            <button class="btn btn-reject" onclick="rejectItem()">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+                Reject
+            </button>
+            <button class="btn btn-approve" onclick="approveItem()">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 6L9 17l-5-5"/>
+                </svg>
+                Approve & Publish
+            </button>
+        </div>
+    </aside>
+
+    <script>
+        // ============================================
+        // STATE MANAGEMENT
+        // ============================================
+
+        let scannerQueue = [];
+        let selectedItemId = null;
+        let isScanning = false;
+
+        // News sources to scan
+        const NEWS_SOURCES = [
+            { id: 'yahoo', name: 'Yahoo', url: 'https://www.yahoo.com', color: '#6001d2' },
+            { id: 'nytimes', name: 'NY Times', url: 'https://www.nytimes.com', color: '#1a1a1a' },
+            { id: 'msn', name: 'MSN', url: 'https://www.msn.com', color: '#0078d4' },
+            { id: 'cnn', name: 'CNN', url: 'https://www.cnn.com', color: '#cc0000' },
+            { id: 'foxnews', name: 'Fox News', url: 'https://www.foxnews.com', color: '#003366' }
+        ];
+
+        // ============================================
+        // SCANNING LOGIC
+        // ============================================
+
+        async function runScan() {
+            if (isScanning) return;
+
+            isScanning = true;
+            updateScanStatus('scanning', 'Scanning sources...');
+            document.getElementById('scanBtn').disabled = true;
+
+            try {
+                // Simulate fetching from each source
+                for (const source of NEWS_SOURCES) {
+                    updateScanStatus('scanning', `Scanning ${source.name}...`);
+
+                    // Simulate network delay
+                    await delay(800 + Math.random() * 400);
+
+                    // Generate simulated top story from this source
+                    const story = await fetchTopStory(source);
+                    if (story) {
+                        // Calculate prominence score
+                        story.score = calculateProminenceScore(story);
+
+                        // Generate good news rewrite
+                        const rewritten = await rewriteAsGoodNews(story);
+                        story.rewrittenTitle = rewritten.title;
+                        story.rewrittenContent = rewritten.content;
+
+                        // Add to queue
+                        story.id = Date.now() + Math.random();
+                        story.timestamp = new Date().toISOString();
+                        story.status = 'pending';
+
+                        scannerQueue.unshift(story);
+                    }
+                }
+
+                // Find and mark the overall top story
+                if (scannerQueue.length > 0) {
+                    const topStory = scannerQueue.reduce((max, s) =>
+                        s.score.total > max.score.total ? s : max, scannerQueue[0]);
+                    topStory.isTopStory = true;
+                }
+
+                updateScanStatus('ready', 'Scan complete');
+                document.getElementById('lastScanTime').textContent = formatTime(new Date());
+
+            } catch (error) {
+                console.error('Scan error:', error);
+                updateScanStatus('error', 'Scan failed');
+            } finally {
+                isScanning = false;
+                document.getElementById('scanBtn').disabled = false;
+                renderTable();
+                updateStats();
+            }
+        }
+
+        async function fetchTopStory(source) {
+            // Simulated top stories from each source
+            // In production, this would fetch actual RSS feeds or scrape headlines
+            const simulatedStories = {
+                'yahoo': {
+                    originalTitle: 'Markets React to Federal Reserve Policy Announcement',
+                    originalUrl: 'https://finance.yahoo.com/news/markets-fed-policy',
+                    originalExcerpt: 'Stock markets showed mixed reactions following the Federal Reserve\'s latest policy statement on interest rates...',
+                    position: 1,
+                    hasImage: true
+                },
+                'nytimes': {
+                    originalTitle: 'Global Leaders Gather for Climate Summit Amid Rising Tensions',
+                    originalUrl: 'https://www.nytimes.com/2026/01/16/world/climate-summit',
+                    originalExcerpt: 'World leaders convened today for crucial climate discussions, facing pressure to deliver meaningful commitments...',
+                    position: 1,
+                    hasImage: true
+                },
+                'msn': {
+                    originalTitle: 'Breaking: Major Technology Company Announces Layoffs',
+                    originalUrl: 'https://www.msn.com/news/technology/layoffs',
+                    originalExcerpt: 'A major technology firm has announced significant workforce reductions, impacting thousands of employees...',
+                    position: 2,
+                    hasImage: true
+                },
+                'cnn': {
+                    originalTitle: 'Political Divide Deepens as Congress Faces Shutdown Deadline',
+                    originalUrl: 'https://www.cnn.com/politics/congress-shutdown',
+                    originalExcerpt: 'Tensions in Washington continue to escalate as lawmakers struggle to reach agreement before the funding deadline...',
+                    position: 1,
+                    hasImage: true
+                },
+                'foxnews': {
+                    originalTitle: 'Economy Shows Signs of Uncertainty Amid Global Challenges',
+                    originalUrl: 'https://www.foxnews.com/economy/uncertainty',
+                    originalExcerpt: 'Economic indicators present a mixed picture as businesses navigate ongoing global challenges...',
+                    position: 1,
+                    hasImage: true
+                }
+            };
+
+            const storyData = simulatedStories[source.id];
+            if (!storyData) return null;
+
+            return {
+                source: source.id,
+                sourceName: source.name,
+                sourceUrl: source.url,
+                ...storyData
+            };
+        }
+
+        function calculateProminenceScore(story) {
+            // Deterministic scoring based on multiple factors
+            const scores = {
+                position: Math.max(0, 10 - (story.position - 1) * 2), // Position on page (1st = 10 pts)
+                hasImage: story.hasImage ? 5 : 0, // Featured image bonus
+                titleLength: story.originalTitle.length > 50 ? 3 : (story.originalTitle.length > 30 ? 5 : 2),
+                sourceWeight: getSourceWeight(story.source),
+                recency: 5 // Assume all stories are recent
+            };
+
+            const total = Object.values(scores).reduce((sum, val) => sum + val, 0);
+
+            return {
+                ...scores,
+                total,
+                normalized: Math.round((total / 30) * 100) // Normalize to 0-100
+            };
+        }
+
+        function getSourceWeight(sourceId) {
+            // Weight sources by typical reliability/prominence
+            const weights = {
+                'nytimes': 5,
+                'cnn': 4,
+                'bbc': 5,
+                'foxnews': 4,
+                'yahoo': 3,
+                'msn': 3
+            };
+            return weights[sourceId] || 3;
+        }
+
+        async function rewriteAsGoodNews(story) {
+            // Transform the story with a hopeful, faith-forward perspective
+            // In production, this could use an AI service
+
+            const transformations = {
+                // Market/Economy stories
+                'markets': {
+                    title: 'Opportunities Emerge as Markets Adapt to New Economic Landscape',
+                    content: `<p>In times of economic change, we are reminded that God's provision remains constant. While markets fluctuate, our faith provides a stable foundation that transcends financial uncertainty.</p>
+                    <p>Financial experts encourage a long-term perspective, reminding us that economies have historically shown remarkable resilience. This is a time to focus on what truly matters: faith, family, and community.</p>
+                    <p>"Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God." - Philippians 4:6</p>
+                    <p>As stewards of the resources God has entrusted to us, we can approach these times with wisdom and peace, knowing that our ultimate security lies not in market performance but in His faithful care.</p>`
+                },
+                // Climate stories
+                'climate': {
+                    title: 'World Leaders Unite in Hopeful Collaboration for Environmental Stewardship',
+                    content: `<p>Leaders from around the globe are coming together with renewed commitment to caring for God's creation. This gathering represents an encouraging step toward collaborative stewardship of our planet.</p>
+                    <p>As people of faith, we recognize our calling to be good stewards of the earth. "The earth is the LORD's, and everything in it" (Psalm 24:1). This responsibility unites believers across nations in a common purpose.</p>
+                    <p>The summit highlights how communities worldwide are finding innovative, hopeful solutions. From local conservation efforts to international cooperation, people are answering the call to protect the environment for future generations.</p>
+                    <p>Let us approach environmental challenges not with fear, but with the confidence that comes from knowing God has given us both the wisdom and the means to care for His creation.</p>`
+                },
+                // Layoffs/Job stories
+                'layoffs': {
+                    title: 'New Beginnings: How Communities Support Those in Career Transitions',
+                    content: `<p>When companies restructure, it can feel unsettling. Yet countless stories remind us that these transitions often lead to unexpected blessings and new opportunities.</p>
+                    <p>Communities across the nation are rallying to support affected workers with job fairs, retraining programs, and networking opportunities. Churches and faith-based organizations are opening their doors to provide both practical assistance and spiritual encouragement.</p>
+                    <p>"For I know the plans I have for you," declares the LORD, "plans to prosper you and not to harm you, plans to give you hope and a future." - Jeremiah 29:11</p>
+                    <p>Many who have experienced similar transitions share how these challenging moments ultimately led them to more fulfilling careers and deeper reliance on God's guidance.</p>`
+                },
+                // Political stories
+                'political': {
+                    title: 'A Call for Unity: Citizens Across the Nation Choose Hope Over Division',
+                    content: `<p>While headlines often focus on political disagreements, a deeper story is emerging: ordinary Americans are finding common ground in their shared values and commitment to community.</p>
+                    <p>Across the country, neighbors are choosing dialogue over division, and local leaders are demonstrating that cooperation transcends party lines when focused on serving others.</p>
+                    <p>"If it is possible, as far as it depends on you, live at peace with everyone." - Romans 12:18</p>
+                    <p>Faith communities are playing a vital role in bridge-building, reminding us that we are called to love our neighbors—including those with whom we may disagree. In this spirit of unity, we find hope for constructive solutions.</p>
+                    <p>As we pray for our leaders and nation, we trust that God remains sovereign over human affairs, working all things according to His purpose.</p>`
+                },
+                // Economy uncertainty stories
+                'economy': {
+                    title: 'Finding Stability in Uncertain Times: Faith Communities Offer Hope and Support',
+                    content: `<p>During times of economic uncertainty, faith communities across the nation are stepping up to provide both spiritual encouragement and practical support to those in need.</p>
+                    <p>From food pantries to financial counseling, churches and ministries are demonstrating Christ's love in tangible ways. These efforts remind us that true security comes not from economic conditions but from our relationship with God.</p>
+                    <p>"Cast all your anxiety on him because he cares for you." - 1 Peter 5:7</p>
+                    <p>Economists note that while challenges exist, the fundamentals of community resilience remain strong. Families are rediscovering the importance of wise stewardship, generosity, and trust in God's provision.</p>
+                    <p>In every season, we are invited to focus on what is good, true, and worthy of praise. This perspective transforms uncertainty into an opportunity for deeper faith and closer community bonds.</p>`
+                }
+            };
+
+            // Determine which transformation to apply based on keywords
+            const titleLower = story.originalTitle.toLowerCase();
+            let transformation;
+
+            if (titleLower.includes('market') || titleLower.includes('fed') || titleLower.includes('stock')) {
+                transformation = transformations['markets'];
+            } else if (titleLower.includes('climate') || titleLower.includes('environment')) {
+                transformation = transformations['climate'];
+            } else if (titleLower.includes('layoff') || titleLower.includes('job') || titleLower.includes('workforce')) {
+                transformation = transformations['layoffs'];
+            } else if (titleLower.includes('congress') || titleLower.includes('political') || titleLower.includes('shutdown')) {
+                transformation = transformations['political'];
+            } else {
+                transformation = transformations['economy'];
+            }
+
+            return transformation;
+        }
+
+        // ============================================
+        // UI RENDERING
+        // ============================================
+
+        function renderTable() {
+            const tableBody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+            const table = document.getElementById('scannerTable');
+
+            // Apply filters
+            const sourceFilter = document.getElementById('sourceFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            let filteredQueue = scannerQueue.filter(item => {
+                if (sourceFilter !== 'all' && item.source !== sourceFilter) return false;
+                if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+                return true;
+            });
+
+            if (filteredQueue.length === 0) {
+                emptyState.style.display = 'flex';
+                table.style.display = 'none';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            table.style.display = 'table';
+
+            tableBody.innerHTML = filteredQueue.map(item => `
+                <tr class="${item.id === selectedItemId ? 'selected' : ''} ${item.isTopStory ? 'top-story' : ''}"
+                    onclick="selectItem('${item.id}')">
+                    <td>
+                        <span class="source-badge ${item.source}">${item.sourceName}</span>
+                        ${item.isTopStory ? '<br><span style="font-size: 10px; color: var(--accent-gold); margin-top: 4px; display: inline-block;">TOP STORY</span>' : ''}
+                    </td>
+                    <td>
+                        <div class="original-headline">${item.originalTitle}</div>
+                        <div class="original-url">
+                            <a href="${item.originalUrl}" target="_blank" onclick="event.stopPropagation()">
+                                ${truncateUrl(item.originalUrl)}
+                            </a>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="score-badge ${getScoreClass(item.score.normalized)}">${item.score.normalized}</div>
+                        <div class="score-label">Prominence</div>
+                    </td>
+                    <td>
+                        <div class="rewritten-headline">${item.rewrittenTitle}</div>
+                        <div class="rewritten-preview">${stripHtml(item.rewrittenContent).substring(0, 100)}...</div>
+                    </td>
+                    <td>
+                        <div class="timestamp-relative">${formatRelativeTime(item.timestamp)}</div>
+                        <div class="timestamp">${formatTime(new Date(item.timestamp))}</div>
+                    </td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="action-btn approve" onclick="event.stopPropagation(); approveItemById('${item.id}')" title="Approve">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 6L9 17l-5-5"/>
+                                </svg>
+                            </button>
+                            <button class="action-btn reject" onclick="event.stopPropagation(); rejectItemById('${item.id}')" title="Reject">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M18 6L6 18M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderPanel(item) {
+            const panelBody = document.getElementById('panelBody');
+
+            panelBody.innerHTML = `
+                <div class="panel-section">
+                    <h3 class="panel-section-title">Good News Rewrite</h3>
+                    <h1 class="panel-rewritten-title">${item.rewrittenTitle}</h1>
+                    <div class="panel-article-content">
+                        ${item.rewrittenContent}
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3 class="panel-section-title">Source Information</h3>
+                    <div class="panel-meta-grid">
+                        <div class="panel-meta-item">
+                            <div class="panel-meta-label">Source</div>
+                            <div class="panel-meta-value">
+                                <span class="source-badge ${item.source}">${item.sourceName}</span>
+                            </div>
+                        </div>
+                        <div class="panel-meta-item">
+                            <div class="panel-meta-label">Scanned At</div>
+                            <div class="panel-meta-value">${formatDateTime(item.timestamp)}</div>
+                        </div>
+                        <div class="panel-meta-item">
+                            <div class="panel-meta-label">Status</div>
+                            <div class="panel-meta-value" style="text-transform: capitalize; color: ${getStatusColor(item.status)}">${item.status}</div>
+                        </div>
+                        <div class="panel-meta-item">
+                            <div class="panel-meta-label">Prominence Score</div>
+                            <div class="panel-meta-value">
+                                <span class="score-badge ${getScoreClass(item.score.normalized)}" style="width: 32px; height: 32px; font-size: 14px;">${item.score.normalized}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-original-link">
+                        <div class="panel-meta-label">Original Article</div>
+                        <div style="margin-top: 4px;">
+                            <strong style="font-size: 13px; color: var(--text-secondary);">${item.originalTitle}</strong>
+                        </div>
+                        <a href="${item.originalUrl}" target="_blank">${item.originalUrl}</a>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3 class="panel-section-title">Scoring Details</h3>
+                    <div class="scoring-details">
+                        <div class="scoring-row">
+                            <span class="scoring-label">Page Position</span>
+                            <span class="scoring-value">${item.score.position} pts</span>
+                        </div>
+                        <div class="scoring-row">
+                            <span class="scoring-label">Featured Image</span>
+                            <span class="scoring-value">${item.score.hasImage} pts</span>
+                        </div>
+                        <div class="scoring-row">
+                            <span class="scoring-label">Title Quality</span>
+                            <span class="scoring-value">${item.score.titleLength} pts</span>
+                        </div>
+                        <div class="scoring-row">
+                            <span class="scoring-label">Source Weight</span>
+                            <span class="scoring-value">${item.score.sourceWeight} pts</span>
+                        </div>
+                        <div class="scoring-row">
+                            <span class="scoring-label">Recency</span>
+                            <span class="scoring-value">${item.score.recency} pts</span>
+                        </div>
+                        <div class="scoring-row">
+                            <span class="scoring-label">Total Score</span>
+                            <span class="scoring-value" style="color: var(--accent-gold);">${item.score.total} / 30 (${item.score.normalized}%)</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // PANEL MANAGEMENT
+        // ============================================
+
+        function selectItem(id) {
+            selectedItemId = id;
+            const item = scannerQueue.find(i => i.id == id);
+
+            if (item) {
+                renderPanel(item);
+                openPanel();
+                renderTable(); // Re-render to show selection
+            }
+        }
+
+        function openPanel() {
+            document.getElementById('slidePanel').classList.add('open');
+            document.getElementById('panelOverlay').classList.add('visible');
+            document.getElementById('scannerContent').classList.add('panel-open');
+        }
+
+        function closePanel() {
+            document.getElementById('slidePanel').classList.remove('open');
+            document.getElementById('panelOverlay').classList.remove('visible');
+            document.getElementById('scannerContent').classList.remove('panel-open');
+            selectedItemId = null;
+            renderTable();
+        }
+
+        // ============================================
+        // ACTIONS
+        // ============================================
+
+        function approveItem() {
+            if (selectedItemId) {
+                approveItemById(selectedItemId);
+            }
+        }
+
+        function rejectItem() {
+            if (selectedItemId) {
+                rejectItemById(selectedItemId);
+            }
+        }
+
+        function approveItemById(id) {
+            const item = scannerQueue.find(i => i.id == id);
+            if (item) {
+                item.status = 'approved';
+                updateStats();
+                renderTable();
+
+                if (selectedItemId == id) {
+                    renderPanel(item);
+                }
+
+                // In production, this would POST to the API to publish
+                console.log('Approved and publishing:', item.rewrittenTitle);
+            }
+        }
+
+        function rejectItemById(id) {
+            const item = scannerQueue.find(i => i.id == id);
+            if (item) {
+                item.status = 'rejected';
+                updateStats();
+                renderTable();
+
+                if (selectedItemId == id) {
+                    renderPanel(item);
+                }
+            }
+        }
+
+        function clearQueue() {
+            if (confirm('Are you sure you want to clear the scanner queue?')) {
+                scannerQueue = [];
+                selectedItemId = null;
+                closePanel();
+                renderTable();
+                updateStats();
+            }
+        }
+
+        function filterResults() {
+            renderTable();
+        }
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+
+        function updateScanStatus(status, text) {
+            const dot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+
+            dot.className = 'status-dot';
+            if (status === 'scanning') {
+                dot.classList.add('scanning');
+                dot.style.background = 'var(--accent-orange)';
+            } else if (status === 'error') {
+                dot.style.background = 'var(--accent-red)';
+            } else {
+                dot.style.background = 'var(--accent-green)';
+            }
+
+            statusText.textContent = text;
+        }
+
+        function updateStats() {
+            document.getElementById('queueCount').textContent = scannerQueue.filter(i => i.status === 'pending').length;
+            document.getElementById('approvedCount').textContent = scannerQueue.filter(i => i.status === 'approved').length;
+        }
+
+        function getScoreClass(score) {
+            if (score >= 70) return 'high';
+            if (score >= 40) return 'medium';
+            return 'low';
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'pending': 'var(--accent-orange)',
+                'approved': 'var(--accent-green)',
+                'rejected': 'var(--accent-red)'
+            };
+            return colors[status] || 'var(--text-secondary)';
+        }
+
+        function truncateUrl(url) {
+            try {
+                const parsed = new URL(url);
+                const path = parsed.pathname.length > 30
+                    ? parsed.pathname.substring(0, 30) + '...'
+                    : parsed.pathname;
+                return parsed.hostname + path;
+            } catch {
+                return url.substring(0, 50) + '...';
+            }
+        }
+
+        function stripHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || '';
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
+        function formatDateTime(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
+        function formatRelativeTime(isoString) {
+            const date = new Date(isoString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+
+            const diffHours = Math.floor(diffMins / 60);
+            if (diffHours < 24) return `${diffHours}h ago`;
+
+            const diffDays = Math.floor(diffHours / 24);
+            return `${diffDays}d ago`;
+        }
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // ============================================
+        // KEYBOARD SHORTCUTS
+        // ============================================
+
+        document.addEventListener('keydown', (e) => {
+            // ESC to close panel
+            if (e.key === 'Escape') {
+                closePanel();
+            }
+
+            // Ctrl/Cmd + S to run scan
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                runScan();
+            }
+        });
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTable();
+            updateStats();
+        });
+    </script>
+</body>
+</html>
