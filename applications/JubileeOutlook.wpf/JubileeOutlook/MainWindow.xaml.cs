@@ -164,6 +164,8 @@ public partial class MainWindow : Window
             ServiceConfiguration.Initialize();
             // Initialize notification service for user-friendly error messages
             NotificationService.Instance.Initialize(NotificationContainer);
+            // Initialize offline status monitoring
+            InitializeOfflineStatusMonitoring();
             // Initialize authentication state
             await _authManager.InitializeAsync();
             UpdateProfileUI();
@@ -1764,6 +1766,100 @@ public partial class MainWindow : Window
         authDialog.Content = overlayGrid;
 
         authDialog.ShowDialog();
+    }
+
+    #endregion
+
+    #region Offline Status Monitoring
+
+    private System.Timers.Timer? _statusUpdateTimer;
+
+    /// <summary>
+    /// Initializes offline status monitoring
+    /// </summary>
+    private void InitializeOfflineStatusMonitoring()
+    {
+        // Subscribe to network status changes
+        var networkService = NetworkStatusService.Instance;
+        networkService.NetworkStatusChanged += NetworkStatus_Changed;
+
+        // Subscribe to sync service events
+        var syncService = SyncService.Instance;
+        syncService.SyncProgressChanged += SyncService_SyncProgressChanged;
+        syncService.SyncCompleted += SyncService_SyncCompleted;
+
+        // Initial update
+        UpdateNetworkStatus();
+        UpdatePendingOperationsCount();
+
+        // Set up timer for periodic pending operations check
+        _statusUpdateTimer = new System.Timers.Timer(5000); // Check every 5 seconds
+        _statusUpdateTimer.Elapsed += (s, e) => Dispatcher.Invoke(UpdatePendingOperationsCount);
+        _statusUpdateTimer.Start();
+
+        // Start network monitoring
+        networkService.StartMonitoring();
+    }
+
+    private void NetworkStatus_Changed(object? sender, NetworkStatusChangedEventArgs e)
+    {
+        Dispatcher.Invoke(UpdateNetworkStatus);
+    }
+
+    private void UpdateNetworkStatus()
+    {
+        var networkService = NetworkStatusService.Instance;
+        var isOnline = networkService.IsOnline && networkService.IsApiReachable;
+
+        OnlineStatusPanel.Visibility = isOnline ? Visibility.Visible : Visibility.Collapsed;
+        OfflineStatusPanel.Visibility = isOnline ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private async void UpdatePendingOperationsCount()
+    {
+        try
+        {
+            var syncQueue = SyncQueueService.Instance;
+            var pendingCount = await syncQueue.GetPendingCountAsync();
+
+            if (pendingCount > 0)
+            {
+                PendingCountText.Text = pendingCount.ToString();
+                PendingOperationsPanel.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                PendingOperationsPanel.Visibility = Visibility.Collapsed;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Error getting pending count: {ex.Message}");
+        }
+    }
+
+    private void SyncService_SyncProgressChanged(object? sender, SyncProgressEventArgs e)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            SyncStatusPanel.Visibility = Visibility.Visible;
+            SyncStatusText.Text = e.Message ?? "Syncing...";
+        });
+    }
+
+    private void SyncService_SyncCompleted(object? sender, SyncCompletedEventArgs e)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            SyncStatusPanel.Visibility = Visibility.Collapsed;
+            UpdatePendingOperationsCount();
+
+            // Update last sync text
+            if (e.Success)
+            {
+                LastSyncText.Text = $"Last sync: {DateTime.Now:HH:mm}";
+            }
+        });
     }
 
     #endregion
