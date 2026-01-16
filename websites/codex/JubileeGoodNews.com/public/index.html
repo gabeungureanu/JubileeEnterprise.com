@@ -1100,21 +1100,21 @@
 
             <!-- Hero Sidebar - Secondary Stories -->
             <div class="hero-sidebar" id="heroSidebar">
-                <div class="hero-sidebar-card">
+                <div class="hero-sidebar-card" onclick="openSidebarStory(0)">
                     <img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=250&fit=crop" alt="Story">
                     <div class="hero-sidebar-overlay">
                         <span class="hero-sidebar-category">Faith</span>
                         <h3 class="hero-sidebar-title">Finding Peace in Uncertain Times</h3>
                     </div>
                 </div>
-                <div class="hero-sidebar-card">
+                <div class="hero-sidebar-card" onclick="openSidebarStory(1)">
                     <img src="https://images.unsplash.com/photo-1489659639091-8b687bc4386e?w=400&h=250&fit=crop" alt="Story">
                     <div class="hero-sidebar-overlay">
                         <span class="hero-sidebar-category">Community</span>
                         <h3 class="hero-sidebar-title">Local Church Launches Food Drive</h3>
                     </div>
                 </div>
-                <div class="hero-sidebar-card">
+                <div class="hero-sidebar-card" onclick="openSidebarStory(2)">
                     <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=250&fit=crop" alt="Story">
                     <div class="hero-sidebar-overlay">
                         <span class="hero-sidebar-category">Inspiration</span>
@@ -1502,7 +1502,7 @@
                                         <div class="hero-score-label">Score</div>
                                     </div>
                                 </div>
-                                <a href="${story.originalUrl}" target="_blank" class="hero-read-more">
+                                <a href="javascript:void(0)" onclick="openArticle(${index})" class="hero-read-more">
                                     Read Full Story
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -1565,6 +1565,77 @@
                     nextSlide();
                 }, ROTATION_INTERVAL);
             }
+        }
+
+        // ============================================
+        // ARTICLE NAVIGATION
+        // ============================================
+
+        function openArticle(index) {
+            if (!heroStories || index >= heroStories.length) return;
+
+            const story = heroStories[index];
+            story.timestamp = Date.now();
+
+            // Store the selected article in sessionStorage
+            sessionStorage.setItem('selectedArticle', JSON.stringify(story));
+
+            // Also store all hero stories for related articles
+            sessionStorage.setItem('heroStories', JSON.stringify(heroStories));
+
+            // Navigate to article page
+            window.location.href = `/article.html?index=${index}`;
+        }
+
+        function openSidebarArticle(type, index) {
+            // For sidebar articles, create a simple article object
+            const sidebarData = {
+                title: type === 'devotional' ? sampleDevotionals[index]?.title : sampleContent[index]?.title,
+                rewrittenTitle: type === 'devotional' ? sampleDevotionals[index]?.title : sampleContent[index]?.title,
+                rewrittenContent: `<p>${type === 'devotional' ? sampleDevotionals[index]?.excerpt : sampleContent[index]?.summary}</p><p>This is a sample article demonstrating the article page layout. In production, this would contain the full article content with faith-inspired messaging.</p>`,
+                imageUrl: type === 'devotional' ? sampleDevotionals[index]?.image : sampleContent[index]?.image,
+                storyCluster: type === 'devotional' ? 'faith' : sampleContent[index]?.category?.toLowerCase(),
+                timestamp: Date.now()
+            };
+
+            sessionStorage.setItem('selectedArticle', JSON.stringify(sidebarData));
+            window.location.href = '/article.html';
+        }
+
+        // Sidebar story cards data
+        const sidebarStories = [
+            {
+                title: 'Finding Peace in Uncertain Times',
+                rewrittenTitle: 'Finding Peace in Uncertain Times',
+                rewrittenContent: '<p>In a world filled with uncertainty, many are discovering that true peace comes from within—rooted in faith, community, and a steadfast trust in God\'s plan.</p><p>As challenges arise in our daily lives, faith communities across the nation are reporting a renewed interest in spiritual practices that bring calm and perspective. Prayer groups, meditation circles, and Bible study sessions are seeing increased attendance as people seek anchors of stability.</p><p>"When everything around us feels unstable, we find that our faith provides the foundation we need," shared one community leader. "It\'s in these moments that we remember we are not alone—we have each other, and we have God."</p><p>Experts in spiritual wellness encourage those feeling anxious to establish daily routines that include moments of reflection, gratitude, and connection with others. These practices, they say, can transform periods of uncertainty into opportunities for growth and deeper faith.</p>',
+                imageUrl: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&h=600&fit=crop',
+                storyCluster: 'faith',
+                timestamp: Date.now()
+            },
+            {
+                title: 'Local Church Launches Food Drive',
+                rewrittenTitle: 'Local Church Launches Food Drive: Community Comes Together to Serve',
+                rewrittenContent: '<p>When members of the community heard about families struggling to put food on the table, they didn\'t wait—they acted. A local church has launched an ambitious food drive that is already making a significant impact on those in need.</p><p>Volunteers have been working tirelessly, collecting donations, organizing supplies, and delivering meals to families throughout the area. The response from the community has been overwhelming, with businesses, schools, and individuals all contributing to the effort.</p><p>"This is what community looks like," explained the church\'s outreach coordinator. "When we see a need, we come together. That\'s the heart of service—showing God\'s love through our actions."</p><p>The food drive accepts non-perishable items, fresh produce, and monetary donations. Organizers hope to serve hundreds of families before the campaign concludes, demonstrating the power of collective compassion.</p>',
+                imageUrl: 'https://images.unsplash.com/photo-1489659639091-8b687bc4386e?w=1200&h=600&fit=crop',
+                storyCluster: 'community',
+                timestamp: Date.now()
+            },
+            {
+                title: 'Morning Devotionals That Transform',
+                rewrittenTitle: 'Morning Devotionals That Transform: Starting Each Day with Purpose',
+                rewrittenContent: '<p>There\'s something powerful about beginning each day with intention. Across the globe, millions are discovering that a simple morning devotional practice can transform not just their mornings, but their entire outlook on life.</p><p>Morning devotionals—whether they include reading Scripture, journaling, prayer, or meditation—create space for reflection before the busyness of the day takes over. Practitioners report feeling more centered, more grateful, and better equipped to handle whatever challenges come their way.</p><p>"I used to check my phone first thing in the morning," shared one devotee. "Now I reach for my Bible instead. The difference in my day is remarkable. I feel like I\'m starting from a place of strength rather than reaction."</p><p>For those new to the practice, experts recommend starting small—even five minutes of quiet reflection can make a difference. The key is consistency, making devotional time a non-negotiable part of the morning routine.</p>',
+                imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=600&fit=crop',
+                storyCluster: 'faith',
+                timestamp: Date.now()
+            }
+        ];
+
+        function openSidebarStory(index) {
+            if (index >= sidebarStories.length) return;
+
+            sessionStorage.setItem('selectedArticle', JSON.stringify(sidebarStories[index]));
+            sessionStorage.setItem('heroStories', JSON.stringify(heroStories.length > 0 ? heroStories : sidebarStories));
+            window.location.href = '/article.html';
         }
 
         function showHeroLoading(text) {
@@ -1689,9 +1760,9 @@
         ];
 
         // Render Functions
-        function renderContentCard(item) {
+        function renderContentCard(item, index) {
             return `
-                <article class="content-card" onclick="window.location='/article/${item.id}'">
+                <article class="content-card" onclick="openSidebarArticle('content', ${index})">
                     <div class="content-card-image">
                         <img src="${item.image}" alt="${item.title}" loading="lazy">
                     </div>
@@ -1706,9 +1777,9 @@
             `;
         }
 
-        function renderListCard(item) {
+        function renderListCard(item, index) {
             return `
-                <article class="list-card" onclick="window.location='/devotional/${item.id}'">
+                <article class="list-card" onclick="openSidebarArticle('devotional', ${index})">
                     <div class="list-card-image">
                         <img src="${item.image}" alt="${item.title}" loading="lazy">
                     </div>
@@ -1749,11 +1820,11 @@
         async function loadContent() {
             // Latest Content
             const latestContainer = document.getElementById('latestContent');
-            latestContainer.innerHTML = sampleContent.map(renderContentCard).join('');
+            latestContainer.innerHTML = sampleContent.map((item, index) => renderContentCard(item, index)).join('');
 
             // Devotionals
             const devotionalsContainer = document.getElementById('devotionalsList');
-            devotionalsContainer.innerHTML = sampleDevotionals.map(renderListCard).join('');
+            devotionalsContainer.innerHTML = sampleDevotionals.map((item, index) => renderListCard(item, index)).join('');
 
             // Trending
             const trendingContainer = document.getElementById('trendingList');
