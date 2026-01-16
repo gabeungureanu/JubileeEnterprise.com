@@ -65,7 +65,7 @@
 
             /* Layout */
             --header-height: 56px;
-            --panel-width: 480px;
+            --panel-width: 520px;
         }
 
         * {
@@ -167,6 +167,11 @@
 
         .btn-primary:hover {
             background: var(--accent-gold-hover);
+        }
+
+        .btn-primary:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
         }
 
         .btn-secondary {
@@ -337,7 +342,7 @@
         .scanner-table td {
             padding: var(--space-md);
             border-bottom: 1px solid var(--border-color);
-            vertical-align: top;
+            vertical-align: middle;
         }
 
         .scanner-table tbody tr {
@@ -353,6 +358,14 @@
         .scanner-table tbody tr.selected {
             background: var(--bg-tertiary);
             border-left: 3px solid var(--accent-gold);
+        }
+
+        .scanner-table tbody tr.top-story {
+            background: linear-gradient(90deg, rgba(230, 172, 0, 0.1) 0%, var(--bg-card) 50%);
+        }
+
+        .scanner-table tbody tr.top-story:hover {
+            background: linear-gradient(90deg, rgba(230, 172, 0, 0.15) 0%, var(--bg-card-hover) 50%);
         }
 
         .scanner-table tbody tr:last-child td:first-child {
@@ -381,6 +394,26 @@
         .source-badge.yahoo { background: var(--source-yahoo); color: white; }
         .source-badge.nytimes { background: #f5f5f5; color: var(--source-nyt); }
         .source-badge.msn { background: var(--source-msn); color: white; }
+
+        /* Image Status */
+        .image-status {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            font-size: var(--font-xs);
+        }
+
+        .image-status.success { color: var(--accent-green); }
+        .image-status.pending { color: var(--accent-orange); }
+        .image-status.failed { color: var(--accent-red); }
+
+        .image-thumb {
+            width: 60px;
+            height: 40px;
+            border-radius: 4px;
+            object-fit: cover;
+            background: var(--bg-secondary);
+        }
 
         /* Headlines */
         .original-headline {
@@ -460,6 +493,26 @@
             text-align: center;
         }
 
+        /* Top Story Badge */
+        .top-story-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-left: var(--space-sm);
+        }
+
+        .top-story-badge svg {
+            width: 10px;
+            height: 10px;
+        }
+
         /* Timestamp */
         .timestamp {
             font-size: var(--font-xs);
@@ -507,177 +560,6 @@
             background: rgba(233, 69, 96, 0.2);
             color: var(--accent-red);
             border-color: var(--accent-red);
-        }
-
-        /* ============================================
-           TOP STORY DISPLAY
-           ============================================ */
-
-        .top-story-container {
-            padding: var(--space-lg);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .top-story-card {
-            max-width: 800px;
-            width: 100%;
-            background: var(--bg-card);
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .top-story-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
-            border-color: var(--accent-gold);
-        }
-
-        .top-story-image-container {
-            width: 100%;
-            height: 350px;
-            background: var(--bg-secondary);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .top-story-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .top-story-image-placeholder {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            gap: var(--space-sm);
-        }
-
-        .top-story-image-placeholder svg {
-            width: 48px;
-            height: 48px;
-            opacity: 0.5;
-        }
-
-        .top-story-loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: var(--space-sm);
-            color: var(--text-muted);
-        }
-
-        .top-story-badge {
-            position: absolute;
-            top: var(--space-md);
-            left: var(--space-md);
-            background: var(--accent-gold);
-            color: var(--bg-primary);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: var(--font-xs);
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: var(--space-xs);
-        }
-
-        .top-story-badge svg {
-            width: 14px;
-            height: 14px;
-        }
-
-        .top-story-score {
-            position: absolute;
-            top: var(--space-md);
-            right: var(--space-md);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: var(--font-lg);
-            font-weight: 700;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
-        }
-
-        .top-story-content {
-            padding: var(--space-xl);
-        }
-
-        .top-story-source {
-            display: flex;
-            align-items: center;
-            gap: var(--space-md);
-            margin-bottom: var(--space-md);
-        }
-
-        .top-story-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 28px;
-            font-weight: 700;
-            line-height: 1.3;
-            color: var(--accent-gold);
-            margin-bottom: var(--space-md);
-        }
-
-        .top-story-original {
-            font-size: var(--font-sm);
-            color: var(--text-muted);
-            margin-bottom: var(--space-lg);
-            padding: var(--space-md);
-            background: var(--bg-secondary);
-            border-radius: 8px;
-            border-left: 3px solid var(--text-muted);
-        }
-
-        .top-story-original strong {
-            display: block;
-            margin-bottom: var(--space-xs);
-            color: var(--text-secondary);
-        }
-
-        .top-story-excerpt {
-            font-size: var(--font-base);
-            line-height: 1.7;
-            color: var(--text-secondary);
-        }
-
-        .top-story-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: var(--space-lg);
-            padding-top: var(--space-md);
-            border-top: 1px solid var(--border-color);
-        }
-
-        .top-story-timestamp {
-            font-size: var(--font-sm);
-            color: var(--text-muted);
-        }
-
-        .top-story-actions {
-            display: flex;
-            gap: var(--space-sm);
         }
 
         /* ============================================
@@ -767,7 +649,7 @@
 
         .panel-image-container {
             width: 100%;
-            height: 250px;
+            height: 280px;
             background: var(--bg-secondary);
             border-radius: 12px;
             overflow: hidden;
@@ -902,6 +784,30 @@
             color: var(--text-primary);
         }
 
+        .image-download-log {
+            background: var(--bg-card);
+            padding: var(--space-md);
+            border-radius: 8px;
+            margin-top: var(--space-md);
+        }
+
+        .download-attempt {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-xs) 0;
+            font-size: var(--font-xs);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .download-attempt:last-child {
+            border-bottom: none;
+        }
+
+        .download-attempt.success { color: var(--accent-green); }
+        .download-attempt.failed { color: var(--accent-red); }
+        .download-attempt.skipped { color: var(--text-muted); }
+
         .panel-footer {
             padding: var(--space-md) var(--space-lg);
             border-top: 1px solid var(--border-color);
@@ -988,20 +894,14 @@
             animation: spin 1s linear infinite;
         }
 
+        .loading-spinner.small {
+            width: 16px;
+            height: 16px;
+            border-width: 2px;
+        }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
-        }
-
-        .skeleton {
-            background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s infinite;
-            border-radius: 4px;
-        }
-
-        @keyframes skeleton-loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
         }
 
         @keyframes slideUp {
@@ -1021,7 +921,7 @@
 
         @media (max-width: 1200px) {
             :root {
-                --panel-width: 400px;
+                --panel-width: 450px;
             }
         }
 
@@ -1032,7 +932,7 @@
 
             .slide-panel {
                 width: 100%;
-                max-width: 480px;
+                max-width: 520px;
             }
         }
 
@@ -1134,7 +1034,7 @@
                 </div>
             </div>
 
-            <!-- Content Container -->
+            <!-- Table Container -->
             <div class="table-container" id="tableContainer">
                 <!-- Empty State -->
                 <div class="empty-state" id="emptyState">
@@ -1147,7 +1047,7 @@
                     </div>
                     <h3 class="empty-state-title">No scanned items yet</h3>
                     <p class="empty-state-text">
-                        Click "Run Scan" to fetch top stories from major news sources and find the highest rated story with a hopeful, faith-forward perspective.
+                        Click "Run Scan" to fetch top stories from major news sources. The scanner will identify matching stories across sources and download images with automatic fallback.
                     </p>
                     <button class="btn btn-primary" onclick="runScan()">
                         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1158,64 +1058,23 @@
                     </button>
                 </div>
 
-                <!-- Top Story Display -->
-                <div class="top-story-container" id="topStoryContainer" style="display: none;">
-                    <div class="top-story-card" id="topStoryCard" onclick="openTopStoryPanel()">
-                        <div class="top-story-image-container">
-                            <div class="top-story-badge">
-                                <svg viewBox="0 0 24 24" fill="currentColor">
-                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                                </svg>
-                                Top Story
-                            </div>
-                            <div class="top-story-score" id="topStoryScore">--</div>
-                            <div class="top-story-loading" id="imageLoading">
-                                <div class="loading-spinner"></div>
-                                <span>Loading image...</span>
-                            </div>
-                            <img class="top-story-image" id="topStoryImage" style="display: none;" alt="Top story image">
-                            <div class="top-story-image-placeholder" id="imagePlaceholder" style="display: none;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                                    <polyline points="21 15 16 10 5 21"/>
-                                </svg>
-                                <span>No image available</span>
-                            </div>
-                        </div>
-                        <div class="top-story-content">
-                            <div class="top-story-source">
-                                <span class="source-badge" id="topStorySourceBadge">Source</span>
-                                <span class="timestamp" id="topStoryTimestamp">Scanned just now</span>
-                            </div>
-                            <h2 class="top-story-title" id="topStoryTitle">Loading...</h2>
-                            <div class="top-story-original" id="topStoryOriginal">
-                                <strong>Original Headline:</strong>
-                                <span id="topStoryOriginalTitle">Loading...</span>
-                            </div>
-                            <p class="top-story-excerpt" id="topStoryExcerpt">
-                                Click to view the full transformed article with scoring details...
-                            </p>
-                            <div class="top-story-meta">
-                                <span class="top-story-timestamp" id="topStoryScanTime">Scanned at --:--</span>
-                                <div class="top-story-actions">
-                                    <button class="btn btn-secondary" onclick="event.stopPropagation(); rejectTopStory()" style="padding: 8px 16px;">
-                                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M18 6L6 18M6 6l12 12"/>
-                                        </svg>
-                                        Reject
-                                    </button>
-                                    <button class="btn btn-primary" onclick="event.stopPropagation(); approveTopStory()" style="padding: 8px 16px;">
-                                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M20 6L9 17l-5-5"/>
-                                        </svg>
-                                        Approve
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- Scanner Table -->
+                <table class="scanner-table" id="scannerTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Source</th>
+                            <th>Original Story</th>
+                            <th>Score</th>
+                            <th>Good News Version</th>
+                            <th>Image</th>
+                            <th>Scanned</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Rows populated dynamically -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -1255,18 +1114,27 @@
         // STATE MANAGEMENT
         // ============================================
 
-        let topStory = null;
-        let downloadedImageUrl = null;
+        let scannerQueue = [];
+        let selectedItemId = null;
         let isScanning = false;
 
-        // News sources to scan
+        // News sources to scan (in priority order for image fallback)
         const NEWS_SOURCES = [
-            { id: 'yahoo', name: 'Yahoo', url: 'https://www.yahoo.com', color: '#6001d2' },
             { id: 'nytimes', name: 'NY Times', url: 'https://www.nytimes.com', color: '#1a1a1a' },
-            { id: 'msn', name: 'MSN', url: 'https://www.msn.com', color: '#0078d4' },
             { id: 'cnn', name: 'CNN', url: 'https://www.cnn.com', color: '#cc0000' },
-            { id: 'foxnews', name: 'Fox News', url: 'https://www.foxnews.com', color: '#003366' }
+            { id: 'foxnews', name: 'Fox News', url: 'https://www.foxnews.com', color: '#003366' },
+            { id: 'yahoo', name: 'Yahoo', url: 'https://www.yahoo.com', color: '#6001d2' },
+            { id: 'msn', name: 'MSN', url: 'https://www.msn.com', color: '#0078d4' }
         ];
+
+        // Story keyword clusters for matching stories across sources
+        const STORY_CLUSTERS = {
+            'economy': ['economy', 'economic', 'gdp', 'inflation', 'recession', 'jobs', 'unemployment', 'fed', 'federal reserve', 'interest rate', 'market', 'stock'],
+            'climate': ['climate', 'environment', 'global warming', 'carbon', 'emissions', 'renewable', 'green', 'sustainability', 'paris agreement'],
+            'politics': ['congress', 'senate', 'house', 'president', 'biden', 'trump', 'election', 'vote', 'shutdown', 'bill', 'legislation'],
+            'technology': ['tech', 'technology', 'ai', 'artificial intelligence', 'layoff', 'startup', 'silicon valley', 'google', 'apple', 'microsoft', 'meta'],
+            'world': ['global', 'international', 'summit', 'united nations', 'nato', 'war', 'conflict', 'diplomatic']
+        };
 
         // ============================================
         // SCANNING LOGIC
@@ -1279,31 +1147,18 @@
             updateScanStatus('scanning', 'Scanning sources...');
             document.getElementById('scanBtn').disabled = true;
 
-            // Reset state
-            topStory = null;
-            downloadedImageUrl = null;
-
-            // Show loading state
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('topStoryContainer').style.display = 'flex';
-            document.getElementById('imageLoading').style.display = 'flex';
-            document.getElementById('topStoryImage').style.display = 'none';
-            document.getElementById('imagePlaceholder').style.display = 'none';
-            document.getElementById('topStoryTitle').textContent = 'Scanning news sources...';
-            document.getElementById('topStoryOriginalTitle').textContent = 'Please wait...';
-            document.getElementById('topStoryExcerpt').textContent = 'Fetching and analyzing stories from multiple sources to find the most prominent news item...';
-
             try {
                 let allStories = [];
 
-                // Fetch from all sources
+                // Phase 1: Fetch stories from all sources
                 for (const source of NEWS_SOURCES) {
                     updateScanStatus('scanning', `Scanning ${source.name}...`);
-                    await delay(600 + Math.random() * 300);
+                    await delay(500 + Math.random() * 300);
 
                     const story = await fetchTopStory(source);
                     if (story) {
                         story.score = calculateProminenceScore(story);
+                        story.storyCluster = identifyStoryCluster(story.originalTitle);
 
                         const rewritten = await rewriteAsGoodNews(story);
                         story.rewrittenTitle = rewritten.title;
@@ -1312,24 +1167,42 @@
                         story.id = Date.now() + Math.random();
                         story.timestamp = new Date().toISOString();
                         story.status = 'pending';
+                        story.imageStatus = 'pending';
+                        story.downloadedImage = null;
+                        story.imageDownloadLog = [];
 
                         allStories.push(story);
                     }
                 }
 
-                // Find the highest rated story
-                if (allStories.length > 0) {
-                    topStory = allStories.reduce((max, s) =>
-                        s.score.normalized > max.score.normalized ? s : max, allStories[0]);
+                // Phase 2: Find matching stories across sources
+                const storyGroups = groupMatchingStories(allStories);
 
-                    updateScanStatus('scanning', 'Downloading image to server...');
+                // Phase 3: Identify the top story (highest scoring story from the largest cluster)
+                let topStoryGroup = null;
+                let maxGroupScore = 0;
 
-                    // Download the image for the top story to /images/prominence folder
-                    await downloadStoryImage(topStory);
-
-                    // Render the top story
-                    renderTopStory();
+                for (const [cluster, stories] of Object.entries(storyGroups)) {
+                    const groupScore = stories.reduce((sum, s) => sum + s.score.normalized, 0);
+                    if (groupScore > maxGroupScore) {
+                        maxGroupScore = groupScore;
+                        topStoryGroup = stories;
+                    }
                 }
+
+                // Mark top story and its matches
+                if (topStoryGroup && topStoryGroup.length > 0) {
+                    // Sort by score to get the primary top story
+                    topStoryGroup.sort((a, b) => b.score.normalized - a.score.normalized);
+                    topStoryGroup[0].isTopStory = true;
+
+                    // Phase 4: Cascading image download for top story
+                    updateScanStatus('scanning', 'Downloading image for top story...');
+                    await downloadImageWithFallback(topStoryGroup[0], topStoryGroup);
+                }
+
+                // Add all stories to queue
+                scannerQueue = allStories;
 
                 updateScanStatus('ready', 'Scan complete');
                 document.getElementById('lastScanTime').textContent = formatTime(new Date());
@@ -1337,12 +1210,148 @@
             } catch (error) {
                 console.error('Scan error:', error);
                 updateScanStatus('error', 'Scan failed');
-                document.getElementById('emptyState').style.display = 'flex';
-                document.getElementById('topStoryContainer').style.display = 'none';
             } finally {
                 isScanning = false;
                 document.getElementById('scanBtn').disabled = false;
+                renderTable();
                 updateStats();
+            }
+        }
+
+        function identifyStoryCluster(title) {
+            const titleLower = title.toLowerCase();
+            let bestMatch = null;
+            let bestScore = 0;
+
+            for (const [cluster, keywords] of Object.entries(STORY_CLUSTERS)) {
+                let score = 0;
+                for (const keyword of keywords) {
+                    if (titleLower.includes(keyword)) {
+                        score += keyword.length; // Longer matches are more significant
+                    }
+                }
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMatch = cluster;
+                }
+            }
+
+            return bestMatch || 'general';
+        }
+
+        function groupMatchingStories(stories) {
+            const groups = {};
+
+            for (const story of stories) {
+                const cluster = story.storyCluster;
+                if (!groups[cluster]) {
+                    groups[cluster] = [];
+                }
+                groups[cluster].push(story);
+            }
+
+            return groups;
+        }
+
+        async function downloadImageWithFallback(topStory, matchingStories) {
+            // Sort matching stories by score for fallback order
+            const sortedStories = [...matchingStories].sort((a, b) => b.score.normalized - a.score.normalized);
+
+            for (const story of sortedStories) {
+                if (!story.imageUrl) {
+                    topStory.imageDownloadLog.push({
+                        source: story.sourceName,
+                        status: 'skipped',
+                        message: 'No image URL available'
+                    });
+                    continue;
+                }
+
+                updateScanStatus('scanning', `Trying image from ${story.sourceName}...`);
+
+                try {
+                    const result = await downloadAndVerifyImage(story.imageUrl, story.source);
+
+                    if (result.success && result.verified) {
+                        // Image successfully downloaded and verified
+                        topStory.downloadedImage = result.localPath;
+                        topStory.imageStatus = 'success';
+                        topStory.imageSource = story.sourceName;
+                        topStory.imageDownloadLog.push({
+                            source: story.sourceName,
+                            status: 'success',
+                            message: `Downloaded ${result.size} bytes`,
+                            path: result.localPath
+                        });
+
+                        // Also update the source story if different
+                        if (story.id !== topStory.id) {
+                            story.downloadedImage = result.localPath;
+                            story.imageStatus = 'success';
+                        }
+
+                        console.log(`Image verified from ${story.sourceName}: ${result.localPath}`);
+                        return true;
+                    } else {
+                        topStory.imageDownloadLog.push({
+                            source: story.sourceName,
+                            status: 'failed',
+                            message: result.error || 'Verification failed'
+                        });
+                    }
+                } catch (error) {
+                    topStory.imageDownloadLog.push({
+                        source: story.sourceName,
+                        status: 'failed',
+                        message: error.message
+                    });
+                }
+            }
+
+            // All sources failed
+            topStory.imageStatus = 'failed';
+            console.warn('Failed to download image from all sources');
+            return false;
+        }
+
+        async function downloadAndVerifyImage(imageUrl, sourceId) {
+            const filename = `${sourceId}_${Date.now()}`;
+
+            try {
+                // Call server endpoint to download the image
+                const response = await fetch('/api/scanner/download-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        imageUrl: imageUrl,
+                        filename: filename
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    return { success: false, error: result.message || 'Download failed' };
+                }
+
+                // Verify the image was actually saved by checking it exists
+                const verifyResponse = await fetch(result.localPath, { method: 'HEAD' });
+
+                if (verifyResponse.ok) {
+                    return {
+                        success: true,
+                        verified: true,
+                        localPath: result.localPath,
+                        size: result.size
+                    };
+                } else {
+                    return { success: false, error: 'Image verification failed - file not accessible' };
+                }
+
+            } catch (error) {
+                return { success: false, error: error.message };
             }
         }
 
@@ -1351,7 +1360,7 @@
             // In production, this would fetch actual RSS feeds or scrape headlines
             const simulatedStories = {
                 'yahoo': {
-                    originalTitle: 'Markets React to Federal Reserve Policy Announcement',
+                    originalTitle: 'Markets React to Federal Reserve Policy Announcement on Interest Rates',
                     originalUrl: 'https://finance.yahoo.com/news/markets-fed-policy',
                     originalExcerpt: 'Stock markets showed mixed reactions following the Federal Reserve\'s latest policy statement on interest rates...',
                     position: 1,
@@ -1359,7 +1368,7 @@
                     imageUrl: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&h=450&fit=crop'
                 },
                 'nytimes': {
-                    originalTitle: 'Global Leaders Gather for Climate Summit Amid Rising Tensions',
+                    originalTitle: 'Global Leaders Gather for Climate Summit Amid Rising Environmental Tensions',
                     originalUrl: 'https://www.nytimes.com/2026/01/16/world/climate-summit',
                     originalExcerpt: 'World leaders convened today for crucial climate discussions, facing pressure to deliver meaningful commitments...',
                     position: 1,
@@ -1367,7 +1376,7 @@
                     imageUrl: 'https://images.unsplash.com/photo-1569163139599-0f4517e36f51?w=800&h=450&fit=crop'
                 },
                 'msn': {
-                    originalTitle: 'Breaking: Major Technology Company Announces Layoffs',
+                    originalTitle: 'Technology Sector Faces Restructuring as Major Companies Announce Layoffs',
                     originalUrl: 'https://www.msn.com/news/technology/layoffs',
                     originalExcerpt: 'A major technology firm has announced significant workforce reductions, impacting thousands of employees...',
                     position: 2,
@@ -1375,7 +1384,7 @@
                     imageUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&h=450&fit=crop'
                 },
                 'cnn': {
-                    originalTitle: 'Political Divide Deepens as Congress Faces Shutdown Deadline',
+                    originalTitle: 'Congress Debates Spending Bill as Government Shutdown Deadline Approaches',
                     originalUrl: 'https://www.cnn.com/politics/congress-shutdown',
                     originalExcerpt: 'Tensions in Washington continue to escalate as lawmakers struggle to reach agreement before the funding deadline...',
                     position: 1,
@@ -1383,7 +1392,7 @@
                     imageUrl: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&h=450&fit=crop'
                 },
                 'foxnews': {
-                    originalTitle: 'Economy Shows Signs of Uncertainty Amid Global Challenges',
+                    originalTitle: 'Economic Indicators Show Signs of Uncertainty Amid Global Market Challenges',
                     originalUrl: 'https://www.foxnews.com/economy/uncertainty',
                     originalExcerpt: 'Economic indicators present a mixed picture as businesses navigate ongoing global challenges...',
                     position: 1,
@@ -1403,54 +1412,13 @@
             };
         }
 
-        async function downloadStoryImage(story) {
-            // Download image to server's /images/prominence folder
-            if (!story.imageUrl) {
-                downloadedImageUrl = null;
-                return;
-            }
-
-            try {
-                // Generate a unique filename based on source and timestamp
-                const filename = `${story.source}_${Date.now()}`;
-
-                // Call server endpoint to download the image
-                const response = await fetch('/api/scanner/download-image', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        imageUrl: story.imageUrl,
-                        filename: filename
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success && result.localPath) {
-                    // Image downloaded successfully to server
-                    downloadedImageUrl = result.localPath;
-                    story.downloadedImage = result.localPath;
-                    console.log(`Image downloaded to: ${result.localPath} (${result.size || 0} bytes)`);
-                } else {
-                    console.warn('Server failed to download image:', result.error || result.message);
-                    downloadedImageUrl = null;
-                }
-            } catch (error) {
-                console.warn('Image download failed:', error);
-                downloadedImageUrl = null;
-            }
-        }
-
         function calculateProminenceScore(story) {
-            // Deterministic scoring based on multiple factors
             const scores = {
-                position: Math.max(0, 10 - (story.position - 1) * 2), // Position on page (1st = 10 pts)
-                hasImage: story.hasImage ? 5 : 0, // Featured image bonus
+                position: Math.max(0, 10 - (story.position - 1) * 2),
+                hasImage: story.hasImage ? 5 : 0,
                 titleLength: story.originalTitle.length > 50 ? 3 : (story.originalTitle.length > 30 ? 5 : 2),
                 sourceWeight: getSourceWeight(story.source),
-                recency: 5 // Assume all stories are recent
+                recency: 5
             };
 
             const total = Object.values(scores).reduce((sum, val) => sum + val, 0);
@@ -1458,16 +1426,14 @@
             return {
                 ...scores,
                 total,
-                normalized: Math.round((total / 30) * 100) // Normalize to 0-100
+                normalized: Math.round((total / 30) * 100)
             };
         }
 
         function getSourceWeight(sourceId) {
-            // Weight sources by typical reliability/prominence
             const weights = {
                 'nytimes': 5,
                 'cnn': 4,
-                'bbc': 5,
                 'foxnews': 4,
                 'yahoo': 3,
                 'msn': 3
@@ -1476,127 +1442,176 @@
         }
 
         async function rewriteAsGoodNews(story) {
-            // Transform the story with a hopeful, faith-forward perspective
-            // In production, this could use an AI service
-
             const transformations = {
-                // Market/Economy stories
-                'markets': {
+                'economy': {
                     title: 'Opportunities Emerge as Markets Adapt to New Economic Landscape',
                     content: `<p>In times of economic change, we are reminded that God's provision remains constant. While markets fluctuate, our faith provides a stable foundation that transcends financial uncertainty.</p>
                     <p>Financial experts encourage a long-term perspective, reminding us that economies have historically shown remarkable resilience. This is a time to focus on what truly matters: faith, family, and community.</p>
-                    <p>"Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God." - Philippians 4:6</p>
-                    <p>As stewards of the resources God has entrusted to us, we can approach these times with wisdom and peace, knowing that our ultimate security lies not in market performance but in His faithful care.</p>`
+                    <p>"Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God." - Philippians 4:6</p>`
                 },
-                // Climate stories
                 'climate': {
                     title: 'World Leaders Unite in Hopeful Collaboration for Environmental Stewardship',
                     content: `<p>Leaders from around the globe are coming together with renewed commitment to caring for God's creation. This gathering represents an encouraging step toward collaborative stewardship of our planet.</p>
-                    <p>As people of faith, we recognize our calling to be good stewards of the earth. "The earth is the LORD's, and everything in it" (Psalm 24:1). This responsibility unites believers across nations in a common purpose.</p>
-                    <p>The summit highlights how communities worldwide are finding innovative, hopeful solutions. From local conservation efforts to international cooperation, people are answering the call to protect the environment for future generations.</p>
-                    <p>Let us approach environmental challenges not with fear, but with the confidence that comes from knowing God has given us both the wisdom and the means to care for His creation.</p>`
+                    <p>As people of faith, we recognize our calling to be good stewards of the earth. "The earth is the LORD's, and everything in it" (Psalm 24:1).</p>
+                    <p>The summit highlights how communities worldwide are finding innovative, hopeful solutions for future generations.</p>`
                 },
-                // Layoffs/Job stories
-                'layoffs': {
-                    title: 'New Beginnings: How Communities Support Those in Career Transitions',
-                    content: `<p>When companies restructure, it can feel unsettling. Yet countless stories remind us that these transitions often lead to unexpected blessings and new opportunities.</p>
-                    <p>Communities across the nation are rallying to support affected workers with job fairs, retraining programs, and networking opportunities. Churches and faith-based organizations are opening their doors to provide both practical assistance and spiritual encouragement.</p>
-                    <p>"For I know the plans I have for you," declares the LORD, "plans to prosper you and not to harm you, plans to give you hope and a future." - Jeremiah 29:11</p>
-                    <p>Many who have experienced similar transitions share how these challenging moments ultimately led them to more fulfilling careers and deeper reliance on God's guidance.</p>`
-                },
-                // Political stories
-                'political': {
+                'politics': {
                     title: 'A Call for Unity: Citizens Across the Nation Choose Hope Over Division',
                     content: `<p>While headlines often focus on political disagreements, a deeper story is emerging: ordinary Americans are finding common ground in their shared values and commitment to community.</p>
-                    <p>Across the country, neighbors are choosing dialogue over division, and local leaders are demonstrating that cooperation transcends party lines when focused on serving others.</p>
                     <p>"If it is possible, as far as it depends on you, live at peace with everyone." - Romans 12:18</p>
-                    <p>Faith communities are playing a vital role in bridge-building, reminding us that we are called to love our neighbors—including those with whom we may disagree. In this spirit of unity, we find hope for constructive solutions.</p>
-                    <p>As we pray for our leaders and nation, we trust that God remains sovereign over human affairs, working all things according to His purpose.</p>`
+                    <p>Faith communities are playing a vital role in bridge-building, reminding us that we are called to love our neighbors.</p>`
                 },
-                // Economy uncertainty stories
-                'economy': {
-                    title: 'Finding Stability in Uncertain Times: Faith Communities Offer Hope and Support',
-                    content: `<p>During times of economic uncertainty, faith communities across the nation are stepping up to provide both spiritual encouragement and practical support to those in need.</p>
-                    <p>From food pantries to financial counseling, churches and ministries are demonstrating Christ's love in tangible ways. These efforts remind us that true security comes not from economic conditions but from our relationship with God.</p>
-                    <p>"Cast all your anxiety on him because he cares for you." - 1 Peter 5:7</p>
-                    <p>Economists note that while challenges exist, the fundamentals of community resilience remain strong. Families are rediscovering the importance of wise stewardship, generosity, and trust in God's provision.</p>
-                    <p>In every season, we are invited to focus on what is good, true, and worthy of praise. This perspective transforms uncertainty into an opportunity for deeper faith and closer community bonds.</p>`
+                'technology': {
+                    title: 'New Beginnings: How Communities Support Those in Career Transitions',
+                    content: `<p>When companies restructure, it can feel unsettling. Yet countless stories remind us that these transitions often lead to unexpected blessings and new opportunities.</p>
+                    <p>"For I know the plans I have for you," declares the LORD, "plans to prosper you and not to harm you, plans to give you hope and a future." - Jeremiah 29:11</p>
+                    <p>Communities are rallying to support affected workers with job fairs, retraining programs, and networking opportunities.</p>`
+                },
+                'world': {
+                    title: 'International Community Comes Together in Spirit of Cooperation',
+                    content: `<p>Nations around the world are finding common ground on critical issues, demonstrating that cooperation can overcome seemingly insurmountable challenges.</p>
+                    <p>"Blessed are the peacemakers, for they will be called children of God." - Matthew 5:9</p>
+                    <p>This spirit of collaboration offers hope for addressing global challenges through unified action.</p>`
+                },
+                'general': {
+                    title: 'Finding Hope and Purpose in Today\'s Headlines',
+                    content: `<p>In every news cycle, there are stories of resilience, compassion, and human connection that remind us of the good in the world.</p>
+                    <p>"And we know that in all things God works for the good of those who love him." - Romans 8:28</p>
+                    <p>As we navigate today's challenges, we can find peace knowing that hope endures.</p>`
                 }
             };
 
-            // Determine which transformation to apply based on keywords
-            const titleLower = story.originalTitle.toLowerCase();
-            let transformation;
-
-            if (titleLower.includes('market') || titleLower.includes('fed') || titleLower.includes('stock')) {
-                transformation = transformations['markets'];
-            } else if (titleLower.includes('climate') || titleLower.includes('environment')) {
-                transformation = transformations['climate'];
-            } else if (titleLower.includes('layoff') || titleLower.includes('job') || titleLower.includes('workforce')) {
-                transformation = transformations['layoffs'];
-            } else if (titleLower.includes('congress') || titleLower.includes('political') || titleLower.includes('shutdown')) {
-                transformation = transformations['political'];
-            } else {
-                transformation = transformations['economy'];
-            }
-
-            return transformation;
+            const cluster = story.storyCluster || 'general';
+            return transformations[cluster] || transformations['general'];
         }
 
         // ============================================
         // UI RENDERING
         // ============================================
 
-        function renderTopStory() {
-            if (!topStory) {
-                document.getElementById('emptyState').style.display = 'flex';
-                document.getElementById('topStoryContainer').style.display = 'none';
+        function renderTable() {
+            const tableBody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+            const table = document.getElementById('scannerTable');
+
+            // Apply filters
+            const sourceFilter = document.getElementById('sourceFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            let filteredQueue = scannerQueue.filter(item => {
+                if (sourceFilter !== 'all' && item.source !== sourceFilter) return false;
+                if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+                return true;
+            });
+
+            if (filteredQueue.length === 0) {
+                emptyState.style.display = 'flex';
+                table.style.display = 'none';
                 return;
             }
 
-            // Hide loading, show container
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('topStoryContainer').style.display = 'flex';
-            document.getElementById('imageLoading').style.display = 'none';
+            emptyState.style.display = 'none';
+            table.style.display = 'table';
 
-            // Handle image display
-            const imageEl = document.getElementById('topStoryImage');
-            const placeholderEl = document.getElementById('imagePlaceholder');
+            // Sort: top story first, then by score
+            filteredQueue.sort((a, b) => {
+                if (a.isTopStory && !b.isTopStory) return -1;
+                if (!a.isTopStory && b.isTopStory) return 1;
+                return b.score.normalized - a.score.normalized;
+            });
 
-            if (downloadedImageUrl || topStory.downloadedImage) {
-                imageEl.src = downloadedImageUrl || topStory.downloadedImage;
-                imageEl.style.display = 'block';
-                placeholderEl.style.display = 'none';
-            } else {
-                imageEl.style.display = 'none';
-                placeholderEl.style.display = 'flex';
-            }
-
-            // Update score badge
-            const scoreBadge = document.getElementById('topStoryScore');
-            scoreBadge.textContent = topStory.score.normalized;
-            scoreBadge.className = `top-story-score ${getScoreClass(topStory.score.normalized)}`;
-
-            // Update source badge
-            const sourceBadge = document.getElementById('topStorySourceBadge');
-            sourceBadge.textContent = topStory.sourceName;
-            sourceBadge.className = `source-badge ${topStory.source}`;
-
-            // Update text content
-            document.getElementById('topStoryTitle').textContent = topStory.rewrittenTitle;
-            document.getElementById('topStoryOriginalTitle').textContent = topStory.originalTitle;
-            document.getElementById('topStoryExcerpt').textContent = stripHtml(topStory.rewrittenContent).substring(0, 200) + '...';
-            document.getElementById('topStoryTimestamp').textContent = formatRelativeTime(topStory.timestamp);
-            document.getElementById('topStoryScanTime').textContent = `Scanned at ${formatTime(new Date(topStory.timestamp))}`;
+            tableBody.innerHTML = filteredQueue.map(item => `
+                <tr class="${item.id === selectedItemId ? 'selected' : ''} ${item.isTopStory ? 'top-story' : ''}"
+                    onclick="selectItem('${item.id}')">
+                    <td>
+                        <span class="source-badge ${item.source}">${item.sourceName}</span>
+                        ${item.isTopStory ? `
+                            <span class="top-story-badge">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                </svg>
+                                TOP
+                            </span>
+                        ` : ''}
+                    </td>
+                    <td>
+                        <div class="original-headline">${item.originalTitle}</div>
+                        <div class="original-url">
+                            <a href="${item.originalUrl}" target="_blank" onclick="event.stopPropagation()">
+                                ${truncateUrl(item.originalUrl)}
+                            </a>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="score-badge ${getScoreClass(item.score.normalized)}">${item.score.normalized}</div>
+                        <div class="score-label">Prominence</div>
+                    </td>
+                    <td>
+                        <div class="rewritten-headline">${item.rewrittenTitle}</div>
+                        <div class="rewritten-preview">${stripHtml(item.rewrittenContent).substring(0, 80)}...</div>
+                    </td>
+                    <td>
+                        ${renderImageStatus(item)}
+                    </td>
+                    <td>
+                        <div class="timestamp-relative">${formatRelativeTime(item.timestamp)}</div>
+                        <div class="timestamp">${formatTime(new Date(item.timestamp))}</div>
+                    </td>
+                    <td>
+                        <div class="row-actions">
+                            <button class="action-btn approve" onclick="event.stopPropagation(); approveItemById('${item.id}')" title="Approve">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 6L9 17l-5-5"/>
+                                </svg>
+                            </button>
+                            <button class="action-btn reject" onclick="event.stopPropagation(); rejectItemById('${item.id}')" title="Reject">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M18 6L6 18M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
         }
 
-        function renderPanel() {
-            if (!topStory) return;
+        function renderImageStatus(item) {
+            if (item.downloadedImage) {
+                return `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <img class="image-thumb" src="${item.downloadedImage}" alt="Thumbnail" onerror="this.style.display='none'">
+                        <span class="image-status success">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 6L9 17l-5-5"/>
+                            </svg>
+                        </span>
+                    </div>
+                `;
+            } else if (item.imageStatus === 'pending') {
+                return `
+                    <span class="image-status pending">
+                        <div class="loading-spinner small"></div>
+                        Pending
+                    </span>
+                `;
+            } else {
+                return `
+                    <span class="image-status failed">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                        Failed
+                    </span>
+                `;
+            }
+        }
 
+        function renderPanel(item) {
             const panelBody = document.getElementById('panelBody');
-            const imageHtml = (downloadedImageUrl || topStory.downloadedImage)
+
+            const imageHtml = item.downloadedImage
                 ? `<div class="panel-image-container">
-                       <img class="panel-image" src="${downloadedImageUrl || topStory.downloadedImage}" alt="Article image">
+                       <img class="panel-image" src="${item.downloadedImage}" alt="Article image">
                    </div>`
                 : `<div class="panel-image-container">
                        <div class="panel-image-placeholder">
@@ -1609,14 +1624,28 @@
                        </div>
                    </div>`;
 
+            const downloadLogHtml = item.imageDownloadLog && item.imageDownloadLog.length > 0
+                ? `<div class="panel-section">
+                       <h3 class="panel-section-title">Image Download Log</h3>
+                       <div class="image-download-log">
+                           ${item.imageDownloadLog.map(log => `
+                               <div class="download-attempt ${log.status}">
+                                   <strong>${log.source}:</strong>
+                                   <span>${log.message}</span>
+                               </div>
+                           `).join('')}
+                       </div>
+                   </div>`
+                : '';
+
             panelBody.innerHTML = `
                 ${imageHtml}
 
                 <div class="panel-section">
                     <h3 class="panel-section-title">Good News Rewrite</h3>
-                    <h1 class="panel-rewritten-title">${topStory.rewrittenTitle}</h1>
+                    <h1 class="panel-rewritten-title">${item.rewrittenTitle}</h1>
                     <div class="panel-article-content">
-                        ${topStory.rewrittenContent}
+                        ${item.rewrittenContent}
                     </div>
                 </div>
 
@@ -1626,30 +1655,30 @@
                         <div class="panel-meta-item">
                             <div class="panel-meta-label">Source</div>
                             <div class="panel-meta-value">
-                                <span class="source-badge ${topStory.source}">${topStory.sourceName}</span>
+                                <span class="source-badge ${item.source}">${item.sourceName}</span>
                             </div>
                         </div>
                         <div class="panel-meta-item">
-                            <div class="panel-meta-label">Scanned At</div>
-                            <div class="panel-meta-value">${formatDateTime(topStory.timestamp)}</div>
+                            <div class="panel-meta-label">Story Cluster</div>
+                            <div class="panel-meta-value" style="text-transform: capitalize;">${item.storyCluster || 'General'}</div>
                         </div>
                         <div class="panel-meta-item">
                             <div class="panel-meta-label">Status</div>
-                            <div class="panel-meta-value" style="text-transform: capitalize; color: ${getStatusColor(topStory.status)}">${topStory.status}</div>
+                            <div class="panel-meta-value" style="text-transform: capitalize; color: ${getStatusColor(item.status)}">${item.status}</div>
                         </div>
                         <div class="panel-meta-item">
                             <div class="panel-meta-label">Prominence Score</div>
                             <div class="panel-meta-value">
-                                <span class="score-badge ${getScoreClass(topStory.score.normalized)}" style="width: 32px; height: 32px; font-size: 14px;">${topStory.score.normalized}</span>
+                                <span class="score-badge ${getScoreClass(item.score.normalized)}" style="width: 32px; height: 32px; font-size: 14px;">${item.score.normalized}</span>
                             </div>
                         </div>
                     </div>
                     <div class="panel-original-link">
                         <div class="panel-meta-label">Original Article</div>
                         <div style="margin-top: 4px;">
-                            <strong style="font-size: 13px; color: var(--text-secondary);">${topStory.originalTitle}</strong>
+                            <strong style="font-size: 13px; color: var(--text-secondary);">${item.originalTitle}</strong>
                         </div>
-                        <a href="${topStory.originalUrl}" target="_blank">${topStory.originalUrl}</a>
+                        <a href="${item.originalUrl}" target="_blank">${item.originalUrl}</a>
                     </div>
                 </div>
 
@@ -1658,30 +1687,32 @@
                     <div class="scoring-details">
                         <div class="scoring-row">
                             <span class="scoring-label">Page Position</span>
-                            <span class="scoring-value">${topStory.score.position} pts</span>
+                            <span class="scoring-value">${item.score.position} pts</span>
                         </div>
                         <div class="scoring-row">
                             <span class="scoring-label">Featured Image</span>
-                            <span class="scoring-value">${topStory.score.hasImage} pts</span>
+                            <span class="scoring-value">${item.score.hasImage} pts</span>
                         </div>
                         <div class="scoring-row">
                             <span class="scoring-label">Title Quality</span>
-                            <span class="scoring-value">${topStory.score.titleLength} pts</span>
+                            <span class="scoring-value">${item.score.titleLength} pts</span>
                         </div>
                         <div class="scoring-row">
                             <span class="scoring-label">Source Weight</span>
-                            <span class="scoring-value">${topStory.score.sourceWeight} pts</span>
+                            <span class="scoring-value">${item.score.sourceWeight} pts</span>
                         </div>
                         <div class="scoring-row">
                             <span class="scoring-label">Recency</span>
-                            <span class="scoring-value">${topStory.score.recency} pts</span>
+                            <span class="scoring-value">${item.score.recency} pts</span>
                         </div>
                         <div class="scoring-row">
                             <span class="scoring-label">Total Score</span>
-                            <span class="scoring-value" style="color: var(--accent-gold);">${topStory.score.total} / 30 (${topStory.score.normalized}%)</span>
+                            <span class="scoring-value" style="color: var(--accent-gold);">${item.score.total} / 30 (${item.score.normalized}%)</span>
                         </div>
                     </div>
                 </div>
+
+                ${downloadLogHtml}
             `;
         }
 
@@ -1689,10 +1720,14 @@
         // PANEL MANAGEMENT
         // ============================================
 
-        function openTopStoryPanel() {
-            if (topStory) {
-                renderPanel();
+        function selectItem(id) {
+            selectedItemId = id;
+            const item = scannerQueue.find(i => i.id == id);
+
+            if (item) {
+                renderPanel(item);
                 openPanel();
+                renderTable();
             }
         }
 
@@ -1706,6 +1741,8 @@
             document.getElementById('slidePanel').classList.remove('open');
             document.getElementById('panelOverlay').classList.remove('visible');
             document.getElementById('scannerContent').classList.remove('panel-open');
+            selectedItemId = null;
+            renderTable();
         }
 
         // ============================================
@@ -1713,53 +1750,63 @@
         // ============================================
 
         function approveItem() {
-            approveTopStory();
-        }
-
-        function rejectItem() {
-            rejectTopStory();
-        }
-
-        function approveTopStory() {
-            if (topStory) {
-                topStory.status = 'approved';
-                updateStats();
-                renderTopStory();
-                renderPanel();
-
-                // In production, this would POST to the API to publish
-                console.log('Approved and publishing:', topStory.rewrittenTitle);
-
-                // Show success feedback
-                showNotification('Article approved and published!', 'success');
+            if (selectedItemId) {
+                approveItemById(selectedItemId);
             }
         }
 
-        function rejectTopStory() {
-            if (topStory) {
-                topStory.status = 'rejected';
-                updateStats();
-                renderTopStory();
-                renderPanel();
+        function rejectItem() {
+            if (selectedItemId) {
+                rejectItemById(selectedItemId);
+            }
+        }
 
-                // Show feedback
+        function approveItemById(id) {
+            const item = scannerQueue.find(i => i.id == id);
+            if (item) {
+                item.status = 'approved';
+                updateStats();
+                renderTable();
+
+                if (selectedItemId == id) {
+                    renderPanel(item);
+                }
+
+                showNotification('Article approved and published!', 'success');
+                console.log('Approved and publishing:', item.rewrittenTitle);
+            }
+        }
+
+        function rejectItemById(id) {
+            const item = scannerQueue.find(i => i.id == id);
+            if (item) {
+                item.status = 'rejected';
+                updateStats();
+                renderTable();
+
+                if (selectedItemId == id) {
+                    renderPanel(item);
+                }
+
                 showNotification('Article rejected.', 'info');
             }
         }
 
         function clearQueue() {
-            if (confirm('Are you sure you want to clear the current story?')) {
-                topStory = null;
-                downloadedImageUrl = null;
+            if (confirm('Are you sure you want to clear the scanner queue?')) {
+                scannerQueue = [];
+                selectedItemId = null;
                 closePanel();
-                document.getElementById('emptyState').style.display = 'flex';
-                document.getElementById('topStoryContainer').style.display = 'none';
+                renderTable();
                 updateStats();
             }
         }
 
+        function filterResults() {
+            renderTable();
+        }
+
         function showNotification(message, type = 'info') {
-            // Create temporary notification
             const notification = document.createElement('div');
             notification.style.cssText = `
                 position: fixed;
@@ -1808,8 +1855,8 @@
         }
 
         function updateStats() {
-            document.getElementById('queueCount').textContent = topStory && topStory.status === 'pending' ? '1' : '0';
-            document.getElementById('approvedCount').textContent = topStory && topStory.status === 'approved' ? '1' : '0';
+            document.getElementById('queueCount').textContent = scannerQueue.filter(i => i.status === 'pending').length;
+            document.getElementById('approvedCount').textContent = scannerQueue.filter(i => i.status === 'approved').length;
         }
 
         function getScoreClass(score) {
@@ -1889,12 +1936,10 @@
         // ============================================
 
         document.addEventListener('keydown', (e) => {
-            // ESC to close panel
             if (e.key === 'Escape') {
                 closePanel();
             }
 
-            // Ctrl/Cmd + S to run scan
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
                 runScan();
@@ -1906,10 +1951,8 @@
         // ============================================
 
         document.addEventListener('DOMContentLoaded', () => {
+            renderTable();
             updateStats();
-            // Show empty state by default
-            document.getElementById('emptyState').style.display = 'flex';
-            document.getElementById('topStoryContainer').style.display = 'none';
         });
     </script>
 </body>
