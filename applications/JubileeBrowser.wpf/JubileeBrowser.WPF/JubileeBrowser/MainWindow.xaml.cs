@@ -1286,8 +1286,20 @@ public partial class MainWindow : Window
 
         UpdateWelcomePanel();
 
+        // Update sidebar chat context when tab changes
+        UpdateSidebarChatContext();
+
         // Save session state when switching tabs (active tab changed)
         SaveSessionState();
+    }
+
+    /// <summary>
+    /// Gets the currently active tab.
+    /// </summary>
+    private TabState? GetCurrentTab()
+    {
+        if (_activeTabId == null) return null;
+        return Tabs.FirstOrDefault(t => t.Id == _activeTabId);
     }
 
     private void CloseTab(string tabId)
@@ -1740,6 +1752,12 @@ public partial class MainWindow : Window
         if (e.IsSuccess)
         {
             SaveSessionState();
+
+            // Update sidebar chat context when navigation completes
+            if (tabId == _activeTabId)
+            {
+                UpdateSidebarChatContext();
+            }
         }
     }
 
@@ -5555,6 +5573,142 @@ public partial class MainWindow : Window
         termsPanel.Children.Add(termsTextBlock);
         createStep2Panel.Children.Add(termsPanel);
 
+        // ===== CREATE ACCOUNT VERIFICATION STEP (6-digit code) =====
+        var createVerifyPanel = new StackPanel { Visibility = Visibility.Collapsed };
+
+        var verifyBackLinkPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 12) };
+        var verifyBackLink = new TextBlock { Text = "← Back", Foreground = new SolidColorBrush(goldColor), FontSize = 13, Cursor = Cursors.Hand };
+        verifyBackLink.MouseEnter += (s, args) => verifyBackLink.TextDecorations = TextDecorations.Underline;
+        verifyBackLink.MouseLeave += (s, args) => verifyBackLink.TextDecorations = null;
+        verifyBackLinkPanel.Children.Add(verifyBackLink);
+        createVerifyPanel.Children.Add(verifyBackLinkPanel);
+
+        var verifyInstructionText = new TextBlock
+        {
+            Text = "We've sent a 6-digit verification code to your email. Please enter it below to activate your account.",
+            Foreground = new SolidColorBrush(Color.FromRgb(180, 180, 180)),
+            FontSize = 13,
+            TextWrapping = TextWrapping.Wrap,
+            TextAlignment = TextAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 8)
+        };
+        createVerifyPanel.Children.Add(verifyInstructionText);
+
+        var verifyEmailDisplay = new TextBlock
+        {
+            Text = "",
+            Foreground = new SolidColorBrush(goldColor),
+            FontSize = 13,
+            FontWeight = FontWeights.SemiBold,
+            TextAlignment = TextAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 15)
+        };
+        createVerifyPanel.Children.Add(verifyEmailDisplay);
+
+        // Create 6 verification code input boxes for sign-up
+        var verifyCodeBoxesPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 8) };
+        var verifyCodeBoxes = new TextBox[6];
+        for (int i = 0; i < 6; i++)
+        {
+            var verifyCodeBox = new TextBox
+            {
+                Width = 45,
+                Height = 50,
+                FontSize = 24,
+                FontWeight = FontWeights.Bold,
+                TextAlignment = TextAlignment.Center,
+                MaxLength = 1,
+                Background = new SolidColorBrush(inputBg),
+                Foreground = Brushes.White,
+                BorderBrush = new SolidColorBrush(goldColor),
+                BorderThickness = new Thickness(1),
+                CaretBrush = Brushes.White,
+                Margin = new Thickness(i < 5 ? 5 : 0, 0, 0, 0)
+            };
+            int index = i;
+            verifyCodeBox.TextChanged += (s, args) =>
+            {
+                // Only allow digits
+                if (!string.IsNullOrEmpty(verifyCodeBox.Text) && !char.IsDigit(verifyCodeBox.Text[0]))
+                {
+                    verifyCodeBox.Text = "";
+                    return;
+                }
+                if (verifyCodeBox.Text.Length == 1 && index < 5)
+                    verifyCodeBoxes[index + 1].Focus();
+            };
+            verifyCodeBox.PreviewKeyDown += (s, args) =>
+            {
+                if (args.Key == Key.Back && string.IsNullOrEmpty(verifyCodeBox.Text) && index > 0)
+                {
+                    verifyCodeBoxes[index - 1].Focus();
+                    verifyCodeBoxes[index - 1].Text = "";
+                }
+            };
+            // Handle paste for full code
+            verifyCodeBox.PreviewTextInput += (s, args) =>
+            {
+                if (args.Text.Length == 6 && args.Text.All(char.IsDigit))
+                {
+                    for (int j = 0; j < 6; j++)
+                        verifyCodeBoxes[j].Text = args.Text[j].ToString();
+                    verifyCodeBoxes[5].Focus();
+                    args.Handled = true;
+                }
+            };
+            verifyCodeBoxes[i] = verifyCodeBox;
+            verifyCodeBoxesPanel.Children.Add(verifyCodeBox);
+        }
+        createVerifyPanel.Children.Add(verifyCodeBoxesPanel);
+
+        // Expiration timer display
+        var verifyTimerText = new TextBlock
+        {
+            Text = "Code expires in 10:00",
+            Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150)),
+            FontSize = 12,
+            TextAlignment = TextAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 10)
+        };
+        createVerifyPanel.Children.Add(verifyTimerText);
+
+        // Resend code link
+        var resendCodePanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 0) };
+        var resendCodeText = new TextBlock { Text = "Didn't receive the code? ", Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150)), FontSize = 12 };
+        resendCodePanel.Children.Add(resendCodeText);
+        var resendCodeLink = new TextBlock { Text = "Resend", Foreground = new SolidColorBrush(goldColor), FontSize = 12, Cursor = Cursors.Hand };
+        resendCodeLink.MouseEnter += (s, args) => resendCodeLink.TextDecorations = TextDecorations.Underline;
+        resendCodeLink.MouseLeave += (s, args) => resendCodeLink.TextDecorations = null;
+        resendCodePanel.Children.Add(resendCodeLink);
+        createVerifyPanel.Children.Add(resendCodePanel);
+
+        // Timer for code expiration
+        System.Windows.Threading.DispatcherTimer? verifyTimer = null;
+        int verifyTimeRemaining = 600; // 10 minutes in seconds
+        string? pendingVerificationToken = null; // Store token from initial registration
+
+        void StartVerifyTimer()
+        {
+            verifyTimeRemaining = 600;
+            verifyTimer?.Stop();
+            verifyTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            verifyTimer.Tick += (s, args) =>
+            {
+                verifyTimeRemaining--;
+                var minutes = verifyTimeRemaining / 60;
+                var seconds = verifyTimeRemaining % 60;
+                verifyTimerText.Text = $"Code expires in {minutes}:{seconds:D2}";
+                if (verifyTimeRemaining <= 60)
+                    verifyTimerText.Foreground = new SolidColorBrush(Color.FromRgb(239, 68, 68)); // Red warning
+                if (verifyTimeRemaining <= 0)
+                {
+                    verifyTimer.Stop();
+                    verifyTimerText.Text = "Code expired. Please request a new code.";
+                }
+            };
+            verifyTimer.Start();
+        }
+
         // ===== FORGOT PASSWORD STEP 1 (content only - no button) =====
         var forgotStep1Panel = new StackPanel { Visibility = Visibility.Collapsed };
 
@@ -5613,8 +5767,20 @@ public partial class MainWindow : Window
         };
         forgotStep2Panel.Children.Add(codeInstructionText);
 
+        // Email display for forgot password
+        var forgotEmailDisplay = new TextBlock
+        {
+            Text = "",
+            Foreground = new SolidColorBrush(goldColor),
+            FontSize = 13,
+            FontWeight = FontWeights.SemiBold,
+            TextAlignment = TextAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 10)
+        };
+        forgotStep2Panel.Children.Add(forgotEmailDisplay);
+
         // Create 6 code input boxes
-        var codeBoxesPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 0) };
+        var codeBoxesPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 8) };
         var codeBoxes = new TextBox[6];
         for (int i = 0; i < 6; i++)
         {
@@ -5636,6 +5802,12 @@ public partial class MainWindow : Window
             int index = i;
             codeBox.TextChanged += (s, args) =>
             {
+                // Only allow digits
+                if (!string.IsNullOrEmpty(codeBox.Text) && !char.IsDigit(codeBox.Text[0]))
+                {
+                    codeBox.Text = "";
+                    return;
+                }
                 if (codeBox.Text.Length == 1 && index < 5)
                     codeBoxes[index + 1].Focus();
             };
@@ -5647,10 +5819,69 @@ public partial class MainWindow : Window
                     codeBoxes[index - 1].Text = "";
                 }
             };
+            // Handle paste for full code
+            codeBox.PreviewTextInput += (s, args) =>
+            {
+                if (args.Text.Length == 6 && args.Text.All(char.IsDigit))
+                {
+                    for (int j = 0; j < 6; j++)
+                        codeBoxes[j].Text = args.Text[j].ToString();
+                    codeBoxes[5].Focus();
+                    args.Handled = true;
+                }
+            };
             codeBoxes[i] = codeBox;
             codeBoxesPanel.Children.Add(codeBox);
         }
         forgotStep2Panel.Children.Add(codeBoxesPanel);
+
+        // Expiration timer display for forgot password
+        var forgotTimerText = new TextBlock
+        {
+            Text = "Code expires in 10:00",
+            Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150)),
+            FontSize = 12,
+            TextAlignment = TextAlignment.Center,
+            Margin = new Thickness(0, 0, 0, 10)
+        };
+        forgotStep2Panel.Children.Add(forgotTimerText);
+
+        // Resend code link for forgot password
+        var forgotResendPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 0) };
+        var forgotResendText = new TextBlock { Text = "Didn't receive the code? ", Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150)), FontSize = 12 };
+        forgotResendPanel.Children.Add(forgotResendText);
+        var forgotResendLink = new TextBlock { Text = "Resend", Foreground = new SolidColorBrush(goldColor), FontSize = 12, Cursor = Cursors.Hand };
+        forgotResendLink.MouseEnter += (s, args) => forgotResendLink.TextDecorations = TextDecorations.Underline;
+        forgotResendLink.MouseLeave += (s, args) => forgotResendLink.TextDecorations = null;
+        forgotResendPanel.Children.Add(forgotResendLink);
+        forgotStep2Panel.Children.Add(forgotResendPanel);
+
+        // Timer for forgot password code expiration
+        System.Windows.Threading.DispatcherTimer? forgotTimer = null;
+        int forgotTimeRemaining = 600; // 10 minutes in seconds
+        string? forgotVerificationToken = null;
+
+        void StartForgotTimer()
+        {
+            forgotTimeRemaining = 600;
+            forgotTimer?.Stop();
+            forgotTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            forgotTimer.Tick += (s, args) =>
+            {
+                forgotTimeRemaining--;
+                var minutes = forgotTimeRemaining / 60;
+                var seconds = forgotTimeRemaining % 60;
+                forgotTimerText.Text = $"Code expires in {minutes}:{seconds:D2}";
+                if (forgotTimeRemaining <= 60)
+                    forgotTimerText.Foreground = new SolidColorBrush(Color.FromRgb(239, 68, 68)); // Red warning
+                if (forgotTimeRemaining <= 0)
+                {
+                    forgotTimer.Stop();
+                    forgotTimerText.Text = "Code expired. Please request a new code.";
+                }
+            };
+            forgotTimer.Start();
+        }
 
         // ===== FORGOT PASSWORD STEP 3 (content only - no button) =====
         var forgotStep3Panel = new StackPanel { Visibility = Visibility.Collapsed };
@@ -5714,6 +5945,7 @@ public partial class MainWindow : Window
             signInPanel.Visibility = Visibility.Collapsed;
             createStep1Panel.Visibility = Visibility.Collapsed;
             createStep2Panel.Visibility = Visibility.Collapsed;
+            createVerifyPanel.Visibility = Visibility.Collapsed;
             forgotStep1Panel.Visibility = Visibility.Collapsed;
             forgotStep2Panel.Visibility = Visibility.Collapsed;
             forgotStep3Panel.Visibility = Visibility.Collapsed;
@@ -5732,15 +5964,27 @@ public partial class MainWindow : Window
                     break;
                 case "createStep2":
                     createStep2Panel.Visibility = Visibility.Visible;
-                    actionButton.Content = "Create Account";
+                    actionButton.Content = "Continue";
+                    break;
+                case "createVerify":
+                    createVerifyPanel.Visibility = Visibility.Visible;
+                    actionButton.Content = "Verify Email";
+                    verifyEmailDisplay.Text = createEmailBox.Text;
+                    // Clear previous code inputs
+                    foreach (var box in verifyCodeBoxes)
+                        box.Text = "";
+                    verifyCodeBoxes[0].Focus();
+                    // Reset timer display
+                    verifyTimerText.Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150));
+                    StartVerifyTimer();
                     break;
                 case "forgotStep1":
                     forgotStep1Panel.Visibility = Visibility.Visible;
-                    actionButton.Content = "Continue";
+                    actionButton.Content = "Send Code";
                     break;
                 case "forgotStep2":
                     forgotStep2Panel.Visibility = Visibility.Visible;
-                    actionButton.Content = "Continue";
+                    actionButton.Content = "Verify Code";
                     break;
                 case "forgotStep3":
                     forgotStep3Panel.Visibility = Visibility.Visible;
@@ -5757,7 +6001,7 @@ public partial class MainWindow : Window
                 case "signIn":
                     if (string.IsNullOrWhiteSpace(signInEmailBox.Text) || string.IsNullOrWhiteSpace(signInPasswordBox.Password))
                     {
-                        MessageBox.Show("Please enter your email and password.", "Sign In", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        JubileeAlertDialog.ShowWarning(this, "Sign In", "Please enter your email and password.");
                         return;
                     }
                     // Perform sign-in via API
@@ -5996,13 +6240,11 @@ public partial class MainWindow : Window
                         JubileeAlertDialog.ShowWarning(this, "Create Account", "You must agree to the Terms of Use and Privacy Policy to create an account.");
                         return;
                     }
-                    // Perform account creation via API
+                    // Send verification code via API
                     actionButton.IsEnabled = false;
-                    actionButton.Content = "Creating Account...";
-                    var createFullName = fullNameBox.Text;
-                    var createEmail = createEmailBox.Text;
-                    var createPassword = createPasswordBox.Password;
-                    var subscribeNewsletter = newsletterCheckbox.IsChecked == true;
+                    actionButton.Content = "Sending Code...";
+                    var sendCodeEmail = createEmailBox.Text;
+                    var sendCodeName = fullNameBox.Text;
                     _ = Task.Run(async () =>
                     {
                         bool success = false;
@@ -6016,59 +6258,182 @@ public partial class MainWindow : Window
                             try
                             {
                                 using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-                                var registerRequest = new { displayName = createFullName, email = createEmail, password = createPassword };
-                                var json = System.Text.Json.JsonSerializer.Serialize(registerRequest);
+                                var sendCodeRequest = new { email = sendCodeEmail, displayName = sendCodeName, type = "registration" };
+                                var json = System.Text.Json.JsonSerializer.Serialize(sendCodeRequest);
                                 var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
-                                var response = await client.PostAsync($"{_apiBaseUrl}/api/auth/register", content);
+                                var response = await client.PostAsync($"{_apiBaseUrl}/api/auth/send-verification-code", content);
                                 responseJson = await response.Content.ReadAsStringAsync();
                                 success = response.IsSuccessStatusCode;
-                                errorMsg = null; // Clear any previous error on success
-                                break; // Success, exit retry loop
+                                errorMsg = null;
+                                break;
                             }
                             catch (TaskCanceledException)
                             {
-                                // Timeout - retry
                                 retryCount++;
                                 if (retryCount < maxRetries)
                                 {
-                                    await Task.Delay(1000 * retryCount); // Exponential backoff
+                                    await Task.Delay(1000 * retryCount);
                                     continue;
                                 }
-                                errorMsg = "Connection timed out after multiple attempts. Please check your internet connection.";
+                                errorMsg = "Connection timed out. Please check your internet connection.";
                             }
                             catch (System.Net.Http.HttpRequestException ex)
                             {
-                                // Network error - retry
                                 retryCount++;
                                 if (retryCount < maxRetries)
                                 {
-                                    await Task.Delay(1000 * retryCount); // Exponential backoff
+                                    await Task.Delay(1000 * retryCount);
                                     continue;
                                 }
-                                errorMsg = $"Network error after multiple attempts: {ex.Message}";
+                                errorMsg = $"Network error: {ex.Message}";
                             }
                             catch (Exception ex)
                             {
-                                // Other errors - don't retry
                                 errorMsg = ex.Message;
                                 break;
                             }
                         }
 
-                        // Now dispatch to UI thread - no async operations inside
                         Dispatcher.Invoke(() =>
                         {
                             actionButton.IsEnabled = true;
-                            actionButton.Content = "Create Account";
+                            actionButton.Content = "Continue";
 
                             if (errorMsg != null)
                             {
-                                // Offer demo mode when API is unavailable using custom themed dialog
-                                var continueInDemo = SignInFailedDialog.Show(this, "Could not connect to the authentication server.");
-
+                                var continueInDemo = SignInFailedDialog.Show(this, $"Could not send verification code.\n\n{errorMsg}");
                                 if (continueInDemo)
                                 {
-                                    // Create a demo profile locally
+                                    _profileAuthService.SignInDemoMode(sendCodeName, sendCodeEmail);
+                                    authDialog.Close();
+                                    ShowDemoModeWelcomeDialog(sendCodeName);
+                                }
+                                return;
+                            }
+
+                            if (success)
+                            {
+                                // Store verification token if returned
+                                try
+                                {
+                                    var result = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseJson);
+                                    if (result.TryGetProperty("verificationToken", out var tokenElement))
+                                        pendingVerificationToken = tokenElement.GetString();
+                                }
+                                catch { }
+
+                                // Move to verification step
+                                ShowPanel("createVerify");
+                            }
+                            else
+                            {
+                                var errorMessage = "Failed to send verification code. Please try again.";
+                                try
+                                {
+                                    var errorResult = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseJson);
+                                    if (errorResult.TryGetProperty("errorMessage", out var errElement))
+                                        errorMessage = errElement.GetString() ?? errorMessage;
+                                }
+                                catch { }
+                                JubileeAlertDialog.ShowError(this, "Verification", errorMessage);
+                            }
+                        });
+                    });
+                    break;
+
+                case "createVerify":
+                    var verifyCode = string.Join("", verifyCodeBoxes.Select(cb => cb.Text));
+                    if (verifyCode.Length != 6)
+                    {
+                        JubileeAlertDialog.ShowWarning(this, "Email Verification", "Please enter the complete 6-digit verification code.");
+                        return;
+                    }
+                    if (!verifyCode.All(char.IsDigit))
+                    {
+                        JubileeAlertDialog.ShowWarning(this, "Email Verification", "Verification code must contain only digits.");
+                        return;
+                    }
+                    if (verifyTimeRemaining <= 0)
+                    {
+                        JubileeAlertDialog.ShowError(this, "Code Expired", "Your verification code has expired. Please request a new code.");
+                        return;
+                    }
+                    // Verify code and complete registration
+                    actionButton.IsEnabled = false;
+                    actionButton.Content = "Verifying...";
+                    var createFullName = fullNameBox.Text;
+                    var createEmail = createEmailBox.Text;
+                    var createPassword = createPasswordBox.Password;
+                    var subscribeNewsletter = newsletterCheckbox.IsChecked == true;
+                    var capturedVerifyCode = verifyCode;
+                    var capturedVerifyToken = pendingVerificationToken;
+                    _ = Task.Run(async () =>
+                    {
+                        bool success = false;
+                        string responseJson = "";
+                        string? errorMsg = null;
+                        const int maxRetries = 3;
+                        int retryCount = 0;
+
+                        while (retryCount < maxRetries)
+                        {
+                            try
+                            {
+                                using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+                                var registerRequest = new
+                                {
+                                    displayName = createFullName,
+                                    email = createEmail,
+                                    password = createPassword,
+                                    verificationCode = capturedVerifyCode,
+                                    verificationToken = capturedVerifyToken
+                                };
+                                var json = System.Text.Json.JsonSerializer.Serialize(registerRequest);
+                                var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                                var response = await client.PostAsync($"{_apiBaseUrl}/api/auth/register", content);
+                                responseJson = await response.Content.ReadAsStringAsync();
+                                success = response.IsSuccessStatusCode;
+                                errorMsg = null;
+                                break;
+                            }
+                            catch (TaskCanceledException)
+                            {
+                                retryCount++;
+                                if (retryCount < maxRetries)
+                                {
+                                    await Task.Delay(1000 * retryCount);
+                                    continue;
+                                }
+                                errorMsg = "Connection timed out. Please check your internet connection.";
+                            }
+                            catch (System.Net.Http.HttpRequestException ex)
+                            {
+                                retryCount++;
+                                if (retryCount < maxRetries)
+                                {
+                                    await Task.Delay(1000 * retryCount);
+                                    continue;
+                                }
+                                errorMsg = $"Network error: {ex.Message}";
+                            }
+                            catch (Exception ex)
+                            {
+                                errorMsg = ex.Message;
+                                break;
+                            }
+                        }
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            actionButton.IsEnabled = true;
+                            actionButton.Content = "Verify Email";
+                            verifyTimer?.Stop();
+
+                            if (errorMsg != null)
+                            {
+                                var continueInDemo = SignInFailedDialog.Show(this, $"Could not complete registration.\n\n{errorMsg}");
+                                if (continueInDemo)
+                                {
                                     _profileAuthService.SignInDemoMode(createFullName, createEmail);
                                     authDialog.Close();
                                     ShowDemoModeWelcomeDialog(createFullName);
@@ -6084,19 +6449,17 @@ public partial class MainWindow : Window
                                 var email = createEmail;
                                 var accessToken = "";
                                 var refreshToken = "";
-                                var accessTokenExpiry = DateTime.UtcNow.AddDays(7); // Default 7 days
+                                var accessTokenExpiry = DateTime.UtcNow.AddDays(7);
 
                                 if (result.TryGetProperty("user", out var userElement))
                                 {
                                     if (userElement.TryGetProperty("displayName", out var displayNameElement))
                                         displayName = displayNameElement.GetString() ?? createFullName;
-                                    // Server returns "id" not "userId"
                                     if (userElement.TryGetProperty("id", out var userIdElement))
                                         userId = userIdElement.GetString() ?? "";
                                     if (userElement.TryGetProperty("email", out var emailElement))
                                         email = emailElement.GetString() ?? createEmail;
                                 }
-                                // Tokens are nested under "tokens" object
                                 if (result.TryGetProperty("tokens", out var tokensElement))
                                 {
                                     if (tokensElement.TryGetProperty("accessToken", out var accessTokenElement))
@@ -6110,37 +6473,31 @@ public partial class MainWindow : Window
                                     }
                                 }
 
-                                System.Diagnostics.Debug.WriteLine($"[MainWindow] Registration - userId: {userId}, accessToken length: {accessToken.Length}");
-
-                                // Sign in with the API response tokens - use synchronous version on UI thread
                                 _profileAuthService.SignInWithApiResponse(userId, email, displayName, accessToken, refreshToken, accessTokenExpiry);
                                 authDialog.Close();
-                                MessageBox.Show($"Welcome to Jubilee, {displayName}!\n\nYour account has been created successfully.", "Account Created", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                                // Force sync immediately after registration
-                                System.Diagnostics.Debug.WriteLine("[MainWindow] Registration successful - triggering sync now");
+                                JubileeAlertDialog.ShowSuccess(this, "Account Created", $"Welcome to Jubilee, {displayName}!\n\nYour email has been verified and your account is now active.");
                                 _ = _syncEngine.SyncNowAsync();
                             }
                             else
                             {
-                                var errorMessage = "Account creation failed. Please try again.";
+                                var errorMessage = "Invalid verification code. Please check and try again.";
                                 try
                                 {
                                     var errorResult = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseJson);
                                     if (errorResult.TryGetProperty("errorMessage", out var errElement))
                                         errorMessage = errElement.GetString() ?? errorMessage;
+                                    // Check for specific error codes
+                                    if (errorResult.TryGetProperty("errorCode", out var codeElement))
+                                    {
+                                        var errorCode = codeElement.GetString();
+                                        if (errorCode == "INVALID_CODE")
+                                            errorMessage = "The verification code you entered is incorrect. Please try again.";
+                                        else if (errorCode == "CODE_EXPIRED")
+                                            errorMessage = "Your verification code has expired. Please request a new code.";
+                                    }
                                 }
                                 catch { }
-
-                                // Offer demo mode when server registration fails using custom themed dialog
-                                var continueInDemo = SignInFailedDialog.Show(this, errorMessage);
-
-                                if (continueInDemo)
-                                {
-                                    _profileAuthService.SignInDemoMode(createFullName, createEmail);
-                                    authDialog.Close();
-                                    ShowDemoModeWelcomeDialog(createFullName);
-                                }
+                                JubileeAlertDialog.ShowError(this, "Verification Failed", errorMessage);
                             }
                         });
                     });
@@ -6152,8 +6509,110 @@ public partial class MainWindow : Window
                         JubileeAlertDialog.ShowWarning(this, "Forgot Password", "Please enter your email address.");
                         return;
                     }
-                    ShowPanel("forgotStep2");
-                    codeBoxes[0].Focus();
+                    // Basic email validation
+                    if (!forgotEmailBox.Text.Contains("@") || !forgotEmailBox.Text.Contains("."))
+                    {
+                        JubileeAlertDialog.ShowWarning(this, "Forgot Password", "Please enter a valid email address.");
+                        return;
+                    }
+                    // Send password reset code via API
+                    actionButton.IsEnabled = false;
+                    actionButton.Content = "Sending Code...";
+                    var forgotSendEmail = forgotEmailBox.Text;
+                    _ = Task.Run(async () =>
+                    {
+                        bool success = false;
+                        string responseJson = "";
+                        string? errorMsg = null;
+                        const int maxRetries = 3;
+                        int retryCount = 0;
+
+                        while (retryCount < maxRetries)
+                        {
+                            try
+                            {
+                                using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+                                var sendCodeRequest = new { email = forgotSendEmail, type = "password_reset" };
+                                var json = System.Text.Json.JsonSerializer.Serialize(sendCodeRequest);
+                                var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                                var response = await client.PostAsync($"{_apiBaseUrl}/api/auth/send-verification-code", content);
+                                responseJson = await response.Content.ReadAsStringAsync();
+                                success = response.IsSuccessStatusCode;
+                                errorMsg = null;
+                                break;
+                            }
+                            catch (TaskCanceledException)
+                            {
+                                retryCount++;
+                                if (retryCount < maxRetries)
+                                {
+                                    await Task.Delay(1000 * retryCount);
+                                    continue;
+                                }
+                                errorMsg = "Connection timed out. Please check your internet connection.";
+                            }
+                            catch (System.Net.Http.HttpRequestException ex)
+                            {
+                                retryCount++;
+                                if (retryCount < maxRetries)
+                                {
+                                    await Task.Delay(1000 * retryCount);
+                                    continue;
+                                }
+                                errorMsg = $"Network error: {ex.Message}";
+                            }
+                            catch (Exception ex)
+                            {
+                                errorMsg = ex.Message;
+                                break;
+                            }
+                        }
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            actionButton.IsEnabled = true;
+                            actionButton.Content = "Send Code";
+
+                            if (errorMsg != null)
+                            {
+                                JubileeAlertDialog.ShowError(this, "Forgot Password", $"Could not send verification code.\n\n{errorMsg}");
+                                return;
+                            }
+
+                            if (success)
+                            {
+                                // Store verification token if returned
+                                try
+                                {
+                                    var result = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseJson);
+                                    if (result.TryGetProperty("verificationToken", out var tokenElement))
+                                        forgotVerificationToken = tokenElement.GetString();
+                                }
+                                catch { }
+
+                                // Update email display and clear code boxes
+                                forgotEmailDisplay.Text = forgotSendEmail;
+                                foreach (var box in codeBoxes)
+                                    box.Text = "";
+                                forgotTimerText.Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150));
+                                StartForgotTimer();
+                                ShowPanel("forgotStep2");
+                                codeBoxes[0].Focus();
+                            }
+                            else
+                            {
+                                var errorMessage = "Failed to send verification code. Please check your email address.";
+                                try
+                                {
+                                    var errorResult = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseJson);
+                                    if (errorResult.TryGetProperty("errorMessage", out var errElement))
+                                        errorMessage = errElement.GetString() ?? errorMessage;
+                                }
+                                catch { }
+                                JubileeAlertDialog.ShowError(this, "Forgot Password", errorMessage);
+                            }
+                        });
+                    });
                     break;
 
                 case "forgotStep2":
@@ -6163,7 +6622,90 @@ public partial class MainWindow : Window
                         JubileeAlertDialog.ShowWarning(this, "Forgot Password", "Please enter the complete 6-digit verification code.");
                         return;
                     }
-                    ShowPanel("forgotStep3");
+                    if (!code.All(char.IsDigit))
+                    {
+                        JubileeAlertDialog.ShowWarning(this, "Forgot Password", "Verification code must contain only digits.");
+                        return;
+                    }
+                    if (forgotTimeRemaining <= 0)
+                    {
+                        JubileeAlertDialog.ShowError(this, "Code Expired", "Your verification code has expired. Please request a new code.");
+                        return;
+                    }
+                    // Verify the code via API
+                    actionButton.IsEnabled = false;
+                    actionButton.Content = "Verifying...";
+                    var forgotVerifyEmail = forgotEmailBox.Text;
+                    var forgotVerifyCode = code;
+                    var capturedForgotToken = forgotVerificationToken;
+                    _ = Task.Run(async () =>
+                    {
+                        bool success = false;
+                        string responseJson = "";
+                        string? errorMsg = null;
+
+                        try
+                        {
+                            using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+                            var verifyRequest = new { email = forgotVerifyEmail, code = forgotVerifyCode, verificationToken = capturedForgotToken, type = "password_reset" };
+                            var json = System.Text.Json.JsonSerializer.Serialize(verifyRequest);
+                            var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                            var response = await client.PostAsync($"{_apiBaseUrl}/api/auth/verify-code", content);
+                            responseJson = await response.Content.ReadAsStringAsync();
+                            success = response.IsSuccessStatusCode;
+                        }
+                        catch (Exception ex)
+                        {
+                            errorMsg = ex.Message;
+                        }
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            actionButton.IsEnabled = true;
+                            actionButton.Content = "Verify Code";
+
+                            if (errorMsg != null)
+                            {
+                                JubileeAlertDialog.ShowError(this, "Verification", $"Could not verify code.\n\n{errorMsg}");
+                                return;
+                            }
+
+                            if (success)
+                            {
+                                // Store reset token for step 3
+                                try
+                                {
+                                    var result = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseJson);
+                                    if (result.TryGetProperty("resetToken", out var tokenElement))
+                                        forgotVerificationToken = tokenElement.GetString();
+                                }
+                                catch { }
+
+                                forgotTimer?.Stop();
+                                ShowPanel("forgotStep3");
+                            }
+                            else
+                            {
+                                var errorMessage = "Invalid verification code. Please check and try again.";
+                                try
+                                {
+                                    var errorResult = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseJson);
+                                    if (errorResult.TryGetProperty("errorMessage", out var errElement))
+                                        errorMessage = errElement.GetString() ?? errorMessage;
+                                    if (errorResult.TryGetProperty("errorCode", out var codeElement))
+                                    {
+                                        var errorCode = codeElement.GetString();
+                                        if (errorCode == "INVALID_CODE")
+                                            errorMessage = "The verification code you entered is incorrect. Please try again.";
+                                        else if (errorCode == "CODE_EXPIRED")
+                                            errorMessage = "Your verification code has expired. Please request a new code.";
+                                    }
+                                }
+                                catch { }
+                                JubileeAlertDialog.ShowError(this, "Verification Failed", errorMessage);
+                            }
+                        });
+                    });
                     break;
 
                 case "forgotStep3":
@@ -6172,14 +6714,73 @@ public partial class MainWindow : Window
                         JubileeAlertDialog.ShowWarning(this, "Reset Password", "Please enter a new password.");
                         return;
                     }
+                    if (newPasswordBox.Password.Length < 8)
+                    {
+                        JubileeAlertDialog.ShowWarning(this, "Reset Password", "Password must be at least 8 characters long.");
+                        return;
+                    }
                     if (newPasswordBox.Password != confirmNewPasswordBox.Password)
                     {
                         JubileeAlertDialog.ShowWarning(this, "Reset Password", "Passwords do not match.");
                         return;
                     }
-                    // Password reset would require email infrastructure
-                    authDialog.Close();
-                    JubileeAlertDialog.ShowSuccess(this, "Password Reset", "Your password has been reset successfully.\n\nYou can now sign in with your new password.");
+                    // Reset password via API
+                    actionButton.IsEnabled = false;
+                    actionButton.Content = "Resetting...";
+                    var resetEmail = forgotEmailBox.Text;
+                    var resetNewPassword = newPasswordBox.Password;
+                    var capturedResetToken = forgotVerificationToken;
+                    _ = Task.Run(async () =>
+                    {
+                        bool success = false;
+                        string responseJson = "";
+                        string? errorMsg = null;
+
+                        try
+                        {
+                            using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+                            var resetRequest = new { email = resetEmail, newPassword = resetNewPassword, resetToken = capturedResetToken };
+                            var json = System.Text.Json.JsonSerializer.Serialize(resetRequest);
+                            var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                            var response = await client.PostAsync($"{_apiBaseUrl}/api/auth/reset-password", content);
+                            responseJson = await response.Content.ReadAsStringAsync();
+                            success = response.IsSuccessStatusCode;
+                        }
+                        catch (Exception ex)
+                        {
+                            errorMsg = ex.Message;
+                        }
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            actionButton.IsEnabled = true;
+                            actionButton.Content = "Reset Password";
+
+                            if (errorMsg != null)
+                            {
+                                JubileeAlertDialog.ShowError(this, "Reset Password", $"Could not reset password.\n\n{errorMsg}");
+                                return;
+                            }
+
+                            if (success)
+                            {
+                                authDialog.Close();
+                                JubileeAlertDialog.ShowSuccess(this, "Password Reset", "Your password has been reset successfully.\n\nYou can now sign in with your new password.");
+                            }
+                            else
+                            {
+                                var errorMessage = "Failed to reset password. Please try again.";
+                                try
+                                {
+                                    var errorResult = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseJson);
+                                    if (errorResult.TryGetProperty("errorMessage", out var errElement))
+                                        errorMessage = errElement.GetString() ?? errorMessage;
+                                }
+                                catch { }
+                                JubileeAlertDialog.ShowError(this, "Reset Failed", errorMessage);
+                            }
+                        });
+                    });
                     break;
             }
         };
@@ -6189,15 +6790,112 @@ public partial class MainWindow : Window
         signUpLink.Click += (s, args) => { ShowPanel("createStep1"); }; // Hyperlink uses Click event
         step1SignInLink.Click += (s, args) => { ShowPanel("signIn"); }; // Hyperlink uses Click event
         step2BackLink.PreviewMouseLeftButtonDown += (s, args) => { args.Handled = true; ShowPanel("createStep1"); };
+        verifyBackLink.PreviewMouseLeftButtonDown += (s, args) => { args.Handled = true; verifyTimer?.Stop(); ShowPanel("createStep2"); };
         forgotPasswordLink.PreviewMouseLeftButtonDown += (s, args) => { args.Handled = true; ShowPanel("forgotStep1"); };
         forgotBackLink.Click += (s, args) => { ShowPanel("signIn"); }; // Hyperlink uses Click event
-        codeBackLink.PreviewMouseLeftButtonDown += (s, args) => { args.Handled = true; ShowPanel("forgotStep1"); };
+        codeBackLink.PreviewMouseLeftButtonDown += (s, args) => { args.Handled = true; forgotTimer?.Stop(); ShowPanel("forgotStep1"); };
+
+        // Resend code handlers
+        resendCodeLink.PreviewMouseLeftButtonDown += async (s, args) =>
+        {
+            args.Handled = true;
+            resendCodeLink.IsEnabled = false;
+            resendCodeLink.Text = "Sending...";
+
+            try
+            {
+                using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+                var sendCodeRequest = new { email = createEmailBox.Text, displayName = fullNameBox.Text, type = "registration" };
+                var json = System.Text.Json.JsonSerializer.Serialize(sendCodeRequest);
+                var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                var response = await client.PostAsync($"{_apiBaseUrl}/api/auth/send-verification-code", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseJson = await response.Content.ReadAsStringAsync();
+                    try
+                    {
+                        var result = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseJson);
+                        if (result.TryGetProperty("verificationToken", out var tokenElement))
+                            pendingVerificationToken = tokenElement.GetString();
+                    }
+                    catch { }
+
+                    // Clear code boxes and restart timer
+                    foreach (var box in verifyCodeBoxes)
+                        box.Text = "";
+                    verifyCodeBoxes[0].Focus();
+                    verifyTimerText.Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150));
+                    StartVerifyTimer();
+                    JubileeAlertDialog.ShowInfo(this, "Code Sent", "A new verification code has been sent to your email.");
+                }
+                else
+                {
+                    JubileeAlertDialog.ShowError(this, "Resend Failed", "Could not resend verification code. Please try again.");
+                }
+            }
+            catch (Exception ex)
+            {
+                JubileeAlertDialog.ShowError(this, "Error", $"Failed to resend code: {ex.Message}");
+            }
+
+            resendCodeLink.Text = "Resend";
+            resendCodeLink.IsEnabled = true;
+        };
+
+        forgotResendLink.PreviewMouseLeftButtonDown += async (s, args) =>
+        {
+            args.Handled = true;
+            forgotResendLink.IsEnabled = false;
+            forgotResendLink.Text = "Sending...";
+
+            try
+            {
+                using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+                var sendCodeRequest = new { email = forgotEmailBox.Text, type = "password_reset" };
+                var json = System.Text.Json.JsonSerializer.Serialize(sendCodeRequest);
+                var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                var response = await client.PostAsync($"{_apiBaseUrl}/api/auth/send-verification-code", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseJson = await response.Content.ReadAsStringAsync();
+                    try
+                    {
+                        var result = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseJson);
+                        if (result.TryGetProperty("verificationToken", out var tokenElement))
+                            forgotVerificationToken = tokenElement.GetString();
+                    }
+                    catch { }
+
+                    // Clear code boxes and restart timer
+                    foreach (var box in codeBoxes)
+                        box.Text = "";
+                    codeBoxes[0].Focus();
+                    forgotTimerText.Foreground = new SolidColorBrush(Color.FromRgb(150, 150, 150));
+                    StartForgotTimer();
+                    JubileeAlertDialog.ShowInfo(this, "Code Sent", "A new verification code has been sent to your email.");
+                }
+                else
+                {
+                    JubileeAlertDialog.ShowError(this, "Resend Failed", "Could not resend verification code. Please try again.");
+                }
+            }
+            catch (Exception ex)
+            {
+                JubileeAlertDialog.ShowError(this, "Error", $"Failed to resend code: {ex.Message}");
+            }
+
+            forgotResendLink.Text = "Resend";
+            forgotResendLink.IsEnabled = true;
+        };
 
         // ===== ASSEMBLE THE LAYOUT WITH FIXED REGIONS =====
         // Add content panels to content container (Row 1)
         contentContainer.Children.Add(signInPanel);
         contentContainer.Children.Add(createStep1Panel);
         contentContainer.Children.Add(createStep2Panel);
+        contentContainer.Children.Add(createVerifyPanel);
         contentContainer.Children.Add(forgotStep1Panel);
         contentContainer.Children.Add(forgotStep2Panel);
         contentContainer.Children.Add(forgotStep3Panel);
@@ -7595,7 +8293,13 @@ public partial class MainWindow : Window
         _isSidebarOpen = false;
         SidebarToggleButton.ToolTip = "Show Sidebar";
 
-        // Also close chat panel if open
+        // Also close sidebar chat panel if open
+        if (_isSidebarChatOpen)
+        {
+            CloseSidebarChat();
+        }
+
+        // Also close right-side chat panel if open
         if (_isChatPanelOpen)
         {
             CloseChatPanel();
@@ -7615,16 +8319,16 @@ public partial class MainWindow : Window
 
     private void SidebarChatButton_Click(object sender, RoutedEventArgs e)
     {
-        // Toggle chat panel from sidebar
-        if (_isChatPanelOpen)
+        // Toggle sidebar chat panel
+        if (_isSidebarChatOpen)
         {
-            CloseChatPanel();
-            SidebarChatButton.Tag = null; // Remove active state
+            CloseSidebarChat();
+            SidebarChatButton.Tag = null;
         }
         else
         {
-            OpenChatPanel();
-            SidebarChatButton.Tag = "Active"; // Set active state
+            OpenSidebarChat();
+            SidebarChatButton.Tag = "Active";
         }
     }
 
@@ -7638,6 +8342,337 @@ public partial class MainWindow : Window
     {
         // Open bookmarks panel
         BookmarksButton_Click(sender, e);
+    }
+
+    #endregion
+
+    #region Sidebar Chat Panel
+
+    private bool _isSidebarChatOpen = false;
+    private List<ChatMessage> _sidebarChatMessages = new List<ChatMessage>();
+    private string _sidebarChatSessionId = string.Empty;
+    private string _currentPageContext = string.Empty;
+    private string _currentPageUrl = string.Empty;
+    private const double SidebarChatPanelWidth = 320;
+
+    private void OpenSidebarChat()
+    {
+        _isSidebarChatOpen = true;
+
+        // Close other sidebar panels
+        if (SidePanel.Visibility == Visibility.Visible)
+        {
+            SidePanel.Visibility = Visibility.Collapsed;
+        }
+        if (TodoPanel.Visibility == Visibility.Visible)
+        {
+            CloseTodoPanel();
+        }
+
+        // Show sidebar chat panel
+        SidebarChatPanel.Visibility = Visibility.Visible;
+        SidePanelColumn.Width = new GridLength(SidebarChatPanelWidth);
+
+        // Update active indicator
+        SidebarChatActiveIndicator.Visibility = Visibility.Visible;
+
+        // Initialize session if needed
+        if (string.IsNullOrEmpty(_sidebarChatSessionId))
+        {
+            _sidebarChatSessionId = Guid.NewGuid().ToString("N");
+        }
+
+        // Sync with current page context
+        SyncPageContext();
+
+        // Load avatar
+        LoadSidebarChatAvatar();
+
+        // Focus input
+        SidebarChatInputBox.Focus();
+    }
+
+    private void CloseSidebarChat()
+    {
+        _isSidebarChatOpen = false;
+        SidebarChatPanel.Visibility = Visibility.Collapsed;
+        SidePanelColumn.Width = new GridLength(0);
+        SidebarChatActiveIndicator.Visibility = Visibility.Collapsed;
+        SidebarChatButton.Tag = null;
+    }
+
+    private void CloseSidebarChat_Click(object sender, RoutedEventArgs e)
+    {
+        CloseSidebarChat();
+    }
+
+    private void SyncPageContext()
+    {
+        // Get current tab's URL and title
+        var currentTab = GetCurrentTab();
+        if (currentTab != null && !string.IsNullOrEmpty(currentTab.Url))
+        {
+            _currentPageUrl = currentTab.Url;
+            _currentPageContext = currentTab.Title ?? "Current page";
+
+            // Show context bar
+            SidebarChatContextBar.Visibility = Visibility.Visible;
+            SidebarChatContextTitle.Text = _currentPageContext;
+        }
+        else
+        {
+            _currentPageUrl = string.Empty;
+            _currentPageContext = string.Empty;
+            SidebarChatContextBar.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void SidebarChatContextClear_Click(object sender, RoutedEventArgs e)
+    {
+        _currentPageUrl = string.Empty;
+        _currentPageContext = string.Empty;
+        SidebarChatContextBar.Visibility = Visibility.Collapsed;
+    }
+
+    private async void LoadSidebarChatAvatar()
+    {
+        try
+        {
+            var imageUrl = "https://jubileeverse.com/assets/images/jubilee-avatar.png";
+            var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+            bitmap.BeginInit();
+            bitmap.UriSource = new Uri(imageUrl);
+            bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+            bitmap.EndInit();
+
+            SidebarChatAvatarBrush.ImageSource = bitmap;
+            SidebarChatAvatarContainer.Visibility = Visibility.Visible;
+            SidebarChatAvatarFallback.Visibility = Visibility.Collapsed;
+        }
+        catch
+        {
+            SidebarChatAvatarContainer.Visibility = Visibility.Collapsed;
+            SidebarChatAvatarFallback.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void SidebarChatInputBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && !string.IsNullOrWhiteSpace(SidebarChatInputBox.Text))
+        {
+            SendSidebarChatMessage();
+            e.Handled = true;
+        }
+    }
+
+    private void SidebarChatInputBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        SidebarChatInputPlaceholder.Visibility = Visibility.Collapsed;
+    }
+
+    private void SidebarChatInputBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(SidebarChatInputBox.Text))
+        {
+            SidebarChatInputPlaceholder.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void SidebarChatSendButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrWhiteSpace(SidebarChatInputBox.Text))
+        {
+            SendSidebarChatMessage();
+        }
+    }
+
+    private async void SendSidebarChatMessage()
+    {
+        if (!_profileAuthService.IsSignedIn)
+        {
+            ShowJubileeVerseSignInDialog();
+            return;
+        }
+
+        var userMessage = SidebarChatInputBox.Text.Trim();
+        if (string.IsNullOrEmpty(userMessage)) return;
+
+        // Clear input
+        SidebarChatInputBox.Text = string.Empty;
+
+        // Hide welcome message on first message
+        SidebarChatWelcome.Visibility = Visibility.Collapsed;
+
+        // Add user message to UI
+        AddSidebarChatMessage(userMessage, "user");
+
+        // Store message
+        _sidebarChatMessages.Add(new ChatMessage
+        {
+            Role = "user",
+            Content = userMessage,
+            Timestamp = DateTime.UtcNow
+        });
+
+        // Show typing indicator
+        var typingIndicator = CreateSidebarTypingIndicator();
+        SidebarChatMessagesPanel.Children.Add(typingIndicator);
+        ScrollSidebarChatToBottom();
+
+        try
+        {
+            string response;
+
+            if (_openAIChatService != null)
+            {
+                // Build context-aware message
+                var contextMessage = userMessage;
+                if (!string.IsNullOrEmpty(_currentPageContext) && !string.IsNullOrEmpty(_currentPageUrl))
+                {
+                    contextMessage = $"[Context: The user is viewing a page titled \"{_currentPageContext}\" at URL: {_currentPageUrl}]\n\nUser question: {userMessage}";
+                }
+
+                // Convert conversation history to DTOs
+                var conversationHistory = _sidebarChatMessages
+                    .Select(m => new ChatMessageDto { Role = m.Role, Content = m.Content })
+                    .ToList();
+
+                var chatResponse = await _openAIChatService.SendMessageAsync(conversationHistory, contextMessage);
+
+                if (chatResponse.Success)
+                {
+                    response = chatResponse.Message;
+                }
+                else
+                {
+                    response = chatResponse.ErrorMessage ?? "Sorry, I couldn't process your request. Please try again.";
+                }
+            }
+            else
+            {
+                await Task.Delay(500);
+                response = GetSidebarPlaceholderResponse(userMessage);
+            }
+
+            // Remove typing indicator
+            SidebarChatMessagesPanel.Children.Remove(typingIndicator);
+
+            // Add assistant response to UI
+            AddSidebarChatMessage(response, "assistant");
+
+            // Store response
+            _sidebarChatMessages.Add(new ChatMessage
+            {
+                Role = "assistant",
+                Content = response,
+                Timestamp = DateTime.UtcNow
+            });
+        }
+        catch (RateLimitException ex)
+        {
+            SidebarChatMessagesPanel.Children.Remove(typingIndicator);
+            AddSidebarChatMessage($"I'm receiving too many requests right now. Please try again in {ex.RetryAfter} seconds.", "assistant");
+        }
+        catch (Exception ex)
+        {
+            SidebarChatMessagesPanel.Children.Remove(typingIndicator);
+            AddSidebarChatMessage($"Sorry, an error occurred: {ex.Message}", "assistant");
+        }
+
+        ScrollSidebarChatToBottom();
+    }
+
+    private void AddSidebarChatMessage(string message, string role)
+    {
+        var isUser = role == "user";
+        var messageColor = isUser ? Color.FromRgb(230, 172, 0) : Color.FromRgb(26, 26, 46); // Gold for user, dark for assistant
+        var textColor = isUser ? Color.FromRgb(28, 28, 51) : Colors.White;
+        var alignment = isUser ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+        var margin = isUser ? new Thickness(40, 0, 0, 8) : new Thickness(0, 0, 40, 8);
+
+        var messageBorder = new Border
+        {
+            Background = new SolidColorBrush(messageColor),
+            CornerRadius = new CornerRadius(12),
+            Padding = new Thickness(12, 8, 12, 8),
+            HorizontalAlignment = alignment,
+            Margin = margin,
+            MaxWidth = 240
+        };
+
+        var messageText = new TextBlock
+        {
+            Text = message,
+            TextWrapping = TextWrapping.Wrap,
+            Foreground = new SolidColorBrush(textColor),
+            FontSize = 13,
+            LineHeight = 18
+        };
+
+        messageBorder.Child = messageText;
+        SidebarChatMessagesPanel.Children.Add(messageBorder);
+    }
+
+    private Border CreateSidebarTypingIndicator()
+    {
+        var border = new Border
+        {
+            Background = new SolidColorBrush(Color.FromRgb(26, 26, 46)),
+            CornerRadius = new CornerRadius(12),
+            Padding = new Thickness(16, 10, 16, 10),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Margin = new Thickness(0, 0, 40, 8)
+        };
+
+        var panel = new StackPanel { Orientation = Orientation.Horizontal };
+
+        for (int i = 0; i < 3; i++)
+        {
+            var dot = new WpfShapes.Ellipse
+            {
+                Width = 6,
+                Height = 6,
+                Fill = new SolidColorBrush(Color.FromRgb(128, 128, 144)),
+                Margin = new Thickness(i > 0 ? 3 : 0, 0, 0, 0)
+            };
+            panel.Children.Add(dot);
+        }
+
+        border.Child = panel;
+        return border;
+    }
+
+    private void ScrollSidebarChatToBottom()
+    {
+        SidebarChatMessagesScroller.ScrollToEnd();
+    }
+
+    private string GetSidebarPlaceholderResponse(string userMessage)
+    {
+        var lowerMessage = userMessage.ToLower();
+
+        if (!string.IsNullOrEmpty(_currentPageContext))
+        {
+            return $"I can see you're viewing \"{_currentPageContext}\". The AI integration is being finalized. Soon I'll be able to answer questions about this page and help you explore related Biblical content!";
+        }
+
+        if (lowerMessage.Contains("hello") || lowerMessage.Contains("hi"))
+        {
+            return "Hello! I'm Jubilee Inspire. How can I help you explore the page you're viewing?";
+        }
+
+        return "Thank you for your message. The Jubilee Inspire AI is being set up. Soon I'll be able to help you understand the page you're viewing and find related Biblical content!";
+    }
+
+    /// <summary>
+    /// Updates the sidebar chat context when the active tab changes.
+    /// </summary>
+    private void UpdateSidebarChatContext()
+    {
+        if (_isSidebarChatOpen)
+        {
+            SyncPageContext();
+        }
     }
 
     #endregion
