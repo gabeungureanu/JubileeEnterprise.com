@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Jubilee Good News - Uplifting Christian news, devotionals, and inspiration">
+    <title>Jubilee Good News - Inspiring Faith, Sharing Hope</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================
+           JUBILEE GOOD NEWS - MSN-STYLE DARK THEME
+           ============================================ */
+
+        :root {
+            /* Dark Theme Colors */
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-tertiary: #0f3460;
+            --bg-card: #1c1c33;
+            --bg-card-hover: #252545;
+
+            /* Text Colors */
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0c0;
+            --text-muted: #6a6a7a;
+
+            /* Accent Colors */
+            --accent-gold: #E6AC00;
+            --accent-gold-hover: #F5C518;
+            --accent-blue: #4a9eff;
+            --accent-red: #e94560;
+            --accent-green: #4ade80;
+
+            /* Borders */
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.15);
+
+            /* Spacing */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-2xl: 48px;
+
+            /* Font Sizes */
+            --font-xs: 11px;
+            --font-sm: 13px;
+            --font-base: 15px;
+            --font-md: 17px;
+            --font-lg: 20px;
+            --font-xl: 24px;
+            --font-2xl: 32px;
+            --font-3xl: 40px;
+
+            /* Layout */
+            --max-width: 1400px;
+            --header-height: 56px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--accent-gold);
+        }
+
+        /* ============================================
+           HEADER / NAVIGATION
+           ============================================ */
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 var(--space-lg);
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-gold) 0%, #cc8800 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-size: var(--font-lg);
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .logo-text span {
+            color: var(--accent-gold);
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xl);
+            list-style: none;
+        }
+
+        .nav-link {
+            font-size: var(--font-sm);
+            font-weight: 500;
+            color: var(--text-secondary);
+            padding: var(--space-sm) 0;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--accent-gold);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--bg-tertiary);
+            border-radius: 20px;
+            padding: var(--space-sm) var(--space-md);
+            gap: var(--space-sm);
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: var(--font-sm);
+            width: 180px;
+            outline: none;
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn-sign-in {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: 20px;
+            font-size: var(--font-sm);
+            font-weight: 600;
+            transition: background 0.2s ease;
+        }
+
+        .btn-sign-in:hover {
+            background: var(--accent-gold-hover);
+            color: var(--bg-primary);
+        }
+
+        /* ============================================
+           MAIN CONTENT LAYOUT
+           ============================================ */
+
+        .main-content {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: var(--space-lg);
+        }
+
+        /* Category Pills */
+        .category-pills {
+            display: flex;
+            gap: var(--space-sm);
+            padding: var(--space-md) 0;
+            overflow-x: auto;
+            scrollbar-width: none;
+            margin-bottom: var(--space-lg);
+        }
+
+        .category-pills::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-pill {
+            padding: var(--space-sm) var(--space-md);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .category-pill:hover,
+        .category-pill.active {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            border-color: var(--accent-gold);
+        }
+
+        /* Hero Section */
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl);
+        }
+
+        .hero-main {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            background: var(--bg-card);
+        }
+
+        .hero-main img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hero-main-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: var(--space-xl);
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+        }
+
+        .hero-main-category {
+            display: inline-block;
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: 4px;
+            font-size: var(--font-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: var(--space-sm);
+        }
+
+        .hero-main-title {
+            font-family: 'Playfair Display', serif;
+            font-size: var(--font-2xl);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: var(--space-sm);
+        }
+
+        .hero-main-excerpt {
+            font-size: var(--font-base);
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .hero-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+
+        .hero-sidebar-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            flex: 1;
+            background: var(--bg-card);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .hero-sidebar-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .hero-sidebar-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hero-sidebar-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: var(--space-md);
+            background: linear-gradient(transparent, rgba(0,0,0,0.85));
+        }
+
+        .hero-sidebar-category {
+            display: inline-block;
+            background: var(--accent-blue);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: var(--space-xs);
+        }
+
+        .hero-sidebar-title {
+            font-size: var(--font-base);
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: var(--font-md);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-primary);
+        }
+
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background: var(--accent-gold);
+            margin-right: var(--space-sm);
+            vertical-align: middle;
+        }
+
+        .see-all-link {
+            font-size: var(--font-sm);
+            color: var(--accent-gold);
+            font-weight: 500;
+        }
+
+        .see-all-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl);
+        }
+
+        .content-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .content-card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+        }
+
+        .content-card-image {
+            aspect-ratio: 16/10;
+            background: var(--bg-tertiary);
+            overflow: hidden;
+        }
+
+        .content-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .content-card:hover .content-card-image img {
+            transform: scale(1.05);
+        }
+
+        .content-card-body {
+            padding: var(--space-md);
+        }
+
+        .content-card-category {
+            font-size: var(--font-xs);
+            color: var(--accent-gold);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: var(--space-xs);
+        }
+
+        .content-card-title {
+            font-size: var(--font-base);
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: var(--space-sm);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .content-card-meta {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: var(--font-xs);
+            color: var(--text-muted);
+        }
+
+        /* Two Column Layout */
+        .two-column-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--space-xl);
+            margin-bottom: var(--space-xl);
+        }
+
+        /* List Cards */
+        .list-card {
+            display: flex;
+            gap: var(--space-md);
+            padding: var(--space-md);
+            background: var(--bg-card);
+            border-radius: 12px;
+            margin-bottom: var(--space-md);
+            transition: background 0.2s ease;
+            cursor: pointer;
+        }
+
+        .list-card:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .list-card-image {
+            width: 140px;
+            aspect-ratio: 4/3;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: var(--bg-tertiary);
+        }
+
+        .list-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .list-card-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .list-card-category {
+            font-size: var(--font-xs);
+            color: var(--accent-blue);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: var(--space-xs);
+        }
+
+        .list-card-title {
+            font-size: var(--font-md);
+            font-weight: 600;
+            line-height: 1.3;
+            margin-bottom: var(--space-sm);
+        }
+
+        .list-card-excerpt {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Sidebar Widgets */
+        .sidebar-widget {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+
+        .widget-title {
+            font-size: var(--font-sm);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--accent-gold);
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .trending-item {
+            display: flex;
+            gap: var(--space-md);
+            padding: var(--space-sm) 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .trending-item:last-child {
+            border-bottom: none;
+        }
+
+        .trending-number {
+            font-size: var(--font-xl);
+            font-weight: 700;
+            color: var(--accent-gold);
+            width: 30px;
+        }
+
+        .trending-content {
+            flex: 1;
+        }
+
+        .trending-title {
+            font-size: var(--font-sm);
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 2px;
+        }
+
+        .trending-meta {
+            font-size: var(--font-xs);
+            color: var(--text-muted);
+        }
+
+        /* Daily Verse Widget */
+        .verse-widget {
+            background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--accent-gold);
+        }
+
+        .verse-text {
+            font-family: 'Playfair Display', serif;
+            font-size: var(--font-md);
+            font-style: italic;
+            line-height: 1.6;
+            margin-bottom: var(--space-md);
+            color: var(--text-primary);
+        }
+
+        .verse-reference {
+            font-size: var(--font-sm);
+            color: var(--accent-gold);
+            font-weight: 600;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: var(--space-xl) 0;
+            margin-top: var(--space-2xl);
+        }
+
+        .footer-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 var(--space-lg);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-xl);
+        }
+
+        .footer-section h4 {
+            font-size: var(--font-sm);
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--accent-gold);
+            margin-bottom: var(--space-md);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: var(--space-sm);
+        }
+
+        .footer-links a {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-gold);
+        }
+
+        .footer-bottom {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: var(--space-lg);
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            margin-top: var(--space-lg);
+        }
+
+        .footer-bottom p {
+            font-size: var(--font-sm);
+            color: var(--text-muted);
+        }
+
+        /* Loading Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-sidebar {
+                flex-direction: row;
+            }
+
+            .two-column-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .content-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .footer-inner {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .hero-sidebar {
+                flex-direction: column;
+            }
+
+            .hero-main-title {
+                font-size: var(--font-xl);
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .list-card {
+                flex-direction: column;
+            }
+
+            .list-card-image {
+                width: 100%;
+            }
+
+            .footer-inner {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <a href="/" class="logo">
+                <div class="logo-icon">+</div>
+                <div class="logo-text">Jubilee <span>Good News</span></div>
+            </a>
+
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="/" class="nav-link active">Home</a></li>
+                    <li><a href="/devotionals" class="nav-link">Devotionals</a></li>
+                    <li><a href="/sermons" class="nav-link">Sermons</a></li>
+                    <li><a href="/faith" class="nav-link">Faith</a></li>
+                    <li><a href="/family" class="nav-link">Family</a></li>
+                    <li><a href="/community" class="nav-link">Community</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-actions">
+                <div class="search-box">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="M21 21l-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" placeholder="Search good news...">
+                </div>
+                <a href="/signin" class="btn-sign-in">Sign In</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Category Pills -->
+        <div class="category-pills" id="categoryPills">
+            <button class="category-pill active" data-category="all">All</button>
+            <button class="category-pill" data-category="devotional">Devotionals</button>
+            <button class="category-pill" data-category="sermon">Sermons</button>
+            <button class="category-pill" data-category="faith">Faith</button>
+            <button class="category-pill" data-category="family">Family</button>
+            <button class="category-pill" data-category="prayer">Prayer</button>
+            <button class="category-pill" data-category="worship">Worship</button>
+            <button class="category-pill" data-category="testimony">Testimonies</button>
+        </div>
+
+        <!-- Hero Section -->
+        <section class="hero-grid" id="heroSection">
+            <article class="hero-main">
+                <img src="https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=1200&h=675&fit=crop" alt="Featured Article">
+                <div class="hero-main-overlay">
+                    <span class="hero-main-category">Featured</span>
+                    <h1 class="hero-main-title">Finding Peace in Times of Uncertainty: A Journey of Faith</h1>
+                    <p class="hero-main-excerpt">Discover how believers around the world are finding strength and hope through their faith during challenging times.</p>
+                </div>
+            </article>
+
+            <div class="hero-sidebar">
+                <article class="hero-sidebar-card">
+                    <img src="https://images.unsplash.com/photo-1529070538774-1843cb3265df?w=600&h=400&fit=crop" alt="Sidebar Article 1">
+                    <div class="hero-sidebar-overlay">
+                        <span class="hero-sidebar-category">Devotional</span>
+                        <h3 class="hero-sidebar-title">Morning Devotions: Starting Your Day with Purpose</h3>
+                    </div>
+                </article>
+
+                <article class="hero-sidebar-card">
+                    <img src="https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=600&h=400&fit=crop" alt="Sidebar Article 2">
+                    <div class="hero-sidebar-overlay">
+                        <span class="hero-sidebar-category">Community</span>
+                        <h3 class="hero-sidebar-title">Churches Unite for Community Outreach</h3>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- Latest Content Section -->
+        <section>
+            <div class="section-header">
+                <h2 class="section-title">Latest Good News</h2>
+                <a href="/latest" class="see-all-link">See All &rarr;</a>
+            </div>
+
+            <div class="content-grid" id="latestContent">
+                <!-- Content loaded dynamically -->
+            </div>
+        </section>
+
+        <!-- Two Column Layout -->
+        <div class="two-column-layout">
+            <!-- Main Column -->
+            <section>
+                <div class="section-header">
+                    <h2 class="section-title">Devotionals & Reflections</h2>
+                    <a href="/devotionals" class="see-all-link">See All &rarr;</a>
+                </div>
+
+                <div id="devotionalsList">
+                    <!-- Devotionals loaded dynamically -->
+                </div>
+            </section>
+
+            <!-- Sidebar -->
+            <aside>
+                <!-- Daily Verse -->
+                <div class="sidebar-widget verse-widget">
+                    <h3 class="widget-title">Daily Verse</h3>
+                    <p class="verse-text" id="dailyVerse">"For I know the plans I have for you," declares the LORD, "plans to prosper you and not to harm you, plans to give you hope and a future."</p>
+                    <p class="verse-reference" id="verseReference">Jeremiah 29:11</p>
+                </div>
+
+                <!-- Trending -->
+                <div class="sidebar-widget">
+                    <h3 class="widget-title">Trending Now</h3>
+                    <div id="trendingList">
+                        <!-- Trending loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Newsletter -->
+                <div class="sidebar-widget">
+                    <h3 class="widget-title">Stay Inspired</h3>
+                    <p style="font-size: var(--font-sm); color: var(--text-secondary); margin-bottom: var(--space-md);">
+                        Get daily devotionals and inspiring content delivered to your inbox.
+                    </p>
+                    <input type="email" placeholder="Enter your email" style="
+                        width: 100%;
+                        padding: var(--space-sm) var(--space-md);
+                        background: var(--bg-tertiary);
+                        border: 1px solid var(--border-color);
+                        border-radius: 8px;
+                        color: var(--text-primary);
+                        font-size: var(--font-sm);
+                        margin-bottom: var(--space-sm);
+                    ">
+                    <button style="
+                        width: 100%;
+                        padding: var(--space-sm) var(--space-md);
+                        background: var(--accent-gold);
+                        border: none;
+                        border-radius: 8px;
+                        color: var(--bg-primary);
+                        font-size: var(--font-sm);
+                        font-weight: 600;
+                        cursor: pointer;
+                    ">Subscribe</button>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Sermons Section -->
+        <section>
+            <div class="section-header">
+                <h2 class="section-title">Recent Sermons</h2>
+                <a href="/sermons" class="see-all-link">See All &rarr;</a>
+            </div>
+
+            <div class="content-grid" id="sermonsContent">
+                <!-- Sermons loaded dynamically -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-section">
+                <h4>About</h4>
+                <ul class="footer-links">
+                    <li><a href="/about">About Us</a></li>
+                    <li><a href="/team">Our Team</a></li>
+                    <li><a href="/mission">Our Mission</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Categories</h4>
+                <ul class="footer-links">
+                    <li><a href="/devotionals">Devotionals</a></li>
+                    <li><a href="/sermons">Sermons</a></li>
+                    <li><a href="/faith">Faith Stories</a></li>
+                    <li><a href="/community">Community</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul class="footer-links">
+                    <li><a href="/bible">Bible Study</a></li>
+                    <li><a href="/prayer">Prayer Requests</a></li>
+                    <li><a href="/podcasts">Podcasts</a></li>
+                    <li><a href="/videos">Videos</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Connect</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Facebook</a></li>
+                    <li><a href="#">Twitter</a></li>
+                    <li><a href="#">Instagram</a></li>
+                    <li><a href="#">YouTube</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Jubilee Good News. Part of the Jubilee Enterprise Network. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // API Configuration
+        const API_BASE = 'https://inspirecodex.com/api/v1';
+
+        // Sample data for demonstration (will be replaced with API calls)
+        const sampleContent = [
+            {
+                id: 1,
+                title: "The Power of Gratitude in Daily Life",
+                category: "Faith",
+                summary: "Discover how practicing gratitude can transform your spiritual journey and bring more joy into your daily life.",
+                image: "https://images.unsplash.com/photo-1489659639091-8b687bc4386e?w=600&h=400&fit=crop",
+                date: "2026-01-16"
+            },
+            {
+                id: 2,
+                title: "Building Stronger Family Bonds Through Prayer",
+                category: "Family",
+                summary: "Learn practical ways to incorporate prayer into your family routine and strengthen your relationships.",
+                image: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=600&h=400&fit=crop",
+                date: "2026-01-16"
+            },
+            {
+                id: 3,
+                title: "Understanding God's Purpose for Your Life",
+                category: "Sermon",
+                summary: "A powerful message about discovering and embracing the unique calling God has placed on your life.",
+                image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=400&fit=crop",
+                date: "2026-01-15"
+            },
+            {
+                id: 4,
+                title: "Walking in Faith During Difficult Seasons",
+                category: "Devotional",
+                summary: "Encouragement and scriptural guidance for maintaining faith when facing life's challenges.",
+                image: "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&h=400&fit=crop",
+                date: "2026-01-15"
+            }
+        ];
+
+        const sampleDevotionals = [
+            {
+                id: 1,
+                title: "Morning Grace: Starting Fresh Each Day",
+                category: "Daily Devotional",
+                excerpt: "Each morning brings new mercies from God. Learn how to embrace His grace and start your day with renewed hope and purpose.",
+                image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop"
+            },
+            {
+                id: 2,
+                title: "Finding Rest in God's Promises",
+                category: "Evening Reflection",
+                excerpt: "When the day has been long and burdens feel heavy, God's promises offer comfort and rest for the weary soul.",
+                image: "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=600&h=400&fit=crop"
+            },
+            {
+                id: 3,
+                title: "The Joy of Serving Others",
+                category: "Weekly Focus",
+                excerpt: "Discover how serving others with a joyful heart reflects God's love and brings fulfillment to your own life.",
+                image: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=600&h=400&fit=crop"
+            }
+        ];
+
+        const trendingItems = [
+            { title: "10 Prayers for Peace and Comfort", category: "Prayer", views: "12.5K" },
+            { title: "How to Study the Bible Effectively", category: "Study", views: "9.8K" },
+            { title: "Worship Songs That Touch the Soul", category: "Worship", views: "8.2K" },
+            { title: "Teaching Children About Faith", category: "Family", views: "7.1K" },
+            { title: "Finding Community in the Church", category: "Community", views: "6.4K" }
+        ];
+
+        // Render Functions
+        function renderContentCard(item) {
+            return `
+                <article class="content-card" onclick="window.location='/article/${item.id}'">
+                    <div class="content-card-image">
+                        <img src="${item.image}" alt="${item.title}" loading="lazy">
+                    </div>
+                    <div class="content-card-body">
+                        <span class="content-card-category">${item.category}</span>
+                        <h3 class="content-card-title">${item.title}</h3>
+                        <div class="content-card-meta">
+                            <span>${formatDate(item.date)}</span>
+                        </div>
+                    </div>
+                </article>
+            `;
+        }
+
+        function renderListCard(item) {
+            return `
+                <article class="list-card" onclick="window.location='/devotional/${item.id}'">
+                    <div class="list-card-image">
+                        <img src="${item.image}" alt="${item.title}" loading="lazy">
+                    </div>
+                    <div class="list-card-content">
+                        <span class="list-card-category">${item.category}</span>
+                        <h3 class="list-card-title">${item.title}</h3>
+                        <p class="list-card-excerpt">${item.excerpt}</p>
+                    </div>
+                </article>
+            `;
+        }
+
+        function renderTrendingItem(item, index) {
+            return `
+                <div class="trending-item">
+                    <span class="trending-number">${index + 1}</span>
+                    <div class="trending-content">
+                        <h4 class="trending-title">${item.title}</h4>
+                        <span class="trending-meta">${item.category} • ${item.views} views</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+            if (diff === 0) return 'Today';
+            if (diff === 1) return 'Yesterday';
+            if (diff < 7) return `${diff} days ago`;
+
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        // Load Content
+        async function loadContent() {
+            // Latest Content
+            const latestContainer = document.getElementById('latestContent');
+            latestContainer.innerHTML = sampleContent.map(renderContentCard).join('');
+
+            // Devotionals
+            const devotionalsContainer = document.getElementById('devotionalsList');
+            devotionalsContainer.innerHTML = sampleDevotionals.map(renderListCard).join('');
+
+            // Trending
+            const trendingContainer = document.getElementById('trendingList');
+            trendingContainer.innerHTML = trendingItems.map((item, i) => renderTrendingItem(item, i)).join('');
+
+            // Sermons (reuse sample content with different images)
+            const sermonsContainer = document.getElementById('sermonsContent');
+            sermonsContainer.innerHTML = sampleContent.map((item, i) => renderContentCard({
+                ...item,
+                category: 'Sermon',
+                image: `https://images.unsplash.com/photo-${1516450360452 + i * 1000}-9eb253c9f5eb?w=600&h=400&fit=crop`
+            })).join('');
+        }
+
+        // Try to load from API
+        async function loadFromAPI() {
+            try {
+                // Load content from InspireCodex API
+                const response = await fetch(`${API_BASE}/inspire/content?limit=8`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.content && data.content.length > 0) {
+                        // Use API content
+                        console.log('Loaded content from API:', data.content.length, 'items');
+                    }
+                }
+
+                // Load categories
+                const catResponse = await fetch(`${API_BASE}/inspire/categories`);
+                if (catResponse.ok) {
+                    const catData = await catResponse.json();
+                    console.log('Loaded categories from API:', catData.categories?.length || 0, 'categories');
+                }
+            } catch (err) {
+                console.log('Using sample data (API not available):', err.message);
+            }
+        }
+
+        // Category Filter
+        document.getElementById('categoryPills').addEventListener('click', (e) => {
+            if (e.target.classList.contains('category-pill')) {
+                document.querySelectorAll('.category-pill').forEach(pill => pill.classList.remove('active'));
+                e.target.classList.add('active');
+
+                const category = e.target.dataset.category;
+                console.log('Filter by category:', category);
+                // Implement filtering logic here
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadContent();
+            loadFromAPI();
+        });
+    </script>
+</body>
+</html>
