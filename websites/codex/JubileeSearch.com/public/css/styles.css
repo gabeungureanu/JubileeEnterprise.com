@@ -1,0 +1,583 @@
+/**
+ * JubileeSearch.com - Matching JubileeVerse.com Design
+ */
+
+/* Agency FB Font */
+@font-face {
+  font-family: 'Agency FB';
+  font-weight: bold;
+  font-display: swap;
+  src: url('/fonts/AGENCYB.TTF');
+}
+
+@font-face {
+  font-family: 'Agency FB';
+  font-display: swap;
+  src: url('/fonts/AGENCYR.TTF');
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #000;
+  color: #f2f2f2;
+}
+
+/* ========== Homepage Layout ========== */
+.home-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* ========== Avatar ========== */
+.avatar-container {
+  position: relative;
+  margin-bottom: 0;
+}
+
+.avatar-wrapper {
+  position: relative;
+  display: inline-block;
+  background-color: #000;
+  border-radius: 50%;
+}
+
+.avatar-image {
+  width: 156px;
+  height: 156px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: none;
+  box-shadow: none;
+  background-color: #000;
+}
+
+/* ========== Logo ========== */
+.logo-container {
+  text-align: center;
+  margin-top: 6px;
+  margin-bottom: 8px;
+}
+
+.main-logo {
+  font-family: 'Agency FB', Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  font-size: 88px;
+  color: #fff;
+  font-weight: bold;
+  line-height: 1.0;
+  text-align: center;
+  letter-spacing: -1px;
+}
+
+.main-logo .highlight {
+  color: #ffbd59;
+  font-style: normal;
+  font-weight: bold;
+}
+
+.main-logo .dotcom {
+  color: #fff;
+}
+
+/* ========== Search Box ========== */
+.search-wrapper {
+  width: 100%;
+  max-width: 760px;
+}
+
+.search-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  background-color: #5a5a5a;
+  border-radius: 8px;
+  padding: 12px 14px;
+  gap: 8px 12px;
+  transition: all 0.2s;
+  border: 1px solid #6a6a6a;
+}
+
+.search-box:focus-within {
+  border-color: #ffbd59;
+  box-shadow: 0 0 0 1px #ffbd59;
+  background-color: #616161;
+}
+
+.search-input {
+  flex: 1 1 auto;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f0f0f0;
+  font-size: 15px;
+  font-family: inherit;
+  line-height: 22px;
+  height: 22px;
+  padding: 0;
+  margin: 0;
+  min-width: 200px;
+}
+
+.search-input::placeholder {
+  color: #ffffff;
+}
+
+/* ========== Search Actions ========== */
+.search-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-icon {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s;
+  background-color: #6b6b6b;
+  border: 1px solid #7b7b7b;
+}
+
+.action-icon:hover {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.action-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: #9a9a9a;
+  transition: fill 0.15s;
+}
+
+.action-icon:hover svg {
+  fill: #cfcfcf;
+}
+
+/* Voice Button */
+.voice-button {
+  width: 32px;
+  height: 32px;
+  background-color: #ffbd59;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 2px 8px rgba(255, 189, 89, 0.4);
+  border: none;
+}
+
+.voice-button:hover {
+  background-color: #ffc970;
+  transform: scale(1.05);
+}
+
+.voice-button svg {
+  width: 16px;
+  height: 16px;
+  fill: #000;
+}
+
+/* ========== Search Buttons ========== */
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+  width: 100%;
+  max-width: 760px;
+}
+
+.search-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-family: 'Oswald', 'Arial Narrow', sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: none;
+  letter-spacing: 0.5px;
+  border: 1px solid #777;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  background: transparent;
+  color: #777;
+}
+
+.search-button:hover {
+  background: transparent;
+  color: #ffbd59;
+  border-color: #ffbd59;
+  transform: translateY(-2px);
+}
+
+.search-button svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+/* ========== Footer ========== */
+.footer {
+  background-color: #1a1a1a;
+  border-top: 1px solid #333;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 24px;
+}
+
+.footer-links a {
+  color: #777;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.15s;
+}
+
+.footer-links a:hover {
+  color: #ffbd59;
+}
+
+/* ========== Search Results Page ========== */
+.results-container {
+  min-height: 100vh;
+  background-color: #000;
+}
+
+/* Results Header */
+.results-header {
+  background-color: #1a1a1a;
+  border-bottom: 1px solid #333;
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.results-header-inner {
+  display: flex;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.results-logo {
+  font-family: 'Agency FB', Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  font-size: 28px;
+  font-weight: bold;
+  margin-right: 24px;
+  cursor: pointer;
+  text-decoration: none;
+  color: #fff;
+}
+
+.results-logo .highlight {
+  color: #ffbd59;
+}
+
+.results-search-box {
+  flex: 1;
+  max-width: 690px;
+}
+
+.results-search-box .search-box {
+  padding: 8px 12px;
+}
+
+/* Results Stats */
+.results-stats {
+  padding: 12px 20px;
+  color: #777;
+  font-size: 14px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 170px;
+}
+
+/* Search Results */
+.results-list {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px 40px;
+  padding-left: 170px;
+}
+
+.result-item {
+  margin-bottom: 32px;
+  max-width: 600px;
+}
+
+.result-url-line {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.result-favicon {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: #2b2b2b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  color: #ffbd59;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.result-url-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.result-site-name {
+  font-size: 14px;
+  color: #bdc1c6;
+  line-height: 1.3;
+}
+
+.result-url {
+  font-size: 12px;
+  color: #777;
+  line-height: 1.3;
+}
+
+.result-title {
+  font-size: 20px;
+  font-weight: 400;
+  color: #8ab4f8;
+  text-decoration: none;
+  line-height: 1.3;
+  display: block;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.result-title:hover {
+  text-decoration: underline;
+}
+
+.result-snippet {
+  font-size: 14px;
+  color: #bdc1c6;
+  line-height: 1.58;
+}
+
+.result-type-badge {
+  display: inline-block;
+  background-color: #2b2b2b;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: #777;
+  margin-right: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.result-type-bible {
+  border-color: #ffbd59;
+  color: #ffbd59;
+}
+
+.result-type-content {
+  border-color: #8ab4f8;
+  color: #8ab4f8;
+}
+
+.result-type-ministry {
+  border-color: #81c995;
+  color: #81c995;
+}
+
+/* Web Search Result Styles */
+.result-favicon-img {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: contain;
+}
+
+.result-favicon-placeholder {
+  width: 18px;
+  height: 18px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #000;
+  background-color: #ffbd59;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.result-meta {
+  margin-top: 8px;
+}
+
+.result-source-badge {
+  display: inline-block;
+  background-color: #2b2b2b;
+  border: 1px solid #3a3a3a;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 10px;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.source-google {
+  border-color: #4285f4;
+  color: #4285f4;
+}
+
+.source-yahoo {
+  border-color: #720e9e;
+  color: #a855f7;
+}
+
+.source-bing {
+  border-color: #00809d;
+  color: #00bcd4;
+}
+
+/* No Results */
+.no-results {
+  text-align: center;
+  padding: 60px 20px;
+  color: #777;
+}
+
+.no-results h2 {
+  font-size: 24px;
+  font-weight: 400;
+  margin-bottom: 16px;
+  color: #f2f2f2;
+}
+
+.no-results p {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #3a3a3a;
+  border-top-color: #ffbd59;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 900px) {
+  .main-logo {
+    font-size: 64px;
+  }
+
+  .avatar-image {
+    width: 126px;
+    height: 126px;
+  }
+
+  .search-wrapper {
+    max-width: 90%;
+  }
+}
+
+@media (max-width: 600px) {
+  .main-logo {
+    font-size: 48px;
+  }
+
+  .search-box {
+    padding: 10px 10px;
+  }
+
+  .button-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .results-header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .results-logo {
+    margin-bottom: 12px;
+  }
+
+  .results-search-box {
+    width: 100%;
+  }
+
+  .results-stats,
+  .results-list {
+    padding-left: 20px;
+  }
+}
+
+/* ========== Scrollbar ========== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a4a4a;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5a5a5a;
+}

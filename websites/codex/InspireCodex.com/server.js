@@ -2358,6 +2358,183 @@ app.get('/api/v1/inspire/knowledge/:id', async (req, res) => {
 });
 
 // =============================================================================
+// WEB SEARCH CACHE API ROUTES - JubileeSearch
+// =============================================================================
+
+// Get cached search results by keyword hash
+app.get('/api/v1/inspire/web-search/cache/:hash', async (req, res) => {
+    try {
+        const { hash } = req.params;
+
+        const result = await inspirePool.query(`
+            SELECT id, keyword, keyword_hash, results, hit_counter,
+                   total_results_fetched, search_engines_queried, ranking_scores,
+                   created_at, updated_at, expires_at
+            FROM cached_web_searches
+            WHERE keyword_hash = $1 AND is_active = true
+        `, [hash]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Cache miss - no cached results found for this search'
+            });
+        }
+
+        const cached = result.rows[0];
+
+        // Check if cache has expired
+        if (cached.expires_at && new Date(cached.expires_at) < new Date()) {
+            return res.status(404).json({
+                success: false,
+                error: 'Cache expired',
+                expired_at: cached.expires_at
+            });
+        }
+
+        res.json({
+            success: true,
+            cached: true,
+            data: cached
+        });
+    } catch (err) {
+        console.error('Web search cache fetch error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch cached search results',
+            message: err.message
+        });
+    }
+});
+
+// Increment hit counter for cached search
+app.post('/api/v1/inspire/web-search/cache/:id/hit', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await inspirePool.query(`
+            UPDATE cached_web_searches
+            SET hit_counter = hit_counter + 1,
+                updated_at = NOW()
+            WHERE id = $1 AND is_active = true
+            RETURNING id, keyword, hit_counter, updated_at
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Cached search not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: result.rows[0]
+        });
+    } catch (err) {
+        console.error('Web search hit counter error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to increment hit counter',
+            message: err.message
+        });
+    }
+});
+
+// Save new search results to cache
+app.post('/api/v1/inspire/web-search/cache', async (req, res) => {
+    try {
+        const {
+            keyword,
+            keyword_hash,
+            results,
+            total_results_fetched,
+            search_engines_queried,
+            ranking_scores,
+            expires_in_hours = 24
+        } = req.body;
+
+        if (!keyword || !keyword_hash || !results) {
+            return res.status(400).json({
+                success: false,
+                error: 'keyword, keyword_hash, and results are required'
+            });
+        }
+
+        // Calculate expiration time
+        const expires_at = new Date();
+        expires_at.setHours(expires_at.getHours() + expires_in_hours);
+
+        // Upsert - insert or update if exists
+        const result = await inspirePool.query(`
+            INSERT INTO cached_web_searches
+                (keyword, keyword_hash, results, total_results_fetched,
+                 search_engines_queried, ranking_scores, expires_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ON CONFLICT (keyword_hash)
+            DO UPDATE SET
+                results = EXCLUDED.results,
+                total_results_fetched = EXCLUDED.total_results_fetched,
+                search_engines_queried = EXCLUDED.search_engines_queried,
+                ranking_scores = EXCLUDED.ranking_scores,
+                hit_counter = cached_web_searches.hit_counter + 1,
+                updated_at = NOW(),
+                expires_at = EXCLUDED.expires_at
+            RETURNING id, keyword, keyword_hash, hit_counter, created_at, updated_at, expires_at
+        `, [
+            keyword,
+            keyword_hash,
+            JSON.stringify(results),
+            total_results_fetched || results.length,
+            JSON.stringify(search_engines_queried || []),
+            JSON.stringify(ranking_scores || []),
+            expires_at
+        ]);
+
+        res.status(201).json({
+            success: true,
+            data: result.rows[0]
+        });
+    } catch (err) {
+        console.error('Web search cache save error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to save search results to cache',
+            message: err.message
+        });
+    }
+});
+
+// Get search cache statistics
+app.get('/api/v1/inspire/web-search/cache/stats', async (req, res) => {
+    try {
+        const result = await inspirePool.query(`
+            SELECT
+                COUNT(*) as total_cached_searches,
+                SUM(hit_counter) as total_hits,
+                AVG(hit_counter)::numeric(10,2) as avg_hits_per_search,
+                MAX(hit_counter) as max_hits,
+                COUNT(CASE WHEN expires_at > NOW() THEN 1 END) as active_cache_entries,
+                COUNT(CASE WHEN expires_at <= NOW() THEN 1 END) as expired_cache_entries
+            FROM cached_web_searches
+            WHERE is_active = true
+        `);
+
+        res.json({
+            success: true,
+            data: result.rows[0]
+        });
+    } catch (err) {
+        console.error('Web search cache stats error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch cache statistics',
+            message: err.message
+        });
+    }
+});
+
+// =============================================================================
 // AUTHENTICATION API ROUTES - JubileeSSO
 // =============================================================================
 
