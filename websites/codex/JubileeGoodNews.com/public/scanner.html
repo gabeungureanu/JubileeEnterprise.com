@@ -1292,59 +1292,41 @@
         }
 
         async function fetchTopStory(source) {
-            // Simulated top stories - in production, fetch actual RSS/scrape
-            const simulatedStories = {
-                'yahoo': {
-                    originalTitle: 'Markets React to Federal Reserve Policy Announcement on Interest Rates',
-                    originalUrl: 'https://finance.yahoo.com/news/markets-fed-policy',
-                    originalExcerpt: 'Stock markets showed mixed reactions following the Federal Reserve\'s latest policy statement on interest rates...',
-                    position: 1,
-                    hasImage: true,
-                    imageUrl: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&h=450&fit=crop'
-                },
-                'nytimes': {
-                    originalTitle: 'Global Leaders Gather for Climate Summit Amid Rising Environmental Tensions',
-                    originalUrl: 'https://www.nytimes.com/2026/01/16/world/climate-summit',
-                    originalExcerpt: 'World leaders convened today for crucial climate discussions, facing pressure to deliver meaningful commitments...',
-                    position: 1,
-                    hasImage: true,
-                    imageUrl: 'https://images.unsplash.com/photo-1569163139599-0f4517e36f51?w=800&h=450&fit=crop'
-                },
-                'msn': {
-                    originalTitle: 'Technology Sector Faces Restructuring as Major Companies Announce Layoffs',
-                    originalUrl: 'https://www.msn.com/news/technology/layoffs',
-                    originalExcerpt: 'A major technology firm has announced significant workforce reductions, impacting thousands of employees...',
-                    position: 2,
-                    hasImage: true,
-                    imageUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&h=450&fit=crop'
-                },
-                'cnn': {
-                    originalTitle: 'Congress Debates Spending Bill as Government Shutdown Deadline Approaches',
-                    originalUrl: 'https://www.cnn.com/politics/congress-shutdown',
-                    originalExcerpt: 'Tensions in Washington continue to escalate as lawmakers struggle to reach agreement before the funding deadline...',
-                    position: 1,
-                    hasImage: true,
-                    imageUrl: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&h=450&fit=crop'
-                },
-                'foxnews': {
-                    originalTitle: 'Economic Indicators Show Signs of Uncertainty Amid Global Market Challenges',
-                    originalUrl: 'https://www.foxnews.com/economy/uncertainty',
-                    originalExcerpt: 'Economic indicators present a mixed picture as businesses navigate ongoing global challenges...',
-                    position: 1,
-                    hasImage: true,
-                    imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=450&fit=crop'
+            // Fetch REAL news from RSS feeds via server proxy
+            try {
+                console.log(`[Scanner] Fetching RSS feed for ${source.name}...`);
+
+                const response = await fetch(`/api/scanner/rss/${source.id}`);
+                const data = await response.json();
+
+                if (!data.success || !data.articles || data.articles.length === 0) {
+                    console.warn(`[Scanner] No articles from ${source.name}:`, data.error || 'Empty feed');
+                    return null;
                 }
-            };
 
-            const storyData = simulatedStories[source.id];
-            if (!storyData) return null;
+                // Get the top article (first in feed = most prominent)
+                const topArticle = data.articles[0];
 
-            return {
-                source: source.id,
-                sourceName: source.name,
-                sourceUrl: source.url,
-                ...storyData
-            };
+                console.log(`[Scanner] Found top story from ${source.name}: "${topArticle.title.substring(0, 50)}..."`);
+                console.log(`[Scanner] Image URL: ${topArticle.imageUrl || 'None'}`);
+
+                return {
+                    source: source.id,
+                    sourceName: source.name,
+                    sourceUrl: source.url,
+                    originalTitle: topArticle.title,
+                    originalUrl: topArticle.link,
+                    originalExcerpt: topArticle.description || '',
+                    position: topArticle.position || 1,
+                    hasImage: !!topArticle.imageUrl,
+                    imageUrl: topArticle.imageUrl,
+                    pubDate: topArticle.pubDate
+                };
+
+            } catch (error) {
+                console.error(`[Scanner] Error fetching ${source.name}:`, error.message);
+                return null;
+            }
         }
 
         function calculateProminenceScore(story) {

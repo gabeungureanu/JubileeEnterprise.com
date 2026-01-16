@@ -207,6 +207,206 @@ app.get('/api/daily-verse', async (req, res) => {
 });
 
 // =============================================================================
+// RSS FEED PROXY FOR SCANNER
+// =============================================================================
+
+// News source RSS feeds
+const RSS_FEEDS = {
+    cnn: 'http://rss.cnn.com/rss/cnn_topstories.rss',
+    nytimes: 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml',
+    foxnews: 'https://moxie.foxnews.com/google-publisher/latest.xml',
+    yahoo: 'https://news.yahoo.com/rss',
+    msn: 'https://www.msn.com/en-us/news/feed'
+};
+
+// Fetch and parse RSS feed
+app.get('/api/scanner/rss/:source', async (req, res) => {
+    const source = req.params.source.toLowerCase();
+    const feedUrl = RSS_FEEDS[source];
+
+    if (!feedUrl) {
+        return res.status(400).json({ error: 'Unknown source', availableSources: Object.keys(RSS_FEEDS) });
+    }
+
+    console.log(`[RSS] Fetching ${source} feed: ${feedUrl}`);
+
+    try {
+        const feedData = await fetchRssFeed(feedUrl);
+        const articles = parseRssFeed(feedData, source);
+
+        console.log(`[RSS] Parsed ${articles.length} articles from ${source}`);
+
+        res.json({
+            success: true,
+            source: source,
+            count: articles.length,
+            articles: articles.slice(0, 10) // Return top 10 articles
+        });
+    } catch (err) {
+        console.error(`[RSS] Error fetching ${source}:`, err.message);
+        res.status(500).json({
+            error: 'Failed to fetch RSS feed',
+            message: err.message,
+            source: source
+        });
+    }
+});
+
+// Helper to fetch RSS feed
+function fetchRssFeed(url) {
+    return new Promise((resolve, reject) => {
+        const protocol = url.startsWith('https') ? https : http;
+
+        const request = protocol.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/rss+xml, application/xml, text/xml, */*'
+            },
+            timeout: 15000
+        }, (response) => {
+            // Handle redirects
+            if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+                console.log(`[RSS] Following redirect to: ${response.headers.location}`);
+                fetchRssFeed(response.headers.location).then(resolve).catch(reject);
+                return;
+            }
+
+            if (response.statusCode !== 200) {
+                reject(new Error(`HTTP ${response.statusCode}`));
+                return;
+            }
+
+            let data = '';
+            response.on('data', chunk => data += chunk);
+            response.on('end', () => resolve(data));
+            response.on('error', reject);
+        });
+
+        request.on('error', reject);
+        request.on('timeout', () => {
+            request.destroy();
+            reject(new Error('Request timeout'));
+        });
+    });
+}
+
+// Parse RSS XML into articles
+function parseRssFeed(xmlData, source) {
+    const articles = [];
+
+    // Extract items using regex (simple XML parsing)
+    const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
+    let match;
+    let position = 1;
+
+    while ((match = itemRegex.exec(xmlData)) !== null && position <= 20) {
+        const itemXml = match[1];
+
+        // Extract title
+        const titleMatch = itemXml.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i);
+        const title = titleMatch ? decodeHtmlEntities(titleMatch[1].trim()) : '';
+
+        // Extract link
+        const linkMatch = itemXml.match(/<link>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
+        const link = linkMatch ? linkMatch[1].trim() : '';
+
+        // Extract description
+        const descMatch = itemXml.match(/<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i);
+        const description = descMatch ? decodeHtmlEntities(stripHtmlTags(descMatch[1].trim())).substring(0, 300) : '';
+
+        // Extract publication date
+        const pubDateMatch = itemXml.match(/<pubDate>([\s\S]*?)<\/pubDate>/i);
+        const pubDate = pubDateMatch ? pubDateMatch[1].trim() : '';
+
+        // Extract image from various sources
+        let imageUrl = '';
+
+        // Try media:content
+        const mediaMatch = itemXml.match(/<media:content[^>]*url=["']([^"']+)["']/i);
+        if (mediaMatch) {
+            imageUrl = mediaMatch[1];
+        }
+
+        // Try media:thumbnail
+        if (!imageUrl) {
+            const thumbMatch = itemXml.match(/<media:thumbnail[^>]*url=["']([^"']+)["']/i);
+            if (thumbMatch) {
+                imageUrl = thumbMatch[1];
+            }
+        }
+
+        // Try enclosure
+        if (!imageUrl) {
+            const enclosureMatch = itemXml.match(/<enclosure[^>]*url=["']([^"']+)["'][^>]*type=["']image/i);
+            if (enclosureMatch) {
+                imageUrl = enclosureMatch[1];
+            }
+        }
+
+        // Try image tag in content:encoded
+        if (!imageUrl) {
+            const contentMatch = itemXml.match(/<content:encoded>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/content:encoded>/i);
+            if (contentMatch) {
+                const imgMatch = contentMatch[1].match(/<img[^>]*src=["']([^"']+)["']/i);
+                if (imgMatch) {
+                    imageUrl = imgMatch[1];
+                }
+            }
+        }
+
+        // Try image in description
+        if (!imageUrl && descMatch) {
+            const imgInDescMatch = descMatch[1].match(/<img[^>]*src=["']([^"']+)["']/i);
+            if (imgInDescMatch) {
+                imageUrl = imgInDescMatch[1];
+            }
+        }
+
+        if (title && link) {
+            articles.push({
+                title: title,
+                link: link,
+                description: description,
+                pubDate: pubDate,
+                imageUrl: imageUrl || null,
+                position: position,
+                hasImage: !!imageUrl
+            });
+            position++;
+        }
+    }
+
+    return articles;
+}
+
+// Helper to decode HTML entities
+function decodeHtmlEntities(str) {
+    const entities = {
+        '&amp;': '&',
+        '&lt;': '<',
+        '&gt;': '>',
+        '&quot;': '"',
+        '&#39;': "'",
+        '&apos;': "'",
+        '&#x27;': "'",
+        '&#x2F;': '/',
+        '&nbsp;': ' ',
+        '&#8217;': "'",
+        '&#8216;': "'",
+        '&#8220;': '"',
+        '&#8221;': '"',
+        '&#8211;': '-',
+        '&#8212;': '-'
+    };
+    return str.replace(/&[^;]+;/g, match => entities[match] || match);
+}
+
+// Helper to strip HTML tags
+function stripHtmlTags(str) {
+    return str.replace(/<[^>]*>/g, '').trim();
+}
+
+// =============================================================================
 // SCANNER IMAGE DOWNLOAD
 // =============================================================================
 
