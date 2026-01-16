@@ -31,7 +31,7 @@ export const darkColors: ColorScheme = {
   primary: '#10a37f',      // ChatGPT green accent
   secondary: '#19c37d',    // Lighter green
   accent: '#10a37f',       // Green accent
-  background: '#212121',   // Dark background
+  background: '#000000',   // Black background
   surface: '#2f2f2f',      // Slightly lighter surface
   surfaceHover: '#3f3f3f', // Hover state
   text: '#ececec',         // Light text

@@ -27,7 +27,7 @@ interface DrawerProviderProps {
 }
 
 export const DrawerProvider: React.FC<DrawerProviderProps> = ({ children }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(() => {
     if (Platform.OS === 'web') {

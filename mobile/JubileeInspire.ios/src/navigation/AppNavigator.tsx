@@ -103,7 +103,9 @@ const AppNavigator: React.FC = () => {
             drawerType: getDrawerType(),
             drawerStyle: {
               width: drawerWidth,
-              backgroundColor: colors.surface,
+              backgroundColor: '#000000',
+              borderRightWidth: 1,
+              borderRightColor: '#3f3f3f',
             },
             overlayColor: 'rgba(0, 0, 0, 0.5)',
             swipeEnabled: isMobileView || Platform.OS !== 'web',
