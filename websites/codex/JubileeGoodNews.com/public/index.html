@@ -244,12 +244,12 @@
             border-color: var(--accent-gold);
         }
 
-        /* Hero Section - MSN-Style Compact Rotating Stories */
+        /* Hero Section - MSN-Style Rotating Stories */
         .hero-container {
             position: relative;
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
-            height: 380px;
+            aspect-ratio: 16/9;
             background: var(--bg-card);
             margin-bottom: var(--space-xl);
         }
@@ -281,20 +281,20 @@
             bottom: 0;
             left: 0;
             right: 0;
-            padding: var(--space-lg) var(--space-xl);
-            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            padding: var(--space-2xl);
+            background: linear-gradient(transparent, rgba(0,0,0,0.95));
         }
 
         .hero-slide-rank {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            padding: 4px 10px;
-            border-radius: 16px;
-            font-size: 10px;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: var(--font-xs);
             font-weight: 700;
             text-transform: uppercase;
-            margin-bottom: var(--space-sm);
+            margin-bottom: var(--space-md);
         }
 
         .hero-slide-rank.rank-1 {
@@ -313,16 +313,16 @@
         }
 
         .hero-slide-rank svg {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
         }
 
         .hero-slide-source {
             display: inline-block;
             margin-left: var(--space-sm);
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 4px;
-            font-size: 10px;
+            font-size: var(--font-xs);
             font-weight: 600;
             text-transform: uppercase;
         }
@@ -335,45 +335,41 @@
 
         .hero-slide-title {
             font-family: 'Playfair Display', serif;
-            font-size: var(--font-xl);
+            font-size: var(--font-3xl);
             font-weight: 700;
-            line-height: 1.25;
-            margin-bottom: var(--space-sm);
+            line-height: 1.2;
+            margin-bottom: var(--space-md);
             color: var(--accent-gold);
         }
 
         .hero-slide-excerpt {
-            font-size: var(--font-sm);
+            font-size: var(--font-md);
             color: var(--text-secondary);
-            line-height: 1.5;
-            max-width: 600px;
-            margin-bottom: var(--space-md);
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+            line-height: 1.6;
+            max-width: 700px;
+            margin-bottom: var(--space-lg);
         }
 
         .hero-slide-meta {
             display: flex;
             align-items: center;
-            gap: var(--space-md);
+            gap: var(--space-lg);
         }
 
         .hero-slide-score {
             display: flex;
             align-items: center;
-            gap: var(--space-xs);
+            gap: var(--space-sm);
         }
 
         .hero-score-circle {
-            width: 36px;
-            height: 36px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: var(--font-sm);
+            font-size: var(--font-lg);
             font-weight: 700;
             background: rgba(74, 222, 128, 0.2);
             color: var(--accent-green);
@@ -381,7 +377,7 @@
         }
 
         .hero-score-label {
-            font-size: 10px;
+            font-size: var(--font-xs);
             color: var(--text-muted);
             text-transform: uppercase;
         }
@@ -389,13 +385,13 @@
         .hero-read-more {
             display: inline-flex;
             align-items: center;
-            gap: var(--space-xs);
-            padding: 6px var(--space-md);
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-lg);
             background: var(--accent-gold);
             color: var(--bg-primary);
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: 600;
-            font-size: var(--font-xs);
+            font-size: var(--font-sm);
             transition: all 0.2s ease;
             cursor: pointer;
         }
@@ -406,23 +402,23 @@
         }
 
         .hero-read-more svg {
-            width: 14px;
-            height: 14px;
+            width: 18px;
+            height: 18px;
         }
 
         /* Hero Progress Indicators */
         .hero-progress {
             position: absolute;
-            bottom: var(--space-md);
-            right: var(--space-lg);
+            bottom: var(--space-lg);
+            right: var(--space-2xl);
             display: flex;
-            gap: 6px;
+            gap: var(--space-sm);
             z-index: 10;
         }
 
         .hero-progress-dot {
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.3);
             cursor: pointer;
@@ -466,9 +462,9 @@
         }
 
         .hero-loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border-color);
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border-color);
             border-top-color: var(--accent-gold);
             border-radius: 50%;
             animation: spin 1s linear infinite;
@@ -479,7 +475,7 @@
         }
 
         .hero-loading-text {
-            font-size: var(--font-sm);
+            font-size: var(--font-base);
             color: var(--text-secondary);
         }
 
@@ -898,11 +894,11 @@
             }
 
             .hero-container {
-                height: 280px;
+                aspect-ratio: 4/3;
             }
 
             .hero-slide-title {
-                font-size: var(--font-lg);
+                font-size: var(--font-xl);
             }
 
             .hero-slide-excerpt {
@@ -910,24 +906,13 @@
             }
 
             .hero-slide-overlay {
-                padding: var(--space-md);
+                padding: var(--space-lg);
             }
 
             .hero-slide-meta {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: var(--space-sm);
-            }
-
-            .hero-slide-rank {
-                font-size: 9px;
-                padding: 3px 8px;
-            }
-
-            .hero-score-circle {
-                width: 30px;
-                height: 30px;
-                font-size: var(--font-xs);
+                gap: var(--space-md);
             }
 
             .hero-sidebar {
@@ -1378,7 +1363,7 @@
                                     <svg viewBox="0 0 24 24" fill="currentColor">
                                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                                     </svg>
-                                    ${rankLabels[story.rank]}
+                                    ${rankLabels[story.rank]} Most Prominent
                                 </span>
                                 <span class="hero-slide-source ${story.source}">${story.sourceName}</span>
                             </div>
@@ -1387,10 +1372,13 @@
                             <div class="hero-slide-meta">
                                 <div class="hero-slide-score">
                                     <div class="hero-score-circle">${story.score.normalized}</div>
-                                    <div class="hero-score-label">Score</div>
+                                    <div>
+                                        <div style="font-weight: 600; font-size: 14px;">Prominence</div>
+                                        <div class="hero-score-label">Score</div>
+                                    </div>
                                 </div>
                                 <a href="${story.originalUrl}" target="_blank" class="hero-read-more">
-                                    Read Story
+                                    Read Full Story
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M5 12h14M12 5l7 7-7 7"/>
                                     </svg>
