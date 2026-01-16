@@ -14,7 +14,7 @@
         WindowStyle="None"
         ResizeMode="CanResize"
         AllowsTransparency="False"
-        Background="#000000"
+        Background="{DynamicResource BgPrimaryBrush}"
         WindowStartupLocation="Manual"
         SizeToContent="Manual"
         Loaded="Window_Loaded"
@@ -1337,8 +1337,10 @@
             <RowDefinition x:Name="TitleBarRow" Height="36"/>
             <!-- Navigation Bar: 38px -->
             <RowDefinition x:Name="NavBarRow" Height="38"/>
-            <!-- Favorites Bar: 0 initially, expands to 40px -->
+            <!-- Favorites Bar: 0 initially, expands to 28px -->
             <RowDefinition x:Name="FavoritesBarRow" Height="0"/>
+            <!-- Bookmarks Bar: 0 initially, expands to 32px when enabled -->
+            <RowDefinition x:Name="BookmarksBarRow" Height="0"/>
             <!-- Content Area -->
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -1507,6 +1509,9 @@
                          Style="{StaticResource AddressBarStyle}"
                          KeyDown="AddressBar_KeyDown"
                          GotFocus="AddressBar_GotFocus"
+                         TextChanged="AddressBar_TextChanged"
+                         LostFocus="AddressBar_LostFocus"
+                         PreviewKeyDown="AddressBar_PreviewKeyDown"
                          Padding="18,0,32,0"/>
                 <!-- Mode Icon overlay - positioned inside the textbox on the left -->
                 <Grid Width="28" HorizontalAlignment="Left" Margin="4,0,0,0" IsHitTestVisible="False">
@@ -1597,6 +1602,74 @@
                         ToolTip="Spiritual Nutrition">
                     <TextBlock x:Name="SpiritualNutritionIcon" Text="&#xECAD;" FontFamily="Segoe MDL2 Assets" FontSize="14"/>
                 </Button>
+
+                <!-- Search Suggestions Popup -->
+                <Popup x:Name="SuggestionsPopup"
+                       PlacementTarget="{Binding ElementName=AddressBar}"
+                       Placement="Bottom"
+                       StaysOpen="False"
+                       AllowsTransparency="True"
+                       PopupAnimation="Fade">
+                    <Border Background="{DynamicResource BgSecondaryBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="0,0,8,8"
+                            MaxHeight="300"
+                            MinWidth="400">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="2" Color="#000000" Opacity="0.4"/>
+                        </Border.Effect>
+                        <ListBox x:Name="SuggestionsList"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 SelectionChanged="SuggestionsList_SelectionChanged"
+                                 PreviewKeyDown="SuggestionsList_PreviewKeyDown"
+                                 PreviewMouseLeftButtonUp="SuggestionsList_MouseLeftButtonUp">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="12,8"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border x:Name="Bd"
+                                                        Background="Transparent"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BgHoverBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BgActiveBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE721;"
+                                                   FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="14"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,10,0"/>
+                                        <TextBlock Text="{Binding}"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   FontSize="13"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+                </Popup>
             </Grid>
 
             <!-- Mode Switch Button (after address bar) -->
@@ -1859,8 +1932,42 @@
             </Grid>
         </Border>
 
+        <!-- Bookmarks Bar - Shows user's saved bookmarks -->
+        <Border x:Name="BookmarksBar"
+                Grid.Row="3"
+                Background="{DynamicResource BgSecondaryBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,0,0,1"
+                Height="32"
+                Visibility="Collapsed">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <!-- Bookmarks Items Panel - scrollable -->
+                <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="8,0,0,0">
+                    <StackPanel x:Name="BookmarksBarItems" Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Bookmark items will be dynamically populated -->
+                    </StackPanel>
+                </ScrollViewer>
+                <!-- Add Bookmark Button -->
+                <Border Grid.Column="1" Background="Transparent" CornerRadius="4" Padding="8,4" Margin="4,0,8,0" Cursor="Hand"
+                        VerticalAlignment="Center"
+                        x:Name="BookmarksBarAddButton"
+                        MouseEnter="BookmarksBarAddButton_MouseEnter"
+                        MouseLeave="BookmarksBarAddButton_MouseLeave"
+                        MouseLeftButtonDown="BookmarksBarAddButton_Click"
+                        ToolTip="Add current page to bookmarks">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE710;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
         <!-- Main Content Area -->
-        <Grid x:Name="MainContentGrid" Grid.Row="3">
+        <Grid x:Name="MainContentGrid" Grid.Row="4">
             <Grid.ColumnDefinitions>
                 <!-- Sidebar Rail (Firefox-style icon rail) -->
                 <ColumnDefinition x:Name="SidebarRailColumn" Width="0"/>
@@ -2330,6 +2437,219 @@
                                   HorizontalAlignment="Center"
                                   Margin="0,6,0,0"/>
                     </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Sidebar Chat Panel - Integrated chat within sidebar -->
+            <Border x:Name="SidebarChatPanel"
+                    Grid.Column="1"
+                    Background="#0a0a14"
+                    BorderBrush="#1a1a2e"
+                    BorderThickness="0,0,1,0"
+                    Visibility="Collapsed">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <!-- Header -->
+                        <RowDefinition Height="52"/>
+                        <!-- Context Info -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Messages Area -->
+                        <RowDefinition Height="*"/>
+                        <!-- Input Area -->
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Sidebar Chat Header -->
+                    <Border Grid.Row="0"
+                            Background="#0f0f1a"
+                            BorderBrush="#1a1a2e"
+                            BorderThickness="0,0,0,1">
+                        <Grid Margin="16,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE8BD;"
+                                          FontFamily="Segoe MDL2 Assets"
+                                          FontSize="16"
+                                          Foreground="#E6AC00"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,10,0"/>
+                                <TextBlock Text="Jubilee Inspire"
+                                          Foreground="White"
+                                          FontSize="15"
+                                          FontWeight="SemiBold"
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Button Style="{StaticResource NavButtonStyle}"
+                                    HorizontalAlignment="Right"
+                                    Width="32" Height="32"
+                                    ToolTip="Close Chat"
+                                    Click="CloseSidebarChat_Click">
+                                <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="White"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Page Context Info Bar -->
+                    <Border x:Name="SidebarChatContextBar"
+                            Grid.Row="1"
+                            Background="#12121f"
+                            BorderBrush="#1a1a2e"
+                            BorderThickness="0,0,0,1"
+                            Padding="12,8"
+                            Visibility="Collapsed">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                      Text="&#xE774;"
+                                      FontFamily="Segoe MDL2 Assets"
+                                      FontSize="12"
+                                      Foreground="#808090"
+                                      VerticalAlignment="Center"
+                                      Margin="0,0,8,0"/>
+                            <TextBlock x:Name="SidebarChatContextTitle"
+                                      Grid.Column="1"
+                                      Text="Current page context"
+                                      Foreground="#808090"
+                                      FontSize="11"
+                                      TextTrimming="CharacterEllipsis"
+                                      VerticalAlignment="Center"/>
+                            <Button x:Name="SidebarChatContextClearButton"
+                                    Grid.Column="2"
+                                    Width="20" Height="20"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Click="SidebarChatContextClear_Click"
+                                    Cursor="Hand"
+                                    ToolTip="Clear context">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="clearBorder" Background="Transparent" CornerRadius="4">
+                                            <TextBlock Text="&#xE711;"
+                                                      FontFamily="Segoe MDL2 Assets"
+                                                      FontSize="9"
+                                                      Foreground="#606070"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="clearBorder" Property="Background" Value="#2a2a4e"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Sidebar Chat Messages Area -->
+                    <ScrollViewer x:Name="SidebarChatMessagesScroller"
+                                 Grid.Row="2"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Background="#0a0a14">
+                        <StackPanel x:Name="SidebarChatMessagesPanel" Margin="12,12,12,12">
+                            <!-- Welcome Message -->
+                            <StackPanel x:Name="SidebarChatWelcome" HorizontalAlignment="Center" Margin="0,20,0,20">
+                                <!-- Jubilee Avatar -->
+                                <Grid Width="64" Height="64" HorizontalAlignment="Center" Margin="0,0,0,12">
+                                    <Ellipse x:Name="SidebarChatAvatarContainer" Width="64" Height="64" Visibility="Collapsed">
+                                        <Ellipse.Fill>
+                                            <ImageBrush x:Name="SidebarChatAvatarBrush" Stretch="UniformToFill"/>
+                                        </Ellipse.Fill>
+                                    </Ellipse>
+                                    <Grid x:Name="SidebarChatAvatarFallback" Visibility="Visible">
+                                        <Ellipse Width="64" Height="64" Fill="#1a1a2e" Stroke="#E6AC00" StrokeThickness="2"/>
+                                        <TextBlock Text="&#xE716;" FontFamily="Segoe MDL2 Assets" FontSize="28" Foreground="#E6AC00" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Grid>
+                                <!-- Brand Text -->
+                                <TextBlock HorizontalAlignment="Center" FontSize="18" FontFamily="Segoe UI Semibold">
+                                    <Run Text="Jubilee" Foreground="White"/>
+                                    <Run Text="Inspire" Foreground="#E6AC00"/>
+                                </TextBlock>
+                                <TextBlock Text="Ask about the page you're viewing"
+                                          HorizontalAlignment="Center"
+                                          FontSize="12"
+                                          Foreground="#606070"
+                                          Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Sidebar Chat Input Area -->
+                    <Border Grid.Row="3"
+                            Background="#0f0f1a"
+                            BorderBrush="#1a1a2e"
+                            BorderThickness="0,1,0,0"
+                            Padding="12,12">
+                        <Border Background="#1a1a2e"
+                               CornerRadius="8"
+                               Padding="4">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Grid Grid.Column="0">
+                                    <TextBox x:Name="SidebarChatInputBox"
+                                            Background="Transparent"
+                                            Foreground="White"
+                                            CaretBrush="White"
+                                            BorderThickness="0"
+                                            FontSize="13"
+                                            VerticalAlignment="Center"
+                                            Padding="10,6"
+                                            AcceptsReturn="False"
+                                            KeyDown="SidebarChatInputBox_KeyDown"
+                                            GotFocus="SidebarChatInputBox_GotFocus"
+                                            LostFocus="SidebarChatInputBox_LostFocus"/>
+                                    <TextBlock x:Name="SidebarChatInputPlaceholder"
+                                              Text="Ask about this page..."
+                                              Foreground="#606070"
+                                              FontSize="13"
+                                              VerticalAlignment="Center"
+                                              Margin="10,0,0,0"
+                                              IsHitTestVisible="False"/>
+                                </Grid>
+
+                                <Button x:Name="SidebarChatSendButton"
+                                       Grid.Column="1"
+                                       Width="28" Height="28"
+                                       Margin="4,0,4,0"
+                                       Background="#E6AC00"
+                                       Cursor="Hand"
+                                       Click="SidebarChatSendButton_Click"
+                                       ToolTip="Send Message">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="sendBorder"
+                                                   Background="{TemplateBinding Background}"
+                                                   CornerRadius="6">
+                                                <TextBlock Text="&#xE724;"
+                                                          FontFamily="Segoe MDL2 Assets"
+                                                          FontSize="12"
+                                                          Foreground="#1c1c33"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="sendBorder" Property="Background" Value="#F5C518"/>
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter TargetName="sendBorder" Property="Background" Value="#CC9800"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Border>
                 </Grid>
             </Border>
 
@@ -2921,11 +3241,42 @@
                     <StackPanel x:Name="ProfileSignedInPanel" Visibility="Collapsed">
                         <!-- Profile Header -->
                         <StackPanel Orientation="Horizontal" Margin="16,14,16,4">
-                            <Ellipse x:Name="ProfilePopupAvatar" Width="48" Height="48" Margin="0,0,14,0">
-                                <Ellipse.Fill>
-                                    <ImageBrush x:Name="ProfilePopupAvatarImage" Stretch="UniformToFill"/>
-                                </Ellipse.Fill>
-                            </Ellipse>
+                            <!-- Clickable Avatar with Camera Overlay -->
+                            <Grid Width="48" Height="48" Margin="0,0,14,0">
+                                <Ellipse x:Name="ProfilePopupAvatar">
+                                    <Ellipse.Fill>
+                                        <ImageBrush x:Name="ProfilePopupAvatarImage" Stretch="UniformToFill"/>
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                                <Button x:Name="ChangeAvatarButton"
+                                        Click="ChangeAvatarButton_Click"
+                                        ToolTip="Change profile picture"
+                                        Cursor="Hand">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid>
+                                                <!-- Hover overlay -->
+                                                <Ellipse x:Name="HoverOverlay" Fill="#80000000" Opacity="0"/>
+                                                <!-- Camera icon -->
+                                                <TextBlock x:Name="CameraIcon"
+                                                           Text="&#xE722;"
+                                                           FontFamily="Segoe MDL2 Assets"
+                                                           FontSize="16"
+                                                           Foreground="White"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"
+                                                           Opacity="0"/>
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="HoverOverlay" Property="Opacity" Value="1"/>
+                                                    <Setter TargetName="CameraIcon" Property="Opacity" Value="1"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </Grid>
                             <StackPanel VerticalAlignment="Center" MaxWidth="200">
                                 <TextBlock x:Name="ProfilePopupName" Text="User Name" FontSize="16" FontWeight="SemiBold" Foreground="White"/>
                                 <TextBlock x:Name="ProfilePopupEmail" Text="user@example.com" FontSize="12" Foreground="White" Margin="0,1,0,0"/>

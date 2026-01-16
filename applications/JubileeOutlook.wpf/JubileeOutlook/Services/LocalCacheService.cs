@@ -715,6 +715,33 @@ public class LocalCacheService : IDisposable
         return events;
     }
 
+    /// <summary>
+    /// Marks an event as deleted in the local cache
+    /// </summary>
+    public async Task MarkEventDeletedAsync(string serverId)
+    {
+        const string sql = @"
+            UPDATE cached_events
+            SET is_deleted = TRUE, last_modified = CURRENT_TIMESTAMP
+            WHERE server_id = @server_id";
+
+        try
+        {
+            await using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
+            await using var cmd = new NpgsqlCommand(sql, connection);
+            cmd.Parameters.AddWithValue("server_id", serverId);
+
+            var rowsAffected = await cmd.ExecuteNonQueryAsync();
+            System.Diagnostics.Debug.WriteLine($"[LocalCacheService] Marked event as deleted: {serverId} (rows affected: {rowsAffected})");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[LocalCacheService] Failed to mark event as deleted: {ex.Message}");
+            throw;
+        }
+    }
+
     private CalendarEvent MapReaderToCalendarEvent(NpgsqlDataReader reader)
     {
         var attendeesJson = reader.IsDBNull(reader.GetOrdinal("attendees")) ? "[]" : reader.GetString(reader.GetOrdinal("attendees"));

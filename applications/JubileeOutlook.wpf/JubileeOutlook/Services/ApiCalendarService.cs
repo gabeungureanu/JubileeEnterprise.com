@@ -10,6 +10,7 @@ namespace JubileeOutlook.Services;
 /// <summary>
 /// API service for calendar operations via InspireContinuum API
 /// Uses HttpClientFactory for centralized HTTP client management with auto-auth
+/// Supports offline-first operation with LocalCacheService and NetworkStatusService
 /// </summary>
 public class ApiCalendarService : ICalendarService
 {
@@ -19,6 +20,31 @@ public class ApiCalendarService : ICalendarService
     private readonly HttpClientFactory _httpClientFactory;
     private readonly ConfigurationService _config;
     private readonly JsonSerializerOptions _jsonOptions;
+
+    // Service dependencies for offline-first support
+    private LocalCacheService? _localCache;
+    private NetworkStatusService? _networkStatus;
+    private SyncQueueService? _syncQueue;
+
+    /// <summary>
+    /// Gets the local cache service instance
+    /// </summary>
+    private LocalCacheService LocalCache => _localCache ??= LocalCacheService.Instance;
+
+    /// <summary>
+    /// Gets the network status service instance
+    /// </summary>
+    private NetworkStatusService NetworkStatus => _networkStatus ??= NetworkStatusService.Instance;
+
+    /// <summary>
+    /// Gets the sync queue service instance
+    /// </summary>
+    private SyncQueueService SyncQueue => _syncQueue ??= SyncQueueService.Instance;
+
+    /// <summary>
+    /// Returns true if the network is available and API is reachable
+    /// </summary>
+    private bool IsOnline => NetworkStatus.IsOnline && NetworkStatus.IsApiReachable;
 
     /// <summary>
     /// Singleton instance of the calendar service
@@ -119,6 +145,7 @@ public class ApiCalendarService : ICalendarService
 
     /// <summary>
     /// Gets calendar events for a date range with detailed result
+    /// Supports offline-first: returns cached events when offline
     /// GET /api/outlook/events?startDate={startDate}&endDate={endDate}
     /// </summary>
     public async Task<CalendarServiceResult<List<CalendarEvent>>> GetEventsWithResultAsync(
@@ -128,6 +155,18 @@ public class ApiCalendarService : ICalendarService
     {
         try
         {
+            // If offline, return cached events
+            if (!IsOnline)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Offline - returning cached events for {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
+                var cachedEvents = await LocalCache.GetCachedEventsAsync(startDate, endDate);
+                return new CalendarServiceResult<List<CalendarEvent>>
+                {
+                    Success = true,
+                    Data = cachedEvents
+                };
+            }
+
             var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
             var queryParams = new List<string>
             {
@@ -155,6 +194,24 @@ public class ApiCalendarService : ICalendarService
                     {
                         var events = apiResponse.Events.Select(MapToCalendarEvent).ToList();
                         System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Retrieved {events.Count} events");
+
+                        // Cache events for offline use
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                foreach (var evt in events)
+                                {
+                                    await LocalCache.CacheEventAsync(evt);
+                                }
+                                System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Cached {events.Count} events");
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Failed to cache events: {ex.Message}");
+                            }
+                        });
+
                         return new CalendarServiceResult<List<CalendarEvent>>
                         {
                             Success = true,
@@ -173,6 +230,24 @@ public class ApiCalendarService : ICalendarService
                 {
                     var events = directEvents.Select(MapToCalendarEvent).ToList();
                     System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Retrieved {events.Count} events (direct)");
+
+                    // Cache events for offline use
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            foreach (var evt in events)
+                            {
+                                await LocalCache.CacheEventAsync(evt);
+                            }
+                            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Cached {events.Count} events");
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Failed to cache events: {ex.Message}");
+                        }
+                    });
+
                     return new CalendarServiceResult<List<CalendarEvent>>
                     {
                         Success = true,
@@ -287,6 +362,7 @@ public class ApiCalendarService : ICalendarService
 
     /// <summary>
     /// Creates a new calendar event with detailed result
+    /// Supports offline-first: queues event creation when offline
     /// POST /api/outlook/events
     /// </summary>
     public async Task<CalendarServiceResult<CalendarEvent>> CreateEventWithResultAsync(CalendarEvent calendarEvent)
@@ -299,6 +375,56 @@ public class ApiCalendarService : ICalendarService
                 {
                     Success = false,
                     Error = "Calendar event is required"
+                };
+            }
+
+            // If offline, cache the event locally and queue for sync
+            if (!IsOnline)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Offline - queueing event creation: {calendarEvent.Subject}");
+
+                // Generate a temporary ID if not set
+                if (string.IsNullOrEmpty(calendarEvent.Id))
+                {
+                    calendarEvent.Id = $"temp-{Guid.NewGuid()}";
+                }
+
+                // Cache the event locally
+                try
+                {
+                    await LocalCache.CacheEventAsync(calendarEvent);
+                    System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Cached event locally: {calendarEvent.Id}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Failed to cache event: {ex.Message}");
+                }
+
+                // Queue the create operation
+                var eventPayload = new
+                {
+                    subject = calendarEvent.Subject,
+                    location = calendarEvent.Location,
+                    description = calendarEvent.Description,
+                    startTime = calendarEvent.StartTime,
+                    endTime = calendarEvent.EndTime,
+                    isAllDay = calendarEvent.IsAllDay,
+                    isPrivate = calendarEvent.IsPrivate,
+                    calendarName = calendarEvent.CalendarName,
+                    attendees = calendarEvent.Attendees,
+                    reminder = calendarEvent.Reminder.ToString()
+                };
+
+                await SyncQueue.QueueOperationAsync(
+                    SyncEntityTypes.Event,
+                    calendarEvent.Id,
+                    SyncOperationTypes.Create,
+                    eventPayload);
+
+                return new CalendarServiceResult<CalendarEvent>
+                {
+                    Success = true,
+                    Data = calendarEvent
                 };
             }
 
@@ -371,6 +497,7 @@ public class ApiCalendarService : ICalendarService
 
     /// <summary>
     /// Updates an existing calendar event with detailed result
+    /// Supports offline-first: queues update when offline
     /// PUT /api/outlook/events/{id}
     /// </summary>
     public async Task<CalendarServiceResult<CalendarEvent>> UpdateEventWithResultAsync(CalendarEvent calendarEvent)
@@ -392,6 +519,50 @@ public class ApiCalendarService : ICalendarService
                 {
                     Success = false,
                     Error = "Event ID is required for update"
+                };
+            }
+
+            // If offline, cache locally and queue for sync
+            if (!IsOnline)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Offline - queueing event update: {calendarEvent.Subject}");
+
+                // Update local cache
+                try
+                {
+                    await LocalCache.CacheEventAsync(calendarEvent);
+                    System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Updated event in local cache: {calendarEvent.Id}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Failed to update local cache: {ex.Message}");
+                }
+
+                // Queue the update operation
+                var eventPayload = new
+                {
+                    subject = calendarEvent.Subject,
+                    location = calendarEvent.Location,
+                    description = calendarEvent.Description,
+                    startTime = calendarEvent.StartTime,
+                    endTime = calendarEvent.EndTime,
+                    isAllDay = calendarEvent.IsAllDay,
+                    isPrivate = calendarEvent.IsPrivate,
+                    calendarName = calendarEvent.CalendarName,
+                    attendees = calendarEvent.Attendees,
+                    reminder = calendarEvent.Reminder.ToString()
+                };
+
+                await SyncQueue.QueueOperationAsync(
+                    SyncEntityTypes.Event,
+                    calendarEvent.Id,
+                    SyncOperationTypes.Update,
+                    eventPayload);
+
+                return new CalendarServiceResult<CalendarEvent>
+                {
+                    Success = true,
+                    Data = calendarEvent
                 };
             }
 
@@ -478,6 +649,33 @@ public class ApiCalendarService : ICalendarService
                     Success = false,
                     Error = "Event ID is required",
                     Data = false
+                };
+            }
+
+            // Mark as deleted in local cache (optimistic update)
+            try
+            {
+                await LocalCache.MarkEventDeletedAsync(eventId);
+                System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Marked event as deleted in local cache: {eventId}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Failed to mark event deleted locally: {ex.Message}");
+            }
+
+            // If offline, queue the delete operation
+            if (!IsOnline)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Offline - queueing event deletion: {eventId}");
+                await SyncQueue.QueueOperationAsync(
+                    SyncEntityTypes.Event,
+                    eventId,
+                    SyncOperationTypes.Delete);
+
+                return new CalendarServiceResult<bool>
+                {
+                    Success = true,
+                    Data = true
                 };
             }
 

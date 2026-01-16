@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jubilee Browser - Task List Status Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: #2196F3;
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+        h2 {
+            text-align: center;
+            font-weight: normal;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        h3 {
+            text-align: center;
+            font-weight: normal;
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .legend {
+            margin-bottom: 30px;
+        }
+        .legend-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .legend-box {
+            width: 30px;
+            height: 25px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        .legend-box.completed {
+            background-color: #c8e6c9;
+            border-color: #a5d6a7;
+        }
+        .legend-box.pending {
+            background-color: #fff9c4;
+            border-color: #fff176;
+        }
+        .summary {
+            margin-bottom: 30px;
+            border-bottom: 2px solid #2196F3;
+            padding-bottom: 15px;
+        }
+        .summary-title {
+            color: #2196F3;
+            font-size: 20px;
+            margin-bottom: 10px;
+            text-decoration: underline;
+        }
+        .summary-stats {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .summary-stats span {
+            font-size: 14px;
+        }
+        .summary-stats .pending-count {
+            color: #f9a825;
+        }
+        .summary-stats .progress {
+            color: #4caf50;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        .section-header {
+            background-color: #2196F3;
+            color: white;
+            padding: 10px 15px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            border-radius: 3px;
+        }
+        .subsection-header {
+            font-size: 14px;
+            color: #555;
+            margin: 15px 0 10px 0;
+        }
+        .task {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            padding: 10px 15px;
+            border-radius: 3px;
+        }
+        .task.completed {
+            background-color: #c8e6c9;
+            border-left: 4px solid #4caf50;
+        }
+        .task.pending {
+            background-color: #fff9c4;
+            border-left: 4px solid #fbc02d;
+        }
+        .task-checkbox {
+            min-width: 30px;
+            height: 25px;
+            border: 1px solid #999;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            background: white;
+        }
+        .task.completed .task-checkbox {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .task.pending .task-checkbox {
+            color: #f9a825;
+            font-weight: bold;
+        }
+        .task-text {
+            flex: 1;
+            font-size: 14px;
+        }
+        @media print {
+            body {
+                padding: 20px;
+            }
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Jubilee Browser</h1>
+    <h2>Deep Functional & UX Analysis</h2>
+    <h3>Task List - Status Report</h3>
+
+    <div class="legend">
+        <div class="legend-title">Legend:</div>
+        <div class="legend-item">
+            <div class="legend-box completed">✓</div>
+            <span>Completed</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box pending">%Ë</div>
+            <span>Pending</span>
+        </div>
+    </div>
+
+    <div class="summary">
+        <div class="summary-title">Summary</div>
+        <div class="summary-stats">
+            <span>Completed: 33</span>
+            <span class="pending-count">Pending: 36</span>
+            <span>Total: 69</span>
+            <span class="progress">Progress: 48%</span>
+        </div>
+    </div>
+
+    <!-- Section 1: Authentication, Identity & Security -->
+    <div class="section">
+        <div class="section-header">1. Authentication, Identity & Security</div>
+
+        <div class="subsection-header">1.1 Sign-Out Flow</div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Redesign the sign-out confirmation dialog to fully follow the active Jubilee theme (colors, typography, spacing).</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Ensure messaging remains intact: confirmation text, local data retention notice, and sync stopping behavior.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Popup should be consistent with other modal dialogs used across the browser.</div>
+        </div>
+
+        <div class="subsection-header">1.2 Sign-In Experience</div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Allow users to upload or change a profile picture after successful sign-in.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Ensure the sign-in UI matches the Jubilee Browser design language exactly.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Replace 'Jubilee Outlook' branding text with the approved sub-slogan only.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Ensure error states are clearly communicated via themed modal dialogs.</div>
+        </div>
+
+        <div class="subsection-header">1.3 Sign-Up Flow</div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Implement a clean, step-based sign-up flow: user details → password creation → verification.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Validate password strength and matching fields before allowing progression.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Checkboxes (terms acceptance, policies) must be functional and validated.</div>
+        </div>
+
+        <div class="subsection-header">1.4 Email Verification (Critical)</div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Send a 6-digit one-time verification code during sign-up.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Require code validation before account activation.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Implement the same 6-digit verification for forgot-password and SSO confirmation flows.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Display clear error messages for expired or invalid codes.</div>
+        </div>
+
+        <div class="subsection-header">1.5 Forgot Password</div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Remove the back arrow from the forgot-password screen (design inconsistency).</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Trigger email delivery with a 6-digit verification code.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Require successful verification before allowing password reset.</div>
+        </div>
+    </div>
+
+    <!-- Section 2: Terms of Use & Privacy Policy Handling -->
+    <div class="section">
+        <div class="section-header">2. Terms of Use & Privacy Policy Handling</div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Do not navigate away from the current WPF screen when Terms or Privacy links are clicked.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Hide existing UI and display a scrollable text area containing the full document.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Load content dynamically from YAML files: termsofuse.yaml and privacypolicy.yaml.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Ensure text area supports scrolling and long-form reading.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">On clicking OK, restore the previous UI state without reloading.</div>
+        </div>
+    </div>
+
+    <!-- Section 3: Single Sign-On (SSO) & Cross-Domain Authentication -->
+    <div class="section">
+        <div class="section-header">3. Single Sign-On (SSO) & Cross-Domain Authentication</div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Ensure Jubilee Inspire websites detect an existing authenticated browser session.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Automatically sign the user into Jubilee Inspire if SSO session is active.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Prevent redundant sign-in prompts across Jubilee properties.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Ensure SSO state is securely validated and encrypted behind the scenes.</div>
+        </div>
+    </div>
+
+    <!-- Section 4: Tabs, Navigation & Mode Switching -->
+    <div class="section">
+        <div class="section-header">4. Tabs, Navigation & Mode Switching</div>
+
+        <div class="subsection-header">4.1 Tab Types & Behavior</div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Yellow tabs represent Bible Web; Blue tabs represent the Worldwide Web.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Ensure Inspire-prefixed URLs remain within Bible Web mode.</div>
+        </div>
+
+        <div class="subsection-header">4.2 Mode Switching</div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Switching between globe and Bible icons should reuse the last active tab.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Do not create new tabs when switching modes.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Ensure icon state always reflects the active browsing mode.</div>
+        </div>
+
+        <div class="subsection-header">4.3 Tab Usability & Bugs</div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Add visual indicators during tab drag operations.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Implement dynamic tab width shrinking as tab count increases.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Ensure all tabs display a favicon or default globe icon if none exists.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Validate all right-click tab menu actions.</div>
+        </div>
+    </div>
+
+    <!-- Section 5: Sidebar (Rail) & Embedded Tools -->
+    <div class="section">
+        <div class="section-header">5. Sidebar (Rail) & Embedded Tools</div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Sidebar must slide in and out smoothly; no abrupt appearance/disappearance.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Clicking the toggle button again should close the sidebar.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Ensure consistent behavior across all browser modes.</div>
+        </div>
+
+        <div class="subsection-header">5.1 Chat Panel</div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Decouple the chat from the browser shell embedding.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Load Jubilee Inspire chat directly within the sidebar.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Ensure chat context syncs with the active webpage.</div>
+        </div>
+
+        <div class="subsection-header">5.2 To-Do List</div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Complete implementation of the To-Do List feature.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Reduce excessive spacing between list items.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Add default assigned user and status per item.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Implement slide-up edit panel for title and description.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Persist all data within the Codex system.</div>
+        </div>
+    </div>
+
+    <!-- Section 6: Toolbar, Icons & Visual Fixes -->
+    <div class="section">
+        <div class="section-header">6. Toolbar, Icons & Visual Fixes</div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Fix hamburger/menu icon color contrast on yellow background.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Ensure all icons remain visible and accessible in all themes.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Verify favorites/application panels open and close reliably.</div>
+        </div>
+    </div>
+
+    <!-- Section 7: History & Favorites Panels -->
+    <div class="section">
+        <div class="section-header">7. History & Favorites Panels</div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Move history panel to the correct designated sidebar.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Redesign history UI for better usability and readability.</div>
+        </div>
+        <div class="task completed">
+            <div class="task-checkbox">✓</div>
+            <div class="task-text">Clicking history or favorites icons again should close the panel.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Ensure functionality works for both Bible Web and Worldwide Web.</div>
+        </div>
+    </div>
+
+    <!-- Section 8: Settings & Preferences -->
+    <div class="section">
+        <div class="section-header">8. Settings & Preferences (High Effort Area)</div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Fix all non-functional settings before adding new ones.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Ensure homepage selections are saved and visibly reflected.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Startup options must work: new tab, homepage, continue where left off.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Implement light and dark themes.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Support Google, Bing, and DuckDuckGo search engines.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Ensure font size changes apply immediately.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Downloads folder picker must open OS file dialog.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Verify privacy and site settings toggles are functional.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Remove or disable broken settings like 'About Jubilee' if necessary.</div>
+        </div>
+    </div>
+
+    <!-- Section 9: Auto-Update System -->
+    <div class="section">
+        <div class="section-header">9. Auto-Update System</div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Ensure published builds auto-update for all installed users.</div>
+        </div>
+    </div>
+
+    <!-- Section 10: Out-of-Scope -->
+    <div class="section">
+        <div class="section-header">10. Out-of-Scope (Handled Separately)</div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Spiritual Nutrition Score feature.</div>
+        </div>
+        <div class="task pending">
+            <div class="task-checkbox">%Ë</div>
+            <div class="task-text">Website rating and evaluation logic.</div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -11,7 +11,7 @@
     <RootNamespace>JubileeBrowser</RootNamespace>
     <AssemblyTitle>Jubilee Browser</AssemblyTitle>
     <FileDescription>Jubilee Browser</FileDescription>
-    <Version>8.0.8</Version>
+    <Version>8.0.11</Version>
     <Authors>Jubilee Browser Team</Authors>
     <Company>Jubilee Browser</Company>
     <Product>Jubilee Browser</Product>
@@ -37,6 +37,8 @@
     <Resource Include="Resources\Fonts\*.ttf" Condition="Exists('Resources\Fonts')" />
     <Content Include="Resources\Html\**\*.*" CopyToOutputDirectory="PreserveNewest" Condition="Exists('Resources\Html')" />
     <Content Include="..\..\blacklist.yaml" CopyToOutputDirectory="PreserveNewest" Link="blacklist.yaml" Condition="Exists('..\..\blacklist.yaml')" />
+    <EmbeddedResource Include="Resources\termsofuse.yaml" />
+    <EmbeddedResource Include="Resources\privacypolicy.yaml" />
   </ItemGroup>
 
 </Project>

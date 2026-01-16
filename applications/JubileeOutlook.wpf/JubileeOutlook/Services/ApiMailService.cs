@@ -7,8 +7,8 @@ using JubileeOutlook.Models;
 namespace JubileeOutlook.Services;
 
 /// <summary>
-/// API service for mail operations via InspireContinuum API
-/// Uses HttpClientFactory for centralized HTTP client management with auto-auth
+/// API service for mail operations with offline-first support
+/// Integrates with LocalCacheService for offline data and NetworkStatusService for connectivity
 /// </summary>
 public class ApiMailService : IMailService
 {
@@ -19,10 +19,35 @@ public class ApiMailService : IMailService
     private readonly ConfigurationService _config;
     private readonly JsonSerializerOptions _jsonOptions;
 
+    // Service dependencies for offline-first support
+    private LocalCacheService? _localCache;
+    private NetworkStatusService? _networkStatus;
+    private SyncQueueService? _syncQueue;
+
     // Cached folders for GetFolders() synchronous call
     private List<MailFolder> _cachedFolders = new();
     private DateTime _foldersCacheTime = DateTime.MinValue;
     private readonly TimeSpan _foldersCacheDuration = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    /// Gets the local cache service instance
+    /// </summary>
+    private LocalCacheService LocalCache => _localCache ??= LocalCacheService.Instance;
+
+    /// <summary>
+    /// Gets the network status service instance
+    /// </summary>
+    private NetworkStatusService NetworkStatus => _networkStatus ??= NetworkStatusService.Instance;
+
+    /// <summary>
+    /// Gets the sync queue service instance
+    /// </summary>
+    private SyncQueueService SyncQueue => _syncQueue ??= SyncQueueService.Instance;
+
+    /// <summary>
+    /// Returns true if the network is available and API is reachable
+    /// </summary>
+    private bool IsOnline => NetworkStatus.IsOnline && NetworkStatus.IsApiReachable;
 
     /// <summary>
     /// Singleton instance of the mail service
@@ -264,6 +289,7 @@ public class ApiMailService : IMailService
 
     /// <summary>
     /// Gets messages for a folder with detailed result
+    /// Supports offline-first: returns cached data when offline, fetches from API when online
     /// GET /api/outlook/messages?folderId={folderId}
     /// </summary>
     public async Task<MailServiceResult<List<EmailMessage>>> GetMessagesWithResultAsync(
@@ -275,6 +301,19 @@ public class ApiMailService : IMailService
     {
         try
         {
+            // If offline, return cached data
+            if (!IsOnline)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Offline - returning cached messages for folder {folderId}");
+                var cachedMessages = await LocalCache.GetCachedEmailsAsync(folderId);
+                return new MailServiceResult<List<EmailMessage>>
+                {
+                    Success = true,
+                    Data = cachedMessages,
+                    TotalCount = cachedMessages.Count
+                };
+            }
+
             var queryParams = new List<string>();
 
             if (!string.IsNullOrEmpty(folderId))
@@ -305,6 +344,20 @@ public class ApiMailService : IMailService
                     {
                         var messages = apiResponse.Messages.Select(MapToEmailMessage).ToList();
                         System.Diagnostics.Debug.WriteLine($"[ApiMailService] Retrieved {messages.Count} messages");
+
+                        // Cache the messages for offline use
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                await LocalCache.CacheEmailsAsync(messages);
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Failed to cache messages: {ex.Message}");
+                            }
+                        });
+
                         return new MailServiceResult<List<EmailMessage>>
                         {
                             Success = true,
@@ -321,6 +374,20 @@ public class ApiMailService : IMailService
                 {
                     var messages = directMessages.Select(MapToEmailMessage).ToList();
                     System.Diagnostics.Debug.WriteLine($"[ApiMailService] Retrieved {messages.Count} messages (direct)");
+
+                    // Cache the messages for offline use
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await LocalCache.CacheEmailsAsync(messages);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[ApiMailService] Failed to cache messages: {ex.Message}");
+                        }
+                    });
+
                     return new MailServiceResult<List<EmailMessage>>
                     {
                         Success = true,
@@ -435,6 +502,7 @@ public class ApiMailService : IMailService
 
     /// <summary>
     /// Sends a message with detailed result
+    /// Supports offline-first: queues message in outbox when offline
     /// POST /api/v1/outlook/messages
     /// Creates message in Sent Items folder and stores recipients/attachments
     /// </summary>
@@ -488,6 +556,57 @@ public class ApiMailService : IMailService
                 IsInline = false
             }).ToList();
 
+            // If offline, queue the message for later sending
+            if (!IsOnline)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Offline - queueing message for send: {message.Subject}");
+
+                // Generate a temporary ID for tracking
+                var tempId = Guid.NewGuid().ToString();
+                message.Id = tempId;
+                message.FolderId = "outbox";
+                message.SentDate = DateTime.UtcNow;
+
+                // Cache the message locally in outbox
+                try
+                {
+                    await LocalCache.CacheEmailAsync(message);
+                    System.Diagnostics.Debug.WriteLine($"[ApiMailService] Cached message in outbox: {tempId}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ApiMailService] Failed to cache outbox message: {ex.Message}");
+                }
+
+                // Queue the send operation with message data
+                var messagePayload = new
+                {
+                    subject = message.Subject,
+                    body = message.Body,
+                    bodyHtml = message.IsHtml ? message.Body : null,
+                    to = message.To,
+                    cc = message.Cc,
+                    bcc = message.Bcc,
+                    fromEmail = message.FromEmail,
+                    fromName = message.From,
+                    isHtml = message.IsHtml,
+                    priority = message.Priority.ToString().ToLower()
+                };
+
+                await SyncQueue.QueueOperationAsync(
+                    SyncEntityTypes.Email,
+                    tempId,
+                    SyncOperationTypes.Create,
+                    messagePayload);
+
+                return new MailServiceResult<EmailMessage>
+                {
+                    Success = true,
+                    Data = message
+                };
+            }
+
+            // Online - proceed with normal send
             // Create the request DTO in API format
             var request = new CreateMessageRequest
             {
@@ -802,6 +921,7 @@ public class ApiMailService : IMailService
 
     /// <summary>
     /// Deletes a message with detailed result
+    /// Supports offline-first: queues operation if offline
     /// DELETE /api/outlook/messages/{id}
     /// </summary>
     public async Task<MailServiceResult<bool>> DeleteMessageWithResultAsync(string messageId)
@@ -815,6 +935,33 @@ public class ApiMailService : IMailService
                     Success = false,
                     Error = "Message ID is required",
                     Data = false
+                };
+            }
+
+            // Mark as deleted in local cache first (optimistic update)
+            try
+            {
+                await LocalCache.MarkEmailDeletedAsync(messageId);
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Marked message as deleted in local cache: {messageId}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Failed to mark as deleted in cache: {ex.Message}");
+            }
+
+            // If offline, queue the operation for later sync
+            if (!IsOnline)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Offline - queueing delete for message: {messageId}");
+                await SyncQueue.QueueOperationAsync(
+                    SyncEntityTypes.Email,
+                    messageId,
+                    SyncOperationTypes.Delete);
+
+                return new MailServiceResult<bool>
+                {
+                    Success = true,
+                    Data = true
                 };
             }
 
@@ -836,7 +983,7 @@ public class ApiMailService : IMailService
             // 404 is acceptable - message may already be deleted
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
-                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Message not found (already deleted?): {messageId}");
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Message not found (already deleted): {messageId}");
                 return new MailServiceResult<bool>
                 {
                     Success = true,
@@ -896,6 +1043,27 @@ public class ApiMailService : IMailService
                 };
             }
 
+            // Update local cache first (optimistic update)
+            // Note: LocalCacheService doesn't have a move method, so we'll handle this
+            // by updating the folder_id when the message is next cached
+
+            // If offline, queue the operation
+            if (!IsOnline)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Offline - queueing move for message {messageId} to folder {targetFolderId}");
+                await SyncQueue.QueueOperationAsync(
+                    SyncEntityTypes.Email,
+                    messageId,
+                    SyncOperationTypes.Update,
+                    new { folder_id = targetFolderId });
+
+                return new MailServiceResult<bool>
+                {
+                    Success = true,
+                    Data = true
+                };
+            }
+
             var endpoint = $"outlook/messages/{Uri.EscapeDataString(messageId)}";
             var payload = new { folder_id = targetFolderId };
 
@@ -938,6 +1106,7 @@ public class ApiMailService : IMailService
 
     /// <summary>
     /// Marks a message as read/unread with detailed result
+    /// Supports offline-first: queues operation if offline
     /// PATCH /api/v1/outlook/messages/{id} with is_read field
     /// </summary>
     public async Task<MailServiceResult<bool>> MarkAsReadWithResultAsync(string messageId, bool isRead)
@@ -951,6 +1120,24 @@ public class ApiMailService : IMailService
                     Success = false,
                     Error = "Message ID is required",
                     Data = false
+                };
+            }
+
+            // Note: Local cache update is handled by SyncService during sync
+
+            // If offline, queue the operation
+            if (!IsOnline)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Offline - queueing mark as read for message {messageId}");
+                await SyncQueue.QueueOperationAsync(
+                    SyncEntityTypes.Email,
+                    messageId,
+                    isRead ? SyncOperationTypes.MarkRead : SyncOperationTypes.MarkUnread);
+
+                return new MailServiceResult<bool>
+                {
+                    Success = true,
+                    Data = true
                 };
             }
 
