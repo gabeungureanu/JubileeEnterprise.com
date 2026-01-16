@@ -3025,7 +3025,7 @@ public partial class MainWindow : Window
             // BookmarkButton is inside address bar - don't apply nav bar style
             ApplyWWBWButtonStyle(HistoryButton);
             ApplyWWBWButtonStyle(BookmarksButton);
-            ApplyWWBWButtonStyle(MenuButton);
+            ApplyWWBWMenuButtonStyle(MenuButton); // Special style with white icon on hover
 
             // Update icon foregrounds to black (for yellow nav bar)
             var blackBrush = System.Windows.Media.Brushes.Black;
@@ -3036,7 +3036,7 @@ public partial class MainWindow : Window
             SetButtonIconForeground(BookmarkButton, wwbwYellowBrush);
             SetButtonIconForeground(HistoryButton, blackBrush);
             SetButtonIconForeground(BookmarksButton, blackBrush);
-            SetButtonIconForeground(MenuButton, blackBrush);
+            // MenuButton uses special style with binding - don't set foreground directly
 
             // Sidebar toggle icon: Black on yellow nav bar
             SidebarToggleIcon.Foreground = blackBrush;
@@ -3048,8 +3048,7 @@ public partial class MainWindow : Window
             ProfileIconHead.Fill = wwbwYellowBrush;
             ProfileIconBody.Fill = wwbwYellowBrush;
             ProfileDefaultAvatar.Fill = new SolidColorBrush(Color.FromRgb(37, 37, 69)); // #252545
-            // Force MenuIcon to black (XAML binding may not update when style is dynamically changed)
-            MenuIcon.SetCurrentValue(TextBlock.ForegroundProperty, blackBrush);
+            // MenuIcon color is handled by ApplyWWBWMenuButtonStyle binding
             ApplyWWBWButtonStyle(ProfileButton);
 
             // Chat button: Yellow chat icon on dark circular background in WWBW mode
@@ -3157,6 +3156,62 @@ public partial class MainWindow : Window
         pressedTrigger.Setters.Add(new Setter(Border.BackgroundProperty,
             new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(179, 134, 0)), // Even darker #B38600
             "border"));
+        template.Triggers.Add(pressedTrigger);
+
+        // Disabled trigger
+        var disabledTrigger = new Trigger { Property = Button.IsEnabledProperty, Value = false };
+        disabledTrigger.Setters.Add(new Setter(Button.OpacityProperty, 0.4));
+        template.Triggers.Add(disabledTrigger);
+
+        style.Setters.Add(new Setter(Button.TemplateProperty, template));
+        button.Style = style;
+    }
+
+    /// <summary>
+    /// Applies WWBW button style with white icon on hover (specifically for MenuButton/hamburger icon)
+    /// </summary>
+    private void ApplyWWBWMenuButtonStyle(Button button)
+    {
+        // Create style for WWBW mode menu button: transparent bg, black text (on yellow nav bar), white on hover
+        var style = new Style(typeof(Button));
+        style.Setters.Add(new Setter(Button.BackgroundProperty, System.Windows.Media.Brushes.Transparent));
+        style.Setters.Add(new Setter(Button.ForegroundProperty, System.Windows.Media.Brushes.Black));
+        style.Setters.Add(new Setter(Button.BorderThicknessProperty, new Thickness(0)));
+        style.Setters.Add(new Setter(Button.WidthProperty, 32.0));
+        style.Setters.Add(new Setter(Button.HeightProperty, 32.0));
+        style.Setters.Add(new Setter(Button.CursorProperty, Cursors.Hand));
+
+        // Template with hover effect
+        var template = new ControlTemplate(typeof(Button));
+        var border = new FrameworkElementFactory(typeof(Border));
+        border.Name = "border";
+        border.SetValue(Border.BackgroundProperty, System.Windows.Media.Brushes.Transparent);
+        border.SetValue(Border.CornerRadiusProperty, new CornerRadius(4));
+        border.SetValue(Border.PaddingProperty, new Thickness(4));
+
+        var contentPresenter = new FrameworkElementFactory(typeof(ContentPresenter));
+        contentPresenter.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+        contentPresenter.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+        // Bind TextElement.Foreground to the Button's Foreground so icons inherit the color
+        contentPresenter.SetBinding(System.Windows.Documents.TextElement.ForegroundProperty, new System.Windows.Data.Binding("Foreground") { RelativeSource = new System.Windows.Data.RelativeSource(System.Windows.Data.RelativeSourceMode.TemplatedParent) });
+        border.AppendChild(contentPresenter);
+
+        template.VisualTree = border;
+
+        // Hover trigger - darker yellow/gold background with white icon
+        var hoverTrigger = new Trigger { Property = Button.IsMouseOverProperty, Value = true };
+        hoverTrigger.Setters.Add(new Setter(Border.BackgroundProperty,
+            new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(204, 153, 0)), // Darker gold #CC9900
+            "border"));
+        hoverTrigger.Setters.Add(new Setter(Button.ForegroundProperty, System.Windows.Media.Brushes.White)); // White icon on hover
+        template.Triggers.Add(hoverTrigger);
+
+        // Pressed trigger - even darker background with white icon
+        var pressedTrigger = new Trigger { Property = Button.IsPressedProperty, Value = true };
+        pressedTrigger.Setters.Add(new Setter(Border.BackgroundProperty,
+            new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(179, 134, 0)), // Even darker #B38600
+            "border"));
+        pressedTrigger.Setters.Add(new Setter(Button.ForegroundProperty, System.Windows.Media.Brushes.White)); // White icon when pressed
         template.Triggers.Add(pressedTrigger);
 
         // Disabled trigger
@@ -5722,6 +5777,16 @@ public partial class MainWindow : Window
             ProfilePopupName.Text = profile.DisplayName;
             ProfilePopupEmail.Text = profile.Email;
 
+            // Update Main Menu profile section
+            MainMenuProfileName.Text = profile.DisplayName;
+            MainMenuProfileEmail.Text = profile.Email;
+            MainMenuProfileIcon.Visibility = Visibility.Collapsed;
+            MainMenuProfileImageEllipse.Visibility = Visibility.Visible;
+            if (ProfileAvatarImage.ImageSource != null)
+            {
+                MainMenuProfileImage.ImageSource = ProfileAvatarImage.ImageSource;
+            }
+
             // Update sync status
             UpdateSyncStatusUI(_syncEngine.Status);
 
@@ -5738,6 +5803,12 @@ public partial class MainWindow : Window
 
             ProfileSignedOutPanel.Visibility = Visibility.Visible;
             ProfileSignedInPanel.Visibility = Visibility.Collapsed;
+
+            // Reset Main Menu profile section to signed out state
+            MainMenuProfileName.Text = "Sign in";
+            MainMenuProfileEmail.Text = "Sync your data across devices";
+            MainMenuProfileIcon.Visibility = Visibility.Visible;
+            MainMenuProfileImageEllipse.Visibility = Visibility.Collapsed;
 
             ProfileButton.ToolTip = "Sign in to sync your data";
         }

@@ -460,6 +460,23 @@ public class InternalPageHandler
             background: var(--color-bg-tertiary);
         }}
 
+        /* Search highlight styles */
+        .search-highlight {{
+            background: rgba(230, 172, 0, 0.1) !important;
+            border-left: 3px solid var(--color-accent-gold) !important;
+            padding-left: 12px !important;
+            margin-left: -15px !important;
+            border-radius: 0 8px 8px 0 !important;
+        }}
+        .sidebar a.has-results {{
+            color: var(--color-accent-gold) !important;
+        }}
+        .sidebar a.has-results::after {{
+            content: '•';
+            margin-left: 8px;
+            color: var(--color-accent-gold);
+        }}
+
         /* ===== Sign In Notice ===== */
         .sync-sign-in-notice {{
             display: flex;
@@ -1735,9 +1752,79 @@ public class InternalPageHandler
 
         // Search functionality
         document.getElementById('searchInput')?.addEventListener('input', function(e) {{
-            const query = e.target.value.toLowerCase();
-            // TODO: Implement search highlighting
+            const query = e.target.value.toLowerCase().trim();
+            searchSettings(query);
         }});
+
+        function searchSettings(query) {{
+            // Get all sections and setting rows
+            const sections = document.querySelectorAll('.section');
+            const allSettingRows = document.querySelectorAll('.setting-row, .setting-group, .profile-card');
+
+            if (!query) {{
+                // If no query, show all and restore normal view
+                sections.forEach(s => {{
+                    s.style.display = '';
+                    s.querySelectorAll('.setting-row, .setting-group, .profile-card').forEach(r => {{
+                        r.style.display = '';
+                        r.classList.remove('search-highlight');
+                    }});
+                }});
+                // Show only active section
+                const activeLink = document.querySelector('.sidebar a.active');
+                if (activeLink) {{
+                    const sectionId = activeLink.getAttribute('data-section');
+                    showSection(sectionId);
+                }}
+                return;
+            }}
+
+            // Search mode: show all sections but only matching items
+            let hasResults = false;
+
+            sections.forEach(section => {{
+                let sectionHasMatch = false;
+                const sectionTitle = section.querySelector('h1')?.textContent?.toLowerCase() || '';
+                const sectionSubtitle = section.querySelector('.subtitle')?.textContent?.toLowerCase() || '';
+
+                // Check if section title/subtitle matches
+                if (sectionTitle.includes(query) || sectionSubtitle.includes(query)) {{
+                    sectionHasMatch = true;
+                }}
+
+                // Check each setting row
+                const rows = section.querySelectorAll('.setting-row, .setting-group');
+                rows.forEach(row => {{
+                    const label = row.querySelector('.setting-label, .group-title, h2')?.textContent?.toLowerCase() || '';
+                    const description = row.querySelector('.setting-description, p')?.textContent?.toLowerCase() || '';
+                    const text = label + ' ' + description;
+
+                    if (text.includes(query)) {{
+                        row.style.display = '';
+                        row.classList.add('search-highlight');
+                        sectionHasMatch = true;
+                    }} else {{
+                        row.style.display = 'none';
+                        row.classList.remove('search-highlight');
+                    }}
+                }});
+
+                // Show/hide section based on matches
+                section.style.display = sectionHasMatch ? 'block' : 'none';
+                if (sectionHasMatch) hasResults = true;
+            }});
+
+            // Update sidebar to show which sections have matches
+            document.querySelectorAll('.sidebar a[data-section]').forEach(link => {{
+                const sectionId = link.getAttribute('data-section');
+                const section = document.getElementById('section-' + sectionId);
+                if (section && section.style.display !== 'none') {{
+                    link.classList.add('has-results');
+                }} else {{
+                    link.classList.remove('has-results');
+                }}
+            }});
+        }}
     </script>
 </body>
 </html>";
