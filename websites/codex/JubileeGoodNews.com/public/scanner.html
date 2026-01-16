@@ -510,6 +510,177 @@
         }
 
         /* ============================================
+           TOP STORY DISPLAY
+           ============================================ */
+
+        .top-story-container {
+            padding: var(--space-lg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .top-story-card {
+            max-width: 800px;
+            width: 100%;
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .top-story-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+            border-color: var(--accent-gold);
+        }
+
+        .top-story-image-container {
+            width: 100%;
+            height: 350px;
+            background: var(--bg-secondary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .top-story-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .top-story-image-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            gap: var(--space-sm);
+        }
+
+        .top-story-image-placeholder svg {
+            width: 48px;
+            height: 48px;
+            opacity: 0.5;
+        }
+
+        .top-story-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-sm);
+            color: var(--text-muted);
+        }
+
+        .top-story-badge {
+            position: absolute;
+            top: var(--space-md);
+            left: var(--space-md);
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: var(--font-xs);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .top-story-badge svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .top-story-score {
+            position: absolute;
+            top: var(--space-md);
+            right: var(--space-md);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-lg);
+            font-weight: 700;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+
+        .top-story-content {
+            padding: var(--space-xl);
+        }
+
+        .top-story-source {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+
+        .top-story-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.3;
+            color: var(--accent-gold);
+            margin-bottom: var(--space-md);
+        }
+
+        .top-story-original {
+            font-size: var(--font-sm);
+            color: var(--text-muted);
+            margin-bottom: var(--space-lg);
+            padding: var(--space-md);
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border-left: 3px solid var(--text-muted);
+        }
+
+        .top-story-original strong {
+            display: block;
+            margin-bottom: var(--space-xs);
+            color: var(--text-secondary);
+        }
+
+        .top-story-excerpt {
+            font-size: var(--font-base);
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .top-story-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--space-lg);
+            padding-top: var(--space-md);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .top-story-timestamp {
+            font-size: var(--font-sm);
+            color: var(--text-muted);
+        }
+
+        .top-story-actions {
+            display: flex;
+            gap: var(--space-sm);
+        }
+
+        /* ============================================
            SLIDE-OVER PANEL
            ============================================ */
 
@@ -592,6 +763,39 @@
 
         .panel-section {
             margin-bottom: var(--space-xl);
+        }
+
+        .panel-image-container {
+            width: 100%;
+            height: 250px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: var(--space-lg);
+            position: relative;
+        }
+
+        .panel-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .panel-image-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            gap: var(--space-sm);
+        }
+
+        .panel-image-placeholder svg {
+            width: 40px;
+            height: 40px;
+            opacity: 0.5;
         }
 
         .panel-section-title {
@@ -800,6 +1004,17 @@
             100% { background-position: -200% 0; }
         }
 
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
         /* ============================================
            RESPONSIVE
            ============================================ */
@@ -919,7 +1134,7 @@
                 </div>
             </div>
 
-            <!-- Table Container -->
+            <!-- Content Container -->
             <div class="table-container" id="tableContainer">
                 <!-- Empty State -->
                 <div class="empty-state" id="emptyState">
@@ -932,7 +1147,7 @@
                     </div>
                     <h3 class="empty-state-title">No scanned items yet</h3>
                     <p class="empty-state-text">
-                        Click "Run Scan" to fetch top stories from major news sources and transform them with a hopeful, faith-forward perspective.
+                        Click "Run Scan" to fetch top stories from major news sources and find the highest rated story with a hopeful, faith-forward perspective.
                     </p>
                     <button class="btn btn-primary" onclick="runScan()">
                         <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -943,22 +1158,64 @@
                     </button>
                 </div>
 
-                <!-- Scanner Table -->
-                <table class="scanner-table" id="scannerTable" style="display: none;">
-                    <thead>
-                        <tr>
-                            <th>Source</th>
-                            <th>Original Story</th>
-                            <th>Score</th>
-                            <th>Good News Version</th>
-                            <th>Scanned</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <!-- Rows populated dynamically -->
-                    </tbody>
-                </table>
+                <!-- Top Story Display -->
+                <div class="top-story-container" id="topStoryContainer" style="display: none;">
+                    <div class="top-story-card" id="topStoryCard" onclick="openTopStoryPanel()">
+                        <div class="top-story-image-container">
+                            <div class="top-story-badge">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                </svg>
+                                Top Story
+                            </div>
+                            <div class="top-story-score" id="topStoryScore">--</div>
+                            <div class="top-story-loading" id="imageLoading">
+                                <div class="loading-spinner"></div>
+                                <span>Loading image...</span>
+                            </div>
+                            <img class="top-story-image" id="topStoryImage" style="display: none;" alt="Top story image">
+                            <div class="top-story-image-placeholder" id="imagePlaceholder" style="display: none;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                                <span>No image available</span>
+                            </div>
+                        </div>
+                        <div class="top-story-content">
+                            <div class="top-story-source">
+                                <span class="source-badge" id="topStorySourceBadge">Source</span>
+                                <span class="timestamp" id="topStoryTimestamp">Scanned just now</span>
+                            </div>
+                            <h2 class="top-story-title" id="topStoryTitle">Loading...</h2>
+                            <div class="top-story-original" id="topStoryOriginal">
+                                <strong>Original Headline:</strong>
+                                <span id="topStoryOriginalTitle">Loading...</span>
+                            </div>
+                            <p class="top-story-excerpt" id="topStoryExcerpt">
+                                Click to view the full transformed article with scoring details...
+                            </p>
+                            <div class="top-story-meta">
+                                <span class="top-story-timestamp" id="topStoryScanTime">Scanned at --:--</span>
+                                <div class="top-story-actions">
+                                    <button class="btn btn-secondary" onclick="event.stopPropagation(); rejectTopStory()" style="padding: 8px 16px;">
+                                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M18 6L6 18M6 6l12 12"/>
+                                        </svg>
+                                        Reject
+                                    </button>
+                                    <button class="btn btn-primary" onclick="event.stopPropagation(); approveTopStory()" style="padding: 8px 16px;">
+                                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M20 6L9 17l-5-5"/>
+                                        </svg>
+                                        Approve
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -998,8 +1255,8 @@
         // STATE MANAGEMENT
         // ============================================
 
-        let scannerQueue = [];
-        let selectedItemId = null;
+        let topStory = null;
+        let downloadedImageUrl = null;
         let isScanning = false;
 
         // News sources to scan
@@ -1022,39 +1279,56 @@
             updateScanStatus('scanning', 'Scanning sources...');
             document.getElementById('scanBtn').disabled = true;
 
+            // Reset state
+            topStory = null;
+            downloadedImageUrl = null;
+
+            // Show loading state
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('topStoryContainer').style.display = 'flex';
+            document.getElementById('imageLoading').style.display = 'flex';
+            document.getElementById('topStoryImage').style.display = 'none';
+            document.getElementById('imagePlaceholder').style.display = 'none';
+            document.getElementById('topStoryTitle').textContent = 'Scanning news sources...';
+            document.getElementById('topStoryOriginalTitle').textContent = 'Please wait...';
+            document.getElementById('topStoryExcerpt').textContent = 'Fetching and analyzing stories from multiple sources to find the most prominent news item...';
+
             try {
-                // Simulate fetching from each source
+                let allStories = [];
+
+                // Fetch from all sources
                 for (const source of NEWS_SOURCES) {
                     updateScanStatus('scanning', `Scanning ${source.name}...`);
+                    await delay(600 + Math.random() * 300);
 
-                    // Simulate network delay
-                    await delay(800 + Math.random() * 400);
-
-                    // Generate simulated top story from this source
                     const story = await fetchTopStory(source);
                     if (story) {
-                        // Calculate prominence score
                         story.score = calculateProminenceScore(story);
 
-                        // Generate good news rewrite
                         const rewritten = await rewriteAsGoodNews(story);
                         story.rewrittenTitle = rewritten.title;
                         story.rewrittenContent = rewritten.content;
 
-                        // Add to queue
                         story.id = Date.now() + Math.random();
                         story.timestamp = new Date().toISOString();
                         story.status = 'pending';
 
-                        scannerQueue.unshift(story);
+                        allStories.push(story);
                     }
                 }
 
-                // Find and mark the overall top story
-                if (scannerQueue.length > 0) {
-                    const topStory = scannerQueue.reduce((max, s) =>
-                        s.score.total > max.score.total ? s : max, scannerQueue[0]);
-                    topStory.isTopStory = true;
+                // Find the highest rated story
+                if (allStories.length > 0) {
+                    topStory = allStories.reduce((max, s) =>
+                        s.score.normalized > max.score.normalized ? s : max, allStories[0]);
+
+                    updateScanStatus('scanning', 'Downloading image...');
+
+                    // Download the image for the top story
+                    await downloadStoryImage(topStory);
+
+                    // Render the top story
+                    renderTopStory();
                 }
 
                 updateScanStatus('ready', 'Scan complete');
@@ -1063,16 +1337,17 @@
             } catch (error) {
                 console.error('Scan error:', error);
                 updateScanStatus('error', 'Scan failed');
+                document.getElementById('emptyState').style.display = 'flex';
+                document.getElementById('topStoryContainer').style.display = 'none';
             } finally {
                 isScanning = false;
                 document.getElementById('scanBtn').disabled = false;
-                renderTable();
                 updateStats();
             }
         }
 
         async function fetchTopStory(source) {
-            // Simulated top stories from each source
+            // Simulated top stories from each source with image URLs
             // In production, this would fetch actual RSS feeds or scrape headlines
             const simulatedStories = {
                 'yahoo': {
@@ -1080,35 +1355,40 @@
                     originalUrl: 'https://finance.yahoo.com/news/markets-fed-policy',
                     originalExcerpt: 'Stock markets showed mixed reactions following the Federal Reserve\'s latest policy statement on interest rates...',
                     position: 1,
-                    hasImage: true
+                    hasImage: true,
+                    imageUrl: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&h=450&fit=crop'
                 },
                 'nytimes': {
                     originalTitle: 'Global Leaders Gather for Climate Summit Amid Rising Tensions',
                     originalUrl: 'https://www.nytimes.com/2026/01/16/world/climate-summit',
                     originalExcerpt: 'World leaders convened today for crucial climate discussions, facing pressure to deliver meaningful commitments...',
                     position: 1,
-                    hasImage: true
+                    hasImage: true,
+                    imageUrl: 'https://images.unsplash.com/photo-1569163139599-0f4517e36f51?w=800&h=450&fit=crop'
                 },
                 'msn': {
                     originalTitle: 'Breaking: Major Technology Company Announces Layoffs',
                     originalUrl: 'https://www.msn.com/news/technology/layoffs',
                     originalExcerpt: 'A major technology firm has announced significant workforce reductions, impacting thousands of employees...',
                     position: 2,
-                    hasImage: true
+                    hasImage: true,
+                    imageUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&h=450&fit=crop'
                 },
                 'cnn': {
                     originalTitle: 'Political Divide Deepens as Congress Faces Shutdown Deadline',
                     originalUrl: 'https://www.cnn.com/politics/congress-shutdown',
                     originalExcerpt: 'Tensions in Washington continue to escalate as lawmakers struggle to reach agreement before the funding deadline...',
                     position: 1,
-                    hasImage: true
+                    hasImage: true,
+                    imageUrl: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&h=450&fit=crop'
                 },
                 'foxnews': {
                     originalTitle: 'Economy Shows Signs of Uncertainty Amid Global Challenges',
                     originalUrl: 'https://www.foxnews.com/economy/uncertainty',
                     originalExcerpt: 'Economic indicators present a mixed picture as businesses navigate ongoing global challenges...',
                     position: 1,
-                    hasImage: true
+                    hasImage: true,
+                    imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=450&fit=crop'
                 }
             };
 
@@ -1121,6 +1401,55 @@
                 sourceUrl: source.url,
                 ...storyData
             };
+        }
+
+        async function downloadStoryImage(story) {
+            // Download/cache the image for the top story
+            if (!story.imageUrl) {
+                downloadedImageUrl = null;
+                return;
+            }
+
+            try {
+                // Create a promise to load the image
+                const loadPromise = new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => {
+                        // Create canvas to "download" the image as a data URL
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.naturalWidth;
+                        canvas.height = img.naturalHeight;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+
+                        try {
+                            // Convert to data URL (this is our "downloaded" image)
+                            downloadedImageUrl = canvas.toDataURL('image/jpeg', 0.9);
+                            story.downloadedImage = downloadedImageUrl;
+                            resolve(downloadedImageUrl);
+                        } catch (e) {
+                            // If canvas export fails (CORS), use original URL
+                            downloadedImageUrl = story.imageUrl;
+                            story.downloadedImage = story.imageUrl;
+                            resolve(story.imageUrl);
+                        }
+                    };
+                    img.onerror = () => {
+                        downloadedImageUrl = null;
+                        reject(new Error('Failed to load image'));
+                    };
+                    img.src = story.imageUrl;
+                });
+
+                await Promise.race([
+                    loadPromise,
+                    delay(5000).then(() => { throw new Error('Image load timeout'); })
+                ]);
+            } catch (error) {
+                console.warn('Image download failed:', error);
+                downloadedImageUrl = null;
+            }
         }
 
         function calculateProminenceScore(story) {
@@ -1227,84 +1556,76 @@
         // UI RENDERING
         // ============================================
 
-        function renderTable() {
-            const tableBody = document.getElementById('tableBody');
-            const emptyState = document.getElementById('emptyState');
-            const table = document.getElementById('scannerTable');
-
-            // Apply filters
-            const sourceFilter = document.getElementById('sourceFilter').value;
-            const statusFilter = document.getElementById('statusFilter').value;
-
-            let filteredQueue = scannerQueue.filter(item => {
-                if (sourceFilter !== 'all' && item.source !== sourceFilter) return false;
-                if (statusFilter !== 'all' && item.status !== statusFilter) return false;
-                return true;
-            });
-
-            if (filteredQueue.length === 0) {
-                emptyState.style.display = 'flex';
-                table.style.display = 'none';
+        function renderTopStory() {
+            if (!topStory) {
+                document.getElementById('emptyState').style.display = 'flex';
+                document.getElementById('topStoryContainer').style.display = 'none';
                 return;
             }
 
-            emptyState.style.display = 'none';
-            table.style.display = 'table';
+            // Hide loading, show container
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('topStoryContainer').style.display = 'flex';
+            document.getElementById('imageLoading').style.display = 'none';
 
-            tableBody.innerHTML = filteredQueue.map(item => `
-                <tr class="${item.id === selectedItemId ? 'selected' : ''} ${item.isTopStory ? 'top-story' : ''}"
-                    onclick="selectItem('${item.id}')">
-                    <td>
-                        <span class="source-badge ${item.source}">${item.sourceName}</span>
-                        ${item.isTopStory ? '<br><span style="font-size: 10px; color: var(--accent-gold); margin-top: 4px; display: inline-block;">TOP STORY</span>' : ''}
-                    </td>
-                    <td>
-                        <div class="original-headline">${item.originalTitle}</div>
-                        <div class="original-url">
-                            <a href="${item.originalUrl}" target="_blank" onclick="event.stopPropagation()">
-                                ${truncateUrl(item.originalUrl)}
-                            </a>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="score-badge ${getScoreClass(item.score.normalized)}">${item.score.normalized}</div>
-                        <div class="score-label">Prominence</div>
-                    </td>
-                    <td>
-                        <div class="rewritten-headline">${item.rewrittenTitle}</div>
-                        <div class="rewritten-preview">${stripHtml(item.rewrittenContent).substring(0, 100)}...</div>
-                    </td>
-                    <td>
-                        <div class="timestamp-relative">${formatRelativeTime(item.timestamp)}</div>
-                        <div class="timestamp">${formatTime(new Date(item.timestamp))}</div>
-                    </td>
-                    <td>
-                        <div class="row-actions">
-                            <button class="action-btn approve" onclick="event.stopPropagation(); approveItemById('${item.id}')" title="Approve">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20 6L9 17l-5-5"/>
-                                </svg>
-                            </button>
-                            <button class="action-btn reject" onclick="event.stopPropagation(); rejectItemById('${item.id}')" title="Reject">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M18 6L6 18M6 6l12 12"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+            // Handle image display
+            const imageEl = document.getElementById('topStoryImage');
+            const placeholderEl = document.getElementById('imagePlaceholder');
+
+            if (downloadedImageUrl || topStory.downloadedImage) {
+                imageEl.src = downloadedImageUrl || topStory.downloadedImage;
+                imageEl.style.display = 'block';
+                placeholderEl.style.display = 'none';
+            } else {
+                imageEl.style.display = 'none';
+                placeholderEl.style.display = 'flex';
+            }
+
+            // Update score badge
+            const scoreBadge = document.getElementById('topStoryScore');
+            scoreBadge.textContent = topStory.score.normalized;
+            scoreBadge.className = `top-story-score ${getScoreClass(topStory.score.normalized)}`;
+
+            // Update source badge
+            const sourceBadge = document.getElementById('topStorySourceBadge');
+            sourceBadge.textContent = topStory.sourceName;
+            sourceBadge.className = `source-badge ${topStory.source}`;
+
+            // Update text content
+            document.getElementById('topStoryTitle').textContent = topStory.rewrittenTitle;
+            document.getElementById('topStoryOriginalTitle').textContent = topStory.originalTitle;
+            document.getElementById('topStoryExcerpt').textContent = stripHtml(topStory.rewrittenContent).substring(0, 200) + '...';
+            document.getElementById('topStoryTimestamp').textContent = formatRelativeTime(topStory.timestamp);
+            document.getElementById('topStoryScanTime').textContent = `Scanned at ${formatTime(new Date(topStory.timestamp))}`;
         }
 
-        function renderPanel(item) {
+        function renderPanel() {
+            if (!topStory) return;
+
             const panelBody = document.getElementById('panelBody');
+            const imageHtml = (downloadedImageUrl || topStory.downloadedImage)
+                ? `<div class="panel-image-container">
+                       <img class="panel-image" src="${downloadedImageUrl || topStory.downloadedImage}" alt="Article image">
+                   </div>`
+                : `<div class="panel-image-container">
+                       <div class="panel-image-placeholder">
+                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                               <circle cx="8.5" cy="8.5" r="1.5"/>
+                               <polyline points="21 15 16 10 5 21"/>
+                           </svg>
+                           <span>No image available</span>
+                       </div>
+                   </div>`;
 
             panelBody.innerHTML = `
+                ${imageHtml}
+
                 <div class="panel-section">
                     <h3 class="panel-section-title">Good News Rewrite</h3>
-                    <h1 class="panel-rewritten-title">${item.rewrittenTitle}</h1>
+                    <h1 class="panel-rewritten-title">${topStory.rewrittenTitle}</h1>
                     <div class="panel-article-content">
-                        ${item.rewrittenContent}
+                        ${topStory.rewrittenContent}
                     </div>
                 </div>
 
@@ -1314,30 +1635,30 @@
                         <div class="panel-meta-item">
                             <div class="panel-meta-label">Source</div>
                             <div class="panel-meta-value">
-                                <span class="source-badge ${item.source}">${item.sourceName}</span>
+                                <span class="source-badge ${topStory.source}">${topStory.sourceName}</span>
                             </div>
                         </div>
                         <div class="panel-meta-item">
                             <div class="panel-meta-label">Scanned At</div>
-                            <div class="panel-meta-value">${formatDateTime(item.timestamp)}</div>
+                            <div class="panel-meta-value">${formatDateTime(topStory.timestamp)}</div>
                         </div>
                         <div class="panel-meta-item">
                             <div class="panel-meta-label">Status</div>
-                            <div class="panel-meta-value" style="text-transform: capitalize; color: ${getStatusColor(item.status)}">${item.status}</div>
+                            <div class="panel-meta-value" style="text-transform: capitalize; color: ${getStatusColor(topStory.status)}">${topStory.status}</div>
                         </div>
                         <div class="panel-meta-item">
                             <div class="panel-meta-label">Prominence Score</div>
                             <div class="panel-meta-value">
-                                <span class="score-badge ${getScoreClass(item.score.normalized)}" style="width: 32px; height: 32px; font-size: 14px;">${item.score.normalized}</span>
+                                <span class="score-badge ${getScoreClass(topStory.score.normalized)}" style="width: 32px; height: 32px; font-size: 14px;">${topStory.score.normalized}</span>
                             </div>
                         </div>
                     </div>
                     <div class="panel-original-link">
                         <div class="panel-meta-label">Original Article</div>
                         <div style="margin-top: 4px;">
-                            <strong style="font-size: 13px; color: var(--text-secondary);">${item.originalTitle}</strong>
+                            <strong style="font-size: 13px; color: var(--text-secondary);">${topStory.originalTitle}</strong>
                         </div>
-                        <a href="${item.originalUrl}" target="_blank">${item.originalUrl}</a>
+                        <a href="${topStory.originalUrl}" target="_blank">${topStory.originalUrl}</a>
                     </div>
                 </div>
 
@@ -1346,27 +1667,27 @@
                     <div class="scoring-details">
                         <div class="scoring-row">
                             <span class="scoring-label">Page Position</span>
-                            <span class="scoring-value">${item.score.position} pts</span>
+                            <span class="scoring-value">${topStory.score.position} pts</span>
                         </div>
                         <div class="scoring-row">
                             <span class="scoring-label">Featured Image</span>
-                            <span class="scoring-value">${item.score.hasImage} pts</span>
+                            <span class="scoring-value">${topStory.score.hasImage} pts</span>
                         </div>
                         <div class="scoring-row">
                             <span class="scoring-label">Title Quality</span>
-                            <span class="scoring-value">${item.score.titleLength} pts</span>
+                            <span class="scoring-value">${topStory.score.titleLength} pts</span>
                         </div>
                         <div class="scoring-row">
                             <span class="scoring-label">Source Weight</span>
-                            <span class="scoring-value">${item.score.sourceWeight} pts</span>
+                            <span class="scoring-value">${topStory.score.sourceWeight} pts</span>
                         </div>
                         <div class="scoring-row">
                             <span class="scoring-label">Recency</span>
-                            <span class="scoring-value">${item.score.recency} pts</span>
+                            <span class="scoring-value">${topStory.score.recency} pts</span>
                         </div>
                         <div class="scoring-row">
                             <span class="scoring-label">Total Score</span>
-                            <span class="scoring-value" style="color: var(--accent-gold);">${item.score.total} / 30 (${item.score.normalized}%)</span>
+                            <span class="scoring-value" style="color: var(--accent-gold);">${topStory.score.total} / 30 (${topStory.score.normalized}%)</span>
                         </div>
                     </div>
                 </div>
@@ -1377,14 +1698,10 @@
         // PANEL MANAGEMENT
         // ============================================
 
-        function selectItem(id) {
-            selectedItemId = id;
-            const item = scannerQueue.find(i => i.id == id);
-
-            if (item) {
-                renderPanel(item);
+        function openTopStoryPanel() {
+            if (topStory) {
+                renderPanel();
                 openPanel();
-                renderTable(); // Re-render to show selection
             }
         }
 
@@ -1398,8 +1715,6 @@
             document.getElementById('slidePanel').classList.remove('open');
             document.getElementById('panelOverlay').classList.remove('visible');
             document.getElementById('scannerContent').classList.remove('panel-open');
-            selectedItemId = null;
-            renderTable();
         }
 
         // ============================================
@@ -1407,58 +1722,77 @@
         // ============================================
 
         function approveItem() {
-            if (selectedItemId) {
-                approveItemById(selectedItemId);
-            }
+            approveTopStory();
         }
 
         function rejectItem() {
-            if (selectedItemId) {
-                rejectItemById(selectedItemId);
-            }
+            rejectTopStory();
         }
 
-        function approveItemById(id) {
-            const item = scannerQueue.find(i => i.id == id);
-            if (item) {
-                item.status = 'approved';
+        function approveTopStory() {
+            if (topStory) {
+                topStory.status = 'approved';
                 updateStats();
-                renderTable();
-
-                if (selectedItemId == id) {
-                    renderPanel(item);
-                }
+                renderTopStory();
+                renderPanel();
 
                 // In production, this would POST to the API to publish
-                console.log('Approved and publishing:', item.rewrittenTitle);
+                console.log('Approved and publishing:', topStory.rewrittenTitle);
+
+                // Show success feedback
+                showNotification('Article approved and published!', 'success');
             }
         }
 
-        function rejectItemById(id) {
-            const item = scannerQueue.find(i => i.id == id);
-            if (item) {
-                item.status = 'rejected';
+        function rejectTopStory() {
+            if (topStory) {
+                topStory.status = 'rejected';
                 updateStats();
-                renderTable();
+                renderTopStory();
+                renderPanel();
 
-                if (selectedItemId == id) {
-                    renderPanel(item);
-                }
+                // Show feedback
+                showNotification('Article rejected.', 'info');
             }
         }
 
         function clearQueue() {
-            if (confirm('Are you sure you want to clear the scanner queue?')) {
-                scannerQueue = [];
-                selectedItemId = null;
+            if (confirm('Are you sure you want to clear the current story?')) {
+                topStory = null;
+                downloadedImageUrl = null;
                 closePanel();
-                renderTable();
+                document.getElementById('emptyState').style.display = 'flex';
+                document.getElementById('topStoryContainer').style.display = 'none';
                 updateStats();
             }
         }
 
-        function filterResults() {
-            renderTable();
+        function showNotification(message, type = 'info') {
+            // Create temporary notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 24px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${type === 'success' ? 'var(--accent-green)' : 'var(--bg-tertiary)'};
+                color: ${type === 'success' ? 'var(--bg-primary)' : 'var(--text-primary)'};
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 14px;
+                z-index: 1000;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                animation: slideUp 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s';
+                setTimeout(() => notification.remove(), 300);
+            }, 2500);
         }
 
         // ============================================
@@ -1483,8 +1817,8 @@
         }
 
         function updateStats() {
-            document.getElementById('queueCount').textContent = scannerQueue.filter(i => i.status === 'pending').length;
-            document.getElementById('approvedCount').textContent = scannerQueue.filter(i => i.status === 'approved').length;
+            document.getElementById('queueCount').textContent = topStory && topStory.status === 'pending' ? '1' : '0';
+            document.getElementById('approvedCount').textContent = topStory && topStory.status === 'approved' ? '1' : '0';
         }
 
         function getScoreClass(score) {
@@ -1581,8 +1915,10 @@
         // ============================================
 
         document.addEventListener('DOMContentLoaded', () => {
-            renderTable();
             updateStats();
+            // Show empty state by default
+            document.getElementById('emptyState').style.display = 'flex';
+            document.getElementById('topStoryContainer').style.display = 'none';
         });
     </script>
 </body>
