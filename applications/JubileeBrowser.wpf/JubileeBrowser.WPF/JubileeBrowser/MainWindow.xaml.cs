@@ -3231,7 +3231,7 @@ public partial class MainWindow : Window
 
     private string GetHomepage()
     {
-        var defaultInternetHomepage = "https://www.jubileeinspire.com";
+        var defaultInternetHomepage = "https://www.jubileeverse.com";
         var defaultWWBWHomepage = "inspire://jubilee.inspire";
         var homepage = _settingsManager?.Settings?.Homepage;
 
