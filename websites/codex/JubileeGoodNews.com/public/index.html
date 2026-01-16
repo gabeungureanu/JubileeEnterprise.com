@@ -244,61 +244,317 @@
             border-color: var(--accent-gold);
         }
 
-        /* Hero Section */
-        .hero-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: var(--space-md);
-            margin-bottom: var(--space-xl);
-        }
-
-        .hero-main {
+        /* Hero Section - Rotating Featured Stories */
+        .hero-container {
             position: relative;
             border-radius: 16px;
             overflow: hidden;
             aspect-ratio: 16/9;
             background: var(--bg-card);
+            margin-bottom: var(--space-xl);
         }
 
-        .hero-main img {
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+            pointer-events: none;
+        }
+
+        .hero-slide.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .hero-slide img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .hero-main-overlay {
+        .hero-slide-overlay {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            padding: var(--space-xl);
-            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            padding: var(--space-2xl);
+            background: linear-gradient(transparent, rgba(0,0,0,0.95));
         }
 
-        .hero-main-category {
-            display: inline-block;
+        .hero-slide-rank {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: var(--font-xs);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: var(--space-md);
+        }
+
+        .hero-slide-rank.rank-1 {
             background: var(--accent-gold);
             color: var(--bg-primary);
-            padding: var(--space-xs) var(--space-sm);
+        }
+
+        .hero-slide-rank.rank-2 {
+            background: #c0c0c0;
+            color: var(--bg-primary);
+        }
+
+        .hero-slide-rank.rank-3 {
+            background: #cd7f32;
+            color: white;
+        }
+
+        .hero-slide-rank svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .hero-slide-source {
+            display: inline-block;
+            margin-left: var(--space-sm);
+            padding: 4px 10px;
             border-radius: 4px;
             font-size: var(--font-xs);
             font-weight: 600;
             text-transform: uppercase;
-            margin-bottom: var(--space-sm);
         }
 
-        .hero-main-title {
+        .hero-slide-source.cnn { background: #cc0000; color: white; }
+        .hero-slide-source.foxnews { background: #003366; color: white; }
+        .hero-slide-source.yahoo { background: #6001d2; color: white; }
+        .hero-slide-source.nytimes { background: #f5f5f5; color: #1a1a1a; }
+        .hero-slide-source.msn { background: #0078d4; color: white; }
+
+        .hero-slide-title {
             font-family: 'Playfair Display', serif;
-            font-size: var(--font-2xl);
+            font-size: var(--font-3xl);
             font-weight: 700;
             line-height: 1.2;
+            margin-bottom: var(--space-md);
+            color: var(--accent-gold);
+        }
+
+        .hero-slide-excerpt {
+            font-size: var(--font-md);
+            color: var(--text-secondary);
+            line-height: 1.6;
+            max-width: 700px;
+            margin-bottom: var(--space-lg);
+        }
+
+        .hero-slide-meta {
+            display: flex;
+            align-items: center;
+            gap: var(--space-lg);
+        }
+
+        .hero-slide-score {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .hero-score-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-lg);
+            font-weight: 700;
+            background: rgba(74, 222, 128, 0.2);
+            color: var(--accent-green);
+            border: 2px solid var(--accent-green);
+        }
+
+        .hero-score-label {
+            font-size: var(--font-xs);
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .hero-read-more {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-lg);
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: var(--font-sm);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .hero-read-more:hover {
+            background: var(--accent-gold-hover);
+            transform: translateX(4px);
+        }
+
+        .hero-read-more svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Hero Progress Indicators */
+        .hero-progress {
+            position: absolute;
+            bottom: var(--space-lg);
+            right: var(--space-2xl);
+            display: flex;
+            gap: var(--space-sm);
+            z-index: 10;
+        }
+
+        .hero-progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-progress-dot.active {
+            background: var(--accent-gold);
+        }
+
+        .hero-progress-dot::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: var(--accent-gold);
+            border-radius: 50%;
+        }
+
+        .hero-progress-dot.active::after {
+            animation: progress-fill 5s linear forwards;
+        }
+
+        @keyframes progress-fill {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* Loading State */
+        .hero-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: var(--space-md);
+        }
+
+        .hero-loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--accent-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hero-loading-text {
+            font-size: var(--font-base);
+            color: var(--text-secondary);
+        }
+
+        /* Empty/Scan State */
+        .hero-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: var(--space-2xl);
+        }
+
+        .hero-empty-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--bg-tertiary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--space-lg);
+        }
+
+        .hero-empty-icon svg {
+            width: 40px;
+            height: 40px;
+            color: var(--text-muted);
+        }
+
+        .hero-empty-title {
+            font-size: var(--font-xl);
+            font-weight: 600;
             margin-bottom: var(--space-sm);
         }
 
-        .hero-main-excerpt {
+        .hero-empty-text {
             font-size: var(--font-base);
             color: var(--text-secondary);
-            line-height: 1.5;
+            max-width: 400px;
+            margin-bottom: var(--space-lg);
+        }
+
+        .hero-scan-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-md) var(--space-xl);
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            font-size: var(--font-base);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .hero-scan-btn:hover {
+            background: var(--accent-gold-hover);
+        }
+
+        .hero-scan-btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .hero-scan-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Legacy hero grid (kept for sidebar) */
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl);
         }
 
         .hero-sidebar {
@@ -707,12 +963,30 @@
                 display: none;
             }
 
-            .hero-sidebar {
-                flex-direction: column;
+            .hero-container {
+                aspect-ratio: 4/3;
             }
 
-            .hero-main-title {
+            .hero-slide-title {
                 font-size: var(--font-xl);
+            }
+
+            .hero-slide-excerpt {
+                display: none;
+            }
+
+            .hero-slide-overlay {
+                padding: var(--space-lg);
+            }
+
+            .hero-slide-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--space-md);
+            }
+
+            .hero-sidebar {
+                flex-direction: column;
             }
 
             .content-grid {
@@ -780,34 +1054,41 @@
             <button class="category-pill" data-category="testimony">Testimonies</button>
         </div>
 
-        <!-- Hero Section -->
-        <section class="hero-grid" id="heroSection">
-            <article class="hero-main">
-                <img src="https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=1200&h=675&fit=crop" alt="Featured Article">
-                <div class="hero-main-overlay">
-                    <span class="hero-main-category">Featured</span>
-                    <h1 class="hero-main-title">Finding Peace in Times of Uncertainty: A Journey of Faith</h1>
-                    <p class="hero-main-excerpt">Discover how believers around the world are finding strength and hope through their faith during challenging times.</p>
+        <!-- Hero Section - Rotating Top 3 Stories -->
+        <section class="hero-container" id="heroContainer">
+            <!-- Slides will be populated dynamically -->
+            <div class="hero-empty" id="heroEmpty">
+                <div class="hero-empty-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
                 </div>
-            </article>
-
-            <div class="hero-sidebar">
-                <article class="hero-sidebar-card">
-                    <img src="https://images.unsplash.com/photo-1529070538774-1843cb3265df?w=600&h=400&fit=crop" alt="Sidebar Article 1">
-                    <div class="hero-sidebar-overlay">
-                        <span class="hero-sidebar-category">Devotional</span>
-                        <h3 class="hero-sidebar-title">Morning Devotions: Starting Your Day with Purpose</h3>
-                    </div>
-                </article>
-
-                <article class="hero-sidebar-card">
-                    <img src="https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=600&h=400&fit=crop" alt="Sidebar Article 2">
-                    <div class="hero-sidebar-overlay">
-                        <span class="hero-sidebar-category">Community</span>
-                        <h3 class="hero-sidebar-title">Churches Unite for Community Outreach</h3>
-                    </div>
-                </article>
+                <h3 class="hero-empty-title">Today's Top Stories</h3>
+                <p class="hero-empty-text">
+                    Scan the latest headlines from major news sources, transformed with faith-inspired hope and positivity.
+                </p>
+                <button class="hero-scan-btn" id="heroScanBtn" onclick="scanForStories()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                        <path d="M11 8v6M8 11h6"/>
+                    </svg>
+                    Scan for Top Stories
+                </button>
             </div>
+
+            <!-- Loading State -->
+            <div class="hero-loading" id="heroLoading" style="display: none;">
+                <div class="hero-loading-spinner"></div>
+                <div class="hero-loading-text" id="heroLoadingText">Scanning news sources...</div>
+            </div>
+
+            <!-- Slides Container -->
+            <div id="heroSlides"></div>
+
+            <!-- Progress Indicators -->
+            <div class="hero-progress" id="heroProgress" style="display: none;"></div>
         </section>
 
         <!-- Latest Content Section -->
@@ -945,6 +1226,348 @@
     <script>
         // API Configuration
         const API_BASE = 'https://inspirecodex.com/api/v1';
+
+        // ============================================
+        // HERO ROTATION - TOP 3 STORIES
+        // ============================================
+
+        let heroStories = [];
+        let currentSlideIndex = 0;
+        let rotationTimer = null;
+        let isScanning = false;
+
+        // Timing constants (in milliseconds)
+        const DISPLAY_DURATION = 5000;  // 5 seconds display
+        const FADE_DURATION = 2000;     // 2 seconds fade (handled by CSS)
+        const ROTATION_INTERVAL = DISPLAY_DURATION + FADE_DURATION;  // Total 7 seconds per slide
+
+        // News sources to scan
+        const NEWS_SOURCES = [
+            { id: 'nytimes', name: 'NY Times', url: 'https://www.nytimes.com' },
+            { id: 'cnn', name: 'CNN', url: 'https://www.cnn.com' },
+            { id: 'foxnews', name: 'Fox News', url: 'https://www.foxnews.com' },
+            { id: 'yahoo', name: 'Yahoo', url: 'https://www.yahoo.com' },
+            { id: 'msn', name: 'MSN', url: 'https://www.msn.com' }
+        ];
+
+        // Story keyword clusters for matching
+        const STORY_CLUSTERS = {
+            'economy': ['economy', 'economic', 'gdp', 'inflation', 'recession', 'jobs', 'unemployment', 'fed', 'federal reserve', 'interest rate', 'market', 'stock', 'trade', 'tariff'],
+            'climate': ['climate', 'environment', 'global warming', 'carbon', 'emissions', 'renewable', 'green', 'wildfire', 'flood', 'hurricane'],
+            'politics': ['congress', 'senate', 'house', 'president', 'biden', 'trump', 'election', 'vote', 'bill', 'legislation', 'supreme court', 'democrat', 'republican'],
+            'technology': ['tech', 'technology', 'ai', 'artificial intelligence', 'layoff', 'startup', 'google', 'apple', 'microsoft', 'meta', 'openai'],
+            'world': ['global', 'international', 'summit', 'united nations', 'nato', 'war', 'conflict', 'ukraine', 'russia', 'china', 'middle east', 'israel', 'gaza'],
+            'health': ['health', 'covid', 'pandemic', 'vaccine', 'hospital', 'disease', 'outbreak', 'cdc', 'medical', 'drug'],
+            'crime': ['crime', 'shooting', 'murder', 'arrest', 'police', 'trial', 'verdict', 'investigation', 'fbi']
+        };
+
+        async function scanForStories() {
+            if (isScanning) return;
+
+            isScanning = true;
+            const scanBtn = document.getElementById('heroScanBtn');
+            scanBtn.disabled = true;
+
+            showHeroLoading('Scanning news sources...');
+
+            try {
+                const allStories = [];
+
+                // Fetch from all sources
+                for (const source of NEWS_SOURCES) {
+                    updateHeroLoading(`Scanning ${source.name}...`);
+
+                    try {
+                        const response = await fetch(`/api/scanner/rss/${source.id}`);
+                        const data = await response.json();
+
+                        if (data.success && data.articles && data.articles.length > 0) {
+                            const topArticle = data.articles[0];
+                            const story = {
+                                source: source.id,
+                                sourceName: source.name,
+                                originalTitle: topArticle.title,
+                                originalUrl: topArticle.link,
+                                originalExcerpt: topArticle.description || '',
+                                imageUrl: topArticle.imageUrl,
+                                position: topArticle.position || 1,
+                                hasImage: !!topArticle.imageUrl
+                            };
+
+                            story.score = calculateProminenceScore(story);
+                            story.storyCluster = identifyStoryCluster(story.originalTitle);
+                            allStories.push(story);
+                        }
+                    } catch (err) {
+                        console.warn(`Failed to fetch ${source.name}:`, err.message);
+                    }
+
+                    await delay(300);
+                }
+
+                // Sort by prominence and take top 3
+                allStories.sort((a, b) => b.score.normalized - a.score.normalized);
+                heroStories = allStories.slice(0, 3);
+
+                // Assign ranks and transform stories
+                updateHeroLoading('Transforming with hope...');
+
+                for (let i = 0; i < heroStories.length; i++) {
+                    const story = heroStories[i];
+                    story.rank = i + 1;
+
+                    // Download image
+                    if (story.imageUrl) {
+                        try {
+                            const imgResponse = await fetch('/api/scanner/download-image', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    imageUrl: story.imageUrl,
+                                    filename: `hero_${story.source}_${Date.now()}`
+                                })
+                            });
+                            const imgResult = await imgResponse.json();
+                            if (imgResult.success) {
+                                story.downloadedImage = imgResult.localPath;
+                            }
+                        } catch (err) {
+                            console.warn('Image download failed:', err.message);
+                        }
+                    }
+
+                    // Rewrite with hopeful perspective
+                    const rewritten = rewriteAsGoodNews(story);
+                    story.rewrittenTitle = rewritten.title;
+                    story.rewrittenContent = rewritten.content;
+                    story.rewrittenExcerpt = stripHtml(rewritten.content).substring(0, 200) + '...';
+                }
+
+                // Render the hero slides
+                if (heroStories.length > 0) {
+                    renderHeroSlides();
+                    startRotation();
+                } else {
+                    showHeroEmpty();
+                }
+
+            } catch (error) {
+                console.error('Scan error:', error);
+                showHeroEmpty();
+            } finally {
+                isScanning = false;
+                scanBtn.disabled = false;
+            }
+        }
+
+        function calculateProminenceScore(story) {
+            const scores = {
+                position: Math.max(0, 10 - (story.position - 1) * 2),
+                hasImage: story.hasImage ? 5 : 0,
+                titleLength: story.originalTitle.length > 50 ? 3 : (story.originalTitle.length > 30 ? 5 : 2),
+                sourceWeight: getSourceWeight(story.source),
+                recency: 5
+            };
+            const total = Object.values(scores).reduce((sum, val) => sum + val, 0);
+            return { ...scores, total, normalized: Math.round((total / 30) * 100) };
+        }
+
+        function getSourceWeight(sourceId) {
+            const weights = { 'nytimes': 5, 'cnn': 4, 'foxnews': 4, 'yahoo': 3, 'msn': 3 };
+            return weights[sourceId] || 3;
+        }
+
+        function identifyStoryCluster(title) {
+            const titleLower = title.toLowerCase();
+            let bestMatch = null;
+            let bestScore = 0;
+
+            for (const [cluster, keywords] of Object.entries(STORY_CLUSTERS)) {
+                let score = 0;
+                for (const keyword of keywords) {
+                    if (titleLower.includes(keyword)) {
+                        score += keyword.length;
+                    }
+                }
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMatch = cluster;
+                }
+            }
+            return bestMatch || 'general';
+        }
+
+        function rewriteAsGoodNews(story) {
+            const transformations = {
+                'economy': {
+                    title: 'Opportunities Emerge as Communities Adapt to Economic Changes',
+                    content: '<p>In times of economic change, communities demonstrate remarkable resilience. Faith provides a stable foundation that transcends financial uncertainty, reminding us of what truly matters.</p><p>Financial experts encourage a long-term perspective, noting that economies have historically shown remarkable resilience.</p>'
+                },
+                'climate': {
+                    title: 'Global Collaboration Brings Hope for Environmental Stewardship',
+                    content: '<p>Leaders worldwide are coming together with renewed commitment to caring for creation. As stewards of the earth, communities are finding innovative solutions for future generations.</p><p>Scientists and faith leaders are discovering common ground in protecting our shared home.</p>'
+                },
+                'politics': {
+                    title: 'Citizens Choose Unity: Finding Common Ground Across Divides',
+                    content: '<p>While headlines focus on disagreements, ordinary people are finding common ground in shared values and commitment to community. Faith communities play a vital role in bridge-building.</p><p>Across the nation, people are choosing to focus on what unites rather than divides.</p>'
+                },
+                'technology': {
+                    title: 'Communities Support Workers Through Career Transitions',
+                    content: '<p>When industries change, communities rally to support affected workers with job fairs, retraining programs, and networking opportunities. Churches and organizations offer practical help and spiritual encouragement.</p><p>Many share stories of discovering new passions through these transitions.</p>'
+                },
+                'world': {
+                    title: 'International Community Unites in Spirit of Cooperation',
+                    content: '<p>Nations are finding common ground on critical issues, demonstrating that cooperation can overcome challenges. Humanitarian organizations report countless acts of kindness occurring daily.</p><p>This spirit of collaboration offers hope for addressing global challenges together.</p>'
+                },
+                'health': {
+                    title: 'Medical Advances and Community Care Bring Hope to Many',
+                    content: '<p>Healthcare professionals continue making remarkable strides, bringing hope to patients and families. Communities are coming together to support wellness initiatives.</p><p>Stories of recovery and resilience remind us that healing takes many forms.</p>'
+                },
+                'crime': {
+                    title: 'Communities United: Finding Strength and Healing Together',
+                    content: '<p>In the face of tragedy, communities demonstrate remarkable resilience and compassion. Neighbors come together to support one another, showing that love is stronger than fear.</p><p>Faith communities open their doors to provide comfort and hope to those affected.</p>'
+                },
+                'general': {
+                    title: 'Finding Hope and Purpose in Today\'s Headlines',
+                    content: '<p>In every news cycle, there are stories of resilience, compassion, and human connection that remind us of the good in the world.</p><p>Today\'s events offer opportunities for reflection, growth, and renewed commitment to our values.</p>'
+                }
+            };
+
+            const cluster = story.storyCluster || 'general';
+            return transformations[cluster] || transformations['general'];
+        }
+
+        function renderHeroSlides() {
+            const slidesContainer = document.getElementById('heroSlides');
+            const progressContainer = document.getElementById('heroProgress');
+            const rankLabels = { 1: '1st', 2: '2nd', 3: '3rd' };
+
+            // Hide empty state and loading
+            document.getElementById('heroEmpty').style.display = 'none';
+            document.getElementById('heroLoading').style.display = 'none';
+
+            // Render slides
+            slidesContainer.innerHTML = heroStories.map((story, index) => {
+                const imageUrl = story.downloadedImage || story.imageUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&h=675&fit=crop';
+                const isActive = index === 0 ? 'active' : '';
+
+                return `
+                    <article class="hero-slide ${isActive}" data-index="${index}">
+                        <img src="${imageUrl}" alt="${story.rewrittenTitle}">
+                        <div class="hero-slide-overlay">
+                            <div>
+                                <span class="hero-slide-rank rank-${story.rank}">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                    </svg>
+                                    ${rankLabels[story.rank]} Most Prominent
+                                </span>
+                                <span class="hero-slide-source ${story.source}">${story.sourceName}</span>
+                            </div>
+                            <h1 class="hero-slide-title">${story.rewrittenTitle}</h1>
+                            <p class="hero-slide-excerpt">${story.rewrittenExcerpt}</p>
+                            <div class="hero-slide-meta">
+                                <div class="hero-slide-score">
+                                    <div class="hero-score-circle">${story.score.normalized}</div>
+                                    <div>
+                                        <div style="font-weight: 600; font-size: 14px;">Prominence</div>
+                                        <div class="hero-score-label">Score</div>
+                                    </div>
+                                </div>
+                                <a href="${story.originalUrl}" target="_blank" class="hero-read-more">
+                                    Read Full Story
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+
+            // Render progress dots
+            progressContainer.innerHTML = heroStories.map((_, index) => `
+                <div class="hero-progress-dot ${index === 0 ? 'active' : ''}" data-index="${index}" onclick="goToSlide(${index})"></div>
+            `).join('');
+
+            progressContainer.style.display = 'flex';
+        }
+
+        function startRotation() {
+            stopRotation();
+            currentSlideIndex = 0;
+
+            rotationTimer = setInterval(() => {
+                nextSlide();
+            }, ROTATION_INTERVAL);
+        }
+
+        function stopRotation() {
+            if (rotationTimer) {
+                clearInterval(rotationTimer);
+                rotationTimer = null;
+            }
+        }
+
+        function nextSlide() {
+            const nextIndex = (currentSlideIndex + 1) % heroStories.length;
+            goToSlide(nextIndex);
+        }
+
+        function goToSlide(index) {
+            if (index === currentSlideIndex) return;
+
+            const slides = document.querySelectorAll('.hero-slide');
+            const dots = document.querySelectorAll('.hero-progress-dot');
+
+            // Remove active from current
+            slides[currentSlideIndex]?.classList.remove('active');
+            dots[currentSlideIndex]?.classList.remove('active');
+
+            // Add active to new
+            currentSlideIndex = index;
+            slides[currentSlideIndex]?.classList.add('active');
+            dots[currentSlideIndex]?.classList.add('active');
+
+            // Reset rotation timer when manually changing
+            if (rotationTimer) {
+                stopRotation();
+                rotationTimer = setInterval(() => {
+                    nextSlide();
+                }, ROTATION_INTERVAL);
+            }
+        }
+
+        function showHeroLoading(text) {
+            document.getElementById('heroEmpty').style.display = 'none';
+            document.getElementById('heroLoading').style.display = 'flex';
+            document.getElementById('heroLoadingText').textContent = text;
+        }
+
+        function updateHeroLoading(text) {
+            document.getElementById('heroLoadingText').textContent = text;
+        }
+
+        function showHeroEmpty() {
+            document.getElementById('heroLoading').style.display = 'none';
+            document.getElementById('heroEmpty').style.display = 'flex';
+            document.getElementById('heroProgress').style.display = 'none';
+        }
+
+        function stripHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            return tmp.textContent || tmp.innerText || '';
+        }
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // ============================================
+        // ORIGINAL CONTENT
+        // ============================================
 
         // Sample data for demonstration (will be replaced with API calls)
         const sampleContent = [
