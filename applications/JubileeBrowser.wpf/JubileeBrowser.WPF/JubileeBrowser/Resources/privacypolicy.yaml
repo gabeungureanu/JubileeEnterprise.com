@@ -1,0 +1,168 @@
+title: Privacy Policy
+lastUpdated: January 16, 2026
+sections:
+  - heading: "1. Introduction"
+    content: |
+      Jubilee Software, Inc. ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use Jubilee Browser.
+
+      We believe in transparency and want you to understand exactly what data we collect and how we use it. Our commitment to privacy is especially important given our focus on providing a safe browsing environment for families and children.
+
+  - heading: "2. Information We Collect"
+    content: |
+      Account Information:
+      When you create a Jubilee account, we collect:
+      • Email address
+      • Display name
+      • Password (encrypted)
+      • Account preferences
+
+      Usage Data:
+      We may collect anonymous usage statistics to improve the browser:
+      • Features used
+      • Error reports (optional)
+      • Performance metrics
+
+      Sync Data (if enabled):
+      • Bookmarks
+      • Browsing preferences
+      • Settings configurations
+
+      We do NOT collect:
+      • Browsing history
+      • Search queries
+      • Personal files or documents
+      • Financial information
+
+  - heading: "3. How We Use Your Information"
+    content: |
+      We use the information we collect to:
+
+      • Provide and maintain the Jubilee Browser service
+      • Sync your data across devices (if you enable this feature)
+      • Improve our content filtering accuracy
+      • Send important service announcements
+      • Respond to your support requests
+      • Analyze usage patterns to improve the browser (anonymized data only)
+
+      We will never:
+      • Sell your personal information to third parties
+      • Use your data for targeted advertising
+      • Share your browsing activity with advertisers
+
+  - heading: "4. Data Storage and Security"
+    content: |
+      Your data security is our priority:
+
+      • All data transmission uses TLS 1.3 encryption
+      • Passwords are hashed using industry-standard algorithms
+      • Account data is stored on secure servers with restricted access
+      • We conduct regular security audits and updates
+
+      Local Data:
+      Jubilee Browser stores some data locally on your device:
+      • Browsing cache (cleared on exit if configured)
+      • Cookies for logged-in websites
+      • Downloaded files
+      • Browser settings
+
+      You can clear local data at any time through the browser settings.
+
+  - heading: "5. Content Filtering"
+    content: |
+      Our content filtering system:
+
+      • Operates locally on your device
+      • Does not send your browsing URLs to our servers
+      • Uses a locally-stored blocklist database
+      • May send anonymous reports when blocked content is encountered (optional)
+
+      Blocklist updates are downloaded periodically but do not include any information about your browsing activity.
+
+  - heading: "6. Children's Privacy"
+    content: |
+      Jubilee Browser is designed to be safe for users of all ages. We are committed to complying with the Children's Online Privacy Protection Act (COPPA) and similar regulations:
+
+      • We do not knowingly collect personal information from children under 13 without parental consent
+      • Parents or guardians can review, modify, or delete their child's information
+      • Our content filtering is designed to protect young users from inappropriate content
+
+      If you believe we have collected information from a child without proper consent, please contact us immediately.
+
+  - heading: "7. Third-Party Services"
+    content: |
+      Jubilee Browser may interact with third-party services:
+
+      JubileeVerse.com:
+      When using Jubilee Bible Mode, you access content from JubileeVerse.com, which has its own privacy practices.
+
+      WebView2 Runtime:
+      Jubilee Browser uses Microsoft Edge WebView2 for rendering. Microsoft's privacy policy applies to WebView2 telemetry (which can be disabled).
+
+      Websites You Visit:
+      When browsing the internet, the websites you visit may collect data according to their own privacy policies.
+
+  - heading: "8. Data Retention"
+    content: |
+      We retain your data as follows:
+
+      • Account data: Until you delete your account
+      • Sync data: Until you disable sync or delete your account
+      • Anonymous usage statistics: Up to 24 months
+      • Support correspondence: Up to 36 months
+
+      You can request deletion of your account and associated data at any time by contacting support@jubileebrowser.com.
+
+  - heading: "9. Your Rights"
+    content: |
+      Depending on your location, you may have the following rights:
+
+      • Access: Request a copy of your personal data
+      • Correction: Update or correct inaccurate data
+      • Deletion: Request deletion of your data
+      • Portability: Receive your data in a portable format
+      • Objection: Object to certain data processing
+      • Restriction: Request limited processing of your data
+
+      To exercise these rights, contact us at privacy@jubileebrowser.com.
+
+  - heading: "10. Cookies and Tracking"
+    content: |
+      Jubilee Browser handles cookies as follows:
+
+      First-Party Cookies:
+      We use essential cookies for authentication and preferences. These are stored locally and not shared.
+
+      Third-Party Cookies:
+      Websites you visit may set cookies. You can configure cookie handling in browser settings, including blocking third-party cookies entirely.
+
+      Do Not Track:
+      Jubilee Browser supports the Do Not Track (DNT) signal. When enabled, we send DNT headers to websites you visit.
+
+  - heading: "11. International Data Transfers"
+    content: |
+      If you use Jubilee Browser outside the United States, your data may be transferred to and processed in the United States. We ensure appropriate safeguards are in place for international transfers in compliance with applicable laws.
+
+  - heading: "12. Changes to This Policy"
+    content: |
+      We may update this Privacy Policy from time to time. We will notify you of significant changes by:
+
+      • Displaying a notice in the browser
+      • Sending an email to registered users
+      • Updating the "Last Updated" date
+
+      Your continued use of Jubilee Browser after changes indicates acceptance of the updated policy.
+
+  - heading: "13. Contact Us"
+    content: |
+      For privacy-related questions or concerns:
+
+      Jubilee Software, Inc.
+      Privacy Team
+      Email: privacy@jubileebrowser.com
+
+      For general support:
+      Email: support@jubileebrowser.com
+      Website: https://jubileebrowser.com/support
+
+      For legal inquiries:
+      Email: legal@jubileebrowser.com

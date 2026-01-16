@@ -496,6 +496,40 @@ public class ProfileAuthService : INotifyPropertyChanged
     public List<StoredProfile> GetStoredProfiles() => _profileRegistry.Profiles;
 
     /// <summary>
+    /// Update the current user's avatar URL
+    /// </summary>
+    public void UpdateAvatarUrl(string? avatarUrl)
+    {
+        if (CurrentProfile == null) return;
+
+        CurrentProfile.AvatarUrl = avatarUrl;
+
+        // Update in profile registry
+        var existing = _profileRegistry.Profiles.FirstOrDefault(p => p.UserId == CurrentProfile.UserId);
+        if (existing != null)
+        {
+            existing.AvatarUrl = avatarUrl;
+        }
+
+        SaveProfileRegistrySync();
+        ProfileChanged?.Invoke(this, CurrentProfile);
+    }
+
+    /// <summary>
+    /// Get the local profile pictures directory
+    /// </summary>
+    public static string GetProfilePicturesDirectory()
+    {
+        var appDataPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "JubileeBrowser",
+            "ProfilePictures"
+        );
+        Directory.CreateDirectory(appDataPath);
+        return appDataPath;
+    }
+
+    /// <summary>
     /// Remove a stored profile
     /// </summary>
     public async Task RemoveProfileAsync(string userId)

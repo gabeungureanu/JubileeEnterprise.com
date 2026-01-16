@@ -5,6 +5,48 @@ All notable changes to Jubilee Browser will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.0.10] - 2026-01-16
+
+### Added
+- **Custom Themed Modal Dialogs**: Replaced all system MessageBox dialogs with Jubilee-themed custom modals
+  - `SignInFailedDialog`: Custom modal for authentication failures with Demo Mode option
+  - `JubileeAlertDialog`: Reusable alert dialog with AlertType enum (Info, Warning, Error, Success)
+  - Consistent dark theme colors (#1c1c33 background, #E6AC00 gold accent)
+  - Smooth fade-in/fade-out animations on dialog open/close
+
+- **In-App Document Viewer**: Terms of Use and Privacy Policy now display within the app
+  - `DocumentViewerDialog`: Scrollable document viewer with YAML content loading
+  - `termsofuse.yaml`: Embedded resource with 12 sections of legal content
+  - `privacypolicy.yaml`: Embedded resource with 13 sections of privacy content
+  - Links in sign-up flow open documents in-app instead of external browser
+
+- **Profile Picture Upload**: Users can now upload or change their profile picture
+  - Clickable avatar in profile popup with camera icon overlay on hover
+  - File picker dialog supporting JPG, PNG, GIF, and BMP formats
+  - Local storage in `%LocalAppData%\JubileeBrowser\ProfilePictures`
+  - Persistent across browser sessions
+  - `UpdateAvatarUrl()` method in ProfileAuthService
+  - `GetProfilePicturesDirectory()` static method for profile picture storage
+
+### Changed
+- **Sign-Up Flow UI**: Removed back arrow icon from forgot-password screen
+- **Default Avatar Generation**: Color-coded default avatars based on user's display name
+- **Avatar Loading**: Supports both local file paths and remote URLs
+
+### Technical
+- Added `JubileeAlertDialog.xaml` and `JubileeAlertDialog.xaml.cs`
+- Added `SignInFailedDialog.xaml` and `SignInFailedDialog.xaml.cs`
+- Added `DocumentViewerDialog.xaml` and `DocumentViewerDialog.xaml.cs`
+- Added embedded resources: `termsofuse.yaml`, `privacypolicy.yaml`
+- Updated `JubileeBrowser.csproj` with embedded resource entries
+- Modified `MainWindow.xaml` with clickable avatar overlay UI
+- Modified `MainWindow.xaml.cs` with `ChangeAvatarButton_Click` and `SetDefaultAvatar` methods
+- Updated `ProfileAuthService.cs` with avatar management methods
+- Fixed DialogResult error in animation callbacks with try-catch wrapper
+
+### Fixed
+- DialogResult assignment error when closing dialogs during animation callbacks
+
 ## [8.0.9] - 2026-01-15
 
 ### Added
@@ -363,8 +405,8 @@ We follow [Semantic Versioning](https://semver.org/):
 
 ## Download
 
-Current version: **8.0.9**
+Current version: **8.0.10**
 
-Download: [https://jubileebrowser.com/downloads/JubileeBrowser-8.0.9-win-x64.zip](https://jubileebrowser.com/downloads/JubileeBrowser-8.0.9-win-x64.zip)
+Download: [https://jubileebrowser.com/downloads/JubileeBrowser-8.0.10-win-x64.zip](https://jubileebrowser.com/downloads/JubileeBrowser-8.0.10-win-x64.zip)
 
 Auto-update manifest: [https://jubileebrowser.com/downloads/stable/releases.json](https://jubileebrowser.com/downloads/stable/releases.json)

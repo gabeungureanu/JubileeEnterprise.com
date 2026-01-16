@@ -37,6 +37,8 @@
     <Resource Include="Resources\Fonts\*.ttf" Condition="Exists('Resources\Fonts')" />
     <Content Include="Resources\Html\**\*.*" CopyToOutputDirectory="PreserveNewest" Condition="Exists('Resources\Html')" />
     <Content Include="..\..\blacklist.yaml" CopyToOutputDirectory="PreserveNewest" Link="blacklist.yaml" Condition="Exists('..\..\blacklist.yaml')" />
+    <EmbeddedResource Include="Resources\termsofuse.yaml" />
+    <EmbeddedResource Include="Resources\privacypolicy.yaml" />
   </ItemGroup>
 
 </Project>

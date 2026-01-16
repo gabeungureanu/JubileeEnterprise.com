@@ -2921,11 +2921,42 @@
                     <StackPanel x:Name="ProfileSignedInPanel" Visibility="Collapsed">
                         <!-- Profile Header -->
                         <StackPanel Orientation="Horizontal" Margin="16,14,16,4">
-                            <Ellipse x:Name="ProfilePopupAvatar" Width="48" Height="48" Margin="0,0,14,0">
-                                <Ellipse.Fill>
-                                    <ImageBrush x:Name="ProfilePopupAvatarImage" Stretch="UniformToFill"/>
-                                </Ellipse.Fill>
-                            </Ellipse>
+                            <!-- Clickable Avatar with Camera Overlay -->
+                            <Grid Width="48" Height="48" Margin="0,0,14,0">
+                                <Ellipse x:Name="ProfilePopupAvatar">
+                                    <Ellipse.Fill>
+                                        <ImageBrush x:Name="ProfilePopupAvatarImage" Stretch="UniformToFill"/>
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                                <Button x:Name="ChangeAvatarButton"
+                                        Click="ChangeAvatarButton_Click"
+                                        ToolTip="Change profile picture"
+                                        Cursor="Hand">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid>
+                                                <!-- Hover overlay -->
+                                                <Ellipse x:Name="HoverOverlay" Fill="#80000000" Opacity="0"/>
+                                                <!-- Camera icon -->
+                                                <TextBlock x:Name="CameraIcon"
+                                                           Text="&#xE722;"
+                                                           FontFamily="Segoe MDL2 Assets"
+                                                           FontSize="16"
+                                                           Foreground="White"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"
+                                                           Opacity="0"/>
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="HoverOverlay" Property="Opacity" Value="1"/>
+                                                    <Setter TargetName="CameraIcon" Property="Opacity" Value="1"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </Grid>
                             <StackPanel VerticalAlignment="Center" MaxWidth="200">
                                 <TextBlock x:Name="ProfilePopupName" Text="User Name" FontSize="16" FontWeight="SemiBold" Foreground="White"/>
                                 <TextBlock x:Name="ProfilePopupEmail" Text="user@example.com" FontSize="12" Foreground="White" Margin="0,1,0,0"/>

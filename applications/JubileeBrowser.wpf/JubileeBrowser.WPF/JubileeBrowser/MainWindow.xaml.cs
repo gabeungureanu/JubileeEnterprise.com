@@ -4852,18 +4852,36 @@ public partial class MainWindow : Window
             {
                 try
                 {
-                    ProfileAvatarImage.ImageSource = new System.Windows.Media.Imaging.BitmapImage(new Uri(profile.AvatarUrl));
-                    ProfilePopupAvatarImage.ImageSource = ProfileAvatarImage.ImageSource;
+                    System.Windows.Media.Imaging.BitmapImage bitmap;
+
+                    // Check if it's a local file path or a URL
+                    if (System.IO.File.Exists(profile.AvatarUrl))
+                    {
+                        // Local file - use file URI
+                        bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.UriSource = new Uri(profile.AvatarUrl);
+                        bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                        bitmap.EndInit();
+                    }
+                    else
+                    {
+                        // Remote URL
+                        bitmap = new System.Windows.Media.Imaging.BitmapImage(new Uri(profile.AvatarUrl));
+                    }
+
+                    ProfileAvatarImage.ImageSource = bitmap;
+                    ProfilePopupAvatarImage.ImageSource = bitmap;
                 }
                 catch
                 {
                     // Use default if avatar URL fails
-                    ProfileUserAvatar.Fill = new SolidColorBrush(Color.FromRgb(0, 120, 212));
+                    SetDefaultAvatar();
                 }
             }
             else
             {
-                ProfileUserAvatar.Fill = new SolidColorBrush(Color.FromRgb(0, 120, 212));
+                SetDefaultAvatar();
             }
 
             // Update popup
@@ -4891,6 +4909,32 @@ public partial class MainWindow : Window
 
             ProfileButton.ToolTip = "Sign in to sync your data";
         }
+    }
+
+    private void SetDefaultAvatar()
+    {
+        // Create a default avatar with the user's initials background
+        var profile = _profileAuthService.CurrentProfile;
+        var defaultColor = Color.FromRgb(0, 120, 212); // Blue
+
+        if (profile != null && !string.IsNullOrEmpty(profile.DisplayName))
+        {
+            // Generate color based on display name
+            var hash = profile.DisplayName.GetHashCode();
+            var colors = new[]
+            {
+                Color.FromRgb(0, 120, 212),   // Blue
+                Color.FromRgb(107, 142, 35),  // Olive
+                Color.FromRgb(220, 20, 60),   // Crimson
+                Color.FromRgb(255, 140, 0),   // Orange
+                Color.FromRgb(138, 43, 226),  // Purple
+                Color.FromRgb(0, 139, 139),   // Teal
+            };
+            defaultColor = colors[Math.Abs(hash) % colors.Length];
+        }
+
+        ProfileUserAvatar.Fill = new SolidColorBrush(defaultColor);
+        ProfilePopupAvatarImage.ImageSource = null;
     }
 
     private void UpdateSyncStatusUI(SyncStatus status)
@@ -5502,11 +5546,11 @@ public partial class MainWindow : Window
         var termsTextBlock = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 0, 0), TextWrapping = TextWrapping.Wrap };
         termsTextBlock.Inlines.Add(new System.Windows.Documents.Run("Yes, I agree to the ") { Foreground = new SolidColorBrush(Color.FromRgb(180, 180, 180)), FontSize = 13 });
         var termsOfUseLink = new System.Windows.Documents.Hyperlink(new System.Windows.Documents.Run("Terms of Use")) { Foreground = new SolidColorBrush(goldColor), TextDecorations = null };
-        termsOfUseLink.Click += (s, args) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "https://jubileeverse.com/terms", UseShellExecute = true }); } catch { } };
+        termsOfUseLink.Click += (s, args) => { DocumentViewerDialog.ShowTermsOfUse(this); };
         termsTextBlock.Inlines.Add(termsOfUseLink);
         termsTextBlock.Inlines.Add(new System.Windows.Documents.Run(" and ") { Foreground = new SolidColorBrush(Color.FromRgb(180, 180, 180)), FontSize = 13 });
         var privacyPolicyLink = new System.Windows.Documents.Hyperlink(new System.Windows.Documents.Run("Privacy Policy")) { Foreground = new SolidColorBrush(goldColor), TextDecorations = null };
-        privacyPolicyLink.Click += (s, args) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "https://jubileeverse.com/privacy", UseShellExecute = true }); } catch { } };
+        privacyPolicyLink.Click += (s, args) => { DocumentViewerDialog.ShowPrivacyPolicy(this); };
         termsTextBlock.Inlines.Add(privacyPolicyLink);
         termsPanel.Children.Add(termsTextBlock);
         createStep2Panel.Children.Add(termsPanel);
@@ -5528,8 +5572,7 @@ public partial class MainWindow : Window
         var (forgotEmailBorder, forgotEmailBox) = CreateTextInput("Email Address", 8);
         forgotStep1Panel.Children.Add(forgotEmailBorder);
 
-        // "← Back to Sign In" link - right aligned, under the textbox
-        var forgotBackLinkColor = new SolidColorBrush(Color.FromRgb(180, 180, 180));
+        // "Back to Sign In" link - right aligned, under the textbox
         var forgotBackLinkHoverColor = new SolidColorBrush(goldColor);
         var forgotBackTextBlock = new TextBlock
         {
@@ -5537,7 +5580,6 @@ public partial class MainWindow : Window
             Margin = new Thickness(0, 0, 0, 0),
             FontSize = 13
         };
-        forgotBackTextBlock.Inlines.Add(new System.Windows.Documents.Run("← ") { Foreground = forgotBackLinkColor });
         var forgotBackLinkRun = new System.Windows.Documents.Run("Back to Sign In") { Foreground = forgotBackLinkHoverColor };
         var forgotBackLink = new System.Windows.Documents.Hyperlink(forgotBackLinkRun)
         {
@@ -5651,7 +5693,7 @@ public partial class MainWindow : Window
         var termsLink = new TextBlock { Text = "Terms of Use", Foreground = footerLinkColor, FontSize = 11, Cursor = Cursors.Hand };
         termsLink.MouseEnter += (s, args) => { termsLink.Foreground = footerLinkHoverColor; termsLink.TextDecorations = TextDecorations.Underline; };
         termsLink.MouseLeave += (s, args) => { termsLink.Foreground = footerLinkColor; termsLink.TextDecorations = null; };
-        termsLink.MouseLeftButtonUp += (s, args) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "https://jubileeverse.com/terms", UseShellExecute = true }); } catch { } };
+        termsLink.MouseLeftButtonUp += (s, args) => { DocumentViewerDialog.ShowTermsOfUse(this); };
         copyrightPanel.Children.Add(termsLink);
 
         copyrightPanel.Children.Add(new TextBlock { Text = " | ", Foreground = footerTextColor, FontSize = 11 });
@@ -5659,7 +5701,7 @@ public partial class MainWindow : Window
         var privacyLink = new TextBlock { Text = "Privacy Policy", Foreground = footerLinkColor, FontSize = 11, Cursor = Cursors.Hand };
         privacyLink.MouseEnter += (s, args) => { privacyLink.Foreground = footerLinkHoverColor; privacyLink.TextDecorations = TextDecorations.Underline; };
         privacyLink.MouseLeave += (s, args) => { privacyLink.Foreground = footerLinkColor; privacyLink.TextDecorations = null; };
-        privacyLink.MouseLeftButtonUp += (s, args) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "https://jubileeverse.com/privacy", UseShellExecute = true }); } catch { } };
+        privacyLink.MouseLeftButtonUp += (s, args) => { DocumentViewerDialog.ShowPrivacyPolicy(this); };
         copyrightPanel.Children.Add(privacyLink);
         footerPanel.Children.Add(copyrightPanel);
 
@@ -5805,19 +5847,15 @@ public partial class MainWindow : Window
 
                             if (errorMsg != null)
                             {
-                                // Offer demo mode when connection fails
-                                var result = MessageBox.Show(
-                                    $"Could not connect to the authentication server.\n\nError: {errorMsg}\n\nWould you like to continue in Demo Mode?\n\n(Demo mode allows you to explore all features without requiring a server connection)",
-                                    "Connection Error",
-                                    MessageBoxButton.YesNo,
-                                    MessageBoxImage.Question);
+                                // Offer demo mode when connection fails using custom themed dialog
+                                var continueInDemo = SignInFailedDialog.Show(this, $"Could not connect to the authentication server.\n\nError: {errorMsg}");
 
-                                if (result == MessageBoxResult.Yes)
+                                if (continueInDemo)
                                 {
                                     var demoName = signInEmail.Split('@')[0];
                                     _profileAuthService.SignInDemoMode(demoName, signInEmail);
                                     authDialog.Close();
-                                    MessageBox.Show($"Welcome to Jubilee Demo Mode, {demoName}!\n\nYou can now explore all features. Note: Data will not be saved to a server.", "Demo Mode Active", MessageBoxButton.OK, MessageBoxImage.Information);
+                                    ShowDemoModeWelcomeDialog(demoName);
                                 }
                                 return;
                             }
@@ -5902,19 +5940,15 @@ public partial class MainWindow : Window
                                 }
                                 catch { }
 
-                                // Offer demo mode when server sign-in fails
-                                var result = MessageBox.Show(
-                                    $"{errorMessage}\n\nWould you like to continue in Demo Mode instead?\n\n(Demo mode allows you to explore all features without requiring server authentication)",
-                                    "Sign In Failed",
-                                    MessageBoxButton.YesNo,
-                                    MessageBoxImage.Question);
+                                // Offer demo mode when server sign-in fails using custom themed dialog
+                                var continueInDemo = SignInFailedDialog.Show(this, errorMessage);
 
-                                if (result == MessageBoxResult.Yes)
+                                if (continueInDemo)
                                 {
                                     var demoName = signInEmail.Split('@')[0];
                                     _profileAuthService.SignInDemoMode(demoName, signInEmail);
                                     authDialog.Close();
-                                    MessageBox.Show($"Welcome to Jubilee Demo Mode, {demoName}!\n\nYou can now explore all features. Note: Data will not be saved to a server.", "Demo Mode Active", MessageBoxButton.OK, MessageBoxImage.Information);
+                                    ShowDemoModeWelcomeDialog(demoName);
                                 }
                             }
                         });
@@ -5924,18 +5958,18 @@ public partial class MainWindow : Window
                 case "createStep1":
                     if (string.IsNullOrWhiteSpace(fullNameBox.Text))
                     {
-                        MessageBox.Show("Please enter your full name.", "Create Account", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        JubileeAlertDialog.ShowWarning(this, "Create Account", "Please enter your full name.");
                         return;
                     }
                     if (string.IsNullOrWhiteSpace(createEmailBox.Text))
                     {
-                        MessageBox.Show("Please enter your email address.", "Create Account", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        JubileeAlertDialog.ShowWarning(this, "Create Account", "Please enter your email address.");
                         return;
                     }
                     // Basic email validation
                     if (!createEmailBox.Text.Contains("@") || !createEmailBox.Text.Contains("."))
                     {
-                        MessageBox.Show("Please enter a valid email address.", "Create Account", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        JubileeAlertDialog.ShowWarning(this, "Create Account", "Please enter a valid email address.");
                         return;
                     }
                     ShowPanel("createStep2");
@@ -5944,22 +5978,22 @@ public partial class MainWindow : Window
                 case "createStep2":
                     if (string.IsNullOrWhiteSpace(createPasswordBox.Password))
                     {
-                        MessageBox.Show("Please enter a password.", "Create Account", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        JubileeAlertDialog.ShowWarning(this, "Create Account", "Please enter a password.");
                         return;
                     }
                     if (createPasswordBox.Password.Length < 8)
                     {
-                        MessageBox.Show("Password must be at least 8 characters long.", "Create Account", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        JubileeAlertDialog.ShowWarning(this, "Create Account", "Password must be at least 8 characters long.");
                         return;
                     }
                     if (createPasswordBox.Password != confirmPasswordBox.Password)
                     {
-                        MessageBox.Show("Passwords do not match.", "Create Account", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        JubileeAlertDialog.ShowWarning(this, "Create Account", "Passwords do not match.");
                         return;
                     }
                     if (termsCheckbox.IsChecked != true)
                     {
-                        MessageBox.Show("You must agree to the Terms of Use and Privacy Policy to create an account.", "Create Account", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        JubileeAlertDialog.ShowWarning(this, "Create Account", "You must agree to the Terms of Use and Privacy Policy to create an account.");
                         return;
                     }
                     // Perform account creation via API
@@ -6029,19 +6063,15 @@ public partial class MainWindow : Window
 
                             if (errorMsg != null)
                             {
-                                // Offer demo mode when API is unavailable
-                                var result = MessageBox.Show(
-                                    $"Could not connect to the authentication server.\n\nWould you like to continue in Demo Mode?\n\n(Demo mode allows you to test features without requiring a server connection)",
-                                    "Connection Error",
-                                    MessageBoxButton.YesNo,
-                                    MessageBoxImage.Question);
+                                // Offer demo mode when API is unavailable using custom themed dialog
+                                var continueInDemo = SignInFailedDialog.Show(this, "Could not connect to the authentication server.");
 
-                                if (result == MessageBoxResult.Yes)
+                                if (continueInDemo)
                                 {
                                     // Create a demo profile locally
                                     _profileAuthService.SignInDemoMode(createFullName, createEmail);
                                     authDialog.Close();
-                                    MessageBox.Show($"Welcome to Jubilee Demo Mode, {createFullName}!\n\nYou can now explore all features. Note: Data will not be saved to a server.", "Demo Mode Active", MessageBoxButton.OK, MessageBoxImage.Information);
+                                    ShowDemoModeWelcomeDialog(createFullName);
                                 }
                                 return;
                             }
@@ -6102,18 +6132,14 @@ public partial class MainWindow : Window
                                 }
                                 catch { }
 
-                                // Offer demo mode when server registration fails
-                                var result = MessageBox.Show(
-                                    $"{errorMessage}\n\nWould you like to continue in Demo Mode instead?\n\n(Demo mode allows you to explore all features without requiring server registration)",
-                                    "Registration Failed",
-                                    MessageBoxButton.YesNo,
-                                    MessageBoxImage.Question);
+                                // Offer demo mode when server registration fails using custom themed dialog
+                                var continueInDemo = SignInFailedDialog.Show(this, errorMessage);
 
-                                if (result == MessageBoxResult.Yes)
+                                if (continueInDemo)
                                 {
                                     _profileAuthService.SignInDemoMode(createFullName, createEmail);
                                     authDialog.Close();
-                                    MessageBox.Show($"Welcome to Jubilee Demo Mode, {createFullName}!\n\nYou can now explore all features. Note: Data will not be saved to a server.", "Demo Mode Active", MessageBoxButton.OK, MessageBoxImage.Information);
+                                    ShowDemoModeWelcomeDialog(createFullName);
                                 }
                             }
                         });
@@ -6123,7 +6149,7 @@ public partial class MainWindow : Window
                 case "forgotStep1":
                     if (string.IsNullOrWhiteSpace(forgotEmailBox.Text))
                     {
-                        MessageBox.Show("Please enter your email address.", "Forgot Password", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        JubileeAlertDialog.ShowWarning(this, "Forgot Password", "Please enter your email address.");
                         return;
                     }
                     ShowPanel("forgotStep2");
@@ -6134,7 +6160,7 @@ public partial class MainWindow : Window
                     var code = string.Join("", codeBoxes.Select(cb => cb.Text));
                     if (code.Length != 6)
                     {
-                        MessageBox.Show("Please enter the complete 6-digit verification code.", "Forgot Password", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        JubileeAlertDialog.ShowWarning(this, "Forgot Password", "Please enter the complete 6-digit verification code.");
                         return;
                     }
                     ShowPanel("forgotStep3");
@@ -6143,17 +6169,17 @@ public partial class MainWindow : Window
                 case "forgotStep3":
                     if (string.IsNullOrWhiteSpace(newPasswordBox.Password))
                     {
-                        MessageBox.Show("Please enter a new password.", "Reset Password", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        JubileeAlertDialog.ShowWarning(this, "Reset Password", "Please enter a new password.");
                         return;
                     }
                     if (newPasswordBox.Password != confirmNewPasswordBox.Password)
                     {
-                        MessageBox.Show("Passwords do not match.", "Reset Password", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        JubileeAlertDialog.ShowWarning(this, "Reset Password", "Passwords do not match.");
                         return;
                     }
                     // Password reset would require email infrastructure
                     authDialog.Close();
-                    MessageBox.Show("Your password has been reset successfully.\n\nYou can now sign in with your new password.", "Password Reset", MessageBoxButton.OK, MessageBoxImage.Information);
+                    JubileeAlertDialog.ShowSuccess(this, "Password Reset", "Your password has been reset successfully.\n\nYou can now sign in with your new password.");
                     break;
             }
         };
@@ -6438,12 +6464,12 @@ public partial class MainWindow : Window
 
         var termsTextBlock = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0), TextWrapping = TextWrapping.Wrap };
         termsTextBlock.Inlines.Add(new System.Windows.Documents.Run("Yes, I agree to the ") { Foreground = new SolidColorBrush(Color.FromRgb(180, 180, 180)), FontSize = 12 });
-        var termsLink = new System.Windows.Documents.Hyperlink(new System.Windows.Documents.Run("Terms of Use")) { Foreground = new SolidColorBrush(goldColor) };
-        termsLink.Click += (s, args) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "https://jubileeverse.com/terms", UseShellExecute = true }); } catch { } };
-        termsTextBlock.Inlines.Add(termsLink);
+        var termsLink2 = new System.Windows.Documents.Hyperlink(new System.Windows.Documents.Run("Terms of Use")) { Foreground = new SolidColorBrush(goldColor) };
+        termsLink2.Click += (s, args) => { DocumentViewerDialog.ShowTermsOfUse(this); };
+        termsTextBlock.Inlines.Add(termsLink2);
         termsTextBlock.Inlines.Add(new System.Windows.Documents.Run(" and ") { Foreground = new SolidColorBrush(Color.FromRgb(180, 180, 180)), FontSize = 12 });
         var privacyLinkInline = new System.Windows.Documents.Hyperlink(new System.Windows.Documents.Run("Privacy Policy")) { Foreground = new SolidColorBrush(goldColor) };
-        privacyLinkInline.Click += (s, args) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "https://jubileeverse.com/privacy", UseShellExecute = true }); } catch { } };
+        privacyLinkInline.Click += (s, args) => { DocumentViewerDialog.ShowPrivacyPolicy(this); };
         termsTextBlock.Inlines.Add(privacyLinkInline);
         termsPanel.Children.Add(termsTextBlock);
         mainPanel.Children.Add(termsPanel);
@@ -6483,32 +6509,31 @@ public partial class MainWindow : Window
 
             if (string.IsNullOrWhiteSpace(fullName))
             {
-                MessageBox.Show("Please enter your full name.", "Create Account", MessageBoxButton.OK, MessageBoxImage.Warning);
+                JubileeAlertDialog.ShowWarning(this, "Create Account", "Please enter your full name.");
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(email) || !email.Contains("@"))
             {
-                MessageBox.Show("Please enter a valid email address.", "Create Account", MessageBoxButton.OK, MessageBoxImage.Warning);
+                JubileeAlertDialog.ShowWarning(this, "Create Account", "Please enter a valid email address.");
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
             {
-                MessageBox.Show("Password must be at least 8 characters long.", "Create Account", MessageBoxButton.OK, MessageBoxImage.Warning);
+                JubileeAlertDialog.ShowWarning(this, "Create Account", "Password must be at least 8 characters long.");
                 return;
             }
 
             if (termsCheck.IsChecked != true)
             {
-                MessageBox.Show("Please agree to the Terms of Use and Privacy Policy.", "Create Account", MessageBoxButton.OK, MessageBoxImage.Warning);
+                JubileeAlertDialog.ShowWarning(this, "Create Account", "Please agree to the Terms of Use and Privacy Policy.");
                 return;
             }
 
             // TODO: Implement actual account creation with Jubilee Inspire API
             createAccountDialog.Close();
-            MessageBox.Show("Account creation with Jubilee Inspire is coming soon!\n\nYour information has been saved for when this feature becomes available.",
-                "Create Account", MessageBoxButton.OK, MessageBoxImage.Information);
+            JubileeAlertDialog.ShowInfo(this, "Create Account", "Account creation with Jubilee Inspire is coming soon!\n\nYour information has been saved for when this feature becomes available.");
         };
         mainPanel.Children.Add(createAccountButton);
 
@@ -6517,11 +6542,11 @@ public partial class MainWindow : Window
         footerPanel.Children.Add(new TextBlock { Text = "© 2026 Jubilee Browser", Foreground = new SolidColorBrush(Color.FromRgb(120, 120, 120)), FontSize = 11 });
         footerPanel.Children.Add(new TextBlock { Text = " | ", Foreground = new SolidColorBrush(Color.FromRgb(120, 120, 120)), FontSize = 11 });
         var termsFooterLink = new TextBlock { Text = "Terms of Use", Foreground = new SolidColorBrush(Color.FromRgb(100, 180, 200)), FontSize = 11, Cursor = Cursors.Hand };
-        termsFooterLink.MouseLeftButtonUp += (s, args) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "https://jubileeverse.com/terms", UseShellExecute = true }); } catch { } };
+        termsFooterLink.MouseLeftButtonUp += (s, args) => { DocumentViewerDialog.ShowTermsOfUse(this); };
         footerPanel.Children.Add(termsFooterLink);
         footerPanel.Children.Add(new TextBlock { Text = " | ", Foreground = new SolidColorBrush(Color.FromRgb(120, 120, 120)), FontSize = 11 });
         var privacyFooterLink = new TextBlock { Text = "Privacy Policy", Foreground = new SolidColorBrush(Color.FromRgb(100, 180, 200)), FontSize = 11, Cursor = Cursors.Hand };
-        privacyFooterLink.MouseLeftButtonUp += (s, args) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = "https://jubileeverse.com/privacy", UseShellExecute = true }); } catch { } };
+        privacyFooterLink.MouseLeftButtonUp += (s, args) => { DocumentViewerDialog.ShowPrivacyPolicy(this); };
         footerPanel.Children.Add(privacyFooterLink);
         mainPanel.Children.Add(footerPanel);
 
@@ -6549,6 +6574,57 @@ public partial class MainWindow : Window
     {
         ProfilePopup.IsOpen = false;
         NavigateTo("jubilee://settings/profile");
+    }
+
+    private void ChangeAvatarButton_Click(object sender, RoutedEventArgs e)
+    {
+        var openFileDialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Select Profile Picture",
+            Filter = "Image files (*.jpg, *.jpeg, *.png, *.gif, *.bmp)|*.jpg;*.jpeg;*.png;*.gif;*.bmp|All files (*.*)|*.*",
+            FilterIndex = 1
+        };
+
+        if (openFileDialog.ShowDialog() == true)
+        {
+            try
+            {
+                var sourcePath = openFileDialog.FileName;
+                var profilePicturesDir = Services.ProfileAuthService.GetProfilePicturesDirectory();
+                var userId = _profileAuthService.CurrentProfile?.UserId ?? "default";
+                var extension = System.IO.Path.GetExtension(sourcePath);
+                var destFileName = $"{userId}_avatar{extension}";
+                var destPath = System.IO.Path.Combine(profilePicturesDir, destFileName);
+
+                // Copy the file to our profile pictures directory
+                System.IO.File.Copy(sourcePath, destPath, overwrite: true);
+
+                // Create a file URI for the local image
+                var fileUri = new Uri(destPath);
+
+                // Update the avatar image
+                var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = fileUri;
+                bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+
+                ProfileAvatarImage.ImageSource = bitmap;
+                ProfilePopupAvatarImage.ImageSource = bitmap;
+
+                // Update profile with new avatar URL
+                _profileAuthService.UpdateAvatarUrl(destPath);
+
+                // Also update the nav bar avatar
+                ProfileDefaultAvatar.Visibility = Visibility.Collapsed;
+                ProfileDefaultIcon.Visibility = Visibility.Collapsed;
+                ProfileUserAvatar.Visibility = Visibility.Visible;
+            }
+            catch (Exception ex)
+            {
+                JubileeAlertDialog.ShowError(this, "Error", $"Failed to update profile picture: {ex.Message}");
+            }
+        }
     }
 
     private async void ProfileRetrySync_Click(object sender, RoutedEventArgs e)
@@ -6996,6 +7072,179 @@ public partial class MainWindow : Window
         panel.Children.Add(buttonPanel);
 
         dialog.Content = panel;
+        dialog.ShowDialog();
+    }
+
+    /// <summary>
+    /// Shows a themed welcome dialog after entering Demo Mode.
+    /// </summary>
+    private void ShowDemoModeWelcomeDialog(string userName)
+    {
+        var dialog = new Window
+        {
+            Title = "Demo Mode Active",
+            Width = 420,
+            Height = 240,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = this,
+            WindowStyle = WindowStyle.None,
+            AllowsTransparency = true,
+            Background = System.Windows.Media.Brushes.Transparent,
+            ResizeMode = ResizeMode.NoResize,
+            ShowInTaskbar = false
+        };
+
+        var mainBorder = new Border
+        {
+            Background = new SolidColorBrush(Color.FromRgb(28, 28, 51)),
+            CornerRadius = new CornerRadius(12),
+            BorderBrush = new SolidColorBrush(Color.FromRgb(44, 44, 74)),
+            BorderThickness = new Thickness(1),
+            Effect = new System.Windows.Media.Effects.DropShadowEffect
+            {
+                BlurRadius = 32,
+                ShadowDepth = 0,
+                Color = Colors.Black,
+                Opacity = 0.55
+            }
+        };
+
+        var grid = new Grid();
+        grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(48) });
+        grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+        // Title bar
+        var titleBar = new Border
+        {
+            Background = new SolidColorBrush(Color.FromRgb(32, 32, 58)),
+            CornerRadius = new CornerRadius(12, 12, 0, 0),
+            BorderBrush = new SolidColorBrush(Color.FromRgb(44, 44, 74)),
+            BorderThickness = new Thickness(0, 0, 0, 1)
+        };
+        titleBar.MouseLeftButtonDown += (s, e) => { if (e.ClickCount == 1) dialog.DragMove(); };
+
+        var titleGrid = new Grid();
+        var titleText = new TextBlock
+        {
+            Text = "Demo Mode Active",
+            Foreground = new SolidColorBrush(Color.FromRgb(230, 230, 242)),
+            FontWeight = FontWeights.SemiBold,
+            FontSize = 14,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(20, 0, 0, 0)
+        };
+        titleGrid.Children.Add(titleText);
+        titleBar.Child = titleGrid;
+        Grid.SetRow(titleBar, 0);
+        grid.Children.Add(titleBar);
+
+        // Content
+        var contentGrid = new Grid { Margin = new Thickness(24, 20, 24, 16) };
+        contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+        // Success icon
+        var iconBorder = new Border
+        {
+            Width = 48,
+            Height = 48,
+            Background = new SolidColorBrush(Color.FromRgb(42, 42, 67)),
+            CornerRadius = new CornerRadius(24),
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, 0, 16, 0)
+        };
+        var iconText = new TextBlock
+        {
+            Text = "\uE73E", // Checkmark icon
+            FontFamily = new System.Windows.Media.FontFamily("Segoe MDL2 Assets"),
+            FontSize = 22,
+            Foreground = new SolidColorBrush(Color.FromRgb(67, 209, 122)),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        iconBorder.Child = iconText;
+        Grid.SetColumn(iconBorder, 0);
+        contentGrid.Children.Add(iconBorder);
+
+        // Message
+        var messagePanel = new StackPanel { VerticalAlignment = VerticalAlignment.Top };
+        messagePanel.Children.Add(new TextBlock
+        {
+            Text = $"Welcome to Jubilee Demo Mode, {userName}!",
+            Foreground = new SolidColorBrush(Color.FromRgb(242, 242, 247)),
+            FontSize = 15,
+            FontWeight = FontWeights.SemiBold,
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, 0, 0, 12)
+        });
+        messagePanel.Children.Add(new TextBlock
+        {
+            Text = "You can now explore all features. Note: Data will not be saved to a server.",
+            Foreground = new SolidColorBrush(Color.FromRgb(192, 192, 208)),
+            FontSize = 13,
+            TextWrapping = TextWrapping.Wrap,
+            LineHeight = 20
+        });
+        Grid.SetColumn(messagePanel, 1);
+        contentGrid.Children.Add(messagePanel);
+
+        Grid.SetRow(contentGrid, 1);
+        grid.Children.Add(contentGrid);
+
+        // Button area
+        var buttonArea = new Border
+        {
+            Background = new SolidColorBrush(Color.FromRgb(26, 26, 46)),
+            CornerRadius = new CornerRadius(0, 0, 12, 12),
+            Padding = new Thickness(24, 16, 24, 16)
+        };
+        var buttonPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+        var okButton = new Button
+        {
+            Content = "Get Started",
+            MinWidth = 120,
+            Height = 36,
+            Background = new SolidColorBrush(Color.FromRgb(230, 172, 0)),
+            Foreground = new SolidColorBrush(Color.FromRgb(28, 28, 51)),
+            FontWeight = FontWeights.SemiBold,
+            FontSize = 13,
+            Cursor = Cursors.Hand,
+            BorderThickness = new Thickness(0)
+        };
+        okButton.Click += (s, e) => dialog.Close();
+
+        // Apply button template for rounded corners
+        var buttonTemplate = new ControlTemplate(typeof(Button));
+        var borderFactory = new FrameworkElementFactory(typeof(Border));
+        borderFactory.SetBinding(Border.BackgroundProperty, new System.Windows.Data.Binding("Background") { RelativeSource = new System.Windows.Data.RelativeSource(System.Windows.Data.RelativeSourceMode.TemplatedParent) });
+        borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(6));
+        borderFactory.SetValue(Border.PaddingProperty, new Thickness(20, 0, 20, 0));
+        var contentPresenterFactory = new FrameworkElementFactory(typeof(ContentPresenter));
+        contentPresenterFactory.SetValue(ContentPresenter.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+        contentPresenterFactory.SetValue(ContentPresenter.VerticalAlignmentProperty, VerticalAlignment.Center);
+        borderFactory.AppendChild(contentPresenterFactory);
+        buttonTemplate.VisualTree = borderFactory;
+        okButton.Template = buttonTemplate;
+
+        buttonPanel.Children.Add(okButton);
+        buttonArea.Child = buttonPanel;
+        Grid.SetRow(buttonArea, 2);
+        grid.Children.Add(buttonArea);
+
+        mainBorder.Child = grid;
+        dialog.Content = mainBorder;
+
+        // Handle keyboard
+        dialog.PreviewKeyDown += (s, e) =>
+        {
+            if (e.Key == Key.Escape || e.Key == Key.Enter)
+            {
+                dialog.Close();
+                e.Handled = true;
+            }
+        };
+
         dialog.ShowDialog();
     }
 
