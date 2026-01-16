@@ -2333,6 +2333,219 @@
                 </Grid>
             </Border>
 
+            <!-- Sidebar Chat Panel - Integrated chat within sidebar -->
+            <Border x:Name="SidebarChatPanel"
+                    Grid.Column="1"
+                    Background="#0a0a14"
+                    BorderBrush="#1a1a2e"
+                    BorderThickness="0,0,1,0"
+                    Visibility="Collapsed">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <!-- Header -->
+                        <RowDefinition Height="52"/>
+                        <!-- Context Info -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Messages Area -->
+                        <RowDefinition Height="*"/>
+                        <!-- Input Area -->
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Sidebar Chat Header -->
+                    <Border Grid.Row="0"
+                            Background="#0f0f1a"
+                            BorderBrush="#1a1a2e"
+                            BorderThickness="0,0,0,1">
+                        <Grid Margin="16,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE8BD;"
+                                          FontFamily="Segoe MDL2 Assets"
+                                          FontSize="16"
+                                          Foreground="#E6AC00"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,10,0"/>
+                                <TextBlock Text="Jubilee Inspire"
+                                          Foreground="White"
+                                          FontSize="15"
+                                          FontWeight="SemiBold"
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Button Style="{StaticResource NavButtonStyle}"
+                                    HorizontalAlignment="Right"
+                                    Width="32" Height="32"
+                                    ToolTip="Close Chat"
+                                    Click="CloseSidebarChat_Click">
+                                <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="White"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Page Context Info Bar -->
+                    <Border x:Name="SidebarChatContextBar"
+                            Grid.Row="1"
+                            Background="#12121f"
+                            BorderBrush="#1a1a2e"
+                            BorderThickness="0,0,0,1"
+                            Padding="12,8"
+                            Visibility="Collapsed">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                      Text="&#xE774;"
+                                      FontFamily="Segoe MDL2 Assets"
+                                      FontSize="12"
+                                      Foreground="#808090"
+                                      VerticalAlignment="Center"
+                                      Margin="0,0,8,0"/>
+                            <TextBlock x:Name="SidebarChatContextTitle"
+                                      Grid.Column="1"
+                                      Text="Current page context"
+                                      Foreground="#808090"
+                                      FontSize="11"
+                                      TextTrimming="CharacterEllipsis"
+                                      VerticalAlignment="Center"/>
+                            <Button x:Name="SidebarChatContextClearButton"
+                                    Grid.Column="2"
+                                    Width="20" Height="20"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Click="SidebarChatContextClear_Click"
+                                    Cursor="Hand"
+                                    ToolTip="Clear context">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="clearBorder" Background="Transparent" CornerRadius="4">
+                                            <TextBlock Text="&#xE711;"
+                                                      FontFamily="Segoe MDL2 Assets"
+                                                      FontSize="9"
+                                                      Foreground="#606070"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="clearBorder" Property="Background" Value="#2a2a4e"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <!-- Sidebar Chat Messages Area -->
+                    <ScrollViewer x:Name="SidebarChatMessagesScroller"
+                                 Grid.Row="2"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Background="#0a0a14">
+                        <StackPanel x:Name="SidebarChatMessagesPanel" Margin="12,12,12,12">
+                            <!-- Welcome Message -->
+                            <StackPanel x:Name="SidebarChatWelcome" HorizontalAlignment="Center" Margin="0,20,0,20">
+                                <!-- Jubilee Avatar -->
+                                <Grid Width="64" Height="64" HorizontalAlignment="Center" Margin="0,0,0,12">
+                                    <Ellipse x:Name="SidebarChatAvatarContainer" Width="64" Height="64" Visibility="Collapsed">
+                                        <Ellipse.Fill>
+                                            <ImageBrush x:Name="SidebarChatAvatarBrush" Stretch="UniformToFill"/>
+                                        </Ellipse.Fill>
+                                    </Ellipse>
+                                    <Grid x:Name="SidebarChatAvatarFallback" Visibility="Visible">
+                                        <Ellipse Width="64" Height="64" Fill="#1a1a2e" Stroke="#E6AC00" StrokeThickness="2"/>
+                                        <TextBlock Text="&#xE716;" FontFamily="Segoe MDL2 Assets" FontSize="28" Foreground="#E6AC00" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Grid>
+                                <!-- Brand Text -->
+                                <TextBlock HorizontalAlignment="Center" FontSize="18" FontFamily="Segoe UI Semibold">
+                                    <Run Text="Jubilee" Foreground="White"/>
+                                    <Run Text="Inspire" Foreground="#E6AC00"/>
+                                </TextBlock>
+                                <TextBlock Text="Ask about the page you're viewing"
+                                          HorizontalAlignment="Center"
+                                          FontSize="12"
+                                          Foreground="#606070"
+                                          Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Sidebar Chat Input Area -->
+                    <Border Grid.Row="3"
+                            Background="#0f0f1a"
+                            BorderBrush="#1a1a2e"
+                            BorderThickness="0,1,0,0"
+                            Padding="12,12">
+                        <Border Background="#1a1a2e"
+                               CornerRadius="8"
+                               Padding="4">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Grid Grid.Column="0">
+                                    <TextBox x:Name="SidebarChatInputBox"
+                                            Background="Transparent"
+                                            Foreground="White"
+                                            CaretBrush="White"
+                                            BorderThickness="0"
+                                            FontSize="13"
+                                            VerticalAlignment="Center"
+                                            Padding="10,6"
+                                            AcceptsReturn="False"
+                                            KeyDown="SidebarChatInputBox_KeyDown"
+                                            GotFocus="SidebarChatInputBox_GotFocus"
+                                            LostFocus="SidebarChatInputBox_LostFocus"/>
+                                    <TextBlock x:Name="SidebarChatInputPlaceholder"
+                                              Text="Ask about this page..."
+                                              Foreground="#606070"
+                                              FontSize="13"
+                                              VerticalAlignment="Center"
+                                              Margin="10,0,0,0"
+                                              IsHitTestVisible="False"/>
+                                </Grid>
+
+                                <Button x:Name="SidebarChatSendButton"
+                                       Grid.Column="1"
+                                       Width="28" Height="28"
+                                       Margin="4,0,4,0"
+                                       Background="#E6AC00"
+                                       Cursor="Hand"
+                                       Click="SidebarChatSendButton_Click"
+                                       ToolTip="Send Message">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="sendBorder"
+                                                   Background="{TemplateBinding Background}"
+                                                   CornerRadius="6">
+                                                <TextBlock Text="&#xE724;"
+                                                          FontFamily="Segoe MDL2 Assets"
+                                                          FontSize="12"
+                                                          Foreground="#1c1c33"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="sendBorder" Property="Background" Value="#F5C518"/>
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter TargetName="sendBorder" Property="Background" Value="#CC9800"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Border>
+                </Grid>
+            </Border>
+
             <!-- To-Do List Panel -->
             <Border x:Name="TodoPanel"
                     Grid.Column="2"
