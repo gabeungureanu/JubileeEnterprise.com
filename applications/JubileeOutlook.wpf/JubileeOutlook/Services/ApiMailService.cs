@@ -502,6 +502,7 @@ public class ApiMailService : IMailService
 
     /// <summary>
     /// Sends a message with detailed result
+    /// Supports offline-first: queues message in outbox when offline
     /// POST /api/v1/outlook/messages
     /// Creates message in Sent Items folder and stores recipients/attachments
     /// </summary>
@@ -555,6 +556,57 @@ public class ApiMailService : IMailService
                 IsInline = false
             }).ToList();
 
+            // If offline, queue the message for later sending
+            if (!IsOnline)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Offline - queueing message for send: {message.Subject}");
+
+                // Generate a temporary ID for tracking
+                var tempId = Guid.NewGuid().ToString();
+                message.Id = tempId;
+                message.FolderId = "outbox";
+                message.SentDate = DateTime.UtcNow;
+
+                // Cache the message locally in outbox
+                try
+                {
+                    await LocalCache.CacheEmailAsync(message);
+                    System.Diagnostics.Debug.WriteLine($"[ApiMailService] Cached message in outbox: {tempId}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ApiMailService] Failed to cache outbox message: {ex.Message}");
+                }
+
+                // Queue the send operation with message data
+                var messagePayload = new
+                {
+                    subject = message.Subject,
+                    body = message.Body,
+                    bodyHtml = message.IsHtml ? message.Body : null,
+                    to = message.To,
+                    cc = message.Cc,
+                    bcc = message.Bcc,
+                    fromEmail = message.FromEmail,
+                    fromName = message.From,
+                    isHtml = message.IsHtml,
+                    priority = message.Priority.ToString().ToLower()
+                };
+
+                await SyncQueue.QueueOperationAsync(
+                    SyncEntityTypes.Email,
+                    tempId,
+                    SyncOperationTypes.Create,
+                    messagePayload);
+
+                return new MailServiceResult<EmailMessage>
+                {
+                    Success = true,
+                    Data = message
+                };
+            }
+
+            // Online - proceed with normal send
             // Create the request DTO in API format
             var request = new CreateMessageRequest
             {
