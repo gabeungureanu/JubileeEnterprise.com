@@ -654,9 +654,12 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
 const createStyles = (colors: any, isCollapsed: boolean, isMobileView: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: '#000000',
     // On mobile view, always use full width; on desktop, use collapsed or full width
     width: isMobileView ? '100%' : (isCollapsed ? 56 : '100%'),
+    // Right border visible in both collapsed and expanded modes
+    borderRightWidth: 1,
+    borderRightColor: '#3f3f3f',
   },
   header: {
     flexDirection: 'row',
