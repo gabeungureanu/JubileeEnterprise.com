@@ -1,0 +1,238 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    color: #fff;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    padding: 40px 0;
+}
+
+.logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 700;
+}
+
+.logo-bible {
+    color: #f4d03f;
+}
+
+.logo-lujah {
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+main {
+    padding: 20px 0;
+}
+
+.hero {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    color: #f4d03f;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+}
+
+.tagline {
+    font-size: 1.5rem;
+    color: #e0e0e0;
+    margin-bottom: 40px;
+}
+
+.verse-card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 600px;
+    margin: 0 auto;
+    border: 1px solid rgba(244, 208, 63, 0.3);
+}
+
+.verse {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-style: italic;
+    line-height: 1.6;
+    color: #fff;
+}
+
+.reference {
+    margin-top: 20px;
+    color: #f4d03f;
+    font-weight: 600;
+}
+
+.coming-soon {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.coming-soon h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: #f4d03f;
+}
+
+.coming-soon > p {
+    max-width: 700px;
+    margin: 0 auto 50px;
+    font-size: 1.2rem;
+    line-height: 1.8;
+    color: #e0e0e0;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.feature {
+    background: rgba(255,255,255,0.05);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    transition: transform 0.3s ease, background 0.3s ease;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.feature:hover {
+    transform: translateY(-5px);
+    background: rgba(255,255,255,0.1);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.feature h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    color: #f4d03f;
+}
+
+.feature p {
+    color: #c0c0c0;
+    font-size: 0.95rem;
+}
+
+.newsletter {
+    text-align: center;
+    padding: 60px 20px;
+    background: rgba(244, 208, 63, 0.1);
+    border-radius: 20px;
+    margin: 40px 0;
+}
+
+.newsletter h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    margin-bottom: 15px;
+    color: #f4d03f;
+}
+
+.newsletter > p {
+    margin-bottom: 30px;
+    color: #e0e0e0;
+}
+
+.signup-form {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.signup-form input {
+    padding: 15px 25px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 50px;
+    width: 300px;
+    outline: none;
+}
+
+.signup-form button {
+    padding: 15px 35px;
+    font-size: 1rem;
+    background: #f4d03f;
+    color: #1a1a2e;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.signup-form button:hover {
+    background: #f7dc6f;
+    transform: scale(1.05);
+}
+
+footer {
+    text-align: center;
+    padding: 40px 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-top: 40px;
+}
+
+footer p {
+    color: #a0a0a0;
+    margin-bottom: 10px;
+}
+
+.footer-verse {
+    font-style: italic;
+    color: #f4d03f;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .logo {
+        font-size: 2rem;
+    }
+
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+
+    .tagline {
+        font-size: 1.2rem;
+    }
+
+    .verse {
+        font-size: 1.2rem;
+    }
+
+    .signup-form input {
+        width: 100%;
+        max-width: 300px;
+    }
+}

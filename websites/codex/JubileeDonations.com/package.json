@@ -1,0 +1,27 @@
+{
+  "name": "jubilee-donations",
+  "version": "1.0.0",
+  "description": "JubileeDonations.com - Jubilee Ministries Donation Platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "jubilee",
+    "donations",
+    "ministries",
+    "nonprofit"
+  ],
+  "author": "Jubilee Enterprise",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

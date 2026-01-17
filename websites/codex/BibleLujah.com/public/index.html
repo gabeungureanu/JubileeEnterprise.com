@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BibleLujah - Celebrate the Word of God</title>
+    <meta name="description" content="BibleLujah - A celebration of Scripture, faith, and the transforming power of God's Word.">
+    <link rel="icon" type="image/png" href="/images/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="logo-bible">Bible</span><span class="logo-lujah">Lujah!</span>
+            </div>
+        </header>
+
+        <main>
+            <section class="hero">
+                <h1>Hallelujah for the Word!</h1>
+                <p class="tagline">Celebrate Scripture. Embrace Truth. Live the Word.</p>
+                <div class="verse-card">
+                    <p class="verse">"Your word is a lamp to my feet and a light to my path."</p>
+                    <p class="reference">- Psalm 119:105</p>
+                </div>
+            </section>
+
+            <section class="coming-soon">
+                <h2>Something Beautiful is Coming</h2>
+                <p>We're building a place where the Bible comes alive through celebration, worship, and community. A space to explore Scripture with joy and reverence.</p>
+                <div class="features">
+                    <div class="feature">
+                        <div class="feature-icon">&#128214;</div>
+                        <h3>Daily Devotionals</h3>
+                        <p>Spirit-filled reflections to start your day</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">&#127926;</div>
+                        <h3>Scripture Songs</h3>
+                        <p>The Word set to worship music</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">&#128101;</div>
+                        <h3>Community</h3>
+                        <p>Connect with fellow believers</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="newsletter">
+                <h2>Be the First to Know</h2>
+                <p>Join our mailing list to receive updates when we launch.</p>
+                <form class="signup-form" onsubmit="return handleSubmit(event)">
+                    <input type="email" placeholder="Enter your email" required>
+                    <button type="submit">Notify Me</button>
+                </form>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 BibleLujah.com - A Jubilee Ministries Project</p>
+            <p class="footer-verse">"Let everything that has breath praise the Lord. Hallelujah!" - Psalm 150:6</p>
+        </footer>
+    </div>
+
+    <script>
+        function handleSubmit(e) {
+            e.preventDefault();
+            alert('Thank you! We\'ll notify you when BibleLujah launches.');
+            e.target.reset();
+            return false;
+        }
+    </script>
+</body>
+</html>
