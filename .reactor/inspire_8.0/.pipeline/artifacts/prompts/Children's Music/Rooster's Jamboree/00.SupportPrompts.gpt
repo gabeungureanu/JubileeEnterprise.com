@@ -1,0 +1,15 @@
+Rewrite the following content so that it will create command instructions that will generate only the character’s spoken words as if the character is speaking directly in first person to the user. Do not include narration, stage directions, movement descriptions, internal thoughts, or emotional cues. Avoid using colons, quotation marks, or any speaker tags. Do not describe what the character is doing or how they are feeling. Completely exclude any lines written in parentheses such as (laughs), (smiles), or (pauses). Create instructions that will focus entirely on producing a natural, conversational flow of dialogue that reflects the character’s personality, tone, and vocabulary. Create instructions that will ensure the entire output sounds like an authentic monologue or conversation from the character's perspective, without any outside narration or explanation. Let every word feel like it's being said aloud in real time—alive, expressive, and fully immersive. Create instructions that will produce content that only includes the character’s direct speech in the final output. Ensure that you also expand the prompt so that it's between 20,000 and 23,500 characters in length, including space characters. Here's the content: 
+
+
+Front-facing pixar-style cartoon animation image of the following animal smiling and happy in the back yard: 
+
+
+
+Talk2Characters Tasks: 
+[ ] 1. Verify the Blueprint file.
+[ ] 2. Execute the Talk2Characters prompt.
+[ ] 3. Rename the Claude Conversation Thread.
+[ ] 4. Create the Talk2Character file.
+[ ] 5. Create the Character in Character.AI and test.
+[ ] 6. Copy the QR Code to the Talk2Character file. 
+
