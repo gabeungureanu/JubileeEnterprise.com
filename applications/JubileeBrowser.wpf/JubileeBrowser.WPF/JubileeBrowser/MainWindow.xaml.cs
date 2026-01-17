@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Web;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -195,6 +196,33 @@ public partial class MainWindow : Window
 
         // Hook into SourceInitialized to set up window message handling
         SourceInitialized += MainWindow_SourceInitialized;
+
+        // Set up SidebarToggleButton hover handlers for yellow mode (hamburger icon turns white on hover)
+        SidebarToggleButton.MouseEnter += SidebarToggleButton_MouseEnter;
+        SidebarToggleButton.MouseLeave += SidebarToggleButton_MouseLeave;
+    }
+
+    private void SidebarToggleButton_MouseEnter(object sender, MouseEventArgs e)
+    {
+        // In yellow mode (JubileeBibles), change hamburger icon to white on hover for visibility
+        if (_currentMode == BrowserMode.JubileeBibles)
+        {
+            SidebarToggleIcon.Foreground = System.Windows.Media.Brushes.White;
+        }
+    }
+
+    private void SidebarToggleButton_MouseLeave(object sender, MouseEventArgs e)
+    {
+        // In yellow mode (JubileeBibles), revert hamburger icon to black when not hovering
+        // BUT keep it white if the sidebar is open
+        if (_currentMode == BrowserMode.JubileeBibles)
+        {
+            if (!_isSidebarOpen)
+            {
+                SidebarToggleIcon.Foreground = System.Windows.Media.Brushes.Black;
+            }
+            // If sidebar is open, keep it white
+        }
     }
 
     private void MainWindow_SourceInitialized(object? sender, EventArgs e)
@@ -714,30 +742,74 @@ public partial class MainWindow : Window
         };
     }
 
+    private bool _isClosing = false;
+
     private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
-        // Save session state with current window position
-        SaveSessionState(true);
-
-        // Save the last active tab ID for restoration
-        if (_activeTabId != null)
+        // Prevent re-entrancy
+        if (_isClosing)
         {
-            await _settingsManager.UpdateAsync(s => s.LastActiveTabId = _activeTabId);
+            return;
         }
 
-        // Save zoom settings
-        await _zoomSettingsManager.FlushAsync();
+        // Check if we need to clear browsing data on exit
+        bool shouldClearData = _settingsManager.Settings.Privacy.ClearOnExit;
 
-        // Clear browsing data on exit if the setting is enabled
-        if (_settingsManager.Settings.Privacy.ClearOnExit)
+        if (shouldClearData)
         {
-            await ClearBrowsingDataOnExitAsync();
+            // Cancel the close, perform async cleanup, then close again
+            e.Cancel = true;
+            _isClosing = true;
+
+            try
+            {
+                // Save session state with current window position
+                SaveSessionState(true);
+
+                // Save the last active tab ID for restoration
+                if (_activeTabId != null)
+                {
+                    await _settingsManager.UpdateAsync(s => s.LastActiveTabId = _activeTabId);
+                }
+
+                // Save zoom settings
+                await _zoomSettingsManager.FlushAsync();
+
+                // Clear browsing data on exit
+                await ClearBrowsingDataOnExitAsync();
+
+                // Cleanup WebViews
+                foreach (var webView in _webViews.Values)
+                {
+                    webView.Dispose();
+                }
+            }
+            finally
+            {
+                // Now actually close the window
+                Application.Current.Shutdown();
+            }
         }
-
-        // Cleanup WebViews
-        foreach (var webView in _webViews.Values)
+        else
         {
-            webView.Dispose();
+            // No async cleanup needed, proceed normally
+            // Save session state with current window position
+            SaveSessionState(true);
+
+            // Save the last active tab ID for restoration
+            if (_activeTabId != null)
+            {
+                await _settingsManager.UpdateAsync(s => s.LastActiveTabId = _activeTabId);
+            }
+
+            // Save zoom settings
+            await _zoomSettingsManager.FlushAsync();
+
+            // Cleanup WebViews
+            foreach (var webView in _webViews.Values)
+            {
+                webView.Dispose();
+            }
         }
     }
 
@@ -1157,7 +1229,39 @@ public partial class MainWindow : Window
     private async Task InitializeWebViewAsync(WebView2 webView, TabState tabState)
     {
         var userDataFolder = GetUserDataFolder(tabState.Mode);
-        var env = await CoreWebView2Environment.CreateAsync(null, userDataFolder);
+
+        // Create environment options with system settings
+        var options = new CoreWebView2EnvironmentOptions();
+
+        // Set the language for spell check (uses system language or configured language)
+        var language = _settingsManager.Settings.Advanced.Language ?? "en-US";
+        options.Language = language;
+
+        // Build browser arguments based on settings
+        var browserArgs = new List<string>();
+
+        // Spell check settings
+        if (_settingsManager.Settings.Advanced.Spellcheck)
+        {
+            browserArgs.Add($"--enable-features=SpellCheck");
+            browserArgs.Add($"--spellcheck-language={language}");
+        }
+        else
+        {
+            browserArgs.Add("--disable-features=SpellCheck");
+        }
+
+        // Hardware acceleration settings
+        if (!_settingsManager.Settings.Advanced.HardwareAcceleration)
+        {
+            // Disable GPU/hardware acceleration
+            browserArgs.Add("--disable-gpu");
+            browserArgs.Add("--disable-gpu-compositing");
+        }
+
+        options.AdditionalBrowserArguments = string.Join(" ", browserArgs);
+
+        var env = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
         await webView.EnsureCoreWebView2Async(env);
 
         // Configure WebView2 settings
@@ -3237,6 +3341,9 @@ public partial class MainWindow : Window
 
         style.Setters.Add(new Setter(Button.TemplateProperty, template));
         button.Style = style;
+
+        // Set initial MenuIcon foreground to black for yellow mode
+        MenuIcon.Foreground = System.Windows.Media.Brushes.Black;
     }
 
     private void ApplyInternetButtonStyle(Button button)
@@ -4411,8 +4518,29 @@ public partial class MainWindow : Window
                 return null;
 
             case "privacy:clearData":
-                // TODO: Implement clear browsing data
-                return new { success = true };
+                {
+                    try
+                    {
+                        // Clear all browsing data (history, cookies, cache, downloads)
+                        await ClearBrowsingDataAsync(
+                            clearHistory: true,
+                            clearCookies: true,
+                            clearCache: true,
+                            clearDownloads: true
+                        );
+
+                        // Also clear the in-memory history and persist to disk
+                        await _historyManager.ClearAsync();
+
+                        System.Diagnostics.Debug.WriteLine("[Privacy] Browsing data cleared successfully from Settings page");
+                        return new { success = true, message = "Browsing data cleared successfully" };
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[Privacy] Failed to clear browsing data: {ex.Message}");
+                        return new { success = false, error = ex.Message };
+                    }
+                }
 
             case "nav:go":
                 {
@@ -4797,8 +4925,8 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Applies system settings to a WebView.
-    /// Note: Spell check in WebView2 is controlled at the profile level and may require
-    /// specific WebView2 versions. Hardware acceleration requires restart.
+    /// Note: Spell check and hardware acceleration require browser restart to take effect.
+    /// Spell check is controlled via browser arguments during WebView2 environment creation.
     /// </summary>
     private void ApplySystemSettings(Microsoft.Web.WebView2.Wpf.WebView2 webView)
     {
@@ -4806,10 +4934,10 @@ public partial class MainWindow : Window
 
         try
         {
-            // Note: WebView2's spell check is controlled at a different level
-            // For now, we just log that settings were applied
             var advancedSettings = _settingsManager.Settings.Advanced;
-            System.Diagnostics.Debug.WriteLine($"System settings applied - Spellcheck: {advancedSettings.Spellcheck}, HW Accel: {advancedSettings.HardwareAcceleration}");
+            // Note: Spell check is applied at WebView2 environment creation time
+            // Changes require browser restart to take effect
+            System.Diagnostics.Debug.WriteLine($"System settings - Spellcheck: {advancedSettings.Spellcheck}, HW Accel: {advancedSettings.HardwareAcceleration}");
         }
         catch (Exception ex)
         {
@@ -4971,6 +5099,7 @@ public partial class MainWindow : Window
                            CoreWebView2BrowsingDataKinds.LocalStorage |
                            CoreWebView2BrowsingDataKinds.IndexedDb;
 
+            // Clear WebView2 browsing data
             foreach (var webView in _webViews.Values)
             {
                 if (webView?.CoreWebView2?.Profile != null)
@@ -4979,7 +5108,10 @@ public partial class MainWindow : Window
                 }
             }
 
-            System.Diagnostics.Debug.WriteLine("Browsing data cleared on exit.");
+            // Clear the app's internal history file
+            await _historyManager.ClearAsync();
+
+            System.Diagnostics.Debug.WriteLine("Browsing data cleared on exit (including history.json).");
         }
         catch (Exception ex)
         {
@@ -8289,21 +8421,131 @@ public partial class MainWindow : Window
         var cardBgColor = Color.FromRgb(22, 33, 62);
         var textColor = Color.FromRgb(160, 160, 160);
         var borderColor = Color.FromRgb(60, 60, 80);
+        var titleBarColor = Color.FromRgb(20, 20, 36);
 
         var accountWindow = new Window
         {
             Title = "Manage your Jubilee Account",
             Width = 500,
-            Height = 550,
+            Height = 580,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             Owner = this,
-            Background = new SolidColorBrush(bgColor),
-            WindowStyle = WindowStyle.SingleBorderWindow,
+            Background = Brushes.Transparent,
+            WindowStyle = WindowStyle.None,
+            AllowsTransparency = true,
             ResizeMode = ResizeMode.NoResize
         };
 
-        var mainScrollViewer = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        var mainPanel = new StackPanel { Margin = new Thickness(32) };
+        // Main container with rounded corners and shadow
+        var mainContainer = new Border
+        {
+            Background = new SolidColorBrush(bgColor),
+            CornerRadius = new CornerRadius(12),
+            BorderBrush = new SolidColorBrush(borderColor),
+            BorderThickness = new Thickness(1),
+            Margin = new Thickness(16), // Space for shadow
+            Effect = new System.Windows.Media.Effects.DropShadowEffect
+            {
+                BlurRadius = 32,
+                ShadowDepth = 0,
+                Color = Colors.Black,
+                Opacity = 0.6
+            }
+        };
+
+        var windowContent = new Grid();
+        windowContent.RowDefinitions.Add(new RowDefinition { Height = new GridLength(48) }); // Title bar
+        windowContent.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // Content
+
+        // Custom Title Bar
+        var titleBar = new Border
+        {
+            Background = new SolidColorBrush(titleBarColor),
+            CornerRadius = new CornerRadius(12, 12, 0, 0),
+            BorderBrush = new SolidColorBrush(borderColor),
+            BorderThickness = new Thickness(0, 0, 0, 1)
+        };
+        titleBar.MouseLeftButtonDown += (s, e) => { if (e.ClickCount == 1) accountWindow.DragMove(); };
+
+        var titleBarContent = new Grid();
+        titleBarContent.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        titleBarContent.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        // Window icon and title
+        var titlePanel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(16, 0, 0, 0) };
+        var windowIcon = new TextBlock
+        {
+            Text = "\uE77B", // Account icon
+            FontFamily = new FontFamily("Segoe MDL2 Assets"),
+            FontSize = 14,
+            Foreground = new SolidColorBrush(goldColor),
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 10, 0)
+        };
+        var titleText = new TextBlock
+        {
+            Text = "Manage your Jubilee Account",
+            Foreground = Brushes.White,
+            FontSize = 13,
+            FontWeight = FontWeights.SemiBold,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        titlePanel.Children.Add(windowIcon);
+        titlePanel.Children.Add(titleText);
+        Grid.SetColumn(titlePanel, 0);
+        titleBarContent.Children.Add(titlePanel);
+
+        // Close button
+        var closeButton = new Button
+        {
+            Width = 36, Height = 36,
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Cursor = Cursors.Hand,
+            Margin = new Thickness(0, 0, 8, 0),
+            ToolTip = "Close"
+        };
+        var closeButtonTemplate = new ControlTemplate(typeof(Button));
+        var closeBorderFactory = new FrameworkElementFactory(typeof(Border));
+        closeBorderFactory.Name = "border";
+        closeBorderFactory.SetValue(Border.BackgroundProperty, Brushes.Transparent);
+        closeBorderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(6));
+        var closeIconFactory = new FrameworkElementFactory(typeof(TextBlock));
+        closeIconFactory.SetValue(TextBlock.TextProperty, "\uE711");
+        closeIconFactory.SetValue(TextBlock.FontFamilyProperty, new FontFamily("Segoe MDL2 Assets"));
+        closeIconFactory.SetValue(TextBlock.FontSizeProperty, 10.0);
+        closeIconFactory.SetValue(TextBlock.ForegroundProperty, new SolidColorBrush(textColor));
+        closeIconFactory.SetValue(TextBlock.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+        closeIconFactory.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
+        closeBorderFactory.AppendChild(closeIconFactory);
+        closeButtonTemplate.VisualTree = closeBorderFactory;
+        var hoverTrigger = new Trigger { Property = UIElement.IsMouseOverProperty, Value = true };
+        hoverTrigger.Setters.Add(new Setter(Border.BackgroundProperty, new SolidColorBrush(Color.FromRgb(50, 50, 70)), "border"));
+        closeButtonTemplate.Triggers.Add(hoverTrigger);
+        closeButton.Template = closeButtonTemplate;
+        closeButton.Click += (s, e) => accountWindow.Close();
+        Grid.SetColumn(closeButton, 1);
+        titleBarContent.Children.Add(closeButton);
+
+        titleBar.Child = titleBarContent;
+        Grid.SetRow(titleBar, 0);
+        windowContent.Children.Add(titleBar);
+
+        // Content area
+        var contentBorder = new Border
+        {
+            Background = new SolidColorBrush(bgColor),
+            CornerRadius = new CornerRadius(0, 0, 12, 12)
+        };
+
+        var mainScrollViewer = new ScrollViewer
+        {
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            Background = Brushes.Transparent
+        };
+
+        var mainPanel = new StackPanel { Margin = new Thickness(32, 24, 32, 32) };
 
         // Profile Header Card
         var headerCard = new Border
@@ -8461,7 +8703,7 @@ public partial class MainWindow : Window
         syncNowBtn.MouseLeftButtonUp += async (s, args) =>
         {
             await _syncEngine.SyncNowAsync();
-            MessageBox.Show("Sync completed!", "Sync", MessageBoxButton.OK, MessageBoxImage.Information);
+            JubileeAlertDialog.ShowSuccess(this, "Sync", "Sync completed!");
         };
         actionsPanel.Children.Add(syncNowBtn);
 
@@ -8478,26 +8720,33 @@ public partial class MainWindow : Window
         // Sign Out button
         var signOutBtn = CreateAccountActionButton("🚪", "Sign out", "Sign out of your Jubilee account");
         signOutBtn.Cursor = Cursors.Hand;
-        signOutBtn.MouseLeftButtonUp += async (s, args) =>
+        var windowToClose = accountWindow; // Capture for closure
+        signOutBtn.MouseLeftButtonUp += (s, args) =>
         {
-            var result = MessageBox.Show(
+            windowToClose.Close(); // Close account window first
+            ShowConfirmModal(
+                "Sign Out",
                 "Are you sure you want to sign out?",
-                "Sign Out", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result == MessageBoxResult.Yes)
-            {
-                await _profileAuthService.SignOutAsync();
-                UpdateProfileUI();
-                UpdateChatPanelAuthState();
-                accountWindow.Close();
-            }
+                async () =>
+                {
+                    await _profileAuthService.SignOutAsync();
+                    UpdateProfileUI();
+                    UpdateChatPanelAuthState();
+                });
         };
         actionsPanel.Children.Add(signOutBtn);
 
         actionsCard.Child = actionsPanel;
         mainPanel.Children.Add(actionsCard);
 
+        // Assemble the window structure
         mainScrollViewer.Content = mainPanel;
-        accountWindow.Content = mainScrollViewer;
+        contentBorder.Child = mainScrollViewer;
+        Grid.SetRow(contentBorder, 1);
+        windowContent.Children.Add(contentBorder);
+
+        mainContainer.Child = windowContent;
+        accountWindow.Content = mainContainer;
 
         accountWindow.ShowDialog();
     }
@@ -9251,6 +9500,12 @@ public partial class MainWindow : Window
         SidebarRailColumn.Width = new GridLength(48);
         SidebarToggleButton.ToolTip = "Hide Sidebar";
 
+        // In yellow mode, keep hamburger icon white when sidebar is open
+        if (_currentMode == BrowserMode.JubileeBibles)
+        {
+            SidebarToggleIcon.Foreground = System.Windows.Media.Brushes.White;
+        }
+
         // Play slide-in animation
         var slideIn = (System.Windows.Media.Animation.Storyboard)FindResource("SidebarSlideIn");
         _isSidebarAnimating = true;
@@ -9264,6 +9519,12 @@ public partial class MainWindow : Window
 
         _isSidebarOpen = false;
         SidebarToggleButton.ToolTip = "Show Sidebar";
+
+        // In yellow mode, revert hamburger icon to black when sidebar is closed
+        if (_currentMode == BrowserMode.JubileeBibles)
+        {
+            SidebarToggleIcon.Foreground = System.Windows.Media.Brushes.Black;
+        }
 
         // Also close sidebar chat panel if open
         if (_isSidebarChatOpen)
