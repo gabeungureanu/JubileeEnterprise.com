@@ -1,0 +1,104 @@
+{
+  "MonitoredServices": {
+    "MonitoringIntervalSeconds": 60,
+    "HealthCheckTimeoutSeconds": 30,
+    "MaxRetryAttempts": 3,
+    "Services": [
+      {
+        "Name": "JubileeVerse.com",
+        "Type": "Website",
+        "HealthEndpoint": "http://localhost:3000/health",
+        "Port": 3000,
+        "Enabled": true,
+        "RecoveryAction": {
+          "Type": "StartProcess",
+          "ProcessPath": "node",
+          "WorkingDirectory": "C:\\data\\JubileeEnterprise.com Bibleweb\\websites\\codex\\JubileeVerse.com",
+          "Arguments": "server.js"
+        }
+      },
+      {
+        "Name": "InspireCodex.com",
+        "Type": "Website",
+        "HealthEndpoint": "http://localhost:3100/health",
+        "Port": 3100,
+        "Enabled": true,
+        "RecoveryAction": {
+          "Type": "StartProcess",
+          "ProcessPath": "node",
+          "WorkingDirectory": "C:\\data\\JubileeEnterprise.com Bibleweb\\websites\\codex\\InspireCodex.com",
+          "Arguments": "server.js"
+        }
+      },
+      {
+        "Name": "JubileeGoodNews.com",
+        "Type": "Website",
+        "HealthEndpoint": "http://localhost:3107/health",
+        "Port": 3107,
+        "Enabled": true,
+        "RecoveryAction": {
+          "Type": "StartProcess",
+          "ProcessPath": "node",
+          "WorkingDirectory": "C:\\data\\JubileeEnterprise.com Bibleweb\\websites\\codex\\JubileeGoodNews.com",
+          "Arguments": "server.js"
+        }
+      },
+      {
+        "Name": "Cloudflare Tunnel (jubilee-enterprise)",
+        "Type": "CloudflareTunnel",
+        "Enabled": true,
+        "RecoveryAction": {
+          "Type": "RestartCloudflareTunnel",
+          "TunnelName": "jubilee-enterprise"
+        }
+      },
+      {
+        "Name": "Qdrant Vector Database",
+        "Type": "DockerContainer",
+        "HealthEndpoint": "http://localhost:6333/health",
+        "Port": 6333,
+        "Enabled": true,
+        "RecoveryAction": {
+          "Type": "RestartDockerContainer",
+          "ContainerName": "qdrant"
+        }
+      },
+      {
+        "Name": "Redis Cache",
+        "Type": "DockerContainer",
+        "Port": 6379,
+        "Enabled": true,
+        "RecoveryAction": {
+          "Type": "RestartDockerContainer",
+          "ContainerName": "redis"
+        }
+      },
+      {
+        "Name": "JubileeSearch.com",
+        "Type": "Website",
+        "HealthEndpoint": "http://localhost:3101/health",
+        "Port": 3101,
+        "Enabled": false,
+        "RecoveryAction": {
+          "Type": "StartProcess",
+          "ProcessPath": "node",
+          "WorkingDirectory": "C:\\data\\JubileeEnterprise.com Bibleweb\\websites\\codex\\JubileeSearch.com",
+          "Arguments": "server.js"
+        }
+      },
+      {
+        "Name": "InspireContinuum.com",
+        "Type": "Website",
+        "HealthEndpoint": "http://localhost:3102/health",
+        "Port": 3102,
+        "Enabled": false,
+        "RecoveryAction": {
+          "Type": "StartProcess",
+          "ProcessPath": "node",
+          "WorkingDirectory": "C:\\data\\JubileeEnterprise.com Bibleweb\\websites\\codex\\InspireContinuum.com",
+          "Arguments": "server.js"
+        }
+      }
+    ]
+  }
+}

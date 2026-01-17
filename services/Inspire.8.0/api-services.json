@@ -1,0 +1,26 @@
+{
+  "name": "Inspire 8.0: Web API Services",
+  "version": "1.0.0",
+  "description": "Manages API servers for database and backend operations",
+  "healthPort": 3901,
+  "services": [
+    {
+      "name": "inspirecodex-api",
+      "description": "InspireCodex.com - Identity & Configuration API",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/InspireCodex.com",
+      "port": 3100,
+      "workers": 16,
+      "enabled": true
+    },
+    {
+      "name": "inspirecontinuum-api",
+      "description": "InspireContinuum.com - User Activity & Chat API",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/InspireContinuum.com",
+      "port": 3200,
+      "workers": 16,
+      "enabled": false
+    }
+  ]
+}

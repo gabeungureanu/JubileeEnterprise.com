@@ -1,0 +1,28 @@
+{
+  "name": "Inspire 8.0: Docker Services",
+  "version": "1.0.0",
+  "description": "Manages Docker containers for infrastructure services",
+  "containers": [
+    {
+      "name": "qdrant",
+      "image": "qdrant/qdrant",
+      "port": 6333,
+      "enabled": true,
+      "restartPolicy": "always"
+    },
+    {
+      "name": "redis",
+      "image": "redis:alpine",
+      "port": 6379,
+      "enabled": true,
+      "restartPolicy": "always"
+    },
+    {
+      "name": "pgadmin",
+      "image": "dpage/pgadmin4",
+      "port": 5050,
+      "enabled": true,
+      "restartPolicy": "always"
+    }
+  ]
+}

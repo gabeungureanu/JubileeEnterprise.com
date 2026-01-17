@@ -1,0 +1,350 @@
+{
+  "name": "Inspire 8.0: Website Services",
+  "version": "1.0.0",
+  "description": "Manages all 40 Jubilee Enterprise frontend websites with 16-worker cluster mode",
+  "healthPort": 3900,
+  "services": [
+    {
+      "name": "jubileeverse",
+      "description": "JubileeVerse.com - Main Platform",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeVerse.com",
+      "port": 3000,
+      "workers": 16,
+      "enabled": true
+    },
+    {
+      "name": "jubileegoodnews",
+      "description": "JubileeGoodNews.com - Daily News",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeGoodNews.com",
+      "port": 3107,
+      "workers": 16,
+      "enabled": true
+    },
+    {
+      "name": "jubileesearch",
+      "description": "JubileeSearch.com - Search Engine",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeSearch.com",
+      "port": 3101,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "biblelujah",
+      "description": "BibleLujah.com - Bible Platform",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/BibleLujah.com",
+      "port": 3104,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "celestialpaths",
+      "description": "CelestialPaths.com - Spiritual Journey",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/CelestialPaths.com",
+      "port": 3111,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "gopartygiggles",
+      "description": "GoPartyGiggles.com - Party Planning",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/GoPartyGiggles.com",
+      "port": 3114,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "inspireshalom",
+      "description": "InspireShalom.com - Peace & Inspiration",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/InspireShalom.com",
+      "port": 3117,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jsvbible",
+      "description": "jsvBible.com - Bible Study",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/jsvBible.com",
+      "port": 3112,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileeadspots",
+      "description": "JubileeAdSpots.com - Advertising",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeAdSpots.com",
+      "port": 3125,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileebooks",
+      "description": "JubileeBooks.com - Book Library",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeBooks.com",
+      "port": 3105,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileebrowser",
+      "description": "JubileeBrowser.com - Browser Downloads",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeBrowser.com",
+      "port": 3103,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileecircles",
+      "description": "JubileeCircles.com - Community Groups",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeCircles.com",
+      "port": 3121,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileedonations",
+      "description": "JubileeDonations.com - Giving Platform",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeDonations.com",
+      "port": 3109,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileeinspire",
+      "description": "JubileeInspire.com - Inspiration Hub",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeInspire.com",
+      "port": 3102,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileemessages",
+      "description": "JubileeMessages.com - Messaging",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeMessages.com",
+      "port": 3118,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileeparadox",
+      "description": "JubileeParadox.com - Faith Paradoxes",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeParadox.com",
+      "port": 3110,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileepathfinders",
+      "description": "JubileePathfinders.com - Youth Ministry",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileePathfinders.com",
+      "port": 3122,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileepodcasts",
+      "description": "JubileePodcasts.com - Podcast Platform",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileePodcasts.com",
+      "port": 3106,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileesermons",
+      "description": "JubileeSermons.com - Sermon Library",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeSermons.com",
+      "port": 3108,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileeshekels",
+      "description": "JubileeShekels.com - Financial Tools",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeShekels.com",
+      "port": 3124,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileesmallgroups",
+      "description": "JubileeSmallGroups.com - Small Groups",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeSmallGroups.com",
+      "port": 3123,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubilee-software",
+      "description": "Jubilee-Software.com - Software Downloads",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/Jubilee-Software.com",
+      "port": 3126,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileevibes",
+      "description": "JubileeVibes.com - Music & Worship",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeVibes.com",
+      "port": 3119,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileewebsites",
+      "description": "JubileeWebsites.com - Website Builder",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeWebsites.com",
+      "port": 3113,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "mytinytiggles",
+      "description": "MyTinyTiggles.com - Kids Content",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/MyTinyTiggles.com",
+      "port": 3115,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "talk2characters",
+      "description": "Talk2Characters.com - Character AI",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/Talk2Characters.com",
+      "port": 3120,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "wwbibleweb",
+      "description": "wwBibleweb.com - Bible Web Portal",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/wwBibleweb.com",
+      "port": 3116,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileechat",
+      "description": "JubileeChat.com - Chat Platform",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeChat.com",
+      "port": 3127,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileeapps",
+      "description": "JubileeApps.com - App Store",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeApps.com",
+      "port": 3128,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileevideos",
+      "description": "JubileeVideos.com - Video Platform",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeVideos.com",
+      "port": 3129,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileetunes",
+      "description": "JubileeTunes.com - Music Streaming",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeTunes.com",
+      "port": 3130,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileeoutlook",
+      "description": "JubileeOutlook.com - Email Service",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeOutlook.com",
+      "port": 3131,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileeaive",
+      "description": "JubileeAIVE.com - AI Video Editor",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeAIVE.com",
+      "port": 3132,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jubileeintelligence",
+      "description": "JubileeIntelligence.com - AI Platform",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeIntelligence.com",
+      "port": 3133,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "inspireflywheel",
+      "description": "InspireFlywheel.com - Automation Hub",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/InspireFlywheel.com",
+      "port": 3134,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "inspirereactors",
+      "description": "InspireReactors.com - Event Processing",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/InspireReactors.com",
+      "port": 3135,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "inspirewebspaces",
+      "description": "InspireWebspaces.com - Web Spaces",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/InspireWebspaces.com",
+      "port": 3136,
+      "workers": 16,
+      "enabled": false
+    },
+    {
+      "name": "jixqr",
+      "description": "jixqr.com - QR Code Service",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/jixqr.com",
+      "port": 3137,
+      "workers": 16,
+      "enabled": false
+    }
+  ]
+}
