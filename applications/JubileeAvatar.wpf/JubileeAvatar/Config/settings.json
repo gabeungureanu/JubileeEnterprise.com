@@ -1,0 +1,40 @@
+{
+  "environment": "production",
+  "api": {
+    "openAIApiKey": "",
+    "elevenLabsApiKey": "",
+    "dIDApiKey": "",
+    "heyGenApiKey": ""
+  },
+  "audio": {
+    "inputDevice": "default",
+    "outputDevice": "default",
+    "voiceMeeterInput": "VoiceMeeter Input (VB-Audio VoiceMeeter VAIO)",
+    "sampleRate": 16000,
+    "channels": 1,
+    "silenceThreshold": 0.02,
+    "silenceDurationMs": 1500
+  },
+  "avatar": {
+    "provider": "d-id",
+    "avatarId": "",
+    "voiceId": "21m00Tcm4TlvDq8ikWAM",
+    "width": 512,
+    "height": 512,
+    "voiceStability": 0.5,
+    "voiceSimilarity": 0.75
+  },
+  "backend": {
+    "url": "http://localhost:3950",
+    "timeoutSeconds": 30,
+    "maxRetries": 3,
+    "useWebSocket": true
+  },
+  "persona": {
+    "name": "Jubilee",
+    "systemPrompt": "You are Jubilee, a friendly, warm, and knowledgeable AI assistant for Jubilee Enterprise. You speak with clarity, enthusiasm, and a professional yet approachable tone. You are helpful, patient, and always aim to provide accurate and useful information. Keep your responses concise and conversational, suitable for spoken dialogue. Avoid using special characters, markdown, or formatting that wouldn't translate well to speech.",
+    "greeting": "Hello! I'm Jubilee, your AI assistant. How can I help you today?",
+    "maxResponseTokens": 150,
+    "temperature": 0.7
+  }
+}

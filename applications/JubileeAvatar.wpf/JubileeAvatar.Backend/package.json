@@ -1,0 +1,25 @@
+{
+  "name": "jubilee-avatar-backend",
+  "version": "1.0.0",
+  "description": "Backend microservice for Jubilee Avatar AI System",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "ws": "^8.18.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "openai": "^4.67.0",
+    "form-data": "^4.0.0",
+    "node-fetch": "^3.3.2",
+    "uuid": "^10.0.0",
+    "winston": "^3.14.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

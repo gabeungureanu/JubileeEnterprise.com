@@ -1,0 +1,15 @@
+{
+  "environment": "development",
+  "api": {
+    "openAIApiKey": "",
+    "elevenLabsApiKey": "",
+    "dIDApiKey": "",
+    "heyGenApiKey": ""
+  },
+  "backend": {
+    "url": "http://localhost:3950",
+    "timeoutSeconds": 60,
+    "maxRetries": 1,
+    "useWebSocket": true
+  }
+}
