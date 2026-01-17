@@ -5,6 +5,35 @@ All notable changes to Jubilee Browser will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.0.12] - 2026-01-17
+
+### Fixed
+- **Auto-Update Check**: Fixed URL construction bug that prevented update checks from working
+  - HttpClient BaseAddress now includes trailing slash
+  - Relative URIs no longer start with slash prefix
+  - Update endpoint correctly resolves to `downloads/stable/releases.json`
+
+### Technical
+- Updated `UpdateManager.cs` with correct URL path construction
+- BaseAddress changed from `https://www.jubileebrowser.com/downloads` to `https://www.jubileebrowser.com/downloads/`
+- Relative URIs changed from `/{channel}/releases.json` to `{channel}/releases.json`
+
+### Installer Details
+- **File**: `JubileeBrowser-Setup-8.0.12.msi`
+- **Size**: ~59 MB
+- **SHA256**: `09E2F7A930D8207B6C958B4A8F1E6DF35F1FD8E29A1AACF116FF9B6A5F896D95`
+
+## [8.0.11] - 2026-01-16
+
+### Added
+- **Theme Support**: Dark and Light theme resource dictionaries with ThemeManager service
+- **System Theme Detection**: Real-time monitoring of OS theme changes
+
+### Changed
+- **Startup Performance**: Optimized browser launch to prevent system resource exhaustion
+- **Tab Restoration**: Limited to maximum 10 tabs on startup
+- **Background Services**: Now initialize in batches for better performance
+
 ## [8.0.8] - 2026-01-11
 
 ### Added
@@ -306,10 +335,10 @@ We follow [Semantic Versioning](https://semver.org/):
 
 ## Download
 
-Current version: **8.0.7**
+Current version: **8.0.12**
 
-Download: [https://jubileebrowser.com/downloads/JubileeBrowser-Setup-8.0.7.msi](https://jubileebrowser.com/downloads/JubileeBrowser-Setup-8.0.7.msi)
+Download: [https://jubileebrowser.com/downloads/stable/JubileeBrowser-Setup-8.0.12.msi](https://jubileebrowser.com/downloads/stable/JubileeBrowser-Setup-8.0.12.msi)
 
 Auto-update manifest: [https://jubileebrowser.com/downloads/stable/releases.json](https://jubileebrowser.com/downloads/stable/releases.json)
 
-SHA256: `D3D2724711E17B60F42321E641FD5A69C3E0D9081C3D34EDB661CF2CE9FDB33C`
+SHA256: `09E2F7A930D8207B6C958B4A8F1E6DF35F1FD8E29A1AACF116FF9B6A5F896D95`
