@@ -75,13 +75,13 @@ qdrant_config:
 
 ```
 INSPIRE_8_0 Container
-├── SHARED COLLECTIONS (Canonical Content)
-│   ├── canon_scripture          # Bible text, translations, verse metadata
-│   ├── canon_ministry           # Core teachings, whitepapers, doctrinal statements
-│   ├── canon_activation         # Activation schema anchors (read-only reference)
-│   └── canon_hymnal             # Worship songs, liturgy, sacred music
+├── SHARED COLLECTIONS (4)
+│   ├── scripture                 # Bible text, translations, verse metadata
+│   ├── doctrine                  # Core teachings, doctrinal statements, theological content
+│   ├── governance                # Guardrails, protocols, activation anchors
+│   └── inspire-family            # Inspire Family shared content (hymnal, ministry resources)
 │
-└── PERSONA COLLECTIONS (Individual Memory)
+└── PERSONA COLLECTIONS (13)
     ├── persona_gabriel_inspire   # Gabriel's memory and activation data (Father)
     ├── persona_jubilee_inspire   # Jubilee's memory and activation data (1st)
     ├── persona_melody_inspire    # Melody's memory and activation data (2nd)
@@ -101,13 +101,13 @@ INSPIRE_8_0 Container
 
 ## SHARED COLLECTIONS
 
-### 1. canon_scripture
+### 1. scripture
 
 **Purpose:** Bible text, translations, and verse-level metadata for the Jubilee Standard Version and reference translations.
 
 ```yaml
 collection:
-  name: "canon_scripture"
+  name: "scripture"
   type: "shared"
 
   vector_config:
@@ -129,13 +129,13 @@ collection:
       - "Dead Sea Scrolls references"
 ```
 
-### 2. canon_ministry
+### 2. doctrine
 
-**Purpose:** Core teachings, whitepapers, doctrinal statements, and approved ministry content.
+**Purpose:** Core teachings, doctrinal statements, whitepapers, and theological content.
 
 ```yaml
 collection:
-  name: "canon_ministry"
+  name: "doctrine"
   type: "shared"
 
   vector_config:
@@ -156,13 +156,13 @@ collection:
     - "Canon Specification content"
 ```
 
-### 3. canon_activation
+### 3. governance
 
-**Purpose:** Activation schema anchors stored as vectors for retrieval during persona activation.
+**Purpose:** Guardrails, protocols, and activation anchors for persona governance.
 
 ```yaml
 collection:
-  name: "canon_activation"
+  name: "governance"
   type: "shared"
   access: "read_only_at_runtime"
 
@@ -183,13 +183,13 @@ collection:
     modification: "Requires version increment"
 ```
 
-### 4. canon_hymnal
+### 4. inspire-family
 
-**Purpose:** Worship songs, liturgy, and sacred music content.
+**Purpose:** Inspire Family shared content including hymnal, worship resources, and ministry materials.
 
 ```yaml
 collection:
-  name: "canon_hymnal"
+  name: "inspire-family"
   type: "shared"
 
   vector_config:
@@ -203,6 +203,7 @@ collection:
     - "liturgy"                   # Liturgical content
     - "psalm_setting"             # Musical Psalm arrangements
     - "sacred_poem"               # Poetry for worship
+    - "family_resource"           # Shared family ministry resources
 ```
 
 ---
@@ -752,10 +753,10 @@ initialization_order:
   1:
     name: "Create shared collections"
     collections:
-      - "canon_scripture"
-      - "canon_ministry"
-      - "canon_activation"
-      - "canon_hymnal"
+      - "scripture"
+      - "doctrine"
+      - "governance"
+      - "inspire-family"
 
   2:
     name: "Create persona collections"

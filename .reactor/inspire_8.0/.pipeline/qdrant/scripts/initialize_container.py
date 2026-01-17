@@ -73,23 +73,23 @@ logger = logging.getLogger(__name__)
 # Shared Collections
 SHARED_COLLECTIONS = [
     {
-        "name": "canon_scripture",
+        "name": "scripture",
         "description": "Bible text, translations, and verse-level metadata",
         "type": "shared",
     },
     {
-        "name": "canon_ministry",
-        "description": "Core teachings, whitepapers, and doctrinal statements",
+        "name": "doctrine",
+        "description": "Core teachings, doctrinal statements, and theological content",
         "type": "shared",
     },
     {
-        "name": "canon_activation",
-        "description": "Activation schema anchors (read-only reference)",
+        "name": "governance",
+        "description": "Guardrails, protocols, and activation anchors",
         "type": "shared",
     },
     {
-        "name": "canon_hymnal",
-        "description": "Worship songs, liturgy, and sacred music",
+        "name": "inspire-family",
+        "description": "Inspire Family shared content (hymnal, ministry resources)",
         "type": "shared",
     },
 ]

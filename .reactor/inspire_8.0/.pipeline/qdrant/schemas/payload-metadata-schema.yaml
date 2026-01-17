@@ -179,7 +179,7 @@ optional_fields:
 # =============================================================================
 scripture_fields:
   applies_to:
-    - "canon_scripture"
+    - "scripture"
   condition: "type in ['verse', 'passage', 'chapter_summary', 'book_intro', 'psalm_setting']"
 
   bible_ref:
@@ -382,7 +382,7 @@ persona_fields:
 # =============================================================================
 activation_fields:
   applies_to:
-    - "canon_activation"
+    - "governance"
     - "persona_*"
   condition: "type ends with '_anchor'"
 
@@ -421,7 +421,7 @@ activation_fields:
 # =============================================================================
 hymnal_fields:
   applies_to:
-    - "canon_hymnal"
+    - "inspire-family"
   condition: "type in ['hymn', 'worship_song', 'liturgy', 'psalm_setting', 'sacred_poem']"
 
   hymn_number:
@@ -565,10 +565,10 @@ validation:
       severity: "error"
       action: "reject"
       details:
-        canon_scripture: ["verse", "passage", "chapter_summary", "book_intro"]
-        canon_ministry: ["teaching", "whitepaper", "doctrinal_statement", "devotional", "commentary"]
-        canon_activation: ["identity_anchor", "mission_anchor", "voice_anchor", "guardrail_anchor", "protocol_anchor"]
-        canon_hymnal: ["hymn", "worship_song", "liturgy", "psalm_setting", "sacred_poem"]
+        scripture: ["verse", "passage", "chapter_summary", "book_intro"]
+        doctrine: ["teaching", "whitepaper", "doctrinal_statement", "devotional", "commentary"]
+        governance: ["identity_anchor", "mission_anchor", "voice_anchor", "guardrail_anchor", "protocol_anchor"]
+        inspire-family: ["hymn", "worship_song", "liturgy", "psalm_setting", "sacred_poem", "family_resource"]
         persona_*: ["activation_anchor", "interaction_summary", "long_term_memory", "relationship_context", "lesson_learned", "prophetic_word", "prayer_journal", "note"]
 
     - rule: "persona field must match collection"

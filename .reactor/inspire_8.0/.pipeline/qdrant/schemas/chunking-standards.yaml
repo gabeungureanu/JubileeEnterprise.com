@@ -26,7 +26,7 @@ overview:
 # =============================================================================
 scripture:
   applies_to:
-    - "canon_scripture"
+    - "scripture"
 
   granularity: "verse_level"
 
@@ -119,7 +119,7 @@ scripture:
 # =============================================================================
 teaching:
   applies_to:
-    - "canon_ministry"
+    - "doctrine"
 
   granularity: "semantic_paragraph"
 
@@ -358,7 +358,7 @@ notes:
 # =============================================================================
 activation:
   applies_to:
-    - "canon_activation"
+    - "governance"
     - "persona_* (activation content only)"
 
   granularity: "logical_unit"
@@ -477,7 +477,7 @@ activation:
 # =============================================================================
 hymnal:
   applies_to:
-    - "canon_hymnal"
+    - "inspire-family"
 
   granularity: "stanza_or_section"
 
