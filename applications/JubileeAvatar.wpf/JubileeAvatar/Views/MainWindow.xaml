@@ -1,0 +1,491 @@
+<Window x:Class="JubileeAvatar.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Jubilee Avatar - AI Live Avatar System"
+        Height="800" Width="1200"
+        MinHeight="600" MinWidth="900"
+        Background="{StaticResource BackgroundBrush}"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="350"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Grid.ColumnSpan="2"
+                Background="{StaticResource SurfaceBrush}"
+                CornerRadius="10"
+                Padding="20"
+                Margin="0,0,0,15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Logo & Title -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse Width="50" Height="50" Fill="{StaticResource SecondaryBrush}" Margin="0,0,15,0">
+                        <Ellipse.Effect>
+                            <DropShadowEffect Color="#3498DB" BlurRadius="15" ShadowDepth="0" Opacity="0.5"/>
+                        </Ellipse.Effect>
+                    </Ellipse>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="JUBILEE AVATAR"
+                                   Foreground="{StaticResource TextBrush}"
+                                   FontSize="24"
+                                   FontWeight="Bold"/>
+                        <TextBlock Text="AI Live Avatar System for Zoom"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="12"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Session Status -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Border Background="#2C3E50" CornerRadius="20" Padding="15,8" Margin="5,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse x:Name="SessionStatusIndicator" Style="{StaticResource StatusIndicator}" Margin="0,0,8,0"/>
+                            <TextBlock x:Name="SessionStatusText" Text="Offline" Foreground="{StaticResource TextBrush}" FontSize="13"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="#2C3E50" CornerRadius="20" Padding="15,8" Margin="5,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Latency: " Foreground="{StaticResource TextSecondaryBrush}" FontSize="13"/>
+                            <TextBlock x:Name="LatencyText" Text="-- ms" Foreground="{StaticResource TextBrush}" FontSize="13" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Main Controls -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button x:Name="StartSessionButton"
+                            Content="Start Session"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Click="StartSessionButton_Click"
+                            Margin="0,0,10,0"/>
+                    <Button x:Name="StopSessionButton"
+                            Content="Stop Session"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Background="{StaticResource AccentBrush}"
+                            Click="StopSessionButton_Click"
+                            IsEnabled="False"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Row="1" Grid.Column="0" Margin="0,0,15,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Conversation Log -->
+            <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="15">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBlock Text="Conversation Log"
+                                   Foreground="{StaticResource TextBrush}"
+                                   FontSize="16"
+                                   FontWeight="SemiBold"/>
+                        <Button x:Name="ClearLogButton"
+                                Content="Clear"
+                                Background="Transparent"
+                                Foreground="{StaticResource TextSecondaryBrush}"
+                                BorderThickness="0"
+                                Margin="15,0,0,0"
+                                Cursor="Hand"
+                                Click="ClearLogButton_Click"/>
+                        <Button x:Name="ExportLogButton"
+                                Content="Export"
+                                Background="Transparent"
+                                Foreground="{StaticResource TextSecondaryBrush}"
+                                BorderThickness="0"
+                                Margin="10,0,0,0"
+                                Cursor="Hand"
+                                Click="ExportLogButton_Click"/>
+                    </StackPanel>
+
+                    <ScrollViewer Grid.Row="1"
+                                  x:Name="LogScrollViewer"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl x:Name="ConversationLogItems">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,0,10"
+                                            Background="#2C3E50"
+                                            CornerRadius="8"
+                                            Padding="12">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                                <TextBlock Text="{Binding Role}"
+                                                           Foreground="{Binding RoleColor}"
+                                                           FontWeight="SemiBold"
+                                                           FontSize="12"/>
+                                                <TextBlock Text="{Binding Timestamp}"
+                                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                                           FontSize="11"
+                                                           Margin="10,0,0,0"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Message}"
+                                                       Foreground="{StaticResource TextBrush}"
+                                                       TextWrapping="Wrap"
+                                                       FontSize="13"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Debug Log -->
+            <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="15" Margin="0,15,0,0" Height="180">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBlock Text="Debug Log"
+                                   Foreground="{StaticResource TextBrush}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"/>
+                        <ToggleButton x:Name="DebugModeToggle"
+                                      Content="Debug Mode"
+                                      Style="{StaticResource ToggleButtonStyle}"
+                                      Margin="15,0,0,0"
+                                      Checked="DebugModeToggle_Changed"
+                                      Unchecked="DebugModeToggle_Changed"/>
+                    </StackPanel>
+
+                    <ScrollViewer Grid.Row="1"
+                                  x:Name="DebugScrollViewer"
+                                  VerticalScrollBarVisibility="Auto">
+                        <TextBox x:Name="DebugLogTextBox"
+                                 IsReadOnly="True"
+                                 Background="Transparent"
+                                 Foreground="#7F8C8D"
+                                 BorderThickness="0"
+                                 FontFamily="Consolas"
+                                 FontSize="11"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"/>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Right Panel - Controls & Status -->
+        <Grid Grid.Row="1" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Pipeline Status -->
+            <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="15" Margin="0,0,0,15">
+                <StackPanel>
+                    <TextBlock Text="Pipeline Status"
+                               Foreground="{StaticResource TextBrush}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,15"/>
+
+                    <!-- STT Status -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Ellipse x:Name="STTStatusIndicator" Style="{StaticResource StatusIndicator}"/>
+                        <TextBlock Grid.Column="1" Text="Speech-to-Text (Whisper)"
+                                   Foreground="{StaticResource TextBrush}"
+                                   FontSize="13"
+                                   Margin="10,0,0,0"/>
+                        <TextBlock x:Name="STTLatency" Grid.Column="2" Text="--"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="12"/>
+                    </Grid>
+
+                    <!-- AI Response Status -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Ellipse x:Name="AIStatusIndicator" Style="{StaticResource StatusIndicator}"/>
+                        <TextBlock Grid.Column="1" Text="AI Response (GPT-4)"
+                                   Foreground="{StaticResource TextBrush}"
+                                   FontSize="13"
+                                   Margin="10,0,0,0"/>
+                        <TextBlock x:Name="AILatency" Grid.Column="2" Text="--"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="12"/>
+                    </Grid>
+
+                    <!-- TTS Status -->
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Ellipse x:Name="TTSStatusIndicator" Style="{StaticResource StatusIndicator}"/>
+                        <TextBlock Grid.Column="1" Text="Text-to-Speech (ElevenLabs)"
+                                   Foreground="{StaticResource TextBrush}"
+                                   FontSize="13"
+                                   Margin="10,0,0,0"/>
+                        <TextBlock x:Name="TTSLatency" Grid.Column="2" Text="--"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="12"/>
+                    </Grid>
+
+                    <!-- Avatar Status -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Ellipse x:Name="AvatarStatusIndicator" Style="{StaticResource StatusIndicator}"/>
+                        <TextBlock Grid.Column="1" Text="Avatar Rendering (D-ID)"
+                                   Foreground="{StaticResource TextBrush}"
+                                   FontSize="13"
+                                   Margin="10,0,0,0"/>
+                        <TextBlock x:Name="AvatarLatency" Grid.Column="2" Text="--"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   FontSize="12"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Audio Controls -->
+            <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="15" Margin="0,0,0,15">
+                <StackPanel>
+                    <TextBlock Text="Audio Controls"
+                               Foreground="{StaticResource TextBrush}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,15"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <ToggleButton x:Name="MicrophoneToggle"
+                                      Content="Microphone"
+                                      Style="{StaticResource ToggleButtonStyle}"
+                                      IsChecked="True"
+                                      Width="100"
+                                      Checked="MicrophoneToggle_Changed"
+                                      Unchecked="MicrophoneToggle_Changed"/>
+                        <ToggleButton x:Name="SpeakerToggle"
+                                      Content="Speaker"
+                                      Style="{StaticResource ToggleButtonStyle}"
+                                      IsChecked="True"
+                                      Width="100"
+                                      Margin="10,0,0,0"
+                                      Checked="SpeakerToggle_Changed"
+                                      Unchecked="SpeakerToggle_Changed"/>
+                    </StackPanel>
+
+                    <!-- Input Level -->
+                    <TextBlock Text="Input Level"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="12"
+                               Margin="0,5,0,5"/>
+                    <ProgressBar x:Name="InputLevelBar"
+                                 Height="8"
+                                 Value="0"
+                                 Maximum="100"
+                                 Background="#2C3E50"
+                                 Foreground="{StaticResource SuccessBrush}"/>
+
+                    <!-- Output Level -->
+                    <TextBlock Text="Output Level"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="12"
+                               Margin="0,10,0,5"/>
+                    <ProgressBar x:Name="OutputLevelBar"
+                                 Height="8"
+                                 Value="0"
+                                 Maximum="100"
+                                 Background="#2C3E50"
+                                 Foreground="{StaticResource SecondaryBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Voice Settings -->
+            <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="15" Margin="0,0,0,15">
+                <StackPanel>
+                    <TextBlock Text="Voice Settings"
+                               Foreground="{StaticResource TextBrush}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,15"/>
+
+                    <TextBlock Text="ElevenLabs Voice"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="12"
+                               Margin="0,0,0,5"/>
+                    <ComboBox x:Name="VoiceSelector"
+                              Background="#2C3E50"
+                              Foreground="{StaticResource TextBrush}"
+                              Padding="10,8"
+                              Margin="0,0,0,10">
+                        <ComboBoxItem Content="Rachel (Female)" IsSelected="True"/>
+                        <ComboBoxItem Content="Adam (Male)"/>
+                        <ComboBoxItem Content="Antoni (Male)"/>
+                        <ComboBoxItem Content="Bella (Female)"/>
+                        <ComboBoxItem Content="Custom Voice"/>
+                    </ComboBox>
+
+                    <TextBlock Text="Response Latency Target"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="12"
+                               Margin="0,0,0,5"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="LatencySlider"
+                                Minimum="1"
+                                Maximum="5"
+                                Value="3"
+                                TickFrequency="1"
+                                IsSnapToTickEnabled="True"/>
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding ElementName=LatencySlider, Path=Value, StringFormat={}{0}s}"
+                                   Foreground="{StaticResource TextBrush}"
+                                   Width="30"
+                                   TextAlignment="Right"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Routing Status -->
+            <Border Grid.Row="3" Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="15" Margin="0,0,0,15">
+                <StackPanel>
+                    <TextBlock Text="Zoom Routing"
+                               Foreground="{StaticResource TextBrush}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,15"/>
+
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Ellipse x:Name="VoiceMeeterStatus" Style="{StaticResource StatusIndicator}"/>
+                        <TextBlock Grid.Column="1" Text="VoiceMeeter Banana"
+                                   Foreground="{StaticResource TextBrush}"
+                                   FontSize="13"
+                                   Margin="10,0,0,0"/>
+                    </Grid>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Ellipse x:Name="OBSVirtualCamStatus" Style="{StaticResource StatusIndicator}"/>
+                        <TextBlock Grid.Column="1" Text="OBS Virtual Camera"
+                                   Foreground="{StaticResource TextBrush}"
+                                   FontSize="13"
+                                   Margin="10,0,0,0"/>
+                    </Grid>
+
+                    <Button x:Name="RefreshRoutingButton"
+                            Content="Refresh Routing Status"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Background="#34495E"
+                            Margin="0,15,0,0"
+                            Click="RefreshRoutingButton_Click"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Avatar Preview -->
+            <Border Grid.Row="4" Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="15">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Avatar Preview"
+                               Foreground="{StaticResource TextBrush}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,10"/>
+
+                    <Border Grid.Row="1" Background="#1A1A2E" CornerRadius="8">
+                        <Grid>
+                            <TextBlock Text="Avatar feed will appear here"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       FontSize="12"/>
+                            <Image x:Name="AvatarPreviewImage" Stretch="Uniform"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" Grid.ColumnSpan="2" Margin="0,15,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="Jubilee Avatar v1.0.0 | Powered by OpenAI, ElevenLabs, and D-ID"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           FontSize="11"
+                           VerticalAlignment="Center"/>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button x:Name="SettingsButton"
+                            Content="Settings"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Background="#34495E"
+                            Padding="15,8"
+                            Margin="0,0,10,0"
+                            Click="SettingsButton_Click"/>
+                    <Button x:Name="HelpButton"
+                            Content="Help"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Background="#34495E"
+                            Padding="15,8"
+                            Click="HelpButton_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
