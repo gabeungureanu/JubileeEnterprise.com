@@ -53,7 +53,18 @@ public partial class MainViewModel : ObservableObject
         _mailService = mailService;
         _calendarService = calendarService;
 
+        // Note: InitializeData is NOT called here anymore
+        // It should be called after network status is confirmed in MainWindow.Loaded event
+    }
+
+    /// <summary>
+    /// Initializes data by loading folders and messages from the API
+    /// Call this after the window is loaded and network status is confirmed
+    /// </summary>
+    public async Task InitializeDataAsync()
+    {
         InitializeData();
+        await Task.CompletedTask; // Ensure async signature for await usage
     }
 
     /// <summary>
@@ -88,15 +99,28 @@ public partial class MainViewModel : ObservableObject
 
     private async Task RebuildFolderStructureAsync()
     {
-        // Get the base folders from the mail service asynchronously
-        var baseFolders = await _mailService.GetFoldersAsync();
-        BuildFolderStructure(baseFolders);
+        try
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] RebuildFolderStructureAsync - Fetching folders from API...");
+
+            // Get the base folders from the mail service asynchronously
+            var baseFolders = await _mailService.GetFoldersAsync();
+
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] RebuildFolderStructureAsync - Got {baseFolders?.Count ?? 0} folders");
+
+            BuildFolderStructure(baseFolders ?? new List<MailFolder>());
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] RebuildFolderStructureAsync ERROR: {ex.Message}");
+            BuildFolderStructure(new List<MailFolder>());
+        }
     }
 
     private void BuildFolderStructure(List<MailFolder> baseFolders)
     {
         var folderName = !string.IsNullOrEmpty(WwbwEmailAddress) ? WwbwEmailAddress : "My Account";
-        System.Diagnostics.Debug.WriteLine($"[MainViewModel] BuildFolderStructure - Creating folder with name: '{folderName}', {baseFolders.Count} subfolders");
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] BuildFolderStructure - {baseFolders.Count} subfolders");
 
         // Create the account root folder with WWBW email
         var rootFolder = new MailFolder
@@ -123,19 +147,38 @@ public partial class MainViewModel : ObservableObject
 
     private async void InitializeData()
     {
-        // Build initial folder structure asynchronously to properly load from API
-        await RebuildFolderStructureAsync();
-
-        // Select inbox by default (look in subfolders of root)
-        var inbox = AccountRootFolder?.SubFolders.FirstOrDefault(f => f.Type == FolderType.Inbox);
-        if (inbox != null)
+        try
         {
-            SelectedFolder = inbox;
-            await LoadMessagesAsync(inbox.Id);
-        }
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] InitializeData started");
 
-        // Load today's events
-        await LoadEventsAsync(DateTime.Today, DateTime.Today.AddDays(1));
+            // Build initial folder structure asynchronously to properly load from API
+            await RebuildFolderStructureAsync();
+
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] InitializeData - Folders loaded: {AccountRootFolder?.SubFolders?.Count ?? 0}");
+
+            // Select inbox by default (look in subfolders of root)
+            var inbox = AccountRootFolder?.SubFolders.FirstOrDefault(f => f.Type == FolderType.Inbox);
+            if (inbox != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] InitializeData - Selecting inbox: {inbox.Id}");
+                SelectedFolder = inbox;
+                await LoadMessagesAsync(inbox.Id);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("[MainViewModel] InitializeData - No inbox folder found!");
+            }
+
+            // Load today's events
+            await LoadEventsAsync(DateTime.Today, DateTime.Today.AddDays(1));
+
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] InitializeData completed");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] InitializeData ERROR: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Stack trace: {ex.StackTrace}");
+        }
     }
 
     partial void OnSelectedFolderChanged(MailFolder? oldValue, MailFolder? newValue)
@@ -330,7 +373,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task RefreshFolders()
+    public async Task RefreshFolders()
     {
         await RebuildFolderStructureAsync();
     }

@@ -74,10 +74,10 @@ public class ApiMailService : IMailService
 
         _jsonOptions = new JsonSerializerOptions
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
             PropertyNameCaseInsensitive = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower) }
         };
 
         System.Diagnostics.Debug.WriteLine($"[ApiMailService] Initialized with HttpClientFactory");
@@ -216,13 +216,15 @@ public class ApiMailService : IMailService
             var response = await _httpClientFactory.GetAsync(ApiEndpoint.InspireContinuum, endpoint);
             var content = await response.Content.ReadAsStringAsync();
 
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] Response Status: {response.StatusCode}");
+
             if (response.IsSuccessStatusCode)
             {
                 // Try API response wrapper first
                 try
                 {
                     var apiResponse = JsonSerializer.Deserialize<ApiFoldersResponse>(content, _jsonOptions);
-                    if (apiResponse?.Folders != null)
+                    if (apiResponse?.Folders != null && apiResponse.Folders.Count > 0)
                     {
                         var folders = apiResponse.Folders.Select(MapToMailFolder).ToList();
                         System.Diagnostics.Debug.WriteLine($"[ApiMailService] Retrieved {folders.Count} folders");
@@ -238,26 +240,37 @@ public class ApiMailService : IMailService
                         };
                     }
                 }
-                catch { }
-
-                // Try direct list parsing
-                var directFolders = JsonSerializer.Deserialize<List<MailFolderDto>>(content, _jsonOptions);
-                if (directFolders != null)
+                catch (Exception deserEx)
                 {
-                    var folders = directFolders.Select(MapToMailFolder).ToList();
-                    System.Diagnostics.Debug.WriteLine($"[ApiMailService] Retrieved {folders.Count} folders (direct)");
-
-                    // Update cache
-                    _cachedFolders = folders;
-                    _foldersCacheTime = DateTime.UtcNow;
-
-                    return new MailServiceResult<List<MailFolder>>
-                    {
-                        Success = true,
-                        Data = folders
-                    };
+                    System.Diagnostics.Debug.WriteLine($"[ApiMailService] ApiFoldersResponse deserialization failed: {deserEx.Message}");
                 }
 
+                // Try direct list parsing
+                try
+                {
+                    var directFolders = JsonSerializer.Deserialize<List<MailFolderDto>>(content, _jsonOptions);
+                    if (directFolders != null && directFolders.Count > 0)
+                    {
+                        var folders = directFolders.Select(MapToMailFolder).ToList();
+                        System.Diagnostics.Debug.WriteLine($"[ApiMailService] Retrieved {folders.Count} folders (direct)");
+
+                        // Update cache
+                        _cachedFolders = folders;
+                        _foldersCacheTime = DateTime.UtcNow;
+
+                        return new MailServiceResult<List<MailFolder>>
+                        {
+                            Success = true,
+                            Data = folders
+                        };
+                    }
+                }
+                catch (Exception deserEx2)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ApiMailService] Direct list deserialization failed: {deserEx2.Message}");
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Both deserialization attempts failed");
                 return new MailServiceResult<List<MailFolder>>
                 {
                     Success = false,
@@ -1590,6 +1603,7 @@ public class MailFolderDto
 {
     public string? Id { get; set; }
     public string? Name { get; set; }
+    [System.Text.Json.Serialization.JsonPropertyName("folder_type")]
     public string? Type { get; set; }
     public int UnreadCount { get; set; }
     public int TotalCount { get; set; }
