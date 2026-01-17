@@ -490,6 +490,39 @@ This application is part of the Jubilee Enterprise suite. Refer to the root repo
 - Value converters for UI formatting
 - Theme fixes for white text on ribbon buttons and labels
 
+### Version 1.6.0 (2026-01-17)
+- **Full ApiMailService Integration**:
+  - Complete email loading from InspireContinuum API
+  - Messages, folders, and folder counts now load from PostgreSQL database
+  - JSON deserialization fixes with explicit `[JsonPropertyName]` attributes
+  - Proper snake_case to PascalCase mapping for all API response DTOs
+  - `StringToLongConverter` for handling file_size returned as string
+  - Mark as read functionality via PATCH API endpoint
+  - Recipients (To/Cc/Bcc) properly extracted from `outlook_email_recipients` table
+
+- **Email List UI Enhancements**:
+  - Hover highlight on email items with pointer cursor
+  - Selection highlight changed from blue (#094771) to gold (#3D3018) to match theme
+  - Smooth visual feedback on email selection
+
+- **Professional Reading Pane Redesign**:
+  - Microsoft Outlook-like layout with sender avatar showing initials
+  - Proper From/To/Cc display with formatted recipient names
+  - Horizontal attachments bar with file icons
+  - `InitialsConverter` for extracting user initials for avatar display
+
+- **Email Seeding Infrastructure**:
+  - Comprehensive `seed-complete-emails.js` script
+  - 6 inbox emails with rich HTML bodies, recipients, and attachments
+  - 3 sent emails with proper formatting
+  - 2 draft emails for testing
+  - Automatic folder unread/total count updates
+
+- **Network Status Monitoring**:
+  - Real-time API health checks via NetworkStatusService
+  - `IsOnline` and `IsApiReachable` tracking
+  - Graceful fallback to cached data when offline
+
 ### Version 1.5.0 (2026-01-15)
 - **PostgreSQL Offline Cache Infrastructure**:
   - Added comprehensive PostgreSQL-based local caching system for offline support

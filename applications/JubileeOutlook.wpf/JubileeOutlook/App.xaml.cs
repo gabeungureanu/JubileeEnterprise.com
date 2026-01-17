@@ -49,10 +49,15 @@ public partial class App : Application
         ServiceConfiguration.Initialize(useApi, apiUrl, userId);
         Console.WriteLine($"[JubileeOutlook] Service mode: {(useApi ? "API (Persistent)" : "Mock (In-Memory)")}");
         Console.WriteLine($"[JubileeOutlook] API URL: {apiUrl}");
+        Console.WriteLine($"[JubileeOutlook] User ID: {ServiceConfiguration.UserId}");
+        Console.WriteLine($"[JubileeOutlook] UseApiServices: {ServiceConfiguration.UseApiServices}");
 
         // Create and show the main window after service configuration is initialized
         // This ensures the CalendarViewModel gets the properly configured service
+        Console.WriteLine("[JubileeOutlook] Creating MainWindow...");
         var mainWindow = new MainWindow();
+        Console.WriteLine("[JubileeOutlook] Showing MainWindow...");
         mainWindow.Show();
+        Console.WriteLine("[JubileeOutlook] MainWindow shown");
     }
 }

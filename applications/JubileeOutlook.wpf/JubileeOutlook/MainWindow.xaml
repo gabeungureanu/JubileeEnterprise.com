@@ -621,98 +621,165 @@
                     <Border Grid.Column="4" Background="{StaticResource PrimaryBackgroundBrush}">
                         <Grid>
                             <!-- Reading Pane - Only visible when a message is selected -->
-                            <ScrollViewer x:Name="ReadingPane" VerticalScrollBarVisibility="Auto"
-                                          Visibility="{Binding MainViewModel.DisplayedMessage, Converter={StaticResource NullToVisibilityConverter}}">
-                                <Grid Margin="20">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
+                            <Grid x:Name="ReadingPane"
+                                  Visibility="{Binding MainViewModel.DisplayedMessage, Converter={StaticResource NullToVisibilityConverter}}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
 
-                                    <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                                        <TextBlock Text="{Binding MainViewModel.DisplayedMessage.Subject}" FontSize="{StaticResource HeaderFontSize}" FontWeight="SemiBold" Foreground="{StaticResource PrimaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,12"/>
-                                        <Grid>
+                                <!-- Email Header Section -->
+                                <Border Grid.Row="0" Background="{StaticResource PrimaryBackgroundBrush}" Padding="20,16,20,16">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Subject -->
+                                        <TextBlock Grid.Row="0"
+                                                   Text="{Binding MainViewModel.DisplayedMessage.Subject}"
+                                                   FontSize="20"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource PrimaryTextBrush}"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,0,0,16"/>
+
+                                        <!-- Sender Info with Avatar -->
+                                        <Grid Grid.Row="1" Margin="0,0,0,12">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="Auto"/>
-                                            </Grid.RowDefinitions>
 
-                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="From:" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource BodyFontSize}" Margin="0,0,8,4"/>
-                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding MainViewModel.DisplayedMessage.From}" FontSize="{StaticResource BodyFontSize}" Foreground="{StaticResource PrimaryTextBrush}" Margin="0,0,0,4"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="To:" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource BodyFontSize}" Margin="0,0,8,4"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding MainViewModel.DisplayedMessage.To, Converter={StaticResource ListToStringConverter}}" FontSize="{StaticResource BodyFontSize}" Foreground="{StaticResource PrimaryTextBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
-                                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Date:" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource BodyFontSize}" Margin="0,0,8,4"/>
-                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding MainViewModel.DisplayedMessage.ReceivedDate, StringFormat='{}{0:dddd, MMMM dd, yyyy h:mm tt}'}" FontSize="{StaticResource BodyFontSize}" Foreground="{StaticResource PrimaryTextBrush}" Margin="0,0,0,4"/>
+                                            <!-- Sender Avatar -->
+                                            <Border Grid.Column="0"
+                                                    Width="40" Height="40"
+                                                    CornerRadius="20"
+                                                    Background="{StaticResource GoldBrandBrush}"
+                                                    Margin="0,0,12,0">
+                                                <TextBlock Text="{Binding MainViewModel.DisplayedMessage.From, Converter={StaticResource InitialsConverter}}"
+                                                           FontSize="16"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#1E1E1E"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+
+                                            <!-- Sender Name and Email -->
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding MainViewModel.DisplayedMessage.From}"
+                                                           FontSize="14"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{StaticResource PrimaryTextBrush}"/>
+                                                <TextBlock Text="{Binding MainViewModel.DisplayedMessage.FromEmail}"
+                                                           FontSize="12"
+                                                           Foreground="{StaticResource SecondaryTextBrush}"
+                                                           Margin="0,2,0,0"/>
+                                            </StackPanel>
+
+                                            <!-- Date/Time -->
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding MainViewModel.DisplayedMessage.ReceivedDate, StringFormat='{}{0:ddd, MMM d, yyyy h:mm tt}'}"
+                                                       FontSize="12"
+                                                       Foreground="{StaticResource SecondaryTextBrush}"
+                                                       VerticalAlignment="Center"/>
                                         </Grid>
-                                    </StackPanel>
 
-                                    <Separator Grid.Row="1" Style="{StaticResource OutlookSeparatorStyle}" Margin="0,0,0,20"/>
+                                        <!-- To Recipients -->
+                                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="52,0,0,8">
+                                            <TextBlock Text="To:"
+                                                       FontSize="12"
+                                                       Foreground="{StaticResource SecondaryTextBrush}"
+                                                       Margin="0,0,8,0"
+                                                       VerticalAlignment="Top"/>
+                                            <TextBlock Text="{Binding MainViewModel.DisplayedMessage.To, Converter={StaticResource ListToStringConverter}}"
+                                                       FontSize="12"
+                                                       Foreground="{StaticResource PrimaryTextBrush}"
+                                                       TextWrapping="Wrap"/>
+                                        </StackPanel>
 
-                                    <!-- Attachments Section -->
-                                    <StackPanel Grid.Row="2" Margin="0,0,0,20" Visibility="{Binding MainViewModel.DisplayedMessage.Attachments.Count, Converter={StaticResource CountToVisibilityConverter}}">
-                                        <TextBlock Text="Attachments:" FontSize="{StaticResource BodyFontSize}" FontWeight="SemiBold" Margin="0,0,0,12"/>
-                                        <ItemsControl ItemsSource="{Binding MainViewModel.DisplayedMessage.Attachments}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border Background="{StaticResource TertiaryBackgroundBrush}"
-                                                           BorderBrush="{StaticResource BorderBrush}"
-                                                           BorderThickness="1"
-                                                           CornerRadius="4"
-                                                           Padding="12,8"
-                                                           Margin="0,0,0,8"
-                                                           Cursor="Hand">
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                                <ColumnDefinition Width="*"/>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                            </Grid.ColumnDefinitions>
+                                        <!-- Attachments Bar (horizontal, compact) -->
+                                        <Border Grid.Row="3"
+                                                Visibility="{Binding MainViewModel.DisplayedMessage.HasAttachments, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                Background="{StaticResource TertiaryBackgroundBrush}"
+                                                CornerRadius="4"
+                                                Padding="12,8"
+                                                Margin="0,8,0,0">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
 
-                                                            <TextBlock Grid.Column="0"
-                                                                      Text="&#xe226;"
-                                                                      FontFamily="{StaticResource MaterialIcons}"
-                                                                      FontSize="24"
-                                                                      Foreground="{StaticResource AccentBrush}"
-                                                                      VerticalAlignment="Center"
-                                                                      Margin="0,0,12,0"/>
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                                    <TextBlock Text="&#xe226;"
+                                                               FontFamily="{StaticResource MaterialIcons}"
+                                                               FontSize="16"
+                                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                                               VerticalAlignment="Center"
+                                                               Margin="0,0,8,0"/>
+                                                    <TextBlock Text="{Binding MainViewModel.DisplayedMessage.Attachments.Count, StringFormat='{}{0} attachment(s)'}"
+                                                               FontSize="12"
+                                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                                               VerticalAlignment="Center"
+                                                               Margin="0,0,12,0"/>
+                                                </StackPanel>
 
-                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding FileName}"
-                                                                          FontSize="{StaticResource BodyFontSize}"
-                                                                          Foreground="{StaticResource PrimaryTextBrush}"
-                                                                          TextTrimming="CharacterEllipsis"/>
-                                                                <TextBlock Text="{Binding FileSize, Converter={StaticResource FileSizeConverter}}"
-                                                                          FontSize="{StaticResource SmallFontSize}"
-                                                                          Foreground="{StaticResource SecondaryTextBrush}"
-                                                                          Margin="0,2,0,0"/>
-                                                            </StackPanel>
+                                                <ItemsControl Grid.Column="1" ItemsSource="{Binding MainViewModel.DisplayedMessage.Attachments}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <WrapPanel Orientation="Horizontal"/>
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Background="{StaticResource SecondaryBackgroundBrush}"
+                                                                    BorderBrush="{StaticResource BorderBrush}"
+                                                                    BorderThickness="1"
+                                                                    CornerRadius="3"
+                                                                    Padding="8,4"
+                                                                    Margin="0,0,8,0"
+                                                                    Cursor="Hand">
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="{Binding FileName}"
+                                                                               FontSize="11"
+                                                                               Foreground="{StaticResource AccentBrush}"
+                                                                               VerticalAlignment="Center"
+                                                                               MaxWidth="150"
+                                                                               TextTrimming="CharacterEllipsis"/>
+                                                                    <TextBlock Text="{Binding FileSize, Converter={StaticResource FileSizeConverter}}"
+                                                                               FontSize="10"
+                                                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                                                               VerticalAlignment="Center"
+                                                                               Margin="6,0,0,0"/>
+                                                                </StackPanel>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </Grid>
+                                        </Border>
+                                    </Grid>
+                                </Border>
 
-                                                            <Button Grid.Column="2"
-                                                                   ToolTip="Download"
-                                                                   Style="{StaticResource IconButtonStyle}"
-                                                                   Margin="8,0,0,0">
-                                                                <TextBlock Text="&#xe2c4;"
-                                                                          FontFamily="{StaticResource MaterialIcons}"
-                                                                          FontSize="20"
-                                                                          Foreground="{StaticResource SecondaryTextBrush}"/>
-                                                            </Button>
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
+                                <!-- Separator Line -->
+                                <Rectangle Grid.Row="0" Height="1" Fill="{StaticResource BorderBrush}" VerticalAlignment="Bottom"/>
 
-                                    <TextBlock Grid.Row="3" Text="{Binding MainViewModel.DisplayedMessage.Body}" FontSize="{StaticResource BodyFontSize}" Foreground="{StaticResource PrimaryTextBrush}" TextWrapping="Wrap" LineHeight="22"/>
-                                </Grid>
-                            </ScrollViewer>
+                                <!-- Email Body Content -->
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <Border Padding="20,16">
+                                        <TextBlock Text="{Binding MainViewModel.DisplayedMessage.Body}"
+                                                   FontSize="14"
+                                                   Foreground="{StaticResource PrimaryTextBrush}"
+                                                   TextWrapping="Wrap"
+                                                   LineHeight="24"/>
+                                    </Border>
+                                </ScrollViewer>
+                            </Grid>
 
                             <!-- Compose Mail Panel -->
                             <views:ComposeMailView x:Name="ComposeMailPanel" Visibility="Collapsed"/>

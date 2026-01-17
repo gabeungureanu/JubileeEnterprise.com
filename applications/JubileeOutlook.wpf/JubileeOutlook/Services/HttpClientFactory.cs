@@ -386,6 +386,7 @@ public class HttpClientFactory
 
     /// <summary>
     /// Attaches the Bearer token and X-User-Id header to the request if available
+    /// Falls back to ServiceConfiguration.UserId for development when no auth tokens exist
     /// </summary>
     private async Task AttachAuthHeaderAsync(HttpRequestMessage request)
     {
@@ -401,6 +402,16 @@ public class HttpClientFactory
                 {
                     request.Headers.Add("X-User-Id", tokens.CachedUserId);
                     System.Diagnostics.Debug.WriteLine($"[HttpClientFactory] Added X-User-Id header: {tokens.CachedUserId}");
+                }
+            }
+            else
+            {
+                // Fallback to ServiceConfiguration.UserId for development/testing
+                var userId = ServiceConfiguration.UserId;
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    request.Headers.Add("X-User-Id", userId);
+                    System.Diagnostics.Debug.WriteLine($"[HttpClientFactory] Added X-User-Id header from ServiceConfiguration: {userId}");
                 }
             }
         }

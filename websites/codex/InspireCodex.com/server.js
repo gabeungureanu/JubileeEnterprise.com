@@ -2528,7 +2528,7 @@ app.post('/api/auth/login', async (req, res) => {
         console.error('Login error:', err);
         res.status(500).json({
             success: false,
-            error: 'An error occurred during login'
+            error: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred during login'
         });
     }
 });
@@ -2695,7 +2695,7 @@ app.post('/api/auth/register', async (req, res) => {
         console.error('Registration error:', err);
         res.status(500).json({
             success: false,
-            error: 'An error occurred during registration'
+            error: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred during registration'
         });
     }
 });

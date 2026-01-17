@@ -1,8 +1,8 @@
 # JubileeOutlook Feature Status Report
 
 **Project:** JubileeOutlook Email Client
-**Version:** 1.5.0
-**Date:** January 15, 2026
+**Version:** 1.6.0
+**Date:** January 17, 2026
 **Platform:** WPF / .NET 9.0
 
 ---
@@ -253,9 +253,10 @@
 | Feature | Current State | Remaining Work |
 |---------|---------------|----------------|
 | ApiCalendarService | ✅ **COMPLETE** - Full CRUD operations with caching | Testing with live InspireContinuum API |
-| ApiMailService | HTTP client ready, endpoints defined | Wire up to MainViewModel |
+| ApiMailService | ✅ **COMPLETE** - Full integration with JSON deserialization fixes | Performance optimization |
 | ServiceConfiguration | ✅ **COMPLETE** - UseApi toggle working | Environment variable integration |
 | ImageService | ✅ **COMPLETE** - Upload/download with retry | - |
+| NetworkStatusService | ✅ **COMPLETE** - Health check monitoring | - |
 
 ### 2.2 Ribbon Commands
 
@@ -429,18 +430,39 @@
 
 | Module | Completion % |
 |--------|--------------|
-| Email UI | 90% |
-| Email Backend | 25% |
+| Email UI | 95% |
+| Email Backend | 85% |
 | Calendar UI | 98% |
-| Calendar Backend | 85% |
+| Calendar Backend | 90% |
 | People/Contacts | 5% |
 | Tasks | 0% |
 | Authentication | 15% |
-| Database Integration | 75% |
+| Database Integration | 90% |
 
-### Recent Updates (v1.5.0 - January 15, 2026)
+### Recent Updates (v1.6.0 - January 17, 2026)
 
 **Completed in this release:**
+- ✅ **ApiMailService Full Integration** - Messages now load and display correctly from InspireContinuum API
+- ✅ **JSON Deserialization Fixes** - Added explicit `[JsonPropertyName]` attributes for proper snake_case mapping
+- ✅ **Email List UI Enhancements** - Hover highlight, selection highlight, and pointer cursor on email items
+- ✅ **Theme-Consistent Selection Colors** - Changed selection highlight from blue (#094771) to gold (#3D3018)
+- ✅ **Professional Reading Pane Redesign** - Outlook-like layout with sender avatar, recipient display, attachments bar
+- ✅ **InitialsConverter** - Extracts user initials for avatar display
+- ✅ **StringToLongConverter** - Handles API returning file_size as string
+- ✅ **Comprehensive Email Seeding** - 11 realistic emails with HTML bodies, recipients, and attachments
+- ✅ **Folder Count Updates** - Automatic unread/total count synchronization
+- ✅ **Network Status Monitoring** - Real-time API health checks with IsOnline/IsApiReachable tracking
+
+**Key Technical Improvements:**
+- Explicit `[JsonPropertyName]` attributes on all API response DTOs
+- Proper recipient extraction from `outlook_email_recipients` table
+- Attachment handling with `StringToLongConverter` for file_size
+- Debug logging infrastructure for API troubleshooting
+- X-User-Id header injection via HttpClientFactory
+
+### Previous Updates (v1.5.0 - January 15, 2026)
+
+**Completed:**
 - ✅ Wire Up CalendarViewModel to API (full implementation)
 - ✅ Implement Event CRUD Operations (create, update, delete via API)
 - ✅ Handle Event Images & Attachments (upload, download, display)
@@ -477,4 +499,4 @@
 ---
 
 **Document Prepared By:** Jubilee Development Team
-**Last Updated:** January 15, 2026
+**Last Updated:** January 17, 2026

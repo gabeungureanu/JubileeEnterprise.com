@@ -71,13 +71,21 @@ public class ConfigurationService
 
     private ConfigurationService()
     {
-        // Determine environment from environment variable or default to Production
+        var basePath = AppDomain.CurrentDomain.BaseDirectory;
+
+        // First, load just appsettings.json to read the Environment setting
+        var preBuilder = new ConfigurationBuilder()
+            .SetBasePath(basePath)
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
+        var preConfig = preBuilder.Build();
+        var configuredEnv = preConfig.GetValue<string>("AppSettings:Environment");
+
+        // Determine environment: Environment variable takes precedence, then config file, then default to Development
         var environmentName = System.Environment.GetEnvironmentVariable("JUBILEE_ENVIRONMENT")
             ?? System.Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
             ?? System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
-            ?? "Production";
-
-        var basePath = AppDomain.CurrentDomain.BaseDirectory;
+            ?? configuredEnv
+            ?? "Development";
 
         System.Diagnostics.Debug.WriteLine($"ConfigurationService: Loading configuration for environment '{environmentName}'");
         System.Diagnostics.Debug.WriteLine($"ConfigurationService: Base path '{basePath}'");
@@ -95,19 +103,8 @@ public class ConfigurationService
         _rootConfig = new RootConfig();
         _configuration.Bind(_rootConfig);
 
-        // Override environment from config if not set by environment variable
-        if (string.IsNullOrEmpty(System.Environment.GetEnvironmentVariable("JUBILEE_ENVIRONMENT")))
-        {
-            var configEnv = _configuration.GetValue<string>("AppSettings:Environment");
-            if (!string.IsNullOrEmpty(configEnv))
-            {
-                _rootConfig.AppSettings.Environment = configEnv;
-            }
-        }
-        else
-        {
-            _rootConfig.AppSettings.Environment = environmentName;
-        }
+        // Ensure environment is set correctly in root config
+        _rootConfig.AppSettings.Environment = environmentName;
 
         LogConfiguration();
     }

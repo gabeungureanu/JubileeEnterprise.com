@@ -108,6 +108,15 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
+        // Initialize service configuration FIRST (reads from environment and config)
+        // This must happen before getting any services
+        ServiceConfiguration.Initialize();
+
+        // Start network monitoring early and perform initial health check
+        // This ensures IsApiReachable is set before services try to load data
+        var networkService = NetworkStatusService.Instance;
+        _ = networkService.CheckNetworkStatusAsync(); // Fire initial check (don't wait)
+
         // Initialize services and ViewModels using ServiceConfiguration
         // ServiceConfiguration determines whether to use API or Mock services based on config
         var mailService = ServiceConfiguration.GetMailService();
@@ -160,17 +169,24 @@ public partial class MainWindow : Window
             ShowTabContent("HomeTab");
             // Ensure Mail module is visible on start
             ShowModuleContent(AppModule.Mail);
-            // Initialize service configuration (reads from environment and config)
-            ServiceConfiguration.Initialize();
             // Initialize notification service for user-friendly error messages
             NotificationService.Instance.Initialize(NotificationContainer);
-            // Initialize offline status monitoring
+            // Initialize offline status monitoring (network service already started in constructor)
             InitializeOfflineStatusMonitoring();
+
+            // Wait for initial network check to complete before loading data
+            var networkService = NetworkStatusService.Instance;
+            await networkService.CheckNetworkStatusAsync();
+
             // Initialize authentication state
             await _authManager.InitializeAsync();
             UpdateProfileUI();
             // Start the animated accent bar
             StartAccentBarAnimation();
+
+            // Now load data after network status is confirmed
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Network status - Online: {networkService.IsOnline}, API Reachable: {networkService.IsApiReachable}");
+            await _mainViewModel.InitializeDataAsync();
         };
 
         // Save window state on closing
@@ -1788,6 +1804,22 @@ public partial class MainWindow : Window
 
         OnlineStatusPanel.Visibility = isOnline ? Visibility.Visible : Visibility.Collapsed;
         OfflineStatusPanel.Visibility = isOnline ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    /// <summary>
+    /// Refreshes folders from the API after network status is confirmed
+    /// </summary>
+    private async Task RefreshFoldersAsync()
+    {
+        try
+        {
+            System.Diagnostics.Debug.WriteLine("[MainWindow] RefreshFoldersAsync called");
+            await _mainViewModel.RefreshFolders();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Error refreshing folders: {ex.Message}");
+        }
     }
 
     private async void UpdatePendingOperationsCount()

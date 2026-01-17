@@ -77,7 +77,11 @@ public class NetworkStatusService : INetworkStatusService
     {
         // Get API URL from configuration
         var config = ConfigurationService.Instance;
-        _apiHealthCheckUrl = $"{config.GetInspireContinuumBaseUrl()}/health";
+        // Health endpoint is at the root, not under /api/v1
+        // Strip /api/v1 from base URL to get the server root
+        var baseUrl = config.GetInspireContinuumBaseUrl();
+        var healthBaseUrl = baseUrl.Replace("/api/v1", "").Replace("/api/v2", "").TrimEnd('/');
+        _apiHealthCheckUrl = $"{healthBaseUrl}/health";
         _pollingIntervalMs = 30000; // 30 seconds
         _healthCheckTimeoutMs = 5000; // 5 seconds timeout
 
