@@ -1395,14 +1395,15 @@ public class ApiMailService : IMailService
 
     private static MailFolder MapToMailFolder(MailFolderDto dto)
     {
+        var folderType = ParseFolderType(dto.Type);
         var folder = new MailFolder
         {
             Id = dto.Id ?? Guid.NewGuid().ToString(),
             Name = dto.Name ?? string.Empty,
-            Type = ParseFolderType(dto.Type),
+            Type = folderType,
             UnreadCount = dto.UnreadCount,
             TotalCount = dto.TotalCount,
-            Icon = dto.Icon ?? GetDefaultIcon(ParseFolderType(dto.Type)),
+            Icon = ConvertIconNameToMaterialIcon(dto.Icon, folderType),
             ParentFolderId = dto.ParentFolderId,
             IsAccountRoot = dto.IsAccountRoot,
             WwbwEmailAddress = dto.WwbwEmailAddress,
@@ -1519,6 +1520,38 @@ public class ApiMailService : IMailService
             FolderType.Junk => "\ue16e",         // report
             FolderType.Archive => "\ue149",      // archive
             _ => "\ue2c7"                        // folder
+        };
+    }
+
+    /// <summary>
+    /// Converts icon name from API (e.g., "inbox", "send") to Material Icons unicode character
+    /// </summary>
+    private static string ConvertIconNameToMaterialIcon(string? iconName, FolderType folderType)
+    {
+        if (string.IsNullOrEmpty(iconName))
+        {
+            return GetDefaultIcon(folderType);
+        }
+
+        // Convert icon name to Material Icons unicode character
+        return iconName.ToLowerInvariant() switch
+        {
+            "inbox" => "\ue156",           // inbox
+            "send" => "\ue163",            // send
+            "drafts" => "\ue151",          // drafts
+            "delete" => "\ue872",          // delete
+            "trash" => "\ue872",           // delete (alias)
+            "report" => "\ue160",          // report (warning/spam)
+            "spam" => "\ue160",            // report (alias)
+            "archive" => "\ue149",         // archive
+            "folder" => "\ue2c7",          // folder
+            "account_circle" => "\ue853",  // account_circle
+            "star" => "\ue838",            // star
+            "label" => "\ue892",           // label
+            "flag" => "\ue153",            // flag
+            "email" => "\ue0be",           // email
+            "mail" => "\ue158",            // mail
+            _ => GetDefaultIcon(folderType) // fallback to folder type default
         };
     }
 
