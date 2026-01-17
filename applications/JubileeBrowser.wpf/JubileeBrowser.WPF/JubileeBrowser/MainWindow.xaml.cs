@@ -3158,8 +3158,8 @@ public partial class MainWindow : Window
             SetButtonIconForeground(BookmarksButton, blackBrush);
             // MenuButton uses special style with binding - don't set foreground directly
 
-            // Sidebar toggle icon: Black on yellow nav bar
-            SidebarToggleIcon.Foreground = blackBrush;
+            // Sidebar toggle icon: Black on yellow nav bar (but white if sidebar is open)
+            SidebarToggleIcon.Foreground = _isSidebarOpen ? System.Windows.Media.Brushes.White : blackBrush;
 
             // Zoom level text should be yellow on black address bar
             ZoomLevelText.Foreground = wwbwYellowBrush;
@@ -3614,10 +3614,13 @@ public partial class MainWindow : Window
         if (SidePanel.Visibility == Visibility.Visible && SidePanelTitle.Text == "Bookmarks" && !_isSidePanelAnimating)
         {
             HideSidePanel();
+            SetSidebarBookmarksActive(false);
         }
         else if (!_isSidePanelAnimating)
         {
             ShowBookmarks();
+            SetSidebarBookmarksActive(true);
+            SetSidebarHistoryActive(false); // Ensure history is not active
         }
     }
 
@@ -3659,6 +3662,20 @@ public partial class MainWindow : Window
     {
         if (_isSidePanelAnimating) return;
 
+        // Close other panels first - only one panel open at a time
+        if (_isTodoPanelOpen)
+        {
+            CloseTodoPanelInstant();
+        }
+        if (_isSidebarChatOpen)
+        {
+            CloseSidebarChat();
+        }
+        if (_isChatPanelOpen)
+        {
+            CloseChatPanelInstant();
+        }
+
         SidePanel.Visibility = Visibility.Visible;
         SidePanelColumn.Width = new GridLength(320);
 
@@ -3672,6 +3689,10 @@ public partial class MainWindow : Window
     private void HideSidePanel()
     {
         if (_isSidePanelAnimating || SidePanel.Visibility != Visibility.Visible) return;
+
+        // Reset sidebar button active states
+        SetSidebarBookmarksActive(false);
+        SetSidebarHistoryActive(false);
 
         // Play slide-out animation
         var slideOut = (System.Windows.Media.Animation.Storyboard)FindResource("SidePanelSlideOut");
@@ -9556,16 +9577,30 @@ public partial class MainWindow : Window
             SidebarToggleIcon.Foreground = System.Windows.Media.Brushes.Black;
         }
 
-        // Also close sidebar chat panel if open
+        // Close all open panels when sidebar is closed
         if (_isSidebarChatOpen)
         {
             CloseSidebarChat();
         }
 
-        // Also close right-side chat panel if open
         if (_isChatPanelOpen)
         {
-            CloseChatPanel();
+            CloseChatPanelInstant();
+        }
+
+        if (_isTodoPanelOpen)
+        {
+            CloseTodoPanelInstant();
+        }
+
+        // Close SidePanel (Bookmarks/History) if open
+        if (SidePanel.Visibility == Visibility.Visible)
+        {
+            SidePanel.Visibility = Visibility.Collapsed;
+            SidePanelColumn.Width = new GridLength(0);
+            // Reset sidebar button active states
+            SetSidebarBookmarksActive(false);
+            SetSidebarHistoryActive(false);
         }
 
         // Play slide-out animation
@@ -9607,6 +9642,24 @@ public partial class MainWindow : Window
         BookmarksButton_Click(sender, e);
     }
 
+    /// <summary>
+    /// Sets the active state for the sidebar bookmarks button
+    /// </summary>
+    private void SetSidebarBookmarksActive(bool isActive)
+    {
+        SidebarBookmarksButton.Tag = isActive ? "Active" : null;
+        SidebarBookmarksActiveIndicator.Visibility = isActive ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>
+    /// Sets the active state for the sidebar history button
+    /// </summary>
+    private void SetSidebarHistoryActive(bool isActive)
+    {
+        SidebarHistoryButton.Tag = isActive ? "Active" : null;
+        SidebarHistoryActiveIndicator.Visibility = isActive ? Visibility.Visible : Visibility.Collapsed;
+    }
+
     #endregion
 
     #region Sidebar Chat Panel
@@ -9626,10 +9679,16 @@ public partial class MainWindow : Window
         if (SidePanel.Visibility == Visibility.Visible)
         {
             SidePanel.Visibility = Visibility.Collapsed;
+            SidePanelColumn.Width = new GridLength(0);
+            // Reset bookmarks/history active states
+            SetSidebarBookmarksActive(false);
+            SetSidebarHistoryActive(false);
         }
-        if (TodoPanel.Visibility == Visibility.Visible)
+
+        // Close todo panel if open (use instant close for smooth transition)
+        if (_isTodoPanelOpen)
         {
-            CloseTodoPanel();
+            CloseTodoPanelInstant();
         }
 
         // Show sidebar chat panel
@@ -9944,6 +10003,7 @@ public partial class MainWindow : Window
 
     private bool _isTodoPanelOpen = false;
     private List<TodoItem> _todoItems = new();
+    private TodoItem? _editingTodo = null;
 
     private void SidebarTodoButton_Click(object sender, RoutedEventArgs e)
     {
@@ -9964,32 +10024,130 @@ public partial class MainWindow : Window
     {
         _isTodoPanelOpen = true;
 
+        // Close chat panel first if open
+        if (_isChatPanelOpen)
+        {
+            CloseChatPanelInstant();
+        }
+
+        // Close sidebar chat panel if open
+        if (_isSidebarChatOpen)
+        {
+            CloseSidebarChat();
+        }
+
         // Close other panels if open
         if (SidePanel.Visibility == Visibility.Visible)
         {
             SidePanel.Visibility = Visibility.Collapsed;
             SidePanelColumn.Width = new GridLength(0);
+            // Reset bookmarks/history active states
+            SetSidebarBookmarksActive(false);
+            SetSidebarHistoryActive(false);
         }
 
+        // Smooth slide-in animation for todo panel
         TodoPanel.Visibility = Visibility.Visible;
         TodoPanelSplitter.Visibility = Visibility.Visible;
-        TodoPanelColumn.Width = new GridLength(320);
-        TodoSplitterColumn.Width = new GridLength(4);
         SidebarTodoActiveIndicator.Visibility = Visibility.Visible;
+
+        // Animate panel width from 0 to 320
+        var slideIn = new System.Windows.Media.Animation.DoubleAnimation
+        {
+            From = 0,
+            To = 320,
+            Duration = TimeSpan.FromMilliseconds(200),
+            EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut }
+        };
+
+        var proxy = new AnimationProxy { Value = 0 };
+        slideIn.Completed += (s, e) =>
+        {
+            TodoPanelColumn.Width = new GridLength(320);
+            TodoSplitterColumn.Width = new GridLength(4);
+        };
+
+        proxy.ValueChanged += (s, e) =>
+        {
+            TodoPanelColumn.Width = new GridLength(proxy.Value);
+            if (proxy.Value > 0) TodoSplitterColumn.Width = new GridLength(4);
+        };
+
+        proxy.BeginAnimation(AnimationProxy.ValueProperty, slideIn);
 
         // Load todos from API
         await LoadTodosAsync();
     }
 
+    // Close chat panel instantly (no fade animation) - used when switching panels
+    private void CloseChatPanelInstant()
+    {
+        _isChatPanelOpen = false;
+
+        // Update chat icon state immediately
+        ChatActiveIndicator.Visibility = Visibility.Collapsed;
+        UpdateChatIconColor();
+
+        // Update sidebar chat button state
+        SidebarChatButton.Tag = null;
+        SidebarChatActiveIndicator.Visibility = Visibility.Collapsed;
+
+        // Hide chat panel immediately
+        ChatSplitter.Visibility = Visibility.Collapsed;
+        ChatPanel.Visibility = Visibility.Collapsed;
+        ChatSplitterColumn.Width = new GridLength(0);
+        ChatPanelColumn.Width = new GridLength(0);
+        ChatPanelColumn.MinWidth = 0;
+        ChatPanelColumn.MaxWidth = double.PositiveInfinity;
+    }
+
     private void CloseTodoPanel()
     {
         _isTodoPanelOpen = false;
+        SidebarTodoActiveIndicator.Visibility = Visibility.Collapsed;
+        SidebarTodoButton.Tag = null;
+        CloseEditPanel();
+
+        // Smooth slide-out animation
+        var currentWidth = TodoPanelColumn.ActualWidth > 0 ? TodoPanelColumn.ActualWidth : 320;
+
+        var slideOut = new System.Windows.Media.Animation.DoubleAnimation
+        {
+            From = currentWidth,
+            To = 0,
+            Duration = TimeSpan.FromMilliseconds(150),
+            EasingFunction = new System.Windows.Media.Animation.CubicEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseIn }
+        };
+
+        var proxy = new AnimationProxy { Value = currentWidth };
+        slideOut.Completed += (s, e) =>
+        {
+            TodoPanel.Visibility = Visibility.Collapsed;
+            TodoPanelSplitter.Visibility = Visibility.Collapsed;
+            TodoPanelColumn.Width = new GridLength(0);
+            TodoSplitterColumn.Width = new GridLength(0);
+        };
+
+        proxy.ValueChanged += (s, e) =>
+        {
+            TodoPanelColumn.Width = new GridLength(Math.Max(0, proxy.Value));
+        };
+
+        proxy.BeginAnimation(AnimationProxy.ValueProperty, slideOut);
+    }
+
+    // Close todo panel instantly (no animation) - used when switching panels
+    private void CloseTodoPanelInstant()
+    {
+        _isTodoPanelOpen = false;
+        SidebarTodoActiveIndicator.Visibility = Visibility.Collapsed;
+        SidebarTodoButton.Tag = null;
+        CloseEditPanel();
+
         TodoPanel.Visibility = Visibility.Collapsed;
         TodoPanelSplitter.Visibility = Visibility.Collapsed;
         TodoPanelColumn.Width = new GridLength(0);
         TodoSplitterColumn.Width = new GridLength(0);
-        SidebarTodoActiveIndicator.Visibility = Visibility.Collapsed;
-        SidebarTodoButton.Tag = null;
     }
 
     private void CloseTodoPanel_Click(object sender, RoutedEventArgs e)
@@ -9999,6 +10157,9 @@ public partial class MainWindow : Window
 
     private async Task LoadTodosAsync()
     {
+        // Show loading indicator
+        TodoLoadingIndicator.Visibility = Visibility.Visible;
+
         try
         {
             using var client = new HttpClient();
@@ -10010,6 +10171,7 @@ public partial class MainWindow : Window
             {
                 _todoItems = new List<TodoItem>();
                 TodoItemsControl.ItemsSource = _todoItems;
+                TodoLoadingIndicator.Visibility = Visibility.Collapsed;
                 return;
             }
 
@@ -10017,7 +10179,37 @@ public partial class MainWindow : Window
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                _todoItems = System.Text.Json.JsonSerializer.Deserialize<List<TodoItem>>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<TodoItem>();
+                var items = System.Text.Json.JsonSerializer.Deserialize<List<TodoItem>>(json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<TodoItem>();
+
+                // Set default values for Status and AssignedTo if null (for backward compatibility)
+                var currentUserName = _profileAuthService.CurrentProfile?.DisplayName ?? userEmail;
+                foreach (var item in items)
+                {
+                    // Set default status based on IsCompleted if status is null
+                    if (string.IsNullOrEmpty(item.Status))
+                    {
+                        item.Status = item.IsCompleted ? "Completed" : "Pending";
+                    }
+
+                    // Set default priority if null
+                    if (string.IsNullOrEmpty(item.Priority))
+                    {
+                        item.Priority = "Medium";
+                    }
+
+                    // Set default assigned to current user if null
+                    if (string.IsNullOrEmpty(item.AssignedTo))
+                    {
+                        item.AssignedTo = currentUserName;
+                    }
+                }
+
+                // Sort client-side: incomplete tasks first, then by creation date ascending (oldest first)
+                _todoItems = items
+                    .OrderBy(t => t.IsCompleted)
+                    .ThenBy(t => t.CreatedAt)
+                    .ToList();
+
                 TodoItemsControl.ItemsSource = _todoItems;
             }
         }
@@ -10026,6 +10218,11 @@ public partial class MainWindow : Window
             System.Diagnostics.Debug.WriteLine($"Error loading todos: {ex.Message}");
             _todoItems = new List<TodoItem>();
             TodoItemsControl.ItemsSource = _todoItems;
+        }
+        finally
+        {
+            // Hide loading indicator when done
+            TodoLoadingIndicator.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -10045,7 +10242,15 @@ public partial class MainWindow : Window
     private async Task AddNewTodoAsync()
     {
         var title = NewTodoTextBox.Text?.Trim();
-        if (string.IsNullOrEmpty(title)) return;
+
+        // Validation: Check if input is empty
+        if (string.IsNullOrEmpty(title))
+        {
+            // Show validation message
+            ShowTodoValidationMessage("Please enter a task title");
+            NewTodoTextBox.Focus();
+            return;
+        }
 
         var userEmail = _profileAuthService.CurrentProfile?.Email ?? "";
         if (string.IsNullOrEmpty(userEmail))
@@ -10054,24 +10259,100 @@ public partial class MainWindow : Window
             return;
         }
 
+        // Clear input immediately for responsive UX
+        NewTodoTextBox.Text = "";
+
+        // Create local todo item for instant display (optimistic UI)
+        var newTodo = new TodoItem
+        {
+            Id = -DateTime.Now.Millisecond, // Temporary negative ID
+            Title = title,
+            Status = "Pending",
+            Priority = "Medium",
+            AssignedTo = _profileAuthService.CurrentProfile?.DisplayName ?? userEmail,
+            UserEmail = userEmail,
+            CreatedAt = DateTime.UtcNow,
+            IsCompleted = false
+        };
+
+        // Add to list at the end (optimistic update - oldest first, newest at bottom)
+        _todoItems.Add(newTodo);
+        TodoItemsControl.ItemsSource = null;
+        TodoItemsControl.ItemsSource = _todoItems;
+
+        // Sync with API in background
         try
         {
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Add("Accept", "application/json");
 
-            var todo = new { title = title, email = userEmail };
-            var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(todo), System.Text.Encoding.UTF8, "application/json");
+            var todoData = new
+            {
+                title = title,
+                email = userEmail,
+                status = "Pending",
+                priority = "Medium",
+                assignedTo = _profileAuthService.CurrentProfile?.DisplayName ?? userEmail
+            };
+            var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(todoData), System.Text.Encoding.UTF8, "application/json");
 
             var response = await client.PostAsync($"{_apiBaseUrl}/api/todos", content);
             if (response.IsSuccessStatusCode)
             {
-                NewTodoTextBox.Text = "";
-                await LoadTodosAsync();
+                // Parse the response to get the real ID and update the optimistic item
+                var responseJson = await response.Content.ReadAsStringAsync();
+                var responseData = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseJson);
+
+                if (responseData.TryGetProperty("todo", out var todoElement) &&
+                    todoElement.TryGetProperty("id", out var idElement))
+                {
+                    // Update the temporary ID with the real server ID
+                    newTodo.Id = idElement.GetInt32();
+
+                    // Refresh to show updated ID (keeping all other values intact)
+                    TodoItemsControl.ItemsSource = null;
+                    TodoItemsControl.ItemsSource = _todoItems;
+                }
+            }
+            else
+            {
+                // Remove optimistic item on failure
+                _todoItems.Remove(newTodo);
+                TodoItemsControl.ItemsSource = null;
+                TodoItemsControl.ItemsSource = _todoItems;
+                ShowTodoValidationMessage("Failed to add task. Please try again.");
             }
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error adding todo: {ex.Message}");
+            // Remove optimistic item on failure
+            _todoItems.Remove(newTodo);
+            TodoItemsControl.ItemsSource = null;
+            TodoItemsControl.ItemsSource = _todoItems;
+            ShowTodoValidationMessage("Connection error. Please try again.");
+        }
+    }
+
+    private void ShowTodoValidationMessage(string message)
+    {
+        // Show a temporary validation message in the Todo panel
+        if (TodoValidationMessage != null)
+        {
+            TodoValidationMessage.Text = message;
+            TodoValidationMessage.Visibility = Visibility.Visible;
+
+            // Auto-hide after 3 seconds
+            var timer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(3)
+            };
+            timer.Tick += (s, e) =>
+            {
+                TodoValidationMessage.Visibility = Visibility.Collapsed;
+                timer.Stop();
+            };
+            timer.Start();
         }
     }
 
@@ -10084,10 +10365,15 @@ public partial class MainWindow : Window
                 using var client = new HttpClient();
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
 
-                var update = new { isCompleted = todo.IsCompleted };
+                // Update status based on completion
+                var newStatus = todo.IsCompleted ? "Completed" : "Pending";
+                var update = new { isCompleted = todo.IsCompleted, status = newStatus };
                 var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(update), System.Text.Encoding.UTF8, "application/json");
 
                 await client.PutAsync($"{_apiBaseUrl}/api/todos/{todo.Id}", content);
+
+                // Update local item
+                todo.Status = newStatus;
             }
             catch (Exception ex)
             {
@@ -10100,16 +10386,256 @@ public partial class MainWindow : Window
     {
         if (sender is Button button && button.Tag is int todoId)
         {
+            // Optimistic delete - remove from UI immediately
+            var todoToRemove = _todoItems.FirstOrDefault(t => t.Id == todoId);
+            if (todoToRemove != null)
+            {
+                _todoItems.Remove(todoToRemove);
+                TodoItemsControl.ItemsSource = null;
+                TodoItemsControl.ItemsSource = _todoItems;
+            }
+
             try
             {
                 using var client = new HttpClient();
                 await client.DeleteAsync($"{_apiBaseUrl}/api/todos/{todoId}");
-                await LoadTodosAsync();
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error deleting todo: {ex.Message}");
+                // Restore on failure
+                if (todoToRemove != null)
+                {
+                    _todoItems.Insert(0, todoToRemove);
+                    TodoItemsControl.ItemsSource = null;
+                    TodoItemsControl.ItemsSource = _todoItems;
+                }
+                ShowTodoValidationMessage("Failed to delete task. Please try again.");
             }
+        }
+    }
+
+    // Edit button click handler
+    private void EditTodoButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button button && button.Tag is TodoItem todo)
+        {
+            OpenEditPanel(todo);
+        }
+    }
+
+    // Click on todo item to open edit panel
+    private void TodoItem_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is Border border && border.DataContext is TodoItem todo)
+        {
+            // Don't open edit panel if clicking on checkbox or delete button
+            if (e.OriginalSource is CheckBox || IsDescendantOf(e.OriginalSource as DependencyObject, typeof(CheckBox)))
+                return;
+            if (e.OriginalSource is Button || IsDescendantOf(e.OriginalSource as DependencyObject, typeof(Button)))
+                return;
+
+            OpenEditPanel(todo);
+        }
+    }
+
+    private bool IsDescendantOf(DependencyObject? child, Type ancestorType)
+    {
+        while (child != null)
+        {
+            if (child.GetType() == ancestorType)
+                return true;
+            child = System.Windows.Media.VisualTreeHelper.GetParent(child);
+        }
+        return false;
+    }
+
+    private void OpenEditPanel(TodoItem todo)
+    {
+        _editingTodo = todo;
+
+        // Populate edit fields
+        EditTodoTitleTextBox.Text = todo.Title;
+        EditTodoDescriptionTextBox.Text = todo.Description ?? "";
+        EditTodoAssignedToTextBox.Text = todo.AssignedTo ?? "";
+
+        // Set status combo box
+        var statusIndex = (todo.Status?.ToLower()) switch
+        {
+            "pending" => 0,
+            "in progress" => 1,
+            "completed" => 2,
+            "blocked" => 3,
+            _ => 0
+        };
+        EditTodoStatusComboBox.SelectedIndex = statusIndex;
+
+        // Set priority combo box
+        var priorityIndex = (todo.Priority?.ToLower()) switch
+        {
+            "low" => 0,
+            "medium" => 1,
+            "high" => 2,
+            _ => 1
+        };
+        EditTodoPriorityComboBox.SelectedIndex = priorityIndex;
+
+        // Show edit panel with slide-up animation
+        TodoEditPanel.Visibility = Visibility.Visible;
+        var slideUp = new System.Windows.Media.Animation.DoubleAnimation
+        {
+            From = TodoEditPanel.ActualHeight > 0 ? TodoEditPanel.ActualHeight : 300,
+            To = 0,
+            Duration = TimeSpan.FromMilliseconds(200),
+            EasingFunction = new System.Windows.Media.Animation.QuadraticEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseOut }
+        };
+        TodoEditPanelTransform.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty, slideUp);
+    }
+
+    private void CloseEditPanel()
+    {
+        if (TodoEditPanel.Visibility != Visibility.Visible) return;
+
+        var slideDown = new System.Windows.Media.Animation.DoubleAnimation
+        {
+            From = 0,
+            To = TodoEditPanel.ActualHeight > 0 ? TodoEditPanel.ActualHeight : 300,
+            Duration = TimeSpan.FromMilliseconds(150),
+            EasingFunction = new System.Windows.Media.Animation.QuadraticEase { EasingMode = System.Windows.Media.Animation.EasingMode.EaseIn }
+        };
+        slideDown.Completed += (s, e) =>
+        {
+            TodoEditPanel.Visibility = Visibility.Collapsed;
+            _editingTodo = null;
+        };
+        TodoEditPanelTransform.BeginAnimation(System.Windows.Media.TranslateTransform.YProperty, slideDown);
+    }
+
+    private void CloseEditPanel_Click(object sender, RoutedEventArgs e)
+    {
+        CloseEditPanel();
+    }
+
+    private async void SaveTodoEdit_Click(object sender, RoutedEventArgs e)
+    {
+        if (_editingTodo == null) return;
+
+        var title = EditTodoTitleTextBox.Text?.Trim();
+        if (string.IsNullOrEmpty(title))
+        {
+            ShowTodoValidationMessage("Title cannot be empty");
+            EditTodoTitleTextBox.Focus();
+            return;
+        }
+
+        var status = (EditTodoStatusComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Pending";
+        var priority = (EditTodoPriorityComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Medium";
+        var description = EditTodoDescriptionTextBox.Text?.Trim();
+        var assignedTo = EditTodoAssignedToTextBox.Text?.Trim();
+        var isCompleted = status.Equals("Completed", StringComparison.OrdinalIgnoreCase);
+
+        // Store original values for rollback in case of failure
+        var originalTitle = _editingTodo.Title;
+        var originalDescription = _editingTodo.Description;
+        var originalStatus = _editingTodo.Status;
+        var originalPriority = _editingTodo.Priority;
+        var originalAssignedTo = _editingTodo.AssignedTo;
+        var originalIsCompleted = _editingTodo.IsCompleted;
+
+        // Optimistic UI update - apply changes immediately
+        _editingTodo.Title = title;
+        _editingTodo.Description = description;
+        _editingTodo.Status = status;
+        _editingTodo.Priority = priority;
+        _editingTodo.AssignedTo = assignedTo;
+        _editingTodo.IsCompleted = isCompleted;
+        _editingTodo.UpdatedAt = DateTime.UtcNow;
+
+        // Store the ID before closing edit panel
+        var todoId = _editingTodo.Id;
+
+        // Re-sort the list to maintain correct order (incomplete first, then by creation date)
+        _todoItems = _todoItems
+            .OrderBy(t => t.IsCompleted)
+            .ThenBy(t => t.CreatedAt)
+            .ToList();
+
+        // Refresh the ItemsControl to reflect changes immediately
+        TodoItemsControl.ItemsSource = null;
+        TodoItemsControl.ItemsSource = _todoItems;
+
+        // Close the edit panel immediately for responsive UX
+        CloseEditPanel();
+
+        // Sync with API in background
+        try
+        {
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+            var update = new
+            {
+                title = title,
+                description = description,
+                status = status,
+                priority = priority,
+                assignedTo = assignedTo,
+                isCompleted = isCompleted
+            };
+
+            var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(update), System.Text.Encoding.UTF8, "application/json");
+            var response = await client.PutAsync($"{_apiBaseUrl}/api/todos/{todoId}", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // Rollback on failure
+                var todoToRollback = _todoItems.FirstOrDefault(t => t.Id == todoId);
+                if (todoToRollback != null)
+                {
+                    todoToRollback.Title = originalTitle;
+                    todoToRollback.Description = originalDescription;
+                    todoToRollback.Status = originalStatus;
+                    todoToRollback.Priority = originalPriority;
+                    todoToRollback.AssignedTo = originalAssignedTo;
+                    todoToRollback.IsCompleted = originalIsCompleted;
+
+                    // Re-sort after rollback
+                    _todoItems = _todoItems
+                        .OrderBy(t => t.IsCompleted)
+                        .ThenBy(t => t.CreatedAt)
+                        .ToList();
+
+                    TodoItemsControl.ItemsSource = null;
+                    TodoItemsControl.ItemsSource = _todoItems;
+                }
+                ShowTodoValidationMessage("Failed to save changes. Please try again.");
+                System.Diagnostics.Debug.WriteLine($"Error saving todo: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Rollback on error
+            var todoToRollback = _todoItems.FirstOrDefault(t => t.Id == todoId);
+            if (todoToRollback != null)
+            {
+                todoToRollback.Title = originalTitle;
+                todoToRollback.Description = originalDescription;
+                todoToRollback.Status = originalStatus;
+                todoToRollback.Priority = originalPriority;
+                todoToRollback.AssignedTo = originalAssignedTo;
+                todoToRollback.IsCompleted = originalIsCompleted;
+
+                // Re-sort after rollback
+                _todoItems = _todoItems
+                    .OrderBy(t => t.IsCompleted)
+                    .ThenBy(t => t.CreatedAt)
+                    .ToList();
+
+                TodoItemsControl.ItemsSource = null;
+                TodoItemsControl.ItemsSource = _todoItems;
+            }
+            ShowTodoValidationMessage("Connection error. Changes reverted.");
+            System.Diagnostics.Debug.WriteLine($"Error saving todo: {ex.Message}");
         }
     }
 
@@ -10150,6 +10676,12 @@ public partial class MainWindow : Window
     private void OpenChatPanel()
     {
         _isChatPanelOpen = true;
+
+        // Close todo panel first if open
+        if (_isTodoPanelOpen)
+        {
+            CloseTodoPanelInstant();
+        }
 
         // Check authentication state
         UpdateChatPanelAuthState();

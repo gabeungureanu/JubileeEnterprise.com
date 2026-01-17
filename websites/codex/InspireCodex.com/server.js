@@ -4921,11 +4921,12 @@ app.get('/api/todos', async (req, res) => {
 
         const result = await codexPool.query(
             `SELECT id, title, description, is_completed as "isCompleted", priority,
+                    status, assigned_to as "assignedTo",
                     due_date as "dueDate", created_at as "createdAt", updated_at as "updatedAt",
                     user_email as "userEmail"
              FROM user_todos
              WHERE user_email = $1
-             ORDER BY is_completed ASC, created_at DESC`,
+             ORDER BY is_completed ASC, created_at ASC`,
             [email.toLowerCase()]
         );
 
@@ -4939,19 +4940,20 @@ app.get('/api/todos', async (req, res) => {
 // Create a new todo
 app.post('/api/todos', async (req, res) => {
     try {
-        const { email, title, description, priority, dueDate } = req.body;
+        const { email, title, description, priority, status, assignedTo, dueDate } = req.body;
 
         if (!email || !title) {
             return res.status(400).json({ success: false, error: 'Email and title are required' });
         }
 
         const result = await codexPool.query(
-            `INSERT INTO user_todos (user_email, title, description, priority, due_date)
-             VALUES ($1, $2, $3, $4, $5)
+            `INSERT INTO user_todos (user_email, title, description, priority, status, assigned_to, due_date)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
              RETURNING id, title, description, is_completed as "isCompleted", priority,
+                       status, assigned_to as "assignedTo",
                        due_date as "dueDate", created_at as "createdAt", updated_at as "updatedAt",
                        user_email as "userEmail"`,
-            [email.toLowerCase(), title, description || null, priority || 'medium', dueDate || null]
+            [email.toLowerCase(), title, description || null, priority || 'Medium', status || 'Pending', assignedTo || null, dueDate || null]
         );
 
         res.status(201).json({ success: true, todo: result.rows[0] });
@@ -4965,7 +4967,7 @@ app.post('/api/todos', async (req, res) => {
 app.put('/api/todos/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, isCompleted, priority, dueDate } = req.body;
+        const { title, description, isCompleted, priority, status, assignedTo, dueDate } = req.body;
 
         const result = await codexPool.query(
             `UPDATE user_todos
@@ -4973,13 +4975,16 @@ app.put('/api/todos/:id', async (req, res) => {
                  description = COALESCE($2, description),
                  is_completed = COALESCE($3, is_completed),
                  priority = COALESCE($4, priority),
-                 due_date = COALESCE($5, due_date),
+                 status = COALESCE($5, status),
+                 assigned_to = COALESCE($6, assigned_to),
+                 due_date = COALESCE($7, due_date),
                  updated_at = NOW()
-             WHERE id = $6
+             WHERE id = $8
              RETURNING id, title, description, is_completed as "isCompleted", priority,
+                       status, assigned_to as "assignedTo",
                        due_date as "dueDate", created_at as "createdAt", updated_at as "updatedAt",
                        user_email as "userEmail"`,
-            [title, description, isCompleted, priority, dueDate, id]
+            [title, description, isCompleted, priority, status, assignedTo, dueDate, id]
         );
 
         if (result.rows.length === 0) {
@@ -5480,12 +5485,27 @@ async function startServer() {
                 description TEXT,
                 is_completed BOOLEAN DEFAULT FALSE,
                 priority VARCHAR(20) DEFAULT 'medium',
+                status VARCHAR(50) DEFAULT 'Pending',
+                assigned_to VARCHAR(255),
                 due_date TIMESTAMPTZ,
                 created_at TIMESTAMPTZ DEFAULT NOW(),
                 updated_at TIMESTAMPTZ DEFAULT NOW()
             );
             CREATE INDEX IF NOT EXISTS idx_user_todos_email ON user_todos(user_email);
             CREATE INDEX IF NOT EXISTS idx_user_todos_completed ON user_todos(is_completed);
+        `);
+
+        // Add new columns if they don't exist (for existing tables)
+        await codexPool.query(`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='user_todos' AND column_name='status') THEN
+                    ALTER TABLE user_todos ADD COLUMN status VARCHAR(50) DEFAULT 'Pending';
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='user_todos' AND column_name='assigned_to') THEN
+                    ALTER TABLE user_todos ADD COLUMN assigned_to VARCHAR(255);
+                END IF;
+            END $$;
         `);
 
         // Insert sample todos for gabe.ungureanu@outlook.com if none exist

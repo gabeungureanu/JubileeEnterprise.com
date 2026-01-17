@@ -2057,14 +2057,52 @@
                             Style="{StaticResource SidebarRailButtonStyle}"
                             Click="SidebarHistoryButton_Click"
                             ToolTip="History">
-                        <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="18"/>
+                        <Grid>
+                            <TextBlock x:Name="SidebarHistoryIcon"
+                                      Text="&#xE81C;"
+                                      FontFamily="Segoe MDL2 Assets"
+                                      FontSize="18"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+                            <!-- Active indicator dot -->
+                            <Ellipse x:Name="SidebarHistoryActiveIndicator"
+                                    Width="8" Height="8"
+                                    Fill="#E6AC00"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Margin="0,-2,-2,0"
+                                    Visibility="Collapsed">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="#E6AC00" BlurRadius="6" ShadowDepth="0" Opacity="0.8"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                        </Grid>
                     </Button>
                     <!-- Bookmarks Icon -->
                     <Button x:Name="SidebarBookmarksButton"
                             Style="{StaticResource SidebarRailButtonStyle}"
                             Click="SidebarBookmarksButton_Click"
                             ToolTip="Bookmarks">
-                        <TextBlock Text="&#xE728;" FontFamily="Segoe MDL2 Assets" FontSize="18"/>
+                        <Grid>
+                            <TextBlock x:Name="SidebarBookmarksIcon"
+                                      Text="&#xE728;"
+                                      FontFamily="Segoe MDL2 Assets"
+                                      FontSize="18"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+                            <!-- Active indicator dot -->
+                            <Ellipse x:Name="SidebarBookmarksActiveIndicator"
+                                    Width="8" Height="8"
+                                    Fill="#E6AC00"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Margin="0,-2,-2,0"
+                                    Visibility="Collapsed">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="#E6AC00" BlurRadius="6" ShadowDepth="0" Opacity="0.8"/>
+                                </Ellipse.Effect>
+                            </Ellipse>
+                        </Grid>
                     </Button>
                 </StackPanel>
             </Border>
@@ -2665,6 +2703,7 @@
                         <RowDefinition Height="40"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <!-- Todo Panel Header -->
@@ -2691,22 +2730,250 @@
                     </Border>
 
                     <!-- Add New Todo Section -->
-                    <Border Grid.Row="1" Padding="12,8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox x:Name="NewTodoTextBox"
-                                    Grid.Column="0"
-                                    Padding="8,6"
-                                    Background="#1a1a2e"
-                                    Foreground="{StaticResource TextPrimaryBrush}"
-                                    BorderBrush="{StaticResource BorderBrush}"
-                                    BorderThickness="1"
-                                    FontSize="13"
-                                    VerticalContentAlignment="Center"
-                                    KeyDown="NewTodoTextBox_KeyDown">
+                    <Border Grid.Row="1" Padding="8,6" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="NewTodoTextBox"
+                                        Grid.Column="0"
+                                        Padding="8,5"
+                                        Background="#1a1a2e"
+                                        Foreground="{StaticResource TextPrimaryBrush}"
+                                        BorderBrush="{StaticResource BorderBrush}"
+                                        BorderThickness="1"
+                                        FontSize="12"
+                                        VerticalContentAlignment="Center"
+                                        KeyDown="NewTodoTextBox_KeyDown">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="TextBox">
+                                                        <Border Background="{TemplateBinding Background}"
+                                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                                CornerRadius="4">
+                                                            <ScrollViewer x:Name="PART_ContentHost" Margin="0"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+                                <Button Grid.Column="1"
+                                        Margin="6,0,0,0"
+                                        Padding="10,5"
+                                        Background="{StaticResource AccentBrush}"
+                                        Foreground="White"
+                                        Click="AddTodoButton_Click"
+                                        Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                    <TextBlock Text="Add" FontSize="11" FontWeight="SemiBold"/>
+                                </Button>
+                            </Grid>
+                            <!-- Validation Message -->
+                            <TextBlock x:Name="TodoValidationMessage"
+                                      Foreground="#ff6b6b"
+                                      FontSize="11"
+                                      Margin="0,4,0,0"
+                                      Visibility="Collapsed"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Todo List - Reduced spacing with custom dark scrollbar -->
+                    <Grid Grid.Row="2">
+                        <!-- Loading Indicator -->
+                        <Border x:Name="TodoLoadingIndicator"
+                                Background="Transparent"
+                                Visibility="Collapsed"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center">
+                            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <!-- Spinning loader -->
+                                <Border Width="32" Height="32" CornerRadius="16" BorderBrush="#E6AC00" BorderThickness="3" Margin="0,0,0,12">
+                                    <Border.RenderTransform>
+                                        <RotateTransform x:Name="TodoLoaderRotation" CenterX="16" CenterY="16"/>
+                                    </Border.RenderTransform>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Resources>
+                                                <Storyboard x:Key="SpinAnimation">
+                                                    <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(RotateTransform.Angle)"
+                                                                     From="0" To="360" Duration="0:0:1" RepeatBehavior="Forever"/>
+                                                </Storyboard>
+                                            </Style.Resources>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Border, AncestorLevel=2}, Path=Visibility}" Value="Visible">
+                                                    <DataTrigger.EnterActions>
+                                                        <BeginStoryboard x:Name="SpinStoryboard" Storyboard="{StaticResource SpinAnimation}"/>
+                                                    </DataTrigger.EnterActions>
+                                                    <DataTrigger.ExitActions>
+                                                        <StopStoryboard BeginStoryboardName="SpinStoryboard"/>
+                                                    </DataTrigger.ExitActions>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Border Background="#0f0f1a" CornerRadius="12" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="Loading tasks..." Foreground="#888" FontSize="12" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ScrollViewer.Resources>
+                            <!-- Custom dark scrollbar style -->
+                            <Style TargetType="ScrollBar">
+                                <Setter Property="Background" Value="#1a1a2e"/>
+                                <Setter Property="Width" Value="8"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ScrollBar">
+                                            <Grid Background="#1a1a2e">
+                                                <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                                    <Track.Thumb>
+                                                        <Thumb>
+                                                            <Thumb.Style>
+                                                                <Style TargetType="Thumb">
+                                                                    <Setter Property="Template">
+                                                                        <Setter.Value>
+                                                                            <ControlTemplate TargetType="Thumb">
+                                                                                <Border Background="#3c3c5c" CornerRadius="4" Margin="1"/>
+                                                                            </ControlTemplate>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </Style>
+                                                            </Thumb.Style>
+                                                        </Thumb>
+                                                    </Track.Thumb>
+                                                </Track>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ScrollViewer.Resources>
+                        <ItemsControl x:Name="TodoItemsControl" Padding="4">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#252545" CornerRadius="4" Margin="2" Padding="8,6"
+                                            Cursor="Hand" MouseLeftButtonUp="TodoItem_Click" Tag="{Binding Id}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <CheckBox Grid.Column="0"
+                                                     IsChecked="{Binding IsCompleted, Mode=TwoWay}"
+                                                     VerticalAlignment="Top"
+                                                     Margin="0,2,8,0"
+                                                     Checked="TodoCheckBox_Changed"
+                                                     Unchecked="TodoCheckBox_Changed"/>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Title}"
+                                                          Foreground="{StaticResource TextPrimaryBrush}"
+                                                          FontSize="12"
+                                                          TextWrapping="Wrap"
+                                                          TextDecorations="{Binding IsCompleted, Converter={StaticResource BoolToStrikethroughConverter}}"/>
+                                                <!-- Status and Assigned To row -->
+                                                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                                    <!-- Status badge - black text for readability -->
+                                                    <Border Background="{Binding StatusColor}" CornerRadius="2" Padding="4,1" Margin="0,0,4,0"
+                                                            Visibility="{Binding Status, Converter={StaticResource NullToVisibilityConverter}}">
+                                                        <TextBlock Text="{Binding Status}" Foreground="Black" FontSize="9" FontWeight="SemiBold"/>
+                                                    </Border>
+                                                    <!-- Priority indicator - black text for readability -->
+                                                    <Border Background="{Binding PriorityColor}" CornerRadius="2" Padding="4,1" Margin="0,0,4,0"
+                                                            Visibility="{Binding Priority, Converter={StaticResource NullToVisibilityConverter}}">
+                                                        <TextBlock Text="{Binding Priority}" Foreground="Black" FontSize="9" FontWeight="SemiBold"/>
+                                                    </Border>
+                                                    <!-- Assigned To -->
+                                                    <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="9" VerticalAlignment="Center"
+                                                              Visibility="{Binding AssignedTo, Converter={StaticResource NullToVisibilityConverter}}">
+                                                        <Run Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="9"/>
+                                                        <Run Text="{Binding AssignedTo}"/>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                                <!-- Due date -->
+                                                <TextBlock Text="{Binding DueDate, StringFormat='Due: {0:MMM dd}'}"
+                                                          Foreground="{StaticResource TextSecondaryBrush}"
+                                                          FontSize="9"
+                                                          Margin="0,2,0,0"
+                                                          Visibility="{Binding DueDate, Converter={StaticResource NullToVisibilityConverter}}"/>
+                                            </StackPanel>
+                                            <!-- Action buttons -->
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
+                                                <Button Style="{StaticResource NavButtonStyle}"
+                                                       Width="22" Height="22"
+                                                       Click="EditTodoButton_Click"
+                                                       Tag="{Binding}"
+                                                       ToolTip="Edit">
+                                                    <TextBlock Text="&#xE70F;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#00bfff"/>
+                                                </Button>
+                                                <Button Style="{StaticResource NavButtonStyle}"
+                                                       Width="22" Height="22"
+                                                       Click="DeleteTodoButton_Click"
+                                                       Tag="{Binding Id}"
+                                                       ToolTip="Delete">
+                                                    <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="#ff6b6b"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <!-- Slide-up Edit Panel -->
+                    <Border x:Name="TodoEditPanel" Grid.Row="3" Background="#1e1e32"
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0"
+                            Visibility="Collapsed">
+                        <Border.RenderTransform>
+                            <TranslateTransform x:Name="TodoEditPanelTransform" Y="0"/>
+                        </Border.RenderTransform>
+                        <Grid Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Edit Panel Header -->
+                            <Grid Grid.Row="0" Margin="0,0,0,8">
+                                <TextBlock Text="Edit Task" Foreground="{StaticResource TextPrimaryBrush}"
+                                          FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <Button Style="{StaticResource NavButtonStyle}" HorizontalAlignment="Right"
+                                        Width="24" Height="24" Click="CloseEditPanel_Click">
+                                    <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
+                                </Button>
+                            </Grid>
+
+                            <!-- Title -->
+                            <TextBox x:Name="EditTodoTitleTextBox" Grid.Row="1" Padding="8,6" Margin="0,0,0,6"
+                                    Background="#1a1a2e" Foreground="{StaticResource TextPrimaryBrush}"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" FontSize="12">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox">
                                         <Setter Property="Template">
@@ -2714,8 +2981,7 @@
                                                 <ControlTemplate TargetType="TextBox">
                                                     <Border Background="{TemplateBinding Background}"
                                                             BorderBrush="{TemplateBinding BorderBrush}"
-                                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                                            CornerRadius="4">
+                                                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
                                                         <ScrollViewer x:Name="PART_ContentHost" Margin="0"/>
                                                     </Border>
                                                 </ControlTemplate>
@@ -2724,13 +2990,209 @@
                                     </Style>
                                 </TextBox.Style>
                             </TextBox>
-                            <Button Grid.Column="1"
-                                    Margin="8,0,0,0"
-                                    Padding="12,6"
-                                    Background="{StaticResource AccentBrush}"
-                                    Foreground="White"
-                                    Click="AddTodoButton_Click"
-                                    Cursor="Hand">
+
+                            <!-- Description -->
+                            <TextBox x:Name="EditTodoDescriptionTextBox" Grid.Row="2" Padding="8,6" Margin="0,0,0,6"
+                                    Background="#1a1a2e" Foreground="{StaticResource TextPrimaryBrush}"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" FontSize="12"
+                                    TextWrapping="Wrap" AcceptsReturn="True" Height="60" VerticalScrollBarVisibility="Auto">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="TextBox">
+                                                    <Border Background="{TemplateBinding Background}"
+                                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
+                                                        <ScrollViewer x:Name="PART_ContentHost" Margin="0"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+
+                            <!-- Status and Priority Row -->
+                            <Grid Grid.Row="3" Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <ComboBox x:Name="EditTodoStatusComboBox" Grid.Column="0" Padding="8,6"
+                                         Background="#1a1a2e" Foreground="Black"
+                                         BorderBrush="{StaticResource BorderBrush}" FontSize="11">
+                                    <ComboBox.Resources>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Setter Property="Foreground" Value="Black"/>
+                                            <Setter Property="Background" Value="#f0f0f0"/>
+                                        </Style>
+                                    </ComboBox.Resources>
+                                    <ComboBox.Style>
+                                        <Style TargetType="ComboBox">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ComboBox">
+                                                        <Grid>
+                                                            <ToggleButton x:Name="ToggleButton"
+                                                                         Background="{TemplateBinding Background}"
+                                                                         BorderBrush="{TemplateBinding BorderBrush}"
+                                                                         BorderThickness="1"
+                                                                         IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                                                         ClickMode="Press">
+                                                                <ToggleButton.Template>
+                                                                    <ControlTemplate TargetType="ToggleButton">
+                                                                        <Border Background="{TemplateBinding Background}"
+                                                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                                                CornerRadius="4">
+                                                                            <Grid>
+                                                                                <Grid.ColumnDefinitions>
+                                                                                    <ColumnDefinition Width="*"/>
+                                                                                    <ColumnDefinition Width="20"/>
+                                                                                </Grid.ColumnDefinitions>
+                                                                                <ContentPresenter Grid.Column="0"/>
+                                                                                <TextBlock Grid.Column="1" Text="&#xE70D;" FontFamily="Segoe MDL2 Assets"
+                                                                                          FontSize="8" Foreground="#888"
+                                                                                          VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                    </ControlTemplate>
+                                                                </ToggleButton.Template>
+                                                            </ToggleButton>
+                                                            <ContentPresenter x:Name="ContentSite"
+                                                                             IsHitTestVisible="False"
+                                                                             Content="{TemplateBinding SelectionBoxItem}"
+                                                                             ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                                             Margin="8,6,24,6"
+                                                                             VerticalAlignment="Center"
+                                                                             HorizontalAlignment="Left">
+                                                                <ContentPresenter.Resources>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="White"/>
+                                                                    </Style>
+                                                                </ContentPresenter.Resources>
+                                                            </ContentPresenter>
+                                                            <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}"
+                                                                  AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                                                                <Border Background="#f0f0f0" BorderBrush="#ccc" BorderThickness="1" CornerRadius="4"
+                                                                       MinWidth="{TemplateBinding ActualWidth}" MaxHeight="200">
+                                                                    <ScrollViewer>
+                                                                        <ItemsPresenter/>
+                                                                    </ScrollViewer>
+                                                                </Border>
+                                                            </Popup>
+                                                        </Grid>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ComboBox.Style>
+                                    <ComboBoxItem Content="Pending" IsSelected="True"/>
+                                    <ComboBoxItem Content="In Progress"/>
+                                    <ComboBoxItem Content="Completed"/>
+                                    <ComboBoxItem Content="Blocked"/>
+                                </ComboBox>
+                                <ComboBox x:Name="EditTodoPriorityComboBox" Grid.Column="2" Padding="8,6"
+                                         Background="#1a1a2e" Foreground="Black"
+                                         BorderBrush="{StaticResource BorderBrush}" FontSize="11">
+                                    <ComboBox.Resources>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Setter Property="Foreground" Value="Black"/>
+                                            <Setter Property="Background" Value="#f0f0f0"/>
+                                        </Style>
+                                    </ComboBox.Resources>
+                                    <ComboBox.Style>
+                                        <Style TargetType="ComboBox">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ComboBox">
+                                                        <Grid>
+                                                            <ToggleButton x:Name="ToggleButton"
+                                                                         Background="{TemplateBinding Background}"
+                                                                         BorderBrush="{TemplateBinding BorderBrush}"
+                                                                         BorderThickness="1"
+                                                                         IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                                                         ClickMode="Press">
+                                                                <ToggleButton.Template>
+                                                                    <ControlTemplate TargetType="ToggleButton">
+                                                                        <Border Background="{TemplateBinding Background}"
+                                                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                                                CornerRadius="4">
+                                                                            <Grid>
+                                                                                <Grid.ColumnDefinitions>
+                                                                                    <ColumnDefinition Width="*"/>
+                                                                                    <ColumnDefinition Width="20"/>
+                                                                                </Grid.ColumnDefinitions>
+                                                                                <ContentPresenter Grid.Column="0"/>
+                                                                                <TextBlock Grid.Column="1" Text="&#xE70D;" FontFamily="Segoe MDL2 Assets"
+                                                                                          FontSize="8" Foreground="#888"
+                                                                                          VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                    </ControlTemplate>
+                                                                </ToggleButton.Template>
+                                                            </ToggleButton>
+                                                            <ContentPresenter x:Name="ContentSite"
+                                                                             IsHitTestVisible="False"
+                                                                             Content="{TemplateBinding SelectionBoxItem}"
+                                                                             ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                                             Margin="8,6,24,6"
+                                                                             VerticalAlignment="Center"
+                                                                             HorizontalAlignment="Left">
+                                                                <ContentPresenter.Resources>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="White"/>
+                                                                    </Style>
+                                                                </ContentPresenter.Resources>
+                                                            </ContentPresenter>
+                                                            <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}"
+                                                                  AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                                                                <Border Background="#f0f0f0" BorderBrush="#ccc" BorderThickness="1" CornerRadius="4"
+                                                                       MinWidth="{TemplateBinding ActualWidth}" MaxHeight="200">
+                                                                    <ScrollViewer>
+                                                                        <ItemsPresenter/>
+                                                                    </ScrollViewer>
+                                                                </Border>
+                                                            </Popup>
+                                                        </Grid>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ComboBox.Style>
+                                    <ComboBoxItem Content="Low"/>
+                                    <ComboBoxItem Content="Medium" IsSelected="True"/>
+                                    <ComboBoxItem Content="High"/>
+                                </ComboBox>
+                            </Grid>
+
+                            <!-- Assigned To -->
+                            <TextBox x:Name="EditTodoAssignedToTextBox" Grid.Row="4" Padding="8,6" Margin="0,0,0,8"
+                                    Background="#1a1a2e" Foreground="{StaticResource TextPrimaryBrush}"
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" FontSize="12">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="TextBox">
+                                                    <Border Background="{TemplateBinding Background}"
+                                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
+                                                        <ScrollViewer x:Name="PART_ContentHost" Margin="0"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+
+                            <!-- Save Button -->
+                            <Button Grid.Row="5" Padding="12,8" Background="{StaticResource AccentBrush}"
+                                   Foreground="White" Cursor="Hand" Click="SaveTodoEdit_Click">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Template">
@@ -2744,54 +3206,10 @@
                                         </Setter>
                                     </Style>
                                 </Button.Style>
-                                <TextBlock Text="Add" FontSize="12" FontWeight="SemiBold"/>
+                                <TextBlock Text="Save Changes" FontSize="12" FontWeight="SemiBold"/>
                             </Button>
                         </Grid>
                     </Border>
-
-                    <!-- Todo List -->
-                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                        <ItemsControl x:Name="TodoItemsControl" Padding="8">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="#252545" CornerRadius="6" Margin="4" Padding="12,10">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <CheckBox Grid.Column="0"
-                                                     IsChecked="{Binding IsCompleted, Mode=TwoWay}"
-                                                     VerticalAlignment="Center"
-                                                     Margin="0,0,10,0"
-                                                     Checked="TodoCheckBox_Changed"
-                                                     Unchecked="TodoCheckBox_Changed"/>
-                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Title}"
-                                                          Foreground="{StaticResource TextPrimaryBrush}"
-                                                          FontSize="13"
-                                                          TextWrapping="Wrap"
-                                                          TextDecorations="{Binding IsCompleted, Converter={StaticResource BoolToStrikethroughConverter}}"/>
-                                                <TextBlock Text="{Binding DueDate, StringFormat='Due: {0:MMM dd, yyyy}'}"
-                                                          Foreground="{StaticResource TextSecondaryBrush}"
-                                                          FontSize="11"
-                                                          Margin="0,2,0,0"
-                                                          Visibility="{Binding DueDate, Converter={StaticResource NullToVisibilityConverter}}"/>
-                                            </StackPanel>
-                                            <Button Grid.Column="2"
-                                                   Style="{StaticResource NavButtonStyle}"
-                                                   Click="DeleteTodoButton_Click"
-                                                   Tag="{Binding Id}"
-                                                   ToolTip="Delete">
-                                                <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#ff6b6b"/>
-                                            </Button>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
                 </Grid>
             </Border>
 
