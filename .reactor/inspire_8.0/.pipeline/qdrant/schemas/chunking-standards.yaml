@@ -566,6 +566,113 @@ hymnal:
       overlap: null
 
 # =============================================================================
+# SYSTEM CONTENT CHUNKING
+# =============================================================================
+system:
+  applies_to:
+    - "model_registry"
+    - "execution_contracts"
+    - "endgame"
+    - "experiments"
+    - "learning_memory"
+    - "evaluation"
+    - "execution_logs"
+    - "scenarios"
+    - "kingdom_builder"
+    - "creative_fire"
+    - "gospel_pulse"
+    - "shepherds_voice"
+    - "hebraic_roots"
+    - "prompts"
+    - "resources"
+    - "languages"
+    - "countries"
+    - "jubilee_ministry"
+    - "ministers"
+    - "users"
+    - "insights"
+    - "analytics"
+    - "persona_index"
+
+  granularity: "document_or_section"
+
+  rules:
+    system_record:
+      description: "System records and configurations"
+      chunk_size: "complete_record"
+      token_range:
+        min: 100
+        max: 500
+        target: 300
+      preserve:
+        - "Complete record integrity"
+        - "All fields and values"
+        - "Relationship references"
+      split_on: null  # Keep records atomic
+      overlap: null
+
+    prompt_content:
+      description: "Prompts and templates"
+      chunk_size: "complete_prompt"
+      token_range:
+        min: 100
+        max: 1000
+        target: 500
+      preserve:
+        - "Complete prompt text"
+        - "Variables and placeholders"
+        - "Instruction structure"
+      split_on: null  # Never split prompts
+      overlap: null
+
+    analytics_data:
+      description: "Analytics and metrics"
+      chunk_size: "data_unit"
+      token_range:
+        min: 50
+        max: 300
+        target: 150
+      preserve:
+        - "Complete data point"
+        - "Timestamp context"
+        - "Metric relationships"
+      split_on:
+        - "Time period boundaries"
+        - "Metric category changes"
+      overlap:
+        type: "token_count"
+        amount: 25
+
+    user_profile:
+      description: "User and minister profiles"
+      chunk_size: "profile_section"
+      token_range:
+        min: 100
+        max: 400
+        target: 250
+      preserve:
+        - "Section completeness"
+        - "Profile coherence"
+        - "Preference groupings"
+      split_on:
+        - "Section boundaries"
+      overlap: null
+
+    insight_content:
+      description: "Insights and recommendations"
+      chunk_size: "complete_insight"
+      token_range:
+        min: 100
+        max: 350
+        target: 200
+      preserve:
+        - "Complete insight"
+        - "Supporting evidence"
+        - "Actionable recommendation"
+      split_on: null  # Keep insights atomic
+      overlap: null
+
+# =============================================================================
 # CHUNKING IMPLEMENTATION
 # =============================================================================
 implementation:

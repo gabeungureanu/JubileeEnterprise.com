@@ -81,6 +81,31 @@ INSPIRE_8_0 Container
 │   ├── governance                # Guardrails, protocols, activation anchors
 │   └── inspire-family            # Inspire Family shared content (hymnal, ministry resources)
 │
+├── SYSTEM COLLECTIONS (23)
+│   ├── model_registry            # AI model configurations and versioning
+│   ├── execution_contracts       # Execution contracts and agreements
+│   ├── endgame                   # End-state goals and completion criteria
+│   ├── experiments               # Experimental runs and A/B testing data
+│   ├── learning_memory           # System-wide learning and adaptation data
+│   ├── evaluation                # Performance evaluation metrics and results
+│   ├── execution_logs            # Execution history and audit trails
+│   ├── scenarios                 # Use case scenarios and test cases
+│   ├── kingdom_builder           # Kingdom building strategies and progress
+│   ├── creative_fire             # Creative content and inspiration
+│   ├── gospel_pulse              # Gospel outreach metrics and heartbeat
+│   ├── shepherds_voice           # Pastoral guidance and shepherding content
+│   ├── hebraic_roots             # Hebrew language and cultural foundations
+│   ├── prompts                   # System prompts and prompt templates
+│   ├── resources                 # Shared resources and assets
+│   ├── languages                 # Language configurations and translations
+│   ├── countries                 # Country-specific data and localizations
+│   ├── jubilee_ministry          # Jubilee Ministry organizational data
+│   ├── ministers                 # Minister profiles and credentials
+│   ├── users                     # User profiles and preferences
+│   ├── insights                  # System insights and recommendations
+│   ├── analytics                 # Analytics data and metrics
+│   └── persona_index             # Persona cross-reference and routing index
+│
 └── PERSONA COLLECTIONS (13)
     ├── persona_gabriel_inspire   # Gabriel's memory and activation data (Father)
     ├── persona_jubilee_inspire   # Jubilee's memory and activation data (1st)
@@ -204,6 +229,493 @@ collection:
     - "psalm_setting"             # Musical Psalm arrangements
     - "sacred_poem"               # Poetry for worship
     - "family_resource"           # Shared family ministry resources
+```
+
+---
+
+## SYSTEM COLLECTIONS
+
+### 5. model_registry
+
+**Purpose:** AI model configurations, versioning, and deployment metadata.
+
+```yaml
+collection:
+  name: "model_registry"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "model_config"              # Model configuration definitions
+    - "model_version"             # Version history and changelogs
+    - "deployment_record"         # Deployment metadata
+    - "performance_baseline"      # Performance benchmarks
+```
+
+### 6. execution_contracts
+
+**Purpose:** Execution contracts, agreements, and binding operational rules.
+
+```yaml
+collection:
+  name: "execution_contracts"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "contract"                  # Formal execution contracts
+    - "agreement"                 # Operational agreements
+    - "binding_rule"              # Binding operational rules
+    - "sla_definition"            # Service level agreements
+```
+
+### 7. endgame
+
+**Purpose:** End-state goals, completion criteria, and success metrics.
+
+```yaml
+collection:
+  name: "endgame"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "goal"                      # End-state goals
+    - "completion_criteria"       # Success completion criteria
+    - "milestone"                 # Progress milestones
+    - "victory_condition"         # Victory and success conditions
+```
+
+### 8. experiments
+
+**Purpose:** Experimental runs, A/B testing data, and research findings.
+
+```yaml
+collection:
+  name: "experiments"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "experiment"                # Experiment definitions
+    - "ab_test"                   # A/B test configurations
+    - "hypothesis"                # Research hypotheses
+    - "finding"                   # Research findings and results
+```
+
+### 9. learning_memory
+
+**Purpose:** System-wide learning, adaptation data, and knowledge acquisition.
+
+```yaml
+collection:
+  name: "learning_memory"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "learned_pattern"           # Learned behavioral patterns
+    - "adaptation"                # System adaptations
+    - "knowledge_acquisition"     # New knowledge records
+    - "feedback_integration"      # Integrated feedback loops
+```
+
+### 10. evaluation
+
+**Purpose:** Performance evaluation metrics, results, and quality assessments.
+
+```yaml
+collection:
+  name: "evaluation"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "metric"                    # Performance metrics
+    - "evaluation_result"         # Evaluation results
+    - "quality_assessment"        # Quality assessments
+    - "benchmark"                 # Benchmark comparisons
+```
+
+### 11. execution_logs
+
+**Purpose:** Execution history, audit trails, and operational records.
+
+```yaml
+collection:
+  name: "execution_logs"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "execution_record"          # Execution records
+    - "audit_entry"               # Audit trail entries
+    - "operation_log"             # Operational logs
+    - "trace"                     # Execution traces
+```
+
+### 12. scenarios
+
+**Purpose:** Use case scenarios, test cases, and simulation definitions.
+
+```yaml
+collection:
+  name: "scenarios"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "scenario"                  # Use case scenarios
+    - "test_case"                 # Test case definitions
+    - "simulation"                # Simulation configurations
+    - "edge_case"                 # Edge case documentation
+```
+
+### 13. kingdom_builder
+
+**Purpose:** Kingdom building strategies, progress tracking, and growth metrics.
+
+```yaml
+collection:
+  name: "kingdom_builder"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "strategy"                  # Kingdom building strategies
+    - "growth_metric"             # Growth and expansion metrics
+    - "initiative"                # Kingdom initiatives
+    - "progress_report"           # Progress tracking reports
+```
+
+### 14. creative_fire
+
+**Purpose:** Creative content, inspiration, and artistic expressions.
+
+```yaml
+collection:
+  name: "creative_fire"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "creative_piece"            # Creative content pieces
+    - "inspiration"               # Inspirational content
+    - "artistic_expression"       # Artistic expressions
+    - "creative_prompt"           # Creative prompts and seeds
+```
+
+### 15. gospel_pulse
+
+**Purpose:** Gospel outreach metrics, evangelism tracking, and heartbeat monitoring.
+
+```yaml
+collection:
+  name: "gospel_pulse"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "outreach_metric"           # Evangelism and outreach metrics
+    - "testimony"                 # Testimonies and conversion records
+    - "gospel_impact"             # Gospel impact measurements
+    - "pulse_reading"             # Heartbeat and health indicators
+```
+
+### 16. shepherds_voice
+
+**Purpose:** Pastoral guidance, shepherding content, and care protocols.
+
+```yaml
+collection:
+  name: "shepherds_voice"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "pastoral_guidance"         # Pastoral guidance content
+    - "care_protocol"             # Care and counseling protocols
+    - "shepherding_resource"      # Shepherding resources
+    - "flock_insight"             # Insights about the flock
+```
+
+### 17. hebraic_roots
+
+**Purpose:** Hebrew language foundations, cultural context, and Hebraic insights.
+
+```yaml
+collection:
+  name: "hebraic_roots"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "hebrew_word"               # Hebrew word studies
+    - "cultural_context"          # Hebraic cultural context
+    - "root_analysis"             # Hebrew root word analysis
+    - "hebraic_insight"           # Hebraic interpretive insights
+```
+
+### 18. prompts
+
+**Purpose:** System prompts, prompt templates, and reusable prompt components.
+
+```yaml
+collection:
+  name: "prompts"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "system_prompt"             # System-level prompts
+    - "prompt_template"           # Reusable prompt templates
+    - "prompt_fragment"           # Prompt components and fragments
+    - "prompt_version"            # Prompt version history
+```
+
+### 19. resources
+
+**Purpose:** Shared resources, assets, and reference materials.
+
+```yaml
+collection:
+  name: "resources"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "resource"                  # General resources
+    - "asset"                     # Digital assets
+    - "reference_material"        # Reference materials
+    - "template"                  # Document templates
+```
+
+### 20. languages
+
+**Purpose:** Language configurations, translations, and localization data.
+
+```yaml
+collection:
+  name: "languages"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "language_config"           # Language configurations
+    - "translation"               # Translation entries
+    - "localization"              # Localization data
+    - "phrase"                    # Common phrases and expressions
+```
+
+### 21. countries
+
+**Purpose:** Country-specific data, localizations, and regional configurations.
+
+```yaml
+collection:
+  name: "countries"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "country_config"            # Country configurations
+    - "regional_data"             # Regional data and customs
+    - "cultural_note"             # Cultural notes and considerations
+    - "legal_requirement"         # Legal and regulatory requirements
+```
+
+### 22. jubilee_ministry
+
+**Purpose:** Jubilee Ministry organizational data, structure, and operations.
+
+```yaml
+collection:
+  name: "jubilee_ministry"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "ministry_info"             # Ministry information
+    - "organizational_data"       # Organizational structure
+    - "policy"                    # Ministry policies
+    - "procedure"                 # Operational procedures
+```
+
+### 23. ministers
+
+**Purpose:** Minister profiles, credentials, and ministry assignments.
+
+```yaml
+collection:
+  name: "ministers"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "minister_profile"          # Minister profiles
+    - "credential"                # Ministry credentials
+    - "assignment"                # Ministry assignments
+    - "ordination_record"         # Ordination records
+```
+
+### 24. users
+
+**Purpose:** User profiles, preferences, and interaction history summaries.
+
+```yaml
+collection:
+  name: "users"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "user_profile"              # User profile data
+    - "preference"                # User preferences
+    - "interaction_summary"       # Summarized interaction history
+    - "spiritual_journey"         # Spiritual journey markers
+```
+
+### 25. insights
+
+**Purpose:** System insights, recommendations, and discovered patterns.
+
+```yaml
+collection:
+  name: "insights"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "insight"                   # System insights
+    - "recommendation"            # Recommendations
+    - "pattern"                   # Discovered patterns
+    - "trend"                     # Identified trends
+```
+
+### 26. analytics
+
+**Purpose:** Analytics data, metrics, and performance indicators.
+
+```yaml
+collection:
+  name: "analytics"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "analytic"                  # Analytics data points
+    - "kpi"                       # Key performance indicators
+    - "dashboard_data"            # Dashboard data
+    - "report"                    # Analytics reports
+```
+
+### 27. persona_index
+
+**Purpose:** Persona cross-reference, routing index, and capability mapping.
+
+```yaml
+collection:
+  name: "persona_index"
+  type: "system"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "persona_entry"             # Persona index entries
+    - "capability_map"            # Capability mappings
+    - "routing_rule"              # Routing rules
+    - "cross_reference"           # Cross-reference data
 ```
 
 ---
@@ -759,6 +1271,33 @@ initialization_order:
       - "inspire-family"
 
   2:
+    name: "Create system collections"
+    collections:
+      - "model_registry"
+      - "execution_contracts"
+      - "endgame"
+      - "experiments"
+      - "learning_memory"
+      - "evaluation"
+      - "execution_logs"
+      - "scenarios"
+      - "kingdom_builder"
+      - "creative_fire"
+      - "gospel_pulse"
+      - "shepherds_voice"
+      - "hebraic_roots"
+      - "prompts"
+      - "resources"
+      - "languages"
+      - "countries"
+      - "jubilee_ministry"
+      - "ministers"
+      - "users"
+      - "insights"
+      - "analytics"
+      - "persona_index"
+
+  3:
     name: "Create persona collections"
     collections:
       - "persona_gabriel_inspire"
@@ -775,7 +1314,7 @@ initialization_order:
       - "persona_zariah_inspire"
       - "persona_elias_inspire"
 
-  3:
+  4:
     name: "Create payload indexes"
     indexes:
       - field: "type"
@@ -791,7 +1330,7 @@ initialization_order:
       - field: "bible_ref.chapter"
         type: "integer"
 
-  4:
+  5:
     name: "Verify initialization"
     action: "validate_all_collections()"
 ```
@@ -800,7 +1339,7 @@ initialization_order:
 
 ```yaml
 post_validation:
-  - "Confirm all 17 collections exist"
+  - "Confirm all 40 collections exist"
   - "Verify vector configuration matches spec"
   - "Confirm payload indexes created"
   - "Test write/read on each collection"
@@ -813,12 +1352,12 @@ post_validation:
 
 ### Access Control
 
-| Role | Shared Collections | Persona Collections |
-|------|-------------------|---------------------|
-| **Gabriel** | Full access | Full access all |
-| **Persona** | Read only | Full access own only |
-| **System** | Read/Write (ingestion) | Write (memory) |
-| **Audit** | Read only | Read only |
+| Role | Shared Collections | System Collections | Persona Collections |
+|------|-------------------|-------------------|---------------------|
+| **Gabriel** | Full access | Full access | Full access all |
+| **Persona** | Read only | Read only | Full access own only |
+| **System** | Read/Write (ingestion) | Read/Write | Write (memory) |
+| **Audit** | Read only | Read only | Read only |
 
 ### Lifecycle Management
 

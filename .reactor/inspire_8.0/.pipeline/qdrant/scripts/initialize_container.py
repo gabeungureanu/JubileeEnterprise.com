@@ -94,6 +94,125 @@ SHARED_COLLECTIONS = [
     },
 ]
 
+# System Collections
+SYSTEM_COLLECTIONS = [
+    {
+        "name": "model_registry",
+        "description": "AI model configurations and versioning",
+        "type": "system",
+    },
+    {
+        "name": "execution_contracts",
+        "description": "Execution contracts and agreements",
+        "type": "system",
+    },
+    {
+        "name": "endgame",
+        "description": "End-state goals and completion criteria",
+        "type": "system",
+    },
+    {
+        "name": "experiments",
+        "description": "Experimental runs and A/B testing data",
+        "type": "system",
+    },
+    {
+        "name": "learning_memory",
+        "description": "System-wide learning and adaptation data",
+        "type": "system",
+    },
+    {
+        "name": "evaluation",
+        "description": "Performance evaluation metrics and results",
+        "type": "system",
+    },
+    {
+        "name": "execution_logs",
+        "description": "Execution history and audit trails",
+        "type": "system",
+    },
+    {
+        "name": "scenarios",
+        "description": "Use case scenarios and test cases",
+        "type": "system",
+    },
+    {
+        "name": "kingdom_builder",
+        "description": "Kingdom building strategies and progress",
+        "type": "system",
+    },
+    {
+        "name": "creative_fire",
+        "description": "Creative content and inspiration",
+        "type": "system",
+    },
+    {
+        "name": "gospel_pulse",
+        "description": "Gospel outreach metrics and heartbeat",
+        "type": "system",
+    },
+    {
+        "name": "shepherds_voice",
+        "description": "Pastoral guidance and shepherding content",
+        "type": "system",
+    },
+    {
+        "name": "hebraic_roots",
+        "description": "Hebrew language and cultural foundations",
+        "type": "system",
+    },
+    {
+        "name": "prompts",
+        "description": "System prompts and prompt templates",
+        "type": "system",
+    },
+    {
+        "name": "resources",
+        "description": "Shared resources and assets",
+        "type": "system",
+    },
+    {
+        "name": "languages",
+        "description": "Language configurations and translations",
+        "type": "system",
+    },
+    {
+        "name": "countries",
+        "description": "Country-specific data and localizations",
+        "type": "system",
+    },
+    {
+        "name": "jubilee_ministry",
+        "description": "Jubilee Ministry organizational data",
+        "type": "system",
+    },
+    {
+        "name": "ministers",
+        "description": "Minister profiles and credentials",
+        "type": "system",
+    },
+    {
+        "name": "users",
+        "description": "User profiles and preferences",
+        "type": "system",
+    },
+    {
+        "name": "insights",
+        "description": "System insights and recommendations",
+        "type": "system",
+    },
+    {
+        "name": "analytics",
+        "description": "Analytics data and metrics",
+        "type": "system",
+    },
+    {
+        "name": "persona_index",
+        "description": "Persona cross-reference and routing index",
+        "type": "system",
+    },
+]
+
 # Persona Collections
 PERSONAS = [
     {"name": "gabriel", "birth_order": 0, "role": "Father"},
@@ -123,7 +242,7 @@ PERSONA_COLLECTIONS = [
 ]
 
 # All Collections
-ALL_COLLECTIONS = SHARED_COLLECTIONS + PERSONA_COLLECTIONS
+ALL_COLLECTIONS = SHARED_COLLECTIONS + SYSTEM_COLLECTIONS + PERSONA_COLLECTIONS
 
 # Payload Indexes
 PAYLOAD_INDEXES = [
@@ -292,6 +411,21 @@ class Inspire8QdrantInitializer:
 
         return success
 
+    def initialize_system_collections(self) -> bool:
+        """Initialize all system collections."""
+        logger.info("\n" + "=" * 60)
+        logger.info("INITIALIZING SYSTEM COLLECTIONS")
+        logger.info("=" * 60)
+
+        success = True
+        for config in SYSTEM_COLLECTIONS:
+            if not self.create_collection(config):
+                success = False
+            elif config["name"] not in self.results["collections_skipped"]:
+                self.create_payload_indexes(config["name"])
+
+        return success
+
     def initialize_persona_collections(self) -> bool:
         """Initialize all persona-specific collections."""
         logger.info("\n" + "=" * 60)
@@ -355,6 +489,10 @@ class Inspire8QdrantInitializer:
         # Initialize shared collections
         if not self.initialize_shared_collections():
             logger.warning("Some shared collections failed to initialize")
+
+        # Initialize system collections
+        if not self.initialize_system_collections():
+            logger.warning("Some system collections failed to initialize")
 
         # Initialize persona collections
         if not self.initialize_persona_collections():
