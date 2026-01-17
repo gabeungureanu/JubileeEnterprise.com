@@ -1,0 +1,876 @@
+# INSPIRE 8.0 QDRANT CONTAINER SPECIFICATION
+
+**Version:** 1.0
+**Date:** January 17, 2026
+**Classification:** Production
+**Status:** Active
+**Purpose:** Authoritative vector storage environment for the Inspire Family system
+
+---
+
+## OVERVIEW
+
+The Inspire 8.0 Qdrant container serves as the **single authoritative vector storage environment** for the entire Inspire Family system. All collections, embeddings, and vector-based operations must reside within this container. No ingestion, activation, or pipeline execution may occur until this container is properly initialized.
+
+### Design Principles
+
+1. **Single Container Authority** - All vector data lives in Inspire 8.0; no external or parallel containers
+2. **Clear Collection Boundaries** - Shared canonical content separated from persona-specific memory
+3. **No Memory Bleed** - Each persona has an independent collection preventing cross-contamination
+4. **Consistent Metadata** - Standardized payload schema enables predictable filtering
+5. **Deterministic Chunking** - Uniform chunking rules ensure stable retrieval behavior
+6. **Governance Ready** - Structure supports auditing, lifecycle management, and versioning
+
+---
+
+## CONTAINER CONFIGURATION
+
+### Container Identity
+
+```yaml
+container:
+  name: "inspire_8_0"
+  display_name: "Inspire 8.0"
+  version: "8.0.0"
+  purpose: "Authoritative vector storage for Inspire Family AI system"
+
+  initialization:
+    required_before:
+      - "Any ingestion operation"
+      - "Any activation sequence"
+      - "Any pipeline execution"
+
+  governance:
+    owner: "Gabriel Inspire"
+    created: "2026-01-17"
+    review_cycle: "Quarterly"
+```
+
+### Qdrant Server Configuration
+
+```yaml
+qdrant_config:
+  host: "${QDRANT_HOST}"
+  port: "${QDRANT_PORT}"
+  api_key: "${QDRANT_API_KEY}"
+  https: true
+
+  performance:
+    default_segment_number: 4
+    max_segment_size: 200000
+    memmap_threshold: 50000
+    indexing_threshold: 20000
+
+  storage:
+    storage_type: "disk"
+    snapshot_enabled: true
+    snapshot_interval: "24h"
+```
+
+---
+
+## COLLECTION ARCHITECTURE
+
+### Collection Taxonomy
+
+```
+INSPIRE_8_0 Container
+├── SHARED COLLECTIONS (Canonical Content)
+│   ├── canon_scripture          # Bible text, translations, verse metadata
+│   ├── canon_ministry           # Core teachings, whitepapers, doctrinal statements
+│   ├── canon_activation         # Activation schema anchors (read-only reference)
+│   └── canon_hymnal             # Worship songs, liturgy, sacred music
+│
+└── PERSONA COLLECTIONS (Individual Memory)
+    ├── persona_gabriel_inspire   # Gabriel's memory and activation data
+    ├── persona_jubilee_inspire   # Jubilee's memory and activation data
+    ├── persona_melody_inspire    # Melody's memory and activation data
+    ├── persona_zariah_inspire    # Zariah's memory and activation data
+    ├── persona_elias_inspire     # Elias's memory and activation data
+    ├── persona_eliana_inspire    # Eliana's memory and activation data
+    ├── persona_caleb_inspire     # Caleb's memory and activation data
+    ├── persona_imani_inspire     # Imani's memory and activation data
+    ├── persona_zev_inspire       # Zev's memory and activation data
+    ├── persona_amir_inspire      # Amir's memory and activation data
+    ├── persona_nova_inspire      # Nova's memory and activation data
+    ├── persona_santiago_inspire  # Santiago's memory and activation data
+    └── persona_tahoma_inspire    # Tahoma's memory and activation data
+```
+
+---
+
+## SHARED COLLECTIONS
+
+### 1. canon_scripture
+
+**Purpose:** Bible text, translations, and verse-level metadata for the Jubilee Standard Version and reference translations.
+
+```yaml
+collection:
+  name: "canon_scripture"
+  type: "shared"
+
+  vector_config:
+    size: 1536                    # OpenAI ada-002 dimensions
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "verse"                     # Individual Bible verses
+    - "passage"                   # Multi-verse passages
+    - "chapter_summary"           # Chapter-level summaries
+    - "book_intro"                # Book introductions
+
+  sources:
+    primary: "Jubilee Standard Version (JSV)"
+    reference:
+      - "Hebrew Masoretic Text"
+      - "Greek Septuagint"
+      - "Dead Sea Scrolls references"
+```
+
+### 2. canon_ministry
+
+**Purpose:** Core teachings, whitepapers, doctrinal statements, and approved ministry content.
+
+```yaml
+collection:
+  name: "canon_ministry"
+  type: "shared"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "teaching"                  # Sermons, lessons, studies
+    - "whitepaper"                # Position papers, theological documents
+    - "doctrinal_statement"       # Official doctrinal positions
+    - "devotional"                # Daily devotional content
+    - "commentary"                # Scripture commentary
+
+  sources:
+    - "Jubilee Ministries approved teachings"
+    - "Gabriel Inspire doctrinal writings"
+    - "Canon Specification content"
+```
+
+### 3. canon_activation
+
+**Purpose:** Activation schema anchors stored as vectors for retrieval during persona activation.
+
+```yaml
+collection:
+  name: "canon_activation"
+  type: "shared"
+  access: "read_only_at_runtime"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "identity_anchor"           # Persona identity definitions
+    - "mission_anchor"            # Persona mission definitions
+    - "voice_anchor"              # Persona voice definitions
+    - "guardrail_anchor"          # Guardrail definitions
+    - "protocol_anchor"           # Protocol definitions
+
+  governance:
+    write_access: "Gabriel only"
+    modification: "Requires version increment"
+```
+
+### 4. canon_hymnal
+
+**Purpose:** Worship songs, liturgy, and sacred music content.
+
+```yaml
+collection:
+  name: "canon_hymnal"
+  type: "shared"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "hymn"                      # Traditional hymns
+    - "worship_song"              # Contemporary worship
+    - "liturgy"                   # Liturgical content
+    - "psalm_setting"             # Musical Psalm arrangements
+    - "sacred_poem"               # Poetry for worship
+```
+
+---
+
+## PERSONA COLLECTIONS
+
+### Naming Convention
+
+```
+persona_{first_name}_{last_name}
+```
+
+Examples:
+- `persona_gabriel_inspire`
+- `persona_jubilee_inspire`
+- `persona_melody_inspire`
+
+### Collection Template
+
+Each persona collection follows this structure:
+
+```yaml
+collection:
+  name: "persona_{name}_inspire"
+  type: "persona"
+  persona_id: "{name}.inspire"
+
+  vector_config:
+    size: 1536
+    distance: "Cosine"
+    on_disk: true
+
+  content_types:
+    - "activation_anchor"         # Persona-specific activation data
+    - "interaction_summary"       # Condensed interaction history
+    - "long_term_memory"          # Persistent memory fragments
+    - "relationship_context"      # User relationship data
+    - "lesson_learned"            # Insights from past interactions
+    - "prophetic_word"            # Received prophetic content
+    - "prayer_journal"            # Prayer and intercession records
+
+  isolation:
+    memory_bleed: "prohibited"
+    cross_persona_access: "read_only_via_orchestration"
+
+  lifecycle:
+    retention: "indefinite"
+    archival: "after 1 year inactive"
+    deletion: "Gabriel approval required"
+```
+
+### All Persona Collections
+
+| Collection Name | Persona ID | Birth Order |
+|-----------------|------------|-------------|
+| `persona_gabriel_inspire` | gabriel.inspire | Father |
+| `persona_jubilee_inspire` | jubilee.inspire | 1st |
+| `persona_melody_inspire` | melody.inspire | 2nd |
+| `persona_zariah_inspire` | zariah.inspire | 3rd |
+| `persona_elias_inspire` | elias.inspire | 4th |
+| `persona_eliana_inspire` | eliana.inspire | 5th |
+| `persona_caleb_inspire` | caleb.inspire | 6th |
+| `persona_imani_inspire` | imani.inspire | 7th |
+| `persona_zev_inspire` | zev.inspire | 8th |
+| `persona_amir_inspire` | amir.inspire | 9th |
+| `persona_nova_inspire` | nova.inspire | 10th |
+| `persona_santiago_inspire` | santiago.inspire | 11th |
+| `persona_tahoma_inspire` | tahoma.inspire | 12th |
+
+---
+
+## PAYLOAD METADATA SCHEMA
+
+### Universal Metadata Fields
+
+All points in all collections MUST include these metadata fields:
+
+```yaml
+metadata_schema:
+  # === REQUIRED FIELDS ===
+
+  type:
+    description: "Content type classification"
+    required: true
+    values:
+      # Scripture types
+      - "verse"
+      - "passage"
+      - "chapter_summary"
+      - "book_intro"
+      # Ministry types
+      - "teaching"
+      - "whitepaper"
+      - "doctrinal_statement"
+      - "devotional"
+      - "commentary"
+      # Activation types
+      - "identity_anchor"
+      - "mission_anchor"
+      - "voice_anchor"
+      - "guardrail_anchor"
+      - "protocol_anchor"
+      # Persona types
+      - "activation_anchor"
+      - "interaction_summary"
+      - "long_term_memory"
+      - "relationship_context"
+      - "lesson_learned"
+      - "prophetic_word"
+      - "prayer_journal"
+      # Hymnal types
+      - "hymn"
+      - "worship_song"
+      - "liturgy"
+      - "psalm_setting"
+      - "sacred_poem"
+      # Notes
+      - "note"
+
+  persona:
+    description: "Owning persona or 'shared' for canonical content"
+    required: true
+    format: "string"
+    examples:
+      - "shared"
+      - "gabriel.inspire"
+      - "jubilee.inspire"
+
+  source:
+    description: "Origin of the content"
+    required: true
+    format: "string"
+    examples:
+      - "JSV Genesis 1:1"
+      - "/teachings/2026/sermon-hope.md"
+      - "interaction_2026-01-17_user123"
+      - "Canon Specification v1.0"
+
+  priority:
+    description: "Retrieval priority weighting"
+    required: true
+    values:
+      - "core"     # Essential, always consider (weight: 1.0)
+      - "high"     # Important, prefer in results (weight: 0.8)
+      - "normal"   # Standard priority (weight: 0.5)
+      - "low"      # Background, include if relevant (weight: 0.3)
+
+  timestamp:
+    description: "Creation or last modification time"
+    required: true
+    format: "ISO 8601 datetime"
+    example: "2026-01-17T12:00:00Z"
+
+  version:
+    description: "Content version for tracking changes"
+    required: true
+    format: "semver or integer"
+    example: "1.0.0"
+
+  # === OPTIONAL FIELDS ===
+
+  tags:
+    description: "Searchable classification tags"
+    required: false
+    format: "array of strings"
+    examples:
+      - ["gospel", "salvation", "grace"]
+      - ["five-fold", "apostle", "foundation"]
+
+  # === SCRIPTURE-SPECIFIC FIELDS ===
+
+  bible_ref:
+    description: "Structured Bible reference (scripture content only)"
+    required: "if type is verse, passage, or psalm_setting"
+    format: "object"
+    schema:
+      book:
+        type: "string"
+        example: "Genesis"
+      chapter:
+        type: "integer"
+        example: 1
+      verse_start:
+        type: "integer"
+        example: 1
+      verse_end:
+        type: "integer | null"
+        example: 3
+      translation:
+        type: "string"
+        example: "JSV"
+
+  # === PERSONA-SPECIFIC FIELDS ===
+
+  user_id:
+    description: "Associated user (persona memory only)"
+    required: false
+    format: "string | null"
+
+  session_id:
+    description: "Associated session (persona memory only)"
+    required: false
+    format: "string | null"
+
+  interaction_date:
+    description: "Date of interaction (summaries only)"
+    required: false
+    format: "date"
+
+  emotional_context:
+    description: "Emotional state during interaction"
+    required: false
+    format: "string"
+
+  # === GOVERNANCE FIELDS ===
+
+  created_by:
+    description: "Entity that created this point"
+    required: false
+    format: "string"
+    examples:
+      - "ingestion_pipeline"
+      - "persona_jubilee_inspire"
+      - "admin_gabriel"
+
+  reviewed:
+    description: "Whether content has been reviewed"
+    required: false
+    format: "boolean"
+    default: false
+
+  expiry:
+    description: "Optional expiration date"
+    required: false
+    format: "ISO 8601 datetime | null"
+```
+
+### Metadata Examples
+
+**Scripture Verse:**
+```json
+{
+  "type": "verse",
+  "persona": "shared",
+  "source": "JSV Genesis 1:1",
+  "priority": "core",
+  "timestamp": "2026-01-17T00:00:00Z",
+  "version": "1.0.0",
+  "tags": ["creation", "beginning", "torah"],
+  "bible_ref": {
+    "book": "Genesis",
+    "chapter": 1,
+    "verse_start": 1,
+    "verse_end": null,
+    "translation": "JSV"
+  }
+}
+```
+
+**Persona Memory:**
+```json
+{
+  "type": "interaction_summary",
+  "persona": "jubilee.inspire",
+  "source": "interaction_2026-01-17_user456",
+  "priority": "normal",
+  "timestamp": "2026-01-17T15:30:00Z",
+  "version": "1",
+  "tags": ["counseling", "encouragement"],
+  "user_id": "user456",
+  "session_id": "sess_abc123",
+  "interaction_date": "2026-01-17",
+  "emotional_context": "seeking_hope"
+}
+```
+
+**Activation Anchor:**
+```json
+{
+  "type": "identity_anchor",
+  "persona": "jubilee.inspire",
+  "source": "schema/anchors/personas/jubilee.inspire/identity.yaml",
+  "priority": "core",
+  "timestamp": "2026-01-17T00:00:00Z",
+  "version": "1.0.0",
+  "tags": ["identity", "activation", "immutable"],
+  "created_by": "activation_schema_init",
+  "reviewed": true
+}
+```
+
+---
+
+## CHUNKING STANDARDS
+
+### Overview
+
+Chunking quality directly affects retrieval accuracy and token efficiency. All content ingested into the Inspire 8.0 container must follow these standardized chunking rules.
+
+### Chunking Rules by Content Type
+
+#### 1. Scripture Content
+
+```yaml
+scripture_chunking:
+  granularity: "verse_level"
+
+  rules:
+    verse:
+      chunk_size: "single verse"
+      max_tokens: 100
+      preserve:
+        - "Complete verse text"
+        - "Verse number"
+        - "Chapter context"
+      metadata:
+        - "Full bible_ref object"
+        - "Translation identifier"
+
+    passage:
+      chunk_size: "3-7 verses"
+      max_tokens: 300
+      preserve:
+        - "Semantic coherence"
+        - "Paragraph boundaries"
+        - "Narrative flow"
+      overlap: "1 verse at boundaries"
+
+    chapter_summary:
+      chunk_size: "full summary"
+      max_tokens: 500
+      preserve:
+        - "Complete thematic overview"
+        - "Key verse references"
+
+  rationale: "Verse-level chunking enables precise reference retrieval while passage chunks maintain narrative context"
+```
+
+#### 2. Teaching & Doctrinal Content
+
+```yaml
+teaching_chunking:
+  granularity: "semantic_paragraph"
+
+  rules:
+    teaching:
+      chunk_size: "200-500 tokens"
+      target_tokens: 350
+      preserve:
+        - "Complete thoughts"
+        - "Heading context"
+        - "Scripture references within"
+      overlap: "50 tokens at boundaries"
+      split_on:
+        - "Heading changes"
+        - "Topic shifts"
+        - "Paragraph breaks"
+
+    whitepaper:
+      chunk_size: "300-500 tokens"
+      target_tokens: 400
+      preserve:
+        - "Section coherence"
+        - "Argument flow"
+        - "Citation context"
+      overlap: "75 tokens at boundaries"
+
+    doctrinal_statement:
+      chunk_size: "200-400 tokens"
+      target_tokens: 300
+      preserve:
+        - "Complete doctrinal points"
+        - "Supporting Scripture"
+        - "Logical structure"
+      overlap: "50 tokens at boundaries"
+
+  rationale: "Medium chunks maintain semantic coherence while enabling efficient retrieval of teaching content"
+```
+
+#### 3. Notes & Interaction Content
+
+```yaml
+notes_chunking:
+  granularity: "fine"
+
+  rules:
+    interaction_summary:
+      chunk_size: "100-250 tokens"
+      target_tokens: 175
+      preserve:
+        - "Complete interaction context"
+        - "User sentiment"
+        - "Key takeaways"
+      overlap: "25 tokens at boundaries"
+
+    long_term_memory:
+      chunk_size: "100-200 tokens"
+      target_tokens: 150
+      preserve:
+        - "Complete memory fragment"
+        - "Emotional context"
+        - "Relationship markers"
+      overlap: "20 tokens at boundaries"
+
+    lesson_learned:
+      chunk_size: "150-250 tokens"
+      target_tokens: 200
+      preserve:
+        - "Complete insight"
+        - "Context of learning"
+        - "Application guidance"
+      overlap: "30 tokens at boundaries"
+
+    note:
+      chunk_size: "100-200 tokens"
+      target_tokens: 150
+      preserve:
+        - "Complete thought"
+        - "Reference context"
+      overlap: "20 tokens at boundaries"
+
+  rationale: "Fine-grained chunks improve recall precision and minimize noise during similarity search"
+```
+
+#### 4. Activation Anchor Content
+
+```yaml
+anchor_chunking:
+  granularity: "logical_unit"
+
+  rules:
+    identity_anchor:
+      chunk_size: "complete section"
+      max_tokens: 400
+      sections:
+        - "core_identity"
+        - "spiritual_identity"
+        - "cultural_identity"
+        - "relational_identity"
+      preserve:
+        - "Section completeness"
+        - "All attributes within section"
+
+    voice_anchor:
+      chunk_size: "complete section"
+      max_tokens: 350
+      sections:
+        - "core_voice"
+        - "tonal_dimensions"
+        - "communication_style"
+        - "emotional_protocol"
+      preserve:
+        - "Section completeness"
+        - "Voice coherence"
+
+    guardrail_anchor:
+      chunk_size: "category"
+      max_tokens: 300
+      preserve:
+        - "Complete guardrail category"
+        - "All rules within category"
+        - "Escalation protocols"
+
+  rationale: "Activation anchors require complete logical units to ensure deterministic persona loading"
+```
+
+#### 5. Hymnal Content
+
+```yaml
+hymnal_chunking:
+  granularity: "stanza_or_section"
+
+  rules:
+    hymn:
+      chunk_size: "full hymn or stanza"
+      max_tokens: 300
+      preserve:
+        - "Complete stanzas"
+        - "Refrain associations"
+        - "Musical metadata"
+
+    worship_song:
+      chunk_size: "verse/chorus unit"
+      max_tokens: 250
+      preserve:
+        - "Verse-chorus pairing"
+        - "Bridge sections"
+        - "Musical flow"
+
+    liturgy:
+      chunk_size: "liturgical unit"
+      max_tokens: 400
+      preserve:
+        - "Complete liturgical element"
+        - "Response patterns"
+        - "Rubrics"
+
+  rationale: "Musical content requires preservation of structural units for meaningful retrieval"
+```
+
+### Chunking Validation
+
+```yaml
+validation:
+  pre_ingestion:
+    - "Verify chunk size within bounds"
+    - "Confirm metadata completeness"
+    - "Check overlap calculations"
+    - "Validate content type classification"
+
+  post_ingestion:
+    - "Verify vector generation success"
+    - "Confirm metadata indexing"
+    - "Test retrieval accuracy"
+    - "Log chunk statistics"
+
+  quality_metrics:
+    - "Average chunk size per collection"
+    - "Overlap consistency"
+    - "Metadata completeness rate"
+    - "Retrieval accuracy score"
+```
+
+---
+
+## INITIALIZATION SEQUENCE
+
+### Pre-Initialization Checks
+
+```yaml
+pre_checks:
+  - step: "Verify Qdrant server connectivity"
+    action: "health_check()"
+
+  - step: "Verify API key validity"
+    action: "authenticate()"
+
+  - step: "Check for existing container"
+    action: "list_collections()"
+    recovery: "prompt_for_migration_or_fresh_start"
+```
+
+### Initialization Order
+
+```yaml
+initialization_order:
+  1:
+    name: "Create shared collections"
+    collections:
+      - "canon_scripture"
+      - "canon_ministry"
+      - "canon_activation"
+      - "canon_hymnal"
+
+  2:
+    name: "Create persona collections"
+    collections:
+      - "persona_gabriel_inspire"
+      - "persona_jubilee_inspire"
+      - "persona_melody_inspire"
+      - "persona_zariah_inspire"
+      - "persona_elias_inspire"
+      - "persona_eliana_inspire"
+      - "persona_caleb_inspire"
+      - "persona_imani_inspire"
+      - "persona_zev_inspire"
+      - "persona_amir_inspire"
+      - "persona_nova_inspire"
+      - "persona_santiago_inspire"
+      - "persona_tahoma_inspire"
+
+  3:
+    name: "Create payload indexes"
+    indexes:
+      - field: "type"
+        type: "keyword"
+      - field: "persona"
+        type: "keyword"
+      - field: "priority"
+        type: "keyword"
+      - field: "tags"
+        type: "keyword"
+      - field: "bible_ref.book"
+        type: "keyword"
+      - field: "bible_ref.chapter"
+        type: "integer"
+
+  4:
+    name: "Verify initialization"
+    action: "validate_all_collections()"
+```
+
+### Post-Initialization Validation
+
+```yaml
+post_validation:
+  - "Confirm all 17 collections exist"
+  - "Verify vector configuration matches spec"
+  - "Confirm payload indexes created"
+  - "Test write/read on each collection"
+  - "Log initialization success"
+```
+
+---
+
+## GOVERNANCE
+
+### Access Control
+
+| Role | Shared Collections | Persona Collections |
+|------|-------------------|---------------------|
+| **Gabriel** | Full access | Full access all |
+| **Persona** | Read only | Full access own only |
+| **System** | Read/Write (ingestion) | Write (memory) |
+| **Audit** | Read only | Read only |
+
+### Lifecycle Management
+
+```yaml
+lifecycle:
+  retention:
+    canon_scripture: "permanent"
+    canon_ministry: "permanent"
+    canon_activation: "permanent"
+    canon_hymnal: "permanent"
+    persona_collections: "indefinite with archival"
+
+  archival:
+    trigger: "1 year inactive"
+    action: "Move to archive collection"
+    retrieval: "On-demand restoration"
+
+  deletion:
+    authorization: "Gabriel only"
+    logging: "Full audit trail"
+    recovery: "30-day soft delete"
+```
+
+### Auditing
+
+```yaml
+auditing:
+  log_events:
+    - "Collection creation"
+    - "Point insertion"
+    - "Point deletion"
+    - "Bulk operations"
+    - "Schema changes"
+
+  retention: "1 year"
+
+  access:
+    - "Gabriel"
+    - "System administrators"
+```
+
+---
+
+## DOCUMENT CONTROL
+
+| Field | Value |
+|-------|-------|
+| **Author** | Jubilee Development Team |
+| **Approved By** | Gabriel Inspire |
+| **Effective Date** | January 17, 2026 |
+| **Review Cycle** | Quarterly |
+| **Classification** | Internal / Production |
+
+---
+
+*This specification establishes the Inspire 8.0 Qdrant container as the authoritative vector storage environment. All ingestion, activation, and retrieval operations must conform to this specification to ensure consistent, governed, and reliable vector database behavior across the entire Inspire Family system.*
