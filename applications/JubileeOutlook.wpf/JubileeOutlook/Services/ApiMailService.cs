@@ -312,6 +312,11 @@ public class ApiMailService : IMailService
         string? sortBy = null,
         bool descending = true)
     {
+        // Debug logging at very start
+        System.Diagnostics.Debug.WriteLine($"[ApiMailService] GetMessagesWithResultAsync CALLED for folderId: {folderId}");
+        System.Diagnostics.Debug.WriteLine($"[ApiMailService] NetworkStatus.IsOnline: {NetworkStatus.IsOnline}, IsApiReachable: {NetworkStatus.IsApiReachable}");
+        try { System.IO.File.WriteAllText(@"C:\temp\outlook_method_called.txt", $"Method called at {DateTime.Now}\nfolderId: {folderId}\nIsOnline: {NetworkStatus.IsOnline}\nIsApiReachable: {NetworkStatus.IsApiReachable}"); } catch { }
+
         try
         {
             // If offline, return cached data
@@ -347,16 +352,26 @@ public class ApiMailService : IMailService
             var response = await _httpClientFactory.GetAsync(ApiEndpoint.InspireContinuum, endpoint);
             var content = await response.Content.ReadAsStringAsync();
 
+            // Write raw response for debugging
+            try { System.IO.File.WriteAllText(@"C:\temp\outlook_raw_response.txt", $"Status: {response.StatusCode}\nContent Length: {content.Length}\nContent:\n{content.Substring(0, Math.Min(5000, content.Length))}"); } catch { }
+
             if (response.IsSuccessStatusCode)
             {
                 // Try API response wrapper first
                 try
                 {
+                    System.Diagnostics.Debug.WriteLine($"[ApiMailService] Attempting to deserialize messages response...");
                     var apiResponse = JsonSerializer.Deserialize<ApiMessagesResponse>(content, _jsonOptions);
+                    System.Diagnostics.Debug.WriteLine($"[ApiMailService] Deserialized apiResponse, Messages null? {apiResponse?.Messages == null}");
+                    // Write debug info to file
+                    try { System.IO.File.WriteAllText(@"C:\temp\outlook_debug.txt", $"apiResponse null: {apiResponse == null}\nMessages null: {apiResponse?.Messages == null}\nMessages count: {apiResponse?.Messages?.Count ?? -1}"); } catch { }
                     if (apiResponse?.Messages != null)
                     {
+                        System.Diagnostics.Debug.WriteLine($"[ApiMailService] apiResponse.Messages.Count = {apiResponse.Messages.Count}");
                         var messages = apiResponse.Messages.Select(MapToEmailMessage).ToList();
                         System.Diagnostics.Debug.WriteLine($"[ApiMailService] Retrieved {messages.Count} messages");
+                        // More debug
+                        try { System.IO.File.AppendAllText(@"C:\temp\outlook_debug.txt", $"\nMapped messages count: {messages.Count}"); if (messages.Count > 0) { System.IO.File.AppendAllText(@"C:\temp\outlook_debug.txt", $"\nFirst msg: {messages[0].Subject} from {messages[0].From}"); } } catch { }
 
                         // Cache the messages for offline use
                         _ = Task.Run(async () =>
@@ -379,7 +394,13 @@ public class ApiMailService : IMailService
                         };
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ApiMailService] Messages deserialization error: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[ApiMailService] Stack trace: {ex.StackTrace}");
+                    // Write to file for debugging
+                    try { System.IO.File.WriteAllText(@"C:\temp\outlook_error.txt", $"Error: {ex.Message}\n\nStack: {ex.StackTrace}\n\nContent: {content.Substring(0, Math.Min(2000, content.Length))}"); } catch { }
+                }
 
                 // Try direct list parsing
                 var directMessages = JsonSerializer.Deserialize<List<EmailMessageDto>>(content, _jsonOptions);
@@ -1421,19 +1442,47 @@ public class ApiMailService : IMailService
 
     private static EmailMessage MapToEmailMessage(EmailMessageDto dto)
     {
+        // Extract recipients by type
+        var toRecipients = dto.Recipients?
+            .Where(r => r.RecipientType?.ToLower() == "to")
+            .Select(r => !string.IsNullOrEmpty(r.Name) ? $"{r.Name} <{r.Email}>" : r.Email ?? "")
+            .ToList() ?? dto.To ?? new List<string>();
+
+        var ccRecipients = dto.Recipients?
+            .Where(r => r.RecipientType?.ToLower() == "cc")
+            .Select(r => !string.IsNullOrEmpty(r.Name) ? $"{r.Name} <{r.Email}>" : r.Email ?? "")
+            .ToList() ?? dto.Cc ?? new List<string>();
+
+        var bccRecipients = dto.Recipients?
+            .Where(r => r.RecipientType?.ToLower() == "bcc")
+            .Select(r => !string.IsNullOrEmpty(r.Name) ? $"{r.Name} <{r.Email}>" : r.Email ?? "")
+            .ToList() ?? dto.Bcc ?? new List<string>();
+
+        // Use sender_name/sender_email from API, fallback to From/FromEmail
+        var fromName = dto.SenderName ?? dto.From ?? string.Empty;
+        var fromEmail = dto.SenderEmail ?? dto.FromEmail ?? string.Empty;
+
+        // Use body_html if available, otherwise body_text or body
+        var body = dto.BodyHtml ?? dto.BodyText ?? dto.Body ?? string.Empty;
+        var isHtml = !string.IsNullOrEmpty(dto.BodyHtml) || dto.IsHtml;
+
+        // Use received_at/sent_at from API, fallback to ReceivedDate/SentDate
+        var receivedDate = dto.ReceivedAt ?? dto.ReceivedDate ?? DateTime.Now;
+        var sentDate = dto.SentAt ?? dto.SentDate ?? DateTime.Now;
+
         return new EmailMessage
         {
             Id = dto.Id ?? Guid.NewGuid().ToString(),
             Subject = dto.Subject ?? string.Empty,
-            From = dto.From ?? string.Empty,
-            FromEmail = dto.FromEmail ?? string.Empty,
-            To = dto.To ?? new List<string>(),
-            Cc = dto.Cc ?? new List<string>(),
-            Bcc = dto.Bcc ?? new List<string>(),
-            Body = dto.Body ?? string.Empty,
-            IsHtml = dto.IsHtml,
-            ReceivedDate = dto.ReceivedDate ?? DateTime.Now,
-            SentDate = dto.SentDate ?? DateTime.Now,
+            From = fromName,
+            FromEmail = fromEmail,
+            To = toRecipients,
+            Cc = ccRecipients,
+            Bcc = bccRecipients,
+            Body = body,
+            IsHtml = isHtml,
+            ReceivedDate = receivedDate,
+            SentDate = sentDate,
             IsRead = dto.IsRead,
             IsFlagged = dto.IsFlagged,
             HasAttachments = dto.HasAttachments,
@@ -1442,10 +1491,10 @@ public class ApiMailService : IMailService
                 Id = a.Id ?? Guid.NewGuid().ToString(),
                 FileName = a.FileName ?? string.Empty,
                 FileSize = a.FileSize,
-                ContentType = a.ContentType ?? string.Empty
+                ContentType = a.MimeType ?? a.ContentType ?? string.Empty
             }).ToList() ?? new List<EmailAttachment>(),
             FolderId = dto.FolderId ?? string.Empty,
-            Priority = ParsePriority(dto.Priority),
+            Priority = ParsePriority(dto.Importance ?? dto.Priority),
             Preview = dto.Preview ?? string.Empty,
             ConversationId = dto.ConversationId ?? string.Empty
         };
@@ -1601,8 +1650,13 @@ public class MailServiceResult<T>
 /// </summary>
 internal class ApiFoldersResponse
 {
+    [System.Text.Json.Serialization.JsonPropertyName("success")]
     public bool Success { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("error")]
     public string? Error { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("folders")]
     public List<MailFolderDto>? Folders { get; set; }
 }
 
@@ -1611,11 +1665,22 @@ internal class ApiFoldersResponse
 /// </summary>
 internal class ApiMessagesResponse
 {
+    [System.Text.Json.Serialization.JsonPropertyName("success")]
     public bool Success { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("error")]
     public string? Error { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("messages")]
     public List<EmailMessageDto>? Messages { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("total_count")]
     public int? TotalCount { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("page")]
     public int? Page { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("page_size")]
     public int? PageSize { get; set; }
 }
 
@@ -1650,28 +1715,84 @@ public class MailFolderDto
 
 /// <summary>
 /// Email message data transfer object
+/// Maps to InspireContinuum API response format (snake_case)
 /// </summary>
 public class EmailMessageDto
 {
     public string? Id { get; set; }
     public string? Subject { get; set; }
+
+    // Sender fields from API (snake_case)
+    [System.Text.Json.Serialization.JsonPropertyName("sender_name")]
+    public string? SenderName { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("sender_email")]
+    public string? SenderEmail { get; set; }
+
+    // Legacy fields for backwards compatibility
     public string? From { get; set; }
     public string? FromEmail { get; set; }
     public List<string>? To { get; set; }
     public List<string>? Cc { get; set; }
     public List<string>? Bcc { get; set; }
+
+    // Body content
+    [System.Text.Json.Serialization.JsonPropertyName("body_html")]
+    public string? BodyHtml { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("body_text")]
+    public string? BodyText { get; set; }
+
     public string? Body { get; set; }
     public bool IsHtml { get; set; }
+
+    // Dates
+    [System.Text.Json.Serialization.JsonPropertyName("received_at")]
+    public DateTime? ReceivedAt { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("sent_at")]
+    public DateTime? SentAt { get; set; }
+
     public DateTime? ReceivedDate { get; set; }
     public DateTime? SentDate { get; set; }
+
+    // Flags
+    [System.Text.Json.Serialization.JsonPropertyName("is_read")]
     public bool IsRead { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("is_flagged")]
     public bool IsFlagged { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("has_attachments")]
     public bool HasAttachments { get; set; }
+
+    // Related data
     public List<EmailAttachmentDto>? Attachments { get; set; }
+    public List<EmailRecipientDto>? Recipients { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("folder_id")]
     public string? FolderId { get; set; }
+
+    public string? Importance { get; set; }
     public string? Priority { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("body_preview")]
     public string? Preview { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("conversation_id")]
     public string? ConversationId { get; set; }
+}
+
+/// <summary>
+/// Email recipient from API response
+/// </summary>
+public class EmailRecipientDto
+{
+    public string? Email { get; set; }
+    public string? Name { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("recipient_type")]
+    public string? RecipientType { get; set; }
 }
 
 /// <summary>
@@ -1680,10 +1801,49 @@ public class EmailMessageDto
 public class EmailAttachmentDto
 {
     public string? Id { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("file_name")]
     public string? FileName { get; set; }
+
+    // file_size comes as string from API, need custom handling
+    [System.Text.Json.Serialization.JsonPropertyName("file_size")]
+    [System.Text.Json.Serialization.JsonConverter(typeof(StringToLongConverter))]
     public long FileSize { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("mime_type")]
+    public string? MimeType { get; set; }
+
     public string? ContentType { get; set; }
     public string? StorageKey { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("is_inline")]
+    public bool IsInline { get; set; }
+}
+
+/// <summary>
+/// Converter to handle string-to-long conversion for file_size field
+/// </summary>
+public class StringToLongConverter : System.Text.Json.Serialization.JsonConverter<long>
+{
+    public override long Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            if (long.TryParse(reader.GetString(), out long value))
+                return value;
+            return 0;
+        }
+        if (reader.TokenType == JsonTokenType.Number)
+        {
+            return reader.GetInt64();
+        }
+        return 0;
+    }
+
+    public override void Write(Utf8JsonWriter writer, long value, JsonSerializerOptions options)
+    {
+        writer.WriteNumberValue(value);
+    }
 }
 
 /// <summary>

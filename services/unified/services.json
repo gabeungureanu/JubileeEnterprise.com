@@ -8,7 +8,7 @@
       "name": "jubileeverse",
       "description": "JubileeVerse.com - Main Website (16 workers)",
       "script": "server-cluster.js",
-      "cwd": "C:/data/JubileeEnterprise.com Flywheel/websites/codex/JubileeVerse.com",
+      "cwd": "D:/Data/JubileeEnterprise.com/websites/codex/JubileeVerse.com",
       "port": 3000,
       "workers": 16,
       "enabled": true
@@ -17,7 +17,7 @@
       "name": "jubileeinspire",
       "description": "JubileeInspire.com - Inspiration Platform (16 workers)",
       "script": "server-cluster.js",
-      "cwd": "C:/data/JubileeEnterprise.com Flywheel/websites/codex/JubileeInspire.com",
+      "cwd": "D:/Data/JubileeEnterprise.com/websites/codex/JubileeInspire.com",
       "port": 3001,
       "workers": 16,
       "enabled": true
@@ -26,7 +26,7 @@
       "name": "wwbibleweb",
       "description": "wwBibleweb.com - Bible Web Platform (16 workers)",
       "script": "server-cluster.js",
-      "cwd": "C:/data/JubileeEnterprise.com Flywheel/websites/codex/wwBibleweb.com",
+      "cwd": "D:/Data/JubileeEnterprise.com/websites/codex/wwBibleweb.com",
       "port": 3847,
       "workers": 16,
       "enabled": true
@@ -35,7 +35,7 @@
       "name": "jubileewebsites",
       "description": "JubileeWebsites.com - Website Generator (16 workers)",
       "script": "server-cluster.cjs",
-      "cwd": "C:/data/JubileeEnterprise.com Flywheel/websites/codex/JubileeWebsites.com",
+      "cwd": "D:/Data/JubileeEnterprise.com/websites/codex/JubileeWebsites.com",
       "port": 3008,
       "workers": 16,
       "enabled": true
@@ -44,7 +44,7 @@
       "name": "jubileeparadox",
       "description": "JubileeParadox.com - Movie Website (16 workers)",
       "script": "server-cluster.cjs",
-      "cwd": "C:/data/JubileeEnterprise.com Flywheel/websites/codex/JubileeParadox.com",
+      "cwd": "D:/Data/JubileeEnterprise.com/websites/codex/JubileeParadox.com",
       "port": 3009,
       "workers": 16,
       "enabled": true
@@ -53,7 +53,7 @@
       "name": "inspirecodex-api",
       "description": "InspireCodex API - Identity & Configuration (16 workers)",
       "script": "server-cluster.cjs",
-      "cwd": "C:/data/JubileeEnterprise.com Flywheel/websites/codex/InspireCodex.com",
+      "cwd": "D:/Data/JubileeEnterprise.com/websites/codex/InspireCodex.com",
       "port": 3100,
       "workers": 16,
       "enabled": true
@@ -62,7 +62,7 @@
       "name": "inspirecontinuum-api",
       "description": "InspireContinuum API - User Activity & Chat (16 workers)",
       "script": "server-cluster.cjs",
-      "cwd": "C:/data/JubileeEnterprise.com Flywheel/websites/codex/InspireContinuum.com",
+      "cwd": "D:/Data/JubileeEnterprise.com/websites/codex/InspireContinuum.com",
       "port": 3101,
       "workers": 16,
       "enabled": true
@@ -71,7 +71,7 @@
       "name": "jubileebrowser",
       "description": "JubileeBrowser.com - Browser Downloads (16 workers)",
       "script": "server-cluster.cjs",
-      "cwd": "C:/data/JubileeEnterprise.com Flywheel/websites/codex/JubileeBrowser.com",
+      "cwd": "D:/Data/JubileeEnterprise.com/websites/codex/JubileeBrowser.com",
       "port": 3200,
       "workers": 16,
       "enabled": true
@@ -80,7 +80,7 @@
       "name": "celestialpaths",
       "description": "CelestialPaths.com - Static Website (16 workers)",
       "script": "server-cluster.cjs",
-      "cwd": "C:/data/JubileeEnterprise.com Flywheel/websites/codex/CelestialPaths.com",
+      "cwd": "D:/Data/JubileeEnterprise.com/websites/codex/CelestialPaths.com",
       "port": 3300,
       "workers": 16,
       "enabled": true

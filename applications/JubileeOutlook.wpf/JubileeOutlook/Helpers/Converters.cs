@@ -535,3 +535,35 @@ public class EventColorConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+
+/// <summary>
+/// Converts a name to initials (e.g., "John Doe" -> "JD", "Jennifer Martinez" -> "JM")
+/// </summary>
+public class InitialsConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is string name && !string.IsNullOrWhiteSpace(name))
+        {
+            var parts = name.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length >= 2)
+            {
+                // First letter of first name + first letter of last name
+                return $"{char.ToUpper(parts[0][0])}{char.ToUpper(parts[parts.Length - 1][0])}";
+            }
+            else if (parts.Length == 1)
+            {
+                // Just the first letter (or first two if long enough)
+                return parts[0].Length >= 2
+                    ? $"{char.ToUpper(parts[0][0])}{char.ToUpper(parts[0][1])}"
+                    : char.ToUpper(parts[0][0]).ToString();
+            }
+        }
+        return "?";
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}

@@ -237,6 +237,58 @@ psql -h localhost -p 5434 -U guardian -d continuum -f continuum/0003_jubilee_out
 - Email body content uses parameterized queries to prevent SQL injection
 - CORS is configured to allow only trusted origins
 
+## Seeding Test Data
+
+To populate the database with sample email data for testing:
+
+```bash
+cd websites/codex/InspireContinuum.com/scripts
+node seed-complete-emails.js
+```
+
+This creates:
+- **6 Inbox emails** with rich HTML bodies, recipients (To/Cc), and attachments
+- **3 Sent emails** with proper formatting
+- **2 Draft emails** for testing
+
+The script also updates folder unread/total counts automatically.
+
+## Implemented Features (v1.6.0)
+
+### ApiMailService Integration (NEW)
+Full email functionality via InspireContinuum API:
+- **Message Loading**: GET `/api/v1/outlook/messages?folderId=...`
+- **Folder Loading**: GET `/api/v1/outlook/folders`
+- **Mark as Read**: PATCH `/api/v1/outlook/messages/:id`
+- **JSON Deserialization**: Explicit `[JsonPropertyName]` attributes for snake_case API
+
+### DTO Mappings
+```csharp
+// API Response classes with explicit JSON mapping
+internal class ApiMessagesResponse
+{
+    [JsonPropertyName("messages")]
+    public List<EmailMessageDto>? Messages { get; set; }
+}
+
+public class EmailMessageDto
+{
+    [JsonPropertyName("sender_name")]
+    public string? SenderName { get; set; }
+
+    [JsonPropertyName("body_preview")]
+    public string? Preview { get; set; }
+    // ... more properties
+}
+```
+
+### StringToLongConverter
+Handles API returning `file_size` as string:
+```csharp
+[JsonConverter(typeof(StringToLongConverter))]
+public long FileSize { get; set; }
+```
+
 ## Implemented Features (v1.5.0)
 
 ### Date Range Caching

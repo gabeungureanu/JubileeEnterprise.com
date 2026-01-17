@@ -95,7 +95,10 @@ public static class ServiceConfiguration
             ?? config.Api.InspireContinuum.BaseUrl;
 
         // Read user ID from parameter or environment
-        _userId = userId ?? Environment.GetEnvironmentVariable("JUBILEE_USER_ID");
+        // Default to test user ID for development if not set
+        _userId = userId
+            ?? Environment.GetEnvironmentVariable("JUBILEE_USER_ID")
+            ?? "00000000-0000-0000-0000-000000000001"; // Default test user
 
         // Determine whether to use API services
         // Priority: Parameter > Environment variable > Config setting
