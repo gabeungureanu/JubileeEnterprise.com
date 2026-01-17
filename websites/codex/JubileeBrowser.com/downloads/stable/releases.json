@@ -1,5 +1,13 @@
 [
   {
+    "Version": "8.0.12",
+    "ReleaseNotes": "## JubileeBrowser 8.0.12\n\n### What's New\n- Fixed auto-update check that was failing with incorrect URL construction\n- Update endpoint now correctly checks for new versions\n- All previous features from 8.0.11 included\n\nSee https://jubileebrowser.com/releases for full release notes.",
+    "ReleaseDate": "2026-01-17T01:00:00.000Z",
+    "DownloadUrl": "https://jubileebrowser.com/downloads/stable/JubileeBrowser-Setup-8.0.12.msi",
+    "FileSize": 61629782,
+    "Sha256": "09E2F7A930D8207B6C958B4A8F1E6DF35F1FD8E29A1AACF116FF9B6A5F896D95"
+  },
+  {
     "Version": "8.0.11",
     "ReleaseNotes": "## JubileeBrowser 8.0.11\n\n### What's New\n- Theme Support: Dark and Light theme resource dictionaries with ThemeManager service\n- System theme detection and real-time monitoring of OS theme changes\n- Startup Performance: Optimized browser launch to prevent system resource exhaustion\n- Limited tab restoration to maximum 10 tabs on startup\n- Background services now initialize in batches\n\nSee https://jubileebrowser.com/releases for full release notes.",
     "ReleaseDate": "2026-01-16T14:00:00.000Z",

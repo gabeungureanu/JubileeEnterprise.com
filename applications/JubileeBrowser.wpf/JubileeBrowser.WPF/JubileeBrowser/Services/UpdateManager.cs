@@ -7,7 +7,7 @@ namespace JubileeBrowser.Services;
 
 public class UpdateManager
 {
-    private const string UpdateEndpoint = "https://jubileebrowser.com/downloads/";
+    private const string UpdateEndpoint = "https://www.jubileebrowser.com/downloads/";
     private const int CheckIntervalHours = 4;
     private const int InitialDelaySeconds = 30;
 
@@ -178,7 +178,7 @@ public class UpdateManager
 
             var channel = _state.Channel == UpdateChannel.Beta ? "beta" : "stable";
             var fileName = $"JubileeBrowser-Setup-{_state.AvailableVersion}.msi";
-            var downloadUrl = $"/{channel}/{fileName}";
+            var downloadUrl = $"{channel}/{fileName}";
 
             using var response = await _httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead);
             response.EnsureSuccessStatusCode();
