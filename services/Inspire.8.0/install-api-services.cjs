@@ -12,11 +12,11 @@ const SERVICE_CONFIG = {
   name: 'Inspire80WebAPIServices',
   description: 'Inspire 8.0: Web API Services - Manages Jubilee Enterprise API servers',
   script: path.join(__dirname, 'inspire-service-manager.cjs'),
-  scriptOptions: '--config=' + path.join(__dirname, 'api-services.json'),
   nodeOptions: [],
   workingDirectory: __dirname,
   env: [
-    { name: 'NODE_ENV', value: 'production' }
+    { name: 'NODE_ENV', value: 'production' },
+    { name: 'SERVICE_CONFIG', value: path.join(__dirname, 'api-services.json') }
   ],
   maxRestarts: 5,
   maxRetries: 3,

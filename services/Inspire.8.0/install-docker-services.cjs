@@ -12,11 +12,11 @@ const SERVICE_CONFIG = {
   name: 'Inspire80DockerServices',
   description: 'Inspire 8.0: Docker Services - Manages Docker containers for infrastructure',
   script: path.join(__dirname, 'docker-service-manager.cjs'),
-  scriptOptions: '--config=' + path.join(__dirname, 'docker-services.json'),
   nodeOptions: [],
   workingDirectory: __dirname,
   env: [
-    { name: 'NODE_ENV', value: 'production' }
+    { name: 'NODE_ENV', value: 'production' },
+    { name: 'SERVICE_CONFIG', value: path.join(__dirname, 'docker-services.json') }
   ],
   maxRestarts: 5,
   maxRetries: 3,

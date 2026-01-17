@@ -24,8 +24,9 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 
-// Configuration
-const CONFIG_FILE = process.argv.find(arg => arg.startsWith('--config='))?.split('=')[1]
+// Configuration - support environment variable for paths with spaces
+const CONFIG_FILE = process.env.SERVICE_CONFIG
+    || process.argv.find(arg => arg.startsWith('--config='))?.split('=')[1]
     || path.join(__dirname, 'services.json');
 const PID_FILE = path.join(__dirname, '.manager.pid');
 const RELOAD_TRIGGER = path.join(__dirname, '.reload-trigger');

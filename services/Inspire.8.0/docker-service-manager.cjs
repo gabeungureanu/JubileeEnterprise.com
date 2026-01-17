@@ -12,7 +12,8 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 
-const CONFIG_FILE = process.argv.find(arg => arg.startsWith('--config='))?.split('=')[1]
+const CONFIG_FILE = process.env.SERVICE_CONFIG
+    || process.argv.find(arg => arg.startsWith('--config='))?.split('=')[1]
     || path.join(__dirname, 'docker-services.json');
 const HEALTH_PORT = 3902;
 const CHECK_INTERVAL = 30000; // 30 seconds

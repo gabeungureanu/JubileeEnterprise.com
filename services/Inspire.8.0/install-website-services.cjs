@@ -12,11 +12,11 @@ const SERVICE_CONFIG = {
   name: 'Inspire80WebsiteServices',
   description: 'Inspire 8.0: Website Services - Manages all Jubilee Enterprise frontend websites',
   script: path.join(__dirname, 'inspire-service-manager.cjs'),
-  scriptOptions: '--config=' + path.join(__dirname, 'websites-services.json'),
   nodeOptions: [],
   workingDirectory: __dirname,
   env: [
-    { name: 'NODE_ENV', value: 'production' }
+    { name: 'NODE_ENV', value: 'production' },
+    { name: 'SERVICE_CONFIG', value: path.join(__dirname, 'websites-services.json') }
   ],
   maxRestarts: 5,
   maxRetries: 3,
