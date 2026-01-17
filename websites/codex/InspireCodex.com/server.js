@@ -8,6 +8,7 @@
  */
 
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
 const express = require('express');
 const cors = require('cors');
@@ -5399,6 +5400,315 @@ app.delete('/api/v1/daily-news/cleanup', async (req, res) => {
 });
 
 // =============================================================================
+// SERVICE MANAGEMENT API - Inspire 8.0 Services Configuration
+// =============================================================================
+
+const SERVICES_DIR = path.join(__dirname, '..', '..', '..', 'services', 'Inspire.8.0');
+
+// Get all service configurations
+app.get('/api/v1/services', async (req, res) => {
+    try {
+        const configs = {};
+
+        // Read website services config
+        const websitesPath = path.join(SERVICES_DIR, 'websites-services.json');
+        if (fs.existsSync(websitesPath)) {
+            configs.websites = JSON.parse(fs.readFileSync(websitesPath, 'utf8'));
+        }
+
+        // Read API services config
+        const apiPath = path.join(SERVICES_DIR, 'api-services.json');
+        if (fs.existsSync(apiPath)) {
+            configs.api = JSON.parse(fs.readFileSync(apiPath, 'utf8'));
+        }
+
+        // Read Docker services config
+        const dockerPath = path.join(SERVICES_DIR, 'docker-services.json');
+        if (fs.existsSync(dockerPath)) {
+            configs.docker = JSON.parse(fs.readFileSync(dockerPath, 'utf8'));
+        }
+
+        res.json({
+            success: true,
+            configs,
+            servicesDirectory: SERVICES_DIR
+        });
+    } catch (err) {
+        console.error('[Services] Error loading configs:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to load service configurations',
+            message: err.message
+        });
+    }
+});
+
+// Get specific service configuration (websites, api, docker)
+app.get('/api/v1/services/:type', async (req, res) => {
+    try {
+        const { type } = req.params;
+        const configMap = {
+            'websites': 'websites-services.json',
+            'api': 'api-services.json',
+            'docker': 'docker-services.json'
+        };
+
+        if (!configMap[type]) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid service type',
+                validTypes: Object.keys(configMap)
+            });
+        }
+
+        const configPath = path.join(SERVICES_DIR, configMap[type]);
+        if (!fs.existsSync(configPath)) {
+            return res.status(404).json({
+                success: false,
+                error: 'Configuration file not found',
+                path: configPath
+            });
+        }
+
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        res.json({
+            success: true,
+            type,
+            config
+        });
+    } catch (err) {
+        console.error('[Services] Error loading config:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to load configuration',
+            message: err.message
+        });
+    }
+});
+
+// Update a single service within a configuration
+app.put('/api/v1/services/:type/:serviceName', async (req, res) => {
+    try {
+        const { type, serviceName } = req.params;
+        const updates = req.body;
+
+        const configMap = {
+            'websites': 'websites-services.json',
+            'api': 'api-services.json',
+            'docker': 'docker-services.json'
+        };
+
+        if (!configMap[type]) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid service type',
+                validTypes: Object.keys(configMap)
+            });
+        }
+
+        const configPath = path.join(SERVICES_DIR, configMap[type]);
+        if (!fs.existsSync(configPath)) {
+            return res.status(404).json({
+                success: false,
+                error: 'Configuration file not found'
+            });
+        }
+
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+
+        // Find and update the service
+        const serviceKey = type === 'docker' ? 'containers' : 'services';
+        const serviceIndex = config[serviceKey].findIndex(s => s.name === serviceName);
+
+        if (serviceIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                error: 'Service not found',
+                serviceName
+            });
+        }
+
+        // Merge updates with existing service config
+        const existingService = config[serviceKey][serviceIndex];
+        config[serviceKey][serviceIndex] = {
+            ...existingService,
+            ...updates
+        };
+
+        // Write updated config back to file
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+
+        console.log(`[Services] Updated ${serviceName} in ${type} config`);
+
+        res.json({
+            success: true,
+            message: `Service ${serviceName} updated successfully`,
+            service: config[serviceKey][serviceIndex],
+            requiresReload: true
+        });
+    } catch (err) {
+        console.error('[Services] Error updating service:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update service',
+            message: err.message
+        });
+    }
+});
+
+// Bulk update services configuration
+app.put('/api/v1/services/:type', async (req, res) => {
+    try {
+        const { type } = req.params;
+        const updates = req.body;
+
+        const configMap = {
+            'websites': 'websites-services.json',
+            'api': 'api-services.json',
+            'docker': 'docker-services.json'
+        };
+
+        if (!configMap[type]) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid service type',
+                validTypes: Object.keys(configMap)
+            });
+        }
+
+        const configPath = path.join(SERVICES_DIR, configMap[type]);
+        if (!fs.existsSync(configPath)) {
+            return res.status(404).json({
+                success: false,
+                error: 'Configuration file not found'
+            });
+        }
+
+        // Backup existing config
+        const existingConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        const backupPath = configPath.replace('.json', `.backup-${Date.now()}.json`);
+        fs.writeFileSync(backupPath, JSON.stringify(existingConfig, null, 2));
+
+        // Write new config
+        const newConfig = {
+            ...existingConfig,
+            ...updates
+        };
+        fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2));
+
+        console.log(`[Services] Updated ${type} config, backup created at ${backupPath}`);
+
+        res.json({
+            success: true,
+            message: `${type} configuration updated successfully`,
+            backupPath,
+            requiresReload: true
+        });
+    } catch (err) {
+        console.error('[Services] Error updating config:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update configuration',
+            message: err.message
+        });
+    }
+});
+
+// Trigger service reload (touches .reload-trigger file)
+app.post('/api/v1/services/:type/reload', async (req, res) => {
+    try {
+        const { type } = req.params;
+        const reloadTrigger = path.join(SERVICES_DIR, '.reload-trigger');
+
+        // Touch the reload trigger file
+        const now = new Date();
+        fs.utimesSync(reloadTrigger, now, now);
+
+        console.log(`[Services] Reload triggered for ${type} services`);
+
+        res.json({
+            success: true,
+            message: `Reload triggered for ${type} services`,
+            timestamp: now.toISOString()
+        });
+    } catch (err) {
+        // File might not exist, create it
+        try {
+            const reloadTrigger = path.join(SERVICES_DIR, '.reload-trigger');
+            fs.writeFileSync(reloadTrigger, new Date().toISOString());
+            res.json({
+                success: true,
+                message: 'Reload trigger created',
+                timestamp: new Date().toISOString()
+            });
+        } catch (createErr) {
+            console.error('[Services] Error triggering reload:', createErr);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to trigger reload',
+                message: createErr.message
+            });
+        }
+    }
+});
+
+// Get service health from service manager health endpoints
+app.get('/api/v1/services/health/:type', async (req, res) => {
+    try {
+        const { type } = req.params;
+        const healthPorts = {
+            'websites': 3900,
+            'api': 3901,
+            'docker': 3902
+        };
+
+        if (!healthPorts[type]) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid service type',
+                validTypes: Object.keys(healthPorts)
+            });
+        }
+
+        const port = healthPorts[type];
+        const healthUrl = `http://localhost:${port}/health`;
+
+        const healthResponse = await new Promise((resolve) => {
+            const req = http.get(healthUrl, { timeout: 5000 }, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                    try {
+                        resolve({ status: 'ok', data: JSON.parse(data) });
+                    } catch (e) {
+                        resolve({ status: 'error', error: 'Invalid JSON response' });
+                    }
+                });
+            });
+            req.on('error', (err) => resolve({ status: 'offline', error: err.message }));
+            req.on('timeout', () => {
+                req.destroy();
+                resolve({ status: 'timeout', error: 'Request timed out' });
+            });
+        });
+
+        res.json({
+            success: healthResponse.status === 'ok',
+            type,
+            port,
+            ...healthResponse
+        });
+    } catch (err) {
+        console.error('[Services] Error fetching health:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch service health',
+            message: err.message
+        });
+    }
+});
+
+// =============================================================================
 // ERROR HANDLING
 // =============================================================================
 
@@ -5447,6 +5757,14 @@ app.use((req, res) => {
                 image: 'GET /api/v1/daily-news/:id/image',
                 stats: 'GET /api/v1/daily-news/stats',
                 cleanup: 'DELETE /api/v1/daily-news/cleanup'
+            },
+            services: {
+                list: 'GET /api/v1/services',
+                byType: 'GET /api/v1/services/:type',
+                update: 'PUT /api/v1/services/:type/:serviceName',
+                bulkUpdate: 'PUT /api/v1/services/:type',
+                reload: 'POST /api/v1/services/:type/reload',
+                health: 'GET /api/v1/services/health/:type'
             }
         }
     });
