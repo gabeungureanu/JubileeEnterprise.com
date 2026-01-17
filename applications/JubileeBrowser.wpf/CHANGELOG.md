@@ -7,13 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [8.0.12] - 2026-01-17
 
+### Added
+- **To-Do List Loading Indicator**: Spinning loader displayed while tasks are fetched from API
+  - Gold-colored (#E6AC00) spinning ring animation
+  - Transparent background for seamless appearance
+  - Automatically hides when tasks are loaded
+
+- **Sidebar Active Indicators**: Visual feedback for active sidebar panels
+  - Gold indicator dots on Bookmarks and History icons when their panels are open
+  - Glow effect on active indicators for enhanced visibility
+  - Active states properly reset when switching between panels
+
 ### Fixed
 - **Auto-Update Check**: Fixed URL construction bug that prevented update checks from working
   - HttpClient BaseAddress now includes trailing slash
   - Relative URIs no longer start with slash prefix
   - Update endpoint correctly resolves to `downloads/stable/releases.json`
 
+- **To-Do List Edit Glitch**: Fixed issue where tasks would disappear after editing
+  - Added LINQ re-sorting after edit operations to maintain correct order
+  - Tasks now stay visible with proper ordering (incomplete first, then by creation date)
+
+- **Hamburger Menu Icon in Yellow Mode**: Fixed icon color when opening new tabs with sidebar open
+  - Icon now correctly stays white when sidebar is open in yellow mode
+  - Previously turned black incorrectly when opening new tabs
+
+- **Bookmarks Panel State**: Active indicator now resets when clicking Todo or Chat icons
+  - Proper deactivation when switching to other sidebar panels
+
 ### Technical
+- Added `TodoLoadingIndicator` Border element with spinning animation storyboard
+- Added `SidebarBookmarksActiveIndicator` and `SidebarHistoryActiveIndicator` ellipse elements
+- Created `SetSidebarBookmarksActive()` and `SetSidebarHistoryActive()` helper methods
+- Updated `OpenTodoPanel()` and `OpenSidebarChat()` to reset bookmarks active state
+- Fixed `UpdateModeVisuals()` to check `_isSidebarOpen` before setting hamburger icon color
+- Added re-sorting logic in `SaveTodoEdit_Click` after successful API updates
 - Updated `UpdateManager.cs` with correct URL path construction
 - BaseAddress changed from `https://www.jubileebrowser.com/downloads` to `https://www.jubileebrowser.com/downloads/`
 - Relative URIs changed from `/{channel}/releases.json` to `{channel}/releases.json`
