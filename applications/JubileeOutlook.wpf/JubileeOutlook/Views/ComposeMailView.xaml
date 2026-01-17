@@ -6,11 +6,10 @@
              xmlns:viewmodels="clr-namespace:JubileeOutlook.ViewModels"
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="500"
+             d:DataContext="{d:DesignInstance Type=viewmodels:ComposeMailViewModel}"
              Background="#1A1A1A">
 
-    <UserControl.DataContext>
-        <viewmodels:ComposeMailViewModel/>
-    </UserControl.DataContext>
+    <!-- DataContext is set programmatically by MainWindow to ensure proper event binding -->
 
     <Grid>
         <Grid.RowDefinitions>

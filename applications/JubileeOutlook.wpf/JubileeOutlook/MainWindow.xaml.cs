@@ -880,8 +880,10 @@ public partial class MainWindow : Window
             _composeMailViewModel.SaveDraftRequested += OnSaveDraftRequested;
         }
 
-        // Get the authenticated user's email
-        var userEmail = _authManager.Session?.Profile?.Email;
+        // Get the WWBW email address (same as shown in sidebar) - fall back to profile email
+        var userEmail = !string.IsNullOrEmpty(_mainViewModel.WwbwEmailAddress)
+            ? _mainViewModel.WwbwEmailAddress
+            : _authManager.Session?.Profile?.Email;
 
         // Reset the form and start composing with the user's email
         _composeMailViewModel.StartComposing(userEmail);
@@ -909,8 +911,10 @@ public partial class MainWindow : Window
             _composeMailViewModel.SaveDraftRequested += OnSaveDraftRequested;
         }
 
-        // Get the authenticated user's email
-        var userEmail = _authManager.Session?.Profile?.Email;
+        // Get the WWBW email address (same as shown in sidebar) - fall back to profile email
+        var userEmail = !string.IsNullOrEmpty(_mainViewModel.WwbwEmailAddress)
+            ? _mainViewModel.WwbwEmailAddress
+            : _authManager.Session?.Profile?.Email;
 
         // Load the draft into the compose form
         _composeMailViewModel.LoadDraft(
