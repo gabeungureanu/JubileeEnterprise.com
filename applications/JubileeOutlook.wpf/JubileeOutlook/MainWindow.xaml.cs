@@ -529,56 +529,22 @@ public partial class MainWindow : Window
         LogDebug("FetchAndSetWwbwEmailAsync started");
         try
         {
-            var tokens = await new SecureTokenStorage().LoadTokensAsync();
-            if (tokens == null || string.IsNullOrEmpty(tokens.AccessToken))
-            {
-                LogDebug("No access token available");
-                return;
-            }
-
-            LogDebug($"Access token found: {tokens.AccessToken.Substring(0, Math.Min(20, tokens.AccessToken.Length))}...");
-
-            using var httpClient = new HttpClient();
-            // Use production InspireCodex API for WWBW email
-            httpClient.BaseAddress = new Uri("https://inspirecodex.com/api/");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
-
-            LogDebug("Fetching WWBW email from API...");
-            var response = await httpClient.GetAsync("wwbw/email");
-
-            LogDebug($"API Response Status: {response.StatusCode}");
+            // Always use the profile email (login email) for display
+            var session = _authManager.Session;
             string? emailToDisplay = null;
 
-            if (response.IsSuccessStatusCode)
+            if (session.Profile != null && !string.IsNullOrEmpty(session.Profile.Email))
             {
-                var content = await response.Content.ReadAsStringAsync();
-                LogDebug($"API response: {content}");
-
-                var wwbwResponse = JsonSerializer.Deserialize<WwbwEmailResponse>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                if (wwbwResponse?.Success == true && !string.IsNullOrEmpty(wwbwResponse.WwbwEmail?.EmailAddress))
-                {
-                    emailToDisplay = wwbwResponse.WwbwEmail.EmailAddress;
-                    LogDebug($"Using WWBW email: {emailToDisplay}");
-                }
-            }
-            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-            {
-                // No WWBW email exists for this user - fall back to profile email
-                LogDebug("No WWBW email found, falling back to profile email");
-                var session = _authManager.Session;
-                if (session.Profile != null && !string.IsNullOrEmpty(session.Profile.Email))
-                {
-                    emailToDisplay = session.Profile.Email;
-                    LogDebug($"Using profile email: {emailToDisplay}");
-                }
+                emailToDisplay = session.Profile.Email;
+                LogDebug($"Using profile email: {emailToDisplay}");
             }
             else
             {
-                LogDebug($"API request failed with status: {response.StatusCode}");
+                LogDebug("No profile email available");
+                return;
             }
 
-            // Update UI with whatever email we found
+            // Update UI with the profile email
             if (!string.IsNullOrEmpty(emailToDisplay))
             {
                 var email = emailToDisplay;
@@ -607,10 +573,6 @@ public partial class MainWindow : Window
                         LogDebug($"Exception updating UI: {ex.Message}");
                     }
                 });
-            }
-            else
-            {
-                LogDebug("No email address available to display");
             }
         }
         catch (Exception ex)
@@ -945,14 +907,23 @@ public partial class MainWindow : Window
         if (ComposeMailPanel != null) ComposeMailPanel.Visibility = Visibility.Collapsed;
     }
 
-    private void OnMailSent(object? sender, EventArgs e)
+    private async void OnMailSent(object? sender, EventArgs e)
     {
+        // Mail was sent successfully - first hide the compose panel
+        HideComposePanel();
+
+        // Refresh the message list for the current folder BEFORE clearing selection
+        // This ensures the UI stays populated
+        if (_mainViewModel.SelectedFolder != null)
+        {
+            await _mainViewModel.RefreshMessagesAsync();
+        }
+
         // Clear displayed message so reading pane shows blank after sending
         _mainViewModel.DisplayedMessage = null;
         _mainViewModel.SelectedMessage = null;
 
-        // Mail was sent successfully
-        HideComposePanel();
+        // Show success notification
         MessageBox.Show("Mail sent successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
