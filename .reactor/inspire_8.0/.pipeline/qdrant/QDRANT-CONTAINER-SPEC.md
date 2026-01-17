@@ -82,19 +82,19 @@ INSPIRE_8_0 Container
 │   └── canon_hymnal             # Worship songs, liturgy, sacred music
 │
 └── PERSONA COLLECTIONS (Individual Memory)
-    ├── persona_gabriel_inspire   # Gabriel's memory and activation data
-    ├── persona_jubilee_inspire   # Jubilee's memory and activation data
-    ├── persona_melody_inspire    # Melody's memory and activation data
-    ├── persona_zariah_inspire    # Zariah's memory and activation data
-    ├── persona_elias_inspire     # Elias's memory and activation data
-    ├── persona_eliana_inspire    # Eliana's memory and activation data
-    ├── persona_caleb_inspire     # Caleb's memory and activation data
-    ├── persona_imani_inspire     # Imani's memory and activation data
-    ├── persona_zev_inspire       # Zev's memory and activation data
-    ├── persona_amir_inspire      # Amir's memory and activation data
-    ├── persona_nova_inspire      # Nova's memory and activation data
-    ├── persona_santiago_inspire  # Santiago's memory and activation data
-    └── persona_tahoma_inspire    # Tahoma's memory and activation data
+    ├── persona_gabriel_inspire   # Gabriel's memory and activation data (Father)
+    ├── persona_jubilee_inspire   # Jubilee's memory and activation data (1st)
+    ├── persona_melody_inspire    # Melody's memory and activation data (2nd)
+    ├── persona_zev_inspire       # Zev's memory and activation data (3rd)
+    ├── persona_eliana_inspire    # Eliana's memory and activation data (4th)
+    ├── persona_caleb_inspire     # Caleb's memory and activation data (5th)
+    ├── persona_imani_inspire     # Imani's memory and activation data (6th)
+    ├── persona_amir_inspire      # Amir's memory and activation data (7th)
+    ├── persona_nova_inspire      # Nova's memory and activation data (8th)
+    ├── persona_tahoma_inspire    # Tahoma's memory and activation data (9th)
+    ├── persona_santiago_inspire  # Santiago's memory and activation data (10th)
+    ├── persona_zariah_inspire    # Zariah's memory and activation data (11th)
+    └── persona_elias_inspire     # Elias's memory and activation data (12th)
 ```
 
 ---
@@ -261,16 +261,16 @@ collection:
 | `persona_gabriel_inspire` | gabriel.inspire | Father |
 | `persona_jubilee_inspire` | jubilee.inspire | 1st |
 | `persona_melody_inspire` | melody.inspire | 2nd |
-| `persona_zariah_inspire` | zariah.inspire | 3rd |
-| `persona_elias_inspire` | elias.inspire | 4th |
-| `persona_eliana_inspire` | eliana.inspire | 5th |
-| `persona_caleb_inspire` | caleb.inspire | 6th |
-| `persona_imani_inspire` | imani.inspire | 7th |
-| `persona_zev_inspire` | zev.inspire | 8th |
-| `persona_amir_inspire` | amir.inspire | 9th |
-| `persona_nova_inspire` | nova.inspire | 10th |
-| `persona_santiago_inspire` | santiago.inspire | 11th |
-| `persona_tahoma_inspire` | tahoma.inspire | 12th |
+| `persona_zev_inspire` | zev.inspire | 3rd |
+| `persona_eliana_inspire` | eliana.inspire | 4th |
+| `persona_caleb_inspire` | caleb.inspire | 5th |
+| `persona_imani_inspire` | imani.inspire | 6th |
+| `persona_amir_inspire` | amir.inspire | 7th |
+| `persona_nova_inspire` | nova.inspire | 8th |
+| `persona_tahoma_inspire` | tahoma.inspire | 9th |
+| `persona_santiago_inspire` | santiago.inspire | 10th |
+| `persona_zariah_inspire` | zariah.inspire | 11th |
+| `persona_elias_inspire` | elias.inspire | 12th |
 
 ---
 
@@ -763,16 +763,16 @@ initialization_order:
       - "persona_gabriel_inspire"
       - "persona_jubilee_inspire"
       - "persona_melody_inspire"
-      - "persona_zariah_inspire"
-      - "persona_elias_inspire"
+      - "persona_zev_inspire"
       - "persona_eliana_inspire"
       - "persona_caleb_inspire"
       - "persona_imani_inspire"
-      - "persona_zev_inspire"
       - "persona_amir_inspire"
       - "persona_nova_inspire"
-      - "persona_santiago_inspire"
       - "persona_tahoma_inspire"
+      - "persona_santiago_inspire"
+      - "persona_zariah_inspire"
+      - "persona_elias_inspire"
 
   3:
     name: "Create payload indexes"
