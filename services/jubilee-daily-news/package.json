@@ -1,0 +1,25 @@
+{
+  "name": "jubilee-daily-news",
+  "version": "1.0.0",
+  "description": "Windows Service for fetching and caching prominent daily news content",
+  "main": "jubilee-daily-news.cjs",
+  "scripts": {
+    "start": "node jubilee-daily-news.cjs",
+    "install-service": "node install-service.cjs",
+    "uninstall-service": "node uninstall-service.cjs",
+    "status": "node status.cjs",
+    "test": "node test-service.cjs"
+  },
+  "keywords": [
+    "windows-service",
+    "news",
+    "rss",
+    "caching"
+  ],
+  "author": "Jubilee Enterprise",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "sharp": "^0.33.2"
+  }
+}

@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Jubilee Good News - Uplifting Christian news article">
+    <title>Article - Jubilee Good News</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================
+           JUBILEE GOOD NEWS - MSN-STYLE ARTICLE PAGE
+           ============================================ */
+
+        :root {
+            /* MSN Dark Theme Colors */
+            --bg-primary: #1b1b1b;
+            --bg-secondary: #242424;
+            --bg-tertiary: #2d2d2d;
+            --bg-card: #2d2d2d;
+            --bg-card-hover: #3a3a3a;
+
+            /* Text Colors */
+            --text-primary: #ffffff;
+            --text-secondary: #c4c4c4;
+            --text-muted: #8a8a8a;
+            --text-body: #e0e0e0;
+
+            /* Accent Colors */
+            --accent-gold: #E6AC00;
+            --accent-gold-hover: #F5C518;
+            --accent-blue: #0078d4;
+            --accent-red: #d13438;
+            --accent-green: #107c10;
+
+            /* Borders */
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-hover: rgba(255, 255, 255, 0.2);
+
+            /* Spacing */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 12px;
+            --space-lg: 16px;
+            --space-xl: 24px;
+            --space-2xl: 32px;
+            --space-3xl: 48px;
+
+            /* Font Sizes */
+            --font-xs: 11px;
+            --font-sm: 12px;
+            --font-base: 14px;
+            --font-md: 16px;
+            --font-lg: 18px;
+            --font-xl: 22px;
+            --font-2xl: 28px;
+            --font-3xl: 36px;
+            --font-4xl: 42px;
+
+            /* Article Typography */
+            --article-line-height: 1.75;
+            --article-max-width: 720px;
+
+            /* Layout */
+            --max-width: 1200px;
+            --header-height: 48px;
+            --card-radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--accent-gold);
+        }
+
+        /* ============================================
+           HEADER - STICKY NAVIGATION
+           ============================================ */
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 var(--space-lg);
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-sm) var(--space-md);
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: var(--font-sm);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--border-hover);
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        .logo-text {
+            font-size: var(--font-base);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .logo-text span {
+            color: var(--accent-gold);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .share-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-sm) var(--space-md);
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: var(--font-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .share-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .share-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* ============================================
+           ARTICLE HERO SECTION
+           ============================================ */
+
+        .article-hero {
+            position: relative;
+            width: 100%;
+            max-height: 750px;
+            overflow: hidden;
+            background: var(--bg-tertiary);
+        }
+
+        .article-hero-image {
+            width: 100%;
+            height: 750px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .article-hero-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: var(--space-3xl) var(--space-xl);
+            background: linear-gradient(transparent, rgba(0,0,0,0.85), rgba(0,0,0,0.95));
+        }
+
+        .article-hero-content {
+            max-width: var(--article-max-width);
+            margin: 0 auto;
+        }
+
+        .article-meta-top {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
+            flex-wrap: wrap;
+        }
+
+        .article-source-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .article-source-badge.cnn { background: #cc0000; color: white; }
+        .article-source-badge.foxnews { background: #003366; color: white; }
+        .article-source-badge.yahoo { background: #6001d2; color: white; }
+        .article-source-badge.nytimes { background: #f5f5f5; color: #1a1a1a; }
+        .article-source-badge.msn { background: #0078d4; color: white; }
+        .article-source-badge.default { background: var(--accent-gold); color: var(--bg-primary); }
+
+        .article-rank-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .article-rank-badge.rank-1 { background: var(--accent-gold); color: var(--bg-primary); }
+        .article-rank-badge.rank-2 { background: #c0c0c0; color: var(--bg-primary); }
+        .article-rank-badge.rank-3 { background: #cd7f32; color: white; }
+
+        .article-rank-badge svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .article-category {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .article-hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: var(--font-3xl);
+            font-weight: 700;
+            line-height: 1.2;
+            color: var(--text-primary);
+            margin-bottom: var(--space-lg);
+        }
+
+        .article-meta-bottom {
+            display: flex;
+            align-items: center;
+            gap: var(--space-lg);
+            color: var(--text-muted);
+            font-size: var(--font-sm);
+        }
+
+        .article-meta-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .article-meta-item svg {
+            width: 14px;
+            height: 14px;
+            opacity: 0.7;
+        }
+
+        .prominence-score {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .score-circle-small {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-sm);
+            font-weight: 700;
+            background: rgba(16, 124, 16, 0.2);
+            color: var(--accent-green);
+            border: 2px solid var(--accent-green);
+        }
+
+        /* ============================================
+           ARTICLE CONTENT
+           ============================================ */
+
+        .article-container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: var(--space-2xl) var(--space-lg);
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: var(--space-3xl);
+        }
+
+        .article-main {
+            /* Full width - content extends to the right */
+        }
+
+        .article-body {
+            font-size: var(--font-lg);
+            line-height: var(--article-line-height);
+            color: var(--text-body);
+            text-align: justify;
+        }
+
+        .article-body p {
+            margin-bottom: var(--space-xl);
+            text-align: justify;
+        }
+
+        .article-body p:first-child::first-letter {
+            float: left;
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            line-height: 0.8;
+            padding-right: var(--space-md);
+            padding-top: var(--space-xs);
+            color: var(--accent-gold);
+        }
+
+        .article-body h2 {
+            font-size: var(--font-xl);
+            font-weight: 600;
+            margin-top: var(--space-2xl);
+            margin-bottom: var(--space-lg);
+            color: var(--text-primary);
+        }
+
+        .article-body blockquote {
+            margin: var(--space-2xl) 0;
+            padding: var(--space-lg) var(--space-xl);
+            border-left: 3px solid var(--accent-gold);
+            background: var(--bg-card);
+            border-radius: 0 var(--card-radius) var(--card-radius) 0;
+            font-style: italic;
+            color: var(--text-secondary);
+            text-align: justify;
+        }
+
+        .article-body ul, .article-body ol {
+            margin: var(--space-lg) 0;
+            padding-left: var(--space-xl);
+        }
+
+        .article-body li {
+            margin-bottom: var(--space-sm);
+        }
+
+        /* Hopeful Call-to-Action Box */
+        .hope-callout {
+            margin: var(--space-2xl) 0;
+            padding: var(--space-xl);
+            background: linear-gradient(135deg, rgba(230, 172, 0, 0.1), rgba(230, 172, 0, 0.05));
+            border: 1px solid rgba(230, 172, 0, 0.3);
+            border-radius: var(--card-radius);
+        }
+
+        .hope-callout-title {
+            font-size: var(--font-md);
+            font-weight: 600;
+            color: var(--accent-gold);
+            margin-bottom: var(--space-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .hope-callout-title svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .hope-callout-text {
+            font-size: var(--font-base);
+            color: var(--text-secondary);
+            line-height: 1.6;
+            text-align: justify;
+        }
+
+        /* Original Source Link */
+        .original-source {
+            margin-top: var(--space-2xl);
+            padding: var(--space-lg);
+            background: var(--bg-card);
+            border-radius: var(--card-radius);
+            border: 1px solid var(--border-color);
+        }
+
+        .original-source-label {
+            font-size: var(--font-xs);
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: var(--space-sm);
+        }
+
+        .original-source-title {
+            font-size: var(--font-base);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-sm);
+        }
+
+        .original-source-link {
+            font-size: var(--font-sm);
+            color: var(--accent-blue);
+            word-break: break-all;
+        }
+
+        .original-source-link:hover {
+            text-decoration: underline;
+        }
+
+        /* ============================================
+           ARTICLE SIDEBAR
+           ============================================ */
+
+        .article-sidebar {
+            position: sticky;
+            top: calc(var(--header-height) + var(--space-xl));
+            height: fit-content;
+        }
+
+        .sidebar-widget {
+            background: var(--bg-card);
+            border-radius: var(--card-radius);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+        }
+
+        .widget-title {
+            font-size: var(--font-sm);
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Related Articles */
+        .related-article {
+            display: flex;
+            gap: var(--space-md);
+            padding: var(--space-sm) 0;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .related-article:last-child {
+            border-bottom: none;
+        }
+
+        .related-article:hover {
+            opacity: 0.8;
+        }
+
+        .related-article-image {
+            width: 80px;
+            height: 60px;
+            border-radius: 4px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: var(--bg-tertiary);
+        }
+
+        .related-article-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .related-article-content {
+            flex: 1;
+        }
+
+        .related-article-title {
+            font-size: var(--font-sm);
+            font-weight: 500;
+            line-height: 1.4;
+            color: var(--text-primary);
+            margin-bottom: var(--space-xs);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .related-article-meta {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Daily Verse */
+        .verse-widget {
+            border-left: 3px solid var(--accent-gold);
+        }
+
+        .verse-text {
+            font-size: var(--font-base);
+            font-style: italic;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-md);
+        }
+
+        .verse-reference {
+            font-size: var(--font-sm);
+            color: var(--accent-gold);
+            font-weight: 600;
+        }
+
+        /* Share Widget */
+        .share-buttons {
+            display: flex;
+            gap: var(--space-sm);
+            flex-wrap: wrap;
+        }
+
+        .share-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--card-radius);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .share-button:hover {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+        }
+
+        .share-button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* ============================================
+           MORE ARTICLES SECTION
+           ============================================ */
+
+        .more-articles {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: var(--space-2xl) var(--space-lg);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .more-articles-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-lg);
+        }
+
+        .more-articles-title {
+            font-size: var(--font-md);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .more-articles-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-md);
+        }
+
+        .more-article-card {
+            background: var(--bg-card);
+            border-radius: var(--card-radius);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .more-article-card:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .more-article-image {
+            aspect-ratio: 16/9;
+            background: var(--bg-tertiary);
+            overflow: hidden;
+        }
+
+        .more-article-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .more-article-card:hover .more-article-image img {
+            transform: scale(1.02);
+        }
+
+        .more-article-body {
+            padding: var(--space-md);
+        }
+
+        .more-article-category {
+            font-size: 10px;
+            color: var(--accent-gold);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: var(--space-xs);
+        }
+
+        .more-article-title {
+            font-size: var(--font-base);
+            font-weight: 600;
+            line-height: 1.35;
+            color: var(--text-primary);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* ============================================
+           FOOTER
+           ============================================ */
+
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: var(--space-xl) 0;
+            margin-top: var(--space-2xl);
+        }
+
+        .footer-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 var(--space-lg);
+            text-align: center;
+        }
+
+        .footer-text {
+            font-size: var(--font-sm);
+            color: var(--text-muted);
+        }
+
+        /* ============================================
+           LOADING STATE
+           ============================================ */
+
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            gap: var(--space-md);
+        }
+
+        .loading-spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: var(--font-sm);
+            color: var(--text-muted);
+        }
+
+        /* Error State */
+        .error-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            gap: var(--space-md);
+            text-align: center;
+            padding: var(--space-xl);
+        }
+
+        .error-state svg {
+            width: 48px;
+            height: 48px;
+            color: var(--accent-red);
+            opacity: 0.5;
+        }
+
+        .error-state h2 {
+            font-size: var(--font-xl);
+            color: var(--text-primary);
+        }
+
+        .error-state p {
+            font-size: var(--font-base);
+            color: var(--text-muted);
+            max-width: 400px;
+        }
+
+        .error-state .btn {
+            margin-top: var(--space-md);
+            padding: var(--space-sm) var(--space-lg);
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .error-state .btn:hover {
+            background: var(--accent-gold-hover);
+        }
+
+        /* ============================================
+           RESPONSIVE DESIGN
+           ============================================ */
+
+        @media (max-width: 1024px) {
+            .article-container {
+                grid-template-columns: 1fr;
+            }
+
+            .article-sidebar {
+                position: static;
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: var(--space-lg);
+            }
+
+            .more-articles-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .article-hero {
+                max-height: 525px;
+            }
+
+            .article-hero-image {
+                height: 525px;
+            }
+
+            .article-hero-overlay {
+                padding: var(--space-xl) var(--space-lg);
+            }
+
+            .article-hero-title {
+                font-size: var(--font-2xl);
+            }
+
+            .article-meta-bottom {
+                flex-wrap: wrap;
+                gap: var(--space-md);
+            }
+
+            .article-body {
+                font-size: var(--font-md);
+            }
+
+            .article-body p:first-child::first-letter {
+                font-size: 3rem;
+            }
+
+            .article-sidebar {
+                grid-template-columns: 1fr;
+            }
+
+            .more-articles-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-actions {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .back-btn span {
+                display: none;
+            }
+
+            .article-hero {
+                max-height: 420px;
+            }
+
+            .article-hero-image {
+                height: 420px;
+            }
+
+            .article-hero-title {
+                font-size: var(--font-xl);
+            }
+
+            .article-meta-top {
+                gap: var(--space-sm);
+            }
+
+            .article-source-badge,
+            .article-rank-badge {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+
+            .prominence-score {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="header-left">
+                <button class="back-btn" onclick="goBack()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                    <span>Back</span>
+                </button>
+                <a href="/" class="logo">
+                    <img src="/images/jubilee-profile.png" alt="Jubilee" class="logo-icon">
+                    <div class="logo-text">Jubilee <span>Good News</span></div>
+                </a>
+            </div>
+
+            <div class="header-actions">
+                <button class="share-btn" onclick="shareArticle()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="18" cy="5" r="3"/>
+                        <circle cx="6" cy="12" r="3"/>
+                        <circle cx="18" cy="19" r="3"/>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                    </svg>
+                    Share
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main id="articleContent">
+        <!-- Loading State -->
+        <div class="loading-state" id="loadingState">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading article...</div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <p class="footer-text">&copy; 2026 Jubilee Good News. Part of the Jubilee Enterprise Network. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // ============================================
+        // ARTICLE DATA MANAGEMENT
+        // ============================================
+
+        let currentArticle = null;
+        let relatedArticles = [];
+
+        // Sample related articles for demonstration
+        const sampleRelatedArticles = [
+            {
+                id: 1,
+                title: "Finding Peace in Uncertain Times",
+                category: "Faith",
+                image: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=250&fit=crop",
+                timestamp: Date.now() - 3600000
+            },
+            {
+                id: 2,
+                title: "Local Church Launches Food Drive",
+                category: "Community",
+                image: "https://images.unsplash.com/photo-1489659639091-8b687bc4386e?w=400&h=250&fit=crop",
+                timestamp: Date.now() - 7200000
+            },
+            {
+                id: 3,
+                title: "Morning Devotionals That Transform",
+                category: "Inspiration",
+                image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=250&fit=crop",
+                timestamp: Date.now() - 10800000
+            }
+        ];
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadArticle();
+        });
+
+        async function loadArticle() {
+            showLoading();
+
+            try {
+                // Get article data from URL parameters or sessionStorage
+                const urlParams = new URLSearchParams(window.location.search);
+                const articleId = urlParams.get('id');
+                const articleIndex = urlParams.get('index');
+
+                // Try to get article from sessionStorage (passed from index.html)
+                const storedArticle = sessionStorage.getItem('selectedArticle');
+
+                if (storedArticle) {
+                    currentArticle = JSON.parse(storedArticle);
+                    renderArticle();
+                } else if (articleId || articleIndex !== null) {
+                    // Fallback: Try to fetch from stored hero stories
+                    const storedStories = sessionStorage.getItem('heroStories');
+                    if (storedStories) {
+                        const stories = JSON.parse(storedStories);
+                        const index = parseInt(articleIndex) || 0;
+                        if (stories[index]) {
+                            currentArticle = stories[index];
+                            renderArticle();
+                        } else {
+                            showError();
+                        }
+                    } else {
+                        showError();
+                    }
+                } else {
+                    // No article specified, show error
+                    showError();
+                }
+
+                // Load related articles
+                loadRelatedArticles();
+
+            } catch (error) {
+                console.error('Error loading article:', error);
+                showError();
+            }
+        }
+
+        function loadRelatedArticles() {
+            // Try to get other stories from sessionStorage
+            const storedStories = sessionStorage.getItem('heroStories');
+            if (storedStories) {
+                const stories = JSON.parse(storedStories);
+                relatedArticles = stories.filter(s => s !== currentArticle).slice(0, 3);
+            }
+
+            // If not enough, use sample articles
+            if (relatedArticles.length < 3) {
+                relatedArticles = [...relatedArticles, ...sampleRelatedArticles].slice(0, 3);
+            }
+        }
+
+        // ============================================
+        // RENDERING
+        // ============================================
+
+        function renderArticle() {
+            if (!currentArticle) {
+                showError();
+                return;
+            }
+
+            // Update page title
+            document.title = `${currentArticle.rewrittenTitle || currentArticle.title} - Jubilee Good News`;
+
+            const content = document.getElementById('articleContent');
+            const rankLabels = { 1: '1st', 2: '2nd', 3: '3rd' };
+
+            // Determine image URL
+            const imageUrl = currentArticle.downloadedImage ||
+                             currentArticle.imageUrl ||
+                             'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&h=600&fit=crop';
+
+            // Build rank badge if applicable
+            const rankBadge = currentArticle.rank ? `
+                <span class="article-rank-badge rank-${currentArticle.rank}">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                    ${rankLabels[currentArticle.rank]} Most Prominent
+                </span>
+            ` : '';
+
+            // Build source badge
+            const sourceBadge = currentArticle.source ? `
+                <span class="article-source-badge ${currentArticle.source}">${currentArticle.sourceName || currentArticle.source}</span>
+            ` : '<span class="article-source-badge default">Good News</span>';
+
+            // Build category
+            const category = currentArticle.storyCluster ? `
+                <span class="article-category">${capitalizeFirst(currentArticle.storyCluster)}</span>
+            ` : '';
+
+            // Format article body content
+            const articleBody = formatArticleContent(currentArticle.rewrittenContent || currentArticle.content || '');
+
+            // Build prominence score if available
+            const prominenceScore = currentArticle.score ? `
+                <div class="prominence-score">
+                    <div class="score-circle-small">${currentArticle.score.normalized}</div>
+                    <span>Prominence</span>
+                </div>
+            ` : '';
+
+            content.innerHTML = `
+                <!-- Hero Section -->
+                <section class="article-hero">
+                    <img src="${imageUrl}" alt="${currentArticle.rewrittenTitle || currentArticle.title}" class="article-hero-image" onerror="this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&h=600&fit=crop'">
+                    <div class="article-hero-overlay">
+                        <div class="article-hero-content">
+                            <div class="article-meta-top">
+                                ${sourceBadge}
+                                ${rankBadge}
+                                ${category}
+                            </div>
+                            <h1 class="article-hero-title">${currentArticle.rewrittenTitle || currentArticle.title}</h1>
+                            <div class="article-meta-bottom">
+                                <div class="article-meta-item">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                    <span>${formatTimestamp(currentArticle.timestamp || Date.now())}</span>
+                                </div>
+                                <div class="article-meta-item">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                                    </svg>
+                                    <span>${estimateReadTime(articleBody)} min read</span>
+                                </div>
+                                ${prominenceScore}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Article Content -->
+                <div class="article-container">
+                    <article class="article-main">
+                        <div class="article-body">
+                            ${articleBody}
+                        </div>
+
+                        <!-- Hopeful Call-to-Action -->
+                        <div class="hope-callout">
+                            <div class="hope-callout-title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                A Word of Encouragement
+                            </div>
+                            <p class="hope-callout-text">
+                                In every story, we find opportunities for hope, growth, and renewed faith.
+                                As we navigate the complexities of our world, let us remember that we are called
+                                to be lights in the darkness, bringing compassion and understanding to every situation.
+                            </p>
+                        </div>
+
+                        <!-- Original Source -->
+                        ${currentArticle.originalUrl ? `
+                            <div class="original-source">
+                                <div class="original-source-label">Original Source</div>
+                                <div class="original-source-title">${currentArticle.originalTitle || 'View Original Article'}</div>
+                                <a href="${currentArticle.originalUrl}" target="_blank" rel="noopener noreferrer" class="original-source-link">
+                                    ${currentArticle.originalUrl}
+                                </a>
+                            </div>
+                        ` : ''}
+                    </article>
+
+                    <!-- Sidebar -->
+                    <aside class="article-sidebar">
+                        <!-- Share Widget -->
+                        <div class="sidebar-widget">
+                            <h3 class="widget-title">Share This Story</h3>
+                            <div class="share-buttons">
+                                <button class="share-button" onclick="shareToFacebook()" title="Share on Facebook">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                                    </svg>
+                                </button>
+                                <button class="share-button" onclick="shareToTwitter()" title="Share on Twitter">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+                                    </svg>
+                                </button>
+                                <button class="share-button" onclick="shareToLinkedIn()" title="Share on LinkedIn">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                                        <rect x="2" y="9" width="4" height="12"/>
+                                        <circle cx="4" cy="4" r="2"/>
+                                    </svg>
+                                </button>
+                                <button class="share-button" onclick="copyLink()" title="Copy Link">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Daily Verse -->
+                        <div class="sidebar-widget verse-widget">
+                            <h3 class="widget-title">Daily Verse</h3>
+                            <p class="verse-text" id="verseText">"For I know the plans I have for you," declares the LORD, "plans to prosper you and not to harm you, plans to give you hope and a future."</p>
+                            <p class="verse-reference" id="verseReference">Jeremiah 29:11</p>
+                        </div>
+
+                        <!-- Related Articles -->
+                        <div class="sidebar-widget">
+                            <h3 class="widget-title">Related Stories</h3>
+                            <div id="relatedArticlesList">
+                                ${renderRelatedArticles()}
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+
+                <!-- More Articles Section -->
+                <section class="more-articles">
+                    <div class="more-articles-header">
+                        <h2 class="more-articles-title">More Good News</h2>
+                        <a href="/" class="see-all-link" style="color: var(--text-muted);">View All &rarr;</a>
+                    </div>
+                    <div class="more-articles-grid" id="moreArticlesGrid">
+                        ${renderMoreArticles()}
+                    </div>
+                </section>
+            `;
+
+            // Fetch daily verse
+            fetchDailyVerse();
+        }
+
+        function renderRelatedArticles() {
+            return relatedArticles.map((article, index) => `
+                <div class="related-article" onclick="openRelatedArticle(${index})">
+                    <div class="related-article-image">
+                        <img src="${article.downloadedImage || article.imageUrl || article.image}" alt="${article.rewrittenTitle || article.title}" onerror="this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=200&h=150&fit=crop'">
+                    </div>
+                    <div class="related-article-content">
+                        <h4 class="related-article-title">${article.rewrittenTitle || article.title}</h4>
+                        <span class="related-article-meta">${formatTimestamp(article.timestamp || Date.now())}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderMoreArticles() {
+            const moreArticles = [
+                ...relatedArticles,
+                ...sampleRelatedArticles
+            ].slice(0, 4);
+
+            return moreArticles.map((article, index) => `
+                <div class="more-article-card" onclick="openRelatedArticle(${index})">
+                    <div class="more-article-image">
+                        <img src="${article.downloadedImage || article.imageUrl || article.image}" alt="${article.rewrittenTitle || article.title}" onerror="this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400&h=250&fit=crop'">
+                    </div>
+                    <div class="more-article-body">
+                        <span class="more-article-category">${article.storyCluster || article.category || 'Faith'}</span>
+                        <h3 class="more-article-title">${article.rewrittenTitle || article.title}</h3>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showLoading() {
+            document.getElementById('articleContent').innerHTML = `
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Loading article...</div>
+                </div>
+            `;
+        }
+
+        function showError() {
+            document.getElementById('articleContent').innerHTML = `
+                <div class="error-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <h2>Article Not Found</h2>
+                    <p>We couldn't find the article you're looking for. It may have been moved or is no longer available.</p>
+                    <button class="btn" onclick="goBack()">Return to Home</button>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+
+        function formatArticleContent(content) {
+            if (!content) {
+                return '<p>Content is being prepared. Please check back soon for the full article.</p>';
+            }
+
+            // If content already has HTML tags, return as-is
+            if (content.includes('<p>') || content.includes('<h2>')) {
+                return content;
+            }
+
+            // Otherwise, wrap in paragraph tags
+            const paragraphs = content.split('\n\n').filter(p => p.trim());
+            return paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins} min ago`;
+            if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+            if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+            });
+        }
+
+        function estimateReadTime(content) {
+            const text = content.replace(/<[^>]*>/g, '');
+            const words = text.split(/\s+/).length;
+            return Math.max(1, Math.ceil(words / 200));
+        }
+
+        function capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        async function fetchDailyVerse() {
+            try {
+                const response = await fetch('/api/verse');
+                if (response.ok) {
+                    const verse = await response.json();
+                    document.getElementById('verseText').textContent = `"${verse.text}"`;
+                    document.getElementById('verseReference').textContent = verse.reference;
+                }
+            } catch (error) {
+                console.log('Using default verse');
+            }
+        }
+
+        // ============================================
+        // NAVIGATION
+        // ============================================
+
+        function goBack() {
+            if (document.referrer && document.referrer.includes(window.location.hostname)) {
+                window.history.back();
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        function openRelatedArticle(index) {
+            if (relatedArticles[index]) {
+                sessionStorage.setItem('selectedArticle', JSON.stringify(relatedArticles[index]));
+                window.location.reload();
+            }
+        }
+
+        // ============================================
+        // SHARING
+        // ============================================
+
+        function shareArticle() {
+            if (navigator.share && currentArticle) {
+                navigator.share({
+                    title: currentArticle.rewrittenTitle || currentArticle.title,
+                    text: 'Check out this inspiring article from Jubilee Good News',
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                copyLink();
+            }
+        }
+
+        function shareToFacebook() {
+            const url = encodeURIComponent(window.location.href);
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'width=600,height=400');
+        }
+
+        function shareToTwitter() {
+            const url = encodeURIComponent(window.location.href);
+            const text = encodeURIComponent(currentArticle?.rewrittenTitle || 'Check out this article');
+            window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank', 'width=600,height=400');
+        }
+
+        function shareToLinkedIn() {
+            const url = encodeURIComponent(window.location.href);
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank', 'width=600,height=400');
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                showNotification('Link copied to clipboard!');
+            }).catch(() => {
+                showNotification('Failed to copy link', 'error');
+            });
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 24px;
+                left: 50%;
+                transform: translateX(-50%);
+                padding: 12px 24px;
+                background: ${type === 'success' ? 'var(--accent-green)' : 'var(--accent-red)'};
+                color: white;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                z-index: 10000;
+                animation: slideUp 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideDown 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Add animation styles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideUp {
+                from { transform: translateX(-50%) translateY(100%); opacity: 0; }
+                to { transform: translateX(-50%) translateY(0); opacity: 1; }
+            }
+            @keyframes slideDown {
+                from { transform: translateX(-50%) translateY(0); opacity: 1; }
+                to { transform: translateX(-50%) translateY(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

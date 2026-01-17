@@ -514,10 +514,17 @@ public partial class MainWindow : Window
             // Small delay to let UI render first tab
             await Task.Delay(100);
 
-            for (int i = 1; i < sessionState.Tabs!.Count; i++)
+            // Limit max tabs to restore to prevent memory exhaustion
+            const int MaxTabsToRestore = 10;
+            var tabCount = Math.Min(sessionState.Tabs!.Count, MaxTabsToRestore);
+
+            for (int i = 1; i < tabCount; i++)
             {
                 var tabState = sessionState.Tabs[i];
                 await CreateTabAsync(tabState.Url, tabState.Mode);
+
+                // Add small delay between tab creations to prevent resource spikes
+                await Task.Delay(50);
             }
 
             // Switch to the originally active tab
@@ -543,21 +550,30 @@ public partial class MainWindow : Window
     {
         try
         {
-            // Initialize all services in parallel for speed
-            var tasks = new List<Task>
-            {
+            // Small delay to let UI fully render before loading background services
+            await Task.Delay(200);
+
+            // Initialize services in batches to prevent resource spikes
+            // Batch 1: Core local services (file I/O)
+            await Task.WhenAll(
                 _historyManager.InitializeAsync(),
                 _bookmarkManager.InitializeAsync(),
-                _blacklistManager.InitializeAsync(),
+                _blacklistManager.InitializeAsync()
+            );
+
+            // Batch 2: Network-related services
+            await Task.WhenAll(
                 _dnsResolver.InitializeAsync(),
                 _hitCountService.InitializeAsync(),
-                _zoomSettingsManager.LoadAsync(),
+                _zoomSettingsManager.LoadAsync()
+            );
+
+            // Batch 3: Profile and sync services (may involve network calls)
+            await Task.WhenAll(
                 _profileAuthService.InitializeAsync(),
                 _syncEngine.InitializeAsync(),
                 _credentialManager.InitializeAsync()
-            };
-
-            await Task.WhenAll(tasks);
+            );
 
             // Update profile UI after auth services are ready
             await Dispatcher.InvokeAsync(() => UpdateProfileUI());

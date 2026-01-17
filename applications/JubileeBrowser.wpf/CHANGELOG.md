@@ -5,6 +5,27 @@ All notable changes to Jubilee Browser will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.0.11] - 2026-01-16
+
+### Added
+- **Theme Support**: Added Dark and Light theme resource dictionaries
+  - `DarkTheme.xaml` and `LightTheme.xaml` theme files
+  - `ThemeManager` service for managing theme switching
+  - System theme detection and real-time monitoring of OS theme changes
+
+### Changed
+- **Startup Performance Improvements**: Optimized browser launch to prevent system resource exhaustion
+  - Limited tab restoration to maximum 10 tabs on startup
+  - Added 50ms delay between tab creations to prevent memory spikes
+  - Background services now initialize in batches instead of all at once
+  - Added 200ms initial delay before background service initialization
+
+### Technical
+- Added `Services/ThemeManager.cs` for theme management
+- Added `Themes/DarkTheme.xaml` and `Themes/LightTheme.xaml`
+- Modified `MainWindow.xaml.cs` with `RestoreRemainingTabsAsync` improvements
+- Modified `InitializeBackgroundServicesAsync` to batch service initialization
+
 ## [8.0.10] - 2026-01-16
 
 ### Added

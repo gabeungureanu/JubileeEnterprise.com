@@ -5015,6 +5015,385 @@ app.delete('/api/todos/:id', async (req, res) => {
 });
 
 // =============================================================================
+// DAILY NEWS CACHE API (JubileeDailyNews Service)
+// =============================================================================
+
+// Cache a transformed news story
+app.post('/api/v1/daily-news/cache', async (req, res) => {
+    try {
+        const {
+            originalTitle,
+            originalUrl,
+            originalExcerpt,
+            rewrittenTitle,
+            rewrittenContent,
+            source,
+            sourceName,
+            storyCluster,
+            prominenceScore,
+            rank,
+            imageData,
+            imageMimeType,
+            imageOriginalSize,
+            imageFinalSize,
+            imageWasResized,
+            fetchedAt
+        } = req.body;
+
+        // Validate required fields
+        if (!originalTitle || !rewrittenTitle || !source) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required fields: originalTitle, rewrittenTitle, source'
+            });
+        }
+
+        // Check for duplicate (same URL within last 24 hours)
+        const existingResult = await inspirePool.query(`
+            SELECT id FROM daily_news_cache
+            WHERE original_url = $1
+            AND fetched_at > NOW() - INTERVAL '24 hours'
+        `, [originalUrl]);
+
+        if (existingResult.rows.length > 0) {
+            return res.status(200).json({
+                success: true,
+                id: existingResult.rows[0].id,
+                message: 'Story already cached within 24 hours',
+                duplicate: true
+            });
+        }
+
+        // Insert the new story
+        const result = await inspirePool.query(`
+            INSERT INTO daily_news_cache (
+                original_title,
+                original_url,
+                original_excerpt,
+                rewritten_title,
+                rewritten_content,
+                source,
+                source_name,
+                story_cluster,
+                prominence_score,
+                rank,
+                image_data,
+                image_mime_type,
+                image_original_size,
+                image_final_size,
+                image_was_resized,
+                fetched_at,
+                created_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW())
+            RETURNING id, created_at
+        `, [
+            originalTitle,
+            originalUrl,
+            originalExcerpt,
+            rewrittenTitle,
+            rewrittenContent,
+            source,
+            sourceName,
+            storyCluster,
+            prominenceScore,
+            rank,
+            imageData,
+            imageMimeType,
+            imageOriginalSize,
+            imageFinalSize,
+            imageWasResized,
+            fetchedAt || new Date().toISOString()
+        ]);
+
+        console.log(`[DailyNews] Cached story: "${rewrittenTitle.substring(0, 50)}..." from ${sourceName}`);
+
+        res.status(201).json({
+            success: true,
+            id: result.rows[0].id,
+            createdAt: result.rows[0].created_at,
+            message: 'Story cached successfully'
+        });
+
+    } catch (err) {
+        console.error('[DailyNews] Cache error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to cache story',
+            details: NODE_ENV === 'development' ? err.message : undefined
+        });
+    }
+});
+
+// Get cached news stories
+app.get('/api/v1/daily-news', async (req, res) => {
+    try {
+        const { limit = 10, hours = 24, source, cluster } = req.query;
+
+        let query = `
+            SELECT
+                id,
+                original_title,
+                original_url,
+                original_excerpt,
+                rewritten_title,
+                rewritten_content,
+                source,
+                source_name,
+                story_cluster,
+                prominence_score,
+                rank,
+                image_mime_type,
+                image_original_size,
+                image_final_size,
+                image_was_resized,
+                fetched_at,
+                created_at
+            FROM daily_news_cache
+            WHERE fetched_at > NOW() - INTERVAL '${parseInt(hours)} hours'
+        `;
+
+        const params = [];
+        let paramIndex = 1;
+
+        if (source) {
+            query += ` AND source = $${paramIndex}`;
+            params.push(source);
+            paramIndex++;
+        }
+
+        if (cluster) {
+            query += ` AND story_cluster = $${paramIndex}`;
+            params.push(cluster);
+            paramIndex++;
+        }
+
+        query += ` ORDER BY prominence_score DESC, fetched_at DESC LIMIT $${paramIndex}`;
+        params.push(parseInt(limit));
+
+        const result = await inspirePool.query(query, params);
+
+        res.json({
+            success: true,
+            count: result.rows.length,
+            stories: result.rows.map(row => ({
+                id: row.id,
+                originalTitle: row.original_title,
+                originalUrl: row.original_url,
+                originalExcerpt: row.original_excerpt,
+                rewrittenTitle: row.rewritten_title,
+                rewrittenContent: row.rewritten_content,
+                source: row.source,
+                sourceName: row.source_name,
+                storyCluster: row.story_cluster,
+                prominenceScore: row.prominence_score,
+                rank: row.rank,
+                hasImage: !!row.image_mime_type,
+                imageWasResized: row.image_was_resized,
+                fetchedAt: row.fetched_at,
+                createdAt: row.created_at
+            }))
+        });
+
+    } catch (err) {
+        console.error('[DailyNews] Fetch error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch cached stories'
+        });
+    }
+});
+
+// Get a single cached story with image data
+app.get('/api/v1/daily-news/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { includeImage = 'false' } = req.query;
+
+        let columns = `
+            id,
+            original_title,
+            original_url,
+            original_excerpt,
+            rewritten_title,
+            rewritten_content,
+            source,
+            source_name,
+            story_cluster,
+            prominence_score,
+            rank,
+            image_mime_type,
+            image_original_size,
+            image_final_size,
+            image_was_resized,
+            fetched_at,
+            created_at
+        `;
+
+        if (includeImage === 'true') {
+            columns += ', image_data';
+        }
+
+        const result = await inspirePool.query(`
+            SELECT ${columns} FROM daily_news_cache WHERE id = $1
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Story not found'
+            });
+        }
+
+        const row = result.rows[0];
+
+        res.json({
+            success: true,
+            story: {
+                id: row.id,
+                originalTitle: row.original_title,
+                originalUrl: row.original_url,
+                originalExcerpt: row.original_excerpt,
+                rewrittenTitle: row.rewritten_title,
+                rewrittenContent: row.rewritten_content,
+                source: row.source,
+                sourceName: row.source_name,
+                storyCluster: row.story_cluster,
+                prominenceScore: row.prominence_score,
+                rank: row.rank,
+                imageMimeType: row.image_mime_type,
+                imageData: row.image_data || null,
+                imageOriginalSize: row.image_original_size,
+                imageFinalSize: row.image_final_size,
+                imageWasResized: row.image_was_resized,
+                fetchedAt: row.fetched_at,
+                createdAt: row.created_at
+            }
+        });
+
+    } catch (err) {
+        console.error('[DailyNews] Fetch single error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch story'
+        });
+    }
+});
+
+// Get cached story image
+app.get('/api/v1/daily-news/:id/image', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await inspirePool.query(`
+            SELECT image_data, image_mime_type
+            FROM daily_news_cache
+            WHERE id = $1 AND image_data IS NOT NULL
+        `, [id]);
+
+        if (result.rows.length === 0 || !result.rows[0].image_data) {
+            return res.status(404).json({
+                success: false,
+                error: 'Image not found'
+            });
+        }
+
+        const { image_data, image_mime_type } = result.rows[0];
+        const imageBuffer = Buffer.from(image_data, 'base64');
+
+        res.set('Content-Type', image_mime_type || 'image/jpeg');
+        res.set('Content-Length', imageBuffer.length);
+        res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+        res.send(imageBuffer);
+
+    } catch (err) {
+        console.error('[DailyNews] Image fetch error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch image'
+        });
+    }
+});
+
+// Get daily news statistics
+app.get('/api/v1/daily-news/stats', async (req, res) => {
+    try {
+        const statsResult = await inspirePool.query(`
+            SELECT
+                COUNT(*) as total_stories,
+                COUNT(DISTINCT source) as unique_sources,
+                COUNT(DISTINCT story_cluster) as unique_clusters,
+                AVG(prominence_score)::integer as avg_prominence,
+                COUNT(CASE WHEN image_data IS NOT NULL THEN 1 END) as stories_with_images,
+                COUNT(CASE WHEN image_was_resized THEN 1 END) as images_resized,
+                MIN(fetched_at) as oldest_story,
+                MAX(fetched_at) as newest_story
+            FROM daily_news_cache
+            WHERE fetched_at > NOW() - INTERVAL '24 hours'
+        `);
+
+        const clusterStats = await inspirePool.query(`
+            SELECT story_cluster, COUNT(*) as count
+            FROM daily_news_cache
+            WHERE fetched_at > NOW() - INTERVAL '24 hours'
+            GROUP BY story_cluster
+            ORDER BY count DESC
+        `);
+
+        const sourceStats = await inspirePool.query(`
+            SELECT source_name, COUNT(*) as count, AVG(prominence_score)::integer as avg_score
+            FROM daily_news_cache
+            WHERE fetched_at > NOW() - INTERVAL '24 hours'
+            GROUP BY source_name
+            ORDER BY count DESC
+        `);
+
+        res.json({
+            success: true,
+            stats: {
+                ...statsResult.rows[0],
+                clusterBreakdown: clusterStats.rows,
+                sourceBreakdown: sourceStats.rows
+            }
+        });
+
+    } catch (err) {
+        console.error('[DailyNews] Stats error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch statistics'
+        });
+    }
+});
+
+// Delete old cached stories (cleanup endpoint)
+app.delete('/api/v1/daily-news/cleanup', async (req, res) => {
+    try {
+        const { hours = 48 } = req.query;
+
+        const result = await inspirePool.query(`
+            DELETE FROM daily_news_cache
+            WHERE fetched_at < NOW() - INTERVAL '${parseInt(hours)} hours'
+            RETURNING id
+        `);
+
+        console.log(`[DailyNews] Cleanup: removed ${result.rowCount} old stories`);
+
+        res.json({
+            success: true,
+            deletedCount: result.rowCount,
+            message: `Removed stories older than ${hours} hours`
+        });
+
+    } catch (err) {
+        console.error('[DailyNews] Cleanup error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to cleanup old stories'
+        });
+    }
+});
+
+// =============================================================================
 // ERROR HANDLING
 // =============================================================================
 
@@ -5055,6 +5434,14 @@ app.use((req, res) => {
                 pull: 'GET /api/sync/pull',
                 preferences: 'GET/PUT /api/sync/preferences',
                 status: 'GET /api/sync/status'
+            },
+            dailyNews: {
+                cache: 'POST /api/v1/daily-news/cache',
+                list: 'GET /api/v1/daily-news',
+                get: 'GET /api/v1/daily-news/:id',
+                image: 'GET /api/v1/daily-news/:id/image',
+                stats: 'GET /api/v1/daily-news/stats',
+                cleanup: 'DELETE /api/v1/daily-news/cleanup'
             }
         }
     });
@@ -5127,6 +5514,35 @@ async function startServer() {
     try {
         await inspirePool.query('SELECT 1');
         console.log('✅ Inspire database connected');
+
+        // Ensure daily_news_cache table exists for JubileeDailyNews service
+        await inspirePool.query(`
+            CREATE TABLE IF NOT EXISTS daily_news_cache (
+                id SERIAL PRIMARY KEY,
+                original_title TEXT NOT NULL,
+                original_url TEXT,
+                original_excerpt TEXT,
+                rewritten_title TEXT NOT NULL,
+                rewritten_content TEXT,
+                source VARCHAR(50) NOT NULL,
+                source_name VARCHAR(100),
+                story_cluster VARCHAR(50),
+                prominence_score INTEGER,
+                rank INTEGER,
+                image_data TEXT,
+                image_mime_type VARCHAR(50),
+                image_original_size INTEGER,
+                image_final_size INTEGER,
+                image_was_resized BOOLEAN DEFAULT FALSE,
+                fetched_at TIMESTAMPTZ DEFAULT NOW(),
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            );
+            CREATE INDEX IF NOT EXISTS idx_daily_news_fetched_at ON daily_news_cache(fetched_at);
+            CREATE INDEX IF NOT EXISTS idx_daily_news_source ON daily_news_cache(source);
+            CREATE INDEX IF NOT EXISTS idx_daily_news_cluster ON daily_news_cache(story_cluster);
+            CREATE INDEX IF NOT EXISTS idx_daily_news_prominence ON daily_news_cache(prominence_score DESC);
+        `);
+        console.log('✅ Daily news cache table ready');
     } catch (err) {
         console.error('❌ Inspire database connection failed:', err.message);
         process.exit(1);
