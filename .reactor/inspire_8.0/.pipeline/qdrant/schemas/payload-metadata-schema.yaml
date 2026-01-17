@@ -1,0 +1,756 @@
+# INSPIRE 8.0 QDRANT PAYLOAD METADATA SCHEMA
+# Version: 1.0 | Effective: 2026-01-17
+# Purpose: Standardized metadata structure for all Qdrant collections
+
+schema_id: "inspire_8_0.payload_metadata.v1"
+schema_version: "1.0.0"
+effective_date: "2026-01-17"
+
+# =============================================================================
+# REQUIRED FIELDS (All Collections)
+# =============================================================================
+required_fields:
+
+  type:
+    description: "Content type classification"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: true
+    validation:
+      enum:
+        # Scripture types
+        - "verse"
+        - "passage"
+        - "chapter_summary"
+        - "book_intro"
+        # Ministry types
+        - "teaching"
+        - "whitepaper"
+        - "doctrinal_statement"
+        - "devotional"
+        - "commentary"
+        # Activation types
+        - "identity_anchor"
+        - "mission_anchor"
+        - "voice_anchor"
+        - "guardrail_anchor"
+        - "protocol_anchor"
+        # Persona memory types
+        - "activation_anchor"
+        - "interaction_summary"
+        - "long_term_memory"
+        - "relationship_context"
+        - "lesson_learned"
+        - "prophetic_word"
+        - "prayer_journal"
+        # Hymnal types
+        - "hymn"
+        - "worship_song"
+        - "liturgy"
+        - "psalm_setting"
+        - "sacred_poem"
+        # System types - Model & Execution
+        - "model_config"
+        - "model_version"
+        - "deployment_record"
+        - "performance_baseline"
+        - "contract"
+        - "agreement"
+        - "binding_rule"
+        - "sla_definition"
+        - "execution_record"
+        - "audit_entry"
+        - "operation_log"
+        - "trace"
+        # System types - Goals & Learning
+        - "goal"
+        - "completion_criteria"
+        - "milestone"
+        - "victory_condition"
+        - "experiment"
+        - "ab_test"
+        - "hypothesis"
+        - "finding"
+        - "learned_pattern"
+        - "adaptation"
+        - "knowledge_acquisition"
+        - "feedback_integration"
+        - "metric"
+        - "evaluation_result"
+        - "quality_assessment"
+        - "benchmark"
+        # System types - Scenarios & Kingdom
+        - "scenario"
+        - "test_case"
+        - "simulation"
+        - "edge_case"
+        - "strategy"
+        - "growth_metric"
+        - "initiative"
+        - "progress_report"
+        - "creative_piece"
+        - "inspiration"
+        - "artistic_expression"
+        - "creative_prompt"
+        # System types - Ministry & Outreach
+        - "outreach_metric"
+        - "testimony"
+        - "gospel_impact"
+        - "pulse_reading"
+        - "pastoral_guidance"
+        - "care_protocol"
+        - "shepherding_resource"
+        - "flock_insight"
+        - "hebrew_word"
+        - "cultural_context"
+        - "root_analysis"
+        - "hebraic_insight"
+        # System types - Prompts & Resources
+        - "system_prompt"
+        - "prompt_template"
+        - "prompt_fragment"
+        - "prompt_version"
+        - "resource"
+        - "asset"
+        - "reference_material"
+        - "template"
+        - "language_config"
+        - "translation"
+        - "localization"
+        - "phrase"
+        # System types - Organization
+        - "country_config"
+        - "regional_data"
+        - "cultural_note"
+        - "legal_requirement"
+        - "ministry_info"
+        - "organizational_data"
+        - "policy"
+        - "procedure"
+        - "minister_profile"
+        - "credential"
+        - "assignment"
+        - "ordination_record"
+        # System types - Users & Analytics
+        - "user_profile"
+        - "preference"
+        - "spiritual_journey"
+        - "insight"
+        - "recommendation"
+        - "pattern"
+        - "trend"
+        - "analytic"
+        - "kpi"
+        - "dashboard_data"
+        - "report"
+        - "persona_entry"
+        - "capability_map"
+        - "routing_rule"
+        - "cross_reference"
+        # General
+        - "note"
+
+  persona:
+    description: "Owning persona or 'shared' for canonical content"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: true
+    validation:
+      pattern: "^(shared|[a-z]+\\.inspire)$"
+    examples:
+      - "shared"
+      - "gabriel.inspire"
+      - "jubilee.inspire"
+      - "melody.inspire"
+
+  source:
+    description: "Origin of the content"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: true
+    validation:
+      min_length: 1
+      max_length: 500
+    examples:
+      - "JSV Genesis 1:1"
+      - "/teachings/2026/sermon-hope.md"
+      - "interaction_2026-01-17_user123"
+      - "Canon Specification v1.0"
+      - "schema/anchors/personas/jubilee.inspire/identity.yaml"
+
+  priority:
+    description: "Retrieval priority weighting"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: true
+    validation:
+      enum:
+        - "core"      # Essential, always consider (weight: 1.0)
+        - "high"      # Important, prefer in results (weight: 0.8)
+        - "normal"    # Standard priority (weight: 0.5)
+        - "low"       # Background, include if relevant (weight: 0.3)
+    default: "normal"
+    weights:
+      core: 1.0
+      high: 0.8
+      normal: 0.5
+      low: 0.3
+
+  timestamp:
+    description: "Creation or last modification time"
+    data_type: "datetime"
+    indexed: true
+    filterable: true
+    required: true
+    validation:
+      format: "ISO 8601"
+    example: "2026-01-17T12:00:00Z"
+
+  version:
+    description: "Content version for tracking changes"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: true
+    validation:
+      pattern: "^[0-9]+\\.?[0-9]*\\.?[0-9]*$|^[0-9]+$"
+    examples:
+      - "1.0.0"
+      - "2.1"
+      - "1"
+
+# =============================================================================
+# OPTIONAL FIELDS (All Collections)
+# =============================================================================
+optional_fields:
+
+  tags:
+    description: "Searchable classification tags"
+    data_type: "keyword[]"
+    indexed: true
+    filterable: true
+    required: false
+    validation:
+      max_items: 20
+      item_max_length: 50
+    examples:
+      - ["gospel", "salvation", "grace"]
+      - ["five-fold", "apostle", "foundation"]
+      - ["prayer", "intercession", "breakthrough"]
+
+  created_by:
+    description: "Entity that created this point"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: false
+    examples:
+      - "ingestion_pipeline"
+      - "persona_jubilee_inspire"
+      - "admin_gabriel"
+      - "activation_schema_init"
+
+  reviewed:
+    description: "Whether content has been reviewed"
+    data_type: "bool"
+    indexed: true
+    filterable: true
+    required: false
+    default: false
+
+  expiry:
+    description: "Optional expiration date"
+    data_type: "datetime"
+    indexed: true
+    filterable: true
+    required: false
+    validation:
+      format: "ISO 8601"
+      must_be_future: true
+
+# =============================================================================
+# SCRIPTURE-SPECIFIC FIELDS
+# =============================================================================
+scripture_fields:
+  applies_to:
+    - "scripture"
+  condition: "type in ['verse', 'passage', 'chapter_summary', 'book_intro', 'psalm_setting']"
+
+  bible_ref:
+    description: "Structured Bible reference"
+    data_type: "object"
+    indexed: true
+    filterable: true
+    required: "when type is scripture-related"
+
+    subfields:
+      book:
+        description: "Bible book name"
+        data_type: "keyword"
+        indexed: true
+        required: true
+        validation:
+          enum:
+            # Torah
+            - "Genesis"
+            - "Exodus"
+            - "Leviticus"
+            - "Numbers"
+            - "Deuteronomy"
+            # Historical
+            - "Joshua"
+            - "Judges"
+            - "Ruth"
+            - "1 Samuel"
+            - "2 Samuel"
+            - "1 Kings"
+            - "2 Kings"
+            - "1 Chronicles"
+            - "2 Chronicles"
+            - "Ezra"
+            - "Nehemiah"
+            - "Esther"
+            # Wisdom
+            - "Job"
+            - "Psalms"
+            - "Proverbs"
+            - "Ecclesiastes"
+            - "Song of Solomon"
+            # Major Prophets
+            - "Isaiah"
+            - "Jeremiah"
+            - "Lamentations"
+            - "Ezekiel"
+            - "Daniel"
+            # Minor Prophets
+            - "Hosea"
+            - "Joel"
+            - "Amos"
+            - "Obadiah"
+            - "Jonah"
+            - "Micah"
+            - "Nahum"
+            - "Habakkuk"
+            - "Zephaniah"
+            - "Haggai"
+            - "Zechariah"
+            - "Malachi"
+            # Gospels
+            - "Matthew"
+            - "Mark"
+            - "Luke"
+            - "John"
+            # History
+            - "Acts"
+            # Pauline Epistles
+            - "Romans"
+            - "1 Corinthians"
+            - "2 Corinthians"
+            - "Galatians"
+            - "Ephesians"
+            - "Philippians"
+            - "Colossians"
+            - "1 Thessalonians"
+            - "2 Thessalonians"
+            - "1 Timothy"
+            - "2 Timothy"
+            - "Titus"
+            - "Philemon"
+            # General Epistles
+            - "Hebrews"
+            - "James"
+            - "1 Peter"
+            - "2 Peter"
+            - "1 John"
+            - "2 John"
+            - "3 John"
+            - "Jude"
+            # Apocalyptic
+            - "Revelation"
+
+      chapter:
+        description: "Chapter number"
+        data_type: "integer"
+        indexed: true
+        required: true
+        validation:
+          min: 1
+          max: 150  # Psalms has 150 chapters
+
+      verse_start:
+        description: "Starting verse number"
+        data_type: "integer"
+        indexed: true
+        required: true
+        validation:
+          min: 1
+          max: 200
+
+      verse_end:
+        description: "Ending verse number (null for single verse)"
+        data_type: "integer"
+        indexed: true
+        required: false
+        validation:
+          min: 1
+          max: 200
+          must_be_gte: "verse_start"
+
+      translation:
+        description: "Bible translation identifier"
+        data_type: "keyword"
+        indexed: true
+        required: true
+        validation:
+          enum:
+            - "JSV"           # Jubilee Standard Version (primary)
+            - "Hebrew"        # Original Hebrew
+            - "Greek"         # Original Greek
+            - "Aramaic"       # Aramaic portions
+            - "LXX"           # Septuagint
+
+# =============================================================================
+# PERSONA MEMORY FIELDS
+# =============================================================================
+persona_fields:
+  applies_to:
+    - "persona_*"
+  condition: "collection name starts with 'persona_'"
+
+  user_id:
+    description: "Associated user identifier"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: false
+    validation:
+      pattern: "^user_[a-zA-Z0-9]+$"
+
+  session_id:
+    description: "Associated session identifier"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: false
+    validation:
+      pattern: "^sess_[a-zA-Z0-9]+$"
+
+  interaction_date:
+    description: "Date of interaction"
+    data_type: "datetime"
+    indexed: true
+    filterable: true
+    required: false
+    validation:
+      format: "ISO 8601 date"
+
+  emotional_context:
+    description: "Emotional state during interaction"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: false
+    examples:
+      - "joyful"
+      - "grieving"
+      - "anxious"
+      - "seeking"
+      - "crisis"
+      - "peaceful"
+
+  relationship_level:
+    description: "User relationship depth"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: false
+    validation:
+      enum:
+        - "new"
+        - "familiar"
+        - "established"
+        - "intimate"
+
+# =============================================================================
+# ACTIVATION ANCHOR FIELDS
+# =============================================================================
+activation_fields:
+  applies_to:
+    - "governance"
+    - "persona_*"
+  condition: "type ends with '_anchor'"
+
+  anchor_version:
+    description: "Anchor schema version"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: true
+    validation:
+      pattern: "^v[0-9]+\\.[0-9]+$"
+    example: "v1.0"
+
+  anchor_section:
+    description: "Section within the anchor"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: false
+    examples:
+      - "core_identity"
+      - "spiritual_identity"
+      - "tonal_dimensions"
+      - "hard_stops"
+
+  immutable:
+    description: "Whether this anchor can be modified"
+    data_type: "bool"
+    indexed: true
+    filterable: true
+    required: false
+    default: true
+
+# =============================================================================
+# HYMNAL FIELDS
+# =============================================================================
+hymnal_fields:
+  applies_to:
+    - "inspire-family"
+  condition: "type in ['hymn', 'worship_song', 'liturgy', 'psalm_setting', 'sacred_poem']"
+
+  hymn_number:
+    description: "Hymnal number if applicable"
+    data_type: "integer"
+    indexed: true
+    filterable: true
+    required: false
+
+  tune_name:
+    description: "Musical tune name"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: false
+
+  meter:
+    description: "Musical meter"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: false
+    examples:
+      - "8.7.8.7"
+      - "Common Meter"
+      - "Long Meter"
+
+  author:
+    description: "Hymn/song author"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: false
+
+  composer:
+    description: "Music composer"
+    data_type: "keyword"
+    indexed: true
+    filterable: true
+    required: false
+
+# =============================================================================
+# EXAMPLE PAYLOADS
+# =============================================================================
+examples:
+
+  scripture_verse:
+    description: "Single Bible verse from JSV"
+    payload:
+      type: "verse"
+      persona: "shared"
+      source: "JSV Genesis 1:1"
+      priority: "core"
+      timestamp: "2026-01-17T00:00:00Z"
+      version: "1.0.0"
+      tags: ["creation", "beginning", "torah"]
+      bible_ref:
+        book: "Genesis"
+        chapter: 1
+        verse_start: 1
+        verse_end: null
+        translation: "JSV"
+      created_by: "ingestion_pipeline"
+      reviewed: true
+
+  teaching_content:
+    description: "Ministry teaching chunk"
+    payload:
+      type: "teaching"
+      persona: "shared"
+      source: "/teachings/2026/covenant-foundations.md"
+      priority: "high"
+      timestamp: "2026-01-17T10:30:00Z"
+      version: "1.0.0"
+      tags: ["covenant", "foundations", "torah"]
+      created_by: "ingestion_pipeline"
+      reviewed: true
+
+  persona_memory:
+    description: "Persona interaction summary"
+    payload:
+      type: "interaction_summary"
+      persona: "jubilee.inspire"
+      source: "interaction_2026-01-17_user456"
+      priority: "normal"
+      timestamp: "2026-01-17T15:30:00Z"
+      version: "1"
+      tags: ["counseling", "encouragement"]
+      user_id: "user_456abc"
+      session_id: "sess_xyz789"
+      interaction_date: "2026-01-17"
+      emotional_context: "seeking"
+      relationship_level: "familiar"
+      created_by: "persona_jubilee_inspire"
+
+  activation_anchor:
+    description: "Identity anchor for persona activation"
+    payload:
+      type: "identity_anchor"
+      persona: "jubilee.inspire"
+      source: "schema/anchors/personas/jubilee.inspire/identity.yaml"
+      priority: "core"
+      timestamp: "2026-01-17T00:00:00Z"
+      version: "1.0.0"
+      tags: ["identity", "activation", "immutable"]
+      anchor_version: "v1.0"
+      anchor_section: "core_identity"
+      immutable: true
+      created_by: "activation_schema_init"
+      reviewed: true
+
+  hymn_content:
+    description: "Worship hymn"
+    payload:
+      type: "hymn"
+      persona: "shared"
+      source: "hymnal/001-holy-holy-holy.md"
+      priority: "normal"
+      timestamp: "2026-01-17T00:00:00Z"
+      version: "1.0.0"
+      tags: ["trinity", "worship", "adoration"]
+      hymn_number: 1
+      tune_name: "NICAEA"
+      meter: "11.12.12.10"
+      author: "Reginald Heber"
+      composer: "John B. Dykes"
+      created_by: "ingestion_pipeline"
+      reviewed: true
+
+# =============================================================================
+# VALIDATION RULES
+# =============================================================================
+validation:
+
+  pre_insert:
+    - rule: "All required fields must be present"
+      severity: "error"
+      action: "reject"
+
+    - rule: "type must match collection purpose"
+      severity: "error"
+      action: "reject"
+      details:
+        scripture: ["verse", "passage", "chapter_summary", "book_intro"]
+        doctrine: ["teaching", "whitepaper", "doctrinal_statement", "devotional", "commentary"]
+        governance: ["identity_anchor", "mission_anchor", "voice_anchor", "guardrail_anchor", "protocol_anchor"]
+        inspire-family: ["hymn", "worship_song", "liturgy", "psalm_setting", "sacred_poem", "family_resource"]
+        persona_*: ["activation_anchor", "interaction_summary", "long_term_memory", "relationship_context", "lesson_learned", "prophetic_word", "prayer_journal", "note"]
+
+    - rule: "persona field must match collection"
+      severity: "error"
+      action: "reject"
+      details: "shared collections require persona='shared', persona collections require persona='{persona_id}'"
+
+    - rule: "bible_ref required for scripture types"
+      severity: "error"
+      action: "reject"
+      condition: "type in scripture_types and bible_ref is null"
+
+    - rule: "timestamp must be valid ISO 8601"
+      severity: "error"
+      action: "reject"
+
+  post_insert:
+    - rule: "Vector must be generated successfully"
+      severity: "error"
+      action: "rollback"
+
+    - rule: "Indexes must be updated"
+      severity: "warning"
+      action: "log"
+
+# =============================================================================
+# FILTERING PATTERNS
+# =============================================================================
+filtering_patterns:
+
+  by_scripture:
+    description: "Filter to specific Bible book/chapter"
+    example:
+      filter:
+        must:
+          - key: "bible_ref.book"
+            match:
+              value: "Genesis"
+          - key: "bible_ref.chapter"
+            match:
+              value: 1
+
+  by_persona:
+    description: "Filter to specific persona's content"
+    example:
+      filter:
+        must:
+          - key: "persona"
+            match:
+              value: "jubilee.inspire"
+
+  by_priority:
+    description: "Filter to high-priority content"
+    example:
+      filter:
+        must:
+          - key: "priority"
+            match:
+              any: ["core", "high"]
+
+  by_type:
+    description: "Filter to specific content types"
+    example:
+      filter:
+        must:
+          - key: "type"
+            match:
+              value: "teaching"
+
+  by_tags:
+    description: "Filter by content tags"
+    example:
+      filter:
+        must:
+          - key: "tags"
+            match:
+              any: ["covenant", "grace"]
+
+  by_date_range:
+    description: "Filter by timestamp range"
+    example:
+      filter:
+        must:
+          - key: "timestamp"
+            range:
+              gte: "2026-01-01T00:00:00Z"
+              lte: "2026-01-31T23:59:59Z"

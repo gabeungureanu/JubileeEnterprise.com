@@ -1,0 +1,764 @@
+# INSPIRE 8.0 QDRANT CHUNKING STANDARDS
+# Version: 1.0 | Effective: 2026-01-17
+# Purpose: Standardized chunking rules for all content ingested into Qdrant
+
+schema_id: "inspire_8_0.chunking_standards.v1"
+schema_version: "1.0.0"
+effective_date: "2026-01-17"
+
+# =============================================================================
+# OVERVIEW
+# =============================================================================
+overview:
+  purpose: "Define consistent chunking rules for all data ingested into the Inspire 8.0 Qdrant container"
+  rationale: "Chunking quality directly affects retrieval accuracy and token efficiency"
+  scope: "All collections within the Inspire 8.0 container"
+
+  principles:
+    - "Preserve semantic coherence within chunks"
+    - "Maintain metadata completeness for each chunk"
+    - "Optimize chunk size for retrieval precision"
+    - "Apply overlap to preserve context at boundaries"
+    - "Never split atomic units (verses, definitions, rules)"
+
+# =============================================================================
+# SCRIPTURE CONTENT CHUNKING
+# =============================================================================
+scripture:
+  applies_to:
+    - "scripture"
+
+  granularity: "verse_level"
+
+  rules:
+    verse:
+      description: "Individual Bible verses"
+      chunk_size: "single_verse"
+      token_range:
+        min: 10
+        max: 100
+        target: 50
+      preserve:
+        - "Complete verse text"
+        - "Verse number reference"
+        - "Chapter context in metadata"
+        - "Book context in metadata"
+      split_on: null  # Never split a verse
+      overlap: null   # No overlap for single verses
+      metadata_requirements:
+        - "bible_ref.book"
+        - "bible_ref.chapter"
+        - "bible_ref.verse_start"
+        - "bible_ref.translation"
+
+    passage:
+      description: "Multi-verse passages (3-7 verses)"
+      chunk_size: "verse_group"
+      token_range:
+        min: 100
+        max: 300
+        target: 200
+      verse_range:
+        min: 3
+        max: 7
+      preserve:
+        - "Semantic coherence"
+        - "Paragraph boundaries"
+        - "Narrative flow"
+        - "Complete thoughts"
+      split_on:
+        - "Paragraph breaks in source"
+        - "Topic transitions"
+        - "Dialogue boundaries"
+      overlap:
+        type: "verse_count"
+        amount: 1
+        description: "Include last verse of previous chunk in current"
+      metadata_requirements:
+        - "bible_ref.book"
+        - "bible_ref.chapter"
+        - "bible_ref.verse_start"
+        - "bible_ref.verse_end"
+        - "bible_ref.translation"
+
+    chapter_summary:
+      description: "Chapter-level thematic summaries"
+      chunk_size: "complete_summary"
+      token_range:
+        min: 200
+        max: 500
+        target: 350
+      preserve:
+        - "Complete thematic overview"
+        - "Key verse references"
+        - "Theological highlights"
+      split_on: null  # Keep summaries whole
+      overlap: null
+
+    book_intro:
+      description: "Book introductions and overviews"
+      chunk_size: "section"
+      token_range:
+        min: 200
+        max: 500
+        target: 350
+      preserve:
+        - "Complete section"
+        - "Authorship info"
+        - "Historical context"
+        - "Theological themes"
+      split_on:
+        - "Major section headings"
+        - "Topic transitions"
+      overlap:
+        type: "token_count"
+        amount: 50
+
+# =============================================================================
+# TEACHING & DOCTRINAL CONTENT CHUNKING
+# =============================================================================
+teaching:
+  applies_to:
+    - "doctrine"
+
+  granularity: "semantic_paragraph"
+
+  rules:
+    teaching:
+      description: "Sermons, lessons, Bible studies"
+      chunk_size: "semantic_unit"
+      token_range:
+        min: 200
+        max: 500
+        target: 350
+      preserve:
+        - "Complete thoughts"
+        - "Heading context"
+        - "Scripture references within"
+        - "Illustrative examples"
+      split_on:
+        - "Heading changes"
+        - "Topic shifts"
+        - "Paragraph breaks"
+        - "Major point transitions"
+      overlap:
+        type: "token_count"
+        amount: 50
+        description: "50 tokens of context from previous chunk"
+      metadata_requirements:
+        - "source"
+        - "type"
+        - "tags"
+
+    whitepaper:
+      description: "Position papers, theological documents"
+      chunk_size: "section"
+      token_range:
+        min: 300
+        max: 500
+        target: 400
+      preserve:
+        - "Section coherence"
+        - "Argument flow"
+        - "Citation context"
+        - "Logical structure"
+      split_on:
+        - "Section headings"
+        - "Argument transitions"
+        - "Major claims"
+      overlap:
+        type: "token_count"
+        amount: 75
+        description: "75 tokens to maintain argument continuity"
+
+    doctrinal_statement:
+      description: "Official doctrinal positions"
+      chunk_size: "doctrinal_point"
+      token_range:
+        min: 200
+        max: 400
+        target: 300
+      preserve:
+        - "Complete doctrinal point"
+        - "Supporting Scripture"
+        - "Logical structure"
+        - "Affirmation/denial pairs"
+      split_on:
+        - "Numbered points"
+        - "Article boundaries"
+        - "Topic sections"
+      overlap:
+        type: "token_count"
+        amount: 50
+
+    devotional:
+      description: "Daily devotional content"
+      chunk_size: "complete_devotional"
+      token_range:
+        min: 150
+        max: 400
+        target: 275
+      preserve:
+        - "Complete daily reading"
+        - "Scripture text"
+        - "Reflection"
+        - "Prayer/application"
+      split_on: null  # Keep devotionals whole when possible
+      overflow_handling: "split_at_section_boundaries"
+
+    commentary:
+      description: "Scripture commentary"
+      chunk_size: "verse_commentary"
+      token_range:
+        min: 200
+        max: 500
+        target: 350
+      preserve:
+        - "Complete verse exposition"
+        - "Cross-references"
+        - "Historical context"
+        - "Application points"
+      split_on:
+        - "Verse boundaries"
+        - "Sub-point transitions"
+      overlap:
+        type: "token_count"
+        amount: 50
+
+# =============================================================================
+# NOTES & INTERACTION CONTENT CHUNKING
+# =============================================================================
+notes:
+  applies_to:
+    - "persona_*"
+
+  granularity: "fine"
+
+  rules:
+    interaction_summary:
+      description: "Condensed interaction history"
+      chunk_size: "single_interaction"
+      token_range:
+        min: 100
+        max: 250
+        target: 175
+      preserve:
+        - "Complete interaction context"
+        - "User sentiment"
+        - "Key takeaways"
+        - "Emotional markers"
+      split_on:
+        - "Topic shifts within interaction"
+        - "Emotional transitions"
+      overflow_handling: "create_continuation_chunk"
+      overlap:
+        type: "token_count"
+        amount: 25
+
+    long_term_memory:
+      description: "Persistent memory fragments"
+      chunk_size: "memory_unit"
+      token_range:
+        min: 100
+        max: 200
+        target: 150
+      preserve:
+        - "Complete memory fragment"
+        - "Emotional context"
+        - "Relationship markers"
+        - "Temporal context"
+      split_on:
+        - "Memory boundaries"
+        - "Context shifts"
+      overlap:
+        type: "token_count"
+        amount: 20
+
+    relationship_context:
+      description: "User relationship information"
+      chunk_size: "relationship_aspect"
+      token_range:
+        min: 75
+        max: 200
+        target: 125
+      preserve:
+        - "Complete aspect description"
+        - "Historical context"
+        - "Preference indicators"
+      split_on:
+        - "Aspect boundaries"
+      overlap: null  # Relationship data should be atomic
+
+    lesson_learned:
+      description: "Insights from past interactions"
+      chunk_size: "single_lesson"
+      token_range:
+        min: 150
+        max: 250
+        target: 200
+      preserve:
+        - "Complete insight"
+        - "Context of learning"
+        - "Application guidance"
+        - "Failure case if applicable"
+      split_on: null  # Keep lessons atomic
+      overflow_handling: "expand_token_limit"
+      overlap:
+        type: "token_count"
+        amount: 30
+
+    prophetic_word:
+      description: "Received prophetic content"
+      chunk_size: "complete_word"
+      token_range:
+        min: 100
+        max: 300
+        target: 200
+      preserve:
+        - "Complete prophetic utterance"
+        - "Timestamp"
+        - "Context"
+        - "Interpretation if present"
+      split_on: null  # Never split prophetic words
+      overflow_handling: "expand_token_limit"
+
+    prayer_journal:
+      description: "Prayer and intercession records"
+      chunk_size: "prayer_entry"
+      token_range:
+        min: 75
+        max: 200
+        target: 125
+      preserve:
+        - "Complete prayer entry"
+        - "Subject of prayer"
+        - "Outcome if known"
+        - "Timestamp"
+      split_on: null  # Keep entries atomic
+
+    note:
+      description: "General notes"
+      chunk_size: "note_unit"
+      token_range:
+        min: 100
+        max: 200
+        target: 150
+      preserve:
+        - "Complete thought"
+        - "Reference context"
+      split_on:
+        - "Paragraph breaks"
+        - "Topic transitions"
+      overlap:
+        type: "token_count"
+        amount: 20
+
+# =============================================================================
+# ACTIVATION ANCHOR CHUNKING
+# =============================================================================
+activation:
+  applies_to:
+    - "governance"
+    - "persona_* (activation content only)"
+
+  granularity: "logical_unit"
+
+  rules:
+    identity_anchor:
+      description: "Persona identity definitions"
+      chunk_size: "complete_section"
+      token_range:
+        min: 150
+        max: 400
+        target: 275
+      sections:
+        - "core_identity"
+        - "spiritual_identity"
+        - "psychological_identity"
+        - "cultural_identity"
+        - "temporal_identity"
+        - "relational_identity"
+        - "visual_identity"
+        - "audience"
+        - "authority_functions"
+      preserve:
+        - "Section completeness"
+        - "All attributes within section"
+        - "Structural integrity"
+      split_on:
+        - "Section boundaries only"
+      overlap: null  # Sections must be complete
+
+    mission_anchor:
+      description: "Persona mission definitions"
+      chunk_size: "complete_section"
+      token_range:
+        min: 150
+        max: 400
+        target: 275
+      sections:
+        - "core_purpose"
+        - "priorities"
+        - "specializations"
+        - "feast_leadership"
+        - "orchestration"
+        - "education"
+      preserve:
+        - "Section completeness"
+        - "Priority ordering"
+        - "Specialization details"
+      split_on:
+        - "Section boundaries only"
+      overlap: null
+
+    voice_anchor:
+      description: "Persona voice definitions"
+      chunk_size: "complete_section"
+      token_range:
+        min: 150
+        max: 350
+        target: 250
+      sections:
+        - "core_voice"
+        - "tonal_dimensions"
+        - "communication_style"
+        - "pastoral_style"
+        - "evangelistic_style"
+        - "emotional_protocol"
+        - "language_preferences"
+        - "metaphor_preferences"
+        - "greeting_protocol"
+      preserve:
+        - "Section completeness"
+        - "Voice coherence"
+        - "Style parameters"
+      split_on:
+        - "Section boundaries only"
+      overlap: null
+
+    guardrail_anchor:
+      description: "Guardrail definitions"
+      chunk_size: "category"
+      token_range:
+        min: 150
+        max: 300
+        target: 225
+      categories:
+        - "canon_inheritance"
+        - "hard_stops"
+        - "soft_boundaries"
+        - "content_restrictions"
+        - "escalation"
+      preserve:
+        - "Complete guardrail category"
+        - "All rules within category"
+        - "Escalation protocols"
+      split_on:
+        - "Category boundaries only"
+      overlap: null
+
+    protocol_anchor:
+      description: "Protocol definitions"
+      chunk_size: "protocol_unit"
+      token_range:
+        min: 150
+        max: 350
+        target: 250
+      preserve:
+        - "Complete protocol"
+        - "Step sequences"
+        - "Conditions and actions"
+      split_on:
+        - "Protocol boundaries"
+      overlap: null
+
+# =============================================================================
+# HYMNAL CONTENT CHUNKING
+# =============================================================================
+hymnal:
+  applies_to:
+    - "inspire-family"
+
+  granularity: "stanza_or_section"
+
+  rules:
+    hymn:
+      description: "Traditional hymns"
+      chunk_size: "complete_hymn_or_stanza"
+      token_range:
+        min: 100
+        max: 300
+        target: 200
+      preserve:
+        - "Complete stanzas"
+        - "Refrain associations"
+        - "Verse-refrain pairings"
+        - "Musical metadata"
+      split_on:
+        - "Stanza boundaries"
+      preference: "Keep complete hymns if under max tokens"
+      overflow_handling: "Split at stanza boundaries"
+      overlap: null  # Musical content needs clean boundaries
+
+    worship_song:
+      description: "Contemporary worship songs"
+      chunk_size: "verse_chorus_unit"
+      token_range:
+        min: 75
+        max: 250
+        target: 150
+      preserve:
+        - "Verse-chorus pairings"
+        - "Bridge sections"
+        - "Musical flow"
+        - "Repeat indicators"
+      split_on:
+        - "Section boundaries (verse/chorus/bridge)"
+      overlap: null
+
+    liturgy:
+      description: "Liturgical content"
+      chunk_size: "liturgical_unit"
+      token_range:
+        min: 150
+        max: 400
+        target: 275
+      preserve:
+        - "Complete liturgical element"
+        - "Response patterns"
+        - "Rubrics"
+        - "Congregational parts"
+      split_on:
+        - "Liturgical element boundaries"
+      overlap: null
+
+    psalm_setting:
+      description: "Musical Psalm arrangements"
+      chunk_size: "psalm_section"
+      token_range:
+        min: 100
+        max: 300
+        target: 200
+      preserve:
+        - "Complete psalm verses"
+        - "Refrain associations"
+        - "Musical notation references"
+      split_on:
+        - "Stanza boundaries"
+        - "Selah markers"
+      overlap: null
+
+    sacred_poem:
+      description: "Poetry for worship"
+      chunk_size: "complete_poem_or_stanza"
+      token_range:
+        min: 75
+        max: 250
+        target: 150
+      preserve:
+        - "Complete stanzas"
+        - "Poetic structure"
+        - "Rhyme scheme integrity"
+      split_on:
+        - "Stanza boundaries"
+      preference: "Keep complete poems if under max tokens"
+      overflow_handling: "Split at stanza boundaries"
+      overlap: null
+
+# =============================================================================
+# SYSTEM CONTENT CHUNKING
+# =============================================================================
+system:
+  applies_to:
+    - "model_registry"
+    - "execution_contracts"
+    - "endgame"
+    - "experiments"
+    - "learning_memory"
+    - "evaluation"
+    - "execution_logs"
+    - "scenarios"
+    - "kingdom_builder"
+    - "creative_fire"
+    - "gospel_pulse"
+    - "shepherds_voice"
+    - "hebraic_roots"
+    - "prompts"
+    - "resources"
+    - "languages"
+    - "countries"
+    - "jubilee_ministry"
+    - "ministers"
+    - "users"
+    - "insights"
+    - "analytics"
+    - "persona_index"
+
+  granularity: "document_or_section"
+
+  rules:
+    system_record:
+      description: "System records and configurations"
+      chunk_size: "complete_record"
+      token_range:
+        min: 100
+        max: 500
+        target: 300
+      preserve:
+        - "Complete record integrity"
+        - "All fields and values"
+        - "Relationship references"
+      split_on: null  # Keep records atomic
+      overlap: null
+
+    prompt_content:
+      description: "Prompts and templates"
+      chunk_size: "complete_prompt"
+      token_range:
+        min: 100
+        max: 1000
+        target: 500
+      preserve:
+        - "Complete prompt text"
+        - "Variables and placeholders"
+        - "Instruction structure"
+      split_on: null  # Never split prompts
+      overlap: null
+
+    analytics_data:
+      description: "Analytics and metrics"
+      chunk_size: "data_unit"
+      token_range:
+        min: 50
+        max: 300
+        target: 150
+      preserve:
+        - "Complete data point"
+        - "Timestamp context"
+        - "Metric relationships"
+      split_on:
+        - "Time period boundaries"
+        - "Metric category changes"
+      overlap:
+        type: "token_count"
+        amount: 25
+
+    user_profile:
+      description: "User and minister profiles"
+      chunk_size: "profile_section"
+      token_range:
+        min: 100
+        max: 400
+        target: 250
+      preserve:
+        - "Section completeness"
+        - "Profile coherence"
+        - "Preference groupings"
+      split_on:
+        - "Section boundaries"
+      overlap: null
+
+    insight_content:
+      description: "Insights and recommendations"
+      chunk_size: "complete_insight"
+      token_range:
+        min: 100
+        max: 350
+        target: 200
+      preserve:
+        - "Complete insight"
+        - "Supporting evidence"
+        - "Actionable recommendation"
+      split_on: null  # Keep insights atomic
+      overlap: null
+
+# =============================================================================
+# CHUNKING IMPLEMENTATION
+# =============================================================================
+implementation:
+
+  tokenizer:
+    primary: "cl100k_base"  # OpenAI tokenizer
+    fallback: "tiktoken"
+    encoding: "UTF-8"
+
+  processing_order:
+    1: "Identify content type"
+    2: "Apply type-specific chunking rules"
+    3: "Calculate token counts"
+    4: "Apply split points"
+    5: "Calculate overlaps"
+    6: "Generate metadata"
+    7: "Validate chunk integrity"
+
+  error_handling:
+    token_overflow:
+      action: "Apply overflow_handling rule"
+      fallback: "Split at nearest safe boundary"
+      log: true
+
+    incomplete_chunk:
+      action: "Expand to complete logical unit"
+      fallback: "Mark as incomplete in metadata"
+      log: true
+
+    metadata_missing:
+      action: "Reject chunk"
+      fallback: "None"
+      log: true
+
+# =============================================================================
+# VALIDATION
+# =============================================================================
+validation:
+
+  pre_chunking:
+    - "Verify content type classification"
+    - "Confirm source document integrity"
+    - "Validate input encoding"
+
+  during_chunking:
+    - "Monitor token counts against bounds"
+    - "Verify split point validity"
+    - "Check overlap calculations"
+
+  post_chunking:
+    - "Confirm all chunks within token range"
+    - "Verify metadata completeness"
+    - "Check no orphaned content"
+    - "Validate chunk boundaries"
+
+  quality_metrics:
+    - metric: "average_chunk_size"
+      target: "Within target token range"
+    - metric: "overlap_consistency"
+      target: "As specified per type"
+    - metric: "metadata_completeness"
+      target: "100%"
+    - metric: "boundary_integrity"
+      target: "No mid-sentence splits"
+
+# =============================================================================
+# LOGGING
+# =============================================================================
+logging:
+
+  per_document:
+    - "Total chunks generated"
+    - "Average chunk size"
+    - "Overflow incidents"
+    - "Split point distribution"
+
+  per_batch:
+    - "Total documents processed"
+    - "Total chunks generated"
+    - "Error rate"
+    - "Average processing time"
+
+  alerts:
+    - condition: "Chunk size outside bounds"
+      severity: "warning"
+    - condition: "Metadata incomplete"
+      severity: "error"
+    - condition: "Content type mismatch"
+      severity: "error"
