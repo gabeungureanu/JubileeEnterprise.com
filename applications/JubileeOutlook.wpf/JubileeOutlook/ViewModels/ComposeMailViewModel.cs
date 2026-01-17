@@ -16,6 +16,7 @@ public partial class ComposeMailViewModel : ObservableObject
     private string _from = "user@example.com";
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SendCommand))]
     private string _to = string.Empty;
 
     [ObservableProperty]
@@ -40,9 +41,11 @@ public partial class ComposeMailViewModel : ObservableObject
     private bool _isComposing = false;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SendCommand))]
     private bool _isSending = false;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SendCommand))]
     private bool _isSavingDraft = false;
 
     [ObservableProperty]
