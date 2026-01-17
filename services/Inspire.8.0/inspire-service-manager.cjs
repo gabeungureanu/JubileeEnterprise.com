@@ -2,10 +2,11 @@
  * Jubilee Unified Service Manager
  *
  * A single Windows Service that manages multiple Node.js websites/APIs.
- * Each site runs in its own child process with automatic restart on crash.
+ * Each site runs with configurable worker clustering for high performance.
  *
  * Features:
  * - Unlimited websites from a single Windows Service
+ * - Per-site worker clustering (configurable workers per site)
  * - Per-site configuration via JSON config file
  * - Automatic restart on crash with exponential backoff
  * - Zero-downtime reload via trigger file
@@ -19,10 +20,12 @@
 
 'use strict';
 
+const cluster = require('cluster');
 const { fork, spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
+const os = require('os');
 
 // Configuration - support environment variable for paths with spaces
 const CONFIG_FILE = process.env.SERVICE_CONFIG
@@ -75,10 +78,13 @@ function createLogStream(serviceName) {
 }
 
 /**
- * Start a single service
+ * Start a single service (with optional clustering via server-cluster.js)
+ *
+ * If workers > 1 and server-cluster.js exists, use it for internal clustering.
+ * Otherwise run the standard server.js script.
  */
 function startService(service) {
-    const { name, script, cwd, port, env = {}, enabled = true } = service;
+    const { name, script, cwd, port, env = {}, enabled = true, workers = 1 } = service;
 
     if (!enabled) {
         console.log(`[Manager] Skipping disabled service: ${name}`);
@@ -90,27 +96,37 @@ function startService(service) {
         return;
     }
 
-    const scriptPath = path.resolve(cwd, script);
-    if (!fs.existsSync(scriptPath)) {
+    // Determine which script to run
+    let scriptPath = path.resolve(cwd, script);
+    const clusterScript = path.resolve(cwd, 'server-cluster.js');
+    let useCluster = false;
+
+    // Use cluster script if workers > 1 and cluster script exists
+    if (workers > 1 && fs.existsSync(clusterScript)) {
+        scriptPath = clusterScript;
+        useCluster = true;
+        console.log(`[Manager] Starting service: ${name} (port ${port}, ${workers} workers via cluster)`);
+    } else if (!fs.existsSync(scriptPath)) {
         console.error(`[Manager] Script not found for ${name}: ${scriptPath}`);
         return;
+    } else {
+        console.log(`[Manager] Starting service: ${name} (port ${port}, single process)`);
     }
-
-    console.log(`[Manager] Starting service: ${name} (port ${port})`);
 
     const logStream = createLogStream(name);
     const timestamp = () => new Date().toISOString();
 
-    // Merge environment variables
+    // Merge environment variables - pass WORKERS count for cluster script
     const processEnv = {
         ...process.env,
         NODE_ENV: 'production',
         PORT: String(port),
+        WORKERS: String(workers),
         ...env
     };
 
-    // Spawn the child process using node explicitly (more compatible with Windows Services)
-    const nodePath = process.execPath; // Gets the path to node.exe
+    // Spawn the child process
+    const nodePath = process.execPath;
     const child = spawn(nodePath, [scriptPath], {
         cwd: path.resolve(cwd),
         env: processEnv,
@@ -171,7 +187,7 @@ function startService(service) {
         logStream.write(`${timestamp()} [MANAGER] Error: ${err.message}\n`);
     });
 
-    processes.set(name, { child, service, logStream });
+    processes.set(name, { child, service, logStream, workers: useCluster ? workers : 1 });
     console.log(`[Manager] Service ${name} started (PID: ${child.pid})`);
 }
 
@@ -260,6 +276,7 @@ function startHealthServer(port = 3999) {
                     name,
                     port: proc.service.port,
                     pid: proc.child.pid,
+                    workers: proc.workers || 1,
                     status: proc.child.exitCode === null ? 'running' : 'stopped',
                     restarts: restartCounts.get(name) || 0
                 });
