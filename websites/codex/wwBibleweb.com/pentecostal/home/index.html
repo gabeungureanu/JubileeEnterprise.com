@@ -55,7 +55,7 @@
       font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
       background: #f5f5f5;
       color: #333;
-      line-height: 1.5;
+      line-height: 1.0;
       width: 100%;
       overflow-x: hidden;
     }
@@ -213,7 +213,7 @@
       overflow: hidden;
       position: relative;
       border-top: 1px solid #333;
-      height: clamp(16px, 1.5vw, 21px);
+      height: clamp(13px, 1.3vw, 18px);
     }
 
     /* Wrapper - JavaScript handles the transform animation */
@@ -229,7 +229,7 @@
     #ticker-bar .ticker-content {
       display: inline-flex;
       align-items: center;
-      height: clamp(16px, 1.5vw, 21px);
+      height: clamp(13px, 1.3vw, 18px);
     }
 
     #ticker-bar .ticker-item {
@@ -239,9 +239,9 @@
       font-size: 10px;
       color: #b0b0b0;
       white-space: nowrap;
-      height: clamp(16px, 1.5vw, 21px);
+      height: clamp(13px, 1.3vw, 18px);
       position: relative;
-      top: -5px;
+      top: -9px;
     }
 
     #ticker-bar .ticker-item .cat-label {
@@ -249,16 +249,16 @@
       color: #ffd700;
       margin-right: var(--space-xs);
       text-transform: uppercase;
-      font-size: var(--font-xs);
+      font-size: clamp(0.5rem, 0.375rem + 0.25vw, 0.625rem);
     }
 
     #ticker-bar .ticker-item a {
-      color: #b0b0b0;
+      color: #ffffff;
       text-decoration: none;
     }
 
     #ticker-bar .ticker-item a:hover {
-      color: #ffffff;
+      color: #ffd700;
     }
 
     /* Legacy - keep for compatibility */
@@ -1029,12 +1029,13 @@
     .spotlight-column-header {
       font-size: 12px;
       font-weight: 700;
-      color: #999;
+      color: #666;
       text-transform: uppercase;
       letter-spacing: 1px;
-      margin-bottom: 15px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #e0e0e0;
+      padding: var(--space-md) 0 0 0;
+      border-bottom: 1px solid #000;
+      margin-top: 4px;
+      margin-bottom: 6px;
     }
 
     .featured-column .featured-item {
@@ -1830,10 +1831,10 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       color: #666;
-      padding-bottom: var(--space-sm);
-      border-bottom: 1px solid #e0e0e0;
-      margin-bottom: 2px;
-      margin-top: 40px;
+      padding: var(--space-md) 0 0 0;
+      border-bottom: 1px solid #000;
+      margin-top: 14px;
+      margin-bottom: 6px;
     }
 
     .section-content {
@@ -1842,8 +1843,8 @@
 
     /* Featured Column - Stacked Cards */
     .featured-card {
-      margin-bottom: var(--space-md);
-      padding-bottom: var(--space-md);
+      margin-bottom: var(--space-sm);
+      padding-bottom: var(--space-sm);
       border-bottom: 1px solid #eee;
     }
 
@@ -1894,7 +1895,7 @@
 
     /* Spotlight Column */
     .spotlight-main {
-      margin-bottom: var(--space-md);
+      margin-bottom: var(--space-sm);
     }
 
     .spotlight-main-image {
@@ -1940,7 +1941,7 @@
     .spotlight-list-item {
       display: flex;
       gap: var(--space-sm);
-      padding: var(--space-md) 0;
+      padding: var(--space-sm) 0;
       border-bottom: 1px solid #eee;
     }
 
@@ -2001,9 +2002,10 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       color: #666;
-      padding: var(--space-md) 0 var(--space-sm) 0;
-      border-bottom: 1px solid #e0e0e0;
-      margin-bottom: var(--space-md);
+      padding: var(--space-md) 0 0 0;
+      border-bottom: 1px solid #000;
+      margin-top: 4px;
+      margin-bottom: 6px;
     }
 
     .related-info-grid {
@@ -2062,9 +2064,10 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       color: #666;
-      padding: 15px 0 10px 0;
-      border-bottom: 1px solid #e0e0e0;
-      margin-bottom: 0;
+      padding: var(--space-md) 0 0 0;
+      border-bottom: 1px solid #000;
+      margin-top: 4px;
+      margin-bottom: 6px;
     }
 
     .recommended-list {
@@ -2205,10 +2208,11 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: #000;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
+      color: #666;
+      padding: var(--space-md) 0 0 0;
       border-bottom: 1px solid #000;
+      margin-top: 4px;
+      margin-bottom: 6px;
     }
 
     .featured-category-image {

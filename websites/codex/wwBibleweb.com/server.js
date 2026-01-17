@@ -21,6 +21,8 @@
  * Default port: 3847 (or process.env.PORT for iisnode)
  */
 
+require('dotenv').config();
+
 const http = require('http');
 const fs = require('fs');
 const path = require('path');

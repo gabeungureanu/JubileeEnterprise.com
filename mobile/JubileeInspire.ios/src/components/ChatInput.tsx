@@ -36,15 +36,17 @@ interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  centered?: boolean; // When true, center the input and limit width
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
   onSend,
   disabled = false,
-  placeholder = 'Message Jubilee Inspire...',
+  placeholder = 'Ask Jubilee Anything...',
+  centered = false,
 }) => {
   const { colors } = useTheme();
-  const styles = createStyles(colors);
+  const styles = createStyles(colors, centered);
 
   const [text, setText] = useState('');
   const [showToolsMenu, setShowToolsMenu] = useState(false);
@@ -52,9 +54,20 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const [isListening, setIsListening] = useState(false);
   const [showMicTooltip, setShowMicTooltip] = useState(false);
   const [showVoiceMode, setShowVoiceMode] = useState(false);
+  const [showVoiceModeTooltip, setShowVoiceModeTooltip] = useState(false);
   const [attachedFile, setAttachedFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
+  const [inputHeight, setInputHeight] = useState(24); // Initial height for single line
+  const [isFocused, setIsFocused] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 30 });
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<any>(null);
+  const plusButtonRef = useRef<any>(null);
+
+  // Constants for auto-expanding textarea
+  const LINE_HEIGHT = 20;
+  const MAX_LINES = 7;
+  const MIN_HEIGHT = 24; // Single line height
+  const MAX_HEIGHT = LINE_HEIGHT * MAX_LINES; // 140px for 7 lines
 
   const handleSend = async () => {
     if (!text.trim() || disabled) return;
@@ -67,13 +80,30 @@ const ChatInput: React.FC<ChatInputProps> = ({
     onSend(text.trim());
     setText('');
     setAttachedFile(null); // Clear attachment after sending
+    setInputHeight(MIN_HEIGHT); // Reset height after sending
   };
 
   const handleToolsMenu = async () => {
     if (Platform.OS === 'ios') {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    setShowToolsMenu(true);
+
+    // Measure plus button position to position menu above it
+    if (plusButtonRef.current) {
+      plusButtonRef.current.measureInWindow((x: number, y: number, width: number, height: number) => {
+        // Position menu above the button, left-aligned with button
+        // Menu height is approximately 300px (6 items * ~50px each)
+        const menuHeight = 300;
+        const topPosition = y - menuHeight - 8; // 8px gap above the button
+        setMenuPosition({
+          top: Math.max(10, topPosition), // Ensure minimum 10px from top
+          left: x,
+        });
+        setShowToolsMenu(true);
+      });
+    } else {
+      setShowToolsMenu(true);
+    }
   };
 
   const handleFileAttachment = async () => {
@@ -136,7 +166,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         break;
       case 'more':
         setShowMoreMenu(true);
-        setShowToolsMenu(false);
+        // Keep tools menu open when showing more menu
         break;
       default:
         console.log('[ChatInput] Tool not yet implemented:', tool);
@@ -246,7 +276,112 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
   };
 
+  // Reference for hidden measurement div (web only)
+  const measureRef = useRef<any>(null);
+
+  // Handle content size change for auto-expanding textarea (native platforms)
+  const handleContentSizeChange = (event: any) => {
+    if (Platform.OS !== 'web') {
+      const contentHeight = event.nativeEvent.contentSize.height;
+      // Clamp height between MIN_HEIGHT and MAX_HEIGHT
+      const newHeight = Math.min(Math.max(contentHeight, MIN_HEIGHT), MAX_HEIGHT);
+      setInputHeight(newHeight);
+    }
+  };
+
+  // Calculate height for web by measuring actual content
+  const calculateWebHeight = (inputText: string) => {
+    if (Platform.OS !== 'web') return;
+
+    if (!inputText || inputText.length === 0) {
+      setInputHeight(MIN_HEIGHT);
+      return;
+    }
+
+    // Use a temporary element to measure text height
+    if (typeof document !== 'undefined') {
+      const measureEl = document.getElementById('chat-input-measure');
+      if (measureEl) {
+        // Set the same text content
+        measureEl.textContent = inputText;
+        // Add a trailing character to account for cursor line
+        if (inputText.endsWith('\n')) {
+          measureEl.textContent += ' ';
+        }
+        // Get the scroll height
+        const scrollHeight = measureEl.scrollHeight;
+        const newHeight = Math.min(Math.max(scrollHeight, MIN_HEIGHT), MAX_HEIGHT);
+        setInputHeight(newHeight);
+      }
+    }
+  };
+
+  // Handle text change
+  const handleTextChange = (newText: string) => {
+    setText(newText);
+
+    // For web, calculate height based on content
+    if (Platform.OS === 'web') {
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        calculateWebHeight(newText);
+      });
+    }
+  };
+
   const canSend = text.trim().length > 0 && !disabled;
+
+  // Create hidden measurement element and inject CSS for hiding scrollbar on web
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      // Check if element already exists
+      let measureEl = document.getElementById('chat-input-measure');
+      if (!measureEl) {
+        measureEl = document.createElement('div');
+        measureEl.id = 'chat-input-measure';
+        measureEl.style.cssText = `
+          position: absolute;
+          visibility: hidden;
+          height: auto;
+          width: 550px;
+          max-width: 550px;
+          padding: 2px 8px;
+          font-size: 16px;
+          line-height: 20px;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          pointer-events: none;
+        `;
+        document.body.appendChild(measureEl);
+      }
+
+      // Add CSS to hide scrollbar on textarea (for WebKit browsers)
+      let styleEl = document.getElementById('chat-input-scrollbar-style');
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'chat-input-scrollbar-style';
+        styleEl.textContent = `
+          textarea::-webkit-scrollbar {
+            display: none;
+          }
+        `;
+        document.head.appendChild(styleEl);
+      }
+
+      return () => {
+        // Cleanup on unmount
+        const el = document.getElementById('chat-input-measure');
+        if (el) {
+          el.remove();
+        }
+        const styleElement = document.getElementById('chat-input-scrollbar-style');
+        if (styleElement) {
+          styleElement.remove();
+        }
+      };
+    }
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -273,27 +408,51 @@ const ChatInput: React.FC<ChatInputProps> = ({
         </View>
       )}
 
-      <View style={styles.inputWrapper}>
+      <View style={[styles.inputWrapper, isFocused && styles.inputWrapperFocused]}>
         {/* Plus (+) Menu Button */}
         <TouchableOpacity
-          style={styles.plusButton}
+          ref={plusButtonRef}
+          style={[
+            styles.plusButton,
+            inputHeight > MIN_HEIGHT && { alignSelf: 'flex-end' },
+          ]}
           onPress={handleToolsMenu}
           disabled={disabled}
         >
-          <Ionicons name="add-circle-outline" size={28} color={colors.primary} />
+          <Ionicons name="add" size={22} color="#ffffff" />
         </TouchableOpacity>
 
+        {/* TextInput - scrollbar hidden, overflow handled by wrapper */}
         <TextInput
           ref={inputRef}
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              height: inputHeight,
+              maxHeight: MAX_HEIGHT,
+              // Center text vertically for single line, align to top for multiline
+              textAlignVertical: inputHeight > MIN_HEIGHT ? 'top' : 'center',
+            },
+            // Web-specific styles - hide the native scrollbar
+            Platform.OS === 'web' && {
+              paddingTop: 0,
+              paddingBottom: 0,
+              overflowY: inputHeight >= MAX_HEIGHT ? 'scroll' : 'hidden',
+              // Hide scrollbar but keep functionality
+              scrollbarWidth: 'none', // Firefox
+              msOverflowStyle: 'none', // IE/Edge
+            } as any,
+          ]}
           value={text}
-          onChangeText={setText}
+          onChangeText={handleTextChange}
           placeholder={placeholder}
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor="#ffffff"
           multiline
           maxLength={4000}
           editable={!disabled}
           returnKeyType="default"
+          scrollEnabled={inputHeight >= MAX_HEIGHT}
+          onContentSizeChange={handleContentSizeChange}
           onKeyPress={(e) => {
             // Handle Enter key for web
             if (Platform.OS === 'web' && e.nativeEvent.key === 'Enter' && !(e.nativeEvent as any).shiftKey) {
@@ -303,173 +462,208 @@ const ChatInput: React.FC<ChatInputProps> = ({
               }
             }
           }}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
         />
 
-        {/* Send Button, Voice Mode, or Microphone */}
-        {canSend ? (
-          <TouchableOpacity
-            style={[styles.sendButton, styles.sendButtonActive]}
-            onPress={handleSend}
-            disabled={!canSend}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-up" size={20} color="#000000" />
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.rightButtons}>
-            {/* Voice Mode Button */}
+        {/* Right side buttons */}
+        <View style={[
+          styles.rightButtons,
+          inputHeight > MIN_HEIGHT && { alignSelf: 'flex-end' },
+        ]}>
+          {/* Microphone Button - always visible */}
+          <View style={styles.micButtonContainer}>
             <TouchableOpacity
-              style={[styles.voiceModeButton, showVoiceMode && styles.voiceModeButtonActive]}
-              onPress={handleVoiceModeToggle}
+              style={[styles.micButton, isListening && styles.micButtonActive]}
+              onPress={handleVoiceInput}
               disabled={disabled}
+              {...(Platform.OS === 'web' ? {
+                onMouseEnter: () => setShowMicTooltip(true),
+                onMouseLeave: () => setShowMicTooltip(false)
+              } as any : {})}
             >
               <Ionicons
-                name="headset-outline"
+                name={isListening ? "mic" : "mic-outline"}
                 size={22}
-                color={showVoiceMode ? colors.primary : colors.textSecondary}
+                color={isListening ? "#ef4444" : colors.textSecondary}
               />
             </TouchableOpacity>
+            {showMicTooltip && Platform.OS === 'web' && (
+              <View style={styles.tooltip}>
+                <Text style={styles.tooltipText}>
+                  {isListening ? 'Stop listening' : 'Dictate'}
+                </Text>
+              </View>
+            )}
+          </View>
 
-            {/* Microphone Button */}
-            <View style={styles.micButtonContainer}>
+          {/* Voice Mode Button (wave icon) OR Send Button */}
+          {canSend ? (
+            <TouchableOpacity
+              style={[styles.sendButton, styles.sendButtonActive]}
+              onPress={handleSend}
+              disabled={!canSend}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="arrow-up" size={20} color="#000000" />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.voiceModeButtonContainer}>
               <TouchableOpacity
-                style={[styles.micButton, isListening && styles.micButtonActive]}
-                onPress={handleVoiceInput}
+                style={[styles.voiceModeButton, showVoiceMode && styles.voiceModeButtonActive]}
+                onPress={handleVoiceModeToggle}
                 disabled={disabled}
                 {...(Platform.OS === 'web' ? {
-                  onMouseEnter: () => setShowMicTooltip(true),
-                  onMouseLeave: () => setShowMicTooltip(false)
+                  onMouseEnter: () => setShowVoiceModeTooltip(true),
+                  onMouseLeave: () => setShowVoiceModeTooltip(false)
                 } as any : {})}
               >
-                <Ionicons
-                  name={isListening ? "mic" : "mic-outline"}
-                  size={22}
-                  color={isListening ? "#ef4444" : colors.textSecondary}
-                />
+                <View style={styles.voiceWaveIcon}>
+                  <View style={[styles.voiceBar, styles.voiceBar1, showVoiceMode && styles.voiceBarActive]} />
+                  <View style={[styles.voiceBar, styles.voiceBar2, showVoiceMode && styles.voiceBarActive]} />
+                  <View style={[styles.voiceBar, styles.voiceBar3, showVoiceMode && styles.voiceBarActive]} />
+                  <View style={[styles.voiceBar, styles.voiceBar4, showVoiceMode && styles.voiceBarActive]} />
+                  <View style={[styles.voiceBar, styles.voiceBar5, showVoiceMode && styles.voiceBarActive]} />
+                </View>
               </TouchableOpacity>
-              {showMicTooltip && Platform.OS === 'web' && (
+              {showVoiceModeTooltip && Platform.OS === 'web' && (
                 <View style={styles.tooltip}>
-                  <Text style={styles.tooltipText}>
-                    {isListening ? 'Stop listening' : 'Voice input'}
-                  </Text>
+                  <Text style={styles.tooltipText}>Voice Input</Text>
                 </View>
               )}
             </View>
-          </View>
-        )}
+          )}
+        </View>
       </View>
 
-      {/* Tools Menu Modal */}
+      {/* Tools Menu Modal - covers full screen for outside click detection */}
       <Modal
         visible={showToolsMenu}
-        transparent
+        transparent={true}
         animationType="fade"
-        onRequestClose={() => setShowToolsMenu(false)}
+        onRequestClose={() => {
+          setShowToolsMenu(false);
+          setShowMoreMenu(false);
+        }}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setShowToolsMenu(false)}>
-          <View style={styles.toolsMenu}>
-            <TouchableOpacity
-              style={styles.toolItem}
-              onPress={() => handleToolSelect('add-photos')}
-            >
-              <Ionicons name="attach-outline" size={20} color={colors.text} />
-              <Text style={styles.toolTitle}>Add photos & files</Text>
-            </TouchableOpacity>
+        {/* Full screen pressable overlay to close menu */}
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => {
+            setShowToolsMenu(false);
+            setShowMoreMenu(false);
+          }}
+        >
+          {/* Menu container positioned above the + button */}
+          <Pressable
+            style={[styles.menuContainer, { top: menuPosition.top, left: menuPosition.left }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {/* Main Tools Menu */}
+            <View style={styles.toolsMenu}>
+              <TouchableOpacity
+                style={styles.toolItem}
+                onPress={() => handleToolSelect('add-photos')}
+              >
+                <Ionicons name="attach-outline" size={20} color={colors.text} />
+                <Text style={styles.toolTitle}>Add photos & files</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.toolItem}
-              onPress={() => handleToolSelect('create-image')}
-            >
-              <Ionicons name="image-outline" size={20} color={colors.text} />
-              <Text style={styles.toolTitle}>Create image</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.toolItem}
+                onPress={() => handleToolSelect('create-image')}
+              >
+                <Ionicons name="image-outline" size={20} color={colors.text} />
+                <Text style={styles.toolTitle}>Create image</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.toolItem}
-              onPress={() => handleToolSelect('thinking')}
-            >
-              <Ionicons name="bulb-outline" size={20} color={colors.text} />
-              <Text style={styles.toolTitle}>Thinking</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.toolItem}
+                onPress={() => handleToolSelect('thinking')}
+              >
+                <Ionicons name="bulb-outline" size={20} color={colors.text} />
+                <Text style={styles.toolTitle}>Thinking</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.toolItem}
-              onPress={() => handleToolSelect('deep-research')}
-            >
-              <Ionicons name="search-outline" size={20} color={colors.text} />
-              <Text style={styles.toolTitle}>Deep research</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.toolItem}
+                onPress={() => handleToolSelect('deep-research')}
+              >
+                <Ionicons name="search-outline" size={20} color={colors.text} />
+                <Text style={styles.toolTitle}>Deep research</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.toolItem}
-              onPress={() => handleToolSelect('shopping-research')}
-            >
-              <Ionicons name="cart-outline" size={20} color={colors.text} />
-              <Text style={styles.toolTitle}>Shopping research</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.toolItem}
+                onPress={() => handleToolSelect('shopping-research')}
+              >
+                <Ionicons name="cart-outline" size={20} color={colors.text} />
+                <Text style={styles.toolTitle}>Shopping research</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.toolItem, styles.lastToolItem]}
-              onPress={() => handleToolSelect('more')}
-            >
-              <Ionicons name="ellipsis-horizontal" size={20} color={colors.text} />
-              <Text style={styles.toolTitle}>More</Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} style={styles.chevron} />
-            </TouchableOpacity>
-          </View>
-        </Pressable>
-      </Modal>
+              {/* More item with hover behavior */}
+              <View
+                style={[styles.toolItem, styles.lastToolItem]}
+                {...(Platform.OS === 'web' ? {
+                  onMouseEnter: () => setShowMoreMenu(true),
+                  onMouseLeave: () => setShowMoreMenu(false),
+                } as any : {})}
+              >
+                <Ionicons name="ellipsis-horizontal" size={20} color={colors.text} />
+                <Text style={styles.toolTitle}>More</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} style={styles.chevron} />
 
-      {/* More Menu Modal */}
-      <Modal
-        visible={showMoreMenu}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowMoreMenu(false)}
-      >
-        <Pressable style={styles.modalOverlay} onPress={() => setShowMoreMenu(false)}>
-          <View style={styles.toolsMenu}>
-            <TouchableOpacity
-              style={styles.toolItem}
-              onPress={() => handleToolSelect('bible-search')}
-            >
-              <Ionicons name="book-outline" size={20} color={colors.text} />
-              <Text style={styles.toolTitle}>Bible search</Text>
-            </TouchableOpacity>
+                {/* More Menu - appears on hover */}
+                {showMoreMenu && (
+                  <View style={styles.moreMenuPopup}>
+                    <TouchableOpacity
+                      style={styles.toolItem}
+                      onPress={() => handleToolSelect('bible-search')}
+                    >
+                      <Ionicons name="book-outline" size={20} color={colors.text} />
+                      <Text style={styles.toolTitle}>Bible search</Text>
+                    </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.toolItem}
-              onPress={() => handleToolSelect('scripture-notes')}
-            >
-              <Ionicons name="document-text-outline" size={20} color={colors.text} />
-              <Text style={styles.toolTitle}>Scripture notes</Text>
-            </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.toolItem}
+                      onPress={() => handleToolSelect('scripture-notes')}
+                    >
+                      <Ionicons name="document-text-outline" size={20} color={colors.text} />
+                      <Text style={styles.toolTitle}>Scripture notes</Text>
+                    </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.toolItem, styles.lastToolItem]}
-              onPress={() => handleToolSelect('bookmarks')}
-            >
-              <Ionicons name="bookmark-outline" size={20} color={colors.text} />
-              <Text style={styles.toolTitle}>Bookmarks</Text>
-            </TouchableOpacity>
-          </View>
+                    <TouchableOpacity
+                      style={[styles.toolItem, styles.lastToolItem]}
+                      onPress={() => handleToolSelect('bookmarks')}
+                    >
+                      <Ionicons name="bookmark-outline" size={20} color={colors.text} />
+                      <Text style={styles.toolTitle}>Bookmarks</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </View>
+          </Pressable>
         </Pressable>
       </Modal>
 
       <View style={styles.disclaimer}>
-        {/* Empty for now, could add disclaimer text */}
+        <Text style={styles.copyrightText}>
+          Copyright © 2026 JubileeInspire.com | All Rights Reserved. JubileeVerse and AI can make mistakes. | Privacy Policy | Terms of Use
+        </Text>
       </View>
     </View>
   );
 };
 
-const createStyles = (colors: any) => StyleSheet.create({
+const createStyles = (colors: any, centered: boolean) => StyleSheet.create({
   container: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
+    paddingHorizontal: 30,
+    paddingTop: centered ? 5 : spacing.sm,
     paddingBottom: Platform.OS === 'ios' ? spacing.md : spacing.sm,
     backgroundColor: colors.background,
     borderTopWidth: 0,
+    ...(centered ? { alignItems: 'center', width: '100%' } : {}),
   },
   attachmentPreview: {
     flexDirection: 'row',
@@ -507,18 +701,29 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   inputWrapper: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
+    alignItems: 'center', // Center items vertically
+    backgroundColor: '#5a5a5a',
     borderRadius: 24,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingLeft: spacing.xs,
-    paddingRight: spacing.xs,
-    paddingVertical: spacing.xs,
+    borderWidth: 2,
+    borderColor: '#5a5a5a',
+    paddingLeft: 15,
+    paddingRight: 15,
+    paddingVertical: spacing.sm,
     minHeight: 48,
+    width: '100%',
+    maxWidth: centered ? 700 : undefined,
+  },
+  inputWrapperFocused: {
+    borderWidth: 2,
+    borderColor: '#ffbd59',
   },
   plusButton: {
-    padding: spacing.xs,
+    width: 32,
+    height: 32,
+    borderRadius: 4,
+    backgroundColor: '#6b6b6b',
+    borderWidth: 1,
+    borderColor: '#7b7b7b',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -526,31 +731,44 @@ const createStyles = (colors: any) => StyleSheet.create({
     flex: 1,
     fontSize: typography.fontSize.base,
     color: colors.text,
-    maxHeight: 120,
     paddingVertical: 0,
     paddingHorizontal: spacing.xs,
-    textAlignVertical: 'center',
-    lineHeight: Platform.OS === 'web' ? 20 : undefined,
+    lineHeight: 20,
+    ...(Platform.OS === 'web' ? {
+      outlineStyle: 'none',
+      outlineWidth: 0,
+      resize: 'none', // Prevent manual resize on web
+    } as any : {}),
   },
   rightButtons: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: 8,
+  },
+  voiceModeButtonContainer: {
+    position: 'relative',
   },
   voiceModeButton: {
-    padding: spacing.xs,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#ffbd59',
     justifyContent: 'center',
     alignItems: 'center',
   },
   voiceModeButtonActive: {
-    backgroundColor: `${colors.primary}15`,
-    borderRadius: 20,
+    backgroundColor: '#e6a94f',
   },
   micButtonContainer: {
     position: 'relative',
   },
   micButton: {
-    padding: spacing.xs,
+    width: 32,
+    height: 32,
+    borderRadius: 4,
+    backgroundColor: '#6b6b6b',
+    borderWidth: 1,
+    borderColor: '#7b7b7b',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -591,22 +809,52 @@ const createStyles = (colors: any) => StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   disclaimer: {
-    marginTop: spacing.xs,
+    marginTop: 5,
     alignItems: 'center',
+  },
+  copyrightText: {
+    fontSize: 11,
+    color: '#777777',
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    justifyContent: 'flex-start',
-    paddingTop: Platform.OS === 'web' ? 60 : 100,
-    paddingLeft: spacing.md,
+    backgroundColor: 'transparent',
+    justifyContent: 'flex-end',
+  },
+  menuContainer: {
+    position: 'absolute',
+    flexDirection: 'row',
   },
   toolsMenu: {
     backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    maxWidth: 280,
+    minWidth: 220,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 5,
+      },
+    }),
+  },
+  moreMenuPopup: {
+    position: 'absolute',
+    left: '100%', // Position to the right of the parent
+    bottom: 0,
+    marginLeft: spacing.xs,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    minWidth: 200,
     ...Platform.select({
       web: {
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
@@ -640,6 +888,37 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   chevron: {
     marginLeft: 'auto',
+  },
+  voiceWaveIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+    height: 18,
+    width: 18,
+  },
+  voiceBar: {
+    width: 2.5,
+    backgroundColor: '#000000',
+    borderRadius: 1.25,
+  },
+  voiceBar1: {
+    height: 6,
+  },
+  voiceBar2: {
+    height: 10,
+  },
+  voiceBar3: {
+    height: 14,
+  },
+  voiceBar4: {
+    height: 10,
+  },
+  voiceBar5: {
+    height: 6,
+  },
+  voiceBarActive: {
+    backgroundColor: '#000000',
   },
 });
 

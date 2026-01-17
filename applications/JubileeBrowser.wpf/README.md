@@ -1,6 +1,6 @@
 # Jubilee Browser
 
-**Version 8.0.7** - A dual-mode WPF browser for navigating both the public Internet and JubileeVerse, a Scripture-centered digital environment.
+**Version 8.0.12** - A dual-mode WPF browser for navigating both the public Internet and JubileeVerse, a Scripture-centered digital environment.
 
 ## Overview
 
@@ -22,7 +22,7 @@ Jubilee Browser is a safe, Scripture-centered browser designed for families, chu
 
 ### Enterprise Deployment
 - **MSI Installer**: Professional Windows Installer built with WiX Toolset v4
-- **Silent Installation**: `msiexec /i JubileeBrowser-Setup-8.0.7.msi /quiet`
+- **Silent Installation**: `msiexec /i JubileeBrowser-Setup-8.0.12.msi /quiet`
 - **Self-Contained**: Includes .NET 8 runtime, no prerequisites needed
 - **Per-Machine Install**: Installs to Program Files for all users
 - **Auto Shortcuts**: Desktop and Start Menu shortcuts created automatically
@@ -94,7 +94,7 @@ Jubilee Browser requires the Microsoft Edge WebView2 Runtime. It is:
 Visit [https://jubileebrowser.com/download.html](https://jubileebrowser.com/download.html) to download the latest version.
 
 ### Standard Installation
-1. Download `JubileeBrowser-Setup-8.0.7.msi` (~57 MB)
+1. Download `JubileeBrowser-Setup-8.0.12.msi` (~57 MB)
 2. Double-click the installer
 3. Follow the installation wizard
 4. Launch Jubilee Browser from desktop or Start menu
@@ -102,17 +102,17 @@ Visit [https://jubileebrowser.com/download.html](https://jubileebrowser.com/down
 ### Silent Installation
 For automated deployments:
 ```cmd
-msiexec /i JubileeBrowser-Setup-8.0.7.msi /quiet
+msiexec /i JubileeBrowser-Setup-8.0.12.msi /quiet
 ```
 
 ### Silent Installation with Custom Directory
 ```cmd
-msiexec /i JubileeBrowser-Setup-8.0.7.msi /quiet INSTALLFOLDER="C:\Program Files\JubileeBrowser"
+msiexec /i JubileeBrowser-Setup-8.0.12.msi /quiet INSTALLFOLDER="C:\Program Files\JubileeBrowser"
 ```
 
 ### Silent Installation with Logging
 ```cmd
-msiexec /i JubileeBrowser-Setup-8.0.7.msi /quiet /log install.log
+msiexec /i JubileeBrowser-Setup-8.0.12.msi /quiet /log install.log
 ```
 
 ## Development
@@ -161,12 +161,12 @@ dotnet tool install --global wix
 # Publish the application first
 dotnet publish JubileeBrowser.WPF/JubileeBrowser/JubileeBrowser.csproj `
     -c Release -r win-x64 --self-contained true `
-    -o JubileeBrowser.WPF/publish/JubileeBrowser-8.0.7
+    -o JubileeBrowser.WPF/publish/JubileeBrowser-8.0.12
 
 # Copy icon to publish folder (required for shortcuts)
-mkdir -p JubileeBrowser.WPF/publish/JubileeBrowser-8.0.7/Resources/Icons
+mkdir -p JubileeBrowser.WPF/publish/JubileeBrowser-8.0.12/Resources/Icons
 cp JubileeBrowser.WPF/JubileeBrowser/Resources/Icons/icon.ico `
-   JubileeBrowser.WPF/publish/JubileeBrowser-8.0.7/Resources/Icons/
+   JubileeBrowser.WPF/publish/JubileeBrowser-8.0.12/Resources/Icons/
 
 # Build the MSI installer
 dotnet build JubileeBrowser.WPF/JubileeBrowser.Installer/JubileeBrowser.Installer.wixproj -c Release
@@ -177,8 +177,8 @@ The WiX project uses:
 - **WixToolset.Heat 4.0.5** - Automatic file harvesting
 
 ### Build Outputs
-- **Installer**: `JubileeBrowser.WPF/JubileeBrowser.Installer/bin/x64/Release/JubileeBrowser-Setup-8.0.7.msi`
-- **Published App**: `JubileeBrowser.WPF/publish/JubileeBrowser-8.0.7/`
+- **Installer**: `JubileeBrowser.WPF/JubileeBrowser.Installer/bin/x64/Release/JubileeBrowser-Setup-8.0.12.msi`
+- **Published App**: `JubileeBrowser.WPF/publish/JubileeBrowser-8.0.12/`
 - **Debug Build**: `JubileeBrowser.WPF/JubileeBrowser/bin/Debug/`
 
 ### Installer Package Details
@@ -251,7 +251,7 @@ The browser integrates with a PostgreSQL database for private URL resolution:
 
 **Silent MSI Installation**:
 ```cmd
-msiexec /i JubileeBrowser-Setup-8.0.7.msi /quiet /log install.log
+msiexec /i JubileeBrowser-Setup-8.0.12.msi /quiet /log install.log
 ```
 
 **Group Policy Deployment**:
@@ -289,6 +289,9 @@ msiexec /i JubileeBrowser-Setup-8.0.7.msi /quiet /log install.log
 
 ## Version History
 
+- **8.0.12** - Fixed auto-update check URL construction bug
+- **8.0.11** - Theme support, system theme detection, startup performance optimizations
+- **8.0.8** - Resizable To-Do List panel, enhanced menu icons, spiritual nutrition panel
 - **8.0.7** - Professional MSI installer with WiX Toolset v4, desktop/Start Menu shortcuts
 - **8.0.6** - WPF-only release, removed Electron version
 - **8.0.5** - Documentation updates

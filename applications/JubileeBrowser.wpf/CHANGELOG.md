@@ -5,6 +5,144 @@ All notable changes to Jubilee Browser will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.0.12] - 2026-01-17
+
+### Fixed
+- **Auto-Update Check**: Fixed URL construction bug that prevented update checks from working
+  - HttpClient BaseAddress now includes trailing slash
+  - Relative URIs no longer start with slash prefix
+  - Update endpoint correctly resolves to `downloads/stable/releases.json`
+
+### Technical
+- Updated `UpdateManager.cs` with correct URL path construction
+- BaseAddress changed from `https://www.jubileebrowser.com/downloads` to `https://www.jubileebrowser.com/downloads/`
+- Relative URIs changed from `/{channel}/releases.json` to `{channel}/releases.json`
+
+### Installer Details
+- **File**: `JubileeBrowser-Setup-8.0.12.msi`
+- **Size**: ~59 MB
+- **SHA256**: `09E2F7A930D8207B6C958B4A8F1E6DF35F1FD8E29A1AACF116FF9B6A5F896D95`
+
+## [8.0.11] - 2026-01-16
+
+### Added
+- **Theme Support**: Added Dark and Light theme resource dictionaries
+  - `DarkTheme.xaml` and `LightTheme.xaml` theme files
+  - `ThemeManager` service for managing theme switching
+  - System theme detection and real-time monitoring of OS theme changes
+
+### Changed
+- **Startup Performance Improvements**: Optimized browser launch to prevent system resource exhaustion
+  - Limited tab restoration to maximum 10 tabs on startup
+  - Added 50ms delay between tab creations to prevent memory spikes
+  - Background services now initialize in batches instead of all at once
+  - Added 200ms initial delay before background service initialization
+
+### Technical
+- Added `Services/ThemeManager.cs` for theme management
+- Added `Themes/DarkTheme.xaml` and `Themes/LightTheme.xaml`
+- Modified `MainWindow.xaml.cs` with `RestoreRemainingTabsAsync` improvements
+- Modified `InitializeBackgroundServicesAsync` to batch service initialization
+
+## [8.0.10] - 2026-01-16
+
+### Added
+- **Custom Themed Modal Dialogs**: Replaced all system MessageBox dialogs with Jubilee-themed custom modals
+  - `SignInFailedDialog`: Custom modal for authentication failures with Demo Mode option
+  - `JubileeAlertDialog`: Reusable alert dialog with AlertType enum (Info, Warning, Error, Success)
+  - Consistent dark theme colors (#1c1c33 background, #E6AC00 gold accent)
+  - Smooth fade-in/fade-out animations on dialog open/close
+
+- **In-App Document Viewer**: Terms of Use and Privacy Policy now display within the app
+  - `DocumentViewerDialog`: Scrollable document viewer with YAML content loading
+  - `termsofuse.yaml`: Embedded resource with 12 sections of legal content
+  - `privacypolicy.yaml`: Embedded resource with 13 sections of privacy content
+  - Links in sign-up flow open documents in-app instead of external browser
+
+- **Profile Picture Upload**: Users can now upload or change their profile picture
+  - Clickable avatar in profile popup with camera icon overlay on hover
+  - File picker dialog supporting JPG, PNG, GIF, and BMP formats
+  - Local storage in `%LocalAppData%\JubileeBrowser\ProfilePictures`
+  - Persistent across browser sessions
+  - `UpdateAvatarUrl()` method in ProfileAuthService
+  - `GetProfilePicturesDirectory()` static method for profile picture storage
+
+### Changed
+- **Sign-Up Flow UI**: Removed back arrow icon from forgot-password screen
+- **Default Avatar Generation**: Color-coded default avatars based on user's display name
+- **Avatar Loading**: Supports both local file paths and remote URLs
+
+### Technical
+- Added `JubileeAlertDialog.xaml` and `JubileeAlertDialog.xaml.cs`
+- Added `SignInFailedDialog.xaml` and `SignInFailedDialog.xaml.cs`
+- Added `DocumentViewerDialog.xaml` and `DocumentViewerDialog.xaml.cs`
+- Added embedded resources: `termsofuse.yaml`, `privacypolicy.yaml`
+- Updated `JubileeBrowser.csproj` with embedded resource entries
+- Modified `MainWindow.xaml` with clickable avatar overlay UI
+- Modified `MainWindow.xaml.cs` with `ChangeAvatarButton_Click` and `SetDefaultAvatar` methods
+- Updated `ProfileAuthService.cs` with avatar management methods
+- Fixed DialogResult error in animation callbacks with try-catch wrapper
+
+### Fixed
+- DialogResult assignment error when closing dialogs during animation callbacks
+
+## [8.0.9] - 2026-01-15
+
+### Added
+- **History Tab Feature**: Complete browsing history panel with improved UI
+  - History panel moved to correct designated sidebar location
+  - Redesigned UI for better usability and readability
+  - Toggle behavior - clicking history icon again closes the panel
+  - Works for both Bible Web and Worldwide Web modes
+
+- **Tab System Improvements**:
+  - Yellow tabs for Bible Web mode; Blue tabs for Worldwide Web mode
+  - Plus button creates tab matching currently active mode
+  - Inspire-prefixed URLs remain within Bible Web mode
+  - Visual indicators during tab drag operations
+  - Dynamic tab width shrinking as tab count increases
+  - All tabs display favicon or default globe icon
+
+- **Mode Switching Enhancements**:
+  - Switching between globe and Bible icons reuses the last active tab
+  - No new tabs created when switching modes
+  - Icon state always reflects active browsing mode
+
+- **Sidebar Improvements**:
+  - Smooth slide in/out animations (no abrupt appearance/disappearance)
+  - Toggle button closes sidebar when clicked again
+  - Consistent behavior across all browser modes
+
+- **Toolbar & Visual Fixes**:
+  - Fixed hamburger/menu icon color contrast on yellow background
+  - All icons remain visible and accessible in all themes
+
+### Changed
+- **Sign-Out Flow**: Redesigned confirmation dialog following Jubilee theme
+  - Consistent colors, typography, and spacing
+  - Messaging intact with local data retention notice
+  - Popup consistent with other modal dialogs
+
+- **Sign-In Experience**:
+  - Sign-in UI matches Jubilee Browser design language
+  - Replaced 'Jubilee Outlook' branding with approved sub-slogan
+  - Error states communicated via themed modal dialogs
+
+- **TabState Model**: Added `IsInspireUrl` property for inspire:// URL detection
+  - Used for displaying WWBW icon on WWW mode tabs with inspire:// URLs
+
+### Technical
+- Simplified MainWindow.xaml by removing unused storyboard animations
+- Streamlined tab width calculation logic
+- Fixed JavaScript bridge script to use JSON.stringify for WebView2 message passing
+- Removed redundant `UpdateTabWidths()` calls and dynamic tab width logic
+- Cleaned up unused drag-drop tracking variables
+
+### Fixed
+- Tab drag-drop operation visual feedback
+- Sidebar animation smoothness
+- Icon visibility in different theme contexts
+
 ## [8.0.8] - 2026-01-11
 
 ### Added
@@ -306,10 +444,10 @@ We follow [Semantic Versioning](https://semver.org/):
 
 ## Download
 
-Current version: **8.0.7**
+Current version: **8.0.12**
 
-Download: [https://jubileebrowser.com/downloads/JubileeBrowser-Setup-8.0.7.msi](https://jubileebrowser.com/downloads/JubileeBrowser-Setup-8.0.7.msi)
+Download: [https://jubileebrowser.com/downloads/stable/JubileeBrowser-Setup-8.0.12.msi](https://jubileebrowser.com/downloads/stable/JubileeBrowser-Setup-8.0.12.msi)
 
 Auto-update manifest: [https://jubileebrowser.com/downloads/stable/releases.json](https://jubileebrowser.com/downloads/stable/releases.json)
 
-SHA256: `D3D2724711E17B60F42321E641FD5A69C3E0D9081C3D34EDB661CF2CE9FDB33C`
+SHA256: `09E2F7A930D8207B6C958B4A8F1E6DF35F1FD8E29A1AACF116FF9B6A5F896D95`

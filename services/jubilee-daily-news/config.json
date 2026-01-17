@@ -1,0 +1,63 @@
+{
+  "name": "JubileeDailyNews",
+  "description": "Fetches and caches prominent daily news content with hopeful perspectives",
+  "version": "1.0.0",
+  "healthPort": 3998,
+  "rssSources": [
+    {
+      "id": "nytimes",
+      "name": "NY Times",
+      "url": "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
+      "weight": 5,
+      "enabled": true
+    },
+    {
+      "id": "cnn",
+      "name": "CNN",
+      "url": "http://rss.cnn.com/rss/cnn_topstories.rss",
+      "weight": 4,
+      "enabled": true
+    },
+    {
+      "id": "foxnews",
+      "name": "Fox News",
+      "url": "https://moxie.foxnews.com/google-publisher/latest.xml",
+      "weight": 4,
+      "enabled": true
+    },
+    {
+      "id": "yahoo",
+      "name": "Yahoo News",
+      "url": "https://news.yahoo.com/rss",
+      "weight": 3,
+      "enabled": true
+    },
+    {
+      "id": "msn",
+      "name": "MSN",
+      "url": "https://www.msn.com/en-us/news/feed",
+      "weight": 3,
+      "enabled": true
+    }
+  ],
+  "storyClusters": {
+    "economy": ["economy", "economic", "gdp", "inflation", "recession", "jobs", "unemployment", "fed", "federal reserve", "interest rate", "market", "stock", "trade", "tariff", "deficit"],
+    "climate": ["climate", "environment", "global warming", "carbon", "emissions", "renewable", "green", "sustainability", "paris agreement", "wildfire", "flood", "hurricane", "storm"],
+    "politics": ["congress", "senate", "house", "president", "biden", "trump", "election", "vote", "shutdown", "bill", "legislation", "supreme court", "impeach", "democrat", "republican"],
+    "technology": ["tech", "technology", "ai", "artificial intelligence", "layoff", "startup", "silicon valley", "google", "apple", "microsoft", "meta", "openai", "chatgpt", "robot"],
+    "world": ["global", "international", "summit", "united nations", "nato", "war", "conflict", "diplomatic", "ukraine", "russia", "china", "middle east", "israel", "gaza"],
+    "health": ["health", "covid", "pandemic", "vaccine", "hospital", "doctor", "disease", "outbreak", "cdc", "who", "medical", "drug", "fda"],
+    "crime": ["crime", "shooting", "murder", "arrest", "police", "trial", "verdict", "sentence", "prison", "investigation", "fbi"]
+  },
+  "imageSettings": {
+    "maxSizeBytes": 5242880,
+    "resizePercentage": 0.90,
+    "minQuality": 60,
+    "supportedFormats": ["jpg", "jpeg", "png", "webp", "gif"]
+  },
+  "cacheSettings": {
+    "tableName": "daily_news_cache",
+    "maxAgeHours": 24,
+    "maxStoriesPerDay": 10
+  }
+}

@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using JubileeOutlook.Models;
+using JubileeOutlook.Services;
 using System.Collections.ObjectModel;
 using System.Windows.Media;
 
@@ -8,6 +9,17 @@ namespace JubileeOutlook.ViewModels;
 
 public partial class CalendarViewModel : ObservableObject
 {
+    private ICalendarService _calendarService;
+    private bool _isInitialized = false;
+    private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(5);
+
+    // Date range caching - tracks which date ranges have been loaded
+    private readonly Dictionary<string, DateRangeCacheEntry> _dateRangeCache = new();
+    private readonly object _cacheLock = new();
+
+    // All cached events (master list)
+    private readonly List<CalendarEvent> _cachedEvents = new();
+
     [ObservableProperty]
     private ObservableCollection<CalendarEvent> _events = new();
 
@@ -41,12 +53,295 @@ public partial class CalendarViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<DateTime> _monthViewDays = new();
 
-    public CalendarViewModel()
+    [ObservableProperty]
+    private bool _isLoading;
+
+    [ObservableProperty]
+    private string _loadingMessage = "Loading events...";
+
+    [ObservableProperty]
+    private string _errorMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool _hasError;
+
+    public CalendarViewModel() : this(ServiceConfiguration.GetCalendarService())
     {
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Constructor called (parameterless)");
+    }
+
+    public CalendarViewModel(ICalendarService calendarService)
+    {
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Constructor called with service: {calendarService.GetType().Name}");
+        _calendarService = calendarService;
         InitializeCalendars();
-        InitializeSampleEvents();
         UpdateViewDates();
         UpdateMiniCalendar();
+
+        // Subscribe to service configuration changes
+        ServiceConfiguration.ServicesChanged += OnServicesChanged;
+        ServiceConfiguration.UserChanged += OnUserChanged;
+    }
+
+    /// <summary>
+    /// Called when the calendar view is activated/shown
+    /// Loads events from API if needed based on visible date range
+    /// </summary>
+    public async Task OnViewActivatedAsync()
+    {
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] OnViewActivatedAsync called. Initialized: {_isInitialized}");
+
+        // Refresh service reference in case it changed
+        _calendarService = ServiceConfiguration.GetCalendarService();
+
+        // Load events for the current visible date range
+        await LoadEventsForVisibleRangeAsync();
+
+        _isInitialized = true;
+    }
+
+    /// <summary>
+    /// Loads events for the currently visible date range with caching
+    /// </summary>
+    private async Task LoadEventsForVisibleRangeAsync()
+    {
+        // Calculate the date range to load based on current view
+        var (startDate, endDate) = GetVisibleDateRange();
+
+        // Add buffer for navigation (load extra days on either side)
+        var bufferDays = ViewMode == CalendarViewMode.Month ? 7 : 14;
+        var loadStartDate = startDate.AddDays(-bufferDays);
+        var loadEndDate = endDate.AddDays(bufferDays);
+
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] LoadEventsForVisibleRangeAsync: {loadStartDate:yyyy-MM-dd} to {loadEndDate:yyyy-MM-dd}");
+
+        // Check if this range is already cached
+        if (IsDateRangeCached(loadStartDate, loadEndDate))
+        {
+            System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Date range is cached, updating visible events");
+            UpdateVisibleEventsFromCache(startDate, endDate);
+            return;
+        }
+
+        // Load events from API for the uncached range
+        await LoadEventsForRangeAsync(loadStartDate, loadEndDate);
+
+        // Update visible events
+        UpdateVisibleEventsFromCache(startDate, endDate);
+    }
+
+    /// <summary>
+    /// Gets the visible date range based on current view mode
+    /// </summary>
+    private (DateTime startDate, DateTime endDate) GetVisibleDateRange()
+    {
+        return ViewMode switch
+        {
+            CalendarViewMode.Day => (ViewStartDate, ViewEndDate),
+            CalendarViewMode.WorkWeek => (ViewStartDate, ViewEndDate),
+            CalendarViewMode.Week => (ViewStartDate, ViewEndDate),
+            CalendarViewMode.Month => (ViewStartDate, ViewEndDate),
+            _ => (DateTime.Today.AddDays(-7), DateTime.Today.AddDays(7))
+        };
+    }
+
+    /// <summary>
+    /// Checks if a date range is already cached and not expired
+    /// </summary>
+    private bool IsDateRangeCached(DateTime startDate, DateTime endDate)
+    {
+        lock (_cacheLock)
+        {
+            // Check each month in the range
+            var current = new DateTime(startDate.Year, startDate.Month, 1);
+            while (current <= endDate)
+            {
+                var cacheKey = GetMonthCacheKey(current);
+                if (!_dateRangeCache.TryGetValue(cacheKey, out var entry) ||
+                    DateTime.UtcNow - entry.LoadedAt > _cacheExpiration)
+                {
+                    return false;
+                }
+                current = current.AddMonths(1);
+            }
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Gets a cache key for a month
+    /// </summary>
+    private static string GetMonthCacheKey(DateTime date)
+    {
+        return $"{date.Year}-{date.Month:D2}";
+    }
+
+    /// <summary>
+    /// Updates the visible Events collection from the cache
+    /// </summary>
+    private void UpdateVisibleEventsFromCache(DateTime startDate, DateTime endDate)
+    {
+        System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+        {
+            lock (_cacheLock)
+            {
+                // Get events that fall within or overlap the visible range
+                var visibleEvents = _cachedEvents
+                    .Where(e => e.EndTime >= startDate && e.StartTime <= endDate.AddDays(1))
+                    .OrderBy(e => e.StartTime)
+                    .ToList();
+
+                // Update the Events collection
+                Events.Clear();
+                foreach (var evt in visibleEvents)
+                {
+                    Events.Add(evt);
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Updated visible events: {Events.Count} events for {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
+            }
+        });
+    }
+
+    /// <summary>
+    /// Handles service configuration changes
+    /// </summary>
+    private void OnServicesChanged(object? sender, EventArgs e)
+    {
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Services changed, resetting state");
+        _calendarService = ServiceConfiguration.GetCalendarService();
+        ClearCache();
+    }
+
+    /// <summary>
+    /// Handles user authentication changes
+    /// </summary>
+    private void OnUserChanged(object? sender, UserChangedEventArgs e)
+    {
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] User changed: {e.PreviousUserId} -> {e.NewUserId}");
+        ClearCache();
+
+        // Clear events when user changes
+        System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+        {
+            Events.Clear();
+        });
+    }
+
+    /// <summary>
+    /// Clears the event cache
+    /// </summary>
+    private void ClearCache()
+    {
+        lock (_cacheLock)
+        {
+            _dateRangeCache.Clear();
+            _cachedEvents.Clear();
+        }
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Cache cleared");
+    }
+
+    /// <summary>
+    /// Loads events for a specific date range from the API and caches them
+    /// </summary>
+    private async Task LoadEventsForRangeAsync(DateTime startDate, DateTime endDate)
+    {
+        if (IsLoading) return;
+
+        try
+        {
+            IsLoading = true;
+            HasError = false;
+            ErrorMessage = string.Empty;
+            LoadingMessage = $"Loading events for {startDate:MMM yyyy}...";
+
+            System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Loading events from {_calendarService.GetType().Name} for {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
+
+            var events = await _calendarService.GetEventsAsync(startDate, endDate);
+
+            System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Loaded {events.Count} events from API");
+
+            // Add to cache
+            lock (_cacheLock)
+            {
+                // Add loaded events to cache (avoiding duplicates by ID)
+                var existingIds = _cachedEvents.Select(e => e.Id).ToHashSet();
+                foreach (var evt in events)
+                {
+                    if (!existingIds.Contains(evt.Id))
+                    {
+                        _cachedEvents.Add(evt);
+                        existingIds.Add(evt.Id);
+                    }
+                    else
+                    {
+                        // Update existing event
+                        var existingIndex = _cachedEvents.FindIndex(e => e.Id == evt.Id);
+                        if (existingIndex >= 0)
+                        {
+                            _cachedEvents[existingIndex] = evt;
+                        }
+                    }
+                }
+
+                // Mark months as cached
+                var current = new DateTime(startDate.Year, startDate.Month, 1);
+                while (current <= endDate)
+                {
+                    var cacheKey = GetMonthCacheKey(current);
+                    _dateRangeCache[cacheKey] = new DateRangeCacheEntry
+                    {
+                        StartDate = new DateTime(current.Year, current.Month, 1),
+                        EndDate = new DateTime(current.Year, current.Month, DateTime.DaysInMonth(current.Year, current.Month)),
+                        LoadedAt = DateTime.UtcNow
+                    };
+                    current = current.AddMonths(1);
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Cache now contains {_cachedEvents.Count} events, {_dateRangeCache.Count} months cached");
+            }
+
+            // Show success notification for API service
+            if (_calendarService is ApiCalendarService && events.Count > 0)
+            {
+                System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Successfully loaded {events.Count} events from API");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Error loading events: {ex.Message}");
+            HasError = true;
+            ErrorMessage = ResiliencePolicyService.GetFriendlyErrorMessage(ex);
+
+            // Show error notification
+            NotificationService.Instance.ShowError(
+                $"Failed to load calendar events: {ErrorMessage}",
+                "Calendar Error");
+
+            // Fall back to sample events if no events loaded
+            if (_cachedEvents.Count == 0)
+            {
+                System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+                {
+                    InitializeSampleEvents();
+                });
+            }
+        }
+        finally
+        {
+            IsLoading = false;
+            LoadingMessage = string.Empty;
+        }
+    }
+
+    [RelayCommand]
+    private async Task RefreshEventsAsync()
+    {
+        // Clear cache to force reload
+        ClearCache();
+
+        // Reload events for current visible range
+        await LoadEventsForVisibleRangeAsync();
     }
 
     private void InitializeCalendars()
@@ -153,7 +448,7 @@ public partial class CalendarViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void PreviousPeriod()
+    private async Task PreviousPeriodAsync()
     {
         SelectedDate = ViewMode switch
         {
@@ -164,10 +459,13 @@ public partial class CalendarViewModel : ObservableObject
             _ => SelectedDate
         };
         UpdateViewDates();
+
+        // Lazy load events for the new date range
+        await LoadEventsForVisibleRangeAsync();
     }
 
     [RelayCommand]
-    private void NextPeriod()
+    private async Task NextPeriodAsync()
     {
         SelectedDate = ViewMode switch
         {
@@ -178,41 +476,104 @@ public partial class CalendarViewModel : ObservableObject
             _ => SelectedDate
         };
         UpdateViewDates();
+
+        // Lazy load events for the new date range
+        await LoadEventsForVisibleRangeAsync();
     }
 
     [RelayCommand]
-    private void GoToToday()
+    private async Task GoToTodayAsync()
     {
         SelectedDate = DateTime.Today;
         UpdateViewDates();
+
+        // Lazy load events for the new date range
+        await LoadEventsForVisibleRangeAsync();
     }
 
     [RelayCommand]
-    private void SetViewMode(string mode)
+    private async Task SetViewModeAsync(string mode)
     {
         if (Enum.TryParse<CalendarViewMode>(mode, out var viewMode))
         {
             ViewMode = viewMode;
             UpdateViewDates();
+
+            // Lazy load events for the new view
+            await LoadEventsForVisibleRangeAsync();
         }
     }
 
     [RelayCommand]
-    private void NewEvent()
+    private async Task NewEventAsync()
     {
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] NewEventAsync called");
         var newEventWindow = new JubileeOutlook.Views.NewEventWindow();
-        if (newEventWindow.ShowDialog() == true)
+        var dialogResult = newEventWindow.ShowDialog();
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Dialog result: {dialogResult}");
+
+        if (dialogResult == true)
         {
             var viewModel = newEventWindow.DataContext as JubileeOutlook.ViewModels.NewEventViewModel;
+            System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] ViewModel: {viewModel != null}, CreatedEvent: {viewModel?.CreatedEvent != null}");
+
             if (viewModel?.CreatedEvent != null)
             {
-                Events.Add(viewModel.CreatedEvent);
+                System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Creating event: {viewModel.CreatedEvent.Subject}");
+                try
+                {
+                    IsLoading = true;
+                    LoadingMessage = "Creating event...";
+
+                    // Upload images and attachments before creating event
+                    if (viewModel.CreatedEvent.Images.Count > 0)
+                    {
+                        LoadingMessage = "Uploading images...";
+                        viewModel.CreatedEvent.Images = await ImageService.Instance.UploadEventImagesAsync(viewModel.CreatedEvent.Images);
+                    }
+
+                    if (viewModel.CreatedEvent.Attachments.Count > 0)
+                    {
+                        LoadingMessage = "Uploading attachments...";
+                        viewModel.CreatedEvent.Attachments = await ImageService.Instance.UploadEventAttachmentsAsync(viewModel.CreatedEvent.Attachments);
+                    }
+
+                    LoadingMessage = "Saving event...";
+                    await _calendarService.CreateEventAsync(viewModel.CreatedEvent);
+
+                    // Add to cache and visible events
+                    AddEventToCache(viewModel.CreatedEvent);
+                    Events.Add(viewModel.CreatedEvent);
+                    System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Event added. Total events: {Events.Count}");
+                    OnPropertyChanged(nameof(Events));
+
+                    NotificationService.Instance.ShowSuccess(
+                        $"Event '{viewModel.CreatedEvent.Subject}' created successfully",
+                        "Event Created");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Error creating event: {ex.Message}");
+                    NotificationService.Instance.ShowError(
+                        $"Failed to save event to server: {ResiliencePolicyService.GetFriendlyErrorMessage(ex)}",
+                        "Create Event Error");
+
+                    // Still add locally for offline support (to cache and visible events)
+                    AddEventToCache(viewModel.CreatedEvent);
+                    Events.Add(viewModel.CreatedEvent);
+                    OnPropertyChanged(nameof(Events));
+                }
+                finally
+                {
+                    IsLoading = false;
+                    LoadingMessage = string.Empty;
+                }
             }
         }
     }
 
     [RelayCommand]
-    private void EditEvent(CalendarEvent eventToEdit)
+    private async Task EditEventAsync(CalendarEvent eventToEdit)
     {
         if (eventToEdit == null) return;
 
@@ -222,24 +583,88 @@ public partial class CalendarViewModel : ObservableObject
             var viewModel = editEventWindow.DataContext as JubileeOutlook.ViewModels.NewEventViewModel;
             if (viewModel?.CreatedEvent != null)
             {
-                if (editEventWindow.IsDeleted)
+                try
                 {
-                    var eventToRemove = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
-                    if (eventToRemove != null)
+                    IsLoading = true;
+
+                    if (editEventWindow.IsDeleted)
                     {
-                        Events.Remove(eventToRemove);
+                        LoadingMessage = "Deleting event...";
+                        await _calendarService.DeleteEventAsync(viewModel.CreatedEvent.Id);
+
+                        // Remove from cache and visible events
+                        RemoveEventFromCache(viewModel.CreatedEvent.Id);
+                        var eventToRemove = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
+                        if (eventToRemove != null)
+                        {
+                            Events.Remove(eventToRemove);
+                        }
+                        NotificationService.Instance.ShowSuccess(
+                            $"Event '{viewModel.CreatedEvent.Subject}' deleted successfully",
+                            "Event Deleted");
+                    }
+                    else
+                    {
+                        // Upload any new images and attachments before updating event
+                        if (viewModel.CreatedEvent.Images.Any(i => !i.IsUploaded))
+                        {
+                            LoadingMessage = "Uploading images...";
+                            viewModel.CreatedEvent.Images = await ImageService.Instance.UploadEventImagesAsync(viewModel.CreatedEvent.Images);
+                        }
+
+                        if (viewModel.CreatedEvent.Attachments.Any(a => !a.IsUploaded))
+                        {
+                            LoadingMessage = "Uploading attachments...";
+                            viewModel.CreatedEvent.Attachments = await ImageService.Instance.UploadEventAttachmentsAsync(viewModel.CreatedEvent.Attachments);
+                        }
+
+                        LoadingMessage = "Saving event...";
+                        await _calendarService.UpdateEventAsync(viewModel.CreatedEvent);
+
+                        // Update cache and visible events
+                        AddEventToCache(viewModel.CreatedEvent);
+                        var existingEvent = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
+                        if (existingEvent != null)
+                        {
+                            var index = Events.IndexOf(existingEvent);
+                            Events.RemoveAt(index);
+                            Events.Insert(index, viewModel.CreatedEvent);
+                        }
+                        NotificationService.Instance.ShowSuccess(
+                            $"Event '{viewModel.CreatedEvent.Subject}' updated successfully",
+                            "Event Updated");
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    var existingEvent = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
-                    if (existingEvent != null)
+                    System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Error updating event: {ex.Message}");
+
+                    var action = editEventWindow.IsDeleted ? "delete" : "update";
+                    NotificationService.Instance.ShowError(
+                        $"Failed to {action} event: {ResiliencePolicyService.GetFriendlyErrorMessage(ex)}",
+                        "Event Error");
+
+                    // Apply changes locally anyway for offline support
+                    if (!editEventWindow.IsDeleted)
                     {
-                        var index = Events.IndexOf(existingEvent);
-                        Events.RemoveAt(index);
-                        Events.Insert(index, viewModel.CreatedEvent);
+                        // Update cache and visible events locally
+                        AddEventToCache(viewModel.CreatedEvent);
+                        var existingEvent = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
+                        if (existingEvent != null)
+                        {
+                            var index = Events.IndexOf(existingEvent);
+                            Events.RemoveAt(index);
+                            Events.Insert(index, viewModel.CreatedEvent);
+                        }
                     }
                 }
+                finally
+                {
+                    IsLoading = false;
+                    LoadingMessage = string.Empty;
+                }
+
+                OnPropertyChanged(nameof(Events));
             }
         }
     }
@@ -370,4 +795,63 @@ public partial class CalendarViewModel : ObservableObject
             UpdateMonthViewDays();
         }
     }
+
+    /// <summary>
+    /// Adds an event to the cache
+    /// </summary>
+    private void AddEventToCache(CalendarEvent evt)
+    {
+        lock (_cacheLock)
+        {
+            var existingIndex = _cachedEvents.FindIndex(e => e.Id == evt.Id);
+            if (existingIndex >= 0)
+            {
+                _cachedEvents[existingIndex] = evt;
+            }
+            else
+            {
+                _cachedEvents.Add(evt);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Removes an event from the cache
+    /// </summary>
+    private void RemoveEventFromCache(string eventId)
+    {
+        lock (_cacheLock)
+        {
+            var eventToRemove = _cachedEvents.FirstOrDefault(e => e.Id == eventId);
+            if (eventToRemove != null)
+            {
+                _cachedEvents.Remove(eventToRemove);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets cache statistics for debugging
+    /// </summary>
+    public (int CachedEvents, int CachedMonths, DateTime? OldestEntry) GetCacheStats()
+    {
+        lock (_cacheLock)
+        {
+            var oldestEntry = _dateRangeCache.Values
+                .OrderBy(e => e.LoadedAt)
+                .FirstOrDefault()?.LoadedAt;
+
+            return (_cachedEvents.Count, _dateRangeCache.Count, oldestEntry);
+        }
+    }
+}
+
+/// <summary>
+/// Cache entry for a date range
+/// </summary>
+public class DateRangeCacheEntry
+{
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public DateTime LoadedAt { get; set; }
 }

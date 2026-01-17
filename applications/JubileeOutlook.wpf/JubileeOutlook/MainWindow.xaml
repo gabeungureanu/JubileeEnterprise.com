@@ -581,7 +581,7 @@
                                 <TextBlock Text="{Binding MainViewModel.SelectedFolder.Name}" FontSize="{StaticResource HeaderFontSize}" FontWeight="SemiBold" Foreground="{StaticResource GoldBrandBrush}"/>
                             </Border>
 
-                            <ListBox Grid.Row="1" ItemsSource="{Binding MainViewModel.Messages}" SelectedItem="{Binding MainViewModel.SelectedMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource OutlookListBoxStyle}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox x:Name="MessageListBox" Grid.Row="1" ItemsSource="{Binding MainViewModel.Messages}" SelectedItem="{Binding MainViewModel.SelectedMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource OutlookListBoxStyle}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" MouseDoubleClick="MessageListBox_MouseDoubleClick">
                                 <ListBox.ItemContainerStyle>
                                     <Style TargetType="ListBoxItem" BasedOn="{StaticResource OutlookListBoxItemStyle}"/>
                                 </ListBox.ItemContainerStyle>
@@ -763,12 +763,48 @@
             <Border Grid.Row="3" Background="{StaticResource TertiaryBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Height="24">
                 <Grid Margin="8,0">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Column="0" Text="{Binding MainViewModel.Messages.Count, StringFormat='Items: {0}'}" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource SmallFontSize}" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="1" Text="Jubilee Outlook - Connected" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource SmallFontSize}" VerticalAlignment="Center"/>
+                    <!-- Network Status Indicator -->
+                    <StackPanel x:Name="NetworkStatusPanel" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
+                        <!-- Online Status (Green) -->
+                        <StackPanel x:Name="OnlineStatusPanel" Orientation="Horizontal" Visibility="Visible">
+                            <Ellipse Width="8" Height="8" Fill="#22c55e" Margin="0,0,6,0"/>
+                            <TextBlock Text="Online" Foreground="#22c55e" FontSize="{StaticResource SmallFontSize}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <!-- Offline Status (Red) -->
+                        <StackPanel x:Name="OfflineStatusPanel" Orientation="Horizontal" Visibility="Collapsed">
+                            <Ellipse Width="8" Height="8" Fill="#ef4444" Margin="0,0,6,0"/>
+                            <TextBlock Text="Offline" Foreground="#ef4444" FontSize="{StaticResource SmallFontSize}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Sync Status -->
+                    <StackPanel x:Name="SyncStatusPanel" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0" Visibility="Collapsed">
+                        <TextBlock Text="&#xE895;" FontFamily="{StaticResource MaterialIcons}" FontSize="12" Foreground="{StaticResource GoldBrandBrush}" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                        <TextBlock x:Name="SyncStatusText" Text="Syncing..." Foreground="{StaticResource GoldBrandBrush}" FontSize="{StaticResource SmallFontSize}" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Pending Operations Badge -->
+                    <StackPanel x:Name="PendingOperationsPanel" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0" Visibility="Collapsed">
+                        <Border Background="#f59e0b" CornerRadius="8" Padding="6,2">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="PendingCountText" Text="0" Foreground="White" FontSize="{StaticResource SmallFontSize}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Text=" pending" Foreground="White" FontSize="{StaticResource SmallFontSize}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Item Count -->
+                    <TextBlock Grid.Column="3" Text="{Binding MainViewModel.Messages.Count, StringFormat='Items: {0}'}" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource SmallFontSize}" VerticalAlignment="Center"/>
+
+                    <!-- Last Sync Time -->
+                    <TextBlock x:Name="LastSyncText" Grid.Column="4" Text="Jubilee Outlook" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource SmallFontSize}" VerticalAlignment="Center"/>
                 </Grid>
             </Border>
         </Grid>
@@ -899,5 +935,12 @@
                 </StackPanel>
             </Border>
         </Popup>
+
+        <!-- Notification Container (overlays everything) -->
+        <Grid x:Name="NotificationContainer"
+              Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2"
+              VerticalAlignment="Top" HorizontalAlignment="Right"
+              IsHitTestVisible="True"
+              Panel.ZIndex="1000"/>
     </Grid>
 </Window>

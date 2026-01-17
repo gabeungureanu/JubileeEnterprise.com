@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>JubileeBrowser.Shared</AssemblyName>
     <RootNamespace>JubileeBrowser.Shared</RootNamespace>
-    <Version>8.0.6</Version>
+    <Version>8.0.8</Version>
   </PropertyGroup>
 
   <ItemGroup>

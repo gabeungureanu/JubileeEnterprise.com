@@ -9,12 +9,15 @@ import React from 'react';
 import { AppNavigator } from './src/navigation';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { ThemeProvider } from './src/contexts/ThemeContext';
+import { DrawerProvider } from './src/contexts/DrawerContext';
 
 export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppNavigator />
+        <DrawerProvider>
+          <AppNavigator />
+        </DrawerProvider>
       </AuthProvider>
     </ThemeProvider>
   );

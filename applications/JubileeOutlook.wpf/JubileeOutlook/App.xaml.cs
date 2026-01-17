@@ -2,6 +2,7 @@ using System.Configuration;
 using System.Data;
 using System.Runtime.InteropServices;
 using System.Windows;
+using JubileeOutlook.Services;
 
 namespace JubileeOutlook;
 
@@ -20,5 +21,38 @@ public partial class App : Application
         AllocConsole();
         Console.WriteLine("[JubileeOutlook] Console attached for debugging");
 #endif
+
+        // Initialize service configuration for database integration
+        // Configuration is read from appsettings.json (Features.EnableDatabaseIntegration)
+        // Environment variables can override:
+        //   - JUBILEE_USE_API: Set to "true" to force API mode, "false" for mock
+        //   - CONTINUUM_API_URL: API base URL (overrides config)
+        //   - JUBILEE_USER_ID: User ID for API calls (default: demo-user-001)
+        var config = ConfigurationService.Instance;
+
+        // Check environment variable first, then fall back to config setting
+        var useApiEnv = Environment.GetEnvironmentVariable("JUBILEE_USE_API")?.ToLower();
+        bool useApi;
+        if (!string.IsNullOrEmpty(useApiEnv))
+        {
+            useApi = useApiEnv == "true" || useApiEnv == "1";
+        }
+        else
+        {
+            // Use config file setting (EnableDatabaseIntegration)
+            useApi = config.Features.EnableDatabaseIntegration;
+        }
+
+        var apiUrl = Environment.GetEnvironmentVariable("CONTINUUM_API_URL") ?? config.Api.InspireContinuum.BaseUrl;
+        var userId = Environment.GetEnvironmentVariable("JUBILEE_USER_ID") ?? "00000000-0000-0000-0000-000000000001";
+
+        ServiceConfiguration.Initialize(useApi, apiUrl, userId);
+        Console.WriteLine($"[JubileeOutlook] Service mode: {(useApi ? "API (Persistent)" : "Mock (In-Memory)")}");
+        Console.WriteLine($"[JubileeOutlook] API URL: {apiUrl}");
+
+        // Create and show the main window after service configuration is initialized
+        // This ensures the CalendarViewModel gets the properly configured service
+        var mainWindow = new MainWindow();
+        mainWindow.Show();
     }
 }

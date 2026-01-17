@@ -1,5 +1,29 @@
 [
   {
+    "Version": "8.0.12",
+    "ReleaseNotes": "## JubileeBrowser 8.0.12\n\n### What's New\n- Fixed auto-update check that was failing with incorrect URL construction\n- Update endpoint now correctly checks for new versions\n- All previous features from 8.0.11 included\n\nSee https://jubileebrowser.com/releases for full release notes.",
+    "ReleaseDate": "2026-01-17T01:00:00.000Z",
+    "DownloadUrl": "https://jubileebrowser.com/downloads/stable/JubileeBrowser-Setup-8.0.12.msi",
+    "FileSize": 61629782,
+    "Sha256": "09E2F7A930D8207B6C958B4A8F1E6DF35F1FD8E29A1AACF116FF9B6A5F896D95"
+  },
+  {
+    "Version": "8.0.11",
+    "ReleaseNotes": "## JubileeBrowser 8.0.11\n\n### What's New\n- Theme Support: Dark and Light theme resource dictionaries with ThemeManager service\n- System theme detection and real-time monitoring of OS theme changes\n- Startup Performance: Optimized browser launch to prevent system resource exhaustion\n- Limited tab restoration to maximum 10 tabs on startup\n- Background services now initialize in batches\n\nSee https://jubileebrowser.com/releases for full release notes.",
+    "ReleaseDate": "2026-01-16T14:00:00.000Z",
+    "DownloadUrl": "https://jubileebrowser.com/downloads/JubileeBrowser-8.0.11-win-x64.zip",
+    "FileSize": 67206226,
+    "Sha256": "C0C2EE9291FC899809F37C69AD189C94D409EEF33DB3763B6DB8E7C3E0F794DE"
+  },
+  {
+    "Version": "8.0.8",
+    "ReleaseNotes": "## JubileeBrowser 8.0.8\n\n### What's New\n- Resizable To-Do List panel with drag handle\n- Enhanced menu icon visibility in both browsing modes\n- Spiritual Nutrition Panel improvements\n- Updated authentication with InspireCodex.com API\n- Self-contained deployment (no .NET installation required)\n- Content filtering with 309,000+ blocked sites\n- Dual-mode navigation (Internet/Jubilee Bible)\n\nSee https://jubileebrowser.com/releases for full release notes.",
+    "ReleaseDate": "2026-01-15T10:00:00.000Z",
+    "DownloadUrl": "https://jubileebrowser.com/downloads/JubileeBrowser-8.0.8-win-x64.zip",
+    "FileSize": 75491693,
+    "Sha256": "4593AB6509CEEE76AC3A8ECC814B0D92B1865F2FD2AF711D9467424E6CF65978"
+  },
+  {
     "Version": "8.0.7",
     "ReleaseNotes": "## JubileeBrowser 8.0.7\n\n### What's New\n- Professional MSI installer for easy deployment\n- Improved installation experience with Windows shortcuts\n- All files from 8.0.6 plus installer improvements\n\n### Previous Features (8.0.6)\n- Platform migration from Electron to .NET 8 WPF\n- Self-contained deployment (no .NET installation required)\n- WebView2 engine for modern web rendering\n- Enterprise-ready MSI installer support\n- Auto-update system with SHA256 verification\n- Secure credential storage via Windows Credential Manager\n- Tab groups and session persistence\n- Content filtering with 309,000+ blocked sites\n\nSee https://jubileebrowser.com/releases for full release notes.",
     "ReleaseDate": "2026-01-05T15:41:00.000Z",

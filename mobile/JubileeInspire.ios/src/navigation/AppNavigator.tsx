@@ -14,6 +14,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { RootStackParamList, DrawerParamList } from '../types';
 import { useTheme } from '../contexts/ThemeContext';
+import { useDrawer } from '../contexts/DrawerContext';
 
 // Screens
 import ChatScreen from '../screens/ChatScreen';
@@ -75,6 +76,21 @@ const MainStack: React.FC = () => {
 // App navigator with drawer
 const AppNavigator: React.FC = () => {
   const { colors } = useTheme();
+  const { isCollapsed, isMobileView } = useDrawer();
+
+  // Drawer width: 56px when collapsed, 300px when expanded (desktop only)
+  // On mobile view, always use 300px width for the sliding drawer
+  const drawerWidth = isMobileView ? 300 : (isCollapsed ? 56 : 300);
+
+  // Determine drawer type based on platform and screen size
+  const getDrawerType = () => {
+    if (Platform.OS === 'web') {
+      // On web: permanent for desktop, front for mobile view
+      return isMobileView ? 'front' : 'permanent';
+    }
+    // On native: slide for iOS, front for Android
+    return Platform.OS === 'ios' ? 'slide' : 'front';
+  };
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -84,13 +100,15 @@ const AppNavigator: React.FC = () => {
           drawerContent={props => <DrawerContent {...props} />}
           screenOptions={{
             headerShown: false,
-            drawerType: Platform.OS === 'ios' ? 'slide' : 'front',
+            drawerType: getDrawerType(),
             drawerStyle: {
-              width: 300,
-              backgroundColor: colors.surface,
+              width: drawerWidth,
+              backgroundColor: '#000000',
+              borderRightWidth: 1,
+              borderRightColor: '#3f3f3f',
             },
             overlayColor: 'rgba(0, 0, 0, 0.5)',
-            swipeEnabled: true,
+            swipeEnabled: isMobileView || Platform.OS !== 'web',
             swipeEdgeWidth: 50,
           }}
         >

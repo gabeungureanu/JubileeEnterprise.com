@@ -17,9 +17,12 @@ COMMENT ON COLUMN developer_tasks.ehh_minutes IS 'Estimated Human Hours in minut
 -- =============================================================================
 -- UPDATE VIEW
 -- Update the developer_tasks_view to include ehh_minutes
+-- Must DROP and CREATE (not CREATE OR REPLACE) because we're adding a column in the middle
 -- =============================================================================
 
-CREATE OR REPLACE VIEW developer_tasks_view AS
+DROP VIEW IF EXISTS developer_tasks_view;
+
+CREATE VIEW developer_tasks_view AS
 SELECT
     t.id,
     t.task_code,
@@ -64,9 +67,12 @@ ORDER BY t.start_time DESC;
 -- =============================================================================
 -- UPDATE DAILY SUMMARY VIEW
 -- Include EHH totals in daily summary
+-- Must DROP and CREATE because we're adding columns
 -- =============================================================================
 
-CREATE OR REPLACE VIEW developer_tasks_daily_summary AS
+DROP VIEW IF EXISTS developer_tasks_daily_summary;
+
+CREATE VIEW developer_tasks_daily_summary AS
 SELECT
     DATE(start_time) AS task_date,
     developer_initials,

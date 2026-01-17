@@ -6,11 +6,10 @@
              xmlns:viewmodels="clr-namespace:JubileeOutlook.ViewModels"
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="500"
+             d:DataContext="{d:DesignInstance Type=viewmodels:ComposeMailViewModel}"
              Background="#1A1A1A">
 
-    <UserControl.DataContext>
-        <viewmodels:ComposeMailViewModel/>
-    </UserControl.DataContext>
+    <!-- DataContext is set programmatically by MainWindow to ensure proper event binding -->
 
     <Grid>
         <Grid.RowDefinitions>
@@ -104,8 +103,14 @@
                     </Button.Style>
                 </Button>
 
+                <!-- Draft Status Text -->
+                <TextBlock Grid.Column="1" Text="{Binding DraftStatus}" FontSize="12" Foreground="#888888" VerticalAlignment="Center" Margin="8,0,0,0"/>
+
                 <!-- Toolbar Icons -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Command="{Binding SaveDraftCommand}" ToolTip="Save draft" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
+                        <TextBlock Text="&#xe161;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
+                    </Button>
                     <Button Command="{Binding AttachCommand}" ToolTip="Attach file" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
                         <TextBlock Text="&#xe226;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
                     </Button>

@@ -19,6 +19,8 @@ public class InternalPageHandler
         _pageGenerators["blocked"] = GenerateBlockedPage;
         _pageGenerators["error"] = GenerateErrorPage;
         _pageGenerators["welcome"] = GenerateWelcomePage;
+        _pageGenerators["history"] = GenerateHistoryPage;
+        _pageGenerators["newtab"] = GenerateNewTabPage;
     }
 
     public bool CanHandle(string url)
@@ -70,10 +72,15 @@ public class InternalPageHandler
     <title>Settings - Jubilee Browser</title>
     <style>
         /* ===== CSS Custom Properties (Design Tokens) ===== */
+        /* Dark Theme (Default) */
         :root {{
             /* Primary Colors */
             --color-primary-text: #ffffff;
+            --color-text-secondary: #a0a0a0;
+            --color-text-muted: #6a6a7a;
             --color-accent-gold: #E6AC00;
+            --color-accent-gold-hover: #F5C518;
+            --color-accent-gold-pressed: #CC9800;
             --color-accent-red: #e94560;
 
             /* Background Colors */
@@ -81,6 +88,8 @@ public class InternalPageHandler
             --color-bg-secondary: #16213e;
             --color-bg-tertiary: #2a2a4e;
             --color-bg-hover: #3a3a5e;
+            --color-bg-card: #1c1c33;
+            --color-bg-input: #2a2a4e;
 
             /* Status Colors */
             --color-success: #4CAF50;
@@ -98,6 +107,40 @@ public class InternalPageHandler
 
             /* Typography */
             --font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }}
+
+        /* Light Theme */
+        :root[data-theme=""light""] {{
+            /* Primary Colors */
+            --color-primary-text: #1a1a2e;
+            --color-text-secondary: #5c5c6e;
+            --color-text-muted: #8a8a9a;
+            --color-accent-gold: #B8860B;
+            --color-accent-gold-hover: #D4A017;
+            --color-accent-gold-pressed: #9A7209;
+            --color-accent-red: #dc3545;
+
+            /* Background Colors */
+            --color-bg-primary: #f5f5f7;
+            --color-bg-secondary: #ffffff;
+            --color-bg-tertiary: #e8e8ed;
+            --color-bg-hover: #d8d8de;
+            --color-bg-card: #ffffff;
+            --color-bg-input: #f0f0f5;
+
+            /* Status Colors */
+            --color-success: #28a745;
+            --color-info: #17a2b8;
+            --color-error: #dc3545;
+
+            /* Border Colors */
+            --color-border: rgba(0, 0, 0, 0.1);
+            --color-border-focus: var(--color-accent-gold);
+
+            /* Scrollbar Colors */
+            --scrollbar-track: #e8e8ed;
+            --scrollbar-thumb: #c8c8ce;
+            --scrollbar-thumb-hover: var(--color-accent-gold);
         }}
 
         /* ===== Custom Scrollbar Styling ===== */
@@ -360,6 +403,134 @@ public class InternalPageHandler
             transform: translateX(22px);
         }}
 
+        /* Disabled toggle state */
+        .toggle.disabled {{
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }}
+        .toggle.disabled:hover {{
+            background: var(--color-bg-tertiary);
+        }}
+        .toggle.disabled.active {{
+            background: rgba(230, 172, 0, 0.4);
+        }}
+
+        /* Setting row disabled state */
+        .setting-row.disabled {{
+            opacity: 0.5;
+        }}
+        .setting-row.disabled .setting-label {{
+            opacity: 0.7;
+        }}
+
+        /* ===== Search Settings Input ===== */
+        .search-settings-container {{
+            margin-bottom: 20px;
+        }}
+        .search-settings-input {{
+            position: relative;
+            display: flex;
+            align-items: center;
+        }}
+        .search-settings-input .search-icon {{
+            position: absolute;
+            left: 14px;
+            width: 18px;
+            height: 18px;
+            color: var(--color-text-muted);
+            pointer-events: none;
+        }}
+        .search-settings-input input {{
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            color: var(--color-text-primary);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }}
+        .search-settings-input input::placeholder {{
+            color: var(--color-text-muted);
+        }}
+        .search-settings-input input:focus {{
+            outline: none;
+            border-color: var(--color-accent-gold);
+            background: var(--color-bg-tertiary);
+        }}
+
+        /* Search highlight styles */
+        .search-highlight {{
+            background: rgba(230, 172, 0, 0.1) !important;
+            border-left: 3px solid var(--color-accent-gold) !important;
+            padding-left: 12px !important;
+            margin-left: -15px !important;
+            border-radius: 0 8px 8px 0 !important;
+        }}
+        .sidebar a.has-results {{
+            color: var(--color-accent-gold) !important;
+        }}
+        .sidebar a.has-results::after {{
+            content: '•';
+            margin-left: 8px;
+            color: var(--color-accent-gold);
+        }}
+
+        /* ===== Sign In Notice ===== */
+        .sync-sign-in-notice {{
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: rgba(230, 172, 0, 0.08);
+            border: 1px solid rgba(230, 172, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }}
+        .sync-sign-in-notice .notice-icon {{
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(230, 172, 0, 0.15);
+            border-radius: 50%;
+        }}
+        .sync-sign-in-notice .notice-icon svg {{
+            width: 22px;
+            height: 22px;
+            color: var(--color-accent-gold);
+        }}
+        .sync-sign-in-notice .notice-content {{
+            flex: 1;
+        }}
+        .sync-sign-in-notice .notice-title {{
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: 2px;
+        }}
+        .sync-sign-in-notice .notice-description {{
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }}
+        .btn-sm {{
+            padding: 8px 16px;
+            font-size: 13px;
+        }}
+
+        /* Setting row highlight for search */
+        .setting-row.highlight {{
+            background: rgba(230, 172, 0, 0.1);
+            border-radius: 8px;
+            margin: -8px -12px;
+            padding: 8px 12px;
+        }}
+        .setting-row.hidden {{
+            display: none !important;
+        }}
+
         /* ===== Buttons ===== */
         .btn {{
             background: var(--color-accent-gold);
@@ -476,6 +647,142 @@ public class InternalPageHandler
             transform: translateY(0);
         }}
 
+        /* ===== Custom Modal ===== */
+        .modal-overlay {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }}
+        .modal-overlay.show {{
+            opacity: 1;
+            visibility: visible;
+        }}
+        .modal-card {{
+            background: var(--color-bg-primary);
+            border-radius: 12px;
+            min-width: 360px;
+            max-width: 440px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9) translateY(-20px);
+            transition: transform 0.2s ease;
+            overflow: hidden;
+        }}
+        .modal-overlay.show .modal-card {{
+            transform: scale(1) translateY(0);
+        }}
+        .modal-header {{
+            background: #0f0f1a;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }}
+        .modal-icon {{
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--color-accent-gold), #d49c00);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }}
+        .modal-icon.warning {{
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+        }}
+        .modal-title {{
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-primary-text);
+            flex: 1;
+        }}
+        .modal-close {{
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: #a0a0a0;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: background 0.15s ease, color 0.15s ease;
+        }}
+        .modal-close:hover {{
+            background: var(--color-bg-tertiary);
+            color: var(--color-primary-text);
+        }}
+        .modal-body {{
+            padding: 20px 24px 24px;
+        }}
+        .modal-message-primary {{
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--color-primary-text);
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }}
+        .modal-message-secondary {{
+            font-size: 14px;
+            color: var(--color-primary-text);
+            opacity: 0.7;
+            line-height: 1.5;
+        }}
+        .modal-footer {{
+            background: #0f0f1a;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }}
+        .modal-btn {{
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            min-width: 100px;
+            transition: background 0.15s ease, transform 0.1s ease;
+        }}
+        .modal-btn:active {{
+            transform: scale(0.98);
+        }}
+        .modal-btn-secondary {{
+            background: var(--color-bg-tertiary);
+            color: var(--color-primary-text);
+        }}
+        .modal-btn-secondary:hover {{
+            background: var(--color-bg-hover);
+        }}
+        .modal-btn-primary {{
+            background: var(--color-accent-gold);
+            color: var(--color-bg-primary);
+        }}
+        .modal-btn-primary:hover {{
+            background: #d49c00;
+        }}
+        .modal-btn-danger {{
+            background: var(--color-accent-red);
+            color: white;
+        }}
+        .modal-btn-danger:hover {{
+            background: #d13a55;
+        }}
+
         /* ===== Accessibility: Focus Visible ===== */
         a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, .toggle:focus-visible {{
             outline: 2px solid var(--color-accent-gold);
@@ -557,7 +864,8 @@ public class InternalPageHandler
                     </div>
                 </div>
 
-                <div class='setting-group'>
+                <!-- Profile Actions - Signed In State (hidden until auth state is checked) -->
+                <div class='setting-group' id='profileActionsSignedIn' style='display: none;'>
                     <h3>Profile Actions</h3>
                     <div class='setting-row'>
                         <div class='setting-label'>
@@ -567,6 +875,18 @@ public class InternalPageHandler
                         <button class='btn btn-secondary' id='signOutBtn'>Sign Out</button>
                     </div>
                 </div>
+
+                <!-- Profile Actions - Signed Out State (hidden until auth state is checked) -->
+                <div class='setting-group' id='profileActionsSignedOut' style='display: none;'>
+                    <h3>Get Started</h3>
+                    <div class='setting-row'>
+                        <div class='setting-label'>
+                            <div class='title'>Sign in to Jubilee</div>
+                            <div class='description'>Sign in to sync your bookmarks, history, and settings across devices</div>
+                        </div>
+                        <button class='btn btn-primary' id='signInBtn'>Sign In</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Sync Section -->
@@ -574,35 +894,60 @@ public class InternalPageHandler
                 <h1>Sync</h1>
                 <p class='subtitle'>Sync your data across devices</p>
 
-                <div class='setting-group'>
+                <!-- Search Settings -->
+                <div class='search-settings-container'>
+                    <div class='search-settings-input'>
+                        <svg class='search-icon' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>
+                            <circle cx='11' cy='11' r='8'/>
+                            <path d='m21 21-4.35-4.35'/>
+                        </svg>
+                        <input type='text' id='syncSearchInput' placeholder='Search sync settings' />
+                    </div>
+                </div>
+
+                <!-- Sign In Required Notice (shown when not signed in) -->
+                <div class='sync-sign-in-notice' id='syncSignInNotice' style='display: none;'>
+                    <div class='notice-icon'>
+                        <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>
+                            <path d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'/>
+                        </svg>
+                    </div>
+                    <div class='notice-content'>
+                        <div class='notice-title'>Sign in to enable sync</div>
+                        <div class='notice-description'>Sign in to your Jubilee account to sync your data across all your devices.</div>
+                    </div>
+                    <button class='btn btn-primary btn-sm' id='syncSignInBtn'>Sign In</button>
+                </div>
+
+                <div class='setting-group' id='syncSettingsGroup'>
                     <h3>Sync Settings</h3>
-                    <div class='setting-row'>
+                    <div class='setting-row sync-setting-row' data-search-terms='bookmarks favorites saved pages'>
                         <div class='setting-label'>
                             <div class='title'>Sync bookmarks</div>
                             <div class='description'>Keep your bookmarks in sync across all your devices</div>
                         </div>
-                        <div class='toggle' data-setting='sync.bookmarks' id='syncBookmarks'></div>
+                        <div class='toggle sync-toggle' data-setting='sync.bookmarks' id='syncBookmarks' tabindex='0'></div>
                     </div>
-                    <div class='setting-row'>
+                    <div class='setting-row sync-setting-row' data-search-terms='history browsing visited'>
                         <div class='setting-label'>
                             <div class='title'>Sync history</div>
                             <div class='description'>Sync your browsing history</div>
                         </div>
-                        <div class='toggle' data-setting='sync.history' id='syncHistory'></div>
+                        <div class='toggle sync-toggle' data-setting='sync.history' id='syncHistory' tabindex='0'></div>
                     </div>
-                    <div class='setting-row'>
+                    <div class='setting-row sync-setting-row' data-search-terms='passwords credentials login security'>
                         <div class='setting-label'>
                             <div class='title'>Sync passwords</div>
                             <div class='description'>Sync saved passwords (encrypted)</div>
                         </div>
-                        <div class='toggle' data-setting='sync.passwords' id='syncPasswords'></div>
+                        <div class='toggle sync-toggle' data-setting='sync.passwords' id='syncPasswords' tabindex='0'></div>
                     </div>
-                    <div class='setting-row'>
+                    <div class='setting-row sync-setting-row' data-search-terms='settings preferences configuration options'>
                         <div class='setting-label'>
                             <div class='title'>Sync settings</div>
                             <div class='description'>Sync your browser settings</div>
                         </div>
-                        <div class='toggle' data-setting='sync.settings' id='syncSettings'></div>
+                        <div class='toggle sync-toggle' data-setting='sync.settings' id='syncSettings' tabindex='0'></div>
                     </div>
                 </div>
             </div>
@@ -626,7 +971,7 @@ public class InternalPageHandler
                             <div class='title'>Jubilee Bibles Homepage</div>
                             <div class='description'>The page shown when you open a new tab in Jubilee Bibles mode</div>
                         </div>
-                        <input type='text' data-setting='homepage.jubileeBibles' id='homepageJubileeBibles' placeholder='inspire://jubileeverse.webspace'>
+                        <input type='text' data-setting='homepage.jubileeBibles' id='homepageJubileeBibles' placeholder='inspire://jubilee.inspire'>
                     </div>
                 </div>
 
@@ -702,7 +1047,6 @@ public class InternalPageHandler
                         <select data-setting='search.defaultEngine' id='searchEngineSelect'>
                             <option value='google'>Google</option>
                             <option value='bing'>Bing</option>
-                            <option value='duckduckgo'>DuckDuckGo</option>
                         </select>
                     </div>
                     <div class='setting-row'>
@@ -920,6 +1264,25 @@ public class InternalPageHandler
 
     <div class='saved-indicator' id='savedIndicator'>Settings saved</div>
 
+    <!-- Custom Confirmation Modal -->
+    <div class='modal-overlay' id='confirmModal'>
+        <div class='modal-card'>
+            <div class='modal-header'>
+                <div class='modal-icon warning' id='modalIcon'>⚠️</div>
+                <div class='modal-title' id='modalTitle'>Confirm</div>
+                <button class='modal-close' id='modalClose'>✕</button>
+            </div>
+            <div class='modal-body'>
+                <div class='modal-message-primary' id='modalMessagePrimary'>Are you sure?</div>
+                <div class='modal-message-secondary' id='modalMessageSecondary'></div>
+            </div>
+            <div class='modal-footer'>
+                <button class='modal-btn modal-btn-secondary' id='modalCancelBtn'>Cancel</button>
+                <button class='modal-btn modal-btn-primary' id='modalConfirmBtn'>Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Settings state
         let settings = {{}};
@@ -992,8 +1355,50 @@ public class InternalPageHandler
             }}
         }}
 
+        // ===== Theme Switching Functions =====
+        let currentTheme = 'dark';
+        const systemThemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+        function applyTheme(theme) {{
+            currentTheme = theme;
+            let effectiveTheme = theme;
+
+            if (theme === 'system') {{
+                effectiveTheme = systemThemeMediaQuery.matches ? 'dark' : 'light';
+            }}
+
+            if (effectiveTheme === 'light') {{
+                document.documentElement.dataset.theme = 'light';
+            }} else {{
+                delete document.documentElement.dataset.theme;
+            }}
+
+            // Notify parent window of theme change for WPF synchronization
+            if (window.jubilee) {{
+                window.jubilee.send('theme:applied', {{ theme: theme, effectiveTheme: effectiveTheme }});
+            }}
+        }}
+
+        // Listen for system theme changes
+        systemThemeMediaQuery.addEventListener('change', (e) => {{
+            if (currentTheme === 'system') {{
+                applyTheme('system');
+            }}
+        }});
+
+        // Global function to receive theme updates from WPF
+        window.setTheme = function(theme) {{
+            applyTheme(theme);
+            setSelectValue('themeSelect', theme);
+        }};
+
         function applySettingsToUI(s) {{
             if (!s) return;
+
+            // Apply theme first for immediate visual feedback
+            if (s.appearance?.theme) {{
+                applyTheme(s.appearance.theme);
+            }}
 
             // Homepage
             setInputValue('homepageInternet', s.homepage?.internet);
@@ -1050,11 +1455,19 @@ public class InternalPageHandler
             const email = document.getElementById('profileEmail');
             const syncStatus = document.getElementById('syncStatusText');
             const syncContainer = document.getElementById('syncStatus');
+            const manageAccountBtn = document.getElementById('manageAccountBtn');
+            const profileActionsSignedIn = document.getElementById('profileActionsSignedIn');
+            const profileActionsSignedOut = document.getElementById('profileActionsSignedOut');
 
             if (info && info.isSignedIn) {{
                 avatar.textContent = (info.displayName || info.email || '?')[0].toUpperCase();
                 name.textContent = info.displayName || 'Jubilee User';
                 email.textContent = info.email || '';
+
+                // Show signed-in UI elements
+                if (manageAccountBtn) manageAccountBtn.style.display = 'inline-flex';
+                if (profileActionsSignedIn) profileActionsSignedIn.style.display = 'block';
+                if (profileActionsSignedOut) profileActionsSignedOut.style.display = 'none';
 
                 if (info.syncStatus === 'syncing') {{
                     syncContainer.className = 'sync-status syncing';
@@ -1066,12 +1479,55 @@ public class InternalPageHandler
                     syncContainer.className = 'sync-status';
                     syncStatus.textContent = info.lastSyncTime ? 'Synced ' + info.lastSyncTime : 'Sync is on';
                 }}
+                // Enable sync toggles
+                updateSyncTogglesState(true);
             }} else {{
                 avatar.textContent = '?';
                 name.textContent = 'Not signed in';
                 email.textContent = 'Sign in to sync your data';
                 syncContainer.className = 'sync-status';
                 syncStatus.textContent = 'Sign in to enable sync';
+
+                // Show signed-out UI elements
+                if (manageAccountBtn) manageAccountBtn.style.display = 'none';
+                if (profileActionsSignedIn) profileActionsSignedIn.style.display = 'none';
+                if (profileActionsSignedOut) profileActionsSignedOut.style.display = 'block';
+
+                // Disable sync toggles
+                updateSyncTogglesState(false);
+            }}
+        }}
+
+        // Track current auth state for sync toggles
+        let isUserSignedIn = false;
+
+        function updateSyncTogglesState(enabled) {{
+            isUserSignedIn = enabled;
+            const syncToggles = document.querySelectorAll('.sync-toggle');
+            const syncSettingRows = document.querySelectorAll('.sync-setting-row');
+            const signInNotice = document.getElementById('syncSignInNotice');
+
+            syncToggles.forEach(toggle => {{
+                if (enabled) {{
+                    toggle.classList.remove('disabled');
+                    toggle.setAttribute('tabindex', '0');
+                }} else {{
+                    toggle.classList.add('disabled');
+                    toggle.setAttribute('tabindex', '-1');
+                }}
+            }});
+
+            syncSettingRows.forEach(row => {{
+                if (enabled) {{
+                    row.classList.remove('disabled');
+                }} else {{
+                    row.classList.add('disabled');
+                }}
+            }});
+
+            // Show/hide sign-in notice
+            if (signInNotice) {{
+                signInNotice.style.display = enabled ? 'none' : 'flex';
             }}
         }}
 
@@ -1096,6 +1552,10 @@ public class InternalPageHandler
         // Handle toggle clicks
         document.querySelectorAll('.toggle').forEach(toggle => {{
             toggle.addEventListener('click', async function() {{
+                // Don't allow toggling if disabled
+                if (this.classList.contains('disabled')) {{
+                    return;
+                }}
                 this.classList.toggle('active');
                 const setting = this.dataset.setting;
                 const value = this.classList.contains('active');
@@ -1113,7 +1573,15 @@ public class InternalPageHandler
         // Handle select changes
         document.querySelectorAll('select[data-setting]').forEach(select => {{
             select.addEventListener('change', async function() {{
-                await saveSetting(this.dataset.setting, this.value);
+                const setting = this.dataset.setting;
+                const value = this.value;
+
+                // Apply theme immediately for visual feedback
+                if (setting === 'appearance.theme') {{
+                    applyTheme(value);
+                }}
+
+                await saveSetting(setting, value);
             }});
         }});
 
@@ -1134,32 +1602,229 @@ public class InternalPageHandler
             setTimeout(() => indicator.classList.remove('show'), 2000);
         }}
 
+        // Custom Modal Functions
+        let modalCallback = null;
+
+        function showConfirmModal(options) {{
+            const modal = document.getElementById('confirmModal');
+            const icon = document.getElementById('modalIcon');
+            const title = document.getElementById('modalTitle');
+            const msgPrimary = document.getElementById('modalMessagePrimary');
+            const msgSecondary = document.getElementById('modalMessageSecondary');
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            const cancelBtn = document.getElementById('modalCancelBtn');
+
+            // Set content
+            title.textContent = options.title || 'Confirm';
+            msgPrimary.textContent = options.messagePrimary || 'Are you sure?';
+            msgSecondary.textContent = options.messageSecondary || '';
+            msgSecondary.style.display = options.messageSecondary ? 'block' : 'none';
+
+            // Set icon
+            icon.textContent = options.icon || '⚠️';
+            icon.className = 'modal-icon' + (options.iconType === 'warning' ? ' warning' : '');
+
+            // Set button text and style
+            confirmBtn.textContent = options.confirmText || 'Confirm';
+            cancelBtn.textContent = options.cancelText || 'Cancel';
+
+            // Set button style based on type
+            confirmBtn.className = 'modal-btn ' + (options.confirmStyle === 'danger' ? 'modal-btn-danger' : 'modal-btn-primary');
+
+            // Store callback
+            modalCallback = options.onConfirm;
+
+            // Show modal
+            modal.classList.add('show');
+        }}
+
+        function hideConfirmModal() {{
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('show');
+            modalCallback = null;
+        }}
+
+        // Modal event listeners
+        document.getElementById('modalClose')?.addEventListener('click', hideConfirmModal);
+        document.getElementById('modalCancelBtn')?.addEventListener('click', hideConfirmModal);
+        document.getElementById('modalConfirmBtn')?.addEventListener('click', function() {{
+            if (modalCallback) {{
+                modalCallback();
+            }}
+            hideConfirmModal();
+        }});
+        document.getElementById('confirmModal')?.addEventListener('click', function(e) {{
+            if (e.target === this) {{
+                hideConfirmModal();
+            }}
+        }});
+
         // Button handlers
         document.getElementById('manageAccountBtn')?.addEventListener('click', function() {{
             window.jubilee?.send('account:manage');
         }});
 
+        document.getElementById('signInBtn')?.addEventListener('click', function() {{
+            window.jubilee?.send('auth:signIn');
+        }});
+
+        // Sync page sign-in button
+        document.getElementById('syncSignInBtn')?.addEventListener('click', function() {{
+            window.jubilee?.send('auth:signIn');
+        }});
+
+        // Sync settings search functionality
+        document.getElementById('syncSearchInput')?.addEventListener('input', function() {{
+            const searchTerm = this.value.toLowerCase().trim();
+            const settingRows = document.querySelectorAll('.sync-setting-row');
+
+            settingRows.forEach(row => {{
+                const title = row.querySelector('.title')?.textContent?.toLowerCase() || '';
+                const description = row.querySelector('.description')?.textContent?.toLowerCase() || '';
+                const searchTerms = row.dataset.searchTerms?.toLowerCase() || '';
+
+                const matches = searchTerm === '' ||
+                    title.includes(searchTerm) ||
+                    description.includes(searchTerm) ||
+                    searchTerms.includes(searchTerm);
+
+                if (matches) {{
+                    row.classList.remove('hidden');
+                    if (searchTerm !== '') {{
+                        row.classList.add('highlight');
+                    }} else {{
+                        row.classList.remove('highlight');
+                    }}
+                }} else {{
+                    row.classList.add('hidden');
+                    row.classList.remove('highlight');
+                }}
+            }});
+        }});
+
         document.getElementById('signOutBtn')?.addEventListener('click', function() {{
-            if (confirm('Are you sure you want to sign out?')) {{
-                window.jubilee?.send('auth:signOut');
-            }}
+            showConfirmModal({{
+                title: 'Sign Out',
+                messagePrimary: 'Are you sure you want to sign out?',
+                messageSecondary: 'Your local data will be kept, but syncing will stop.',
+                icon: '⚠️',
+                iconType: 'warning',
+                confirmText: 'Sign Out',
+                cancelText: 'Cancel',
+                confirmStyle: 'danger',
+                onConfirm: function() {{
+                    window.jubilee?.send('auth:signOut');
+                }}
+            }});
         }});
 
         document.getElementById('clearDataBtn')?.addEventListener('click', function() {{
-            window.jubilee?.send('privacy:clearData');
+            showConfirmModal({{
+                title: 'Clear Browsing Data',
+                messagePrimary: 'Clear all browsing data?',
+                messageSecondary: 'This will delete your history, cookies, and cached files. This cannot be undone.',
+                icon: '🗑️',
+                iconType: 'warning',
+                confirmText: 'Clear Data',
+                cancelText: 'Cancel',
+                confirmStyle: 'danger',
+                onConfirm: function() {{
+                    window.jubilee?.send('privacy:clearData');
+                }}
+            }});
         }});
 
         document.getElementById('resetSettingsBtn')?.addEventListener('click', function() {{
-            if (confirm('Reset all settings to defaults? This cannot be undone.')) {{
-                window.jubilee?.send('settings:reset');
-            }}
+            showConfirmModal({{
+                title: 'Reset Settings',
+                messagePrimary: 'Reset all settings to defaults?',
+                messageSecondary: 'All your custom settings will be restored to their original values. This cannot be undone.',
+                icon: '🔄',
+                iconType: 'warning',
+                confirmText: 'Reset Settings',
+                cancelText: 'Cancel',
+                confirmStyle: 'danger',
+                onConfirm: function() {{
+                    window.jubilee?.send('settings:reset');
+                }}
+            }});
         }});
 
         // Search functionality
         document.getElementById('searchInput')?.addEventListener('input', function(e) {{
-            const query = e.target.value.toLowerCase();
-            // TODO: Implement search highlighting
+            const query = e.target.value.toLowerCase().trim();
+            searchSettings(query);
         }});
+
+        function searchSettings(query) {{
+            // Get all sections and setting rows
+            const sections = document.querySelectorAll('.section');
+            const allSettingRows = document.querySelectorAll('.setting-row, .setting-group, .profile-card');
+
+            if (!query) {{
+                // If no query, show all and restore normal view
+                sections.forEach(s => {{
+                    s.style.display = '';
+                    s.querySelectorAll('.setting-row, .setting-group, .profile-card').forEach(r => {{
+                        r.style.display = '';
+                        r.classList.remove('search-highlight');
+                    }});
+                }});
+                // Show only active section
+                const activeLink = document.querySelector('.sidebar a.active');
+                if (activeLink) {{
+                    const sectionId = activeLink.getAttribute('data-section');
+                    showSection(sectionId);
+                }}
+                return;
+            }}
+
+            // Search mode: show all sections but only matching items
+            let hasResults = false;
+
+            sections.forEach(section => {{
+                let sectionHasMatch = false;
+                const sectionTitle = section.querySelector('h1')?.textContent?.toLowerCase() || '';
+                const sectionSubtitle = section.querySelector('.subtitle')?.textContent?.toLowerCase() || '';
+
+                // Check if section title/subtitle matches
+                if (sectionTitle.includes(query) || sectionSubtitle.includes(query)) {{
+                    sectionHasMatch = true;
+                }}
+
+                // Check each setting row
+                const rows = section.querySelectorAll('.setting-row, .setting-group');
+                rows.forEach(row => {{
+                    const label = row.querySelector('.setting-label, .group-title, h2')?.textContent?.toLowerCase() || '';
+                    const description = row.querySelector('.setting-description, p')?.textContent?.toLowerCase() || '';
+                    const text = label + ' ' + description;
+
+                    if (text.includes(query)) {{
+                        row.style.display = '';
+                        row.classList.add('search-highlight');
+                        sectionHasMatch = true;
+                    }} else {{
+                        row.style.display = 'none';
+                        row.classList.remove('search-highlight');
+                    }}
+                }});
+
+                // Show/hide section based on matches
+                section.style.display = sectionHasMatch ? 'block' : 'none';
+                if (sectionHasMatch) hasResults = true;
+            }});
+
+            // Update sidebar to show which sections have matches
+            document.querySelectorAll('.sidebar a[data-section]').forEach(link => {{
+                const sectionId = link.getAttribute('data-section');
+                const section = document.getElementById('section-' + sectionId);
+                if (section && section.style.display !== 'none') {{
+                    link.classList.add('has-results');
+                }} else {{
+                    link.classList.remove('has-results');
+                }}
+            }});
+        }}
     </script>
 </body>
 </html>";
@@ -1168,6 +1833,7 @@ public class InternalPageHandler
     private string GenerateAboutPage(string? query)
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "0.0.0";
+        var year = DateTime.Now.Year;
 
         return $@"
 <!DOCTYPE html>
@@ -1176,73 +1842,413 @@ public class InternalPageHandler
     <meta charset='UTF-8'>
     <title>About - Jubilee Browser</title>
     <style>
-        body {{
-            font-family: 'Segoe UI', sans-serif;
-            background: #1a1a2e;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+        :root {{
+            --color-primary-text: #ffffff;
+            --color-secondary-text: #a0a0a0;
+            --color-bg-primary: #1a1a2e;
+            --color-bg-secondary: #16213e;
+            --color-bg-tertiary: #2a2a4e;
+            --color-accent-gold: #E6AC00;
+            --color-accent-rose: #e94560;
+            --color-border: rgba(255, 255, 255, 0.08);
+        }}
+
+        * {{
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }}
-        .about-card {{
-            background: #16213e;
-            border-radius: 16px;
-            padding: 60px;
+
+        body {{
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--color-bg-primary);
+            color: var(--color-primary-text);
+            min-height: 100vh;
+            padding: 40px 20px;
+            overflow-y: auto;
+        }}
+
+        .container {{
+            max-width: 800px;
+            margin: 0 auto;
+        }}
+
+        /* Header Section */
+        .header {{
             text-align: center;
-            max-width: 500px;
+            margin-bottom: 48px;
         }}
+
         .logo {{
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, #e94560, #E6AC00);
-            border-radius: 20px;
-            margin: 0 auto 30px;
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--color-accent-rose), var(--color-accent-gold));
+            border-radius: 28px;
+            margin: 0 auto 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 48px;
-        }}
-        h1 {{
-            margin-bottom: 10px;
+            font-size: 56px;
             font-weight: 300;
+            box-shadow: 0 8px 32px rgba(233, 69, 96, 0.3);
         }}
+
+        .header h1 {{
+            font-size: 36px;
+            font-weight: 300;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }}
+
         .version {{
-            color: #e94560;
-            font-size: 18px;
-            margin-bottom: 20px;
-        }}
-        .description {{
-            color: #a0a0a0;
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }}
-        .tech {{
-            background: #1a1a2e;
-            padding: 15px;
-            border-radius: 8px;
+            display: inline-block;
+            background: var(--color-bg-tertiary);
+            color: var(--color-accent-gold);
+            padding: 6px 16px;
+            border-radius: 20px;
             font-size: 14px;
-            color: #a0a0a0;
+            font-weight: 500;
         }}
-        .tech strong {{
-            color: #ffffff;
+
+        /* Mission Section */
+        .mission {{
+            background: var(--color-bg-secondary);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+            border: 1px solid var(--color-border);
+        }}
+
+        .mission h2 {{
+            color: var(--color-accent-gold);
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }}
+
+        .mission h2::before {{
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: var(--color-accent-gold);
+            border-radius: 2px;
+        }}
+
+        .mission p {{
+            color: var(--color-secondary-text);
+            line-height: 1.7;
+            font-size: 15px;
+        }}
+
+        /* Features Grid */
+        .features {{
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }}
+
+        @media (max-width: 600px) {{
+            .features {{
+                grid-template-columns: 1fr;
+            }}
+        }}
+
+        .feature-card {{
+            background: var(--color-bg-secondary);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--color-border);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }}
+
+        .feature-card:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }}
+
+        .feature-icon {{
+            width: 48px;
+            height: 48px;
+            background: var(--color-bg-tertiary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }}
+
+        .feature-card h3 {{
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }}
+
+        .feature-card p {{
+            color: var(--color-secondary-text);
+            font-size: 14px;
+            line-height: 1.5;
+        }}
+
+        /* Dual Mode Section */
+        .dual-mode {{
+            background: linear-gradient(135deg, rgba(233, 69, 96, 0.1), rgba(230, 172, 0, 0.1));
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+            border: 1px solid var(--color-border);
+        }}
+
+        .dual-mode h2 {{
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }}
+
+        .modes {{
+            display: flex;
+            gap: 20px;
+        }}
+
+        @media (max-width: 600px) {{
+            .modes {{
+                flex-direction: column;
+            }}
+        }}
+
+        .mode {{
+            flex: 1;
+            background: var(--color-bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }}
+
+        .mode-icon {{
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }}
+
+        .mode.jubilee .mode-icon {{
+            background: linear-gradient(135deg, var(--color-accent-rose), var(--color-accent-gold));
+        }}
+
+        .mode.standard .mode-icon {{
+            background: var(--color-bg-tertiary);
+        }}
+
+        .mode h3 {{
+            font-size: 16px;
+            margin-bottom: 8px;
+        }}
+
+        .mode p {{
+            color: var(--color-secondary-text);
+            font-size: 13px;
+            line-height: 1.5;
+        }}
+
+        /* Tech Info */
+        .tech-info {{
+            background: var(--color-bg-secondary);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+            border: 1px solid var(--color-border);
+        }}
+
+        .tech-info h2 {{
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--color-secondary-text);
+        }}
+
+        .tech-grid {{
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }}
+
+        @media (max-width: 600px) {{
+            .tech-grid {{
+                grid-template-columns: 1fr;
+            }}
+        }}
+
+        .tech-item {{
+            text-align: center;
+            padding: 16px;
+            background: var(--color-bg-primary);
+            border-radius: 8px;
+        }}
+
+        .tech-item .label {{
+            color: var(--color-secondary-text);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }}
+
+        .tech-item .value {{
+            font-size: 14px;
+            font-weight: 500;
+        }}
+
+        /* Links */
+        .links {{
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 32px;
+        }}
+
+        .links a {{
+            color: var(--color-accent-gold);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s ease;
+        }}
+
+        .links a:hover {{
+            color: var(--color-primary-text);
+        }}
+
+        /* Footer */
+        .footer {{
+            text-align: center;
+            color: var(--color-secondary-text);
+            font-size: 13px;
+            padding-top: 24px;
+            border-top: 1px solid var(--color-border);
+        }}
+
+        .footer .copyright {{
+            margin-bottom: 8px;
+        }}
+
+        .footer .tagline {{
+            color: var(--color-accent-gold);
+            font-style: italic;
         }}
     </style>
 </head>
 <body>
-    <div class='about-card'>
-        <div class='logo'>J</div>
-        <h1>Jubilee Browser</h1>
-        <div class='version'>Version {version}</div>
-        <p class='description'>
-            A secure, family-friendly web browser with dual browsing modes.
-            Browse the web safely with built-in content filtering and
-            seamless access to Jubilee Bibles resources.
-        </p>
-        <div class='tech'>
-            <strong>Powered by</strong> WebView2 (Microsoft Edge)<br>
-            <strong>Built with</strong> WPF (.NET 8)
+    <div class='container'>
+        <!-- Header -->
+        <div class='header'>
+            <div class='logo'>J</div>
+            <h1>Jubilee Browser</h1>
+            <span class='version'>Version {version}</span>
+        </div>
+
+        <!-- Mission -->
+        <div class='mission'>
+            <h2>Our Mission</h2>
+            <p>
+                Jubilee Browser is a secure, faith-centered web browser designed for the
+                <strong>Worldwide Bible Web</strong> community. We believe that browsing the internet
+                should be a safe, enriching experience for individuals and families. Built with
+                privacy and protection at its core, Jubilee Browser provides seamless access to
+                Bible resources, faith-based content, and the broader web with intelligent
+                content filtering to ensure a wholesome browsing experience.
+            </p>
+        </div>
+
+        <!-- Dual Mode -->
+        <div class='dual-mode'>
+            <h2>Dual Browsing Modes</h2>
+            <div class='modes'>
+                <div class='mode jubilee'>
+                    <div class='mode-icon'>J</div>
+                    <h3>Jubilee Mode</h3>
+                    <p>
+                        Access the Worldwide Bible Web with curated faith-based content,
+                        Bible study tools, and community resources. Enhanced filtering
+                        ensures a safe, spiritually enriching experience.
+                    </p>
+                </div>
+                <div class='mode standard'>
+                    <div class='mode-icon'>W</div>
+                    <h3>Web Mode</h3>
+                    <p>
+                        Browse the full internet with intelligent content filtering
+                        that protects your family while giving you access to the
+                        information you need.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class='features'>
+            <div class='feature-card'>
+                <div class='feature-icon'>&#128274;</div>
+                <h3>Privacy Protection</h3>
+                <p>Advanced tracking prevention, Do Not Track support, and the ability to clear browsing data automatically.</p>
+            </div>
+            <div class='feature-card'>
+                <div class='feature-icon'>&#128106;</div>
+                <h3>Family-Friendly</h3>
+                <p>Built-in content filtering keeps inappropriate content away, making it safe for the whole family.</p>
+            </div>
+            <div class='feature-card'>
+                <div class='feature-icon'>&#128218;</div>
+                <h3>Bible Integration</h3>
+                <p>Quick access to Jubilee Bibles resources, Scripture references, and faith-based study tools.</p>
+            </div>
+            <div class='feature-card'>
+                <div class='feature-icon'>&#9729;</div>
+                <h3>Cloud Sync</h3>
+                <p>Sync your bookmarks, history, and settings across all your devices with a Jubilee account.</p>
+            </div>
+            <div class='feature-card'>
+                <div class='feature-icon'>&#127912;</div>
+                <h3>Customizable Themes</h3>
+                <p>Choose between dark, light, or system-matched themes for comfortable browsing any time of day.</p>
+            </div>
+            <div class='feature-card'>
+                <div class='feature-icon'>&#128187;</div>
+                <h3>Modern Performance</h3>
+                <p>Built on Microsoft Edge WebView2 for fast, secure, and standards-compliant web browsing.</p>
+            </div>
+        </div>
+
+        <!-- Tech Info -->
+        <div class='tech-info'>
+            <h2>Technical Information</h2>
+            <div class='tech-grid'>
+                <div class='tech-item'>
+                    <div class='label'>Engine</div>
+                    <div class='value'>WebView2 (Chromium)</div>
+                </div>
+                <div class='tech-item'>
+                    <div class='label'>Framework</div>
+                    <div class='value'>WPF (.NET 8)</div>
+                </div>
+                <div class='tech-item'>
+                    <div class='label'>Platform</div>
+                    <div class='value'>Windows 10/11</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class='footer'>
+            <p class='copyright'>&copy; {year} Jubilee Browser. All rights reserved.</p>
+            <p class='tagline'>""Browsing with Purpose, Protected by Faith""</p>
         </div>
     </div>
 </body>
@@ -1474,6 +2480,1042 @@ public class InternalPageHandler
         <h1>Page Not Found</h1>
         <p>The page 'jubilee://{System.Web.HttpUtility.HtmlEncode(pageName)}' does not exist.</p>
     </div>
+</body>
+</html>";
+    }
+
+    private string GenerateHistoryPage(string? query)
+    {
+        return @"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <title>History - Jubilee Browser</title>
+    <style>
+        /* ===== CSS Custom Properties (Design Tokens) ===== */
+        :root {
+            --color-primary-text: #ffffff;
+            --color-accent-gold: #E6AC00;
+            --color-accent-red: #e94560;
+            --color-bg-primary: #1a1a2e;
+            --color-bg-secondary: #16213e;
+            --color-bg-tertiary: #2a2a4e;
+            --color-bg-hover: #3a3a5e;
+            --color-border: rgba(255, 255, 255, 0.08);
+            --color-success: #4CAF50;
+            --color-error: #f44336;
+            --scrollbar-track: var(--color-bg-secondary);
+            --scrollbar-thumb: var(--color-bg-tertiary);
+            --scrollbar-thumb-hover: var(--color-accent-gold);
+            --font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--scrollbar-track); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 5px; border: 2px solid var(--scrollbar-track); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+        * { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); }
+
+        /* Base Reset */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-family);
+            background: var(--color-bg-primary);
+            color: var(--color-primary-text);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--color-accent-red), var(--color-accent-gold));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 400;
+        }
+        .header .subtitle {
+            color: var(--color-primary-text);
+            opacity: 0.7;
+            font-size: 14px;
+        }
+
+        /* Search Box */
+        .search-box {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            transition: border-color 0.2s ease;
+        }
+        .search-box:focus-within { border-color: var(--color-accent-gold); }
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: var(--color-primary-text);
+            font-size: 14px;
+            flex: 1;
+            outline: none;
+        }
+        .search-box input::placeholder { color: var(--color-primary-text); opacity: 0.5; }
+        .search-icon { color: var(--color-accent-gold); margin-right: 12px; font-size: 18px; }
+
+        /* Bulk Actions Bar */
+        .bulk-actions {
+            background: var(--color-bg-secondary);
+            border-radius: 10px;
+            padding: 12px 20px;
+            margin-bottom: 24px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--color-accent-gold);
+        }
+        .bulk-actions.visible { display: flex; }
+        .bulk-actions .selected-count {
+            color: var(--color-accent-gold);
+            font-weight: 500;
+        }
+        .bulk-actions .actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: var(--color-accent-gold);
+            color: var(--color-bg-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:hover { background: #d49c00; }
+        .btn:active { transform: scale(0.98); }
+        .btn-danger { background: var(--color-accent-red); color: white; }
+        .btn-danger:hover { background: #d13a55; }
+        .btn-secondary { background: var(--color-bg-tertiary); color: var(--color-primary-text); }
+        .btn-secondary:hover { background: var(--color-bg-hover); }
+
+        /* Date Group */
+        .date-group {
+            margin-bottom: 32px;
+        }
+        .date-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .date-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-accent-gold);
+        }
+        .date-header .count {
+            background: var(--color-bg-tertiary);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--color-primary-text);
+            opacity: 0.8;
+        }
+
+        /* History Item */
+        .history-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            background: var(--color-bg-secondary);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 2px solid transparent;
+        }
+        .history-item:hover { background: var(--color-bg-tertiary); }
+        .history-item.selected {
+            border-color: var(--color-accent-gold);
+            background: rgba(230, 172, 0, 0.1);
+        }
+
+        /* Checkbox */
+        .checkbox-wrapper {
+            margin-right: 14px;
+            display: flex;
+            align-items: center;
+        }
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--color-bg-hover);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+        .checkbox:hover { border-color: var(--color-accent-gold); }
+        .checkbox.checked {
+            background: var(--color-accent-gold);
+            border-color: var(--color-accent-gold);
+        }
+        .checkbox.checked::after {
+            content: '✓';
+            color: var(--color-bg-primary);
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Favicon */
+        .favicon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: var(--color-bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 14px;
+            font-size: 16px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .favicon img {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+
+        /* Item Content */
+        .item-content {
+            flex: 1;
+            min-width: 0;
+            margin-right: 16px;
+        }
+        .item-title {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+        .item-url {
+            font-size: 12px;
+            color: var(--color-primary-text);
+            opacity: 0.6;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Item Time */
+        .item-time {
+            font-size: 12px;
+            color: var(--color-primary-text);
+            opacity: 0.5;
+            white-space: nowrap;
+            margin-right: 12px;
+        }
+
+        /* Delete Button (per item) */
+        .item-delete {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: transparent;
+            border: none;
+            color: var(--color-primary-text);
+            opacity: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            font-size: 16px;
+        }
+        .history-item:hover .item-delete { opacity: 0.5; }
+        .item-delete:hover { opacity: 1 !important; color: var(--color-accent-red); background: rgba(233, 69, 96, 0.1); }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .empty-state .icon { font-size: 64px; margin-bottom: 24px; opacity: 0.3; }
+        .empty-state h2 { font-size: 24px; font-weight: 400; margin-bottom: 12px; }
+        .empty-state p { color: var(--color-primary-text); opacity: 0.6; margin-bottom: 24px; }
+
+        /* Retry Button - Premium Styling */
+        .retry-btn {
+            background: linear-gradient(135deg, var(--color-accent-gold), #d49c00);
+            color: var(--color-bg-primary);
+            border: none;
+            padding: 14px 32px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 140px;
+            box-shadow: 0 4px 12px rgba(230, 172, 0, 0.3);
+        }
+        .retry-btn:hover {
+            background: linear-gradient(135deg, #f0b800, var(--color-accent-gold));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(230, 172, 0, 0.4);
+        }
+        .retry-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(230, 172, 0, 0.3);
+        }
+        .retry-btn:disabled {
+            background: var(--color-bg-tertiary);
+            color: var(--color-primary-text);
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .retry-icon { font-size: 16px; }
+
+        /* Button Spinner */
+        .btn-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--color-primary-text);
+            opacity: 0.7;
+        }
+        .loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--color-bg-tertiary);
+            border-top-color: var(--color-accent-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-accent-gold);
+            padding: 16px 24px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast .icon { font-size: 20px; }
+        .toast.success { border-color: var(--color-success); }
+        .toast.success .icon { color: var(--color-success); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 24px; }
+            .header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .item-time { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <div class='header-left'>
+                <div class='header-icon'>🕐</div>
+                <div>
+                    <h1>History</h1>
+                    <p class='subtitle'>Your browsing activity</p>
+                </div>
+            </div>
+            <button class='btn btn-secondary' id='clearAllBtn' style='display: none;'>
+                <span>🗑️</span> Clear All History
+            </button>
+        </div>
+
+        <div class='search-box'>
+            <span class='search-icon'>🔍</span>
+            <input type='text' placeholder='Search history...' id='searchInput'>
+        </div>
+
+        <div class='bulk-actions' id='bulkActions'>
+            <span class='selected-count'><span id='selectedCount'>0</span> items selected</span>
+            <div class='actions'>
+                <button class='btn btn-secondary' id='selectAllBtn'>Select All</button>
+                <button class='btn btn-danger' id='deleteSelectedBtn'>
+                    <span>🗑️</span> Delete Selected
+                </button>
+            </div>
+        </div>
+
+        <div id='historyContainer'>
+            <div class='loading'>
+                <div class='spinner'></div>
+                <p>Loading history...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class='toast' id='toast'>
+        <span class='icon'>✓</span>
+        <span class='message' id='toastMessage'>Items deleted</span>
+    </div>
+
+    <script>
+        // Jubilee Bridge - embedded directly for NavigateToString pages
+        (function() {
+            if (window.jubilee) return;
+
+            const pendingRequests = new Map();
+
+            // Check if WebView2 bridge is available
+            console.log('chrome.webview available:', !!window.chrome?.webview);
+            console.log('postMessage available:', !!window.chrome?.webview?.postMessage);
+
+            window.jubilee = {
+                invoke: function(channel, args) {
+                    return new Promise((resolve, reject) => {
+                        const id = Math.random().toString(36).substr(2, 9);
+                        pendingRequests.set(id, { resolve, reject });
+
+                        console.log('Sending message:', { channel, args, id });
+
+                        if (!window.chrome?.webview?.postMessage) {
+                            console.error('postMessage not available!');
+                            reject(new Error('WebView bridge not available'));
+                            return;
+                        }
+
+                        // Pass object directly - WebMessageAsJson will serialize it
+                        window.chrome.webview.postMessage({
+                            channel: channel,
+                            args: args || {},
+                            id: id
+                        });
+
+                        console.log('Message sent successfully');
+
+                        setTimeout(() => {
+                            if (pendingRequests.has(id)) {
+                                console.log('Request timed out for id:', id);
+                                pendingRequests.delete(id);
+                                reject(new Error('Request timeout'));
+                            }
+                        }, 30000);
+                    });
+                },
+
+                send: function(channel, args) {
+                    // Pass object directly - WebMessageAsJson will serialize it
+                    window.chrome.webview.postMessage({
+                        channel: channel,
+                        args: args || {}
+                    });
+                },
+
+                on: function(channel, callback) {
+                    window.addEventListener('jubilee-message', function(e) {
+                        if (e.detail && e.detail.channel === channel) {
+                            callback(e.detail.data);
+                        }
+                    });
+                }
+            };
+
+            window.addEventListener('jubilee-response', function(e) {
+                const response = e.detail;
+                if (response.id && pendingRequests.has(response.id)) {
+                    const { resolve, reject } = pendingRequests.get(response.id);
+                    pendingRequests.delete(response.id);
+
+                    if (response.error) {
+                        reject(new Error(response.error));
+                    } else {
+                        resolve(response.result);
+                    }
+                }
+            });
+
+            console.log('Jubilee Bridge initialized (inline)');
+        })();
+
+        let historyData = [];
+        let selectedIds = new Set();
+        let searchQuery = '';
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await loadHistory();
+            } catch (e) {
+                console.error('Failed to load history:', e);
+                showError();
+            }
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                searchQuery = e.target.value.toLowerCase();
+                renderHistory();
+            });
+
+            document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelected);
+            document.getElementById('selectAllBtn').addEventListener('click', toggleSelectAll);
+            document.getElementById('clearAllBtn').addEventListener('click', clearAllHistory);
+        }
+
+        async function loadHistory() {
+            try {
+                if (window.jubilee) {
+                    historyData = await window.jubilee.invoke('history:getAll');
+                } else {
+                    throw new Error('Jubilee bridge not available');
+                }
+                renderHistory();
+            } catch (e) {
+                console.error('Failed to load history:', e);
+                showError();
+            }
+        }
+
+        function showError() {
+            document.getElementById('historyContainer').innerHTML = `
+                <div class='empty-state'>
+                    <div class='icon'>⚠️</div>
+                    <h2>Failed to load history</h2>
+                    <p>Please try again later</p>
+                    <button class='btn retry-btn' id='retryBtn' onclick='retryLoad()'>
+                        <span class='retry-icon'>🔄</span>
+                        <span class='retry-text'>Retry</span>
+                    </button>
+                </div>
+            `;
+        }
+
+        async function retryLoad() {
+            const retryBtn = document.getElementById('retryBtn');
+            if (retryBtn) {
+                retryBtn.disabled = true;
+                retryBtn.innerHTML = `
+                    <span class='btn-spinner'></span>
+                    <span>Loading...</span>
+                `;
+            }
+            await loadHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyContainer');
+            const clearAllBtn = document.getElementById('clearAllBtn');
+
+            // Filter by search (using camelCase properties from C# serialization)
+            let filtered = historyData;
+            if (searchQuery) {
+                filtered = historyData.filter(item =>
+                    (item.title || '').toLowerCase().includes(searchQuery) ||
+                    (item.url || '').toLowerCase().includes(searchQuery)
+                );
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class='empty-state'>
+                        <div class='icon'>🕐</div>
+                        <h2>${searchQuery ? 'No results found' : 'No history yet'}</h2>
+                        <p>${searchQuery ? 'Try a different search term' : 'Your browsing history will appear here'}</p>
+                    </div>
+                `;
+                clearAllBtn.style.display = 'none';
+                return;
+            }
+
+            clearAllBtn.style.display = 'flex';
+
+            // Group by date
+            const groups = groupByDate(filtered);
+            let html = '';
+
+            for (const [date, items] of Object.entries(groups)) {
+                html += `
+                    <div class='date-group'>
+                        <div class='date-header'>
+                            <h2>${date}</h2>
+                            <span class='count'>${items.length} ${items.length === 1 ? 'page' : 'pages'}</span>
+                        </div>
+                `;
+
+                for (const item of items) {
+                    const isSelected = selectedIds.has(item.id);
+                    const time = formatTime(item.timestamp);
+                    const faviconHtml = item.favicon
+                        ? `<img src='${escapeHtml(item.favicon)}' onerror=""this.parentElement.innerHTML='🌐'"" />`
+                        : '🌐';
+
+                    html += `
+                        <div class='history-item ${isSelected ? 'selected' : ''}' data-id='${item.id}'>
+                            <div class='checkbox-wrapper'>
+                                <div class='checkbox ${isSelected ? 'checked' : ''}' data-id='${item.id}'></div>
+                            </div>
+                            <div class='favicon'>${faviconHtml}</div>
+                            <div class='item-content' data-url='${escapeHtml(item.url)}'>
+                                <div class='item-title'>${escapeHtml(item.title || item.url)}</div>
+                                <div class='item-url'>${escapeHtml(item.url)}</div>
+                            </div>
+                            <div class='item-time'>${time}</div>
+                            <button class='item-delete' data-id='${item.id}' title='Delete'>🗑️</button>
+                        </div>
+                    `;
+                }
+
+                html += '</div>';
+            }
+
+            container.innerHTML = html;
+
+            // Attach event listeners
+            container.querySelectorAll('.checkbox').forEach(cb => {
+                cb.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleSelect(cb.dataset.id);
+                });
+            });
+
+            container.querySelectorAll('.item-content').forEach(content => {
+                content.addEventListener('click', () => {
+                    const url = content.dataset.url;
+                    if (url && window.jubilee) {
+                        window.jubilee.send('nav:go', { url });
+                    }
+                });
+            });
+
+            container.querySelectorAll('.item-delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteItem(btn.dataset.id);
+                });
+            });
+
+            updateBulkActions();
+        }
+
+        function groupByDate(items) {
+            const groups = {};
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            for (const item of items) {
+                const date = new Date(item.timestamp);
+                let label;
+
+                if (isSameDay(date, today)) {
+                    label = 'Today';
+                } else if (isSameDay(date, yesterday)) {
+                    label = 'Yesterday';
+                } else if (isThisWeek(date)) {
+                    label = date.toLocaleDateString('en-US', { weekday: 'long' });
+                } else {
+                    label = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                }
+
+                if (!groups[label]) groups[label] = [];
+                groups[label].push(item);
+            }
+
+            return groups;
+        }
+
+        function isSameDay(d1, d2) {
+            return d1.getFullYear() === d2.getFullYear() &&
+                   d1.getMonth() === d2.getMonth() &&
+                   d1.getDate() === d2.getDate();
+        }
+
+        function isThisWeek(date) {
+            const today = new Date();
+            const weekAgo = new Date(today);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            return date > weekAgo;
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/""/g, '&quot;');
+        }
+
+        function toggleSelect(id) {
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+            } else {
+                selectedIds.add(id);
+            }
+            renderHistory();
+        }
+
+        function toggleSelectAll() {
+            const allIds = historyData.map(item => item.id);
+            if (selectedIds.size === allIds.length) {
+                selectedIds.clear();
+            } else {
+                allIds.forEach(id => selectedIds.add(id));
+            }
+            renderHistory();
+        }
+
+        function updateBulkActions() {
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            const selectAllBtn = document.getElementById('selectAllBtn');
+
+            if (selectedIds.size > 0) {
+                bulkActions.classList.add('visible');
+                selectedCount.textContent = selectedIds.size;
+                selectAllBtn.textContent = selectedIds.size === historyData.length ? 'Deselect All' : 'Select All';
+            } else {
+                bulkActions.classList.remove('visible');
+            }
+        }
+
+        async function deleteItem(id) {
+            try {
+                if (window.jubilee) {
+                    await window.jubilee.invoke('history:delete', { ids: [id] });
+                }
+                historyData = historyData.filter(item => item.id !== id);
+                selectedIds.delete(id);
+                renderHistory();
+                showToast('Item deleted');
+            } catch (e) {
+                console.error('Failed to delete item:', e);
+            }
+        }
+
+        async function deleteSelected() {
+            if (selectedIds.size === 0) return;
+
+            try {
+                const ids = Array.from(selectedIds);
+                if (window.jubilee) {
+                    await window.jubilee.invoke('history:delete', { ids });
+                }
+                historyData = historyData.filter(item => !selectedIds.has(item.id));
+                const count = selectedIds.size;
+                selectedIds.clear();
+                renderHistory();
+                showToast(`${count} ${count === 1 ? 'item' : 'items'} deleted`);
+            } catch (e) {
+                console.error('Failed to delete items:', e);
+            }
+        }
+
+        async function clearAllHistory() {
+            if (!confirm('Are you sure you want to clear all browsing history? This cannot be undone.')) {
+                return;
+            }
+
+            try {
+                if (window.jubilee) {
+                    await window.jubilee.invoke('history:clearAll');
+                }
+                historyData = [];
+                selectedIds.clear();
+                renderHistory();
+                showToast('All history cleared');
+            } catch (e) {
+                console.error('Failed to clear history:', e);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.classList.add('show', 'success');
+
+            setTimeout(() => {
+                toast.classList.remove('show', 'success');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>";
+    }
+
+    private string GenerateNewTabPage(string? query)
+    {
+        return @"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>New Tab - Jubilee Browser</title>
+    <style>
+        :root {
+            --color-primary-text: #ffffff;
+            --color-bg-primary: #1a1a2e;
+            --color-bg-secondary: #16213e;
+            --color-bg-tertiary: #2a2a4e;
+            --color-bg-hover: #3a3a5e;
+            --color-accent-gold: #E6AC00;
+            --color-border: rgba(255, 255, 255, 0.08);
+            --color-text-muted: #8a8a9a;
+        }
+        :root[data-theme='light'] {
+            --color-primary-text: #1a1a1a;
+            --color-bg-primary: #ffffff;
+            --color-bg-secondary: #f5f5f5;
+            --color-bg-tertiary: #e8e8e8;
+            --color-bg-hover: #e0e0e0;
+            --color-accent-gold: #B8860B;
+            --color-border: rgba(0, 0, 0, 0.1);
+            --color-text-muted: #666666;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-primary);
+            color: var(--color-primary-text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        .logo-container {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 16px;
+        }
+        .brand-text {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--color-accent-gold);
+        }
+        .search-container {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 60px;
+        }
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: 24px;
+            padding: 12px 20px;
+            transition: all 0.2s ease;
+        }
+        .search-box:focus-within {
+            border-color: var(--color-accent-gold);
+            box-shadow: 0 0 0 3px rgba(230, 172, 0, 0.15);
+        }
+        .search-icon {
+            font-size: 18px;
+            color: var(--color-text-muted);
+            margin-right: 12px;
+        }
+        .search-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            color: var(--color-primary-text);
+        }
+        .search-input::placeholder {
+            color: var(--color-text-muted);
+        }
+        .shortcuts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 120px));
+            gap: 20px;
+            justify-content: center;
+            max-width: 800px;
+        }
+        .shortcut {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: var(--color-primary-text);
+        }
+        .shortcut:hover {
+            background: var(--color-bg-hover);
+        }
+        .shortcut-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--color-bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+        .shortcut-label {
+            font-size: 12px;
+            color: var(--color-text-muted);
+            text-align: center;
+        }
+        .greeting {
+            font-size: 18px;
+            color: var(--color-text-muted);
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class='logo-container'>
+        <div class='brand-text'>Jubilee Browser</div>
+    </div>
+
+    <p class='greeting' id='greeting'></p>
+
+    <div class='search-container'>
+        <div class='search-box'>
+            <span class='search-icon'>🔍</span>
+            <input type='text' class='search-input' id='searchInput' placeholder='Search the web or enter URL' autofocus>
+        </div>
+    </div>
+
+    <div class='shortcuts'>
+        <a class='shortcut' href='https://www.google.com'>
+            <div class='shortcut-icon'>🔍</div>
+            <span class='shortcut-label'>Google</span>
+        </a>
+        <a class='shortcut' href='https://www.youtube.com'>
+            <div class='shortcut-icon'>▶️</div>
+            <span class='shortcut-label'>YouTube</span>
+        </a>
+        <a class='shortcut' href='https://www.wikipedia.org'>
+            <div class='shortcut-icon'>📚</div>
+            <span class='shortcut-label'>Wikipedia</span>
+        </a>
+        <a class='shortcut' href='https://www.github.com'>
+            <div class='shortcut-icon'>💻</div>
+            <span class='shortcut-label'>GitHub</span>
+        </a>
+        <a class='shortcut' href='jubilee://settings'>
+            <div class='shortcut-icon'>⚙️</div>
+            <span class='shortcut-label'>Settings</span>
+        </a>
+        <a class='shortcut' href='jubilee://history'>
+            <div class='shortcut-icon'>📜</div>
+            <span class='shortcut-label'>History</span>
+        </a>
+    </div>
+
+    <script>
+        // Set greeting based on time of day
+        function setGreeting() {
+            const hour = new Date().getHours();
+            let greeting = 'Good evening';
+            if (hour >= 5 && hour < 12) greeting = 'Good morning';
+            else if (hour >= 12 && hour < 17) greeting = 'Good afternoon';
+            document.getElementById('greeting').textContent = greeting;
+        }
+        setGreeting();
+
+        // Handle search
+        document.getElementById('searchInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const query = this.value.trim();
+                if (query) {
+                    // Check if it looks like a URL
+                    if (query.includes('.') && !query.includes(' ')) {
+                        window.location.href = query.startsWith('http') ? query : 'https://' + query;
+                    } else {
+                        // Search with Google (or configured search engine)
+                        window.location.href = 'https://www.google.com/search?q=' + encodeURIComponent(query);
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html>";
     }

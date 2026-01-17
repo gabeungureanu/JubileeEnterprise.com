@@ -2,8 +2,8 @@ namespace JubileeBrowser.Models;
 
 public class HomepageSettings
 {
-    public string Internet { get; set; } = "http://www.jubileeverse.com";
-    public string JubileeBibles { get; set; } = "inspire://jubileeverse.webspace";
+    public string Internet { get; set; } = "https://www.jubileeverse.com";
+    public string JubileeBibles { get; set; } = "inspire://jubilee.inspire";
 }
 
 public class AutofillSettings
@@ -53,8 +53,7 @@ public class SearchSettings
     public List<SearchEngine> Engines { get; set; } = new()
     {
         new SearchEngine { Name = "Google", Url = "https://www.google.com/search?q={searchTerms}", Keyword = "g" },
-        new SearchEngine { Name = "Bing", Url = "https://www.bing.com/search?q={searchTerms}", Keyword = "b" },
-        new SearchEngine { Name = "DuckDuckGo", Url = "https://duckduckgo.com/?q={searchTerms}", Keyword = "d" }
+        new SearchEngine { Name = "Bing", Url = "https://www.bing.com/search?q={searchTerms}", Keyword = "b" }
     };
     public bool SuggestionsEnabled { get; set; } = true;
 }

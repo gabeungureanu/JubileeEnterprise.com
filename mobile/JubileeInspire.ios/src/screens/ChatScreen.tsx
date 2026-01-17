@@ -28,6 +28,7 @@ import { MessageBubble, TypingIndicator, ChatInput, EmptyChat } from '../compone
 import { storage } from '../services/storage';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useDrawer } from '../contexts/DrawerContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>;
 
@@ -51,6 +52,7 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
   const conversationId = route.params?.conversationId;
   const { user, isAuthenticated, signOut } = useAuth();
   const { colors } = useTheme();
+  const { isMobileView } = useDrawer();
 
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -225,12 +227,53 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
     handleSend(prompt);
   };
 
+  const handleRetry = useCallback(async (messageId: string) => {
+    // Find the assistant message to regenerate
+    const messageIndex = messages.findIndex(m => m.id === messageId);
+    if (messageIndex === -1) return;
+
+    const assistantMessage = messages[messageIndex];
+    if (assistantMessage.role !== 'assistant') return;
+
+    // Find the user message that prompted this response (should be immediately before)
+    let userMessageIndex = messageIndex - 1;
+    while (userMessageIndex >= 0 && messages[userMessageIndex].role !== 'user') {
+      userMessageIndex--;
+    }
+
+    if (userMessageIndex < 0) {
+      console.warn('[ChatScreen] Could not find user message for retry');
+      return;
+    }
+
+    // Set the assistant message to streaming state with empty content
+    setMessages(prev =>
+      prev.map((msg, idx) =>
+        idx === messageIndex
+          ? { ...msg, content: '', isStreaming: true }
+          : msg
+      )
+    );
+    setStreamingMessageId(messageId);
+
+    // Show typing indicator briefly
+    setIsTyping(true);
+    await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 300));
+    setIsTyping(false);
+
+    // Get a different random response (try to avoid the same one)
+    let response = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
+
+    // Stream the new response into the existing message
+    await simulateStreaming(response, messageId);
+  }, [messages, simulateStreaming]);
+
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
   };
 
   const renderMessage = ({ item }: { item: ChatMessage }) => (
-    <MessageBubble message={item} />
+    <MessageBubble message={item} onRetry={handleRetry} />
   );
 
   const styles = createStyles(colors);
@@ -239,9 +282,12 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       {/* Custom Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={openDrawer} style={styles.headerButton}>
-          <Ionicons name="menu" size={24} color={colors.text} />
-        </TouchableOpacity>
+        {/* Hamburger menu shown on mobile view (native or web < 768px) */}
+        {(Platform.OS !== 'web' || isMobileView) && (
+          <TouchableOpacity onPress={openDrawer} style={styles.headerButton}>
+            <Ionicons name="menu" size={24} color={colors.text} />
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity
           style={styles.personaSelector}
@@ -382,21 +428,27 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         {messages.length === 0 ? (
-          <EmptyChat onSuggestionPress={handleSuggestionPress} />
+          <View style={styles.emptyChatContainer}>
+            <View style={styles.emptyChatContent}>
+              <EmptyChat onSuggestionPress={handleSuggestionPress} />
+              <ChatInput onSend={handleSend} disabled={isTyping || !!streamingMessageId} centered={true} />
+            </View>
+          </View>
         ) : (
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            renderItem={renderMessage}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.messageList}
-            onContentSizeChange={scrollToBottom}
-            showsVerticalScrollIndicator={false}
-            ListFooterComponent={isTyping ? <TypingIndicator /> : null}
-          />
+          <>
+            <FlatList
+              ref={flatListRef}
+              data={messages}
+              renderItem={renderMessage}
+              keyExtractor={item => item.id}
+              contentContainerStyle={styles.messageList}
+              onContentSizeChange={scrollToBottom}
+              showsVerticalScrollIndicator={false}
+              ListFooterComponent={isTyping ? <TypingIndicator /> : null}
+            />
+            <ChatInput onSend={handleSend} disabled={isTyping || !!streamingMessageId} />
+          </>
         )}
-
-        <ChatInput onSend={handleSend} disabled={isTyping || !!streamingMessageId} />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -438,6 +490,17 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   keyboardAvoid: {
     flex: 1,
+  },
+  emptyChatContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  emptyChatContent: {
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 700,
   },
   messageList: {
     paddingVertical: spacing.sm,

@@ -490,6 +490,74 @@ This application is part of the Jubilee Enterprise suite. Refer to the root repo
 - Value converters for UI formatting
 - Theme fixes for white text on ribbon buttons and labels
 
+### Version 1.5.0 (2026-01-15)
+- **PostgreSQL Offline Cache Infrastructure**:
+  - Added comprehensive PostgreSQL-based local caching system for offline support
+  - Created detailed execution plan documentation (JubileeOutlook_Execution_Plan.md)
+  - Created implementation guide (JubileeOutlook_Offline_Cache_PostgreSQL.md)
+  - Database schema designed for cached_emails, cached_folders, cached_events, cached_contacts tables
+  - Sync queue table for offline operation queuing
+  - Sync state table for delta synchronization tracking
+  - Full-text search indexing for cached emails
+  - JSONB columns for flexible payload storage (recipients, attachments, attendees)
+  - Planned services: LocalCacheService, SyncQueueService, NetworkStatusService, SyncService
+  - Configuration model (LocalCacheSettings) for cache management
+  - Added utility scripts: check_indexes.ps1, test_cache_service.ps1
+
+- **Email Operations via API**:
+  - Implemented email sending via InspireContinuum API
+  - Added Sent Items folder support with proper message persistence
+  - Fixed message operations to use PATCH API endpoint
+  - Implemented draft saving functionality with auto-save support
+
+- **Sync Settings Enhancements**:
+  - Fixed Sync Settings modal button visibility
+  - Added TabWidth property for improved layout control
+
+- **Documentation Updates**:
+  - Created Feature Status HTML report (JubileeOutlook_Feature_Status.html)
+  - Updated README with comprehensive feature documentation
+  - Added PDF generation capability for documentation
+
+### Version 1.4.0 (2026-01-14)
+- **Image Insertion in Events**:
+  - Added EventImage model class for storing image data with events
+  - Added Images property to CalendarEvent for persistent image storage
+  - Implemented InsertImageCommand in NewEventViewModel
+  - File dialog supports multiple image formats (jpg, jpeg, png, gif, bmp)
+  - Images displayed as thumbnails in event description area with WrapPanel layout
+  - RemoveImageCommand for removing inserted images
+  - Images persist with event data and reload when editing events
+  - EventImageViewModel wrapper class for image display with BitmapImage source
+
+- **Private Event Functionality**:
+  - Added IsPrivate property to CalendarEvent model
+  - Private toggle button wired to IsPrivate in NewEventViewModel
+  - Private events display "Private" instead of actual title on calendar
+  - Private events hide location information on calendar view
+  - Private events appear in gray color (#808080) to indicate blocked time
+  - Added display properties: DisplaySubject, DisplayLocation, DisplayDescription, DisplayEventColor
+  - All calendar view event bindings updated to use Display* properties
+  - Event details remain visible when opening private events for editing
+
+- **Reminder Persistence**:
+  - Reminder selection now saves with event data
+  - Added GetReminderTimeFromString() converter method
+  - Added GetStringFromReminderTime() converter method
+  - SelectedReminder value stored in CalendarEvent.Reminder property
+  - Reminder dropdown auto-selects saved value when editing events
+  - Supports all reminder options: Don't remind me, At time of event, 5/15/30 minutes, 1/2 hours, 1 day, 1 week
+
+- **UI Improvements**:
+  - Removed "Add Calendar" button from CalendarView left panel
+  - Removed Emoji and Drawing icons from NewEventWindow toolbar
+  - Cleaner toolbar with only Attach file, Insert image, and More buttons
+
+- **Bug Fixes**:
+  - Fixed CommunityToolkit.Mvvm command naming issue (NewEventAsync → NewEventCommand, EditEventAsync → EditEventCommand)
+  - Fixed service initialization timing in App.xaml.cs
+  - Resolved all 14 EditEventAsyncCommand binding errors in CalendarView.xaml
+
 ### Version 1.3.0 (2026-01-13)
 - **Calendar Dynamic Date System**:
   - Calendar now detects and displays real system date automatically

@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>JubileeOutlook Execution Plan</title>
+    <style>
+        body {
+            font-family: 'Calibri', 'Arial', sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            margin: 1in;
+            color: #333;
+        }
+        h1 {
+            font-size: 24pt;
+            color: #1a1a1a;
+            border-bottom: 3px solid #B8860B;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        h2 {
+            font-size: 18pt;
+            color: #B8860B;
+            border-bottom: 2px solid #B8860B;
+            padding-bottom: 8px;
+            margin-top: 40px;
+        }
+        h3 {
+            font-size: 14pt;
+            color: #1a1a1a;
+            background: #f5f5f5;
+            padding: 10px 15px;
+            border-left: 4px solid #B8860B;
+            margin-top: 25px;
+        }
+        h4 {
+            font-size: 12pt;
+            color: #444;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .header-info {
+            background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
+            color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .header-info h2 {
+            color: #B8860B;
+            border: none;
+            margin: 0 0 15px 0;
+            padding: 0;
+        }
+        .header-info p {
+            margin: 5px 0;
+            color: #ccc;
+        }
+        .header-info strong {
+            color: #fff;
+        }
+        .phase-box {
+            border: 2px solid #B8860B;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .phase-header {
+            background: #B8860B;
+            color: #fff;
+            padding: 15px 20px;
+            font-size: 14pt;
+            font-weight: bold;
+        }
+        .phase-content {
+            padding: 20px;
+        }
+        .sprint-box {
+            background: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 15px 0;
+            padding: 15px;
+        }
+        .sprint-header {
+            font-weight: bold;
+            color: #B8860B;
+            font-size: 12pt;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #ddd;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #B8860B;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .priority-critical {
+            background: #d32f2f;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 9pt;
+            font-weight: bold;
+        }
+        .priority-high {
+            background: #f44336;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 9pt;
+            font-weight: bold;
+        }
+        .priority-medium {
+            background: #ff9800;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 9pt;
+            font-weight: bold;
+        }
+        .priority-low {
+            background: #4caf50;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 9pt;
+            font-weight: bold;
+        }
+        .task-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .task-list li {
+            padding: 8px 0;
+            border-bottom: 1px dotted #ddd;
+            display: flex;
+            align-items: flex-start;
+        }
+        .task-list li:last-child {
+            border-bottom: none;
+        }
+        .task-number {
+            background: #B8860B;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10pt;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .task-content {
+            flex: 1;
+        }
+        .task-title {
+            font-weight: bold;
+            color: #333;
+        }
+        .task-desc {
+            color: #666;
+            font-size: 10pt;
+            margin-top: 3px;
+        }
+        .dependencies {
+            background: #fff3e0;
+            border: 1px solid #ffcc80;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 10pt;
+        }
+        .dependencies strong {
+            color: #e65100;
+        }
+        .deliverables {
+            background: #e8f5e9;
+            border: 1px solid #a5d6a7;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 10pt;
+        }
+        .deliverables strong {
+            color: #2e7d32;
+        }
+        .technical-notes {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 10pt;
+        }
+        .technical-notes strong {
+            color: #1565c0;
+        }
+        .milestone {
+            background: linear-gradient(135deg, #B8860B 0%, #d4a50a 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .milestone h4 {
+            margin: 0;
+            color: white;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        .timeline {
+            display: flex;
+            margin: 20px 0;
+            padding: 0;
+        }
+        .timeline-item {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            position: relative;
+        }
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: 0;
+            width: 50%;
+            height: 3px;
+            background: #B8860B;
+        }
+        .timeline-item:last-child::after {
+            display: none;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 50%;
+            height: 3px;
+            background: #B8860B;
+        }
+        .timeline-item:first-child::before {
+            display: none;
+        }
+        .timeline-dot {
+            width: 20px;
+            height: 20px;
+            background: #B8860B;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            position: relative;
+            z-index: 1;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .summary-card {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+        }
+        .summary-card h4 {
+            margin: 0 0 10px 0;
+            color: #B8860B;
+        }
+        .summary-card .number {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #1a1a1a;
+        }
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', monospace;
+            font-size: 10pt;
+        }
+        @media print {
+            body { margin: 0.5in; }
+            .page-break { page-break-before: always; }
+        }
+    </style>
+</head>
+<body>
+
+<h1>JubileeOutlook Execution Plan</h1>
+
+<div class="header-info">
+    <h2>Project Implementation Roadmap</h2>
+    <p><strong>Project:</strong> JubileeOutlook Email Client</p>
+    <p><strong>Current Version:</strong> 1.5.0</p>
+    <p><strong>Target Version:</strong> 2.0.0 (Full Production)</p>
+    <p><strong>Date:</strong> January 15, 2026</p>
+    <p><strong>Total Pending Features:</strong> 45+ items across 7 categories</p>
+    <p style="color: #4caf50;"><strong>✅ Recently Completed:</strong> Calendar API Integration, CRUD Operations, Image Handling, Date Range Caching</p>
+</div>
+
+<!-- EXECUTIVE SUMMARY -->
+<h2>Executive Summary</h2>
+
+<p>This execution plan outlines the step-by-step implementation of pending JubileeOutlook features, organized into 4 phases with clear priorities, dependencies, and deliverables.</p>
+
+<div class="summary-grid">
+    <div class="summary-card">
+        <h4>Phase 1</h4>
+        <div class="number">Core Backend</div>
+        <p>Authentication & API</p>
+    </div>
+    <div class="summary-card">
+        <h4>Phase 2</h4>
+        <div class="number">Data Layer</div>
+        <p>Persistence & Sync</p>
+    </div>
+    <div class="summary-card">
+        <h4>Phase 3</h4>
+        <div class="number">Modules</div>
+        <p>Contacts & Tasks</p>
+    </div>
+</div>
+
+<table>
+    <tr>
+        <th>Phase</th>
+        <th>Focus Area</th>
+        <th>Priority</th>
+        <th>Key Deliverables</th>
+    </tr>
+    <tr>
+        <td><strong>Phase 1</strong></td>
+        <td>Core Backend Infrastructure</td>
+        <td><span class="priority-critical">CRITICAL</span></td>
+        <td>SSO Auth, API Connection, Value Converters</td>
+    </tr>
+    <tr>
+        <td><strong>Phase 2</strong></td>
+        <td>Data Persistence & Sync</td>
+        <td><span class="priority-high">HIGH</span></td>
+        <td>Calendar/Email Persistence, Offline Cache</td>
+    </tr>
+    <tr>
+        <td><strong>Phase 3</strong></td>
+        <td>Complete Modules</td>
+        <td><span class="priority-medium">MEDIUM</span></td>
+        <td>People/Contacts, Tasks Module</td>
+    </tr>
+    <tr>
+        <td><strong>Phase 4</strong></td>
+        <td>Advanced Features & Polish</td>
+        <td><span class="priority-low">LOW</span></td>
+        <td>Email Integration, Themes, Notifications</td>
+    </tr>
+</table>
+
+<div class="page-break"></div>
+
+<!-- PHASE 1 -->
+<h2>PHASE 1: Core Backend Infrastructure</h2>
+<p><span class="priority-critical">CRITICAL PRIORITY</span> - Foundation for all other features</p>
+
+<div class="phase-box">
+    <div class="phase-header">Sprint 1.1: Value Converters Implementation</div>
+    <div class="phase-content">
+        <p><strong>Objective:</strong> Implement all 22 value converters currently throwing NotImplementedException</p>
+
+        <div class="dependencies">
+            <strong>Dependencies:</strong> None - can start immediately
+        </div>
+
+        <h4>Step-by-Step Tasks:</h4>
+        <ol class="task-list">
+            <li>
+                <span class="task-number">1</span>
+                <div class="task-content">
+                    <div class="task-title">Implement Visibility Converters</div>
+                    <div class="task-desc">
+                        <code>BoolToVisibilityConverter</code> - Convert bool to Visibility.Visible/Collapsed<br>
+                        <code>InverseBoolToVisibilityConverter</code> - Inverse of above<br>
+                        <code>NullToVisibilityConverter</code> - Show/hide based on null check<br>
+                        <code>StringToVisibilityConverter</code> - Show/hide based on empty string<br>
+                        <code>CountToVisibilityConverter</code> - Show/hide based on collection count
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">2</span>
+                <div class="task-content">
+                    <div class="task-title">Implement Text/Style Converters</div>
+                    <div class="task-desc">
+                        <code>ReadToWeightConverter</code> - Bold for unread, Normal for read<br>
+                        <code>ListToStringConverter</code> - Join list items with separator
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">3</span>
+                <div class="task-content">
+                    <div class="task-title">Implement Calendar Date Converters</div>
+                    <div class="task-desc">
+                        <code>IsTodayConverter</code> - Check if date is today<br>
+                        <code>IsTodayToBackgroundConverter</code> - Gold background for today<br>
+                        <code>IsTodayToForegroundConverter</code> - Text color for today<br>
+                        <code>IsTodayToFontWeightConverter</code> - Bold for today
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">4</span>
+                <div class="task-content">
+                    <div class="task-title">Implement Calendar Event Converters</div>
+                    <div class="task-desc">
+                        <code>EventHeightConverter</code> - Calculate event height (60px per hour)<br>
+                        <code>EventTopPositionConverter</code> - Calculate event top position<br>
+                        <code>EventsForDayColumnConverter</code> - Filter events by date<br>
+                        <code>EventsByDateConverter</code> - Group events by date<br>
+                        <code>EventColorConverter</code> - Get event color from category
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">5</span>
+                <div class="task-content">
+                    <div class="task-title">Unit Test All Converters</div>
+                    <div class="task-desc">Create test cases for each converter with edge cases</div>
+                </div>
+            </li>
+        </ol>
+
+        <div class="deliverables">
+            <strong>Deliverables:</strong>
+            <ul>
+                <li>22 fully implemented value converters in <code>Helpers/Converters.cs</code></li>
+                <li>Unit tests for all converters</li>
+                <li>No more NotImplementedException errors</li>
+            </ul>
+        </div>
+
+        <div class="technical-notes">
+            <strong>Technical Notes:</strong>
+            <ul>
+                <li>File: <code>JubileeOutlook/Helpers/Converters.cs</code></li>
+                <li>All converters implement <code>IValueConverter</code> or <code>IMultiValueConverter</code></li>
+                <li>Use existing theme colors from <code>DarkTheme.xaml</code></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="phase-box">
+    <div class="phase-header">Sprint 1.2: Jubilee SSO Authentication</div>
+    <div class="phase-content">
+        <p><strong>Objective:</strong> Integrate Jubilee Single Sign-On for user authentication</p>
+
+        <div class="dependencies">
+            <strong>Dependencies:</strong> SSO endpoint at <code>https://sso.worldwidebibleweb.org/api</code>
+        </div>
+
+        <h4>Step-by-Step Tasks:</h4>
+        <ol class="task-list">
+            <li>
+                <span class="task-number">1</span>
+                <div class="task-content">
+                    <div class="task-title">Update AuthenticationManager</div>
+                    <div class="task-desc">
+                        Complete <code>SignInAsync()</code> - POST to /auth/login<br>
+                        Complete <code>SignOutAsync()</code> - POST to /auth/logout<br>
+                        Complete <code>RefreshTokenAsync()</code> - POST to /auth/refresh
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">2</span>
+                <div class="task-content">
+                    <div class="task-title">Implement Token Storage</div>
+                    <div class="task-desc">
+                        Use <code>SecureStorageService</code> with DPAPI encryption<br>
+                        Store access token, refresh token, expiry time<br>
+                        Auto-restore session on app startup
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">3</span>
+                <div class="task-content">
+                    <div class="task-title">Create Login UI</div>
+                    <div class="task-desc">
+                        Design login window with dark theme<br>
+                        Email/password fields with validation<br>
+                        "Remember me" checkbox<br>
+                        Error message display
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">4</span>
+                <div class="task-content">
+                    <div class="task-title">Integrate with MainWindow</div>
+                    <div class="task-desc">
+                        Show login on startup if not authenticated<br>
+                        Update profile button with user info<br>
+                        Handle session expiry gracefully
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">5</span>
+                <div class="task-content">
+                    <div class="task-title">Implement Token Refresh</div>
+                    <div class="task-desc">
+                        Auto-refresh before token expires<br>
+                        Background refresh timer<br>
+                        Handle refresh failures (redirect to login)
+                    </div>
+                </div>
+            </li>
+        </ol>
+
+        <div class="deliverables">
+            <strong>Deliverables:</strong>
+            <ul>
+                <li>Working SSO login/logout flow</li>
+                <li>Secure token storage with DPAPI</li>
+                <li>Auto session restore on startup</li>
+                <li>Token refresh mechanism</li>
+            </ul>
+        </div>
+
+        <div class="technical-notes">
+            <strong>Technical Notes:</strong>
+            <ul>
+                <li>Files: <code>Services/AuthenticationManager.cs</code>, <code>Services/SecureStorageService.cs</code></li>
+                <li>Models: <code>Models/AuthModels.cs</code> (AuthSession, UserProfile)</li>
+                <li>SSO API returns JWT tokens with 15-minute expiry</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="page-break"></div>
+
+<div class="phase-box">
+    <div class="phase-header">Sprint 1.3: InspireContinuum API Connection</div>
+    <div class="phase-content">
+        <p><strong>Objective:</strong> Connect JubileeOutlook to InspireContinuum API for data persistence</p>
+
+        <div class="dependencies">
+            <strong>Dependencies:</strong> Sprint 1.2 (Authentication) must be complete
+        </div>
+
+        <h4>Step-by-Step Tasks:</h4>
+        <ol class="task-list">
+            <li>
+                <span class="task-number">1</span>
+                <div class="task-content">
+                    <div class="task-title">Configure API Base Settings</div>
+                    <div class="task-desc">
+                        Create <code>appsettings.json</code> with API URL configuration<br>
+                        Support for dev/staging/prod environments<br>
+                        Read from environment variables
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">2</span>
+                <div class="task-content">
+                    <div class="task-title">Create HTTP Client Factory</div>
+                    <div class="task-desc">
+                        Centralized HttpClient with auth headers<br>
+                        Auto-attach Bearer token to requests<br>
+                        Handle 401 responses (trigger token refresh)
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">3</span>
+                <div class="task-content">
+                    <div class="task-title">Complete ApiCalendarService</div>
+                    <div class="task-desc">
+                        Verify all endpoints work with live API<br>
+                        <code>GetEventsAsync()</code> - GET /api/outlook/events<br>
+                        <code>CreateEventAsync()</code> - POST /api/outlook/events<br>
+                        <code>UpdateEventAsync()</code> - PUT /api/outlook/events/{id}<br>
+                        <code>DeleteEventAsync()</code> - DELETE /api/outlook/events/{id}
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">4</span>
+                <div class="task-content">
+                    <div class="task-title">Implement ApiMailService</div>
+                    <div class="task-desc">
+                        <code>GetFoldersAsync()</code> - GET /api/outlook/folders<br>
+                        <code>GetMessagesAsync()</code> - GET /api/outlook/messages<br>
+                        <code>SendMessageAsync()</code> - POST /api/outlook/messages<br>
+                        <code>DeleteMessageAsync()</code> - DELETE /api/outlook/messages/{id}<br>
+                        <code>MoveMessageAsync()</code> - PUT /api/outlook/messages/{id}/move
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">5</span>
+                <div class="task-content">
+                    <div class="task-title">Update ServiceConfiguration</div>
+                    <div class="task-desc">
+                        Toggle between Mock and API services<br>
+                        Read <code>CONTINUUM_API_URL</code> from environment<br>
+                        Pass authenticated user ID to services
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">6</span>
+                <div class="task-content">
+                    <div class="task-title">Error Handling & Retry Logic</div>
+                    <div class="task-desc">
+                        Implement Polly for retry policies<br>
+                        Handle network failures gracefully<br>
+                        Show user-friendly error messages
+                    </div>
+                </div>
+            </li>
+        </ol>
+
+        <div class="deliverables">
+            <strong>Deliverables:</strong>
+            <ul>
+                <li>Fully working ApiCalendarService</li>
+                <li>Fully working ApiMailService</li>
+                <li>Environment-based configuration</li>
+                <li>Robust error handling</li>
+            </ul>
+        </div>
+
+        <div class="technical-notes">
+            <strong>Technical Notes:</strong>
+            <ul>
+                <li>API Base URL: <code>http://localhost:3101</code> (dev) or <code>https://api.inspirecontinuum.com</code> (prod)</li>
+                <li>All requests require <code>Authorization: Bearer {token}</code> header</li>
+                <li>Consider adding NuGet: <code>Microsoft.Extensions.Http.Polly</code> for retry policies</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="milestone">
+    <h4>MILESTONE: Phase 1 Complete</h4>
+    <p>Application can authenticate users and communicate with backend API</p>
+</div>
+
+<div class="page-break"></div>
+
+<!-- PHASE 2 -->
+<h2>PHASE 2: Data Persistence & Synchronization</h2>
+<p><span class="priority-high">HIGH PRIORITY</span> - Enable real data storage and offline capability</p>
+
+<div class="phase-box" style="border-color: #4caf50;">
+    <div class="phase-header" style="background: #4caf50;">Sprint 2.1: Calendar Persistence ✅ COMPLETED</div>
+    <div class="phase-content">
+        <p><strong>Objective:</strong> Save and load calendar events from Continuum database</p>
+
+        <p style="color: #4caf50; font-weight: bold;">✅ This sprint was completed on January 15, 2026</p>
+
+        <div class="dependencies">
+            <strong>Dependencies:</strong> Phase 1 complete (API connection working)
+        </div>
+
+        <h4>Completed Tasks:</h4>
+        <ol class="task-list">
+            <li>
+                <span class="task-number" style="background: #4caf50;">✓</span>
+                <div class="task-content">
+                    <div class="task-title" style="color: #4caf50;">Wire Up CalendarViewModel to API ✅</div>
+                    <div class="task-desc">
+                        ✓ Replaced MockCalendarService with ApiCalendarService<br>
+                        ✓ Load events on calendar view activation<br>
+                        ✓ Loading states with IsLoading, LoadingMessage properties
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number" style="background: #4caf50;">✓</span>
+                <div class="task-content">
+                    <div class="task-title" style="color: #4caf50;">Implement Event CRUD Operations ✅</div>
+                    <div class="task-desc">
+                        ✓ Save new events to API on create (POST /outlook/events)<br>
+                        ✓ Update events on edit/save (PUT /outlook/events/:id)<br>
+                        ✓ Delete events with confirmation (DELETE /outlook/events/:id)<br>
+                        ✓ Optimistic UI updates with local cache sync
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number" style="background: #4caf50;">✓</span>
+                <div class="task-content">
+                    <div class="task-title" style="color: #4caf50;">Handle Event Images & Attachments ✅</div>
+                    <div class="task-desc">
+                        ✓ Upload images via API (multipart form data)<br>
+                        ✓ Store image URLs in event record<br>
+                        ✓ Download and display images on edit with loading indicator<br>
+                        ✓ Retry logic with exponential backoff
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number" style="background: #4caf50;">✓</span>
+                <div class="task-content">
+                    <div class="task-title" style="color: #4caf50;">Implement Date Range Loading ✅</div>
+                    <div class="task-desc">
+                        ✓ Load events for visible date range only<br>
+                        ✓ Month-based caching with 5-minute expiration<br>
+                        ✓ Lazy loading as user navigates<br>
+                        ✓ Buffer days (7-14) for smooth navigation<br>
+                        ✓ Thread-safe caching with lock objects
+                    </div>
+                </div>
+            </li>
+        </ol>
+
+        <div class="deliverables" style="background: #e8f5e9; border-color: #4caf50;">
+            <strong style="color: #4caf50;">Deliverables (All Complete):</strong>
+            <ul>
+                <li>✅ Events persist across app restarts</li>
+                <li>✅ Full CRUD operations working</li>
+                <li>✅ Image/attachment upload working</li>
+                <li>✅ Date range caching implemented</li>
+                <li>✅ Error handling and retry logic</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="phase-box">
+    <div class="phase-header">Sprint 2.2: Email Persistence</div>
+    <div class="phase-content">
+        <p><strong>Objective:</strong> Save and load emails from Continuum database</p>
+
+        <div class="dependencies">
+            <strong>Dependencies:</strong> Sprint 2.1 complete
+        </div>
+
+        <h4>Step-by-Step Tasks:</h4>
+        <ol class="task-list">
+            <li>
+                <span class="task-number">1</span>
+                <div class="task-content">
+                    <div class="task-title">Wire Up MainViewModel to API</div>
+                    <div class="task-desc">
+                        Replace MockMailService with ApiMailService<br>
+                        Load folders on startup<br>
+                        Load messages when folder selected
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">2</span>
+                <div class="task-content">
+                    <div class="task-title">Implement Message Operations</div>
+                    <div class="task-desc">
+                        Mark as read/unread via API<br>
+                        Delete messages via API<br>
+                        Move messages between folders<br>
+                        Flag/unflag messages
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">3</span>
+                <div class="task-content">
+                    <div class="task-title">Implement Email Sending</div>
+                    <div class="task-desc">
+                        Send composed email via API<br>
+                        Save to Sent Items folder<br>
+                        Handle attachments upload
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">4</span>
+                <div class="task-content">
+                    <div class="task-title">Implement Draft Saving</div>
+                    <div class="task-desc">
+                        Auto-save drafts periodically<br>
+                        Manual save to Drafts folder<br>
+                        Resume editing from drafts
+                    </div>
+                </div>
+            </li>
+        </ol>
+
+        <div class="deliverables">
+            <strong>Deliverables:</strong>
+            <ul>
+                <li>Emails persist across app restarts</li>
+                <li>Full message operations working</li>
+                <li>Draft auto-save functionality</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="phase-box">
+    <div class="phase-header">Sprint 2.3: Offline Cache (SQLite)</div>
+    <div class="phase-content">
+        <p><strong>Objective:</strong> Enable offline access with local SQLite cache</p>
+
+        <div class="dependencies">
+            <strong>Dependencies:</strong> Sprints 2.1 and 2.2 complete
+        </div>
+
+        <h4>Step-by-Step Tasks:</h4>
+        <ol class="task-list">
+            <li>
+                <span class="task-number">1</span>
+                <div class="task-content">
+                    <div class="task-title">Add SQLite NuGet Package</div>
+                    <div class="task-desc">
+                        Add <code>Microsoft.Data.Sqlite</code><br>
+                        Add <code>SQLitePCLRaw.bundle_e_sqlite3</code><br>
+                        Create database file in <code>%LocalAppData%\JubileeOutlook</code>
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">2</span>
+                <div class="task-content">
+                    <div class="task-title">Create Local Database Schema</div>
+                    <div class="task-desc">
+                        Mirror Continuum schema for emails, events, contacts<br>
+                        Add sync metadata columns (last_synced, is_dirty)<br>
+                        Create indexes for common queries
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">3</span>
+                <div class="task-content">
+                    <div class="task-title">Implement Cache Service</div>
+                    <div class="task-desc">
+                        <code>LocalCacheService</code> for SQLite operations<br>
+                        Store API responses locally<br>
+                        Check cache before API calls
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">4</span>
+                <div class="task-content">
+                    <div class="task-title">Implement Sync Logic</div>
+                    <div class="task-desc">
+                        Track dirty records for upload<br>
+                        Pull new server changes on connect<br>
+                        Conflict resolution strategy
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">5</span>
+                <div class="task-content">
+                    <div class="task-title">Detect Online/Offline Status</div>
+                    <div class="task-desc">
+                        Monitor network connectivity<br>
+                        Show offline indicator in status bar<br>
+                        Queue operations when offline
+                    </div>
+                </div>
+            </li>
+        </ol>
+
+        <div class="deliverables">
+            <strong>Deliverables:</strong>
+            <ul>
+                <li>App works offline with cached data</li>
+                <li>Changes sync when back online</li>
+                <li>Offline indicator in UI</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="milestone">
+    <h4>MILESTONE: Phase 2 Complete</h4>
+    <p>Application has full data persistence with offline capability</p>
+</div>
+
+<div class="page-break"></div>
+
+<!-- PHASE 3 -->
+<h2>PHASE 3: Complete Modules</h2>
+<p><span class="priority-medium">MEDIUM PRIORITY</span> - Build out remaining application modules</p>
+
+<div class="phase-box">
+    <div class="phase-header">Sprint 3.1: People/Contacts Module</div>
+    <div class="phase-content">
+        <p><strong>Objective:</strong> Implement full contact management functionality</p>
+
+        <div class="dependencies">
+            <strong>Dependencies:</strong> Phase 2 complete (API and persistence working)
+        </div>
+
+        <h4>Step-by-Step Tasks:</h4>
+        <ol class="task-list">
+            <li>
+                <span class="task-number">1</span>
+                <div class="task-content">
+                    <div class="task-title">Create Contact Models</div>
+                    <div class="task-desc">
+                        <code>Contact</code> - Name, email, phone, company, notes<br>
+                        <code>ContactGroup</code> - Group name, member list<br>
+                        <code>ContactEmail</code>, <code>ContactPhone</code>, <code>ContactAddress</code>
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">2</span>
+                <div class="task-content">
+                    <div class="task-title">Create IContactService Interface</div>
+                    <div class="task-desc">
+                        <code>GetContactsAsync()</code><br>
+                        <code>GetContactByIdAsync()</code><br>
+                        <code>CreateContactAsync()</code><br>
+                        <code>UpdateContactAsync()</code><br>
+                        <code>DeleteContactAsync()</code><br>
+                        <code>SearchContactsAsync()</code>
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">3</span>
+                <div class="task-content">
+                    <div class="task-title">Implement MockContactService</div>
+                    <div class="task-desc">
+                        In-memory contact storage<br>
+                        Sample contact data for testing
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">4</span>
+                <div class="task-content">
+                    <div class="task-title">Create ContactsViewModel</div>
+                    <div class="task-desc">
+                        Contact list with sorting/filtering<br>
+                        Selected contact property<br>
+                        CRUD commands
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">5</span>
+                <div class="task-content">
+                    <div class="task-title">Create ContactsView UI</div>
+                    <div class="task-desc">
+                        Contact list panel (alphabetical grouping)<br>
+                        Contact detail panel<br>
+                        Search box with instant filter<br>
+                        Add/Edit contact buttons
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">6</span>
+                <div class="task-content">
+                    <div class="task-title">Create NewContactWindow</div>
+                    <div class="task-desc">
+                        Full contact form with all fields<br>
+                        Multiple email/phone/address support<br>
+                        Photo upload<br>
+                        Save/Cancel buttons
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">7</span>
+                <div class="task-content">
+                    <div class="task-title">Implement ApiContactService</div>
+                    <div class="task-desc">
+                        Connect to InspireContinuum API<br>
+                        All CRUD operations via REST
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">8</span>
+                <div class="task-content">
+                    <div class="task-title">Integrate with Email Compose</div>
+                    <div class="task-desc">
+                        Contact picker for To/Cc/Bcc fields<br>
+                        Auto-complete from contacts<br>
+                        Click email to start compose
+                    </div>
+                </div>
+            </li>
+        </ol>
+
+        <div class="deliverables">
+            <strong>Deliverables:</strong>
+            <ul>
+                <li>Complete People module with contact list</li>
+                <li>Add/Edit/Delete contacts</li>
+                <li>Search and filter</li>
+                <li>Integration with email compose</li>
+            </ul>
+        </div>
+
+        <div class="technical-notes">
+            <strong>Technical Notes:</strong>
+            <ul>
+                <li>New files: <code>Models/Contact.cs</code>, <code>ViewModels/ContactsViewModel.cs</code>, <code>Views/ContactsView.xaml</code></li>
+                <li>Database tables: <code>outlook_contacts</code>, <code>outlook_contact_emails</code>, etc.</li>
+                <li>Consider vCard import/export for future</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="page-break"></div>
+
+<div class="phase-box">
+    <div class="phase-header">Sprint 3.2: Tasks Module</div>
+    <div class="phase-content">
+        <p><strong>Objective:</strong> Implement full task management functionality</p>
+
+        <div class="dependencies">
+            <strong>Dependencies:</strong> Sprint 3.1 complete (for consistent patterns)
+        </div>
+
+        <h4>Step-by-Step Tasks:</h4>
+        <ol class="task-list">
+            <li>
+                <span class="task-number">1</span>
+                <div class="task-content">
+                    <div class="task-title">Create Task Models</div>
+                    <div class="task-desc">
+                        <code>TaskItem</code> - Title, description, due date, priority, status<br>
+                        <code>TaskCategory</code> - Category name, color<br>
+                        <code>TaskReminder</code> - Reminder time, repeat
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">2</span>
+                <div class="task-content">
+                    <div class="task-title">Create ITaskService Interface</div>
+                    <div class="task-desc">
+                        <code>GetTasksAsync()</code><br>
+                        <code>GetTaskByIdAsync()</code><br>
+                        <code>CreateTaskAsync()</code><br>
+                        <code>UpdateTaskAsync()</code><br>
+                        <code>DeleteTaskAsync()</code><br>
+                        <code>CompleteTaskAsync()</code>
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">3</span>
+                <div class="task-content">
+                    <div class="task-title">Implement MockTaskService</div>
+                    <div class="task-desc">
+                        In-memory task storage<br>
+                        Sample task data for testing
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">4</span>
+                <div class="task-content">
+                    <div class="task-title">Create TasksViewModel</div>
+                    <div class="task-desc">
+                        Task list with grouping (Today, This Week, Later, Completed)<br>
+                        Filter by category, priority, status<br>
+                        Sort by due date, priority, alphabetical
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">5</span>
+                <div class="task-content">
+                    <div class="task-title">Create TasksView UI</div>
+                    <div class="task-desc">
+                        Task list with checkboxes<br>
+                        Priority indicators (High=red, Medium=yellow, Low=green)<br>
+                        Due date display with overdue highlighting<br>
+                        Quick add task input
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">6</span>
+                <div class="task-content">
+                    <div class="task-title">Create NewTaskWindow</div>
+                    <div class="task-desc">
+                        Task form with all fields<br>
+                        Due date picker<br>
+                        Priority selector<br>
+                        Category selector<br>
+                        Reminder options
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">7</span>
+                <div class="task-content">
+                    <div class="task-title">Implement ApiTaskService</div>
+                    <div class="task-desc">
+                        Connect to InspireContinuum API<br>
+                        All CRUD operations via REST
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">8</span>
+                <div class="task-content">
+                    <div class="task-title">Integrate with Calendar</div>
+                    <div class="task-desc">
+                        Show tasks with due dates on calendar<br>
+                        Different visual style from events<br>
+                        Create task from calendar date
+                    </div>
+                </div>
+            </li>
+        </ol>
+
+        <div class="deliverables">
+            <strong>Deliverables:</strong>
+            <ul>
+                <li>Complete Tasks module with task list</li>
+                <li>Add/Edit/Delete/Complete tasks</li>
+                <li>Priority and category management</li>
+                <li>Integration with calendar view</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="phase-box">
+    <div class="phase-header">Sprint 3.3: Ribbon Commands Implementation</div>
+    <div class="phase-content">
+        <p><strong>Objective:</strong> Implement all empty ribbon command stubs</p>
+
+        <h4>Step-by-Step Tasks:</h4>
+        <ol class="task-list">
+            <li>
+                <span class="task-number">1</span>
+                <div class="task-content">
+                    <div class="task-title">Folder Management Commands</div>
+                    <div class="task-desc">
+                        <code>NewFolder()</code> - Create subfolder dialog<br>
+                        <code>RenameFolder()</code> - Rename dialog<br>
+                        <code>DeleteFolder()</code> - Delete with confirmation
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">2</span>
+                <div class="task-content">
+                    <div class="task-title">Message Management Commands</div>
+                    <div class="task-desc">
+                        <code>CleanUpFolder()</code> - Remove duplicates<br>
+                        <code>RecoverDeletedItems()</code> - Restore from trash<br>
+                        <code>ApplyCategory()</code> - Category picker popup
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">3</span>
+                <div class="task-content">
+                    <div class="task-title">Compose Commands</div>
+                    <div class="task-desc">
+                        <code>InsertSignature()</code> - Signature picker<br>
+                        <code>SetImportance()</code> - High/Normal/Low<br>
+                        <code>SetFollowUp()</code> - Follow-up flag picker<br>
+                        <code>RequestReceipt()</code> - Toggle read receipt
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">4</span>
+                <div class="task-content">
+                    <div class="task-title">Calendar Commands</div>
+                    <div class="task-desc">
+                        <code>ShareCalendar()</code> - Share dialog<br>
+                        <code>SetRecurrence()</code> - Recurrence editor<br>
+                        <code>ChangeTimeZone()</code> - Timezone picker
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">5</span>
+                <div class="task-content">
+                    <div class="task-title">View Commands</div>
+                    <div class="task-desc">
+                        <code>ChangeReadingPanePosition()</code> - Right/Bottom/Off<br>
+                        <code>SortMessages()</code> - Sort options menu<br>
+                        <code>FilterMessages()</code> - Filter by read/unread/flagged
+                    </div>
+                </div>
+            </li>
+        </ol>
+
+        <div class="deliverables">
+            <strong>Deliverables:</strong>
+            <ul>
+                <li>All 19+ ribbon commands functional</li>
+                <li>No more empty command stubs</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="milestone">
+    <h4>MILESTONE: Phase 3 Complete</h4>
+    <p>All four modules (Mail, Calendar, Contacts, Tasks) are fully functional</p>
+</div>
+
+<div class="page-break"></div>
+
+<!-- PHASE 4 -->
+<h2>PHASE 4: Advanced Features & Polish</h2>
+<p><span class="priority-low">LOWER PRIORITY</span> - Enhancements and additional capabilities</p>
+
+<div class="phase-box">
+    <div class="phase-header">Sprint 4.1: Real Email Integration (IMAP/SMTP)</div>
+    <div class="phase-content">
+        <p><strong>Objective:</strong> Enable sending/receiving real emails via IMAP/SMTP</p>
+
+        <h4>Step-by-Step Tasks:</h4>
+        <ol class="task-list">
+            <li>
+                <span class="task-number">1</span>
+                <div class="task-content">
+                    <div class="task-title">Add MailKit NuGet Package</div>
+                    <div class="task-desc">
+                        Add <code>MailKit</code> for IMAP/SMTP<br>
+                        Add <code>MimeKit</code> for email parsing
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">2</span>
+                <div class="task-content">
+                    <div class="task-title">Create Account Configuration UI</div>
+                    <div class="task-desc">
+                        Settings page for mail server config<br>
+                        IMAP server, port, SSL settings<br>
+                        SMTP server, port, authentication<br>
+                        Test connection button
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">3</span>
+                <div class="task-content">
+                    <div class="task-title">Implement ImapMailService</div>
+                    <div class="task-desc">
+                        Connect to IMAP server<br>
+                        Sync folders from server<br>
+                        Download messages with IDLE push
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">4</span>
+                <div class="task-content">
+                    <div class="task-title">Implement SmtpMailService</div>
+                    <div class="task-desc">
+                        Connect to SMTP server<br>
+                        Send emails with attachments<br>
+                        Handle send failures/retries
+                    </div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">5</span>
+                <div class="task-content">
+                    <div class="task-title">Background Sync Service</div>
+                    <div class="task-desc">
+                        Periodic email checking<br>
+                        IMAP IDLE for push notifications<br>
+                        Sync emails to local cache
+                    </div>
+                </div>
+            </li>
+        </ol>
+
+        <div class="deliverables">
+            <strong>Deliverables:</strong>
+            <ul>
+                <li>Real email send/receive working</li>
+                <li>Multi-account configuration</li>
+                <li>Background sync with IMAP IDLE</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="phase-box">
+    <div class="phase-header">Sprint 4.2: Advanced Email Features</div>
+    <div class="phase-content">
+        <h4>Step-by-Step Tasks:</h4>
+        <ol class="task-list">
+            <li>
+                <span class="task-number">1</span>
+                <div class="task-content">
+                    <div class="task-title">Email Signatures</div>
+                    <div class="task-desc">Create, edit, manage signatures<br>Auto-insert on compose</div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">2</span>
+                <div class="task-content">
+                    <div class="task-title">Conversation Threading</div>
+                    <div class="task-desc">Group related emails by thread<br>Expand/collapse thread view</div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">3</span>
+                <div class="task-content">
+                    <div class="task-title">Rules and Filters</div>
+                    <div class="task-desc">Create rules based on sender/subject<br>Auto-move, flag, categorize</div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">4</span>
+                <div class="task-content">
+                    <div class="task-title">Email Templates</div>
+                    <div class="task-desc">Save/load email templates<br>Quick insert from menu</div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">5</span>
+                <div class="task-content">
+                    <div class="task-title">Schedule Send</div>
+                    <div class="task-desc">Schedule email for later<br>Edit/cancel scheduled emails</div>
+                </div>
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="phase-box">
+    <div class="phase-header">Sprint 4.3: UI/UX Enhancements</div>
+    <div class="phase-content">
+        <h4>Step-by-Step Tasks:</h4>
+        <ol class="task-list">
+            <li>
+                <span class="task-number">1</span>
+                <div class="task-content">
+                    <div class="task-title">System Notifications</div>
+                    <div class="task-desc">Windows toast notifications for new emails<br>Notification settings</div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">2</span>
+                <div class="task-content">
+                    <div class="task-title">Light Theme Option</div>
+                    <div class="task-desc">Create LightTheme.xaml<br>Theme toggle in settings</div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">3</span>
+                <div class="task-content">
+                    <div class="task-title">Keyboard Navigation</div>
+                    <div class="task-desc">Full keyboard shortcuts<br>Focus management<br>Shortcut help dialog</div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">4</span>
+                <div class="task-content">
+                    <div class="task-title">Accessibility</div>
+                    <div class="task-desc">Screen reader support<br>High contrast mode<br>ARIA labels</div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">5</span>
+                <div class="task-content">
+                    <div class="task-title">Spell Checking</div>
+                    <div class="task-desc">Integrate spell checker in compose<br>Suggestion popup<br>Custom dictionary</div>
+                </div>
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="phase-box">
+    <div class="phase-header">Sprint 4.4: Advanced Calendar Features</div>
+    <div class="phase-content">
+        <h4>Step-by-Step Tasks:</h4>
+        <ol class="task-list">
+            <li>
+                <span class="task-number">1</span>
+                <div class="task-content">
+                    <div class="task-title">Meeting Invitations</div>
+                    <div class="task-desc">Send meeting invites via email<br>Accept/Decline/Tentative responses</div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">2</span>
+                <div class="task-content">
+                    <div class="task-title">Free/Busy Lookup</div>
+                    <div class="task-desc">Check attendee availability<br>Scheduling assistant</div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">3</span>
+                <div class="task-content">
+                    <div class="task-title">External Calendar Sync</div>
+                    <div class="task-desc">Google Calendar sync<br>Outlook.com sync<br>iCal import/export</div>
+                </div>
+            </li>
+            <li>
+                <span class="task-number">4</span>
+                <div class="task-content">
+                    <div class="task-title">Calendar Sharing</div>
+                    <div class="task-desc">Share calendar with others<br>Permission levels (view/edit)</div>
+                </div>
+            </li>
+        </ol>
+    </div>
+</div>
+
+<div class="milestone">
+    <h4>MILESTONE: Phase 4 Complete - Version 2.0.0</h4>
+    <p>JubileeOutlook is a full-featured production email client</p>
+</div>
+
+<div class="page-break"></div>
+
+<!-- SUMMARY -->
+<h2>Execution Summary</h2>
+
+<h3>Phase Overview</h3>
+
+<table>
+    <tr>
+        <th>Phase</th>
+        <th>Sprints</th>
+        <th>Key Focus</th>
+        <th>Dependencies</th>
+    </tr>
+    <tr>
+        <td><strong>Phase 1</strong></td>
+        <td>3 sprints</td>
+        <td>Value Converters, SSO Auth, API Connection</td>
+        <td>None - Start immediately</td>
+    </tr>
+    <tr>
+        <td><strong>Phase 2</strong></td>
+        <td>3 sprints</td>
+        <td>Calendar Persistence, Email Persistence, Offline Cache</td>
+        <td>Phase 1 complete</td>
+    </tr>
+    <tr>
+        <td><strong>Phase 3</strong></td>
+        <td>3 sprints</td>
+        <td>Contacts Module, Tasks Module, Ribbon Commands</td>
+        <td>Phase 2 complete</td>
+    </tr>
+    <tr>
+        <td><strong>Phase 4</strong></td>
+        <td>4 sprints</td>
+        <td>IMAP/SMTP, Advanced Features, UI Polish</td>
+        <td>Phase 3 complete</td>
+    </tr>
+</table>
+
+<h3>Quick Reference: First 10 Tasks to Start</h3>
+
+<table>
+    <tr>
+        <th>#</th>
+        <th>Task</th>
+        <th>File(s)</th>
+        <th>Priority</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>Implement BoolToVisibilityConverter</td>
+        <td><code>Helpers/Converters.cs</code></td>
+        <td><span class="priority-critical">CRITICAL</span></td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>Implement NullToVisibilityConverter</td>
+        <td><code>Helpers/Converters.cs</code></td>
+        <td><span class="priority-critical">CRITICAL</span></td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>Implement IsTodayConverter</td>
+        <td><code>Helpers/Converters.cs</code></td>
+        <td><span class="priority-critical">CRITICAL</span></td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>Implement EventHeightConverter</td>
+        <td><code>Helpers/Converters.cs</code></td>
+        <td><span class="priority-critical">CRITICAL</span></td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>Implement EventTopPositionConverter</td>
+        <td><code>Helpers/Converters.cs</code></td>
+        <td><span class="priority-critical">CRITICAL</span></td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>Complete AuthenticationManager.SignInAsync</td>
+        <td><code>Services/AuthenticationManager.cs</code></td>
+        <td><span class="priority-high">HIGH</span></td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>Implement token storage with DPAPI</td>
+        <td><code>Services/SecureStorageService.cs</code></td>
+        <td><span class="priority-high">HIGH</span></td>
+    </tr>
+    <tr>
+        <td>8</td>
+        <td>Create Login Window UI</td>
+        <td><code>Views/LoginWindow.xaml</code></td>
+        <td><span class="priority-high">HIGH</span></td>
+    </tr>
+    <tr>
+        <td>9</td>
+        <td>Configure HTTP client with auth headers</td>
+        <td><code>Services/HttpClientFactory.cs</code></td>
+        <td><span class="priority-high">HIGH</span></td>
+    </tr>
+    <tr>
+        <td>10</td>
+        <td>Verify ApiCalendarService endpoints</td>
+        <td><code>Services/ApiCalendarService.cs</code></td>
+        <td><span class="priority-high">HIGH</span></td>
+    </tr>
+</table>
+
+<h3>Success Criteria</h3>
+
+<ul>
+    <li><strong>Phase 1:</strong> User can log in, calendar and email views load without errors</li>
+    <li><strong>Phase 2:</strong> Data persists after app restart, offline mode works</li>
+    <li><strong>Phase 3:</strong> All four modules (Mail, Calendar, Contacts, Tasks) are functional</li>
+    <li><strong>Phase 4:</strong> Real email send/receive works, professional polish complete</li>
+</ul>
+
+<hr>
+
+<p style="text-align: center; color: #666; margin-top: 40px;">
+    <strong>Document Prepared By:</strong> Jubilee Development Team<br>
+    <strong>Date:</strong> January 15, 2026<br>
+    <strong>Version:</strong> 1.1 (Updated with Sprint 2.1 completion)
+</p>
+
+</body>
+</html>

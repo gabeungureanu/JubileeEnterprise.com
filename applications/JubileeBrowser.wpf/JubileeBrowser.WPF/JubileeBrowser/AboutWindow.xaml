@@ -99,17 +99,20 @@
                         Margin="0,24,0,0"
                         Width="340">
                     <StackPanel>
-                        <TextBlock Text="Jubilee is up to date."
-                                   Foreground="#43D17A"
+                        <TextBlock x:Name="UpdateStatusText"
+                                   Text="Checking for updates..."
+                                   Foreground="#C0C0D0"
                                    FontWeight="SemiBold"
                                    FontSize="12"/>
-                        <Button Content="Check for Updates"
+                        <Button x:Name="CheckUpdatesButton"
+                                Content="Check for Updates"
                                 Height="32"
                                 Margin="0,12,0,10"
                                 Background="#3a3a52"
                                 Foreground="#E6E6F2"
                                 BorderThickness="0"
-                                Cursor="Hand">
+                                Cursor="Hand"
+                                Click="CheckUpdatesButton_Click">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border x:Name="border"
@@ -121,14 +124,45 @@
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter TargetName="border" Property="Background" Value="#454560"/>
                                         </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter TargetName="border" Property="Background" Value="#2a2a3a"/>
+                                            <Setter Property="Foreground" Value="#808090"/>
+                                        </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Button.Template>
                         </Button>
-                        <TextBlock Text="Channel: Stable"
+                        <Button x:Name="DownloadUpdateButton"
+                                Content="Download and Install Update"
+                                Height="32"
+                                Margin="0,0,0,10"
+                                Background="#2d6a4f"
+                                Foreground="#FFFFFF"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Visibility="Collapsed"
+                                Click="DownloadUpdateButton_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="border"
+                                            Background="{TemplateBinding Background}"
+                                            CornerRadius="6">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="border" Property="Background" Value="#40916c"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        <TextBlock x:Name="ChannelText"
+                                   Text="Channel: Stable"
                                    Foreground="#B0B0C2"
                                    FontSize="11"/>
-                        <TextBlock Text="Last checked: 1h ago"
+                        <TextBlock x:Name="LastCheckedText"
+                                   Text="Last checked: Never"
                                    Foreground="#B0B0C2"
                                    FontSize="11"
                                    Margin="0,4,0,0"/>

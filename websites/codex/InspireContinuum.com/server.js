@@ -864,6 +864,872 @@ app.post('/api/v1/analytics', async (req, res) => {
 });
 
 // =============================================================================
+// JUBILEE OUTLOOK - CALENDAR ROUTES
+// =============================================================================
+
+// Get calendars for user
+app.get('/api/v1/outlook/calendars', requireUserId, async (req, res) => {
+    try {
+        const result = await continuumPool.query(`
+            SELECT * FROM outlook_calendars
+            WHERE user_id = $1
+            ORDER BY is_default DESC, name
+        `, [req.userId]);
+
+        res.json({ calendars: result.rows });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch calendars', message: err.message });
+    }
+});
+
+// Create calendar
+app.post('/api/v1/outlook/calendars', requireUserId, async (req, res) => {
+    try {
+        const { name, description, color, is_default, time_zone } = req.body;
+
+        if (!name) {
+            return res.status(400).json({ error: 'Calendar name is required' });
+        }
+
+        const result = await continuumPool.query(`
+            INSERT INTO outlook_calendars (user_id, name, description, color, is_default, time_zone)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING *
+        `, [req.userId, name, description, color || '#0078D4', is_default || false, time_zone || 'UTC']);
+
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to create calendar', message: err.message });
+    }
+});
+
+// Get calendar events
+app.get('/api/v1/outlook/events', async (req, res) => {
+    try {
+        const { userId, user_id, startDate, endDate, calendarId } = req.query;
+        const effectiveUserId = userId || user_id;
+
+        if (!effectiveUserId) {
+            return res.status(400).json({ error: 'userId is required' });
+        }
+
+        let query = `
+            SELECT e.*, c.name as calendar_name
+            FROM outlook_calendar_events e
+            LEFT JOIN outlook_calendars c ON e.calendar_id = c.id
+            WHERE e.user_id = $1
+        `;
+        const params = [effectiveUserId];
+        let paramCount = 1;
+
+        if (startDate) {
+            params.push(startDate);
+            query += ` AND e.start_time >= $${++paramCount}`;
+        }
+        if (endDate) {
+            params.push(endDate);
+            query += ` AND e.end_time <= $${++paramCount}`;
+        }
+        if (calendarId) {
+            params.push(calendarId);
+            query += ` AND e.calendar_id = $${++paramCount}`;
+        }
+
+        query += ' ORDER BY e.start_time';
+
+        const result = await continuumPool.query(query, params);
+
+        // Get attendees for each event
+        const events = await Promise.all(result.rows.map(async (event) => {
+            const attendeesResult = await continuumPool.query(`
+                SELECT attendee_email, attendee_name, response_status, is_required
+                FROM outlook_event_attendees
+                WHERE event_id = $1
+            `, [event.id]);
+
+            const attachmentsResult = await continuumPool.query(`
+                SELECT id, file_name, file_path, file_size, mime_type, created_at as added_date
+                FROM outlook_event_attachments
+                WHERE event_id = $1
+            `, [event.id]);
+
+            return {
+                id: event.id,
+                calendarId: event.calendar_id,
+                subject: event.subject,
+                location: event.location,
+                description: event.description,
+                startTime: event.start_time,
+                endTime: event.end_time,
+                isAllDay: event.is_all_day,
+                status: event.status,
+                category: event.category,
+                eventColor: event.event_color,
+                calendarName: event.calendar_name || 'My Calendar',
+                attendees: attendeesResult.rows.map(a => a.attendee_email),
+                attachments: attachmentsResult.rows.map(a => ({
+                    id: a.id,
+                    fileName: a.file_name,
+                    filePath: a.file_path,
+                    fileSize: a.file_size,
+                    addedDate: a.added_date
+                })),
+                isRecurring: event.is_recurring,
+                reminderMinutes: event.reminder_minutes
+            };
+        }));
+
+        res.json(events);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch events', message: err.message });
+    }
+});
+
+// Get single event
+app.get('/api/v1/outlook/events/:id', async (req, res) => {
+    try {
+        const result = await continuumPool.query(`
+            SELECT e.*, c.name as calendar_name
+            FROM outlook_calendar_events e
+            LEFT JOIN outlook_calendars c ON e.calendar_id = c.id
+            WHERE e.id = $1
+        `, [req.params.id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Event not found' });
+        }
+
+        const event = result.rows[0];
+
+        const attendeesResult = await continuumPool.query(`
+            SELECT attendee_email, attendee_name, response_status, is_required
+            FROM outlook_event_attendees
+            WHERE event_id = $1
+        `, [event.id]);
+
+        const attachmentsResult = await continuumPool.query(`
+            SELECT id, file_name, file_path, file_size, mime_type, created_at as added_date
+            FROM outlook_event_attachments
+            WHERE event_id = $1
+        `, [event.id]);
+
+        res.json({
+            id: event.id,
+            calendarId: event.calendar_id,
+            subject: event.subject,
+            location: event.location,
+            description: event.description,
+            startTime: event.start_time,
+            endTime: event.end_time,
+            isAllDay: event.is_all_day,
+            status: event.status,
+            category: event.category,
+            eventColor: event.event_color,
+            calendarName: event.calendar_name || 'My Calendar',
+            attendees: attendeesResult.rows.map(a => a.attendee_email),
+            attachments: attachmentsResult.rows.map(a => ({
+                id: a.id,
+                fileName: a.file_name,
+                filePath: a.file_path,
+                fileSize: a.file_size,
+                addedDate: a.added_date
+            })),
+            isRecurring: event.is_recurring,
+            reminderMinutes: event.reminder_minutes
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch event', message: err.message });
+    }
+});
+
+// Create calendar event
+app.post('/api/v1/outlook/events', async (req, res) => {
+    try {
+        const {
+            userId, user_id, calendarId, calendar_id,
+            subject, location, description,
+            startTime, start_time, endTime, end_time,
+            isAllDay, is_all_day, status, category,
+            eventColor, event_color, isRecurring, is_recurring,
+            reminderMinutes, reminder_minutes,
+            attendees, attachments
+        } = req.body;
+
+        const effectiveUserId = userId || user_id;
+        const effectiveStartTime = startTime || start_time;
+        const effectiveEndTime = endTime || end_time;
+        const effectiveCalendarId = calendarId || calendar_id;
+        const effectiveIsAllDay = isAllDay ?? is_all_day ?? false;
+        const effectiveEventColor = eventColor || event_color || '#5B9BD5';
+        const effectiveIsRecurring = isRecurring ?? is_recurring ?? false;
+        const effectiveReminderMinutes = reminderMinutes ?? reminder_minutes ?? 15;
+
+        if (!effectiveUserId || !subject || !effectiveStartTime || !effectiveEndTime) {
+            return res.status(400).json({ error: 'userId, subject, startTime, and endTime are required' });
+        }
+
+        const client = await continuumPool.connect();
+        try {
+            await client.query('BEGIN');
+
+            // Get or create default calendar for user
+            let calendarIdToUse = effectiveCalendarId;
+            if (!calendarIdToUse) {
+                const calResult = await client.query(`
+                    SELECT id FROM outlook_calendars WHERE user_id = $1 AND is_default = true
+                `, [effectiveUserId]);
+
+                if (calResult.rows.length === 0) {
+                    const newCalResult = await client.query(`
+                        INSERT INTO outlook_calendars (user_id, name, is_default)
+                        VALUES ($1, 'My Calendar', true)
+                        RETURNING id
+                    `, [effectiveUserId]);
+                    calendarIdToUse = newCalResult.rows[0].id;
+                } else {
+                    calendarIdToUse = calResult.rows[0].id;
+                }
+            }
+
+            // Insert event
+            const eventResult = await client.query(`
+                INSERT INTO outlook_calendar_events (
+                    calendar_id, user_id, subject, location, description,
+                    start_time, end_time, is_all_day, status, category,
+                    event_color, is_recurring, reminder_minutes
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                RETURNING *
+            `, [
+                calendarIdToUse, effectiveUserId, subject, location || '', description || '',
+                effectiveStartTime, effectiveEndTime, effectiveIsAllDay, status || 'free', category || '',
+                effectiveEventColor, effectiveIsRecurring, effectiveReminderMinutes
+            ]);
+
+            const newEvent = eventResult.rows[0];
+
+            // Insert attendees
+            if (Array.isArray(attendees) && attendees.length > 0) {
+                for (const attendee of attendees) {
+                    const email = typeof attendee === 'string' ? attendee : attendee.email;
+                    const name = typeof attendee === 'string' ? null : attendee.name;
+                    await client.query(`
+                        INSERT INTO outlook_event_attendees (event_id, attendee_email, attendee_name)
+                        VALUES ($1, $2, $3)
+                    `, [newEvent.id, email, name]);
+                }
+            }
+
+            // Insert attachments
+            if (Array.isArray(attachments) && attachments.length > 0) {
+                for (const att of attachments) {
+                    await client.query(`
+                        INSERT INTO outlook_event_attachments (event_id, file_name, file_path, file_size, mime_type)
+                        VALUES ($1, $2, $3, $4, $5)
+                    `, [newEvent.id, att.fileName || att.file_name, att.filePath || att.file_path, att.fileSize || att.file_size || 0, att.mimeType || att.mime_type]);
+                }
+            }
+
+            await client.query('COMMIT');
+
+            res.status(201).json({
+                id: newEvent.id,
+                calendarId: newEvent.calendar_id,
+                subject: newEvent.subject,
+                location: newEvent.location,
+                description: newEvent.description,
+                startTime: newEvent.start_time,
+                endTime: newEvent.end_time,
+                isAllDay: newEvent.is_all_day,
+                status: newEvent.status,
+                category: newEvent.category,
+                eventColor: newEvent.event_color,
+                isRecurring: newEvent.is_recurring,
+                reminderMinutes: newEvent.reminder_minutes
+            });
+        } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to create event', message: err.message });
+    }
+});
+
+// Update calendar event
+app.put('/api/v1/outlook/events/:id', async (req, res) => {
+    try {
+        const {
+            subject, location, description,
+            startTime, start_time, endTime, end_time,
+            isAllDay, is_all_day, status, category,
+            eventColor, event_color, isRecurring, is_recurring,
+            reminderMinutes, reminder_minutes,
+            attendees, attachments
+        } = req.body;
+
+        const effectiveStartTime = startTime || start_time;
+        const effectiveEndTime = endTime || end_time;
+        const effectiveIsAllDay = isAllDay ?? is_all_day;
+        const effectiveEventColor = eventColor || event_color;
+        const effectiveIsRecurring = isRecurring ?? is_recurring;
+        const effectiveReminderMinutes = reminderMinutes ?? reminder_minutes;
+
+        const client = await continuumPool.connect();
+        try {
+            await client.query('BEGIN');
+
+            // Update event
+            const result = await client.query(`
+                UPDATE outlook_calendar_events SET
+                    subject = COALESCE($1, subject),
+                    location = COALESCE($2, location),
+                    description = COALESCE($3, description),
+                    start_time = COALESCE($4, start_time),
+                    end_time = COALESCE($5, end_time),
+                    is_all_day = COALESCE($6, is_all_day),
+                    status = COALESCE($7, status),
+                    category = COALESCE($8, category),
+                    event_color = COALESCE($9, event_color),
+                    is_recurring = COALESCE($10, is_recurring),
+                    reminder_minutes = COALESCE($11, reminder_minutes),
+                    updated_at = NOW()
+                WHERE id = $12
+                RETURNING *
+            `, [
+                subject, location, description,
+                effectiveStartTime, effectiveEndTime, effectiveIsAllDay,
+                status, category, effectiveEventColor,
+                effectiveIsRecurring, effectiveReminderMinutes,
+                req.params.id
+            ]);
+
+            if (result.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return res.status(404).json({ error: 'Event not found' });
+            }
+
+            const updatedEvent = result.rows[0];
+
+            // Update attendees if provided
+            if (Array.isArray(attendees)) {
+                await client.query('DELETE FROM outlook_event_attendees WHERE event_id = $1', [req.params.id]);
+                for (const attendee of attendees) {
+                    const email = typeof attendee === 'string' ? attendee : attendee.email;
+                    const name = typeof attendee === 'string' ? null : attendee.name;
+                    await client.query(`
+                        INSERT INTO outlook_event_attendees (event_id, attendee_email, attendee_name)
+                        VALUES ($1, $2, $3)
+                    `, [req.params.id, email, name]);
+                }
+            }
+
+            // Update attachments if provided
+            if (Array.isArray(attachments)) {
+                await client.query('DELETE FROM outlook_event_attachments WHERE event_id = $1', [req.params.id]);
+                for (const att of attachments) {
+                    await client.query(`
+                        INSERT INTO outlook_event_attachments (event_id, file_name, file_path, file_size, mime_type)
+                        VALUES ($1, $2, $3, $4, $5)
+                    `, [req.params.id, att.fileName || att.file_name, att.filePath || att.file_path, att.fileSize || att.file_size || 0, att.mimeType || att.mime_type]);
+                }
+            }
+
+            await client.query('COMMIT');
+
+            res.json({
+                id: updatedEvent.id,
+                calendarId: updatedEvent.calendar_id,
+                subject: updatedEvent.subject,
+                location: updatedEvent.location,
+                description: updatedEvent.description,
+                startTime: updatedEvent.start_time,
+                endTime: updatedEvent.end_time,
+                isAllDay: updatedEvent.is_all_day,
+                status: updatedEvent.status,
+                category: updatedEvent.category,
+                eventColor: updatedEvent.event_color,
+                isRecurring: updatedEvent.is_recurring,
+                reminderMinutes: updatedEvent.reminder_minutes
+            });
+        } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to update event', message: err.message });
+    }
+});
+
+// Delete calendar event
+app.delete('/api/v1/outlook/events/:id', async (req, res) => {
+    try {
+        const result = await continuumPool.query(`
+            DELETE FROM outlook_calendar_events WHERE id = $1 RETURNING id
+        `, [req.params.id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Event not found' });
+        }
+
+        res.json({ success: true, deleted: req.params.id });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete event', message: err.message });
+    }
+});
+
+// =============================================================================
+// JUBILEE OUTLOOK - EMAIL ROUTES
+// =============================================================================
+
+// Get email folders
+app.get('/api/v1/outlook/folders', requireUserId, async (req, res) => {
+    try {
+        const result = await continuumPool.query(`
+            SELECT * FROM outlook_email_folders
+            WHERE user_id = $1
+            ORDER BY display_order, name
+        `, [req.userId]);
+
+        res.json({ folders: result.rows });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch folders', message: err.message });
+    }
+});
+
+// Create email folder
+app.post('/api/v1/outlook/folders', requireUserId, async (req, res) => {
+    try {
+        const { name, parent_folder_id, folder_type, icon, color } = req.body;
+
+        if (!name) {
+            return res.status(400).json({ error: 'Folder name is required' });
+        }
+
+        const result = await continuumPool.query(`
+            INSERT INTO outlook_email_folders (user_id, name, parent_folder_id, folder_type, icon, color)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING *
+        `, [req.userId, name, parent_folder_id, folder_type || 'custom', icon, color]);
+
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to create folder', message: err.message });
+    }
+});
+
+// Get email messages
+app.get('/api/v1/outlook/messages', requireUserId, async (req, res) => {
+    try {
+        const { folderId, folder_id, limit = 50, offset = 0, is_read, is_flagged } = req.query;
+        const effectiveFolderId = folderId || folder_id;
+
+        let query = `
+            SELECT m.*, f.name as folder_name
+            FROM outlook_email_messages m
+            LEFT JOIN outlook_email_folders f ON m.folder_id = f.id
+            WHERE m.user_id = $1
+        `;
+        const params = [req.userId];
+        let paramCount = 1;
+
+        if (effectiveFolderId) {
+            params.push(effectiveFolderId);
+            query += ` AND m.folder_id = $${++paramCount}`;
+        }
+        if (is_read !== undefined) {
+            params.push(is_read === 'true');
+            query += ` AND m.is_read = $${++paramCount}`;
+        }
+        if (is_flagged !== undefined) {
+            params.push(is_flagged === 'true');
+            query += ` AND m.is_flagged = $${++paramCount}`;
+        }
+
+        params.push(parseInt(limit));
+        params.push(parseInt(offset));
+        query += ` ORDER BY m.received_at DESC LIMIT $${++paramCount} OFFSET $${++paramCount}`;
+
+        const result = await continuumPool.query(query, params);
+
+        // Get recipients and attachments for each message
+        const messages = await Promise.all(result.rows.map(async (msg) => {
+            const recipientsResult = await continuumPool.query(`
+                SELECT email, name, recipient_type
+                FROM outlook_email_recipients
+                WHERE message_id = $1
+            `, [msg.id]);
+
+            const attachmentsResult = await continuumPool.query(`
+                SELECT id, file_name, file_size, mime_type, is_inline
+                FROM outlook_email_attachments
+                WHERE message_id = $1
+            `, [msg.id]);
+
+            return {
+                ...msg,
+                recipients: recipientsResult.rows,
+                attachments: attachmentsResult.rows
+            };
+        }));
+
+        res.json({ messages });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch messages', message: err.message });
+    }
+});
+
+// Get single email message
+app.get('/api/v1/outlook/messages/:id', async (req, res) => {
+    try {
+        const result = await continuumPool.query(`
+            SELECT m.*, f.name as folder_name
+            FROM outlook_email_messages m
+            LEFT JOIN outlook_email_folders f ON m.folder_id = f.id
+            WHERE m.id = $1
+        `, [req.params.id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
+
+        const msg = result.rows[0];
+
+        const recipientsResult = await continuumPool.query(`
+            SELECT email, name, recipient_type
+            FROM outlook_email_recipients
+            WHERE message_id = $1
+        `, [msg.id]);
+
+        const attachmentsResult = await continuumPool.query(`
+            SELECT id, file_name, file_path, file_size, mime_type, is_inline
+            FROM outlook_email_attachments
+            WHERE message_id = $1
+        `, [msg.id]);
+
+        res.json({
+            ...msg,
+            recipients: recipientsResult.rows,
+            attachments: attachmentsResult.rows
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch message', message: err.message });
+    }
+});
+
+// Create email message (send/save draft)
+app.post('/api/v1/outlook/messages', requireUserId, async (req, res) => {
+    try {
+        const {
+            folder_id, subject, body_text, body_html,
+            sender_email, sender_name, is_draft, importance,
+            recipients, attachments
+        } = req.body;
+
+        const client = await continuumPool.connect();
+        try {
+            await client.query('BEGIN');
+
+            // Get or create appropriate folder based on message type
+            let folderId = folder_id;
+
+            // If saving as draft, use drafts folder
+            if (!folderId && is_draft) {
+                const folderResult = await client.query(`
+                    SELECT id FROM outlook_email_folders
+                    WHERE user_id = $1 AND folder_type = 'drafts'
+                `, [req.userId]);
+
+                if (folderResult.rows.length === 0) {
+                    const newFolder = await client.query(`
+                        INSERT INTO outlook_email_folders (user_id, name, folder_type, is_system)
+                        VALUES ($1, 'Drafts', 'drafts', true)
+                        RETURNING id
+                    `, [req.userId]);
+                    folderId = newFolder.rows[0].id;
+                } else {
+                    folderId = folderResult.rows[0].id;
+                }
+            }
+
+            // If sending (not draft) and no folder specified, use sent folder
+            if (!folderId && !is_draft) {
+                const folderResult = await client.query(`
+                    SELECT id FROM outlook_email_folders
+                    WHERE user_id = $1 AND folder_type = 'sent'
+                `, [req.userId]);
+
+                if (folderResult.rows.length === 0) {
+                    const newFolder = await client.query(`
+                        INSERT INTO outlook_email_folders (user_id, name, folder_type, is_system)
+                        VALUES ($1, 'Sent Items', 'sent', true)
+                        RETURNING id
+                    `, [req.userId]);
+                    folderId = newFolder.rows[0].id;
+                } else {
+                    folderId = folderResult.rows[0].id;
+                }
+            }
+
+            const result = await client.query(`
+                INSERT INTO outlook_email_messages (
+                    folder_id, user_id, subject, body_text, body_html,
+                    sender_email, sender_name, is_draft, is_read, importance,
+                    has_attachments, received_at
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, $9, $10, NOW())
+                RETURNING *
+            `, [
+                folderId, req.userId, subject, body_text, body_html,
+                sender_email, sender_name, is_draft || false, importance || 'normal',
+                Array.isArray(attachments) && attachments.length > 0
+            ]);
+
+            const newMessage = result.rows[0];
+
+            // Insert recipients
+            if (Array.isArray(recipients)) {
+                for (const r of recipients) {
+                    await client.query(`
+                        INSERT INTO outlook_email_recipients (message_id, email, name, recipient_type)
+                        VALUES ($1, $2, $3, $4)
+                    `, [newMessage.id, r.email, r.name, r.type || 'to']);
+                }
+            }
+
+            // Insert attachments
+            if (Array.isArray(attachments)) {
+                for (const att of attachments) {
+                    await client.query(`
+                        INSERT INTO outlook_email_attachments (message_id, file_name, file_path, file_size, mime_type, is_inline)
+                        VALUES ($1, $2, $3, $4, $5, $6)
+                    `, [newMessage.id, att.fileName, att.filePath, att.fileSize || 0, att.mimeType, att.isInline || false]);
+                }
+            }
+
+            await client.query('COMMIT');
+            res.status(201).json(newMessage);
+        } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to create message', message: err.message });
+    }
+});
+
+// Update message (mark read, flag, move folder)
+app.patch('/api/v1/outlook/messages/:id', async (req, res) => {
+    try {
+        const { is_read, is_flagged, folder_id } = req.body;
+
+        const updates = [];
+        const values = [];
+        let paramCount = 0;
+
+        if (is_read !== undefined) {
+            values.push(is_read);
+            updates.push(`is_read = $${++paramCount}`);
+        }
+        if (is_flagged !== undefined) {
+            values.push(is_flagged);
+            updates.push(`is_flagged = $${++paramCount}`);
+        }
+        if (folder_id) {
+            values.push(folder_id);
+            updates.push(`folder_id = $${++paramCount}`);
+        }
+
+        if (updates.length === 0) {
+            return res.status(400).json({ error: 'No updates provided' });
+        }
+
+        values.push(req.params.id);
+        const result = await continuumPool.query(`
+            UPDATE outlook_email_messages
+            SET ${updates.join(', ')}, updated_at = NOW()
+            WHERE id = $${++paramCount}
+            RETURNING *
+        `, values);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to update message', message: err.message });
+    }
+});
+
+// Delete message
+app.delete('/api/v1/outlook/messages/:id', async (req, res) => {
+    try {
+        const result = await continuumPool.query(`
+            DELETE FROM outlook_email_messages WHERE id = $1 RETURNING id
+        `, [req.params.id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Message not found' });
+        }
+
+        res.json({ success: true, deleted: req.params.id });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete message', message: err.message });
+    }
+});
+
+// =============================================================================
+// JUBILEE OUTLOOK - CONTACTS ROUTES
+// =============================================================================
+
+// Get contacts
+app.get('/api/v1/outlook/contacts', requireUserId, async (req, res) => {
+    try {
+        const { search, limit = 100, offset = 0 } = req.query;
+
+        let query = `
+            SELECT * FROM outlook_contacts
+            WHERE user_id = $1
+        `;
+        const params = [req.userId];
+        let paramCount = 1;
+
+        if (search) {
+            params.push(`%${search}%`);
+            query += ` AND (display_name ILIKE $${++paramCount} OR first_name ILIKE $${paramCount} OR last_name ILIKE $${paramCount})`;
+        }
+
+        params.push(parseInt(limit));
+        params.push(parseInt(offset));
+        query += ` ORDER BY display_name LIMIT $${++paramCount} OFFSET $${++paramCount}`;
+
+        const result = await continuumPool.query(query, params);
+
+        // Get emails and phones for each contact
+        const contacts = await Promise.all(result.rows.map(async (contact) => {
+            const emailsResult = await continuumPool.query(`
+                SELECT email, email_type, is_primary FROM outlook_contact_emails WHERE contact_id = $1
+            `, [contact.id]);
+
+            const phonesResult = await continuumPool.query(`
+                SELECT phone_number, phone_type, is_primary FROM outlook_contact_phones WHERE contact_id = $1
+            `, [contact.id]);
+
+            return {
+                ...contact,
+                emails: emailsResult.rows,
+                phones: phonesResult.rows
+            };
+        }));
+
+        res.json({ contacts });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch contacts', message: err.message });
+    }
+});
+
+// Create contact
+app.post('/api/v1/outlook/contacts', requireUserId, async (req, res) => {
+    try {
+        const {
+            display_name, first_name, last_name, middle_name, nickname,
+            title, suffix, company_name, department, job_title,
+            notes, birthday, anniversary, is_favorite,
+            emails, phones, addresses
+        } = req.body;
+
+        if (!display_name) {
+            return res.status(400).json({ error: 'Display name is required' });
+        }
+
+        const client = await continuumPool.connect();
+        try {
+            await client.query('BEGIN');
+
+            const result = await client.query(`
+                INSERT INTO outlook_contacts (
+                    user_id, display_name, first_name, last_name, middle_name, nickname,
+                    title, suffix, company_name, department, job_title,
+                    notes, birthday, anniversary, is_favorite
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+                RETURNING *
+            `, [
+                req.userId, display_name, first_name, last_name, middle_name, nickname,
+                title, suffix, company_name, department, job_title,
+                notes, birthday, anniversary, is_favorite || false
+            ]);
+
+            const newContact = result.rows[0];
+
+            // Insert emails
+            if (Array.isArray(emails)) {
+                for (const e of emails) {
+                    await client.query(`
+                        INSERT INTO outlook_contact_emails (contact_id, email, email_type, is_primary)
+                        VALUES ($1, $2, $3, $4)
+                    `, [newContact.id, e.email, e.type || 'personal', e.is_primary || false]);
+                }
+            }
+
+            // Insert phones
+            if (Array.isArray(phones)) {
+                for (const p of phones) {
+                    await client.query(`
+                        INSERT INTO outlook_contact_phones (contact_id, phone_number, phone_type, is_primary)
+                        VALUES ($1, $2, $3, $4)
+                    `, [newContact.id, p.number, p.type || 'mobile', p.is_primary || false]);
+                }
+            }
+
+            // Insert addresses
+            if (Array.isArray(addresses)) {
+                for (const a of addresses) {
+                    await client.query(`
+                        INSERT INTO outlook_contact_addresses (contact_id, address_type, street, city, state, postal_code, country, is_primary)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    `, [newContact.id, a.type || 'home', a.street, a.city, a.state, a.postal_code, a.country, a.is_primary || false]);
+                }
+            }
+
+            await client.query('COMMIT');
+            res.status(201).json(newContact);
+        } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to create contact', message: err.message });
+    }
+});
+
+// Delete contact
+app.delete('/api/v1/outlook/contacts/:id', async (req, res) => {
+    try {
+        const result = await continuumPool.query(`
+            DELETE FROM outlook_contacts WHERE id = $1 RETURNING id
+        `, [req.params.id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Contact not found' });
+        }
+
+        res.json({ success: true, deleted: req.params.id });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete contact', message: err.message });
+    }
+});
+
+// =============================================================================
 // STATIC FILE SERVING (Dashboard UI)
 // =============================================================================
 
@@ -872,6 +1738,148 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Serve index.html for root path
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// =============================================================================
+// DATABASE MIGRATION ENDPOINT
+// =============================================================================
+
+const MIGRATE_SECRET = process.env.MIGRATE_SECRET || 'jubilee-migrate-2026';
+const fs = require('fs');
+
+app.post('/api/v1/migrate', async (req, res) => {
+    // Verify migration secret
+    const providedSecret = req.headers['x-migrate-secret'] || req.body.secret;
+    if (providedSecret !== MIGRATE_SECRET) {
+        console.log('Migration endpoint: Unauthorized attempt');
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const { migration } = req.body;
+    console.log(`Migration endpoint: Running migration ${migration || 'all'}...`);
+
+    const results = {
+        success: true,
+        migrations: [],
+        errors: []
+    };
+
+    try {
+        // Check which tables already exist
+        const existingTables = await continuumPool.query(`
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+        `);
+        const tableNames = existingTables.rows.map(r => r.table_name);
+
+        // Migration: outlook_schema (0003)
+        if (!migration || migration === 'outlook_schema' || migration === '0003') {
+            if (!tableNames.includes('outlook_calendars')) {
+                console.log('Running outlook_schema migration...');
+
+                // First ensure the update_updated_at_column function exists
+                await continuumPool.query(`
+                    CREATE OR REPLACE FUNCTION update_updated_at_column()
+                    RETURNS TRIGGER AS $$
+                    BEGIN
+                        NEW.updated_at = NOW();
+                        RETURN NEW;
+                    END;
+                    $$ language 'plpgsql';
+                `);
+
+                // Enable required extensions
+                await continuumPool.query(`CREATE EXTENSION IF NOT EXISTS "citext"`);
+                await continuumPool.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
+
+                // Read and execute the migration file
+                const migrationPath = path.join(__dirname, '..', '..', '..', 'infrastructure', 'migrations', 'continuum', '0003_jubilee_outlook_schema.sql');
+
+                if (fs.existsSync(migrationPath)) {
+                    let sql = fs.readFileSync(migrationPath, 'utf8');
+                    // Remove the DOWN MIGRATION comments section
+                    const downIndex = sql.indexOf('-- ============================================================================\n-- DOWN MIGRATION');
+                    if (downIndex > 0) {
+                        sql = sql.substring(0, downIndex);
+                    }
+
+                    await continuumPool.query(sql);
+                    results.migrations.push({ name: 'outlook_schema (0003)', status: 'applied' });
+                    console.log('✅ outlook_schema migration applied');
+                } else {
+                    // Run inline if file not found
+                    results.migrations.push({ name: 'outlook_schema (0003)', status: 'skipped', reason: 'Migration file not found' });
+                    console.log('⚠️ Migration file not found at:', migrationPath);
+                }
+            } else {
+                results.migrations.push({ name: 'outlook_schema (0003)', status: 'already_applied' });
+                console.log('ℹ️ outlook_schema already applied');
+            }
+        }
+
+        // Add activity_sessions columns if missing (for browser heartbeat support)
+        if (!migration || migration === 'activity_sessions_update') {
+            try {
+                await continuumPool.query(`
+                    ALTER TABLE activity_sessions
+                    ADD COLUMN IF NOT EXISTS client_type VARCHAR(50),
+                    ADD COLUMN IF NOT EXISTS browser_id VARCHAR(255),
+                    ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true,
+                    ADD COLUMN IF NOT EXISTS last_heartbeat TIMESTAMPTZ DEFAULT NOW()
+                `);
+
+                // Add unique constraint for browser sessions
+                await continuumPool.query(`
+                    CREATE UNIQUE INDEX IF NOT EXISTS idx_activity_sessions_user_browser
+                    ON activity_sessions(user_id, browser_id) WHERE browser_id IS NOT NULL
+                `);
+
+                results.migrations.push({ name: 'activity_sessions_update', status: 'applied' });
+            } catch (err) {
+                if (!err.message.includes('already exists')) {
+                    results.errors.push({ migration: 'activity_sessions_update', error: err.message });
+                } else {
+                    results.migrations.push({ name: 'activity_sessions_update', status: 'already_applied' });
+                }
+            }
+        }
+
+        res.json(results);
+    } catch (err) {
+        console.error('Migration error:', err);
+        results.success = false;
+        results.errors.push({ migration: migration || 'all', error: err.message });
+        res.status(500).json(results);
+    }
+});
+
+// Get migration status
+app.get('/api/v1/migrate/status', async (req, res) => {
+    try {
+        const existingTables = await continuumPool.query(`
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+            ORDER BY table_name
+        `);
+
+        const outlookTables = existingTables.rows
+            .filter(r => r.table_name.startsWith('outlook_'))
+            .map(r => r.table_name);
+
+        const migrations = {
+            'outlook_schema (0003)': outlookTables.length > 0 ? 'applied' : 'pending',
+            'activity_sessions_update': existingTables.rows.some(r => r.table_name === 'activity_sessions') ? 'check_columns' : 'pending'
+        };
+
+        res.json({
+            success: true,
+            totalTables: existingTables.rows.length,
+            outlookTables: outlookTables,
+            migrations: migrations
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 // =============================================================================
@@ -896,7 +1904,12 @@ app.use((req, res) => {
                 content: 'GET/POST /api/v1/content',
                 annotations: 'GET/POST /api/v1/annotations',
                 progress: 'GET/POST /api/v1/progress',
-                analytics: 'POST /api/v1/analytics'
+                analytics: 'POST /api/v1/analytics',
+                outlook_calendars: 'GET/POST /api/v1/outlook/calendars',
+                outlook_events: 'GET/POST/PUT/DELETE /api/v1/outlook/events',
+                outlook_folders: 'GET/POST /api/v1/outlook/folders',
+                outlook_messages: 'GET/POST/PATCH/DELETE /api/v1/outlook/messages',
+                outlook_contacts: 'GET/POST/DELETE /api/v1/outlook/contacts'
             }
         });
     }

@@ -899,6 +899,8 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
                             <!-- Icon Header -->
@@ -970,7 +972,8 @@
                                     Padding="8,10"
                                     Margin="0,8,0,0">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                    <Button ToolTip="Attach file" Margin="0,0,6,0">
+                                    <Button ToolTip="Attach file" Margin="0,0,6,0"
+                                            Command="{Binding AddAttachmentCommand}">
                                         <Button.Style>
                                             <Style TargetType="Button">
                                                 <Setter Property="Background" Value="Transparent"/>
@@ -1003,7 +1006,8 @@
                                         <TextBlock Text="&#xe226;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#888888"/>
                                     </Button>
 
-                                    <Button ToolTip="Insert image" Margin="0,0,6,0">
+                                    <Button ToolTip="Insert image" Margin="0,0,6,0"
+                                            Command="{Binding InsertImageCommand}">
                                         <Button.Style>
                                             <Style TargetType="Button">
                                                 <Setter Property="Background" Value="Transparent"/>
@@ -1034,72 +1038,6 @@
                                             </Style>
                                         </Button.Style>
                                         <TextBlock Text="&#xe3f4;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#888888"/>
-                                    </Button>
-
-                                    <Button ToolTip="Emoji" Margin="0,0,6,0">
-                                        <Button.Style>
-                                            <Style TargetType="Button">
-                                                <Setter Property="Background" Value="Transparent"/>
-                                                <Setter Property="BorderThickness" Value="0"/>
-                                                <Setter Property="Width" Value="32"/>
-                                                <Setter Property="Height" Value="32"/>
-                                                <Setter Property="Cursor" Value="Hand"/>
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="Button">
-                                                            <Border x:Name="border"
-                                                                    Background="{TemplateBinding Background}"
-                                                                    CornerRadius="6"
-                                                                    Padding="6">
-                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            </Border>
-                                                            <ControlTemplate.Triggers>
-                                                                <Trigger Property="IsMouseOver" Value="True">
-                                                                    <Setter TargetName="border" Property="Background" Value="#2A2A2A"/>
-                                                                </Trigger>
-                                                                <Trigger Property="IsPressed" Value="True">
-                                                                    <Setter TargetName="border" Property="Background" Value="#333333"/>
-                                                                </Trigger>
-                                                            </ControlTemplate.Triggers>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </Button.Style>
-                                        <TextBlock Text="😊" FontSize="16" Foreground="#888888"/>
-                                    </Button>
-
-                                    <Button ToolTip="Drawing" Margin="0,0,6,0">
-                                        <Button.Style>
-                                            <Style TargetType="Button">
-                                                <Setter Property="Background" Value="Transparent"/>
-                                                <Setter Property="BorderThickness" Value="0"/>
-                                                <Setter Property="Width" Value="32"/>
-                                                <Setter Property="Height" Value="32"/>
-                                                <Setter Property="Cursor" Value="Hand"/>
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="Button">
-                                                            <Border x:Name="border"
-                                                                    Background="{TemplateBinding Background}"
-                                                                    CornerRadius="6"
-                                                                    Padding="6">
-                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            </Border>
-                                                            <ControlTemplate.Triggers>
-                                                                <Trigger Property="IsMouseOver" Value="True">
-                                                                    <Setter TargetName="border" Property="Background" Value="#2A2A2A"/>
-                                                                </Trigger>
-                                                                <Trigger Property="IsPressed" Value="True">
-                                                                    <Setter TargetName="border" Property="Background" Value="#333333"/>
-                                                                </Trigger>
-                                                            </ControlTemplate.Triggers>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </Button.Style>
-                                        <TextBlock Text="&#xe3c9;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#888888"/>
                                     </Button>
 
                                     <Button ToolTip="More" Margin="0,0,0,0">
@@ -1136,6 +1074,214 @@
                                     </Button>
                                 </StackPanel>
                             </Border>
+
+                            <!-- Images Loading Indicator (Row 3) -->
+                            <Border Grid.Row="3" Background="#252525" CornerRadius="8" Margin="0,12,0,0" Padding="16"
+                                    Visibility="{Binding IsLoadingImages, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <!-- Spinning indicator -->
+                                    <Border Width="20" Height="20" Margin="0,0,10,0">
+                                        <Border.RenderTransform>
+                                            <RotateTransform x:Name="LoadingImagesSpinnerRotate" />
+                                        </Border.RenderTransform>
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsLoadingImages}" Value="True">
+                                                        <DataTrigger.EnterActions>
+                                                            <BeginStoryboard>
+                                                                <Storyboard RepeatBehavior="Forever">
+                                                                    <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Angle"
+                                                                                     From="0" To="360" Duration="0:0:1" />
+                                                                </Storyboard>
+                                                            </BeginStoryboard>
+                                                        </DataTrigger.EnterActions>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Ellipse Width="20" Height="20" StrokeThickness="3">
+                                            <Ellipse.Stroke>
+                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                    <GradientStop Color="#0078D4" Offset="0"/>
+                                                    <GradientStop Color="Transparent" Offset="0.75"/>
+                                                </LinearGradientBrush>
+                                            </Ellipse.Stroke>
+                                        </Ellipse>
+                                    </Border>
+                                    <TextBlock Text="{Binding LoadingImagesMessage}" Foreground="#AAAAAA"
+                                               FontSize="12" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Images Gallery (Row 3) -->
+                            <ItemsControl Grid.Row="3" ItemsSource="{Binding Images}" Margin="0,12,0,0">
+                                <ItemsControl.Style>
+                                    <Style TargetType="ItemsControl">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Images.Count}" Value="0">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ItemsControl.Style>
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#252525" CornerRadius="8" Margin="0,0,8,8" Padding="6">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <!-- Image Preview -->
+                                                <Border Grid.Row="0" CornerRadius="6" ClipToBounds="True" MaxWidth="200" MaxHeight="150">
+                                                    <Image Source="{Binding ImageSource}"
+                                                           Stretch="Uniform"
+                                                           MaxWidth="200"
+                                                           MaxHeight="150"/>
+                                                </Border>
+
+                                                <!-- Image Name and Remove Button -->
+                                                <Grid Grid.Row="1" Margin="0,6,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="{Binding EventImage.FileName}"
+                                                               Foreground="#AAAAAA"
+                                                               FontSize="11"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               MaxWidth="160"
+                                                               VerticalAlignment="Center"/>
+
+                                                    <!-- Remove Image Button -->
+                                                    <Button Grid.Column="1" ToolTip="Remove image"
+                                                            Command="{Binding DataContext.RemoveImageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Setter Property="Background" Value="Transparent"/>
+                                                                <Setter Property="BorderThickness" Value="0"/>
+                                                                <Setter Property="Width" Value="22"/>
+                                                                <Setter Property="Height" Value="22"/>
+                                                                <Setter Property="Cursor" Value="Hand"/>
+                                                                <Setter Property="Template">
+                                                                    <Setter.Value>
+                                                                        <ControlTemplate TargetType="Button">
+                                                                            <Border x:Name="border"
+                                                                                    Background="{TemplateBinding Background}"
+                                                                                    CornerRadius="4">
+                                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                            </Border>
+                                                                            <ControlTemplate.Triggers>
+                                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                                    <Setter TargetName="border" Property="Background" Value="#3A3A3A"/>
+                                                                                </Trigger>
+                                                                                <Trigger Property="IsPressed" Value="True">
+                                                                                    <Setter TargetName="border" Property="Background" Value="#444444"/>
+                                                                                </Trigger>
+                                                                            </ControlTemplate.Triggers>
+                                                                        </ControlTemplate>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Style>
+                                                        </Button.Style>
+                                                        <TextBlock Text="&#xe5cd;" FontFamily="{StaticResource MaterialIcons}"
+                                                                   FontSize="14" Foreground="#888888"/>
+                                                    </Button>
+                                                </Grid>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Attachments List (Row 4) -->
+                            <ItemsControl Grid.Row="4" ItemsSource="{Binding Attachments}" Margin="0,12,0,0">
+                                <ItemsControl.Style>
+                                    <Style TargetType="ItemsControl">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Attachments.Count}" Value="0">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ItemsControl.Style>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#252525" CornerRadius="6" Margin="0,0,0,6" Padding="10,8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- File Icon -->
+                                                <Border Grid.Column="0" Background="#333333" CornerRadius="4" Width="36" Height="36" Margin="0,0,12,0">
+                                                    <TextBlock Text="{Binding FileIcon}" FontFamily="{StaticResource MaterialIcons}"
+                                                               FontSize="18" Foreground="#888888"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+
+                                                <!-- File Name and Size -->
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding FileName}" Foreground="#EEEEEE" FontSize="13"
+                                                               TextTrimming="CharacterEllipsis" MaxWidth="350"/>
+                                                    <TextBlock Text="{Binding FileSizeFormatted}" Foreground="#888888" FontSize="11"/>
+                                                </StackPanel>
+
+                                                <!-- Remove Button -->
+                                                <Button Grid.Column="3" ToolTip="Remove attachment"
+                                                        Command="{Binding DataContext.RemoveAttachmentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                        CommandParameter="{Binding}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Background" Value="Transparent"/>
+                                                            <Setter Property="BorderThickness" Value="0"/>
+                                                            <Setter Property="Width" Value="28"/>
+                                                            <Setter Property="Height" Value="28"/>
+                                                            <Setter Property="Cursor" Value="Hand"/>
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="Button">
+                                                                        <Border x:Name="border"
+                                                                                Background="{TemplateBinding Background}"
+                                                                                CornerRadius="4">
+                                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                        </Border>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                                <Setter TargetName="border" Property="Background" Value="#3A3A3A"/>
+                                                                            </Trigger>
+                                                                            <Trigger Property="IsPressed" Value="True">
+                                                                                <Setter TargetName="border" Property="Background" Value="#444444"/>
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </Button.Style>
+                                                    <TextBlock Text="&#xe5cd;" FontFamily="{StaticResource MaterialIcons}"
+                                                               FontSize="16" Foreground="#888888"/>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </Grid>
                     </Border>
 

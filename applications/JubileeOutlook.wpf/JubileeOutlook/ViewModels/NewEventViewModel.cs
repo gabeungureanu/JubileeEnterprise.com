@@ -1,7 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using JubileeOutlook.Models;
+using JubileeOutlook.Services;
 using System.Collections.ObjectModel;
+using System.Windows.Media.Imaging;
 
 namespace JubileeOutlook.ViewModels;
 
@@ -84,6 +86,16 @@ public partial class NewEventViewModel : ObservableObject
     [ObservableProperty]
     private string _validationError = string.Empty;
 
+    [ObservableProperty]
+    private bool _isLoadingImages;
+
+    [ObservableProperty]
+    private string _loadingImagesMessage = string.Empty;
+
+    public ObservableCollection<EventAttachment> Attachments { get; } = new();
+
+    public ObservableCollection<EventImageViewModel> Images { get; } = new();
+
     public CalendarEvent? CreatedEvent { get; private set; }
 
     public NewEventViewModel()
@@ -114,6 +126,8 @@ public partial class NewEventViewModel : ObservableObject
         Attendees = string.Join("; ", eventToEdit.Attendees);
 
         IsBusy = eventToEdit.Status == EventStatus.Busy;
+        IsPrivate = eventToEdit.IsPrivate;
+        SelectedReminder = GetStringFromReminderTime(eventToEdit.Reminder);
 
         var colorHex = GetColorHexFromBrush(eventToEdit.EventColor);
         foreach (var category in CategoryOptions)
@@ -125,7 +139,70 @@ public partial class NewEventViewModel : ObservableObject
             }
         }
 
+        // Load existing attachments
+        Attachments.Clear();
+        if (eventToEdit.Attachments != null)
+        {
+            foreach (var attachment in eventToEdit.Attachments)
+            {
+                Attachments.Add(attachment);
+            }
+        }
+
+        // Load existing images (sync for local data, async for URLs)
+        Images.Clear();
+        if (eventToEdit.Images != null && eventToEdit.Images.Count > 0)
+        {
+            LoadImagesAsync(eventToEdit.Images);
+        }
+
         CalculateEventPosition();
+    }
+
+    /// <summary>
+    /// Loads images asynchronously, downloading from URLs if necessary
+    /// </summary>
+    private async void LoadImagesAsync(List<EventImage> imagesToLoad)
+    {
+        try
+        {
+            IsLoadingImages = true;
+            LoadingImagesMessage = "Loading images...";
+
+            // Use ImageService to load images for display
+            var loadedImages = await ImageService.Instance.LoadEventImagesForDisplayAsync(imagesToLoad);
+
+            int loadedCount = 0;
+            foreach (var (image, bitmap) in loadedImages)
+            {
+                loadedCount++;
+                LoadingImagesMessage = $"Loading image {loadedCount} of {imagesToLoad.Count}...";
+
+                if (bitmap != null)
+                {
+                    Images.Add(new EventImageViewModel
+                    {
+                        EventImage = image,
+                        ImageSource = bitmap
+                    });
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[NewEventViewModel] Failed to load image: {image.FileName}");
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[NewEventViewModel] Loaded {Images.Count} images successfully");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[NewEventViewModel] Error loading images: {ex.Message}");
+        }
+        finally
+        {
+            IsLoadingImages = false;
+            LoadingImagesMessage = string.Empty;
+        }
     }
 
     private static string GetColorHexFromBrush(System.Windows.Media.Brush brush)
@@ -165,6 +242,40 @@ public partial class NewEventViewModel : ObservableObject
 
         // Set default to 15 minutes before
         SelectedReminder = "15 minutes before";
+    }
+
+    private ReminderTime GetReminderTimeFromString(string reminderString)
+    {
+        return reminderString switch
+        {
+            "Don't remind me" => ReminderTime.None,
+            "At time of event" => ReminderTime.AtTimeOfEvent,
+            "5 minutes before" => ReminderTime.FiveMinutes,
+            "15 minutes before" => ReminderTime.FifteenMinutes,
+            "30 minutes before" => ReminderTime.ThirtyMinutes,
+            "1 hour before" => ReminderTime.OneHour,
+            "2 hours before" => ReminderTime.TwoHours,
+            "1 day before" => ReminderTime.OneDay,
+            "1 week before" => ReminderTime.OneWeek,
+            _ => ReminderTime.FifteenMinutes
+        };
+    }
+
+    private string GetStringFromReminderTime(ReminderTime reminder)
+    {
+        return reminder switch
+        {
+            ReminderTime.None => "Don't remind me",
+            ReminderTime.AtTimeOfEvent => "At time of event",
+            ReminderTime.FiveMinutes => "5 minutes before",
+            ReminderTime.FifteenMinutes => "15 minutes before",
+            ReminderTime.ThirtyMinutes => "30 minutes before",
+            ReminderTime.OneHour => "1 hour before",
+            ReminderTime.TwoHours => "2 hours before",
+            ReminderTime.OneDay => "1 day before",
+            ReminderTime.OneWeek => "1 week before",
+            _ => "15 minutes before"
+        };
     }
 
     private void InitializeCategoryOptions()
@@ -287,6 +398,14 @@ public partial class NewEventViewModel : ObservableObject
             _ => new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(91, 155, 213))
         };
 
+        // Parse attendees from semicolon/comma separated string
+        var attendeesList = string.IsNullOrWhiteSpace(Attendees)
+            ? new List<string>()
+            : Attendees.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                       .Select(a => a.Trim())
+                       .Where(a => !string.IsNullOrEmpty(a))
+                       .ToList();
+
         CreatedEvent = new CalendarEvent
         {
             Id = IsEditMode && !string.IsNullOrEmpty(_editingEventId) ? _editingEventId : Guid.NewGuid().ToString(),
@@ -297,9 +416,14 @@ public partial class NewEventViewModel : ObservableObject
             Description = Description,
             IsAllDay = IsAllDay,
             Status = IsBusy ? EventStatus.Busy : EventStatus.Free,
+            IsPrivate = IsPrivate,
+            Reminder = GetReminderTimeFromString(SelectedReminder),
             Category = EventCategory.None,
             CalendarName = "My Calendar",
-            EventColor = eventColor
+            EventColor = eventColor,
+            Attendees = attendeesList,
+            Attachments = Attachments.ToList(),
+            Images = Images.Select(i => i.EventImage).ToList()
         };
 
         SaveCompleted?.Invoke(this, EventArgs.Empty);
@@ -312,6 +436,119 @@ public partial class NewEventViewModel : ObservableObject
         {
             CreatedEvent = new CalendarEvent { Id = _editingEventId };
             DeleteCompleted?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    [RelayCommand]
+    private void AddAttachment()
+    {
+        var openFileDialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Select files to attach",
+            Multiselect = true,
+            Filter = "All Files (*.*)|*.*|" +
+                     "Documents (*.pdf;*.doc;*.docx;*.xls;*.xlsx;*.ppt;*.pptx;*.txt)|*.pdf;*.doc;*.docx;*.xls;*.xlsx;*.ppt;*.pptx;*.txt|" +
+                     "Images (*.jpg;*.jpeg;*.png;*.gif;*.bmp)|*.jpg;*.jpeg;*.png;*.gif;*.bmp|" +
+                     "Archives (*.zip;*.rar;*.7z)|*.zip;*.rar;*.7z"
+        };
+
+        if (openFileDialog.ShowDialog() == true)
+        {
+            foreach (var filePath in openFileDialog.FileNames)
+            {
+                try
+                {
+                    var fileInfo = new System.IO.FileInfo(filePath);
+                    var attachment = new EventAttachment
+                    {
+                        FileName = fileInfo.Name,
+                        FilePath = filePath,
+                        FileSize = fileInfo.Length,
+                        AddedDate = DateTime.Now
+                    };
+                    Attachments.Add(attachment);
+                }
+                catch
+                {
+                    // Skip files that can't be accessed
+                }
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveAttachment(EventAttachment? attachment)
+    {
+        if (attachment != null)
+        {
+            Attachments.Remove(attachment);
+        }
+    }
+
+    [RelayCommand]
+    private void InsertImage()
+    {
+        var openFileDialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Select an image to insert",
+            Multiselect = true,
+            Filter = "Image Files (*.jpg;*.jpeg;*.png;*.gif;*.bmp)|*.jpg;*.jpeg;*.png;*.gif;*.bmp|" +
+                     "JPEG Images (*.jpg;*.jpeg)|*.jpg;*.jpeg|" +
+                     "PNG Images (*.png)|*.png|" +
+                     "GIF Images (*.gif)|*.gif|" +
+                     "Bitmap Images (*.bmp)|*.bmp|" +
+                     "All Files (*.*)|*.*"
+        };
+
+        if (openFileDialog.ShowDialog() == true)
+        {
+            foreach (var filePath in openFileDialog.FileNames)
+            {
+                try
+                {
+                    var fileInfo = new System.IO.FileInfo(filePath);
+
+                    // Read the image file into bytes
+                    var imageData = System.IO.File.ReadAllBytes(filePath);
+
+                    // Create BitmapImage for display
+                    var bitmapImage = new BitmapImage();
+                    bitmapImage.BeginInit();
+                    bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmapImage.UriSource = new Uri(filePath);
+                    bitmapImage.EndInit();
+                    bitmapImage.Freeze();
+
+                    var eventImage = new EventImage
+                    {
+                        FileName = fileInfo.Name,
+                        FilePath = filePath,
+                        ImageData = imageData,
+                        AddedDate = DateTime.Now
+                    };
+
+                    var imageViewModel = new EventImageViewModel
+                    {
+                        EventImage = eventImage,
+                        ImageSource = bitmapImage
+                    };
+
+                    Images.Add(imageViewModel);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[NewEventViewModel] Error inserting image: {ex.Message}");
+                }
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveImage(EventImageViewModel? image)
+    {
+        if (image != null)
+        {
+            Images.Remove(image);
         }
     }
 }
@@ -332,4 +569,10 @@ public class CategoryItem
 {
     public string Name { get; set; } = string.Empty;
     public string Color { get; set; } = string.Empty;
+}
+
+public class EventImageViewModel
+{
+    public EventImage EventImage { get; set; } = new();
+    public BitmapImage? ImageSource { get; set; }
 }
