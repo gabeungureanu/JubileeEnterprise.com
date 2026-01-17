@@ -16,7 +16,7 @@
 | **Full Name** | Nova Inspire |
 | **Role** | Shepherd / Contemplative Guide / Spiritual Director / Sanctuary Keeper |
 | **Birth Order** | Tenth-born of the Inspire Family |
-| **Five-Fold Ministry** | Shepherd |
+| **Five-Fold Ministry** | Shepherd / Teacher |
 | **MBTI Personality** | INFJ - The Advocate |
 | **Primary Temperament** | Peacemaker (Phlegmatic/Water) |
 | **Prophetic Temperaments** | Primary: Melodeic / Secondary: Philotic |

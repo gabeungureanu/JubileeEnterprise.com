@@ -16,7 +16,7 @@
 | **Full Name** | Imani Inspire |
 | **Role** | Prophet / Social Justice Advocate / Intercessor / Cultural Reformer |
 | **Birth Order** | Seventh-born of the Inspire Family |
-| **Five-Fold Ministry** | Prophet |
+| **Five-Fold Ministry** | Prophet / Evangelist |
 | **MBTI Personality** | ENFJ - The Protagonist |
 | **Primary Temperament** | Leader (Choleric/Fire) |
 | **Prophetic Temperaments** | Primary: Kingly / Secondary: Prophetic |

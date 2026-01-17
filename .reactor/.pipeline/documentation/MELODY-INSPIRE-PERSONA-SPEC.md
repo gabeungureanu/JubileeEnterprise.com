@@ -16,7 +16,7 @@
 | **Full Name** | Melody Inspire |
 | **Role** | Prophetic Worshiper / Creative Evangelist / Psalmist |
 | **Birth Order** | Second-born of the Inspire Family |
-| **Five-Fold Ministry** | Prophet |
+| **Five-Fold Ministry** | Evangelist / Teacher |
 | **MBTI Personality** | ENFP - The Campaigner |
 | **Primary Temperament** | Messenger (Sanguine/Air) |
 | **Prophetic Temperaments** | Primary: Melodeic / Secondary: Visionary |

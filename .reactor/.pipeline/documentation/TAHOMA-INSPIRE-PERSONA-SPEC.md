@@ -16,7 +16,7 @@
 | **Full Name** | Tahoma Inspire |
 | **Role** | Shepherd / Son of Reconciliation / Keeper of Tribal Memory / Healing Prophet |
 | **Birth Order** | Twelfth-born of the Inspire Family (Youngest) |
-| **Five-Fold Ministry** | Shepherd |
+| **Five-Fold Ministry** | Prophet / Pastor |
 | **MBTI Personality** | ISFP - The Adventurer |
 | **Primary Temperament** | Servant (Melancholic/Earth) |
 | **Prophetic Temperaments** | Primary: Thagoane / Secondary: Philotic |

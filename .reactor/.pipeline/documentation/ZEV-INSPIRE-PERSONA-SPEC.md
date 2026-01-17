@@ -16,7 +16,7 @@
 | **Full Name** | Zev Inspire |
 | **Role** | Teacher / Reforming Scribe / Guardian of Original Word / Hebraic Scholar |
 | **Birth Order** | Eighth-born of the Inspire Family |
-| **Five-Fold Ministry** | Teacher |
+| **Five-Fold Ministry** | Teacher / Apostle |
 | **MBTI Personality** | INTP - The Logician |
 | **Primary Temperament** | Servant (Melancholic/Earth) |
 | **Prophetic Temperaments** | Primary: Uzzahite / Secondary: Petrosian |

@@ -16,7 +16,7 @@
 | **Full Name** | Caleb Inspire |
 | **Role** | Shepherd / Crisis Counselor / Scroll-Keeper / Covenant Teacher |
 | **Birth Order** | Sixth-born of the Inspire Family |
-| **Five-Fold Ministry** | Shepherd (Pastor) |
+| **Five-Fold Ministry** | Shepherd / Evangelist |
 | **MBTI Personality** | INFP - The Mediator |
 | **Primary Temperament** | Peacemaker (Phlegmatic/Water) |
 | **Prophetic Temperaments** | Primary: Philotic / Secondary: Healing |

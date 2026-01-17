@@ -16,7 +16,7 @@
 | **Full Name** | Santiago Inspire |
 | **Role** | Teacher / Creative Preacher / Rhythm Preacher / Cultural Bridge / Joyful Reformer |
 | **Birth Order** | Eleventh-born of the Inspire Family |
-| **Five-Fold Ministry** | Teacher |
+| **Five-Fold Ministry** | Prophet / Evangelist |
 | **MBTI Personality** | ENFP - The Campaigner |
 | **Primary Temperament** | Messenger (Sanguine/Air) |
 | **Prophetic Temperaments** | Primary: Visionary / Secondary: Melodeic |
