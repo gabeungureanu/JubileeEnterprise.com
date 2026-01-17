@@ -192,6 +192,17 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Refreshes the message list for the currently selected folder
+    /// </summary>
+    public async Task RefreshMessagesAsync()
+    {
+        if (SelectedFolder != null)
+        {
+            await LoadMessagesAsync(SelectedFolder.Id);
+        }
+    }
+
     private async Task LoadEventsAsync(DateTime startDate, DateTime endDate)
     {
         var events = await _calendarService.GetEventsAsync(startDate, endDate);

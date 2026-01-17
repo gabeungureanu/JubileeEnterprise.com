@@ -385,7 +385,7 @@ public class HttpClientFactory
     }
 
     /// <summary>
-    /// Attaches the Bearer token to the request if available
+    /// Attaches the Bearer token and X-User-Id header to the request if available
     /// </summary>
     private async Task AttachAuthHeaderAsync(HttpRequestMessage request)
     {
@@ -395,6 +395,13 @@ public class HttpClientFactory
             if (tokens != null && !string.IsNullOrEmpty(tokens.AccessToken))
             {
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+
+                // Also attach X-User-Id header for InspireContinuum API compatibility
+                if (!string.IsNullOrEmpty(tokens.CachedUserId))
+                {
+                    request.Headers.Add("X-User-Id", tokens.CachedUserId);
+                    System.Diagnostics.Debug.WriteLine($"[HttpClientFactory] Added X-User-Id header: {tokens.CachedUserId}");
+                }
             }
         }
         catch (Exception ex)
