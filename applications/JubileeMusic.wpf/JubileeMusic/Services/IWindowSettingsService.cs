@@ -20,6 +20,13 @@ public class WindowSettings
     public double Height { get; set; } = 800;
     public WindowState WindowState { get; set; } = WindowState.Normal;
 
+    // Monitor identification for multi-monitor setups
+    public string? MonitorDeviceName { get; set; }
+    public double MonitorLeft { get; set; } = double.NaN;
+    public double MonitorTop { get; set; } = double.NaN;
+    public double MonitorWidth { get; set; } = double.NaN;
+    public double MonitorHeight { get; set; } = double.NaN;
+
     // Restore dimensions when coming out of maximized state
     public double RestoreWidth { get; set; } = 1280;
     public double RestoreHeight { get; set; } = 800;
@@ -27,6 +34,10 @@ public class WindowSettings
     // Navigation state
     public string LastView { get; set; } = "Browser";
     public string? LastUrl { get; set; }
+
+    // Suno WebView state
+    public double SunoZoomFactor { get; set; } = 1.0;
+    public string? SunoLastUrl { get; set; }
 
     // Create panel state (right side)
     public bool IsCreatorPanelOpen { get; set; } = false;

@@ -1,0 +1,59 @@
+# JubileeMusic Song Generation Workflow
+# This workflow defines the prompt to send to ChatGPT for generating Christian songs
+
+workflow:
+  name: "Christian Song Generator"
+  version: "1.0"
+  description: "Generates Christian songs with title, styles, and lyrics"
+
+prompt: |
+  Research, develop, craft, and write a Christian song that's called "Amazing Goodness of God" that uses the music style of "Contemporary Christian Music" that has an intro, one stanza and one chorus with a bridge and an outro. The song should be sung by a female vocalist.
+
+  In your output, display the song using EXACTLY this format:
+
+  Workspace: Test 123
+
+  Title: [song title here]
+
+  Styles: [music style description here]
+
+  Gender: Female
+
+  Weirdness: 90
+
+  Style Influence: 10
+
+  Lyrics:
+  [full lyrics here including sections marked as Intro, Verse, Chorus, Bridge, Outro]
+
+  Please ensure each section (Workspace, Title, Styles, Gender, Weirdness, Style Influence, Lyrics) is clearly labeled and formatted as shown above.
+
+# Output parsing configuration
+output:
+  fields:
+    - name: "Workspace"
+      pattern: "Workspace:\\s*(.+?)(?=\\n|Title:)"
+      target: "workspace_textbox"
+    - name: "Title"
+      pattern: "Title:\\s*(.+?)(?=\\n|Styles:)"
+      target: "title_textbox"
+    - name: "Styles"
+      pattern: "Styles:\\s*(.+?)(?=\\n|Gender:)"
+      target: "styles_textbox"
+    - name: "Gender"
+      pattern: "Gender:\\s*(.+?)(?=\\n|Weirdness:)"
+      target: "gender_textbox"
+    - name: "Weirdness"
+      pattern: "Weirdness:\\s*(.+?)(?=\\n|Style Influence:)"
+      target: "weirdness_textbox"
+    - name: "StyleInfluence"
+      pattern: "Style Influence:\\s*(.+?)(?=\\n|Lyrics:)"
+      target: "style_influence_textbox"
+    - name: "Lyrics"
+      pattern: "Lyrics:\\s*([\\s\\S]+)$"
+      target: "lyrics_textbox"
+
+settings:
+  auto_submit: true
+  wait_for_response: true
+  response_timeout_seconds: 120

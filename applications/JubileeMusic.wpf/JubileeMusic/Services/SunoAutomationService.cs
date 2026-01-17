@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,6 +24,16 @@ public class SunoAutomationService : ISunoAutomationService
     private const string SunoCreateUrl = "https://suno.com/create";
     private const int NavigationTimeoutMs = 30000;
     private const int ElementWaitTimeoutMs = 10000;
+
+    // Win32 API declarations for real mouse cursor simulation
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetCursorPos(int x, int y);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern void mouse_event(uint dwFlags, int dx, int dy, uint dwData, UIntPtr dwExtraInfo);
+
+    private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+    private const uint MOUSEEVENTF_LEFTUP = 0x0004;
 
     public event EventHandler<string>? NavigationStarted;
     public event EventHandler<string>? NavigationCompleted;
@@ -779,6 +791,773 @@ public class SunoAutomationService : ISunoAutomationService
         }
     }
 
+    public async Task<bool> SetVocalGenderAsync(string gender)
+    {
+        EnsureInitialized();
+
+        if (string.IsNullOrWhiteSpace(gender))
+        {
+            _logger.LogDebug("[GENDER] Gender is empty, skipping");
+            return true;
+        }
+
+        try
+        {
+            var normalizedGender = gender.Trim().ToLowerInvariant();
+            var isFemale = normalizedGender.Contains("female") || normalizedGender == "f";
+            var isMale = normalizedGender.Contains("male") || normalizedGender == "m";
+
+            if (!isFemale && !isMale)
+            {
+                _logger.LogWarning("[GENDER] Unknown gender value: {Gender}, defaulting to female", gender);
+                isFemale = true;
+            }
+
+            var targetGender = isFemale ? "female" : "male";
+            _logger.LogInformation("[GENDER] Setting vocal gender to: {Gender}", targetGender);
+
+            var script = @"
+                (function() {
+                    console.log('[GENDER] Looking for vocal gender buttons');
+                    const targetGender = '" + targetGender + @"';
+
+                    // Method 1: Look for buttons/tabs with Male/Female text
+                    const allElements = document.querySelectorAll('button, [role=""tab""], [role=""radio""], div[class*=""button""], span[class*=""button""]');
+
+                    for (const el of allElements) {
+                        const text = (el.textContent || '').trim().toLowerCase();
+                        const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+
+                        // Check if this is the target gender button
+                        if (text === targetGender || text.includes(targetGender) ||
+                            ariaLabel === targetGender || ariaLabel.includes(targetGender)) {
+
+                            // Check if already selected using multiple methods
+                            const computedBg = getComputedStyle(el).backgroundColor;
+                            const hasHighlightBg = computedBg && computedBg !== 'rgba(0, 0, 0, 0)' && computedBg !== 'transparent';
+
+                            const isSelected = el.classList.contains('selected') ||
+                                              el.classList.contains('active') ||
+                                              el.getAttribute('aria-checked') === 'true' ||
+                                              el.getAttribute('aria-selected') === 'true' ||
+                                              el.getAttribute('data-state') === 'active' ||
+                                              el.getAttribute('data-state') === 'on' ||
+                                              el.getAttribute('aria-pressed') === 'true';
+
+                            // Also check if the OTHER gender button looks unselected
+                            const otherGender = targetGender === 'female' ? 'male' : 'female';
+                            let otherButton = null;
+                            for (const other of allElements) {
+                                const otherText = (other.textContent || '').trim().toLowerCase();
+                                if (otherText === otherGender || otherText.includes(otherGender)) {
+                                    otherButton = other;
+                                    break;
+                                }
+                            }
+
+                            // If other button exists, compare backgrounds
+                            let isSelectedByComparison = false;
+                            if (otherButton) {
+                                const otherBg = getComputedStyle(otherButton).backgroundColor;
+                                isSelectedByComparison = hasHighlightBg && otherBg !== computedBg;
+                            }
+
+                            const finalIsSelected = isSelected || isSelectedByComparison;
+
+                            console.log('[GENDER] Found ' + targetGender + ' button, isSelected=' + finalIsSelected + ' (attrs=' + isSelected + ', bgCompare=' + isSelectedByComparison + ')');
+
+                            if (!finalIsSelected) {
+                                console.log('[GENDER] Clicking ' + targetGender + ' button');
+                                el.click();
+                                return { success: true, clicked: targetGender };
+                            } else {
+                                console.log('[GENDER] ' + targetGender + ' already selected, skipping click');
+                                return { success: true, alreadySelected: true };
+                            }
+                        }
+                    }
+
+                    // Method 2: Look for radio inputs or checkboxes
+                    const radioInputs = document.querySelectorAll('input[type=""radio""], input[type=""checkbox""]');
+                    for (const input of radioInputs) {
+                        const label = input.closest('label') || document.querySelector('label[for=""' + input.id + '""]');
+                        const labelText = (label?.textContent || '').toLowerCase();
+                        const inputValue = (input.value || '').toLowerCase();
+                        const inputName = (input.name || '').toLowerCase();
+
+                        if (labelText.includes(targetGender) || inputValue === targetGender ||
+                            (inputName.includes('gender') && inputValue === targetGender)) {
+                            if (!input.checked) {
+                                input.click();
+                                console.log('[GENDER] Clicked radio/checkbox for ' + targetGender);
+                                return { success: true, clicked: targetGender, method: 'radio' };
+                            } else {
+                                console.log('[GENDER] ' + targetGender + ' radio already checked');
+                                return { success: true, alreadySelected: true };
+                            }
+                        }
+                    }
+
+                    // Method 3: Look for Vocal Gender section and find buttons within
+                    const labels = document.querySelectorAll('label, span, div, p');
+                    for (const label of labels) {
+                        const text = (label.textContent || '').trim().toLowerCase();
+                        if (text.includes('vocal') && text.includes('gender')) {
+                            // Found the section, look for gender buttons in parent or sibling
+                            const container = label.closest('div[class]') || label.parentElement?.parentElement;
+                            if (container) {
+                                const buttons = container.querySelectorAll('button, [role=""tab""], [role=""radio""]');
+                                for (const btn of buttons) {
+                                    const btnText = (btn.textContent || '').trim().toLowerCase();
+                                    if (btnText === targetGender || btnText.includes(targetGender)) {
+                                        // Check if already selected before clicking
+                                        const isSelected = btn.classList.contains('selected') ||
+                                                          btn.classList.contains('active') ||
+                                                          btn.getAttribute('aria-checked') === 'true' ||
+                                                          btn.getAttribute('aria-selected') === 'true' ||
+                                                          btn.getAttribute('data-state') === 'active' ||
+                                                          btn.getAttribute('data-state') === 'on' ||
+                                                          getComputedStyle(btn).backgroundColor !== getComputedStyle(document.body).backgroundColor;
+
+                                        if (!isSelected) {
+                                            btn.click();
+                                            console.log('[GENDER] Clicked ' + targetGender + ' in Vocal Gender section');
+                                            return { success: true, clicked: targetGender, method: 'section' };
+                                        } else {
+                                            console.log('[GENDER] ' + targetGender + ' already selected in section');
+                                            return { success: true, alreadySelected: true, method: 'section' };
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    console.log('[GENDER] Could not find gender selection controls');
+                    return { success: false, error: 'Gender selection controls not found' };
+                })();
+            ";
+
+            var result = await ExecuteScriptAsync<JsonElement>(script);
+
+            if (result.TryGetProperty("success", out var successProp) && successProp.GetBoolean())
+            {
+                var alreadySelected = result.TryGetProperty("alreadySelected", out var as2) && as2.GetBoolean();
+                if (alreadySelected)
+                {
+                    _logger.LogInformation("[GENDER] Vocal gender {Gender} was already selected", targetGender);
+                }
+                else
+                {
+                    _logger.LogInformation("[GENDER] Successfully set vocal gender to {Gender}", targetGender);
+                }
+                return true;
+            }
+            else
+            {
+                var error = result.TryGetProperty("error", out var ep) ? ep.GetString() : "Unknown error";
+                _logger.LogWarning("[GENDER] Failed to set vocal gender: {Error}", error);
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[GENDER] Exception while setting vocal gender");
+            ErrorOccurred?.Invoke(this, $"Failed to set vocal gender: {ex.Message}");
+            return false;
+        }
+    }
+
+    public async Task<bool> SetWeirdnessSliderAsync(string weirdness)
+    {
+        return await SetSliderValueAsync("Weirdness", weirdness);
+    }
+
+    public async Task<bool> SetStyleInfluenceSliderAsync(string styleInfluence)
+    {
+        return await SetSliderValueAsync("Style Influence", styleInfluence);
+    }
+
+    private async Task<bool> SetSliderValueAsync(string sliderName, string valueStr)
+    {
+        EnsureInitialized();
+
+        if (string.IsNullOrWhiteSpace(valueStr))
+        {
+            _logger.LogDebug("[SLIDER] {SliderName} value is empty, skipping", sliderName);
+            return true;
+        }
+
+        try
+        {
+            // Parse the percentage value - remove % symbol if present
+            var cleanValue = valueStr.Trim().Replace("%", "").Trim();
+            if (!int.TryParse(cleanValue, out var percentage))
+            {
+                _logger.LogWarning("[SLIDER] Could not parse {SliderName} value: {Value}", sliderName, valueStr);
+                return false;
+            }
+
+            // Clamp to valid range
+            percentage = Math.Max(0, Math.Min(100, percentage));
+
+            _logger.LogInformation("[SLIDER] Setting {SliderName} to {Percentage}% using comprehensive slider detection", sliderName, percentage);
+
+            var sliderNameLower = sliderName.ToLower();
+
+            // DISCOVERY: Suno may use custom slider components, NOT standard input[type="range"]
+            // This script searches for multiple types of slider implementations:
+            // 1. Standard input[type="range"]
+            // 2. Elements with role="slider"
+            // 3. Radix UI sliders (common in React apps)
+            // 4. Custom div-based sliders with thumb/track structure
+            var dragSliderScript = @"
+                (async function() {
+                    const targetName = '" + sliderNameLower + @"';
+                    const targetPercent = " + percentage + @";
+                    console.log('[SLIDER] Starting comprehensive slider search for ' + targetName + ' to ' + targetPercent + '%');
+
+                    // DIAGNOSTIC: Log all potential slider elements on the page
+                    console.log('[SLIDER] === DIAGNOSTIC SCAN ===');
+
+                    // Check for standard range inputs
+                    const rangeInputs = document.querySelectorAll('input[type=""range""]');
+                    console.log('[SLIDER] Standard range inputs: ' + rangeInputs.length);
+                    rangeInputs.forEach((el, i) => {
+                        const rect = el.getBoundingClientRect();
+                        console.log('[SLIDER]   Range ' + i + ': ' + rect.width + 'x' + rect.height + ' at (' + Math.round(rect.left) + ',' + Math.round(rect.top) + ')');
+                    });
+
+                    // Check for role=""slider"" elements (Radix UI and other accessible sliders)
+                    const roleSliders = document.querySelectorAll('[role=""slider""]');
+                    console.log('[SLIDER] Role=slider elements: ' + roleSliders.length);
+                    roleSliders.forEach((el, i) => {
+                        const rect = el.getBoundingClientRect();
+                        const ariaVal = el.getAttribute('aria-valuenow');
+                        const ariaMin = el.getAttribute('aria-valuemin');
+                        const ariaMax = el.getAttribute('aria-valuemax');
+                        const parentText = el.parentElement?.parentElement?.parentElement?.textContent?.substring(0, 50) || '';
+                        console.log('[SLIDER]   RoleSlider ' + i + ': value=' + ariaVal + ' (min=' + ariaMin + ', max=' + ariaMax + '), parent text: ' + parentText);
+                    });
+
+                    // Check for Radix UI slider structure
+                    const radixSliders = document.querySelectorAll('[class*=""SliderRoot""], [class*=""slider-root""], [data-radix-slider]');
+                    console.log('[SLIDER] Radix-style sliders: ' + radixSliders.length);
+
+                    // Check for any elements with slider in class name
+                    const sliderClasses = document.querySelectorAll('[class*=""slider""], [class*=""Slider""]');
+                    console.log('[SLIDER] Elements with slider in class: ' + sliderClasses.length);
+
+                    // Log unique class names containing slider
+                    const sliderClassSet = new Set();
+                    sliderClasses.forEach(el => {
+                        el.classList.forEach(c => {
+                            if (c.toLowerCase().includes('slider')) sliderClassSet.add(c);
+                        });
+                    });
+                    console.log('[SLIDER] Unique slider classes: ' + Array.from(sliderClassSet).join(', '));
+
+                    console.log('[SLIDER] === END DIAGNOSTIC ===');
+
+                    // Find all slider elements - BOTH standard range inputs AND role=slider elements
+                    const allRangeInputs = document.querySelectorAll('input[type=""range""]');
+                    const allRoleSliders = document.querySelectorAll('[role=""slider""]');
+                    console.log('[SLIDER] Found ' + allRangeInputs.length + ' range inputs, ' + allRoleSliders.length + ' role=slider elements');
+
+                    let targetSlider = null;
+                    let targetRoleSlider = null;
+                    let foundSectionLabel = null;
+                    let sliderType = 'unknown'; // 'range' or 'role'
+
+                    // APPROACH 1: Find by label, then look for EITHER type of slider nearby
+                    const allLabels = document.querySelectorAll('span, label, p, div, h3, h4');
+                    for (const lbl of allLabels) {
+                        const lblText = (lbl.textContent || '').trim().toLowerCase();
+
+                        // Match exact label or close match
+                        if (lblText === targetName ||
+                            (lblText.includes(targetName) && lblText.length < targetName.length + 15)) {
+
+                            console.log('[SLIDER] Found label: ' + lblText);
+                            foundSectionLabel = lbl;
+
+                            // Look for either type of slider in parent hierarchy
+                            let searchContainer = lbl.parentElement;
+                            for (let i = 0; i < 6 && searchContainer; i++) {
+                                // Check for role=""slider"" elements FIRST (Radix UI pattern)
+                                const roleSlider = searchContainer.querySelector('[role=""slider""]');
+                                if (roleSlider && !roleSlider.hasAttribute('data-jubilee-used')) {
+                                    targetRoleSlider = roleSlider;
+                                    roleSlider.setAttribute('data-jubilee-used', 'true');
+                                    sliderType = 'role';
+                                    console.log('[SLIDER] Found role=slider near label in parent level ' + i);
+                                    break;
+                                }
+
+                                // Check for standard range input
+                                const rangeSlider = searchContainer.querySelector('input[type=""range""]');
+                                if (rangeSlider && !rangeSlider.hasAttribute('data-jubilee-used')) {
+                                    targetSlider = rangeSlider;
+                                    rangeSlider.setAttribute('data-jubilee-used', 'true');
+                                    sliderType = 'range';
+                                    console.log('[SLIDER] Found range input near label in parent level ' + i);
+                                    break;
+                                }
+
+                                searchContainer = searchContainer.parentElement;
+                            }
+
+                            if (targetSlider || targetRoleSlider) break;
+                        }
+                    }
+
+                    // APPROACH 2: Search role=slider elements by looking at their parent text
+                    if (!targetSlider && !targetRoleSlider && allRoleSliders.length > 0) {
+                        console.log('[SLIDER] Trying role=slider parent text search');
+                        for (const slider of allRoleSliders) {
+                            if (slider.hasAttribute('data-jubilee-used')) continue;
+
+                            let searchNode = slider;
+                            for (let depth = 0; depth < 6 && searchNode; depth++) {
+                                searchNode = searchNode.parentElement;
+                                if (!searchNode) break;
+
+                                const containerText = (searchNode.textContent || '').toLowerCase();
+                                if (containerText.includes(targetName)) {
+                                    // Check if there's a label that specifically matches
+                                    const labels = searchNode.querySelectorAll('span, label, p, div');
+                                    for (const lbl of labels) {
+                                        const lblText = (lbl.textContent || '').trim().toLowerCase();
+                                        if (lblText === targetName || (lblText.includes(targetName) && lblText.length < targetName.length + 20)) {
+                                            targetRoleSlider = slider;
+                                            slider.setAttribute('data-jubilee-used', 'true');
+                                            sliderType = 'role';
+                                            console.log('[SLIDER] Found role=slider via parent text at depth ' + depth);
+                                            break;
+                                        }
+                                    }
+                                    if (targetRoleSlider) break;
+                                }
+                            }
+                            if (targetRoleSlider) break;
+                        }
+                    }
+
+                    // APPROACH 3: Fallback - search standard range inputs
+                    if (!targetSlider && !targetRoleSlider) {
+                        console.log('[SLIDER] Trying fallback range input search');
+                        for (const slider of allRangeInputs) {
+                            if (slider.hasAttribute('data-jubilee-used')) continue;
+
+                            let searchNode = slider;
+                            for (let depth = 0; depth < 8 && searchNode; depth++) {
+                                searchNode = searchNode.parentElement;
+                                if (!searchNode) break;
+
+                                const allText = (searchNode.textContent || '').toLowerCase();
+                                if (allText.includes(targetName)) {
+                                    const labels = searchNode.querySelectorAll('span, label, p, div');
+                                    for (const lbl of labels) {
+                                        const lblText = (lbl.textContent || '').trim().toLowerCase();
+                                        if (lblText === targetName || (lblText.includes(targetName) && lblText.length < targetName.length + 20)) {
+                                            targetSlider = slider;
+                                            slider.setAttribute('data-jubilee-used', 'true');
+                                            sliderType = 'range';
+                                            break;
+                                        }
+                                    }
+                                    if (targetSlider) break;
+                                }
+                            }
+                            if (targetSlider) break;
+                        }
+                    }
+
+                    // Determine which slider we're working with
+                    const activeSlider = targetRoleSlider || targetSlider;
+
+                    if (!activeSlider) {
+                        console.log('[SLIDER] Could not find slider for: ' + targetName);
+                        return { success: false, error: 'Slider not found for: ' + targetName, sliderType: 'none' };
+                    }
+
+                    // Scroll the slider into view
+                    activeSlider.scrollIntoView({ behavior: 'instant', block: 'center' });
+                    console.log('[SLIDER] Found ' + targetName + ' slider (type=' + sliderType + '), scrolled into view');
+
+                    // Get slider properties - different for role=slider vs input[type=range]
+                    let min, max, step, currentValue;
+
+                    if (sliderType === 'role') {
+                        // Radix UI / ARIA sliders use aria-* attributes
+                        min = parseFloat(activeSlider.getAttribute('aria-valuemin') || '0');
+                        max = parseFloat(activeSlider.getAttribute('aria-valuemax') || '100');
+                        step = 1; // Usually no step attribute on role sliders
+                        currentValue = parseFloat(activeSlider.getAttribute('aria-valuenow') || '0');
+                        console.log('[SLIDER] Role slider: min=' + min + ', max=' + max + ', current=' + currentValue);
+                    } else {
+                        // Standard range input
+                        min = parseFloat(activeSlider.min || '0');
+                        max = parseFloat(activeSlider.max || '100');
+                        step = parseFloat(activeSlider.step || '1');
+                        currentValue = parseFloat(activeSlider.value);
+                    }
+
+                    // Calculate target based on percentage of the ACTUAL range
+                    const newValue = min + (targetPercent / 100) * (max - min);
+                    const steppedValue = Math.round(newValue / (step || 1)) * (step || 1);
+
+                    console.log('[SLIDER] Current: ' + currentValue + ', Target: ' + steppedValue + ', min=' + min + ', max=' + max);
+
+                    // Find the track container for coordinate calculations
+                    let trackContainer = activeSlider.parentElement;
+                    for (let i = 0; i < 6 && trackContainer; i++) {
+                        const rect = trackContainer.getBoundingClientRect();
+                        // Look for a container that's reasonably wide (at least 100px)
+                        if (rect.width >= 100) {
+                            console.log('[SLIDER] Found track container at level ' + i + ' with width ' + rect.width);
+                            break;
+                        }
+                        trackContainer = trackContainer.parentElement;
+                    }
+
+                    // Get the track container's rect for coordinate calculations
+                    const containerRect = trackContainer ? trackContainer.getBoundingClientRect() : activeSlider.getBoundingClientRect();
+                    const trackWidth = containerRect.width;
+                    const trackHeight = containerRect.height;
+
+                    // Calculate the X position for the target value
+                    const valuePercent = (steppedValue - min) / (max - min);
+                    const targetX = containerRect.left + (trackWidth * valuePercent);
+                    const centerY = containerRect.top + (trackHeight / 2);
+
+                    // Current thumb position
+                    const currentPercent = (currentValue - min) / (max - min);
+                    const currentX = containerRect.left + (trackWidth * currentPercent);
+
+                    console.log('[SLIDER] Track container: left=' + containerRect.left + ', width=' + trackWidth);
+                    console.log('[SLIDER] Current X: ' + currentX + ', Target X: ' + targetX + ', Y: ' + centerY);
+
+                    // For role=slider, the thumb IS the activeSlider element
+                    // For range input, we need to find the thumb
+                    let thumbEl, trackEl, eventTarget;
+
+                    if (sliderType === 'role') {
+                        thumbEl = activeSlider; // The role=slider element IS the thumb
+                        trackEl = trackContainer?.querySelector('[class*=""track""], [class*=""Track""], [class*=""rail""], [class*=""Rail""]');
+                        eventTarget = activeSlider;
+                    } else {
+                        thumbEl = trackContainer?.querySelector('[class*=""thumb""], [class*=""Thumb""], [class*=""handle""], [role=""slider""]');
+                        trackEl = trackContainer?.querySelector('[class*=""track""], [class*=""Track""], [class*=""rail""], [class*=""Rail""]');
+                        eventTarget = thumbEl || trackEl || trackContainer || activeSlider;
+                    }
+
+                    console.log('[SLIDER] Event target: ' + eventTarget.tagName + (eventTarget.className ? '.' + String(eventTarget.className).split(' ')[0] : ''));
+
+                    // Helper to create PointerEvent
+                    function createPointerEvent(type, x, y) {
+                        return new PointerEvent(type, {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window,
+                            pointerId: 1,
+                            pointerType: 'mouse',
+                            isPrimary: true,
+                            clientX: x,
+                            clientY: y,
+                            screenX: x,
+                            screenY: y,
+                            button: 0,
+                            buttons: type === 'pointerup' ? 0 : 1,
+                            pressure: type === 'pointerup' ? 0 : 0.5
+                        });
+                    }
+
+                    // Helper to create MouseEvent
+                    function createMouseEvent(type, x, y) {
+                        return new MouseEvent(type, {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window,
+                            clientX: x,
+                            clientY: y,
+                            screenX: x,
+                            screenY: y,
+                            button: 0,
+                            buttons: type === 'mouseup' ? 0 : 1
+                        });
+                    }
+
+                    // Helper function to get current slider value (works for both types)
+                    function getSliderValue() {
+                        if (sliderType === 'role') {
+                            return parseFloat(activeSlider.getAttribute('aria-valuenow') || '0');
+                        } else {
+                            return parseFloat(activeSlider.value);
+                        }
+                    }
+
+                    try {
+                        // METHOD 1: Try direct click on the track at target position
+                        console.log('[SLIDER] Method 1: Direct click at target position');
+
+                        // Dispatch click sequence at target position on the track
+                        const clickTarget = trackEl || trackContainer || eventTarget;
+                        clickTarget.dispatchEvent(createPointerEvent('pointerdown', targetX, centerY));
+                        clickTarget.dispatchEvent(createMouseEvent('mousedown', targetX, centerY));
+                        clickTarget.dispatchEvent(createPointerEvent('pointerup', targetX, centerY));
+                        clickTarget.dispatchEvent(createMouseEvent('mouseup', targetX, centerY));
+                        clickTarget.dispatchEvent(createMouseEvent('click', targetX, centerY));
+
+                        // Check if value changed
+                        let checkValue = getSliderValue();
+                        if (Math.abs(checkValue - steppedValue) < (step || 1)) {
+                            console.log('[SLIDER] Method 1 SUCCESS - value is now: ' + checkValue);
+                            return { success: true, method: 'click', finalValue: checkValue, targetValue: steppedValue, sliderType: sliderType };
+                        }
+
+                        // METHOD 2: For Radix UI sliders, we need to click on the TRACK at the target position
+                        // This is how users actually interact with sliders - clicking where they want the value
+                        console.log('[SLIDER] Method 2: Click on track at target position (Radix pattern)');
+
+                        // Find the track element (the background bar of the slider)
+                        const sliderTrack = trackContainer?.querySelector('[class*=""Track""], [class*=""track""], [data-orientation]') || trackContainer;
+                        console.log('[SLIDER] Clicking on track: ' + (sliderTrack?.tagName || 'none'));
+
+                        if (sliderTrack) {
+                            const trackRect = sliderTrack.getBoundingClientRect();
+                            const clickX = trackRect.left + (trackRect.width * valuePercent);
+                            const clickY = trackRect.top + trackRect.height / 2;
+
+                            console.log('[SLIDER] Track click position: X=' + clickX + ', Y=' + clickY);
+
+                            // Simulate a complete click sequence on the track
+                            sliderTrack.dispatchEvent(createPointerEvent('pointerdown', clickX, clickY));
+                            sliderTrack.dispatchEvent(createMouseEvent('mousedown', clickX, clickY));
+
+                            // Small move to simulate natural interaction
+                            sliderTrack.dispatchEvent(createPointerEvent('pointermove', clickX, clickY));
+
+                            sliderTrack.dispatchEvent(createPointerEvent('pointerup', clickX, clickY));
+                            sliderTrack.dispatchEvent(createMouseEvent('mouseup', clickX, clickY));
+                            sliderTrack.dispatchEvent(createMouseEvent('click', clickX, clickY));
+                        }
+
+                        // Wait a tiny moment and check
+                        await new Promise(r => setTimeout(r, 50));
+                        checkValue = getSliderValue();
+                        console.log('[SLIDER] After track click, value: ' + checkValue);
+
+                        if (Math.abs(checkValue - steppedValue) < (step || 1) + 5) {
+                            console.log('[SLIDER] Method 2 SUCCESS - value is now: ' + checkValue);
+                            return { success: true, method: 'track_click', finalValue: checkValue, targetValue: steppedValue, sliderType: sliderType };
+                        }
+
+                        // METHOD 3: Full drag simulation on the thumb element itself
+                        console.log('[SLIDER] Method 3: Full drag sequence on thumb');
+
+                        // For Radix, the thumb is the role=slider element
+                        const thumbElement = sliderType === 'role' ? activeSlider : (thumbEl || eventTarget);
+                        const thumbRect = thumbElement.getBoundingClientRect();
+                        const startX = thumbRect.left + thumbRect.width / 2;
+                        const startY = thumbRect.top + thumbRect.height / 2;
+
+                        console.log('[SLIDER] Dragging thumb from X=' + startX + ' to X=' + targetX);
+
+                        // Focus the thumb first
+                        thumbElement.focus();
+
+                        // Start drag at thumb center
+                        thumbElement.dispatchEvent(createPointerEvent('pointerdown', startX, startY));
+                        thumbElement.dispatchEvent(createMouseEvent('mousedown', startX, startY));
+
+                        // Smooth drag to target
+                        const dragSteps = 20;
+                        for (let i = 1; i <= dragSteps; i++) {
+                            const progress = i / dragSteps;
+                            const moveX = startX + (targetX - startX) * progress;
+                            thumbElement.dispatchEvent(createPointerEvent('pointermove', moveX, startY));
+                            thumbElement.dispatchEvent(createMouseEvent('mousemove', moveX, startY));
+                        }
+
+                        // End drag
+                        thumbElement.dispatchEvent(createPointerEvent('pointerup', targetX, startY));
+                        thumbElement.dispatchEvent(createMouseEvent('mouseup', targetX, startY));
+                        thumbElement.blur();
+
+                        await new Promise(r => setTimeout(r, 50));
+                        checkValue = getSliderValue();
+                        console.log('[SLIDER] After drag, value: ' + checkValue);
+
+                        if (Math.abs(checkValue - steppedValue) < (step || 1) + 5) {
+                            console.log('[SLIDER] Method 3 SUCCESS - value is now: ' + checkValue);
+                            return { success: true, method: 'drag', finalValue: checkValue, targetValue: steppedValue, sliderType: sliderType };
+                        }
+
+                        // METHOD 4: Keyboard arrow keys (Radix sliders respond to keyboard)
+                        // This is the MOST RELIABLE method for Radix sliders
+                        console.log('[SLIDER] Method 4: Keyboard arrow key simulation');
+
+                        // Use the thumb element for focus
+                        const focusElement = sliderType === 'role' ? activeSlider : (thumbEl || eventTarget);
+                        focusElement.focus();
+
+                        // Re-read current value since it may have changed
+                        const currentVal = getSliderValue();
+                        const diff = steppedValue - currentVal;
+                        const keyCode = diff > 0 ? 39 : 37; // Right or Left arrow
+                        const keyName = diff > 0 ? 'ArrowRight' : 'ArrowLeft';
+                        const numPresses = Math.abs(Math.round(diff));
+
+                        console.log('[SLIDER] Current=' + currentVal + ', Target=' + steppedValue + ', pressing ' + keyName + ' ' + numPresses + ' times');
+
+                        // Press arrow keys with delay after EACH press for React to process
+                        for (let i = 0; i < Math.min(numPresses, 100); i++) {
+                            focusElement.dispatchEvent(new KeyboardEvent('keydown', {
+                                key: keyName,
+                                code: keyName,
+                                keyCode: keyCode,
+                                which: keyCode,
+                                bubbles: true,
+                                cancelable: true
+                            }));
+                            focusElement.dispatchEvent(new KeyboardEvent('keyup', {
+                                key: keyName,
+                                code: keyName,
+                                keyCode: keyCode,
+                                which: keyCode,
+                                bubbles: true,
+                                cancelable: true
+                            }));
+
+                            // CRITICAL: Delay after EACH keypress so React can process state update
+                            await new Promise(r => setTimeout(r, 20));
+                        }
+
+                        await new Promise(r => setTimeout(r, 100));
+                        checkValue = getSliderValue();
+                        console.log('[SLIDER] After keyboard, value: ' + checkValue + ' (target was ' + steppedValue + ')');
+
+                        if (Math.abs(checkValue - steppedValue) <= 5) {
+                            console.log('[SLIDER] Method 4 SUCCESS - value is now: ' + checkValue);
+                            return { success: true, method: 'keyboard', finalValue: checkValue, targetValue: steppedValue, sliderType: sliderType };
+                        }
+
+                        // If keyboard didn't get close enough, try a few more times in a loop
+                        let attempts = 0;
+                        while (Math.abs(checkValue - steppedValue) > 1 && attempts < 3) {
+                            attempts++;
+                            const remaining = steppedValue - checkValue;
+                            const kc = remaining > 0 ? 39 : 37;
+                            const kn = remaining > 0 ? 'ArrowRight' : 'ArrowLeft';
+                            const presses = Math.min(Math.abs(Math.round(remaining)), 50);
+
+                            console.log('[SLIDER] Correction attempt ' + attempts + ': pressing ' + kn + ' ' + presses + ' times');
+
+                            for (let i = 0; i < presses; i++) {
+                                focusElement.dispatchEvent(new KeyboardEvent('keydown', {
+                                    key: kn, code: kn, keyCode: kc, which: kc, bubbles: true, cancelable: true
+                                }));
+                                focusElement.dispatchEvent(new KeyboardEvent('keyup', {
+                                    key: kn, code: kn, keyCode: kc, which: kc, bubbles: true, cancelable: true
+                                }));
+                                // Delay after EACH keypress for React
+                                await new Promise(r => setTimeout(r, 20));
+                            }
+
+                            await new Promise(r => setTimeout(r, 50));
+                            checkValue = getSliderValue();
+                            console.log('[SLIDER] After correction ' + attempts + ', value: ' + checkValue);
+                        }
+
+                        // METHOD 4: For range input, try React _valueTracker hack
+                        if (sliderType === 'range' && activeSlider.tagName === 'INPUT') {
+                            console.log('[SLIDER] Method 4: React _valueTracker hack');
+
+                            activeSlider.focus();
+                            const lastValue = activeSlider.value;
+                            activeSlider.value = steppedValue;
+
+                            const tracker = activeSlider._valueTracker;
+                            if (tracker) {
+                                console.log('[SLIDER] Found _valueTracker, resetting');
+                                tracker.setValue(lastValue);
+                            }
+
+                            activeSlider.dispatchEvent(new Event('input', { bubbles: true }));
+                            activeSlider.dispatchEvent(new Event('change', { bubbles: true }));
+
+                            checkValue = getSliderValue();
+                            if (Math.abs(checkValue - steppedValue) < (step || 1)) {
+                                console.log('[SLIDER] Method 4 SUCCESS - value is now: ' + checkValue);
+                                return { success: true, method: 'valueTracker', finalValue: checkValue, targetValue: steppedValue, sliderType: sliderType };
+                            }
+
+                            // METHOD 5: Native setter + _valueTracker combination
+                            console.log('[SLIDER] Method 5: Native setter + _valueTracker');
+
+                            const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+                            const lastValue2 = activeSlider.value;
+                            nativeSetter.call(activeSlider, steppedValue);
+
+                            const tracker2 = activeSlider._valueTracker;
+                            if (tracker2) {
+                                tracker2.setValue(lastValue2);
+                            }
+
+                            activeSlider.dispatchEvent(new Event('input', { bubbles: true }));
+                            activeSlider.dispatchEvent(new Event('change', { bubbles: true }));
+                            activeSlider.blur();
+
+                            checkValue = getSliderValue();
+                        }
+
+                        console.log('[SLIDER] Final value: ' + checkValue + ' (target was ' + steppedValue + ')');
+
+                        const tolerance = (step || 1) * 2;
+                        const isClose = Math.abs(checkValue - steppedValue) <= tolerance;
+
+                        return {
+                            success: isClose,
+                            method: 'all_methods',
+                            finalValue: checkValue,
+                            targetValue: steppedValue,
+                            tolerance: tolerance,
+                            sliderType: sliderType
+                        };
+
+                    } catch (e) {
+                        console.log('[SLIDER] Error during slider manipulation: ' + e.message);
+                        return { success: false, error: e.message, sliderType: sliderType };
+                    }
+                })();
+            ";
+
+            var result = await ExecuteScriptAsync<JsonElement>(dragSliderScript);
+
+            if (result.TryGetProperty("success", out var successProp) && successProp.GetBoolean())
+            {
+                var method = result.TryGetProperty("method", out var mp) ? mp.GetString() : "unknown";
+                var finalValue = result.TryGetProperty("finalValue", out var fv) ? fv.GetDouble() : -1;
+                var targetValue = result.TryGetProperty("targetValue", out var tv) ? tv.GetDouble() : -1;
+                _logger.LogInformation("[SLIDER] {SliderName} SUCCESS via {Method}: final={Final}, target={Target}",
+                    sliderName, method, finalValue, targetValue);
+                return true;
+            }
+            else
+            {
+                var error = result.TryGetProperty("error", out var ep) ? ep.GetString() : "Unknown error";
+                _logger.LogWarning("[SLIDER] Failed to set {SliderName}: {Error}", sliderName, error);
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[SLIDER] Exception while setting {SliderName}", sliderName);
+            return false;
+        }
+    }
+
     public async Task<bool> EnterTitleAsync(string title)
     {
         EnsureInitialized();
@@ -1104,6 +1883,206 @@ public class SunoAutomationService : ISunoAutomationService
         }
     }
 
+    public async Task<bool> SelectSaveToWorkspaceAsync(string workspaceName)
+    {
+        EnsureInitialized();
+
+        try
+        {
+            _logger.LogInformation("[SAVE-TO] Selecting workspace '{Name}' from Save to dropdown", workspaceName);
+
+            // Step 1: Make sure the "Save to..." checkbox is checked
+            var checkSaveToScript = @"
+                (function() {
+                    console.log('[SAVE-TO] Looking for Save to checkbox');
+
+                    // Find the Save to checkbox - look for checkbox near 'Save to' text
+                    const labels = document.querySelectorAll('label, span, div');
+                    for (const label of labels) {
+                        const text = (label.textContent || '').trim();
+                        if (text.includes('Save to') && text.length < 50) {
+                            console.log('[SAVE-TO] Found Save to label: ' + text);
+
+                            // Find nearby checkbox
+                            const container = label.closest('div[class]') || label.parentElement?.parentElement;
+                            if (container) {
+                                const checkbox = container.querySelector('input[type=""checkbox""], [role=""checkbox""], button[aria-checked]');
+                                if (checkbox) {
+                                    const isChecked = checkbox.checked ||
+                                                      checkbox.getAttribute('aria-checked') === 'true' ||
+                                                      checkbox.getAttribute('data-state') === 'checked';
+                                    if (!isChecked) {
+                                        checkbox.click();
+                                        console.log('[SAVE-TO] Clicked checkbox to enable Save to');
+                                        return { success: true, action: 'checked' };
+                                    } else {
+                                        console.log('[SAVE-TO] Checkbox already checked');
+                                        return { success: true, action: 'already_checked' };
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Alternative: Find by checkbox that is near 'Save to' text
+                    const checkboxes = document.querySelectorAll('input[type=""checkbox""], [role=""checkbox""], button[aria-checked]');
+                    for (const cb of checkboxes) {
+                        const parent = cb.closest('div') || cb.parentElement;
+                        if (parent && parent.textContent.includes('Save to')) {
+                            const isChecked = cb.checked ||
+                                              cb.getAttribute('aria-checked') === 'true' ||
+                                              cb.getAttribute('data-state') === 'checked';
+                            if (!isChecked) {
+                                cb.click();
+                                console.log('[SAVE-TO] Clicked Save to checkbox (alt method)');
+                                return { success: true, action: 'checked' };
+                            }
+                            return { success: true, action: 'already_checked' };
+                        }
+                    }
+
+                    console.log('[SAVE-TO] Could not find Save to checkbox');
+                    return { success: false, error: 'Save to checkbox not found' };
+                })();
+            ";
+
+            var checkResult = await ExecuteScriptAsync<JsonElement>(checkSaveToScript);
+            _logger.LogDebug("[SAVE-TO] Checkbox result: {Result}", checkResult.ToString());
+
+            await Task.Delay(300);
+
+            // Step 2: Click on the workspace dropdown to open it
+            var targetNameLower = workspaceName.ToLowerInvariant().Trim();
+            var openDropdownScript = $@"
+                (async function() {{
+                    console.log('[SAVE-TO] Looking for workspace dropdown');
+                    const targetName = '{EscapeJsString(targetNameLower)}';
+
+                    // Find dropdown button/select near 'Save to' area
+                    // Look for elements that show current workspace name or have dropdown indicators
+                    const dropdowns = document.querySelectorAll('button, [role=""combobox""], [role=""listbox""], select, [class*=""dropdown""], [class*=""select""]');
+
+                    for (const dd of dropdowns) {{
+                        const rect = dd.getBoundingClientRect();
+                        if (rect.width < 50 || rect.height < 20) continue;
+
+                        const text = (dd.textContent || '').trim().toLowerCase();
+                        const parent = dd.closest('div[class]');
+                        const parentText = parent ? (parent.textContent || '').toLowerCase() : '';
+
+                        // Check if this dropdown is in the Save to area
+                        if (parentText.includes('save to') || text.includes('workspace') ||
+                            dd.getAttribute('aria-label')?.toLowerCase().includes('workspace')) {{
+
+                            // Skip if it's just the checkbox
+                            if (dd.getAttribute('role') === 'checkbox' || dd.type === 'checkbox') continue;
+
+                            console.log('[SAVE-TO] Found potential dropdown: ' + text.substring(0, 50));
+                            dd.click();
+                            await new Promise(r => setTimeout(r, 300));
+                            return {{ success: true, clicked: text.substring(0, 50) }};
+                        }}
+                    }}
+
+                    // Alternative: Find button/dropdown that contains a workspace name
+                    const allButtons = document.querySelectorAll('button');
+                    for (const btn of allButtons) {{
+                        const text = (btn.textContent || '').trim();
+                        const rect = btn.getBoundingClientRect();
+
+                        // Look for buttons near bottom of form (y > 500) that might be workspace selectors
+                        if (rect.top > 500 && rect.width > 80 && rect.height > 20) {{
+                            // Check if it looks like a workspace selector (has icon + text)
+                            const hasIcon = btn.querySelector('svg, img, [class*=""icon""]');
+                            if (hasIcon && text.length < 40 && !text.toLowerCase().includes('create')) {{
+                                console.log('[SAVE-TO] Found workspace button (alt): ' + text);
+                                btn.click();
+                                await new Promise(r => setTimeout(r, 300));
+                                return {{ success: true, clicked: text }};
+                            }}
+                        }}
+                    }}
+
+                    console.log('[SAVE-TO] Workspace dropdown not found');
+                    return {{ success: false, error: 'Dropdown not found' }};
+                }})();
+            ";
+
+            var dropdownResult = await ExecuteScriptAsync<JsonElement>(openDropdownScript);
+            if (!dropdownResult.TryGetProperty("success", out var dropdownSuccess) || !dropdownSuccess.GetBoolean())
+            {
+                _logger.LogWarning("[SAVE-TO] Could not find or click workspace dropdown");
+                return false;
+            }
+
+            await Task.Delay(500); // Wait for dropdown to open
+
+            // Step 3: Select the target workspace from the dropdown list
+            var selectWorkspaceScript = $@"
+                (function() {{
+                    console.log('[SAVE-TO] Looking for workspace option in dropdown');
+                    const targetName = '{EscapeJsString(targetNameLower)}';
+
+                    // Find all potential list items in dropdown
+                    const options = document.querySelectorAll('[role=""option""], [role=""menuitem""], li, div[class*=""option""], div[class*=""item""]');
+
+                    for (const opt of options) {{
+                        const rect = opt.getBoundingClientRect();
+                        if (rect.width < 50 || rect.height < 20) continue;
+
+                        const text = (opt.textContent || '').trim();
+                        const lowerText = text.toLowerCase();
+                        const firstLine = text.split('\\n')[0].trim().toLowerCase();
+
+                        console.log('[SAVE-TO] Checking option: ' + firstLine);
+
+                        // Check for match
+                        if (firstLine === targetName || lowerText === targetName ||
+                            firstLine.includes(targetName) || targetName.includes(firstLine)) {{
+                            opt.click();
+                            console.log('[SAVE-TO] Selected workspace: ' + text);
+                            return {{ success: true, selected: text }};
+                        }}
+                    }}
+
+                    // Try looking in portals/modals
+                    const portals = document.querySelectorAll('[data-radix-portal], [role=""dialog""], [role=""listbox""], [class*=""dropdown""], [class*=""menu""]');
+                    for (const portal of portals) {{
+                        const items = portal.querySelectorAll('div, span, li, button');
+                        for (const item of items) {{
+                            const text = (item.textContent || '').trim();
+                            const lowerText = text.toLowerCase();
+                            if (lowerText === targetName || text.toLowerCase().includes(targetName)) {{
+                                item.click();
+                                console.log('[SAVE-TO] Selected workspace from portal: ' + text);
+                                return {{ success: true, selected: text }};
+                            }}
+                        }}
+                    }}
+
+                    console.log('[SAVE-TO] Target workspace not found in dropdown');
+                    return {{ success: false, error: 'Workspace not in dropdown' }};
+                }})();
+            ";
+
+            var selectResult = await ExecuteScriptAsync<JsonElement>(selectWorkspaceScript);
+            if (!selectResult.TryGetProperty("success", out var selectSuccess) || !selectSuccess.GetBoolean())
+            {
+                _logger.LogWarning("[SAVE-TO] Could not find workspace '{Name}' in dropdown", workspaceName);
+                return false;
+            }
+
+            _logger.LogInformation("[SAVE-TO] Successfully selected workspace '{Name}'", workspaceName);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[SAVE-TO] Exception while selecting Save to workspace");
+            ErrorOccurred?.Invoke(this, $"Failed to select Save to workspace: {ex.Message}");
+            return false;
+        }
+    }
+
     public Task<bool> IsOnCreatePageAsync()
     {
         EnsureInitialized();
@@ -1225,7 +2204,7 @@ public class SunoAutomationService : ISunoAutomationService
         }
     }
 
-    public async Task<bool> InsertIntoCreateFormAsync(string? title, string? style, string? lyrics, bool isInstrumental)
+    public async Task<bool> InsertIntoCreateFormAsync(string? title, string? style, string? lyrics, bool isInstrumental, string? vocalGender = null, string? weirdness = null, string? styleInfluence = null, string? workspace = null)
     {
         EnsureInitialized();
 
@@ -1238,15 +2217,16 @@ public class SunoAutomationService : ISunoAutomationService
                 return false;
             }
 
-            _logger.LogInformation("[FORM] Inserting data into create form - Title: '{Title}', Style: '{Style}' ({StyleLen} chars), Lyrics: ({LyricsLen} chars), Instrumental: {Instrumental}",
-                title ?? "(empty)", style ?? "(empty)", style?.Length ?? 0, lyrics?.Length ?? 0, isInstrumental);
+            _logger.LogInformation("[FORM] Inserting data into create form - Title: '{Title}', Style: '{Style}' ({StyleLen} chars), Lyrics: ({LyricsLen} chars), Instrumental: {Instrumental}, VocalGender: {Gender}, Weirdness: {Weirdness}, StyleInfluence: {StyleInfluence}, Workspace: {Workspace}",
+                title ?? "(empty)", style ?? "(empty)", style?.Length ?? 0, lyrics?.Length ?? 0, isInstrumental, vocalGender ?? "(none)", weirdness ?? "(none)", styleInfluence ?? "(none)", workspace ?? "(none)");
 
             var success = true;
 
-            // Clear any previous markers first
-            _logger.LogDebug("[FORM] Clearing previous field markers");
+            // Clear any previous markers first (both field markers and slider-used markers)
+            _logger.LogDebug("[FORM] Clearing previous field and slider markers");
             await ExecuteScriptAsync<object>(@"
                 document.querySelectorAll('[data-jubilee-field]').forEach(el => el.removeAttribute('data-jubilee-field'));
+                document.querySelectorAll('[data-jubilee-used]').forEach(el => el.removeAttribute('data-jubilee-used'));
             ");
 
             // Wait for DOM to stabilize after clearing markers
@@ -1273,7 +2253,56 @@ public class SunoAutomationService : ISunoAutomationService
                 _logger.LogDebug("[FORM] Style is empty, skipping");
             }
 
-            // Insert LYRICS SECOND (bottom textarea in Suno Custom mode)
+            // Set vocal gender (if not instrumental)
+            if (!isInstrumental && !string.IsNullOrWhiteSpace(vocalGender))
+            {
+                _logger.LogInformation("[FORM] Setting vocal gender: '{Gender}'", vocalGender);
+                var genderResult = await SetVocalGenderAsync(vocalGender);
+                if (!genderResult)
+                {
+                    _logger.LogWarning("[FORM] Failed to set vocal gender - control may not exist");
+                    // Don't fail the whole operation if gender fails
+                }
+                else
+                {
+                    _logger.LogInformation("[FORM] Vocal gender set successfully");
+                }
+                await Task.Delay(300);
+            }
+
+            // Set Weirdness slider
+            if (!string.IsNullOrWhiteSpace(weirdness))
+            {
+                _logger.LogInformation("[FORM] Setting Weirdness: '{Weirdness}'", weirdness);
+                var weirdnessResult = await SetWeirdnessSliderAsync(weirdness);
+                if (!weirdnessResult)
+                {
+                    _logger.LogWarning("[FORM] Failed to set Weirdness slider - control may not exist");
+                }
+                else
+                {
+                    _logger.LogInformation("[FORM] Weirdness slider set successfully");
+                }
+                await Task.Delay(300);
+            }
+
+            // Set Style Influence slider
+            if (!string.IsNullOrWhiteSpace(styleInfluence))
+            {
+                _logger.LogInformation("[FORM] Setting Style Influence: '{StyleInfluence}'", styleInfluence);
+                var styleInfluenceResult = await SetStyleInfluenceSliderAsync(styleInfluence);
+                if (!styleInfluenceResult)
+                {
+                    _logger.LogWarning("[FORM] Failed to set Style Influence slider - control may not exist");
+                }
+                else
+                {
+                    _logger.LogInformation("[FORM] Style Influence slider set successfully");
+                }
+                await Task.Delay(300);
+            }
+
+            // Insert LYRICS (bottom textarea in Suno Custom mode)
             if (!isInstrumental && !string.IsNullOrWhiteSpace(lyrics))
             {
                 _logger.LogInformation("[FORM] Inserting lyrics ({Length} chars)", lyrics.Length);
@@ -1312,9 +2341,27 @@ public class SunoAutomationService : ISunoAutomationService
                 await Task.Delay(200);
             }
 
-            // Set instrumental mode last
+            // Set instrumental mode
             _logger.LogDebug("[FORM] Setting instrumental mode: {Instrumental}", isInstrumental);
             await SetInstrumentalOnlyAsync(isInstrumental);
+            await Task.Delay(200);
+
+            // Select workspace from "Save to..." dropdown (at the bottom of form)
+            if (!string.IsNullOrWhiteSpace(workspace))
+            {
+                _logger.LogInformation("[FORM] Selecting Save to workspace: '{Workspace}'", workspace);
+                var workspaceResult = await SelectSaveToWorkspaceAsync(workspace);
+                if (!workspaceResult)
+                {
+                    _logger.LogWarning("[FORM] Failed to select Save to workspace - dropdown may not exist or workspace not found");
+                    // Don't fail the whole operation if workspace selection fails
+                }
+                else
+                {
+                    _logger.LogInformation("[FORM] Save to workspace selected successfully");
+                }
+                await Task.Delay(200);
+            }
 
             _logger.LogInformation("[FORM] Form data insertion completed, success: {Success}", success);
             return success;

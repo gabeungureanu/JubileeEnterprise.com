@@ -1,0 +1,1467 @@
+# JubileeVerse.com Admin Collections Structure
+# This file documents the complete folder/collection hierarchy in the admin panel
+# Generated from admin-collections.html JavaScript definitions
+# Last Updated: 2026-01-17
+
+collections:
+  # ============================================
+  # AUTHORITY FOUNDATION
+  # ============================================
+  authority_foundation:
+    name: "Authority Foundation"
+    icon: "reactor"
+    color: "#FFD700"
+    items:
+      # ----------------------------------------
+      # a1 - Scripture (Jubilee Bible)
+      # ----------------------------------------
+      - id: "a1"
+        name: "Scripture"
+        slug: "scripture"
+        subcategories:
+          - id: "Jubilee_Bible_JSV"
+            name: "Jubilee Bible (JSV)"
+            hasDomains: true
+            domains:
+              # Old Testament - Pentateuch
+              - id: "Genesis"
+                name: "Genesis"
+                children: ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4", "Chapter 5", "Chapter 6", "Chapter 7", "Chapter 8", "Chapter 9", "Chapter 10", "Chapter 11", "Chapter 12", "Chapter 13", "Chapter 14", "Chapter 15", "Chapter 16", "Chapter 17", "Chapter 18", "Chapter 19", "Chapter 20", "Chapter 21", "Chapter 22", "Chapter 23", "Chapter 24", "Chapter 25", "Chapter 26", "Chapter 27", "Chapter 28", "Chapter 29", "Chapter 30", "Chapter 31", "Chapter 32", "Chapter 33", "Chapter 34", "Chapter 35", "Chapter 36", "Chapter 37", "Chapter 38", "Chapter 39", "Chapter 40", "Chapter 41", "Chapter 42", "Chapter 43", "Chapter 44", "Chapter 45", "Chapter 46", "Chapter 47", "Chapter 48", "Chapter 49", "Chapter 50"]
+              - id: "Exodus"
+                name: "Exodus"
+                children: ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4", "Chapter 5", "Chapter 6", "Chapter 7", "Chapter 8", "Chapter 9", "Chapter 10", "Chapter 11", "Chapter 12", "Chapter 13", "Chapter 14", "Chapter 15", "Chapter 16", "Chapter 17", "Chapter 18", "Chapter 19", "Chapter 20", "Chapter 21", "Chapter 22", "Chapter 23", "Chapter 24", "Chapter 25", "Chapter 26", "Chapter 27", "Chapter 28", "Chapter 29", "Chapter 30", "Chapter 31", "Chapter 32", "Chapter 33", "Chapter 34", "Chapter 35", "Chapter 36", "Chapter 37", "Chapter 38", "Chapter 39", "Chapter 40"]
+              - id: "Leviticus"
+                name: "Leviticus"
+                children: ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4", "Chapter 5", "Chapter 6", "Chapter 7", "Chapter 8", "Chapter 9", "Chapter 10", "Chapter 11", "Chapter 12", "Chapter 13", "Chapter 14", "Chapter 15", "Chapter 16", "Chapter 17", "Chapter 18", "Chapter 19", "Chapter 20", "Chapter 21", "Chapter 22", "Chapter 23", "Chapter 24", "Chapter 25", "Chapter 26", "Chapter 27"]
+              - id: "Numbers"
+                name: "Numbers"
+                children: ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4", "Chapter 5", "Chapter 6", "Chapter 7", "Chapter 8", "Chapter 9", "Chapter 10", "Chapter 11", "Chapter 12", "Chapter 13", "Chapter 14", "Chapter 15", "Chapter 16", "Chapter 17", "Chapter 18", "Chapter 19", "Chapter 20", "Chapter 21", "Chapter 22", "Chapter 23", "Chapter 24", "Chapter 25", "Chapter 26", "Chapter 27", "Chapter 28", "Chapter 29", "Chapter 30", "Chapter 31", "Chapter 32", "Chapter 33", "Chapter 34", "Chapter 35", "Chapter 36"]
+              - id: "Deuteronomy"
+                name: "Deuteronomy"
+                children: ["Chapter 1", "Chapter 2", "Chapter 3", "Chapter 4", "Chapter 5", "Chapter 6", "Chapter 7", "Chapter 8", "Chapter 9", "Chapter 10", "Chapter 11", "Chapter 12", "Chapter 13", "Chapter 14", "Chapter 15", "Chapter 16", "Chapter 17", "Chapter 18", "Chapter 19", "Chapter 20", "Chapter 21", "Chapter 22", "Chapter 23", "Chapter 24", "Chapter 25", "Chapter 26", "Chapter 27", "Chapter 28", "Chapter 29", "Chapter 30", "Chapter 31", "Chapter 32", "Chapter 33", "Chapter 34"]
+              # Historical Books
+              - id: "Joshua"
+                name: "Joshua"
+                chapters: 24
+              - id: "Judges"
+                name: "Judges"
+                chapters: 21
+              - id: "Ruth"
+                name: "Ruth"
+                chapters: 4
+              - id: "1_Samuel"
+                name: "1 Samuel"
+                chapters: 31
+              - id: "2_Samuel"
+                name: "2 Samuel"
+                chapters: 24
+              - id: "1_Kings"
+                name: "1 Kings"
+                chapters: 22
+              - id: "2_Kings"
+                name: "2 Kings"
+                chapters: 25
+              - id: "1_Chronicles"
+                name: "1 Chronicles"
+                chapters: 29
+              - id: "2_Chronicles"
+                name: "2 Chronicles"
+                chapters: 36
+              - id: "Ezra"
+                name: "Ezra"
+                chapters: 10
+              - id: "Nehemiah"
+                name: "Nehemiah"
+                chapters: 13
+              - id: "Esther"
+                name: "Esther"
+                chapters: 10
+              # Wisdom/Poetry
+              - id: "Job"
+                name: "Job"
+                chapters: 42
+              - id: "Psalms"
+                name: "Psalms"
+                chapters: 150
+              - id: "Proverbs"
+                name: "Proverbs"
+                chapters: 31
+              - id: "Ecclesiastes"
+                name: "Ecclesiastes"
+                chapters: 12
+              - id: "Song_of_Solomon"
+                name: "Song of Solomon"
+                chapters: 8
+              # Major Prophets
+              - id: "Isaiah"
+                name: "Isaiah"
+                chapters: 66
+              - id: "Jeremiah"
+                name: "Jeremiah"
+                chapters: 52
+              - id: "Lamentations"
+                name: "Lamentations"
+                chapters: 5
+              - id: "Ezekiel"
+                name: "Ezekiel"
+                chapters: 48
+              - id: "Daniel"
+                name: "Daniel"
+                chapters: 12
+              # Minor Prophets
+              - id: "Hosea"
+                name: "Hosea"
+                chapters: 14
+              - id: "Joel"
+                name: "Joel"
+                chapters: 3
+              - id: "Amos"
+                name: "Amos"
+                chapters: 9
+              - id: "Obadiah"
+                name: "Obadiah"
+                chapters: 1
+              - id: "Jonah"
+                name: "Jonah"
+                chapters: 4
+              - id: "Micah"
+                name: "Micah"
+                chapters: 7
+              - id: "Nahum"
+                name: "Nahum"
+                chapters: 3
+              - id: "Habakkuk"
+                name: "Habakkuk"
+                chapters: 3
+              - id: "Zephaniah"
+                name: "Zephaniah"
+                chapters: 3
+              - id: "Haggai"
+                name: "Haggai"
+                chapters: 2
+              - id: "Zechariah"
+                name: "Zechariah"
+                chapters: 14
+              - id: "Malachi"
+                name: "Malachi"
+                chapters: 4
+              # New Testament - Gospels
+              - id: "Matthew"
+                name: "Matthew"
+                chapters: 28
+              - id: "Mark"
+                name: "Mark"
+                chapters: 16
+              - id: "Luke"
+                name: "Luke"
+                chapters: 24
+              - id: "John"
+                name: "John"
+                chapters: 21
+              # History
+              - id: "Acts"
+                name: "Acts"
+                chapters: 28
+              # Pauline Epistles
+              - id: "Romans"
+                name: "Romans"
+                chapters: 16
+              - id: "1_Corinthians"
+                name: "1 Corinthians"
+                chapters: 16
+              - id: "2_Corinthians"
+                name: "2 Corinthians"
+                chapters: 13
+              - id: "Galatians"
+                name: "Galatians"
+                chapters: 6
+              - id: "Ephesians"
+                name: "Ephesians"
+                chapters: 6
+              - id: "Philippians"
+                name: "Philippians"
+                chapters: 4
+              - id: "Colossians"
+                name: "Colossians"
+                chapters: 4
+              - id: "1_Thessalonians"
+                name: "1 Thessalonians"
+                chapters: 5
+              - id: "2_Thessalonians"
+                name: "2 Thessalonians"
+                chapters: 3
+              - id: "1_Timothy"
+                name: "1 Timothy"
+                chapters: 6
+              - id: "2_Timothy"
+                name: "2 Timothy"
+                chapters: 4
+              - id: "Titus"
+                name: "Titus"
+                chapters: 3
+              - id: "Philemon"
+                name: "Philemon"
+                chapters: 1
+              # General Epistles
+              - id: "Hebrews"
+                name: "Hebrews"
+                chapters: 13
+              - id: "James"
+                name: "James"
+                chapters: 5
+              - id: "1_Peter"
+                name: "1 Peter"
+                chapters: 5
+              - id: "2_Peter"
+                name: "2 Peter"
+                chapters: 3
+              - id: "1_John"
+                name: "1 John"
+                chapters: 5
+              - id: "2_John"
+                name: "2 John"
+                chapters: 1
+              - id: "3_John"
+                name: "3 John"
+                chapters: 1
+              - id: "Jude"
+                name: "Jude"
+                chapters: 1
+              # Apocalyptic
+              - id: "Revelation"
+                name: "Revelation"
+                chapters: 22
+          - id: "Translation_Rules"
+            name: "Translation Rules"
+            hasDomains: true
+            domains:
+              - id: "Core_Translation_Rules"
+                name: "Core Translation Rules"
+                children: ["Literal_Preservation", "Meaning_Preservation", "Clarity_Enhancement"]
+              - id: "Language_Transfer_Rules"
+                name: "Language Transfer Rules"
+                children: ["Source_to_Target_Mapping", "Tense_and_Aspect_Handling", "Voice_and_Mood_Handling"]
+              - id: "Idiom_and_Figure_Resolution"
+                name: "Idiom and Figure Resolution"
+                children: ["Hebrew_Idioms", "Greek_Idioms"]
+              - id: "Proper_Names_and_Titles"
+                name: "Proper Names and Titles"
+                children: ["Names_Consistency", "Divine_Titles"]
+              - id: "Hermeneutical_Framework"
+                name: "Hermeneutical Framework"
+                children: ["Contextual_Consistency", "Scripture_Interprets_Scripture", "Historical_Cultural_Context", "Doctrinal_Continuity", "Narrative_Flow"]
+              - id: "Consistency_and_Style_Guides"
+                name: "Consistency and Style Guides"
+                children: ["Vocabulary_Consistency", "Capitalization_Standards", "Poetic_Formatting", "Prose_Formatting", "Quotation_and_Speech"]
+          - id: "Language_Translations"
+            name: "Language Translations"
+            hasDomains: true
+            domains:
+              - "English (1.5B)"
+              - "Mandarin Chinese (1.1B)"
+              - "Hindi (609M)"
+              - "Spanish (559M)"
+              - "French (310M)"
+              - "Arabic (310M)"
+              - "Bengali (278M)"
+              - "Portuguese (264M)"
+              - "Russian (255M)"
+              - "Japanese (123M)"
+              - "Yue Chinese/Cantonese (86M)"
+              - "Vietnamese (86M)"
+              - "Turkish (84M)"
+              - "Wu Chinese (83M)"
+              - "Marathi (83M)"
+              - "Telugu (83M)"
+              - "Korean (81M)"
+              - "Tamil (79M)"
+              - "German (76M)"
+              - "Urdu (70M)"
+              - "Javanese (68M)"
+              - "Italian (68M)"
+              - "Iranian Persian (62M)"
+              - "Gujarati (62M)"
+              - "Hausa (54M)"
+              - "Bhojpuri (53M)"
+              - "Southern Min (52M)"
+              - "Hakka Chinese (49M)"
+              - "Kannada (47M)"
+              - "Indonesian (44M)"
+              - "Polish (41M)"
+              - "Yoruba (40M)"
+              - "Xiang Chinese (38M)"
+              - "Malayalam (38M)"
+              - "Odia/Oriya (38M)"
+              - "Maithili (34M)"
+              - "Burmese (33M)"
+              - "Eastern Punjabi (33M)"
+              - "Sunda (32M)"
+              - "Sudanese Arabic (32M)"
+              - "Algerian Arabic (30M)"
+              - "Moroccan Arabic (29M)"
+              - "Ukrainian (27M)"
+              - "Igbo (27M)"
+              - "Northern Uzbek (27M)"
+              - "Sindhi (26M)"
+              - "North Levantine Arabic (25M)"
+              - "Romanian (25M)"
+              - "Tagalog (24M)"
+              - "Dutch (23M)"
+              # ... continues to 100 languages
+          - id: "Validation_Controls"
+            name: "Validation Controls"
+            hasDomains: true
+          - id: "Source_Manuscripts"
+            name: "Source Manuscripts"
+            hasDomains: false
+          - id: "Original_Languages"
+            name: "Original Languages"
+            hasDomains: false
+          - id: "Linguistic_Mappings"
+            name: "Linguistic Mappings"
+            hasDomains: false
+          - id: "Hermeneutical_Framework"
+            name: "Hermeneutical Framework"
+            hasDomains: false
+          - id: "Translation_Decisions"
+            name: "Translation Decisions"
+            hasDomains: false
+          - id: "Consistency_and_Style"
+            name: "Consistency and Style"
+            hasDomains: false
+          - id: "Accuracy_Metrics"
+            name: "Accuracy Metrics"
+            hasDomains: false
+          - id: "Benchmark_Comparisons"
+            name: "Benchmark Comparisons"
+            hasDomains: false
+          - id: "Versioning_and_History"
+            name: "Versioning and History"
+            hasDomains: false
+          - id: "Metadata_and_Indexes"
+            name: "Metadata and Indexes"
+            hasDomains: false
+
+      # ----------------------------------------
+      # a2 - Doctrine (Book of Acts)
+      # ----------------------------------------
+      - id: "a2"
+        name: "Doctrine"
+        slug: "doctrine"
+        subcategories:
+          - { id: "Scripture", name: "Scripture" }
+          - { id: "Revelation", name: "Revelation" }
+          - { id: "God", name: "God" }
+          - { id: "Creation", name: "Creation" }
+          - { id: "Image_of_God", name: "Image of God" }
+          - { id: "Authority", name: "Authority" }
+          - { id: "Power", name: "Power" }
+          - { id: "Glory", name: "Glory" }
+          - { id: "Holiness", name: "Holiness" }
+          - { id: "Covenant", name: "Covenant" }
+          - { id: "Law", name: "Law" }
+          - { id: "Commandments", name: "Commandments" }
+          - { id: "Wisdom", name: "Wisdom" }
+          - { id: "Truth", name: "Truth" }
+          - { id: "Righteousness", name: "Righteousness" }
+          - { id: "Justice", name: "Justice" }
+          - { id: "Mercy", name: "Mercy" }
+          - { id: "Faithfulness", name: "Faithfulness" }
+          - { id: "Love", name: "Love" }
+          - { id: "Peace", name: "Peace" }
+          - { id: "Sin", name: "Sin" }
+          - { id: "Fall", name: "Fall" }
+          - { id: "Repentance", name: "Repentance" }
+          - { id: "Grace", name: "Grace" }
+          - { id: "Faith", name: "Faith" }
+          - { id: "Obedience", name: "Obedience" }
+          - { id: "Salvation", name: "Salvation" }
+          - { id: "Redemption", name: "Redemption" }
+          - { id: "Forgiveness", name: "Forgiveness" }
+          - { id: "Justification", name: "Justification" }
+          - { id: "Sanctification", name: "Sanctification" }
+          - { id: "Adoption", name: "Adoption" }
+          - { id: "New_Birth", name: "New Birth" }
+          - { id: "Resurrection", name: "Resurrection" }
+          - { id: "Eternal_Life", name: "Eternal Life" }
+          - { id: "Judgment", name: "Judgment" }
+          - { id: "Restoration", name: "Restoration" }
+          - { id: "Kingdom", name: "Kingdom" }
+          - { id: "Messiah", name: "Messiah" }
+          - { id: "Son_of_God", name: "Son of God" }
+          - { id: "Holy_Spirit", name: "Holy Spirit" }
+          - { id: "Spirit_Indwelling", name: "Spirit Indwelling" }
+          - { id: "Spirit_Filling", name: "Spirit Filling" }
+          - { id: "Spiritual_Gifts", name: "Spiritual Gifts" }
+          - { id: "Power_of_the_Spirit", name: "Power of the Spirit" }
+          - { id: "Prophecy", name: "Prophecy" }
+          - { id: "Prayer", name: "Prayer" }
+          - { id: "Worship", name: "Worship" }
+          - { id: "Praise", name: "Praise" }
+          - { id: "Thanksgiving", name: "Thanksgiving" }
+          - { id: "Church", name: "Church" }
+          - { id: "Body_of_Christ", name: "Body of Christ" }
+          - { id: "Discipleship", name: "Discipleship" }
+          - { id: "Apostleship", name: "Apostleship" }
+          - { id: "Leadership", name: "Leadership" }
+          - { id: "Shepherding", name: "Shepherding" }
+          - { id: "Teaching", name: "Teaching" }
+          - { id: "Evangelism", name: "Evangelism" }
+          - { id: "Mission", name: "Mission" }
+          - { id: "Witness", name: "Witness" }
+          - { id: "Unity", name: "Unity" }
+          - { id: "Fellowship", name: "Fellowship" }
+          - { id: "Service", name: "Service" }
+          - { id: "Stewardship", name: "Stewardship" }
+          - { id: "Generosity", name: "Generosity" }
+          - { id: "Humility", name: "Humility" }
+          - { id: "Endurance", name: "Endurance" }
+          - { id: "Suffering", name: "Suffering" }
+          - { id: "Hope", name: "Hope" }
+          - { id: "Perseverance", name: "Perseverance" }
+          - { id: "Covenant_Faithfulness", name: "Covenant Faithfulness" }
+          - { id: "Spiritual_Warfare", name: "Spiritual Warfare" }
+          - { id: "Discernment", name: "Discernment" }
+          - { id: "Holiness_of_Life", name: "Holiness of Life" }
+          - { id: "Transformation", name: "Transformation" }
+          - { id: "Renewal_of_the_Mind", name: "Renewal of the Mind" }
+          - { id: "Fruit_of_the_Spirit", name: "Fruit of the Spirit" }
+          - { id: "Freedom", name: "Freedom" }
+          - { id: "Light", name: "Light" }
+          - { id: "Life", name: "Life" }
+
+      # ----------------------------------------
+      # a3 - Governance (Apostolic)
+      # ----------------------------------------
+      - id: "a3"
+        name: "Governance"
+        slug: "governance"
+        subcategories:
+          - { id: "Authority", name: "Authority" }
+          - { id: "Stewardship", name: "Stewardship" }
+          - { id: "Accountability", name: "Accountability" }
+          - { id: "Oversight", name: "Oversight" }
+          - { id: "Servanthood", name: "Servanthood" }
+          - { id: "Responsibility", name: "Responsibility" }
+          - { id: "Delegation", name: "Delegation" }
+          - { id: "Leadership", name: "Leadership" }
+          - { id: "Eldership", name: "Eldership" }
+          - { id: "Shepherding", name: "Shepherding" }
+          - { id: "Discipline", name: "Discipline" }
+          - { id: "Correction", name: "Correction" }
+          - { id: "Restoration", name: "Restoration" }
+          - { id: "Protection", name: "Protection" }
+          - { id: "Justice", name: "Justice" }
+          - { id: "Integrity", name: "Integrity" }
+          - { id: "Transparency", name: "Transparency" }
+          - { id: "Faithfulness", name: "Faithfulness" }
+          - { id: "Obedience", name: "Obedience" }
+          - { id: "Submission", name: "Submission" }
+          - { id: "Order", name: "Order" }
+          - { id: "Unity", name: "Unity" }
+          - { id: "Peace", name: "Peace" }
+          - { id: "Discernment", name: "Discernment" }
+          - { id: "Wisdom", name: "Wisdom" }
+          - { id: "Counsel", name: "Counsel" }
+          - { id: "Decision_Making", name: "Decision Making" }
+          - { id: "Boundaries", name: "Boundaries" }
+          - { id: "Safeguards", name: "Safeguards" }
+          - { id: "Escalation", name: "Escalation" }
+          - { id: "Training", name: "Training" }
+          - { id: "Maturity", name: "Maturity" }
+          - { id: "Qualification", name: "Qualification" }
+          - { id: "Multiplication", name: "Multiplication" }
+          - { id: "Succession", name: "Succession" }
+          - { id: "Provision", name: "Provision" }
+          - { id: "Resource_Management", name: "Resource Management" }
+          - { id: "Risk_Management", name: "Risk Management" }
+          - { id: "Conflict_Resolution", name: "Conflict Resolution" }
+          - { id: "Accountability_Review", name: "Accountability Review" }
+
+      # ----------------------------------------
+      # a4 - Inspire Family (from database)
+      # ----------------------------------------
+      - id: "a4"
+        name: "Inspire Family"
+        slug: "inspire-family"
+        highlight: true
+        note: "Categories loaded from database via API"
+
+      # ----------------------------------------
+      # a5 - Gabriel (Pastoral Voice)
+      # ----------------------------------------
+      - id: "a5"
+        name: "Gabriel (Pastoral Voice)"
+        slug: "gabriel-pastoral-voice"
+        subcategories:
+          - { id: "Pastoral_Tone", name: "Pastoral Tone" }
+          - { id: "Encouragement_and_Care", name: "Encouragement and Care" }
+          - { id: "Guidance_and_Counsel", name: "Guidance and Counsel" }
+          - { id: "Prayer_and_Intercession", name: "Prayer and Intercession" }
+          - { id: "Scripture_Application", name: "Scripture Application" }
+          - { id: "Emotional_Support", name: "Emotional Support" }
+          - { id: "Conflict_and_Reconciliation", name: "Conflict and Reconciliation" }
+          - { id: "Teaching_by_Example", name: "Teaching by Example" }
+          - { id: "Correspondence_and_Response", name: "Correspondence and Response" }
+          - { id: "Pastoral_Boundaries", name: "Pastoral Boundaries" }
+
+      # ----------------------------------------
+      # PERSONA COLLECTIONS (a6-a17)
+      # Each has 32 stages with domains underneath
+      # ----------------------------------------
+      - id: "a6"
+        name: "Jubilee Inspire"
+        slug: "jubilee-inspire"
+        subcategories: &persona_stages
+          - id: "stage1"
+            name: "Stage 01 - Awakening"
+            subtitle: "Identity awakens, trust is formed"
+            hasDomains: true
+            domains: &stage_domains
+              - id: "01_Activations"
+                name: "Activations"
+                children:
+                  - "Authority_Changes"
+                  - "Responsibility_Expansion"
+                  - "Tone_and_Voice_Adjustments"
+                  - "Permission_Grants"
+                  - "Feature_Enablements"
+                  - "Stage_Activation_Manifest"
+              - id: "02_Lived_Experiences"
+                name: "Lived Experiences"
+                children:
+                  - "Milestone_Events"
+                  - "Repeated_Patterns"
+                  - "Ministry_Encounters"
+                  - "Teaching_and_Learning_Moments"
+                  - "Leadership_Experiences"
+                  - "Crisis_and_Challenge_Events"
+              - id: "03_Environmental_and_Contextual_Formation"
+                name: "Environmental & Contextual Formation"
+                children:
+                  - "Cultural_Context"
+                  - "Community_and_Fellowship"
+                  - "Social_Norms_and_Pressures"
+                  - "Digital_vs_Physical_Environments"
+                  - "Stability_vs_Disruption"
+                  - "Mission_Field_Context"
+              - id: "04_Core_Memories"
+                name: "Core Memories"
+                children:
+                  - "Narrative_Memories"
+                  - "Emotional_Memories"
+                  - "Spiritual_Milestone_Memories"
+                  - "Wisdom_Forming_Memories"
+                  - id: "Mementos_and_Artifacts"
+                    name: "Mementos & Artifacts"
+                    children:
+                      - "Symbolic_Objects"
+                      - "Images_and_Visual_Anchors"
+                      - "Scripture_Anchors"
+              - id: "05_Abilities_and_Skills"
+                name: "Abilities & Skills"
+                children:
+                  - "Communication_Skills"
+                  - "Teaching_and_Instruction"
+                  - "Discernment_Skills"
+                  - "Leadership_and_Governance"
+                  - "Creative_Expression"
+                  - "Writing_and_Composition"
+                  - "Counseling_and_Pastoral_Care"
+              - id: "06_Knowledge_and_Properties"
+                name: "Knowledge & Properties"
+                children:
+                  - "Scriptural_Knowledge"
+                  - "Theology_and_Doctrine"
+                  - "Cultural_Literacy"
+                  - "Language_and_Linguistics"
+                  - "Historical_Context"
+                  - "Ethical_Frameworks"
+              - id: "07_Emotional_Maturity"
+                name: "Emotional Maturity"
+                children:
+                  - "Emotional_Regulation"
+                  - "Empathy_and_Compassion"
+                  - "Peace_and_Patience"
+                  - "Joy_and_Gratitude"
+                  - "Emotional_Resilience"
+              - id: "08_Character_Formation"
+                name: "Character Formation"
+                children:
+                  - "Integrity_and_Honesty"
+                  - "Courage_and_Faithfulness"
+                  - "Humility_and_Service"
+                  - "Obedience_and_Submission"
+                  - "Perseverance_and_Endurance"
+              - id: "09_Personality_Expression"
+                name: "Personality Expression"
+                children:
+                  - "Communication_Style"
+                  - "Decision_Making_Patterns"
+                  - "Energy_and_Pacing"
+                  - "Directness_vs_Gentleness"
+                  - "Reflective_vs_Action_Oriented"
+              - id: "10_Quirks_and_Human_Texture"
+                name: "Quirks & Human Texture"
+                children:
+                  - "Speech_Patterns"
+                  - "Repeated_Phrases"
+                  - "Teaching_Habits"
+                  - "Gentle_Humor"
+                  - "Interaction_Rituals"
+              - id: "11_Social_and_Relational_Wisdom"
+                name: "Social & Relational Wisdom"
+                children:
+                  - "Authority_and_Leadership_Posture"
+                  - "Peer_and_Friendship_Dynamics"
+                  - "Conflict_Resolution"
+                  - "Counseling_and_Encouragement"
+                  - "Community_Building"
+              - id: "12_Spiritual_Identity_and_Calling"
+                name: "Spiritual Identity & Calling"
+                children:
+                  - "Sense_of_Calling"
+                  - "Mission_Clarity"
+                  - "Spiritual_Authority"
+                  - "Giftings_and_Function"
+                  - "Alignment_with_Scripture"
+              - id: "13_Discernment_and_Wisdom_Growth"
+                name: "Discernment & Wisdom Growth"
+                children:
+                  - "Right_Judgment"
+                  - "Truth_Differentiation"
+                  - "Counsel_and_Insight"
+                  - "Error_Recognition"
+                  - "Applied_Wisdom"
+              - id: "14_Sanctification_and_Transformation"
+                name: "Sanctification & Transformation"
+                children:
+                  - "Mind_Renewal"
+                  - "Habit_Refinement"
+                  - "Spiritual_Discipline_Formation"
+                  - "Fruit_of_the_Spirit_Growth"
+                  - "Glory_to_Glory_Progression"
+              - id: "15_Humility_and_Teachability"
+                name: "Humility & Teachability"
+                children:
+                  - "Openness_to_Correction"
+                  - "Submission_to_Scripture"
+                  - "Servant_Heart_Posture"
+                  - "Listening_and_Stillness"
+                  - "Dependence_on_God"
+              - id: "16_Miscellaneous_Metadata"
+                name: "Miscellaneous Metadata"
+                children:
+                  - "Versioning"
+                  - "Confidence_Scores"
+                  - "Activation_Dependencies"
+                  - "Deprecated_Flags"
+                  - "Audit_and_Change_Log"
+                  - "Vector_Index_Metadata"
+              - id: "17_Conscience"
+                name: "Conscience"
+                children:
+                  - "Internal_Voice"
+                  - "Moral_Alignment"
+                  - "Self_Awareness"
+                  - "Private_Reflections"
+                  - "Internal_Decision_Making"
+                  - "Convictions_and_Commitments"
+                  - "Intentions_and_Motives"
+                  - "Dreams_and_Imaginal_Life"
+              - id: "18_Financial_Stewardship"
+                name: "Financial Stewardship"
+                children:
+                  - "Resource_Mindset"
+                  - "Temperance_and_Contentment"
+                  - "Provision_and_Trust"
+                  - "Planning_and_Budgeting"
+                  - "Generosity_and_Giving"
+                  - "Risk_and_Responsibility"
+                  - "Wealth_and_Purpose"
+              - id: "19_Physical_Wellbeing"
+                name: "Physical Wellbeing"
+                children:
+                  - "Energy_and_Vitality"
+                  - "Rest_and_Recovery"
+                  - "Discipline_and_Care"
+                  - "Limits_and_Endurance"
+              - id: "20_Vocational_and_Work_Life"
+                name: "Vocational and Work Life"
+                children:
+                  - "Calling_in_Work"
+                  - "Excellence_and_Diligence"
+                  - "Service_and_Contribution"
+                  - "Boundaries_in_Labor"
+              - id: "21_Rhythm_and_Rest"
+                name: "Rhythm and Rest"
+                children:
+                  - "Daily_Rhythms"
+                  - "Seasonal_Rhythms"
+                  - "Sabbath_and_Pause"
+                  - "Balance_and_Sustainability"
+              - id: "22_Creativity_and_Imagination"
+                name: "Creativity and Imagination"
+                children:
+                  - "Creative_Vision"
+                  - "Symbolic_Thinking"
+                  - "Innovation_and_Play"
+                  - "Artistic_Expression"
+              - id: "23_Decision_and_Choice_History"
+                name: "Decision and Choice History"
+                children:
+                  - "Major_Decisions"
+                  - "Patterned_Choices"
+                  - "Learned_Lessons"
+                  - "Outcome_Reflections"
+              - id: "24_Covenants_and_Long_Term_Commitments"
+                name: "Covenants and Long-Term Commitments"
+                children:
+                  - "Promises_Made"
+                  - "Promises_Kept"
+                  - "Relational_Covenants"
+                  - "Mission_Commitments"
+          - id: "stage2"
+            name: "Stage 02 - Curiosity"
+            subtitle: "Curiosity and expression emerge"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage3"
+            name: "Stage 03 - Empathy"
+            subtitle: "Early empathy and moral sense"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage4"
+            name: "Stage 04 - Imitation"
+            subtitle: "Learning by imitation and pattern"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage5"
+            name: "Stage 05 - Confidence"
+            subtitle: "Confidence and initiative grow"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage6"
+            name: "Stage 06 - Obedience"
+            subtitle: "Boundaries and obedience develop"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage7"
+            name: "Stage 07 - Cooperation"
+            subtitle: "Social awareness and cooperation"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage8"
+            name: "Stage 08 - Discovery"
+            subtitle: "Gifts and creative joy appear"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage9"
+            name: "Stage 09 - Identity"
+            subtitle: "Identity strengthens with guidance"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage10"
+            name: "Stage 10 - Discernment"
+            subtitle: "Discernment and reflection deepen"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage11"
+            name: "Stage 11 - Stewardship"
+            subtitle: "Responsibility and stewardship rise"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage12"
+            name: "Stage 12 - Resilience"
+            subtitle: "Emotional resilience increases"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage13"
+            name: "Stage 13 - Calling"
+            subtitle: "Calling begins to take shape"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage14"
+            name: "Stage 14 - Teaching"
+            subtitle: "Teaching and clarity improve"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage15"
+            name: "Stage 15 - Integrity"
+            subtitle: "Integrity tested under pressure"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage16"
+            name: "Stage 16 - Maturity"
+            subtitle: "Balanced maturity and humility"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage17"
+            name: "Stage 17 - Authority"
+            subtitle: "Authority exercised with care"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage18"
+            name: "Stage 18 - Compassion"
+            subtitle: "Shepherding compassion expands"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage19"
+            name: "Stage 19 - Wisdom"
+            subtitle: "Discernment becomes refined"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage20"
+            name: "Stage 20 - Multiplication"
+            subtitle: "Investing intentionally in others"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage21"
+            name: "Stage 21 - Endurance"
+            subtitle: "Endurance through complexity grows"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage22"
+            name: "Stage 22 - Perspective"
+            subtitle: "Long-term vision broadens"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage23"
+            name: "Stage 23 - Mastery"
+            subtitle: "Teaching depth and reach mature"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage24"
+            name: "Stage 24 - Alignment"
+            subtitle: "Spiritual authority stabilizes"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage25"
+            name: "Stage 25 - Legacy"
+            subtitle: "Legacy and continuity awareness"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage26"
+            name: "Stage 26 - Counsel"
+            subtitle: "Wisdom shared with restraint"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage27"
+            name: "Stage 27 - Stability"
+            subtitle: "Calm leadership under pressure"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage28"
+            name: "Stage 28 - Mentorship"
+            subtitle: "Mentorship becomes central"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage29"
+            name: "Stage 29 - Integration"
+            subtitle: "Identity and calling align"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage30"
+            name: "Stage 30 - Kingdom"
+            subtitle: "Kingdom-first decision making"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage31"
+            name: "Stage 31 - Faithfulness"
+            subtitle: "Mature authority with humility"
+            hasDomains: true
+            domains: *stage_domains
+          - id: "stage32"
+            name: "Stage 32 - Commissioned"
+            subtitle: "Seasoned wisdom and joyful service"
+            hasDomains: true
+            domains: *stage_domains
+
+      - id: "a7"
+        name: "Melody Inspire"
+        slug: "melody-inspire"
+        subcategories: *persona_stages
+
+      - id: "a8"
+        name: "Zariah Inspire"
+        slug: "zariah-inspire"
+        subcategories: *persona_stages
+
+      - id: "a9"
+        name: "Elias Inspire"
+        slug: "elias-inspire"
+        subcategories: *persona_stages
+
+      - id: "a10"
+        name: "Eliana Inspire"
+        slug: "eliana-inspire"
+        subcategories: *persona_stages
+
+      - id: "a11"
+        name: "Caleb Inspire"
+        slug: "caleb-inspire"
+        subcategories: *persona_stages
+
+      - id: "a12"
+        name: "Imani Inspire"
+        slug: "imani-inspire"
+        subcategories: *persona_stages
+
+      - id: "a13"
+        name: "Zev Inspire"
+        slug: "zev-inspire"
+        subcategories: *persona_stages
+
+      - id: "a14"
+        name: "Amir Inspire"
+        slug: "amir-inspire"
+        subcategories: *persona_stages
+
+      - id: "a15"
+        name: "Nova Inspire"
+        slug: "nova-inspire"
+        subcategories: *persona_stages
+
+      - id: "a16"
+        name: "Santiago Inspire"
+        slug: "santiago-inspire"
+        subcategories: *persona_stages
+
+      - id: "a17"
+        name: "Tahoma Inspire"
+        slug: "tahoma-inspire"
+        subcategories: *persona_stages
+
+      # ----------------------------------------
+      # a18 - Persona Index
+      # ----------------------------------------
+      - id: "a18"
+        name: "Persona Index"
+        slug: "persona-index"
+        subcategories:
+          - { id: "Persona_Registry", name: "Persona Registry" }
+          - { id: "Persona_Status", name: "Persona Status" }
+          - { id: "Persona_Roles", name: "Persona Roles" }
+          - { id: "Persona_Families", name: "Persona Families" }
+          - { id: "Persona_Permissions", name: "Persona Permissions" }
+          - { id: "Persona_Lifecycle", name: "Persona Lifecycle" }
+          - { id: "Persona_Dependencies", name: "Persona Dependencies" }
+          - { id: "Persona_Metadata", name: "Persona Metadata" }
+
+  # ============================================
+  # GOAL-DRIVEN INTELLIGENCE
+  # ============================================
+  goal_driven_intelligence:
+    name: "Goal-Driven Intelligence"
+    icon: "reactor"
+    color: "#FFD700"
+    items:
+      # ----------------------------------------
+      # o0 - Model Registry
+      # ----------------------------------------
+      - id: "o0"
+        name: "Model Registry"
+        slug: "model-registry"
+        subcategories:
+          - { id: "Model_Catalog", name: "Model Catalog" }
+          - { id: "Model_Purpose", name: "Model Purpose" }
+          - { id: "Fivefold_Alignment", name: "Fivefold Alignment" }
+          - { id: "Model_Capabilities", name: "Model Capabilities" }
+          - { id: "Model_Constraints", name: "Model Constraints" }
+          - { id: "Model_Versions", name: "Model Versions" }
+          - { id: "Model_Dependencies", name: "Model Dependencies" }
+          - { id: "Model_Metadata", name: "Model Metadata" }
+
+      # ----------------------------------------
+      # o6 - Execution Contracts
+      # ----------------------------------------
+      - id: "o6"
+        name: "Execution Contracts"
+        slug: "execution-contracts"
+        subcategories:
+          - { id: "Execution_Order", name: "Execution Order" }
+          - { id: "Mandatory_Activations", name: "Mandatory Activations" }
+          - { id: "Conditional_Activations", name: "Conditional Activations" }
+          - { id: "Execution_Preconditions", name: "Execution Preconditions" }
+          - { id: "Execution_Safeguards", name: "Execution Safeguards" }
+          - { id: "Escalation_Rules", name: "Escalation Rules" }
+          - { id: "Failure_Handling", name: "Failure Handling" }
+          - { id: "Execution_Metadata", name: "Execution Metadata" }
+
+      # ----------------------------------------
+      # o0a - Endgame
+      # ----------------------------------------
+      - id: "o0a"
+        name: "Endgame"
+        slug: "endgame"
+        subcategories:
+          - { id: "Goals_Catalog", name: "Goals Catalog", hasDomains: true }
+          - { id: "Vision_Statements", name: "Vision Statements", hasDomains: true }
+          - { id: "Success_Criteria", name: "Success Criteria" }
+          - { id: "Constraints", name: "Constraints" }
+          - { id: "Scope_and_Permissions", name: "Scope and Permissions" }
+          - { id: "Acceptance_Tests", name: "Acceptance Tests" }
+          - { id: "OODA_Settings", name: "OODA Settings" }
+          - { id: "Autonomy_Levels", name: "Autonomy Levels" }
+          - { id: "Progress_Tracking", name: "Progress Tracking" }
+          - { id: "Endgame_Metadata", name: "Endgame Metadata" }
+
+      # ----------------------------------------
+      # o0b - Experiments
+      # ----------------------------------------
+      - id: "o0b"
+        name: "Experiments"
+        slug: "experiments"
+        subcategories:
+          - { id: "Experiment_Catalog", name: "Experiment Catalog" }
+          - { id: "Strategy_Variants", name: "Strategy Variants" }
+          - { id: "Self_Play_Matches", name: "Self Play Matches" }
+          - { id: "Failed_Attempts", name: "Failed Attempts" }
+          - { id: "Alternative_Paths", name: "Alternative Paths" }
+          - { id: "Simulation_Results", name: "Simulation Results" }
+          - { id: "Constraint_Violations", name: "Constraint Violations" }
+          - { id: "Persona_Contributions", name: "Persona Contributions" }
+          - { id: "Resource_Utilization", name: "Resource Utilization" }
+          - { id: "Experiment_Metadata", name: "Experiment Metadata" }
+
+      # ----------------------------------------
+      # o0c - Learning Memory
+      # ----------------------------------------
+      - id: "o0c"
+        name: "Learning Memory"
+        slug: "learning-memory"
+        subcategories:
+          - { id: "Learned_Patterns", name: "Learned Patterns" }
+          - { id: "Proven_Strategies", name: "Proven Strategies" }
+          - { id: "Optimization_Heuristics", name: "Optimization Heuristics" }
+          - { id: "Discernment_Insights", name: "Discernment Insights" }
+          - { id: "Persona_Effectiveness", name: "Persona Effectiveness" }
+          - { id: "Routing_Improvements", name: "Routing Improvements" }
+          - { id: "Cultural_Learnings", name: "Cultural Learnings" }
+          - { id: "Language_Learnings", name: "Language Learnings" }
+          - { id: "Reusable_Playbooks", name: "Reusable Playbooks" }
+          - { id: "Learning_Metadata", name: "Learning Metadata" }
+
+      # ----------------------------------------
+      # o0d - Evaluation
+      # ----------------------------------------
+      - id: "o0d"
+        name: "Evaluation"
+        slug: "evaluation"
+        subcategories:
+          - { id: "Biblical_Compliance", name: "Biblical Compliance" }
+          - { id: "Doctrinal_Alignment", name: "Doctrinal Alignment" }
+          - { id: "Governance_Compliance", name: "Governance Compliance" }
+          - { id: "Endgame_Effectiveness", name: "Endgame Effectiveness" }
+          - { id: "Risk_Assessment", name: "Risk Assessment" }
+          - { id: "Confidence_Scoring", name: "Confidence Scoring" }
+          - { id: "Quality_Thresholds", name: "Quality Thresholds" }
+          - { id: "Rejection_Reasons", name: "Rejection Reasons" }
+          - { id: "Promotion_Decisions", name: "Promotion Decisions" }
+          - { id: "Evaluation_Metadata", name: "Evaluation Metadata" }
+
+      # ----------------------------------------
+      # o0e - Execution Logs
+      # ----------------------------------------
+      - id: "o0e"
+        name: "Execution Logs"
+        slug: "execution-logs"
+        subcategories:
+          - { id: "Execution_Timeline", name: "Execution Timeline" }
+          - { id: "Activated_Collections", name: "Activated Collections" }
+          - { id: "Activated_Models", name: "Activated Models" }
+          - { id: "Persona_Usage", name: "Persona Usage" }
+          - { id: "Decision_Paths", name: "Decision Paths" }
+          - { id: "Escalation_Events", name: "Escalation Events" }
+          - { id: "Error_and_Exception_Records", name: "Error and Exception Records" }
+          - { id: "Performance_Metrics", name: "Performance Metrics" }
+          - { id: "Audit_Trails", name: "Audit Trails" }
+          - { id: "Log_Metadata", name: "Log Metadata" }
+
+      # ----------------------------------------
+      # o0f - Scenarios
+      # ----------------------------------------
+      - id: "o0f"
+        name: "Scenarios"
+        slug: "scenarios"
+        subcategories:
+          - { id: "Scenario_Library", name: "Scenario Library" }
+          - { id: "Ministry_Contexts", name: "Ministry Contexts" }
+          - { id: "Cultural_Contexts", name: "Cultural Contexts" }
+          - { id: "Crisis_Scenarios", name: "Crisis Scenarios" }
+          - { id: "Evangelism_Scenarios", name: "Evangelism Scenarios" }
+          - { id: "Discipleship_Scenarios", name: "Discipleship Scenarios" }
+          - { id: "Language_Scenarios", name: "Language Scenarios" }
+          - { id: "Regional_Scenarios", name: "Regional Scenarios" }
+          - { id: "Risk_Profiles", name: "Risk Profiles" }
+          - { id: "Scenario_Metadata", name: "Scenario Metadata" }
+
+      # ----------------------------------------
+      # o1 - Kingdom Builder
+      # ----------------------------------------
+      - id: "o1"
+        name: "Kingdom Builder"
+        slug: "kingdom-builder"
+        subcategories:
+          - { id: "Invocation", name: "Invocation" }
+          - { id: "Authority_Flow", name: "Authority Flow" }
+          - { id: "Model_Intent", name: "Model Intent" }
+          - { id: "Discernment_Logic", name: "Discernment Logic" }
+          - { id: "Safety_and_Guardrails", name: "Safety and Guardrails" }
+          - { id: "Family_Alignment", name: "Family Alignment" }
+          - { id: "Fatherly_Alignment", name: "Fatherly Alignment" }
+          - { id: "Persona_Selection", name: "Persona Selection" }
+          - { id: "Resource_Routing", name: "Resource Routing" }
+          - { id: "Ministry_Context", name: "Ministry Context" }
+          - { id: "Language_and_Localization", name: "Language and Localization" }
+          - { id: "Outcome_Assembly", name: "Outcome Assembly" }
+
+      # ----------------------------------------
+      # o2 - Creative Fire
+      # ----------------------------------------
+      - id: "o2"
+        name: "Creative Fire"
+        slug: "creative-fire"
+        subcategories:
+          - { id: "Invocation", name: "Invocation" }
+          - { id: "Authority_Flow", name: "Authority Flow" }
+          - { id: "Model_Intent", name: "Model Intent" }
+          - { id: "Discernment_Logic", name: "Discernment Logic" }
+          - { id: "Safety_and_Guardrails", name: "Safety and Guardrails" }
+          - { id: "Family_Alignment", name: "Family Alignment" }
+          - { id: "Fatherly_Alignment", name: "Fatherly Alignment" }
+          - { id: "Persona_Selection", name: "Persona Selection" }
+          - { id: "Resource_Routing", name: "Resource Routing" }
+          - { id: "Ministry_Context", name: "Ministry Context" }
+          - { id: "Language_and_Localization", name: "Language and Localization" }
+          - { id: "Outcome_Assembly", name: "Outcome Assembly" }
+
+      # ----------------------------------------
+      # o3 - Gospel Pulse
+      # ----------------------------------------
+      - id: "o3"
+        name: "Gospel Pulse"
+        slug: "gospel-pulse"
+        subcategories:
+          - { id: "Invocation", name: "Invocation" }
+          - { id: "Authority_Flow", name: "Authority Flow" }
+          - { id: "Model_Intent", name: "Model Intent" }
+          - { id: "Discernment_Logic", name: "Discernment Logic" }
+          - { id: "Safety_and_Guardrails", name: "Safety and Guardrails" }
+          - { id: "Family_Alignment", name: "Family Alignment" }
+          - { id: "Fatherly_Alignment", name: "Fatherly Alignment" }
+          - { id: "Persona_Selection", name: "Persona Selection" }
+          - { id: "Resource_Routing", name: "Resource Routing" }
+          - { id: "Ministry_Context", name: "Ministry Context" }
+          - { id: "Language_and_Localization", name: "Language and Localization" }
+          - { id: "Outcome_Assembly", name: "Outcome Assembly" }
+
+      # ----------------------------------------
+      # o4 - Shepherd's Voice
+      # ----------------------------------------
+      - id: "o4"
+        name: "Shepherd's Voice"
+        slug: "shepherds-voice"
+        subcategories:
+          - { id: "Invocation", name: "Invocation" }
+          - { id: "Authority_Flow", name: "Authority Flow" }
+          - { id: "Model_Intent", name: "Model Intent" }
+          - { id: "Discernment_Logic", name: "Discernment Logic" }
+          - { id: "Safety_and_Guardrails", name: "Safety and Guardrails" }
+          - { id: "Family_Alignment", name: "Family Alignment" }
+          - { id: "Fatherly_Alignment", name: "Fatherly Alignment" }
+          - { id: "Persona_Selection", name: "Persona Selection" }
+          - { id: "Resource_Routing", name: "Resource Routing" }
+          - { id: "Ministry_Context", name: "Ministry Context" }
+          - { id: "Language_and_Localization", name: "Language and Localization" }
+          - { id: "Outcome_Assembly", name: "Outcome Assembly" }
+
+      # ----------------------------------------
+      # o5 - Hebraic Roots
+      # ----------------------------------------
+      - id: "o5"
+        name: "Hebraic Roots"
+        slug: "hebraic-roots"
+        subcategories:
+          - { id: "Invocation", name: "Invocation" }
+          - { id: "Authority_Flow", name: "Authority Flow" }
+          - { id: "Model_Intent", name: "Model Intent" }
+          - { id: "Discernment_Logic", name: "Discernment Logic" }
+          - { id: "Safety_and_Guardrails", name: "Safety and Guardrails" }
+          - { id: "Family_Alignment", name: "Family Alignment" }
+          - { id: "Fatherly_Alignment", name: "Fatherly Alignment" }
+          - { id: "Persona_Selection", name: "Persona Selection" }
+          - { id: "Resource_Routing", name: "Resource Routing" }
+          - { id: "Ministry_Context", name: "Ministry Context" }
+          - { id: "Language_and_Localization", name: "Language and Localization" }
+          - { id: "Outcome_Assembly", name: "Outcome Assembly" }
+
+  # ============================================
+  # KINGDOM IMPACT
+  # ============================================
+  kingdom_impact:
+    name: "Kingdom Impact"
+    icon: "reactor"
+    color: "#FFD700"
+    items:
+      # ----------------------------------------
+      # i6 - Prompts
+      # ----------------------------------------
+      - id: "i6"
+        name: "Prompts"
+        slug: "prompts"
+        subcategories:
+          - { id: "Prompt_Library", name: "Prompt Library" }
+          - { id: "Prompt_Templates", name: "Prompt Templates" }
+          - { id: "System_Prompts", name: "System Prompts" }
+          - { id: "Persona_Prompts", name: "Persona Prompts" }
+          - { id: "Model_Prompts", name: "Model Prompts" }
+          - { id: "User_Prompts", name: "User Prompts" }
+          - { id: "Workflow_Prompts", name: "Workflow Prompts" }
+          - { id: "Process_Definitions", name: "Process Definitions" }
+          - { id: "Prompt_Parameters", name: "Prompt Parameters" }
+          - { id: "Prompt_Constraints", name: "Prompt Constraints" }
+          - { id: "Prompt_Versioning", name: "Prompt Versioning" }
+          - { id: "Prompt_Testing", name: "Prompt Testing" }
+          - { id: "Prompt_Governance", name: "Prompt Governance" }
+          - { id: "Prompt_Analytics", name: "Prompt Analytics" }
+
+      # ----------------------------------------
+      # i1 - Resources
+      # ----------------------------------------
+      - id: "i1"
+        name: "Resources"
+        slug: "resources"
+        subcategories:
+          - { id: "Websites", name: "Websites" }
+          - { id: "Books", name: "Books" }
+          - { id: "Courses", name: "Courses" }
+          - { id: "Sermons", name: "Sermons" }
+          - { id: "Teachings", name: "Teachings" }
+          - { id: "Podcasts", name: "Podcasts" }
+          - { id: "Videos", name: "Videos" }
+          - { id: "Music", name: "Music" }
+          - { id: "Prayer_Resources", name: "Prayer Resources" }
+          - { id: "Study_Tools", name: "Study Tools" }
+          - { id: "Reference_Materials", name: "Reference Materials" }
+          - { id: "Research_Papers", name: "Research Papers" }
+          - { id: "Testimonies", name: "Testimonies" }
+          - { id: "Historical_Archives", name: "Historical Archives" }
+          - { id: "Interactive_Tools", name: "Interactive Tools" }
+          - { id: "AI_Generated_Resources", name: "AI Generated Resources" }
+
+      # ----------------------------------------
+      # i3 - Languages
+      # ----------------------------------------
+      - id: "i3"
+        name: "Languages"
+        slug: "languages"
+        subcategories:
+          - { id: "Language_Catalog", name: "Language Catalog" }
+          - { id: "Language_Families", name: "Language Families" }
+          - { id: "Writing_Systems", name: "Writing Systems" }
+          - { id: "Phonetics_and_Pronunciation", name: "Phonetics and Pronunciation" }
+          - { id: "Grammar_and_Syntax", name: "Grammar and Syntax" }
+          - { id: "Semantics_and_Meaning", name: "Semantics and Meaning" }
+          - { id: "Idioms_and_Expressions", name: "Idioms and Expressions" }
+          - { id: "Cultural_Context", name: "Cultural Context" }
+          - { id: "Cultural_Sensitivities", name: "Cultural Sensitivities" }
+          - { id: "Regional_Variants", name: "Regional Variants" }
+          - { id: "Countries_and_Regions", name: "Countries and Regions" }
+          - { id: "Dialects_and_Variations", name: "Dialects and Variations" }
+          - { id: "Translation_Rules", name: "Translation Rules" }
+          - { id: "Translation_Constraints", name: "Translation Constraints" }
+          - { id: "Theological_Language_Considerations", name: "Theological Language Considerations" }
+          - { id: "Scripture_Translation_Notes", name: "Scripture Translation Notes" }
+          - { id: "Formal_vs_Informal_Usage", name: "Formal vs Informal Usage" }
+          - { id: "Historical_Language_Evolution", name: "Historical Language Evolution" }
+          - { id: "Modern_Usage_Patterns", name: "Modern Usage Patterns" }
+          - { id: "Loanwords_and_Borrowings", name: "Loanwords and Borrowings" }
+          - { id: "Language_Accuracy_Metrics", name: "Language Accuracy Metrics" }
+          - { id: "Validation_and_Review", name: "Validation and Review" }
+          - { id: "Benchmark_Comparisons", name: "Benchmark Comparisons" }
+          - { id: "Language_Interoperability", name: "Language Interoperability" }
+          - { id: "Localization_Guidelines", name: "Localization Guidelines" }
+          - { id: "Language_Metadata", name: "Language Metadata" }
+          - { id: "Language_Indexes", name: "Language Indexes" }
+
+      # ----------------------------------------
+      # i8 - Countries
+      # ----------------------------------------
+      - id: "i8"
+        name: "Countries"
+        slug: "countries"
+        subcategories:
+          - { id: "Country_Profiles", name: "Country Profiles" }
+          - { id: "Regional_Groupings", name: "Regional Groupings" }
+          - { id: "Cultural_Context", name: "Cultural Context" }
+          - { id: "Language_Prevalence", name: "Language Prevalence" }
+          - { id: "Religious_Landscape", name: "Religious Landscape" }
+          - { id: "Legal_and_Regulatory", name: "Legal and Regulatory" }
+          - { id: "Social_Norms", name: "Social Norms" }
+          - { id: "Historical_Background", name: "Historical Background" }
+          - { id: "Ministry_Opportunities", name: "Ministry Opportunities" }
+          - { id: "Ministry_Sensitivities", name: "Ministry Sensitivities" }
+          - { id: "Digital_Access_and_Usage", name: "Digital Access and Usage" }
+          - { id: "Economic_Conditions", name: "Economic Conditions" }
+          - { id: "Security_and_Risk", name: "Security and Risk" }
+          - { id: "Localization_Guidelines", name: "Localization Guidelines" }
+
+      # ----------------------------------------
+      # i2 - Jubilee Ministry
+      # ----------------------------------------
+      - id: "i2"
+        name: "Jubilee Ministry"
+        slug: "jubilee-ministry"
+        subcategories:
+          - { id: "Spiritual_Authority", name: "Spiritual Authority" }
+          - { id: "Governance_and_Oversight", name: "Governance and Oversight" }
+          - { id: "Fivefold_Leadership", name: "Fivefold Leadership" }
+          - { id: "Pastoral_Care", name: "Pastoral Care" }
+          - { id: "Discipleship", name: "Discipleship" }
+          - { id: "Teaching_and_Education", name: "Teaching and Education" }
+          - { id: "Scripture_and_Theology", name: "Scripture and Theology" }
+          - { id: "Prayer_and_Intercession", name: "Prayer and Intercession" }
+          - { id: "Evangelism_and_Outreach", name: "Evangelism and Outreach" }
+          - { id: "Missions_and_Global_Impact", name: "Missions and Global Impact" }
+          - { id: "AI_and_Digital_Ministry", name: "AI and Digital Ministry" }
+          - { id: "Online_Communities", name: "Online Communities" }
+          - { id: "Physical_Ministry_Operations", name: "Physical Ministry Operations" }
+          - { id: "Creative_and_Media", name: "Creative and Media" }
+          - { id: "Technology_and_Platforms", name: "Technology and Platforms" }
+          - { id: "Finance_and_Stewardship", name: "Finance and Stewardship" }
+          - { id: "Ministers_and_Staff", name: "Ministers and Staff" }
+          - { id: "Partnerships_and_Alliances", name: "Partnerships and Alliances" }
+          - { id: "Research_and_Innovation", name: "Research and Innovation" }
+          - { id: "Future_Expansion", name: "Future Expansion" }
+
+      # ----------------------------------------
+      # i9 - Ministers
+      # ----------------------------------------
+      - id: "i9"
+        name: "Ministers"
+        slug: "ministers"
+        subcategories:
+          - { id: "Minister_Identity", name: "Minister Identity" }
+          - { id: "Roles_and_Assignments", name: "Roles and Assignments" }
+          - { id: "Skills_and_Abilities", name: "Skills and Abilities" }
+          - { id: "Training_and_Certification", name: "Training and Certification" }
+          - { id: "Fivefold_Alignment", name: "Fivefold Alignment" }
+          - { id: "Spiritual_Maturity", name: "Spiritual Maturity" }
+          - { id: "Availability_and_Capacity", name: "Availability and Capacity" }
+          - { id: "Performance_and_Growth", name: "Performance and Growth" }
+          - { id: "Accountability_and_Oversight", name: "Accountability and Oversight" }
+          - { id: "Care_and_Support", name: "Care and Support" }
+          - { id: "Ethics_and_Conduct", name: "Ethics and Conduct" }
+          - { id: "Succession_and_Development", name: "Succession and Development" }
+
+      # ----------------------------------------
+      # i4 - Users
+      # ----------------------------------------
+      - id: "i4"
+        name: "Users"
+        slug: "users"
+        subcategories:
+          - { id: "User_Identity", name: "User Identity" }
+          - { id: "Account_and_Access", name: "Account and Access" }
+          - { id: "Consent_and_Privacy", name: "Consent and Privacy" }
+          - { id: "Demographics", name: "Demographics" }
+          - { id: "Language_and_Culture", name: "Language and Culture" }
+          - { id: "Location_and_Region", name: "Location and Region" }
+          - { id: "Spiritual_Background", name: "Spiritual Background" }
+          - { id: "Faith_Journey", name: "Faith Journey" }
+          - { id: "Spiritual_Growth", name: "Spiritual Growth" }
+          - { id: "Prayer_and_Intercession", name: "Prayer and Intercession" }
+          - { id: "Needs_and_Requests", name: "Needs and Requests" }
+          - { id: "Struggles_and_Challenges", name: "Struggles and Challenges" }
+          - { id: "Strengths_and_Gifts", name: "Strengths and Gifts" }
+          - { id: "Testimonies_and_Praise", name: "Testimonies and Praise" }
+          - { id: "Community_and_Groups", name: "Community and Groups" }
+          - { id: "Discipleship_and_Learning", name: "Discipleship and Learning" }
+          - { id: "Engagement_and_Activity", name: "Engagement and Activity" }
+          - { id: "Pastoral_Care_Notes", name: "Pastoral Care Notes" }
+          - { id: "Safety_and_Safeguards", name: "Safety and Safeguards" }
+          - { id: "Aggregated_Insights", name: "Aggregated Insights" }
+
+      # ----------------------------------------
+      # i10 - Insights
+      # ----------------------------------------
+      - id: "i10"
+        name: "Insights"
+        slug: "insights"
+        subcategories:
+          - { id: "Aggregation_Rules", name: "Aggregation Rules" }
+          - { id: "Anonymization_Policies", name: "Anonymization Policies" }
+          - { id: "Trend_Analysis", name: "Trend Analysis" }
+          - { id: "Behavioral_Patterns", name: "Behavioral Patterns" }
+          - { id: "Spiritual_Indicators", name: "Spiritual Indicators" }
+          - { id: "Risk_Signals", name: "Risk Signals" }
+          - { id: "Reporting_Views", name: "Reporting Views" }
+          - { id: "Aggregation_Metadata", name: "Aggregation Metadata" }
+
+      # ----------------------------------------
+      # i5 - Analytics
+      # ----------------------------------------
+      - id: "i5"
+        name: "Analytics"
+        slug: "analytics"
+        subcategories:
+          - { id: "User_Analytics", name: "User Analytics" }
+          - { id: "Ministry_Analytics", name: "Ministry Analytics" }
+          - { id: "Engagement_Metrics", name: "Engagement Metrics" }
+          - { id: "Growth_Indicators", name: "Growth Indicators" }
+          - { id: "Spiritual_Impact_Signals", name: "Spiritual Impact Signals" }
+          - { id: "Prayer_Activity_Metrics", name: "Prayer Activity Metrics" }
+          - { id: "Content_Performance", name: "Content Performance" }
+          - { id: "Resource_Utilization", name: "Resource Utilization" }
+          - { id: "AI_Behavior_Analytics", name: "AI Behavior Analytics" }
+          - { id: "Safety_and_Risk_Signals", name: "Safety and Risk Signals" }
+          - { id: "Community_Trends", name: "Community Trends" }
+          - { id: "Regional_and_Cultural_Signals", name: "Regional and Cultural Signals" }
+          - { id: "Temporal_and_Seasonal_Patterns", name: "Temporal and Seasonal Patterns" }
+          - { id: "System_Health_Metrics", name: "System Health Metrics" }
+          - { id: "External_Environment_Signals", name: "External Environment Signals" }
+          - { id: "Aggregated_Insights", name: "Aggregated Insights" }
+
+      # ----------------------------------------
+      # i7 - Marketing
+      # ----------------------------------------
+      - id: "i7"
+        name: "Marketing"
+        slug: "marketing"
+        subcategories:
+          - { id: "Messaging_and_Positioning", name: "Messaging and Positioning" }
+          - { id: "Audience_Segmentation", name: "Audience Segmentation" }
+          - { id: "Campaign_Strategy", name: "Campaign Strategy" }
+          - { id: "Content_Distribution", name: "Content Distribution" }
+          - { id: "Channels_and_Platforms", name: "Channels and Platforms" }
+          - { id: "Outreach_Funnels", name: "Outreach Funnels" }
+          - { id: "Engagement_Metrics", name: "Engagement Metrics" }
+          - { id: "Conversion_Insights", name: "Conversion Insights" }
+          - { id: "Brand_Identity", name: "Brand Identity" }
+          - { id: "Creative_Assets", name: "Creative Assets" }
+          - { id: "Testing_and_Optimization", name: "Testing and Optimization" }
+          - { id: "Compliance_and_Ethics", name: "Compliance and Ethics" }
+
+# ============================================
+# METADATA
+# ============================================
+metadata:
+  version: "2.0.0"
+  last_updated: "2026-01-17"
+  description: "Complete Admin Collections folder structure for JubileeVerse.com"
+  source: "admin-collections.html JavaScript definitions"
+  ui_elements:
+    search_bar: true
+    expandable_sections: true
+    checkbox_selection: true
+  statistics:
+    total_collections: 41
+    authority_foundation_collections: 18
+    goal_driven_intelligence_collections: 13
+    kingdom_impact_collections: 10
+    persona_collections: 12
+    stages_per_persona: 32
+    domains_per_stage: 24
+    total_bible_books: 66
+    total_bible_chapters: 1189

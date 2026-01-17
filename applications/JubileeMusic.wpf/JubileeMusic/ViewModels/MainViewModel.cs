@@ -149,14 +149,36 @@ public partial class MainViewModel : BaseViewModel
     [RelayCommand]
     private async Task NavigateToLibrary()
     {
-        _navigationService.NavigateTo("Library");
-        await LibraryViewModel.LoadTracksCommand.ExecuteAsync(null);
+        try
+        {
+            _logger.LogInformation("NavigateToLibrary called");
+            _logger.LogInformation("About to call _navigationService.NavigateTo(\"Library\")");
+            _navigationService.NavigateTo("Library");
+            _logger.LogInformation("Navigated to Library view, CurrentViewModel will change");
+            _logger.LogInformation("About to load tracks via LibraryViewModel.LoadTracksCommand");
+            await LibraryViewModel.LoadTracksCommand.ExecuteAsync(null);
+            _logger.LogInformation("Library tracks loaded successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in NavigateToLibrary: {Message}", ex.Message);
+            System.Diagnostics.Debug.WriteLine($"[CRASH] NavigateToLibrary error: {ex}");
+        }
     }
 
     [RelayCommand]
     private void NavigateToSettings()
     {
-        _navigationService.NavigateTo("Settings");
+        try
+        {
+            _logger.LogInformation("NavigateToSettings called");
+            _navigationService.NavigateTo("Settings");
+            _logger.LogInformation("Navigated to Settings");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in NavigateToSettings");
+        }
     }
 
     [RelayCommand]

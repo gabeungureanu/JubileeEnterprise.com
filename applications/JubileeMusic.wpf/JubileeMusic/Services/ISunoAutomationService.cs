@@ -14,8 +14,12 @@ public interface ISunoAutomationService
     Task<bool> EnterStylePromptAsync(string stylePrompt);
     Task<bool> EnterTitleAsync(string title);
     Task<bool> SetInstrumentalOnlyAsync(bool instrumental);
-    Task<bool> InsertIntoCreateFormAsync(string? title, string? style, string? lyrics, bool isInstrumental);
+    Task<bool> InsertIntoCreateFormAsync(string? title, string? style, string? lyrics, bool isInstrumental, string? vocalGender = null, string? weirdness = null, string? styleInfluence = null, string? workspace = null);
+    Task<bool> SetVocalGenderAsync(string gender);
+    Task<bool> SetWeirdnessSliderAsync(string weirdness);
+    Task<bool> SetStyleInfluenceSliderAsync(string styleInfluence);
     Task<bool> SelectOrCreateWorkspaceAsync(string workspaceName);
+    Task<bool> SelectSaveToWorkspaceAsync(string workspaceName);
     Task<bool> IsOnCreatePageAsync();
     Task<bool> ClickCreateIconAsync();
     Task<GenerationResult> SubmitGenerationAsync();

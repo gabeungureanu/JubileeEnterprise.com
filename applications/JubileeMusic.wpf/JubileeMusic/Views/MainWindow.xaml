@@ -6,93 +6,186 @@
         xmlns:views="clr-namespace:JubileeMusic.Views"
         xmlns:vm="clr-namespace:JubileeMusic.ViewModels"
         mc:Ignorable="d"
-        Title="{Binding WindowTitle}"
+        Title="Inspire: Melody Music"
         Height="800" Width="1280"
         MinHeight="600" MinWidth="900"
-        WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource BackgroundColor}">
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        AllowsTransparency="False"
+        Background="#000000"
+        Icon="/Resources/Images/melody.png">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
-        <Style x:Key="NavButtonStyle" TargetType="Button" BasedOn="{StaticResource ModernButtonStyle}">
-            <Setter Property="Width" Value="100"/>
-            <Setter Property="Height" Value="36"/>
-            <Setter Property="Margin" Value="4"/>
+        <!-- Window Control Button Style -->
+        <Style x:Key="WindowButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource AccentColor}"/>
-                </DataTrigger>
-            </Style.Triggers>
+            <Setter Property="Width" Value="46"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3a3a5e"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource WindowButtonStyle}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#e81123"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Navigation Button Style -->
+        <Style x:Key="TitleBarNavButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="0"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3a3a5e"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#4a4a6e"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Window.Resources>
 
-    <Grid>
+    <Grid Background="Black">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
+            <!-- Title Bar with Navigation: 36px -->
+            <RowDefinition Height="36"/>
+            <!-- Content Area -->
             <RowDefinition Height="*"/>
+            <!-- Status Bar -->
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Top Navigation Bar -->
-        <Border Grid.Row="0" Background="{DynamicResource SurfaceColor}" Padding="16,8">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+        <!-- Title Bar with Navigation -->
+        <Grid x:Name="TitleBar" Grid.Row="0" Background="Black" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <Grid.ColumnDefinitions>
+                <!-- Logo and Title -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- Navigation Buttons -->
+                <ColumnDefinition Width="*"/>
+                <!-- Status Indicator -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- Window Controls -->
+                <ColumnDefinition Width="138"/>
+            </Grid.ColumnDefinitions>
 
-                <!-- App Title -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Jubilee Music"
-                               FontSize="20"
-                               FontWeight="Bold"
-                               Foreground="White"
-                               VerticalAlignment="Center"/>
-                </StackPanel>
+            <!-- App Icon and Title -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,16,0">
+                <!-- Profile Icon -->
+                <Border Width="24" Height="24" CornerRadius="12" Margin="0,0,8,0" ClipToBounds="True">
+                    <Border.Background>
+                        <ImageBrush ImageSource="/Resources/Images/melody.png" Stretch="UniformToFill"/>
+                    </Border.Background>
+                </Border>
+                <!-- Styled Title: "Inspire: " in gold bold, "Melody Music" in white narrow font -->
+                <TextBlock FontSize="14" VerticalAlignment="Center">
+                    <Run Text="Inspire: " Foreground="#FFD700" FontWeight="Bold"/>
+                    <Run Text="Melody Music" Foreground="White" FontWeight="Light" FontStretch="Condensed"/>
+                </TextBlock>
+            </StackPanel>
 
-                <!-- Navigation Buttons (Right-Aligned) -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="Browser"
-                            Command="{Binding NavigateToBrowserCommand}"
-                            Style="{StaticResource NavButtonStyle}"/>
-                    <Button Content="ChatGPT"
-                            Command="{Binding ToggleChatGptPanelCommand}"
-                            Style="{StaticResource NavButtonStyle}"/>
-                    <Button Content="Create"
-                            Command="{Binding ToggleCreatePanelCommand}"
-                            Style="{StaticResource NavButtonStyle}"/>
-                    <Button Content="Library"
-                            Command="{Binding NavigateToLibraryCommand}"
-                            Style="{StaticResource NavButtonStyle}"/>
-                    <Button Content="Settings"
-                            Command="{Binding NavigateToSettingsCommand}"
-                            Style="{StaticResource NavButtonStyle}"/>
-                </StackPanel>
+            <!-- Navigation Buttons -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Stretch">
+                <Button Content="Browser"
+                        Command="{Binding NavigateToBrowserCommand}"
+                        Style="{StaticResource TitleBarNavButtonStyle}"/>
+                <Button Content="ChatGPT"
+                        Command="{Binding ToggleChatGptPanelCommand}"
+                        Style="{StaticResource TitleBarNavButtonStyle}"/>
+                <Button Content="Create"
+                        Command="{Binding ToggleCreatePanelCommand}"
+                        Style="{StaticResource TitleBarNavButtonStyle}"/>
+                <Button Content="Library"
+                        Command="{Binding NavigateToLibraryCommand}"
+                        Style="{StaticResource TitleBarNavButtonStyle}"/>
+                <Button Content="Settings"
+                        Command="{Binding NavigateToSettingsCommand}"
+                        Style="{StaticResource TitleBarNavButtonStyle}"/>
+            </StackPanel>
 
-                <!-- Status -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Ellipse Width="8" Height="8" Margin="0,0,8,0">
-                        <Ellipse.Style>
-                            <Style TargetType="Ellipse">
-                                <Setter Property="Fill" Value="{DynamicResource SuccessColor}"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsAuthenticated}" Value="False">
-                                        <Setter Property="Fill" Value="{DynamicResource WarningColor}"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Ellipse.Style>
-                    </Ellipse>
-                    <TextBlock Text="{Binding CurrentViewName}"
-                               Foreground="{DynamicResource TextSecondaryColor}"
-                               VerticalAlignment="Center"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+            <!-- Status Indicator -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                <Ellipse Width="8" Height="8" Margin="0,0,8,0">
+                    <Ellipse.Style>
+                        <Style TargetType="Ellipse">
+                            <Setter Property="Fill" Value="#4CAF50"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsAuthenticated}" Value="False">
+                                    <Setter Property="Fill" Value="#FF9800"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Ellipse.Style>
+                </Ellipse>
+                <TextBlock Text="Browser"
+                           Foreground="#A0A0A0"
+                           FontSize="11"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Window Controls -->
+            <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="MinimizeButton"
+                        Style="{StaticResource WindowButtonStyle}"
+                        Click="MinimizeButton_Click"
+                        Content="&#xE921;"/>
+                <Button x:Name="MaximizeButton"
+                        Style="{StaticResource WindowButtonStyle}"
+                        Click="MaximizeButton_Click"
+                        Content="&#xE922;"/>
+                <Button x:Name="CloseButton"
+                        Style="{StaticResource CloseButtonStyle}"
+                        Click="CloseButton_Click"
+                        Content="&#xE8BB;"/>
+            </StackPanel>
+        </Grid>
 
         <!-- Main Content Area -->
         <ContentControl Grid.Row="1" Content="{Binding CurrentViewModel}">
@@ -113,7 +206,7 @@
         </ContentControl>
 
         <!-- Status Bar -->
-        <Border Grid.Row="2" Background="{DynamicResource SurfaceColor}" Padding="16,4">
+        <Border Grid.Row="2" Background="#16213e" Padding="12,4">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -122,13 +215,14 @@
 
                 <TextBlock Grid.Column="0"
                            Text="{Binding StatusMessage}"
-                           Foreground="{DynamicResource TextSecondaryColor}"
+                           Foreground="#A0A0A0"
+                           FontSize="11"
                            VerticalAlignment="Center"/>
 
                 <TextBlock Grid.Column="1"
-                           Text="Jubilee Music v1.0.0"
-                           Foreground="{DynamicResource TextMutedColor}"
-                           FontSize="11"
+                           Text="Inspire: Melody Music v1.0.0"
+                           Foreground="#666666"
+                           FontSize="10"
                            VerticalAlignment="Center"/>
             </Grid>
         </Border>

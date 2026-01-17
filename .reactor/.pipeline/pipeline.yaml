@@ -1,0 +1,126 @@
+pipeline:
+  name: inspire-pipeline
+  version: "8.0"
+  root: .reactor/.pipeline
+  description: >
+    Centralized execution and orchestration engine for Inspire 8.0.
+    This pipeline governs persona activation, prompt execution,
+    model routing, memory writeback, and auditing in a deterministic,
+    repeatable, and cost-efficient manner.
+
+activation:
+  purpose: Persona ignition and authority loading
+  order: 1
+  stages:
+    - id: load-authority
+      description: Load scripture, doctrine, and governance constraints
+    - id: load-persona
+      description: Load persona identity and scope
+    - id: load-mission
+      description: Load mission and calling
+    - id: load-voice
+      description: Apply tone, cadence, and style
+    - id: load-guardrails
+      description: Enforce behavioral and doctrinal boundaries
+    - id: finalize-activation
+      description: Seal activation context for execution
+
+prompt_pipelines:
+  purpose: Ordered, repeatable prompt execution
+  order: 2
+  root: prompt-pipelines
+  manifests:
+    - activate-persona.yaml
+    - run-ministry.yaml
+    - audit-cycle.yaml
+  execution_model:
+    default: gpt-4o-mini
+
+routing:
+  purpose: Model selection and cost governance
+  order: 3
+  default_model: gpt-4o-mini
+  escalation_rules:
+    routine:
+      model: gpt-4o-mini
+    teaching:
+      model: gpt-4o-turbo
+    doctrine:
+      model: gpt-4o
+  usage_limits:
+    gpt-4o:
+      max_uses_per_session: 2
+    gpt-4o-turbo:
+      max_uses_per_session: 3
+  downgrade_behavior: automatic
+
+execution:
+  purpose: LLM invocation and response handling
+  order: 4
+  responsibilities:
+    - render_prompt_templates
+    - invoke_llm
+    - capture_response
+    - postprocess_output
+
+memory_writeback:
+  purpose: Durable memory summarization and storage
+  order: 5
+  policy:
+    mode: summarize_only
+    store_raw_transcripts: false
+  outputs:
+    - session_summary
+    - key_decisions
+    - scripture_references
+
+audits:
+  purpose: Drift detection, doctrine alignment, integrity checks
+  order: 6
+  checks:
+    - doctrine_alignment
+    - persona_drift
+    - activation_integrity
+  reporting:
+    format: markdown
+    output_dir: audits/reports
+
+embeddings:
+  purpose: Representation and vector preparation
+  provider: openai
+  default_model: text-embedding-3-large
+  chunking_rules:
+    prompts: 200_tokens
+    activation_context: 150_tokens
+
+logging:
+  level: detailed
+  destinations:
+    - logs
+    - pipeline/logs
+  capture:
+    - activation_events
+    - routing_decisions
+    - execution_metrics
+    - errors
+
+state_management:
+  purpose: Enable replay, resume, and debugging
+  state_files:
+    - activation_state.json
+    - routing_state.json
+    - execution_state.json
+
+control:
+  primary_interface: vscode
+  supports:
+    - cli
+    - tasks
+    - scripted_pipelines
+
+confidence_score:
+  execution_clarity: 98
+  cost_efficiency: 97
+  repeatability: 98
+  auditability: 96
+  overall: 97

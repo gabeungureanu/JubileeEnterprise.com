@@ -2358,183 +2358,6 @@ app.get('/api/v1/inspire/knowledge/:id', async (req, res) => {
 });
 
 // =============================================================================
-// WEB SEARCH CACHE API ROUTES - JubileeSearch
-// =============================================================================
-
-// Get cached search results by keyword hash
-app.get('/api/v1/inspire/web-search/cache/:hash', async (req, res) => {
-    try {
-        const { hash } = req.params;
-
-        const result = await inspirePool.query(`
-            SELECT id, keyword, keyword_hash, results, hit_counter,
-                   total_results_fetched, search_engines_queried, ranking_scores,
-                   created_at, updated_at, expires_at
-            FROM cached_web_searches
-            WHERE keyword_hash = $1 AND is_active = true
-        `, [hash]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                error: 'Cache miss - no cached results found for this search'
-            });
-        }
-
-        const cached = result.rows[0];
-
-        // Check if cache has expired
-        if (cached.expires_at && new Date(cached.expires_at) < new Date()) {
-            return res.status(404).json({
-                success: false,
-                error: 'Cache expired',
-                expired_at: cached.expires_at
-            });
-        }
-
-        res.json({
-            success: true,
-            cached: true,
-            data: cached
-        });
-    } catch (err) {
-        console.error('Web search cache fetch error:', err);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch cached search results',
-            message: err.message
-        });
-    }
-});
-
-// Increment hit counter for cached search
-app.post('/api/v1/inspire/web-search/cache/:id/hit', async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const result = await inspirePool.query(`
-            UPDATE cached_web_searches
-            SET hit_counter = hit_counter + 1,
-                updated_at = NOW()
-            WHERE id = $1 AND is_active = true
-            RETURNING id, keyword, hit_counter, updated_at
-        `, [id]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                error: 'Cached search not found'
-            });
-        }
-
-        res.json({
-            success: true,
-            data: result.rows[0]
-        });
-    } catch (err) {
-        console.error('Web search hit counter error:', err);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to increment hit counter',
-            message: err.message
-        });
-    }
-});
-
-// Save new search results to cache
-app.post('/api/v1/inspire/web-search/cache', async (req, res) => {
-    try {
-        const {
-            keyword,
-            keyword_hash,
-            results,
-            total_results_fetched,
-            search_engines_queried,
-            ranking_scores,
-            expires_in_hours = 24
-        } = req.body;
-
-        if (!keyword || !keyword_hash || !results) {
-            return res.status(400).json({
-                success: false,
-                error: 'keyword, keyword_hash, and results are required'
-            });
-        }
-
-        // Calculate expiration time
-        const expires_at = new Date();
-        expires_at.setHours(expires_at.getHours() + expires_in_hours);
-
-        // Upsert - insert or update if exists
-        const result = await inspirePool.query(`
-            INSERT INTO cached_web_searches
-                (keyword, keyword_hash, results, total_results_fetched,
-                 search_engines_queried, ranking_scores, expires_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (keyword_hash)
-            DO UPDATE SET
-                results = EXCLUDED.results,
-                total_results_fetched = EXCLUDED.total_results_fetched,
-                search_engines_queried = EXCLUDED.search_engines_queried,
-                ranking_scores = EXCLUDED.ranking_scores,
-                hit_counter = cached_web_searches.hit_counter + 1,
-                updated_at = NOW(),
-                expires_at = EXCLUDED.expires_at
-            RETURNING id, keyword, keyword_hash, hit_counter, created_at, updated_at, expires_at
-        `, [
-            keyword,
-            keyword_hash,
-            JSON.stringify(results),
-            total_results_fetched || results.length,
-            JSON.stringify(search_engines_queried || []),
-            JSON.stringify(ranking_scores || []),
-            expires_at
-        ]);
-
-        res.status(201).json({
-            success: true,
-            data: result.rows[0]
-        });
-    } catch (err) {
-        console.error('Web search cache save error:', err);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to save search results to cache',
-            message: err.message
-        });
-    }
-});
-
-// Get search cache statistics
-app.get('/api/v1/inspire/web-search/cache/stats', async (req, res) => {
-    try {
-        const result = await inspirePool.query(`
-            SELECT
-                COUNT(*) as total_cached_searches,
-                SUM(hit_counter) as total_hits,
-                AVG(hit_counter)::numeric(10,2) as avg_hits_per_search,
-                MAX(hit_counter) as max_hits,
-                COUNT(CASE WHEN expires_at > NOW() THEN 1 END) as active_cache_entries,
-                COUNT(CASE WHEN expires_at <= NOW() THEN 1 END) as expired_cache_entries
-            FROM cached_web_searches
-            WHERE is_active = true
-        `);
-
-        res.json({
-            success: true,
-            data: result.rows[0]
-        });
-    } catch (err) {
-        console.error('Web search cache stats error:', err);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to fetch cache statistics',
-            message: err.message
-        });
-    }
-});
-
-// =============================================================================
 // AUTHENTICATION API ROUTES - JubileeSSO
 // =============================================================================
 
@@ -5085,6 +4908,492 @@ app.get('/api/v1/developer/tasks/session/:sessionId/active', async (req, res) =>
 });
 
 // =============================================================================
+// USER TODOS API ROUTES
+// =============================================================================
+
+// Get all todos for a user
+app.get('/api/todos', async (req, res) => {
+    try {
+        const { email } = req.query;
+        if (!email) {
+            return res.status(400).json({ success: false, error: 'Email parameter required' });
+        }
+
+        const result = await codexPool.query(
+            `SELECT id, title, description, is_completed as "isCompleted", priority,
+                    due_date as "dueDate", created_at as "createdAt", updated_at as "updatedAt",
+                    user_email as "userEmail"
+             FROM user_todos
+             WHERE user_email = $1
+             ORDER BY is_completed ASC, created_at DESC`,
+            [email.toLowerCase()]
+        );
+
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Get todos error:', err);
+        res.status(500).json({ success: false, error: 'Failed to fetch todos' });
+    }
+});
+
+// Create a new todo
+app.post('/api/todos', async (req, res) => {
+    try {
+        const { email, title, description, priority, dueDate } = req.body;
+
+        if (!email || !title) {
+            return res.status(400).json({ success: false, error: 'Email and title are required' });
+        }
+
+        const result = await codexPool.query(
+            `INSERT INTO user_todos (user_email, title, description, priority, due_date)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id, title, description, is_completed as "isCompleted", priority,
+                       due_date as "dueDate", created_at as "createdAt", updated_at as "updatedAt",
+                       user_email as "userEmail"`,
+            [email.toLowerCase(), title, description || null, priority || 'medium', dueDate || null]
+        );
+
+        res.status(201).json({ success: true, todo: result.rows[0] });
+    } catch (err) {
+        console.error('Create todo error:', err);
+        res.status(500).json({ success: false, error: 'Failed to create todo' });
+    }
+});
+
+// Update a todo
+app.put('/api/todos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, description, isCompleted, priority, dueDate } = req.body;
+
+        const result = await codexPool.query(
+            `UPDATE user_todos
+             SET title = COALESCE($1, title),
+                 description = COALESCE($2, description),
+                 is_completed = COALESCE($3, is_completed),
+                 priority = COALESCE($4, priority),
+                 due_date = COALESCE($5, due_date),
+                 updated_at = NOW()
+             WHERE id = $6
+             RETURNING id, title, description, is_completed as "isCompleted", priority,
+                       due_date as "dueDate", created_at as "createdAt", updated_at as "updatedAt",
+                       user_email as "userEmail"`,
+            [title, description, isCompleted, priority, dueDate, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Todo not found' });
+        }
+
+        res.json({ success: true, todo: result.rows[0] });
+    } catch (err) {
+        console.error('Update todo error:', err);
+        res.status(500).json({ success: false, error: 'Failed to update todo' });
+    }
+});
+
+// Delete a todo
+app.delete('/api/todos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await codexPool.query(
+            'DELETE FROM user_todos WHERE id = $1 RETURNING id',
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Todo not found' });
+        }
+
+        res.json({ success: true, message: 'Todo deleted' });
+    } catch (err) {
+        console.error('Delete todo error:', err);
+        res.status(500).json({ success: false, error: 'Failed to delete todo' });
+    }
+});
+
+// =============================================================================
+// DAILY NEWS CACHE API (JubileeDailyNews Service)
+// =============================================================================
+
+// Cache a transformed news story
+app.post('/api/v1/daily-news/cache', async (req, res) => {
+    try {
+        const {
+            originalTitle,
+            originalUrl,
+            originalExcerpt,
+            rewrittenTitle,
+            rewrittenContent,
+            source,
+            sourceName,
+            storyCluster,
+            prominenceScore,
+            rank,
+            imageData,
+            imageMimeType,
+            imageOriginalSize,
+            imageFinalSize,
+            imageWasResized,
+            fetchedAt
+        } = req.body;
+
+        // Validate required fields
+        if (!originalTitle || !rewrittenTitle || !source) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required fields: originalTitle, rewrittenTitle, source'
+            });
+        }
+
+        // Check for duplicate (same URL within last 24 hours)
+        const existingResult = await inspirePool.query(`
+            SELECT id FROM daily_news_cache
+            WHERE original_url = $1
+            AND fetched_at > NOW() - INTERVAL '24 hours'
+        `, [originalUrl]);
+
+        if (existingResult.rows.length > 0) {
+            return res.status(200).json({
+                success: true,
+                id: existingResult.rows[0].id,
+                message: 'Story already cached within 24 hours',
+                duplicate: true
+            });
+        }
+
+        // Insert the new story
+        const result = await inspirePool.query(`
+            INSERT INTO daily_news_cache (
+                original_title,
+                original_url,
+                original_excerpt,
+                rewritten_title,
+                rewritten_content,
+                source,
+                source_name,
+                story_cluster,
+                prominence_score,
+                rank,
+                image_data,
+                image_mime_type,
+                image_original_size,
+                image_final_size,
+                image_was_resized,
+                fetched_at,
+                created_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW())
+            RETURNING id, created_at
+        `, [
+            originalTitle,
+            originalUrl,
+            originalExcerpt,
+            rewrittenTitle,
+            rewrittenContent,
+            source,
+            sourceName,
+            storyCluster,
+            prominenceScore,
+            rank,
+            imageData,
+            imageMimeType,
+            imageOriginalSize,
+            imageFinalSize,
+            imageWasResized,
+            fetchedAt || new Date().toISOString()
+        ]);
+
+        console.log(`[DailyNews] Cached story: "${rewrittenTitle.substring(0, 50)}..." from ${sourceName}`);
+
+        res.status(201).json({
+            success: true,
+            id: result.rows[0].id,
+            createdAt: result.rows[0].created_at,
+            message: 'Story cached successfully'
+        });
+
+    } catch (err) {
+        console.error('[DailyNews] Cache error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to cache story',
+            details: NODE_ENV === 'development' ? err.message : undefined
+        });
+    }
+});
+
+// Get cached news stories
+app.get('/api/v1/daily-news', async (req, res) => {
+    try {
+        const { limit = 10, hours = 24, source, cluster } = req.query;
+
+        let query = `
+            SELECT
+                id,
+                original_title,
+                original_url,
+                original_excerpt,
+                rewritten_title,
+                rewritten_content,
+                source,
+                source_name,
+                story_cluster,
+                prominence_score,
+                rank,
+                image_mime_type,
+                image_original_size,
+                image_final_size,
+                image_was_resized,
+                fetched_at,
+                created_at
+            FROM daily_news_cache
+            WHERE fetched_at > NOW() - INTERVAL '${parseInt(hours)} hours'
+        `;
+
+        const params = [];
+        let paramIndex = 1;
+
+        if (source) {
+            query += ` AND source = $${paramIndex}`;
+            params.push(source);
+            paramIndex++;
+        }
+
+        if (cluster) {
+            query += ` AND story_cluster = $${paramIndex}`;
+            params.push(cluster);
+            paramIndex++;
+        }
+
+        query += ` ORDER BY prominence_score DESC, fetched_at DESC LIMIT $${paramIndex}`;
+        params.push(parseInt(limit));
+
+        const result = await inspirePool.query(query, params);
+
+        res.json({
+            success: true,
+            count: result.rows.length,
+            stories: result.rows.map(row => ({
+                id: row.id,
+                originalTitle: row.original_title,
+                originalUrl: row.original_url,
+                originalExcerpt: row.original_excerpt,
+                rewrittenTitle: row.rewritten_title,
+                rewrittenContent: row.rewritten_content,
+                source: row.source,
+                sourceName: row.source_name,
+                storyCluster: row.story_cluster,
+                prominenceScore: row.prominence_score,
+                rank: row.rank,
+                hasImage: !!row.image_mime_type,
+                imageWasResized: row.image_was_resized,
+                fetchedAt: row.fetched_at,
+                createdAt: row.created_at
+            }))
+        });
+
+    } catch (err) {
+        console.error('[DailyNews] Fetch error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch cached stories'
+        });
+    }
+});
+
+// Get a single cached story with image data
+app.get('/api/v1/daily-news/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { includeImage = 'false' } = req.query;
+
+        let columns = `
+            id,
+            original_title,
+            original_url,
+            original_excerpt,
+            rewritten_title,
+            rewritten_content,
+            source,
+            source_name,
+            story_cluster,
+            prominence_score,
+            rank,
+            image_mime_type,
+            image_original_size,
+            image_final_size,
+            image_was_resized,
+            fetched_at,
+            created_at
+        `;
+
+        if (includeImage === 'true') {
+            columns += ', image_data';
+        }
+
+        const result = await inspirePool.query(`
+            SELECT ${columns} FROM daily_news_cache WHERE id = $1
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Story not found'
+            });
+        }
+
+        const row = result.rows[0];
+
+        res.json({
+            success: true,
+            story: {
+                id: row.id,
+                originalTitle: row.original_title,
+                originalUrl: row.original_url,
+                originalExcerpt: row.original_excerpt,
+                rewrittenTitle: row.rewritten_title,
+                rewrittenContent: row.rewritten_content,
+                source: row.source,
+                sourceName: row.source_name,
+                storyCluster: row.story_cluster,
+                prominenceScore: row.prominence_score,
+                rank: row.rank,
+                imageMimeType: row.image_mime_type,
+                imageData: row.image_data || null,
+                imageOriginalSize: row.image_original_size,
+                imageFinalSize: row.image_final_size,
+                imageWasResized: row.image_was_resized,
+                fetchedAt: row.fetched_at,
+                createdAt: row.created_at
+            }
+        });
+
+    } catch (err) {
+        console.error('[DailyNews] Fetch single error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch story'
+        });
+    }
+});
+
+// Get cached story image
+app.get('/api/v1/daily-news/:id/image', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await inspirePool.query(`
+            SELECT image_data, image_mime_type
+            FROM daily_news_cache
+            WHERE id = $1 AND image_data IS NOT NULL
+        `, [id]);
+
+        if (result.rows.length === 0 || !result.rows[0].image_data) {
+            return res.status(404).json({
+                success: false,
+                error: 'Image not found'
+            });
+        }
+
+        const { image_data, image_mime_type } = result.rows[0];
+        const imageBuffer = Buffer.from(image_data, 'base64');
+
+        res.set('Content-Type', image_mime_type || 'image/jpeg');
+        res.set('Content-Length', imageBuffer.length);
+        res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+        res.send(imageBuffer);
+
+    } catch (err) {
+        console.error('[DailyNews] Image fetch error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch image'
+        });
+    }
+});
+
+// Get daily news statistics
+app.get('/api/v1/daily-news/stats', async (req, res) => {
+    try {
+        const statsResult = await inspirePool.query(`
+            SELECT
+                COUNT(*) as total_stories,
+                COUNT(DISTINCT source) as unique_sources,
+                COUNT(DISTINCT story_cluster) as unique_clusters,
+                AVG(prominence_score)::integer as avg_prominence,
+                COUNT(CASE WHEN image_data IS NOT NULL THEN 1 END) as stories_with_images,
+                COUNT(CASE WHEN image_was_resized THEN 1 END) as images_resized,
+                MIN(fetched_at) as oldest_story,
+                MAX(fetched_at) as newest_story
+            FROM daily_news_cache
+            WHERE fetched_at > NOW() - INTERVAL '24 hours'
+        `);
+
+        const clusterStats = await inspirePool.query(`
+            SELECT story_cluster, COUNT(*) as count
+            FROM daily_news_cache
+            WHERE fetched_at > NOW() - INTERVAL '24 hours'
+            GROUP BY story_cluster
+            ORDER BY count DESC
+        `);
+
+        const sourceStats = await inspirePool.query(`
+            SELECT source_name, COUNT(*) as count, AVG(prominence_score)::integer as avg_score
+            FROM daily_news_cache
+            WHERE fetched_at > NOW() - INTERVAL '24 hours'
+            GROUP BY source_name
+            ORDER BY count DESC
+        `);
+
+        res.json({
+            success: true,
+            stats: {
+                ...statsResult.rows[0],
+                clusterBreakdown: clusterStats.rows,
+                sourceBreakdown: sourceStats.rows
+            }
+        });
+
+    } catch (err) {
+        console.error('[DailyNews] Stats error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch statistics'
+        });
+    }
+});
+
+// Delete old cached stories (cleanup endpoint)
+app.delete('/api/v1/daily-news/cleanup', async (req, res) => {
+    try {
+        const { hours = 48 } = req.query;
+
+        const result = await inspirePool.query(`
+            DELETE FROM daily_news_cache
+            WHERE fetched_at < NOW() - INTERVAL '${parseInt(hours)} hours'
+            RETURNING id
+        `);
+
+        console.log(`[DailyNews] Cleanup: removed ${result.rowCount} old stories`);
+
+        res.json({
+            success: true,
+            deletedCount: result.rowCount,
+            message: `Removed stories older than ${hours} hours`
+        });
+
+    } catch (err) {
+        console.error('[DailyNews] Cleanup error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to cleanup old stories'
+        });
+    }
+});
+
+// =============================================================================
 // ERROR HANDLING
 // =============================================================================
 
@@ -5125,6 +5434,14 @@ app.use((req, res) => {
                 pull: 'GET /api/sync/pull',
                 preferences: 'GET/PUT /api/sync/preferences',
                 status: 'GET /api/sync/status'
+            },
+            dailyNews: {
+                cache: 'POST /api/v1/daily-news/cache',
+                list: 'GET /api/v1/daily-news',
+                get: 'GET /api/v1/daily-news/:id',
+                image: 'GET /api/v1/daily-news/:id/image',
+                stats: 'GET /api/v1/daily-news/stats',
+                cleanup: 'DELETE /api/v1/daily-news/cleanup'
             }
         }
     });
@@ -5153,6 +5470,42 @@ async function startServer() {
     try {
         await codexPool.query('SELECT 1');
         console.log('✅ Codex database connected');
+
+        // Ensure user_todos table exists
+        await codexPool.query(`
+            CREATE TABLE IF NOT EXISTS user_todos (
+                id SERIAL PRIMARY KEY,
+                user_email VARCHAR(255) NOT NULL,
+                title VARCHAR(500) NOT NULL,
+                description TEXT,
+                is_completed BOOLEAN DEFAULT FALSE,
+                priority VARCHAR(20) DEFAULT 'medium',
+                due_date TIMESTAMPTZ,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            );
+            CREATE INDEX IF NOT EXISTS idx_user_todos_email ON user_todos(user_email);
+            CREATE INDEX IF NOT EXISTS idx_user_todos_completed ON user_todos(is_completed);
+        `);
+
+        // Insert sample todos for gabe.ungureanu@outlook.com if none exist
+        const existingSamples = await codexPool.query(
+            "SELECT COUNT(*) FROM user_todos WHERE user_email = 'gabe.ungureanu@outlook.com'"
+        );
+        if (parseInt(existingSamples.rows[0].count) === 0) {
+            await codexPool.query(`
+                INSERT INTO user_todos (user_email, title, description, priority, is_completed)
+                VALUES
+                    ('gabe.ungureanu@outlook.com', 'Review JubileeBrowser feature updates', 'Check the new sidebar panel and todo functionality', 'high', false),
+                    ('gabe.ungureanu@outlook.com', 'Test InspireCodex API endpoints', 'Verify all CRUD operations work correctly', 'high', false),
+                    ('gabe.ungureanu@outlook.com', 'Update documentation for Jubilee platform', 'Document the new todo feature and API changes', 'medium', false),
+                    ('gabe.ungureanu@outlook.com', 'Schedule team sync meeting', 'Discuss upcoming sprint goals and priorities', 'medium', true),
+                    ('gabe.ungureanu@outlook.com', 'Deploy latest changes to production', 'Push all updates to the live server', 'high', true)
+            `);
+            console.log('✅ Sample todos created for gabe.ungureanu@outlook.com');
+        }
+
+        console.log('✅ User todos table ready');
     } catch (err) {
         console.error('❌ Codex database connection failed:', err.message);
         process.exit(1);
@@ -5161,6 +5514,35 @@ async function startServer() {
     try {
         await inspirePool.query('SELECT 1');
         console.log('✅ Inspire database connected');
+
+        // Ensure daily_news_cache table exists for JubileeDailyNews service
+        await inspirePool.query(`
+            CREATE TABLE IF NOT EXISTS daily_news_cache (
+                id SERIAL PRIMARY KEY,
+                original_title TEXT NOT NULL,
+                original_url TEXT,
+                original_excerpt TEXT,
+                rewritten_title TEXT NOT NULL,
+                rewritten_content TEXT,
+                source VARCHAR(50) NOT NULL,
+                source_name VARCHAR(100),
+                story_cluster VARCHAR(50),
+                prominence_score INTEGER,
+                rank INTEGER,
+                image_data TEXT,
+                image_mime_type VARCHAR(50),
+                image_original_size INTEGER,
+                image_final_size INTEGER,
+                image_was_resized BOOLEAN DEFAULT FALSE,
+                fetched_at TIMESTAMPTZ DEFAULT NOW(),
+                created_at TIMESTAMPTZ DEFAULT NOW()
+            );
+            CREATE INDEX IF NOT EXISTS idx_daily_news_fetched_at ON daily_news_cache(fetched_at);
+            CREATE INDEX IF NOT EXISTS idx_daily_news_source ON daily_news_cache(source);
+            CREATE INDEX IF NOT EXISTS idx_daily_news_cluster ON daily_news_cache(story_cluster);
+            CREATE INDEX IF NOT EXISTS idx_daily_news_prominence ON daily_news_cache(prominence_score DESC);
+        `);
+        console.log('✅ Daily news cache table ready');
     } catch (err) {
         console.error('❌ Inspire database connection failed:', err.message);
         process.exit(1);

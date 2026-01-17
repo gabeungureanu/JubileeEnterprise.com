@@ -14,12 +14,20 @@ public partial class BrowserViewModel : BaseViewModel
     private readonly ISunoAutomationService _automationService;
     private readonly ICredentialService _credentialService;
     private readonly ILibraryService _libraryService;
+    private readonly IWorkflowService _workflowService;
     private readonly ILogger<BrowserViewModel> _logger;
     private WebView2? _webView;
     private string? _currentJobId;
 
+    // Workflow automation
+    public SongWorkflow? CurrentWorkflow { get; private set; }
+    public event EventHandler<string>? ChatGptPromptReady;
+
     [ObservableProperty]
     private string _currentUrl = "https://suno.com";
+
+    // Stored last URL for restoring on next launch
+    public string? SunoLastUrl { get; set; }
 
     [ObservableProperty]
     private bool _isNavigating;
@@ -40,6 +48,10 @@ public partial class BrowserViewModel : BaseViewModel
     [ObservableProperty]
     private double _chatGptPanelWidth = 400;
 
+    // Suno WebView state
+    [ObservableProperty]
+    private double _sunoZoomFactor = 1.0;
+
     // Creator Panel Properties (right side)
     [ObservableProperty]
     private bool _isCreatorPanelOpen;
@@ -52,6 +64,15 @@ public partial class BrowserViewModel : BaseViewModel
 
     [ObservableProperty]
     private string _lyrics = string.Empty;
+
+    [ObservableProperty]
+    private string _vocalGender = string.Empty;
+
+    [ObservableProperty]
+    private string _weirdness = string.Empty;
+
+    [ObservableProperty]
+    private string _styleInfluence = string.Empty;
 
     [ObservableProperty]
     private bool _isInstrumental;
@@ -75,11 +96,13 @@ public partial class BrowserViewModel : BaseViewModel
         ISunoAutomationService automationService,
         ICredentialService credentialService,
         ILibraryService libraryService,
+        IWorkflowService workflowService,
         ILogger<BrowserViewModel> logger)
     {
         _automationService = automationService;
         _credentialService = credentialService;
         _libraryService = libraryService;
+        _workflowService = workflowService;
         _logger = logger;
 
         // Subscribe to automation events
@@ -87,6 +110,81 @@ public partial class BrowserViewModel : BaseViewModel
         _automationService.NavigationCompleted += OnNavigationCompleted;
         _automationService.ErrorOccurred += OnErrorOccurred;
         _automationService.GenerationStatusChanged += OnGenerationStatusChanged;
+
+        // Load default workflow
+        LoadDefaultWorkflow();
+    }
+
+    private void LoadDefaultWorkflow()
+    {
+        CurrentWorkflow = _workflowService.LoadDefaultWorkflow();
+        if (CurrentWorkflow != null)
+        {
+            _logger.LogInformation("Loaded workflow: {Name}", CurrentWorkflow.Name);
+        }
+        else
+        {
+            _logger.LogWarning("No default workflow found");
+        }
+    }
+
+    public void TriggerChatGptPrompt()
+    {
+        if (CurrentWorkflow != null && !string.IsNullOrWhiteSpace(CurrentWorkflow.Prompt))
+        {
+            _logger.LogInformation("Triggering ChatGPT prompt from workflow");
+            ChatGptPromptReady?.Invoke(this, CurrentWorkflow.Prompt);
+        }
+    }
+
+    public void ApplyChatGptResults(string response)
+    {
+        var result = _workflowService.ParseChatGptResponse(response);
+        if (result != null)
+        {
+            if (!string.IsNullOrWhiteSpace(result.Workspace))
+            {
+                Workspace = result.Workspace;
+                _logger.LogInformation("Applied Workspace: {Workspace}", result.Workspace);
+            }
+            if (!string.IsNullOrWhiteSpace(result.Title))
+            {
+                Title = result.Title;
+                _logger.LogInformation("Applied Title: {Title}", result.Title);
+            }
+            if (!string.IsNullOrWhiteSpace(result.Styles))
+            {
+                MusicStyle = result.Styles;
+                _logger.LogInformation("Applied Styles: {Styles}", result.Styles);
+            }
+            if (!string.IsNullOrWhiteSpace(result.Gender))
+            {
+                VocalGender = result.Gender;
+                _logger.LogInformation("Applied Gender: {Gender}", result.Gender);
+            }
+            if (!string.IsNullOrWhiteSpace(result.Weirdness))
+            {
+                Weirdness = result.Weirdness;
+                _logger.LogInformation("Applied Weirdness: {Weirdness}", result.Weirdness);
+            }
+            if (!string.IsNullOrWhiteSpace(result.StyleInfluence))
+            {
+                StyleInfluence = result.StyleInfluence;
+                _logger.LogInformation("Applied StyleInfluence: {StyleInfluence}", result.StyleInfluence);
+            }
+            if (!string.IsNullOrWhiteSpace(result.Lyrics))
+            {
+                Lyrics = result.Lyrics;
+                _logger.LogInformation("Applied Lyrics ({Length} chars)", result.Lyrics.Length);
+            }
+
+            // Open the Create panel if we have results
+            if (result.IsComplete)
+            {
+                IsCreatorPanelOpen = true;
+                SetStatus("Song details populated from ChatGPT!");
+            }
+        }
     }
 
     public async Task InitializeWebViewAsync(WebView2 webView)
@@ -103,8 +201,16 @@ public partial class BrowserViewModel : BaseViewModel
                 PageTitle = _webView.CoreWebView2.DocumentTitle;
             };
 
-            // Navigate to Suno.com after initialization
-            await _automationService.NavigateToSunoAsync();
+            // Navigate to saved URL if available, otherwise Suno.com
+            if (!string.IsNullOrWhiteSpace(SunoLastUrl) && SunoLastUrl.Contains("suno.com", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("Navigating to saved URL: {Url}", SunoLastUrl);
+                _webView.CoreWebView2.Navigate(SunoLastUrl);
+            }
+            else
+            {
+                await _automationService.NavigateToSunoAsync();
+            }
         }
 
         _logger.LogInformation("WebView initialized");
@@ -259,13 +365,18 @@ public partial class BrowserViewModel : BaseViewModel
             }
 
             SetStatus("Inserting form data...");
-            _logger.LogInformation("[INSERT] Calling InsertIntoCreateFormAsync with MusicStyle='{Style}'", MusicStyle ?? "(null)");
+            _logger.LogInformation("[INSERT] Calling InsertIntoCreateFormAsync with MusicStyle='{Style}', VocalGender='{Gender}', Weirdness='{Weirdness}', StyleInfluence='{StyleInfluence}', Workspace='{Workspace}'",
+                MusicStyle ?? "(null)", VocalGender ?? "(null)", Weirdness ?? "(null)", StyleInfluence ?? "(null)", Workspace ?? "(null)");
 
             var success = await _automationService.InsertIntoCreateFormAsync(
                 Title,
                 MusicStyle,
                 Lyrics,
-                IsInstrumental);
+                IsInstrumental,
+                VocalGender,
+                Weirdness,
+                StyleInfluence,
+                Workspace);
 
             if (success)
             {
@@ -453,6 +564,9 @@ public partial class BrowserViewModel : BaseViewModel
         Workspace = string.Empty;
         Title = string.Empty;
         MusicStyle = string.Empty;
+        VocalGender = string.Empty;
+        Weirdness = string.Empty;
+        StyleInfluence = string.Empty;
         Lyrics = string.Empty;
         IsInstrumental = false;
         IsGenerating = false;

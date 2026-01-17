@@ -17,6 +17,21 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // Global exception handlers
+        AppDomain.CurrentDomain.UnhandledException += (s, args) =>
+        {
+            var ex = args.ExceptionObject as Exception;
+            System.Diagnostics.Debug.WriteLine($"[FATAL] Unhandled domain exception: {ex}");
+            MessageBox.Show($"Fatal error: {ex?.Message}\n\n{ex?.StackTrace}", "Application Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        };
+
+        DispatcherUnhandledException += (s, args) =>
+        {
+            System.Diagnostics.Debug.WriteLine($"[FATAL] Dispatcher unhandled exception: {args.Exception}");
+            MessageBox.Show($"UI Error: {args.Exception.Message}\n\n{args.Exception.StackTrace}", "UI Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            args.Handled = true; // Prevent crash to see error
+        };
+
         var services = new ServiceCollection();
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();
@@ -52,6 +67,7 @@ public partial class App : Application
         services.AddSingleton<IAudioPlayerService, AudioPlayerService>();
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<IWindowSettingsService, WindowSettingsService>();
+        services.AddSingleton<IWorkflowService, WorkflowService>();
 
         // ViewModels (as singletons to maintain state)
         services.AddSingleton<MainViewModel>();

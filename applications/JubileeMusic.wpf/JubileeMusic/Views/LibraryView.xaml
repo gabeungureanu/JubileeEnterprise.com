@@ -51,6 +51,7 @@
                 <!-- Sort Options -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
                     <ComboBox SelectedValue="{Binding SortBy}"
+                              SelectedValuePath="Content"
                               Width="120" Margin="0,0,8,0">
                         <ComboBoxItem Content="Date"/>
                         <ComboBoxItem Content="Title"/>
@@ -280,8 +281,8 @@
                         <TextBlock Text="{Binding CurrentPosition, StringFormat='{}{0:mm\\:ss}'}"
                                    Foreground="{DynamicResource TextSecondaryColor}"
                                    Width="50"/>
-                        <Slider Value="{Binding CurrentPosition.TotalSeconds}"
-                                Maximum="{Binding TotalDuration.TotalSeconds}"
+                        <Slider Value="{Binding CurrentPosition.TotalSeconds, Mode=OneWay}"
+                                Maximum="{Binding TotalDuration.TotalSeconds, Mode=OneWay}"
                                 Width="200" Margin="8,0"
                                 VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding TotalDuration, StringFormat='{}{0:mm\\:ss}'}"

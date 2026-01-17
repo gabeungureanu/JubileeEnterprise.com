@@ -44,6 +44,129 @@
                     Icon="AppIcon.ico"
                     IconIndex="0" />
         </Component>
+
+        <!-- Windows Default Apps Registration -->
+        <Component Id="DefaultAppsRegistration" Guid="AABBCCDD-1234-5678-9ABC-DEF012345678">
+          <RegistryKey Root="HKLM" Key="SOFTWARE\JubileeBrowser">
+            <RegistryValue Name="InstallPath" Type="string" Value="[INSTALLFOLDER]" />
+          </RegistryKey>
+
+          <!-- Register as a Windows Application in Default Apps -->
+          <RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications" Name="JubileeBrowser" Type="string" Value="SOFTWARE\JubileeBrowser\Capabilities" KeyPath="yes" />
+
+          <!-- Application Capabilities -->
+          <RegistryKey Root="HKLM" Key="SOFTWARE\JubileeBrowser\Capabilities">
+            <RegistryValue Name="ApplicationName" Type="string" Value="Jubilee Browser" />
+            <RegistryValue Name="ApplicationDescription" Type="string" Value="A secure, family-friendly web browser by Jubilee Software, Inc." />
+            <RegistryValue Name="ApplicationIcon" Type="string" Value="[INSTALLFOLDER]JubileeBrowser.exe,0" />
+          </RegistryKey>
+
+          <!-- URL Associations -->
+          <RegistryKey Root="HKLM" Key="SOFTWARE\JubileeBrowser\Capabilities\URLAssociations">
+            <RegistryValue Name="http" Type="string" Value="JubileeBrowserURL" />
+            <RegistryValue Name="https" Type="string" Value="JubileeBrowserURL" />
+            <RegistryValue Name="ftp" Type="string" Value="JubileeBrowserURL" />
+          </RegistryKey>
+
+          <!-- File Associations -->
+          <RegistryKey Root="HKLM" Key="SOFTWARE\JubileeBrowser\Capabilities\FileAssociations">
+            <RegistryValue Name=".htm" Type="string" Value="JubileeBrowserHTML" />
+            <RegistryValue Name=".html" Type="string" Value="JubileeBrowserHTML" />
+            <RegistryValue Name=".shtml" Type="string" Value="JubileeBrowserHTML" />
+            <RegistryValue Name=".xht" Type="string" Value="JubileeBrowserHTML" />
+            <RegistryValue Name=".xhtml" Type="string" Value="JubileeBrowserHTML" />
+            <RegistryValue Name=".webp" Type="string" Value="JubileeBrowserHTML" />
+            <RegistryValue Name=".svg" Type="string" Value="JubileeBrowserHTML" />
+            <RegistryValue Name=".pdf" Type="string" Value="JubileeBrowserPDF" />
+          </RegistryKey>
+
+          <!-- ProgID for URL Handler -->
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\JubileeBrowserURL">
+            <RegistryValue Type="string" Value="Jubilee Browser URL" />
+            <RegistryValue Name="FriendlyTypeName" Type="string" Value="Jubilee Browser URL" />
+            <RegistryValue Name="URL Protocol" Type="string" Value="" />
+            <RegistryValue Name="EditFlags" Type="integer" Value="2" />
+          </RegistryKey>
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\JubileeBrowserURL\DefaultIcon">
+            <RegistryValue Type="string" Value="[INSTALLFOLDER]JubileeBrowser.exe,0" />
+          </RegistryKey>
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\JubileeBrowserURL\shell\open\command">
+            <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]JubileeBrowser.exe&quot; &quot;%1&quot;" />
+          </RegistryKey>
+
+          <!-- ProgID for HTML files -->
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\JubileeBrowserHTML">
+            <RegistryValue Type="string" Value="Jubilee Browser HTML Document" />
+            <RegistryValue Name="FriendlyTypeName" Type="string" Value="Jubilee Browser HTML Document" />
+            <RegistryValue Name="EditFlags" Type="integer" Value="2" />
+          </RegistryKey>
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\JubileeBrowserHTML\DefaultIcon">
+            <RegistryValue Type="string" Value="[INSTALLFOLDER]JubileeBrowser.exe,0" />
+          </RegistryKey>
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\JubileeBrowserHTML\shell\open\command">
+            <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]JubileeBrowser.exe&quot; &quot;%1&quot;" />
+          </RegistryKey>
+
+          <!-- ProgID for PDF files -->
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\JubileeBrowserPDF">
+            <RegistryValue Type="string" Value="Jubilee Browser PDF Document" />
+            <RegistryValue Name="FriendlyTypeName" Type="string" Value="Jubilee Browser PDF Document" />
+            <RegistryValue Name="EditFlags" Type="integer" Value="2" />
+          </RegistryKey>
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\JubileeBrowserPDF\DefaultIcon">
+            <RegistryValue Type="string" Value="[INSTALLFOLDER]JubileeBrowser.exe,0" />
+          </RegistryKey>
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\JubileeBrowserPDF\shell\open\command">
+            <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]JubileeBrowser.exe&quot; &quot;%1&quot;" />
+          </RegistryKey>
+
+          <!-- Application Registration in App Paths -->
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\JubileeBrowser.exe">
+            <RegistryValue Type="string" Value="[INSTALLFOLDER]JubileeBrowser.exe" />
+            <RegistryValue Name="Path" Type="string" Value="[INSTALLFOLDER]" />
+          </RegistryKey>
+
+          <!-- Start Menu Internet Registration (for browser selection) -->
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Clients\StartMenuInternet\JubileeBrowser">
+            <RegistryValue Type="string" Value="Jubilee Browser" />
+            <RegistryValue Name="LocalizedString" Type="string" Value="Jubilee Browser" />
+          </RegistryKey>
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Clients\StartMenuInternet\JubileeBrowser\Capabilities">
+            <RegistryValue Name="ApplicationName" Type="string" Value="Jubilee Browser" />
+            <RegistryValue Name="ApplicationDescription" Type="string" Value="A secure, family-friendly web browser by Jubilee Software, Inc." />
+            <RegistryValue Name="ApplicationIcon" Type="string" Value="[INSTALLFOLDER]JubileeBrowser.exe,0" />
+          </RegistryKey>
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Clients\StartMenuInternet\JubileeBrowser\Capabilities\URLAssociations">
+            <RegistryValue Name="http" Type="string" Value="JubileeBrowserURL" />
+            <RegistryValue Name="https" Type="string" Value="JubileeBrowserURL" />
+            <RegistryValue Name="ftp" Type="string" Value="JubileeBrowserURL" />
+          </RegistryKey>
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Clients\StartMenuInternet\JubileeBrowser\Capabilities\FileAssociations">
+            <RegistryValue Name=".htm" Type="string" Value="JubileeBrowserHTML" />
+            <RegistryValue Name=".html" Type="string" Value="JubileeBrowserHTML" />
+            <RegistryValue Name=".shtml" Type="string" Value="JubileeBrowserHTML" />
+            <RegistryValue Name=".xht" Type="string" Value="JubileeBrowserHTML" />
+            <RegistryValue Name=".xhtml" Type="string" Value="JubileeBrowserHTML" />
+          </RegistryKey>
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Clients\StartMenuInternet\JubileeBrowser\Capabilities\StartMenu">
+            <RegistryValue Name="StartMenuInternet" Type="string" Value="JubileeBrowser" />
+          </RegistryKey>
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Clients\StartMenuInternet\JubileeBrowser\DefaultIcon">
+            <RegistryValue Type="string" Value="[INSTALLFOLDER]JubileeBrowser.exe,0" />
+          </RegistryKey>
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Clients\StartMenuInternet\JubileeBrowser\InstallInfo">
+            <RegistryValue Name="IconsVisible" Type="integer" Value="1" />
+            <RegistryValue Name="ShowIconsCommand" Type="string" Value="&quot;[INSTALLFOLDER]JubileeBrowser.exe&quot; --show-icons" />
+            <RegistryValue Name="HideIconsCommand" Type="string" Value="&quot;[INSTALLFOLDER]JubileeBrowser.exe&quot; --hide-icons" />
+            <RegistryValue Name="ReinstallCommand" Type="string" Value="&quot;[INSTALLFOLDER]JubileeBrowser.exe&quot; --make-default-browser" />
+          </RegistryKey>
+          <RegistryKey Root="HKLM" Key="SOFTWARE\Clients\StartMenuInternet\JubileeBrowser\shell\open\command">
+            <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]JubileeBrowser.exe&quot;" />
+          </RegistryKey>
+
+          <!-- Register in RegisteredApplications for StartMenuInternet -->
+          <RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications" Name="JubileeBrowser.StartMenuInternet" Type="string" Value="SOFTWARE\Clients\StartMenuInternet\JubileeBrowser\Capabilities" />
+        </Component>
       </Directory>
     </StandardDirectory>
 
@@ -54,6 +177,7 @@
 
     <Feature Id="MainFeature" Title="Jubilee Browser" Level="1">
       <ComponentRef Id="Shortcuts" />
+      <ComponentRef Id="DefaultAppsRegistration" />
       <ComponentGroupRef Id="HarvestedFiles" />
     </Feature>
 

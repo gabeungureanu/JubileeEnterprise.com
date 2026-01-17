@@ -21,8 +21,8 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Browser Toolbar -->
-        <Border Grid.Row="0" Background="{DynamicResource SurfaceColor}" Padding="8">
+        <!-- Browser Toolbar (ultra compact) -->
+        <Border Grid.Row="0" Background="{DynamicResource SurfaceColor}" Padding="2,1">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -35,22 +35,26 @@
                     <Button Content="&#x2190;"
                             Command="{Binding GoBackCommand}"
                             ToolTip="Go Back"
-                            Width="32" Height="32" Margin="2"
+                            Width="20" Height="20" Margin="1,0"
+                            FontSize="10"
                             Style="{StaticResource ModernButtonStyle}"/>
                     <Button Content="&#x2192;"
                             Command="{Binding GoForwardCommand}"
                             ToolTip="Go Forward"
-                            Width="32" Height="32" Margin="2"
+                            Width="20" Height="20" Margin="1,0"
+                            FontSize="10"
                             Style="{StaticResource ModernButtonStyle}"/>
                     <Button Content="&#x21BB;"
                             Command="{Binding RefreshCommand}"
                             ToolTip="Refresh"
-                            Width="32" Height="32" Margin="2"
+                            Width="20" Height="20" Margin="1,0"
+                            FontSize="10"
                             Style="{StaticResource ModernButtonStyle}"/>
                     <Button Content="&#x2302;"
                             Command="{Binding NavigateToSunoCommand}"
                             ToolTip="Go to Suno Home"
-                            Width="32" Height="32" Margin="2"
+                            Width="20" Height="20" Margin="1,0"
+                            FontSize="10"
                             Style="{StaticResource ModernButtonStyle}"/>
                 </StackPanel>
 
@@ -64,6 +68,7 @@
                 <ColumnDefinition x:Name="ChatGptPanelColumn" Width="0"/>
                 <ColumnDefinition x:Name="ChatGptSplitterColumn" Width="0"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition x:Name="CreatorSplitterColumn" Width="0"/>
                 <ColumnDefinition x:Name="CreatorPanelColumn" Width="0"/>
             </Grid.ColumnDefinitions>
 
@@ -79,28 +84,17 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- ChatGPT Panel Header -->
+                    <!-- ChatGPT Panel Header (X button only) -->
                     <Border Grid.Row="0"
                             Background="{DynamicResource BackgroundColor}"
-                            Padding="16,12">
+                            Padding="6,3">
                         <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-
-                            <TextBlock Text="ChatGPT"
-                                       FontSize="18"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextColor}"
-                                       VerticalAlignment="Center"/>
-
-                            <Button Grid.Column="1"
+                            <Button HorizontalAlignment="Right"
                                     Content="&#x2715;"
                                     Command="{Binding ToggleChatGptPanelCommand}"
                                     ToolTip="Close ChatGPT Panel"
-                                    Width="28" Height="28"
-                                    FontSize="14"
+                                    Width="18" Height="18"
+                                    FontSize="10"
                                     Background="Transparent"
                                     Foreground="{DynamicResource TextSecondaryColor}"
                                     BorderThickness="0"
@@ -171,9 +165,19 @@
                 </Border>
             </Grid>
 
+            <!-- Creator Panel Splitter (for resizing panel width) -->
+            <GridSplitter x:Name="CreatorPanelSplitter"
+                          Grid.Column="3"
+                          Width="5"
+                          Background="#808080"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Stretch"
+                          Cursor="SizeWE"
+                          ShowsPreview="False"/>
+
             <!-- Creator Panel (Right Side - Pushes Content) -->
             <Border x:Name="CreatorPanel"
-                    Grid.Column="3"
+                    Grid.Column="4"
                     Background="{DynamicResource SurfaceColor}"
                     BorderBrush="{DynamicResource BorderBrush}"
                     BorderThickness="1,0,0,0">
@@ -187,7 +191,7 @@
                     <!-- Panel Header -->
                     <Border Grid.Row="0"
                             Background="{DynamicResource BackgroundColor}"
-                            Padding="16,12">
+                            Padding="6,3">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -195,7 +199,7 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="Create Song"
-                                       FontSize="18"
+                                       FontSize="13"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextColor}"
                                        VerticalAlignment="Center"/>
@@ -204,8 +208,8 @@
                                     Content="&#x2715;"
                                     Command="{Binding ToggleCreatorPanelCommand}"
                                     ToolTip="Close Panel"
-                                    Width="28" Height="28"
-                                    FontSize="14"
+                                    Width="18" Height="18"
+                                    FontSize="10"
                                     Background="Transparent"
                                     Foreground="{DynamicResource TextSecondaryColor}"
                                     BorderThickness="0"
@@ -218,30 +222,6 @@
                                   VerticalScrollBarVisibility="Auto"
                                   Padding="16">
                         <StackPanel>
-                            <!-- Workspace Field -->
-                            <TextBlock Text="Workspace"
-                                       FontSize="13"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextColor}"
-                                       Margin="0,0,0,8"/>
-                            <TextBox x:Name="WorkspaceTextBox"
-                                     Text="{Binding Workspace, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
-                                     Background="{DynamicResource BackgroundColor}"
-                                     Foreground="{DynamicResource TextColor}"
-                                     CaretBrush="{DynamicResource TextColor}"
-                                     BorderBrush="{DynamicResource BorderBrush}"
-                                     BorderThickness="1"
-                                     Padding="10,8"
-                                     Height="36"
-                                     VerticalContentAlignment="Center"
-                                     GotFocus="TextBox_GotFocus"
-                                     Margin="0,0,0,4"/>
-                            <TextBlock Text="Select or create a workspace to save your song"
-                                       FontSize="11"
-                                       Foreground="{DynamicResource TextMutedColor}"
-                                       Margin="0,0,0,16"
-                                       TextWrapping="Wrap"/>
-
                             <!-- Title Field (Optional) -->
                             <TextBlock Text="Title (Optional)"
                                        FontSize="13"
@@ -311,33 +291,157 @@
                                               VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Grid>
-                            <TextBox x:Name="LyricsTextBox"
-                                     Text="{Binding Lyrics, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                            <!-- Resizable Lyrics Container -->
+                            <Grid x:Name="LyricsContainer" Margin="0,0,0,8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition x:Name="LyricsRowDefinition" Height="200" MinHeight="100"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBox x:Name="LyricsTextBox"
+                                         Grid.Row="0"
+                                         Text="{Binding Lyrics, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                         Background="{DynamicResource BackgroundColor}"
+                                         Foreground="{DynamicResource TextColor}"
+                                         CaretBrush="{DynamicResource TextColor}"
+                                         BorderBrush="{DynamicResource BorderBrush}"
+                                         BorderThickness="1"
+                                         Padding="10,8"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Visible"
+                                         HorizontalScrollBarVisibility="Disabled"
+                                         GotFocus="TextBox_GotFocus">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsInstrumental}" Value="True">
+                                                    <Setter Property="Opacity" Value="0.5"/>
+                                                    <Setter Property="IsEnabled" Value="False"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+
+                                <!-- Resize Gripper -->
+                                <Thumb x:Name="LyricsResizeGripper"
+                                       Grid.Row="1"
+                                       Height="12"
+                                       Cursor="SizeNS"
+                                       DragDelta="LyricsResizeGripper_DragDelta"
+                                       Background="Transparent">
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Grid Background="Transparent">
+                                                <Border Background="#808080"
+                                                        Height="3"
+                                                        Width="40"
+                                                        CornerRadius="1.5"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Grid>
+                            <TextBlock Text="Enter your song lyrics or check Instrumental for no vocals. Drag the bar below the text area to resize."
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextMutedColor}"
+                                       Margin="0,0,0,16"
+                                       TextWrapping="Wrap"/>
+
+                            <!-- Vocal Gender Field -->
+                            <TextBlock Text="Vocal Gender"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextColor}"
+                                       Margin="0,0,0,8"/>
+                            <TextBox x:Name="VocalGenderTextBox"
+                                     Text="{Binding VocalGender, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                                      Background="{DynamicResource BackgroundColor}"
                                      Foreground="{DynamicResource TextColor}"
                                      CaretBrush="{DynamicResource TextColor}"
                                      BorderBrush="{DynamicResource BorderBrush}"
                                      BorderThickness="1"
                                      Padding="10,8"
-                                     AcceptsReturn="True"
-                                     TextWrapping="Wrap"
-                                     VerticalScrollBarVisibility="Auto"
-                                     MinHeight="150"
-                                     MaxHeight="300"
+                                     Height="36"
+                                     VerticalContentAlignment="Center"
                                      GotFocus="TextBox_GotFocus"
-                                     Margin="0,0,0,8">
-                                <TextBox.Style>
-                                    <Style TargetType="TextBox">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsInstrumental}" Value="True">
-                                                <Setter Property="Opacity" Value="0.5"/>
-                                                <Setter Property="IsEnabled" Value="False"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBox.Style>
-                            </TextBox>
-                            <TextBlock Text="Enter your song lyrics or check Instrumental for no vocals"
+                                     Margin="0,0,0,4"/>
+                            <TextBlock Text="Male or Female - will auto-select in Suno"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextMutedColor}"
+                                       Margin="0,0,0,16"
+                                       TextWrapping="Wrap"/>
+
+                            <!-- Weirdness Field -->
+                            <TextBlock Text="Weirdness"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextColor}"
+                                       Margin="0,0,0,8"/>
+                            <TextBox x:Name="WeirdnessTextBox"
+                                     Text="{Binding Weirdness, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                     Background="{DynamicResource BackgroundColor}"
+                                     Foreground="{DynamicResource TextColor}"
+                                     CaretBrush="{DynamicResource TextColor}"
+                                     BorderBrush="{DynamicResource BorderBrush}"
+                                     BorderThickness="1"
+                                     Padding="10,8"
+                                     Height="36"
+                                     VerticalContentAlignment="Center"
+                                     GotFocus="TextBox_GotFocus"
+                                     Margin="0,0,0,4"/>
+                            <TextBlock Text="0-100% - sets the Weirdness slider in Suno"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextMutedColor}"
+                                       Margin="0,0,0,16"
+                                       TextWrapping="Wrap"/>
+
+                            <!-- Style Influence Field -->
+                            <TextBlock Text="Style Influence"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextColor}"
+                                       Margin="0,0,0,8"/>
+                            <TextBox x:Name="StyleInfluenceTextBox"
+                                     Text="{Binding StyleInfluence, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                     Background="{DynamicResource BackgroundColor}"
+                                     Foreground="{DynamicResource TextColor}"
+                                     CaretBrush="{DynamicResource TextColor}"
+                                     BorderBrush="{DynamicResource BorderBrush}"
+                                     BorderThickness="1"
+                                     Padding="10,8"
+                                     Height="36"
+                                     VerticalContentAlignment="Center"
+                                     GotFocus="TextBox_GotFocus"
+                                     Margin="0,0,0,4"/>
+                            <TextBlock Text="0-100% - sets the Style Influence slider in Suno"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextMutedColor}"
+                                       Margin="0,0,0,16"
+                                       TextWrapping="Wrap"/>
+
+                            <!-- Workspace Field -->
+                            <TextBlock Text="Workspace"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextColor}"
+                                       Margin="0,0,0,8"/>
+                            <TextBox x:Name="WorkspaceTextBox"
+                                     Text="{Binding Workspace, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                     Background="{DynamicResource BackgroundColor}"
+                                     Foreground="{DynamicResource TextColor}"
+                                     CaretBrush="{DynamicResource TextColor}"
+                                     BorderBrush="{DynamicResource BorderBrush}"
+                                     BorderThickness="1"
+                                     Padding="10,8"
+                                     Height="36"
+                                     VerticalContentAlignment="Center"
+                                     GotFocus="TextBox_GotFocus"
+                                     Margin="0,0,0,4"/>
+                            <TextBlock Text="Select or create a workspace to save your song"
                                        FontSize="11"
                                        Foreground="{DynamicResource TextMutedColor}"
                                        Margin="0,0,0,16"

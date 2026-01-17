@@ -2379,6 +2379,17 @@
                                 <TextBlock Grid.Column="1" Text="Settings" VerticalAlignment="Center"/>
                             </Grid>
                         </Button>
+                        <Button Style="{StaticResource MainMenuItemStyle}" Click="MainMenu_SetDefaultBrowser_Click"
+                                AutomationProperties.Name="Set as default browser">
+                            <Grid Width="220">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="&#xE12B;" FontFamily="Segoe MDL2 Assets" FontSize="14" Width="24" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="Set as default browser" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
 
                         <Border Style="{StaticResource MainMenuSeparatorStyle}"/>
 

@@ -238,19 +238,17 @@ class JubileeSearch {
 
     return `
       <div class="result-item">
-        <div class="result-url-line">
+        <div class="result-title-row">
           <div class="result-favicon">${favicon}</div>
-          <div class="result-url-container">
-            <span class="result-site-name">${this.escapeHtml(hostname)}</span>
-            <span class="result-url">${this.escapeHtml(this.truncateUrl(displayUrl))}</span>
-          </div>
+          <a href="${this.escapeHtml(result.url)}" class="result-title" target="_blank" rel="noopener">${this.escapeHtml(result.title)}</a>
         </div>
-        <a href="${this.escapeHtml(result.url)}" class="result-title" target="_blank" rel="noopener">${this.escapeHtml(result.title)}</a>
-        <div class="result-snippet">
+        <a href="${this.escapeHtml(result.url)}" class="result-snippet-link" target="_blank" rel="noopener">
           ${this.escapeHtml(result.snippet)}
-        </div>
-        <div class="result-meta">
-          <span class="result-source-badge source-${result.source}">${result.source}</span>
+        </a>
+        <div class="result-url-line">
+          <a href="${this.escapeHtml(result.url)}" class="result-site-name-link" target="_blank" rel="noopener">${this.escapeHtml(hostname)}</a>
+          <span class="result-url-separator">›</span>
+          <a href="${this.escapeHtml(result.url)}" class="result-url-link" target="_blank" rel="noopener">${this.escapeHtml(this.truncateUrl(displayUrl))}</a>
         </div>
       </div>
     `;
@@ -419,4 +417,128 @@ class JubileeSearch {
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   window.jubileeSearch = new JubileeSearch();
+
+  // Initialize location detection for results page
+  if (document.getElementById('user-location')) {
+    initLocationDetection();
+  }
 });
+
+// Location detection for footer
+function initLocationDetection() {
+  const locationElement = document.getElementById('user-location');
+  const updateButton = document.getElementById('update-location');
+
+  // Check if we have a cached location
+  const cachedLocation = localStorage.getItem('userLocation');
+  if (cachedLocation) {
+    locationElement.textContent = cachedLocation;
+  }
+
+  // Try to get user's location
+  detectLocation();
+
+  // Update location button handler
+  if (updateButton) {
+    updateButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      locationElement.textContent = 'Updating location...';
+      detectLocation(true);
+    });
+  }
+}
+
+function detectLocation(forceRefresh = false) {
+  const locationElement = document.getElementById('user-location');
+
+  if (!navigator.geolocation) {
+    locationElement.textContent = 'Location not available';
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const { latitude, longitude } = position.coords;
+      try {
+        const locationName = await reverseGeocode(latitude, longitude);
+        locationElement.textContent = locationName;
+        localStorage.setItem('userLocation', locationName);
+      } catch (error) {
+        console.error('Geocoding error:', error);
+        locationElement.textContent = 'Location unavailable';
+      }
+    },
+    (error) => {
+      console.error('Geolocation error:', error);
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          locationElement.textContent = 'Location access denied';
+          break;
+        case error.POSITION_UNAVAILABLE:
+          locationElement.textContent = 'Location unavailable';
+          break;
+        case error.TIMEOUT:
+          locationElement.textContent = 'Location request timed out';
+          break;
+        default:
+          locationElement.textContent = 'Location unavailable';
+      }
+    },
+    {
+      enableHighAccuracy: false,
+      timeout: 10000,
+      maximumAge: forceRefresh ? 0 : 600000 // Cache for 10 minutes unless forcing refresh
+    }
+  );
+}
+
+async function reverseGeocode(latitude, longitude) {
+  // Using OpenStreetMap's Nominatim API (free, no API key required)
+  const response = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14&addressdetails=1`,
+    {
+      headers: {
+        'Accept-Language': 'en-US,en',
+        'User-Agent': 'JubileeSearch/1.0'
+      }
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Geocoding request failed');
+  }
+
+  const data = await response.json();
+
+  // Build a readable location string
+  const address = data.address || {};
+  const parts = [];
+
+  // Try to get neighborhood or suburb first, then city
+  if (address.neighbourhood) {
+    parts.push(address.neighbourhood);
+  } else if (address.suburb) {
+    parts.push(address.suburb);
+  } else if (address.village) {
+    parts.push(address.village);
+  } else if (address.town) {
+    parts.push(address.town);
+  }
+
+  // Add city if different from above
+  if (address.city && !parts.includes(address.city)) {
+    parts.push(address.city);
+  }
+
+  // Add state abbreviation
+  if (address.state) {
+    parts.push(address.state);
+  }
+
+  if (parts.length === 0) {
+    // Fallback to display name
+    return data.display_name?.split(',').slice(0, 3).join(',') || 'Unknown location';
+  }
+
+  return parts.join(', ');
+}

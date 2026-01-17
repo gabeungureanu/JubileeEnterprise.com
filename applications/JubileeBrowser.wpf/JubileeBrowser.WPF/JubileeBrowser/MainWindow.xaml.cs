@@ -3345,6 +3345,36 @@ public partial class MainWindow : Window
         NavigateTo("jubilee://settings");
     }
 
+    private void MainMenu_SetDefaultBrowser_Click(object sender, RoutedEventArgs e)
+    {
+        MainMenuPopup.IsOpen = false;
+        OpenDefaultAppsSettings();
+    }
+
+    private void OpenDefaultAppsSettings()
+    {
+        try
+        {
+            // Open Windows Settings to Default Apps page for Jubilee Browser
+            // This uses the ms-settings URI scheme to open the Default Apps settings
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "ms-settings:defaultapps",
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(psi);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Unable to open Default Apps settings: {ex.Message}\n\nYou can manually set Jubilee Browser as your default browser by going to:\nSettings > Apps > Default apps > Jubilee Browser",
+                "Set Default Browser",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information
+            );
+        }
+    }
+
     private void MainMenu_ClearBrowsingData_Click(object sender, RoutedEventArgs e)
     {
         MainMenuPopup.IsOpen = false;

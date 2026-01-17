@@ -18,8 +18,44 @@ public partial class App : Application
         // Defer app data directory creation to background (non-blocking)
         Task.Run(EnsureAppDataDirectory);
 
+        // Handle command-line arguments for default browser setup
+        if (e.Args.Length > 0)
+        {
+            var arg = e.Args[0].ToLowerInvariant();
+            if (arg == "--make-default-browser" || arg == "-make-default-browser")
+            {
+                OpenDefaultAppsSettings();
+                Shutdown();
+                return;
+            }
+            else if (arg == "--show-icons" || arg == "-show-icons" ||
+                     arg == "--hide-icons" || arg == "-hide-icons")
+            {
+                // These are Windows shell integration commands - just exit gracefully
+                Shutdown();
+                return;
+            }
+        }
+
         // Now call base to load XAML resources and show main window
         base.OnStartup(e);
+    }
+
+    private void OpenDefaultAppsSettings()
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "ms-settings:defaultapps",
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(psi);
+        }
+        catch
+        {
+            // Silently fail - user can manually open settings
+        }
     }
 
     private void EnsureAppDataDirectory()
