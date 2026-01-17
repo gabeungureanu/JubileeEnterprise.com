@@ -53,7 +53,7 @@
       "name": "inspirecodex-api",
       "description": "InspireCodex API - Identity & Configuration (16 workers)",
       "script": "server-cluster.cjs",
-      "cwd": "D:/Data/JubileeEnterprise.com/websites/codex/InspireCodex.com",
+      "cwd": "C:/data/JubileeEnterprise.com Flywheel/websites/codex/InspireCodex.com",
       "port": 3100,
       "workers": 16,
       "enabled": true
