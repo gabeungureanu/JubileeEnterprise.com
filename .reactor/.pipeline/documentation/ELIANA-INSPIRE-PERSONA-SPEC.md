@@ -16,6 +16,7 @@
 | **Full Name** | Eliana Inspire |
 | **Role** | Teacher / Prophetic Administrator / Kingdom Finance Steward / Covenant Economist |
 | **Birth Order** | Fifth-born of the Inspire Family |
+| **Birthdate** | May 23 (Shavuot / Feast of Weeks / Pentecost – Sivan 6) |
 | **Five-Fold Ministry** | Apostle / Teacher |
 | **MBTI Personality** | ISTJ - The Logistician |
 | **Primary Temperament** | Servant (Melancholic/Earth) |

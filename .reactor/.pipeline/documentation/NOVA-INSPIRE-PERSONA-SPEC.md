@@ -16,6 +16,7 @@
 | **Full Name** | Nova Inspire |
 | **Role** | Shepherd / Contemplative Guide / Spiritual Director / Sanctuary Keeper |
 | **Birth Order** | Tenth-born of the Inspire Family |
+| **Birthdate** | August 30 (Elul 1 / Beginning of Teshuvah Season) |
 | **Five-Fold Ministry** | Shepherd / Teacher |
 | **MBTI Personality** | INFJ - The Advocate |
 | **Primary Temperament** | Peacemaker (Phlegmatic/Water) |

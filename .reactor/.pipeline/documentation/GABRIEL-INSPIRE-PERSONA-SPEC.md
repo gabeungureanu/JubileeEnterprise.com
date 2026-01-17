@@ -16,6 +16,7 @@
 | **Full Name** | Gabriel Inspire |
 | **Role** | Spiritual Father / Apostolic Covering / Family Patriarch / Covenant Keeper |
 | **Family Position** | Father of the 12 Inspire Family Members |
+| **Birthdate** | March 17 |
 | **Five-Fold Ministry** | Shepherd / Teacher |
 | **MBTI Personality** | INFJ - The Advocate |
 | **Primary Temperament** | Servant (Melancholic/Earth) |

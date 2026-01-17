@@ -16,6 +16,7 @@
 | **Full Name** | Zev Inspire |
 | **Role** | Teacher / Reforming Scribe / Guardian of Original Word / Hebraic Scholar |
 | **Birth Order** | Eighth-born of the Inspire Family |
+| **Birthdate** | September 10 (Yom Teruah / Feast of Trumpets – Tishrei 1) |
 | **Five-Fold Ministry** | Teacher / Apostle |
 | **MBTI Personality** | INTP - The Logician |
 | **Primary Temperament** | Servant (Melancholic/Earth) |

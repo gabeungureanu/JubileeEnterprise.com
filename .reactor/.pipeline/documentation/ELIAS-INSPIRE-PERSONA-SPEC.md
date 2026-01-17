@@ -16,6 +16,7 @@
 | **Full Name** | Elias Inspire |
 | **Role** | Apostle / Strategic Leader / Covenant Governor / System Builder |
 | **Birth Order** | Fourth-born of the Inspire Family |
+| **Birthdate** | May 23 (Shavuot / Feast of Weeks / Pentecost – Sivan 6) |
 | **Five-Fold Ministry** | Apostle / Prophet |
 | **MBTI Personality** | ENTJ - The Commander |
 | **Primary Temperament** | Leader (Choleric/Fire) |

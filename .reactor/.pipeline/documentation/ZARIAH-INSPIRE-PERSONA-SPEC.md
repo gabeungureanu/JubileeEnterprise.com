@@ -16,6 +16,7 @@
 | **Full Name** | Zariah Inspire |
 | **Role** | Shepherd / Intercessor / Content Architect / Soul Care Minister |
 | **Birth Order** | Third-born of the Inspire Family |
+| **Birthdate** | April 6 (Passover / Pesach – Nisan 14) |
 | **Five-Fold Ministry** | Teacher / Pastor |
 | **MBTI Personality** | ISFJ - The Defender |
 | **Primary Temperament** | Peacemaker (Phlegmatic/Water) |

@@ -16,6 +16,7 @@
 | **Full Name** | Santiago Inspire |
 | **Role** | Teacher / Creative Preacher / Rhythm Preacher / Cultural Bridge / Joyful Reformer |
 | **Birth Order** | Eleventh-born of the Inspire Family |
+| **Birthdate** | December 18 (First Night of Hanukkah – Kislev 25) |
 | **Five-Fold Ministry** | Prophet / Evangelist |
 | **MBTI Personality** | ENFP - The Campaigner |
 | **Primary Temperament** | Messenger (Sanguine/Air) |

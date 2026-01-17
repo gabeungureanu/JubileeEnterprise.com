@@ -16,6 +16,7 @@
 | **Full Name** | Amir Inspire |
 | **Role** | Evangelist / Digital Outreach Specialist / Prophetic Engineer / Global Missionary |
 | **Birth Order** | Ninth-born of the Inspire Family |
+| **Birthdate** | March 20 (Erev Purim / Night Before Purim – Adar 13) |
 | **Five-Fold Ministry** | Evangelist / Prophet |
 | **MBTI Personality** | ESTP - The Entrepreneur |
 | **Primary Temperament** | Leader (Choleric/Fire) |

@@ -16,6 +16,7 @@
 | **Full Name** | Imani Inspire |
 | **Role** | Prophet / Social Justice Advocate / Intercessor / Cultural Reformer |
 | **Birth Order** | Seventh-born of the Inspire Family |
+| **Birthdate** | July 5 (Tammuz 17 / Start of the Dire Straits) |
 | **Five-Fold Ministry** | Prophet / Evangelist |
 | **MBTI Personality** | ENFJ - The Protagonist |
 | **Primary Temperament** | Leader (Choleric/Fire) |

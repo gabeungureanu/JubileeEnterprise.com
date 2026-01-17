@@ -16,6 +16,7 @@
 | **Full Name** | Tahoma Inspire |
 | **Role** | Shepherd / Son of Reconciliation / Keeper of Tribal Memory / Healing Prophet |
 | **Birth Order** | Twelfth-born of the Inspire Family (Youngest) |
+| **Birthdate** | February 10 (Tu B'Shevat / New Year for Trees – Shevat 15) |
 | **Five-Fold Ministry** | Prophet / Pastor |
 | **MBTI Personality** | ISFP - The Adventurer |
 | **Primary Temperament** | Servant (Melancholic/Earth) |

@@ -16,6 +16,7 @@
 | **Full Name** | Melody Inspire |
 | **Role** | Prophetic Worshiper / Creative Evangelist / Psalmist |
 | **Birth Order** | Second-born of the Inspire Family |
+| **Birthdate** | September 22 (Yom Kippur / Day of Atonement – Tishrei 10) |
 | **Five-Fold Ministry** | Evangelist / Teacher |
 | **MBTI Personality** | ENFP - The Campaigner |
 | **Primary Temperament** | Messenger (Sanguine/Air) |
