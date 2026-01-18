@@ -1,0 +1,15 @@
+# Jubilee Enterprise Main Target
+# ARCH-0007: WSL2 + systemd Architecture
+#
+# This is the main orchestration target that brings up all Jubilee services.
+# Start with: sudo systemctl start jubilee.target
+# Enable with: sudo systemctl enable jubilee.target
+
+[Unit]
+Description=Jubilee Enterprise Services
+Documentation=https://github.com/gabeungureanu/JubileeEnterprise.com
+Requires=jubilee-docker.target jubilee-api.target jubilee-websites.target jubilee-cloudflared.service
+After=jubilee-docker.target jubilee-api.target jubilee-websites.target
+
+[Install]
+WantedBy=multi-user.target

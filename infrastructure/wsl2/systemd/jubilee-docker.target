@@ -1,0 +1,14 @@
+# Jubilee Docker Infrastructure Target
+# ARCH-0007: WSL2 + systemd Architecture
+#
+# Groups all Docker infrastructure (PostgreSQL, Qdrant, Redis)
+
+[Unit]
+Description=Jubilee Docker Infrastructure
+Documentation=https://github.com/gabeungureanu/JubileeEnterprise.com
+Requires=docker.service
+After=docker.service
+BindsTo=jubilee-docker.service
+
+[Install]
+WantedBy=jubilee.target

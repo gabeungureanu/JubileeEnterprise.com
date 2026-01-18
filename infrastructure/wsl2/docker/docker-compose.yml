@@ -1,0 +1,178 @@
+# Jubilee Enterprise Infrastructure Stack
+# WSL2 + systemd Architecture (ARCH-0007)
+#
+# This Docker Compose file manages all infrastructure containers:
+# - PostgreSQL (Codex, Inspire, Continuum databases)
+# - Qdrant (Vector database)
+# - Redis (Cache)
+# - pgAdmin (Database management)
+#
+# Managed by jubilee-docker.service systemd unit
+
+version: '3.8'
+
+services:
+  # ============================================
+  # PostgreSQL Databases
+  # ============================================
+
+  postgres-codex:
+    image: postgres:16-alpine
+    container_name: postgres-codex
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: codex
+      POSTGRES_USER: guardian
+      POSTGRES_PASSWORD: ${CODEX_DB_PASSWORD:-askShaddai4e!}
+    volumes:
+      - codex-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guardian -d codex"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - jubilee-network
+
+  postgres-inspire:
+    image: postgres:16-alpine
+    container_name: postgres-inspire
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: inspire
+      POSTGRES_USER: guardian
+      POSTGRES_PASSWORD: ${INSPIRE_DB_PASSWORD:-askShaddai4e!}
+    volumes:
+      - inspire-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guardian -d inspire"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - jubilee-network
+
+  postgres-continuum:
+    image: postgres:16-alpine
+    container_name: postgres-continuum
+    restart: always
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: continuum
+      POSTGRES_USER: guardian
+      POSTGRES_PASSWORD: ${CONTINUUM_DB_PASSWORD:-askShaddai4e!}
+    volumes:
+      - continuum-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guardian -d continuum"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - jubilee-network
+
+  # ============================================
+  # Qdrant Vector Database
+  # ============================================
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    restart: always
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 3 bash -c '</dev/tcp/localhost/6333' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - jubilee-network
+
+  # ============================================
+  # Redis Cache
+  # ============================================
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jubilee-network
+
+  # ============================================
+  # Database Administration
+  # ============================================
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: always
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@jubileeenterprise.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      postgres-codex:
+        condition: service_healthy
+      postgres-inspire:
+        condition: service_healthy
+      postgres-continuum:
+        condition: service_healthy
+    networks:
+      - jubilee-network
+
+# ============================================
+# Networks
+# ============================================
+
+networks:
+  jubilee-network:
+    driver: bridge
+    name: jubilee-network
+
+# ============================================
+# Volumes
+# ============================================
+
+volumes:
+  codex-data:
+    name: jubilee-codex-data
+  inspire-data:
+    name: jubilee-inspire-data
+  continuum-data:
+    name: jubilee-continuum-data
+  qdrant-data:
+    name: jubilee-qdrant-data
+  redis-data:
+    name: jubilee-redis-data
+  pgadmin-data:
+    name: jubilee-pgadmin-data

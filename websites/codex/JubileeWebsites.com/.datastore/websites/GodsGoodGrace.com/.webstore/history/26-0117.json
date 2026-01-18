@@ -1,6 +1,6 @@
 {
-  "buildDate": "2026-01-17",
-  "buildTimestamp": "2026-01-17T11:04:32.315Z",
+  "buildDate": "2026-01-18",
+  "buildTimestamp": "2026-01-18T04:01:21.601Z",
   "domain": "GodsGoodGrace.com",
   "siteCode": "WEB-GODS-897082",
   "siteName": "God's Grace",
@@ -26,67 +26,49 @@
     {
       "categorySlug": "living-in-grace",
       "categoryName": "Living in Grace",
+      "articleId": "njIUjpKBwH4p",
+      "title": "God's Grace: The Key to Personal Healing",
+      "slug": "gods-grace-the-key-to-personal-healing",
+      "excerpt": "In a world filled with turmoil, God's grace offers a sanctuary of healing. Embra...",
+      "image": "images/njIUjpKBwH4p.jpg"
+    },
+    {
+      "categorySlug": "living-in-grace",
+      "categoryName": "Living in Grace",
+      "articleId": "MYD1Ob05xrzD",
+      "title": "Living with Grace: Practical Tips for Families",
+      "slug": "living-with-grace-practical-tips-for-families",
+      "excerpt": "Living with grace transforms family life into a harmonious symphony. Begin each ...",
+      "image": "images/MYD1Ob05xrzD.jpg"
+    },
+    {
+      "categorySlug": "living-in-grace",
+      "categoryName": "Living in Grace",
       "articleId": "PDZjz3rX93Yr",
       "title": "The Power of Grace in the Workplace",
       "slug": "the-power-of-grace-in-the-workplace",
       "excerpt": "Imagine a workplace where grace reigns supreme—where forgiveness and understandi...",
       "image": "images/PDZjz3rX93Yr.jpg"
-    },
-    {
-      "categorySlug": "living-in-grace",
-      "categoryName": "Living in Grace",
-      "articleId": "l5qB3loInAy7",
-      "title": "How to Live Gracefully in a Broken World",
-      "slug": "how-to-live-gracefully-in-a-broken-world",
-      "excerpt": "In a world marred by brokenness, living gracefully requires embracing God’s love...",
-      "image": "images/l5qB3loInAy7.jpg"
-    },
-    {
-      "categorySlug": "living-in-grace",
-      "categoryName": "Living in Grace",
-      "articleId": "ec2QUUIgiZ3f",
-      "title": "10 Ways God's Grace Transforms Daily Life",
-      "slug": "10-ways-gods-grace-transforms-daily-life",
-      "excerpt": "Imagine starting each day wrapped in the gentle embrace of God's grace. It trans...",
-      "image": "images/ec2QUUIgiZ3f.jpg"
     }
   ],
   "homeFeatured": [
     {
-      "articleId": "pjN7D84DGC27",
-      "title": "Embracing Grace: A Guide to Spiritual Growth",
-      "slug": "embracing-grace-a-guide-to-spiritual-growth",
+      "articleId": "l5qB3loInAy7",
+      "title": "How to Live Gracefully in a Broken World",
+      "slug": "how-to-live-gracefully-in-a-broken-world",
       "categorySlug": "living-in-grace",
       "categoryName": "Living in Grace",
-      "excerpt": "In the journey of faith, embracing grace is transformative. It calls for a heart open to receiving G...",
-      "image": "images/pjN7D84DGC27.jpg"
+      "excerpt": "In a world marred by brokenness, living gracefully requires embracing God’s love and extending it to...",
+      "image": "images/l5qB3loInAy7.jpg"
     },
     {
-      "articleId": "9cL9huk4G6jv",
-      "title": "Cultivating a Grace-Filled Mindset Every Day",
-      "slug": "cultivating-a-grace-filled-mindset-every-day",
+      "articleId": "ec2QUUIgiZ3f",
+      "title": "10 Ways God's Grace Transforms Daily Life",
+      "slug": "10-ways-gods-grace-transforms-daily-life",
       "categorySlug": "living-in-grace",
       "categoryName": "Living in Grace",
-      "excerpt": "In a world buzzing with distractions, cultivating a grace-filled mindset requires intentional focus....",
-      "image": "images/9cL9huk4G6jv.jpg"
-    },
-    {
-      "articleId": "R4gUMZMG6kkX",
-      "title": "Deep Dive: Understanding Divine Grace",
-      "slug": "deep-dive-understanding-divine-grace",
-      "categorySlug": "living-in-grace",
-      "categoryName": "Living in Grace",
-      "excerpt": "Divine grace, a cornerstone of Christian faith, invites us into a transformative relationship with G...",
-      "image": "images/R4gUMZMG6kkX.jpg"
-    },
-    {
-      "articleId": "njIUjpKBwH4p",
-      "title": "God's Grace: The Key to Personal Healing",
-      "slug": "gods-grace-the-key-to-personal-healing",
-      "categorySlug": "living-in-grace",
-      "categoryName": "Living in Grace",
-      "excerpt": "In a world filled with turmoil, God's grace offers a sanctuary of healing. Embracing this divine gif...",
-      "image": "images/njIUjpKBwH4p.jpg"
+      "excerpt": "Imagine starting each day wrapped in the gentle embrace of God's grace. It transforms mundane routin...",
+      "image": "images/ec2QUUIgiZ3f.jpg"
     },
     {
       "articleId": "K43zZlmghSHZ",
@@ -98,13 +80,22 @@
       "image": "images/K43zZlmghSHZ.jpg"
     },
     {
-      "articleId": "JdsAkC6xBGmK",
-      "title": "Grace in Action: Stories from Everyday Believers",
-      "slug": "grace-in-action-stories-from-everyday-believers",
+      "articleId": "pjN7D84DGC27",
+      "title": "Embracing Grace: A Guide to Spiritual Growth",
+      "slug": "embracing-grace-a-guide-to-spiritual-growth",
       "categorySlug": "living-in-grace",
       "categoryName": "Living in Grace",
-      "excerpt": "Every day, ordinary believers perform extraordinary acts of grace. Take Anna, who quietly pays for g...",
-      "image": "images/JdsAkC6xBGmK.jpg"
+      "excerpt": "In the journey of faith, embracing grace is transformative. It calls for a heart open to receiving G...",
+      "image": "images/pjN7D84DGC27.jpg"
+    },
+    {
+      "articleId": "R4gUMZMG6kkX",
+      "title": "Deep Dive: Understanding Divine Grace",
+      "slug": "deep-dive-understanding-divine-grace",
+      "categorySlug": "living-in-grace",
+      "categoryName": "Living in Grace",
+      "excerpt": "Divine grace, a cornerstone of Christian faith, invites us into a transformative relationship with G...",
+      "image": "images/R4gUMZMG6kkX.jpg"
     },
     {
       "articleId": "SNMJep9uD9dA",
@@ -114,6 +105,15 @@
       "categoryName": "Living in Grace",
       "excerpt": "In the Bible, grace emerges as a profound theme, illustrating God's boundless love. Consider Noah, w...",
       "image": "images/SNMJep9uD9dA.jpg"
+    },
+    {
+      "articleId": "9cL9huk4G6jv",
+      "title": "Cultivating a Grace-Filled Mindset Every Day",
+      "slug": "cultivating-a-grace-filled-mindset-every-day",
+      "categorySlug": "living-in-grace",
+      "categoryName": "Living in Grace",
+      "excerpt": "In a world buzzing with distractions, cultivating a grace-filled mindset requires intentional focus....",
+      "image": "images/9cL9huk4G6jv.jpg"
     },
     {
       "articleId": "AArSmZcnyGQn",
@@ -127,33 +127,181 @@
   ],
   "homeSpotlight": {
     "main": {
-      "articleId": "MYD1Ob05xrzD",
-      "title": "Living with Grace: Practical Tips for Families",
-      "slug": "living-with-grace-practical-tips-for-families",
+      "articleId": "JdsAkC6xBGmK",
+      "title": "Grace in Action: Stories from Everyday Believers",
+      "slug": "grace-in-action-stories-from-everyday-believers",
       "categorySlug": "living-in-grace",
       "categoryName": "Living in Grace",
-      "excerpt": "Living with grace transforms family life into a harmonious symphony. Begin each day with a prayer, inviting God's peace into your home. Practice grati...",
-      "image": "images/MYD1Ob05xrzD.jpg"
+      "excerpt": "Every day, ordinary believers perform extraordinary acts of grace. Take Anna, who quietly pays for groceries for struggling families, embodying Christ...",
+      "image": "images/JdsAkC6xBGmK.jpg"
     },
     "list": [
       {
-        "articleId": "PDZjz3rX93Yr",
-        "title": "The Power of Grace in the Workplace",
-        "slug": "the-power-of-grace-in-the-workplace",
+        "articleId": "njIUjpKBwH4p",
+        "title": "God's Grace: The Key to Personal Healing",
+        "slug": "gods-grace-the-key-to-personal-healing",
         "categorySlug": "living-in-grace",
         "categoryName": "Living in Grace",
-        "image": "images/PDZjz3rX93Yr.jpg"
+        "image": "images/njIUjpKBwH4p.jpg"
       },
       {
-        "articleId": "R4gUMZMG6kkX",
-        "title": "Deep Dive: Understanding Divine Grace",
-        "slug": "deep-dive-understanding-divine-grace",
+        "articleId": "9cL9huk4G6jv",
+        "title": "Cultivating a Grace-Filled Mindset Every Day",
+        "slug": "cultivating-a-grace-filled-mindset-every-day",
         "categorySlug": "living-in-grace",
         "categoryName": "Living in Grace",
-        "image": "images/R4gUMZMG6kkX.jpg"
+        "image": "images/9cL9huk4G6jv.jpg"
       }
     ],
     "relatedInfo": [
+      {
+        "articleId": "OaJ5pCyxf03C",
+        "title": "How to Build a Strong Christian Community",
+        "slug": "how-to-build-a-strong-christian-community",
+        "categorySlug": "community-and-fellowship",
+        "categoryName": "Community and Fellowship",
+        "excerpt": "Building a strong Christian community begins with genuine relationships. Start with open-hearted fel...",
+        "image": "images/OaJ5pCyxf03C.jpg"
+      },
+      {
+        "articleId": "Gns67bdl4U46",
+        "title": "Building Bridges: Intergenerational Church Activities",
+        "slug": "building-bridges-intergenerational-church-activities",
+        "categorySlug": "community-and-fellowship",
+        "categoryName": "Community and Fellowship",
+        "excerpt": "Imagine a church where wisdom meets youthful energy, a community thriving through intergenerational ...",
+        "image": "images/Gns67bdl4U46.jpg"
+      },
+      {
+        "articleId": "hIe2QljfWFRM",
+        "title": "10 Old Testament Stories with Modern Relevance",
+        "slug": "10-old-testament-stories-with-modern-relevance",
+        "categorySlug": "scripture-and-reflection",
+        "categoryName": "Scripture and Reflection",
+        "excerpt": "The Old Testament, a tapestry of timeless stories, speaks to modern hearts with profound relevance. ...",
+        "image": "images/hIe2QljfWFRM.jpg"
+      },
+      {
+        "articleId": "FAhwV3pFxBsp",
+        "title": "Creating Lasting Connections Through Service",
+        "slug": "creating-lasting-connections-through-service",
+        "categorySlug": "community-and-fellowship",
+        "categoryName": "Community and Fellowship",
+        "excerpt": "In a world craving genuine connection, serving others can light the path to deeper fellowship. Servi...",
+        "image": "images/FAhwV3pFxBsp.jpg"
+      }
+    ],
+    "recommended": [
+      {
+        "articleId": "ic5CA8MoBx4E",
+        "title": "Exploring the Beatitudes: Pathways to a Blessed Life",
+        "slug": "exploring-the-beatitudes-pathways-to-a-blessed-life",
+        "categorySlug": "scripture-and-reflection",
+        "categoryName": "Scripture and Reflection",
+        "excerpt": "In the heart of Matthew's Gospel, the Beatitudes unveil profound pathways to living a blessed life. ...",
+        "image": "images/ic5CA8MoBx4E.jpg"
+      },
+      {
+        "articleId": "x6DEkQ1tG4TS",
+        "title": "Why Fellowship Matters for Modern Christians",
+        "slug": "why-fellowship-matters-for-modern-christians",
+        "categorySlug": "community-and-fellowship",
+        "categoryName": "Community and Fellowship",
+        "excerpt": "In a world where virtual connections often replace face-to-face interactions, fellowship remains cru...",
+        "image": "images/x6DEkQ1tG4TS.jpg"
+      },
+      {
+        "articleId": "USo4BlHnxHZz",
+        "title": "The Power of Unity: Strengthening Church Bonds",
+        "slug": "the-power-of-unity-strengthening-church-bonds",
+        "categorySlug": "community-and-fellowship",
+        "categoryName": "Community and Fellowship",
+        "excerpt": "In the tapestry of faith, unity threads together the vibrant colors of individual believers, creatin...",
+        "image": "images/USo4BlHnxHZz.jpg"
+      },
+      {
+        "articleId": "uRw2m4gCZRi4",
+        "title": "Finding Your Place in God's Community",
+        "slug": "finding-your-place-in-gods-community",
+        "categorySlug": "community-and-fellowship",
+        "categoryName": "Community and Fellowship",
+        "excerpt": "In a world brimming with noise, finding your place in God's community can be transformative. Imagine...",
+        "image": "images/uRw2m4gCZRi4.jpg"
+      },
+      {
+        "articleId": "QBhrNJP9tEvo",
+        "title": "5 Steps to Deepen Your Bible Study Experience",
+        "slug": "5-steps-to-deepen-your-bible-study-experience",
+        "categorySlug": "scripture-and-reflection",
+        "categoryName": "Scripture and Reflection",
+        "excerpt": "Unlock the treasures of Scripture with these five transformative steps. Begin by choosing a quiet, d...",
+        "image": "images/QBhrNJP9tEvo.jpg"
+      },
+      {
+        "articleId": "lbLN1i7bPBya",
+        "title": "Discover Hope: 10 Uplifting Scriptures for Troubling Times",
+        "slug": "discover-hope-10-uplifting-scriptures-for-troubling-times",
+        "categorySlug": "scripture-and-reflection",
+        "categoryName": "Scripture and Reflection",
+        "excerpt": "In life’s storms, finding a beacon of hope can transform despair into peace. The Bible offers profou...",
+        "image": "images/lbLN1i7bPBya.jpg"
+      },
+      {
+        "articleId": "Wrxbj1FYmx4z",
+        "title": "Building Faith: Insights from Hebrews Chapter 11",
+        "slug": "building-faith-insights-from-hebrews-chapter-11",
+        "categorySlug": "scripture-and-reflection",
+        "categoryName": "Scripture and Reflection",
+        "excerpt": "Faith, the cornerstone of Christian life, is beautifully illustrated in Hebrews 11. This chapter, of...",
+        "image": "images/Wrxbj1FYmx4z.jpg"
+      },
+      {
+        "articleId": "UCudb5VsT8nh",
+        "title": "5 Ways to Foster Fellowship in Your Church",
+        "slug": "5-ways-to-foster-fellowship-in-your-church",
+        "categorySlug": "community-and-fellowship",
+        "categoryName": "Community and Fellowship",
+        "excerpt": "Building a vibrant church community starts with fostering deeper connections. Begin by hosting small...",
+        "image": "images/UCudb5VsT8nh.jpg"
+      },
+      {
+        "articleId": "OevdPi8RIF6y",
+        "title": "Understanding God's Grace: Key Verses and Reflections",
+        "slug": "understanding-gods-grace-key-verses-and-reflections",
+        "categorySlug": "scripture-and-reflection",
+        "categoryName": "Scripture and Reflection",
+        "excerpt": "God's grace, a profound mystery, is the unearned, unmerited favor showered upon us. Ephesians 2:8 re...",
+        "image": "images/OevdPi8RIF6y.jpg"
+      },
+      {
+        "articleId": "QaMyB4Oh2CK7",
+        "title": "Volunteer Opportunities That Enrich Your Faith",
+        "slug": "volunteer-opportunities-that-enrich-your-faith",
+        "categorySlug": "community-and-fellowship",
+        "categoryName": "Community and Fellowship",
+        "excerpt": "Are you seeking ways to deepen your faith while making a real impact? Volunteering offers a path to ...",
+        "image": "images/QaMyB4Oh2CK7.jpg"
+      }
+    ],
+    "mostPopular": [
+      {
+        "articleId": "OevdPi8RIF6y",
+        "title": "Understanding God's Grace: Key Verses and Reflections",
+        "slug": "understanding-gods-grace-key-verses-and-reflections",
+        "categorySlug": "scripture-and-reflection",
+        "categoryName": "Scripture and Reflection",
+        "excerpt": "God's grace, a profound mystery, is the unearned, unmerited favor showered upon us. Ephesians 2:8 re...",
+        "image": "images/OevdPi8RIF6y.jpg"
+      },
+      {
+        "articleId": "OVbgKfRBp2qO",
+        "title": "How Fellowship Deepens Your Walk with Christ",
+        "slug": "how-fellowship-deepens-your-walk-with-christ",
+        "categorySlug": "community-and-fellowship",
+        "categoryName": "Community and Fellowship",
+        "excerpt": "In the heart of fellowship lies a transformative power, deepening your walk with Christ in ways soli...",
+        "image": "images/OVbgKfRBp2qO.jpg"
+      },
       {
         "articleId": "lbLN1i7bPBya",
         "title": "Discover Hope: 10 Uplifting Scriptures for Troubling Times",
@@ -173,6 +321,53 @@
         "image": "images/OaJ5pCyxf03C.jpg"
       },
       {
+        "articleId": "QBhrNJP9tEvo",
+        "title": "5 Steps to Deepen Your Bible Study Experience",
+        "slug": "5-steps-to-deepen-your-bible-study-experience",
+        "categorySlug": "scripture-and-reflection",
+        "categoryName": "Scripture and Reflection",
+        "excerpt": "Unlock the treasures of Scripture with these five transformative steps. Begin by choosing a quiet, d...",
+        "image": "images/QBhrNJP9tEvo.jpg"
+      },
+      {
+        "articleId": "USo4BlHnxHZz",
+        "title": "The Power of Unity: Strengthening Church Bonds",
+        "slug": "the-power-of-unity-strengthening-church-bonds",
+        "categorySlug": "community-and-fellowship",
+        "categoryName": "Community and Fellowship",
+        "excerpt": "In the tapestry of faith, unity threads together the vibrant colors of individual believers, creatin...",
+        "image": "images/USo4BlHnxHZz.jpg"
+      },
+      {
+        "articleId": "ulWWcj1Qz4W1",
+        "title": "Reflecting on the Parables: Wisdom for Daily Living",
+        "slug": "reflecting-on-the-parables-wisdom-for-daily-living",
+        "categorySlug": "scripture-and-reflection",
+        "categoryName": "Scripture and Reflection",
+        "excerpt": "Parables—simple stories with profound truths—encourage us to pause and reflect. Jesus used them mast...",
+        "image": "images/ulWWcj1Qz4W1.jpg"
+      }
+    ],
+    "mustRead": [
+      {
+        "articleId": "oideHWFEb9wr",
+        "title": "Finding Joy: A Study of Philippians’ Core Messages",
+        "slug": "finding-joy-a-study-of-philippians-core-messages",
+        "categorySlug": "scripture-and-reflection",
+        "categoryName": "Scripture and Reflection",
+        "excerpt": "Philippians, a beacon of joy amidst trials, invites us to discover profound contentment through fait...",
+        "image": "images/oideHWFEb9wr.jpg"
+      },
+      {
+        "articleId": "ulWWcj1Qz4W1",
+        "title": "Reflecting on the Parables: Wisdom for Daily Living",
+        "slug": "reflecting-on-the-parables-wisdom-for-daily-living",
+        "categorySlug": "scripture-and-reflection",
+        "categoryName": "Scripture and Reflection",
+        "excerpt": "Parables—simple stories with profound truths—encourage us to pause and reflect. Jesus used them mast...",
+        "image": "images/ulWWcj1Qz4W1.jpg"
+      },
+      {
         "articleId": "uRw2m4gCZRi4",
         "title": "Finding Your Place in God's Community",
         "slug": "finding-your-place-in-gods-community",
@@ -182,210 +377,6 @@
         "image": "images/uRw2m4gCZRi4.jpg"
       },
       {
-        "articleId": "UCudb5VsT8nh",
-        "title": "5 Ways to Foster Fellowship in Your Church",
-        "slug": "5-ways-to-foster-fellowship-in-your-church",
-        "categorySlug": "community-and-fellowship",
-        "categoryName": "Community and Fellowship",
-        "excerpt": "Building a vibrant church community starts with fostering deeper connections. Begin by hosting small...",
-        "image": "images/UCudb5VsT8nh.jpg"
-      }
-    ],
-    "recommended": [
-      {
-        "articleId": "USo4BlHnxHZz",
-        "title": "The Power of Unity: Strengthening Church Bonds",
-        "slug": "the-power-of-unity-strengthening-church-bonds",
-        "categorySlug": "community-and-fellowship",
-        "categoryName": "Community and Fellowship",
-        "excerpt": "In the tapestry of faith, unity threads together the vibrant colors of individual believers, creatin...",
-        "image": "images/USo4BlHnxHZz.jpg"
-      },
-      {
-        "articleId": "ic5CA8MoBx4E",
-        "title": "Exploring the Beatitudes: Pathways to a Blessed Life",
-        "slug": "exploring-the-beatitudes-pathways-to-a-blessed-life",
-        "categorySlug": "scripture-and-reflection",
-        "categoryName": "Scripture and Reflection",
-        "excerpt": "In the heart of Matthew's Gospel, the Beatitudes unveil profound pathways to living a blessed life. ...",
-        "image": "images/ic5CA8MoBx4E.jpg"
-      },
-      {
-        "articleId": "OVbgKfRBp2qO",
-        "title": "How Fellowship Deepens Your Walk with Christ",
-        "slug": "how-fellowship-deepens-your-walk-with-christ",
-        "categorySlug": "community-and-fellowship",
-        "categoryName": "Community and Fellowship",
-        "excerpt": "In the heart of fellowship lies a transformative power, deepening your walk with Christ in ways soli...",
-        "image": "images/OVbgKfRBp2qO.jpg"
-      },
-      {
-        "articleId": "AhfEApm05ldh",
-        "title": "Lessons from the Apostles: Faithful Servants of God",
-        "slug": "lessons-from-the-apostles-faithful-servants-of-god",
-        "categorySlug": "scripture-and-reflection",
-        "categoryName": "Scripture and Reflection",
-        "excerpt": "The apostles, pillars of early Christianity, are timeless examples of unwavering faith and dedicatio...",
-        "image": "images/AhfEApm05ldh.jpg"
-      },
-      {
-        "articleId": "oideHWFEb9wr",
-        "title": "Finding Joy: A Study of Philippians’ Core Messages",
-        "slug": "finding-joy-a-study-of-philippians-core-messages",
-        "categorySlug": "scripture-and-reflection",
-        "categoryName": "Scripture and Reflection",
-        "excerpt": "Philippians, a beacon of joy amidst trials, invites us to discover profound contentment through fait...",
-        "image": "images/oideHWFEb9wr.jpg"
-      },
-      {
-        "articleId": "hIe2QljfWFRM",
-        "title": "10 Old Testament Stories with Modern Relevance",
-        "slug": "10-old-testament-stories-with-modern-relevance",
-        "categorySlug": "scripture-and-reflection",
-        "categoryName": "Scripture and Reflection",
-        "excerpt": "The Old Testament, a tapestry of timeless stories, speaks to modern hearts with profound relevance. ...",
-        "image": "images/hIe2QljfWFRM.jpg"
-      },
-      {
-        "articleId": "x6DEkQ1tG4TS",
-        "title": "Why Fellowship Matters for Modern Christians",
-        "slug": "why-fellowship-matters-for-modern-christians",
-        "categorySlug": "community-and-fellowship",
-        "categoryName": "Community and Fellowship",
-        "excerpt": "In a world where virtual connections often replace face-to-face interactions, fellowship remains cru...",
-        "image": "images/x6DEkQ1tG4TS.jpg"
-      },
-      {
-        "articleId": "OevdPi8RIF6y",
-        "title": "Understanding God's Grace: Key Verses and Reflections",
-        "slug": "understanding-gods-grace-key-verses-and-reflections",
-        "categorySlug": "scripture-and-reflection",
-        "categoryName": "Scripture and Reflection",
-        "excerpt": "God's grace, a profound mystery, is the unearned, unmerited favor showered upon us. Ephesians 2:8 re...",
-        "image": "images/OevdPi8RIF6y.jpg"
-      },
-      {
-        "articleId": "ulWWcj1Qz4W1",
-        "title": "Reflecting on the Parables: Wisdom for Daily Living",
-        "slug": "reflecting-on-the-parables-wisdom-for-daily-living",
-        "categorySlug": "scripture-and-reflection",
-        "categoryName": "Scripture and Reflection",
-        "excerpt": "Parables—simple stories with profound truths—encourage us to pause and reflect. Jesus used them mast...",
-        "image": "images/ulWWcj1Qz4W1.jpg"
-      },
-      {
-        "articleId": "FAhwV3pFxBsp",
-        "title": "Creating Lasting Connections Through Service",
-        "slug": "creating-lasting-connections-through-service",
-        "categorySlug": "community-and-fellowship",
-        "categoryName": "Community and Fellowship",
-        "excerpt": "In a world craving genuine connection, serving others can light the path to deeper fellowship. Servi...",
-        "image": "images/FAhwV3pFxBsp.jpg"
-      }
-    ],
-    "mostPopular": [
-      {
-        "articleId": "Gns67bdl4U46",
-        "title": "Building Bridges: Intergenerational Church Activities",
-        "slug": "building-bridges-intergenerational-church-activities",
-        "categorySlug": "community-and-fellowship",
-        "categoryName": "Community and Fellowship",
-        "excerpt": "Imagine a church where wisdom meets youthful energy, a community thriving through intergenerational ...",
-        "image": "images/Gns67bdl4U46.jpg"
-      },
-      {
-        "articleId": "aAe7E0f5Copf",
-        "title": "Understanding the Biblical Basis for Community",
-        "slug": "understanding-the-biblical-basis-for-community",
-        "categorySlug": "community-and-fellowship",
-        "categoryName": "Community and Fellowship",
-        "excerpt": "In the Bible, community isn't just a suggestion—it's a divine mandate. From the early church in Acts...",
-        "image": "images/aAe7E0f5Copf.jpg"
-      },
-      {
-        "articleId": "gbtx1Fls9vB6",
-        "title": "Journey Through the Gospels: A Reflective Study Guide",
-        "slug": "journey-through-the-gospels-a-reflective-study-guide",
-        "categorySlug": "scripture-and-reflection",
-        "categoryName": "Scripture and Reflection",
-        "excerpt": "Embark on a transformative journey through the Gospels, where ancient wisdom meets modern reflection...",
-        "image": "images/gbtx1Fls9vB6.jpg"
-      },
-      {
-        "articleId": "ic5CA8MoBx4E",
-        "title": "Exploring the Beatitudes: Pathways to a Blessed Life",
-        "slug": "exploring-the-beatitudes-pathways-to-a-blessed-life",
-        "categorySlug": "scripture-and-reflection",
-        "categoryName": "Scripture and Reflection",
-        "excerpt": "In the heart of Matthew's Gospel, the Beatitudes unveil profound pathways to living a blessed life. ...",
-        "image": "images/ic5CA8MoBx4E.jpg"
-      },
-      {
-        "articleId": "UCudb5VsT8nh",
-        "title": "5 Ways to Foster Fellowship in Your Church",
-        "slug": "5-ways-to-foster-fellowship-in-your-church",
-        "categorySlug": "community-and-fellowship",
-        "categoryName": "Community and Fellowship",
-        "excerpt": "Building a vibrant church community starts with fostering deeper connections. Begin by hosting small...",
-        "image": "images/UCudb5VsT8nh.jpg"
-      },
-      {
-        "articleId": "OVbgKfRBp2qO",
-        "title": "How Fellowship Deepens Your Walk with Christ",
-        "slug": "how-fellowship-deepens-your-walk-with-christ",
-        "categorySlug": "community-and-fellowship",
-        "categoryName": "Community and Fellowship",
-        "excerpt": "In the heart of fellowship lies a transformative power, deepening your walk with Christ in ways soli...",
-        "image": "images/OVbgKfRBp2qO.jpg"
-      },
-      {
-        "articleId": "VaMWZY52j30n",
-        "title": "10 Inspiring Stories of Faith in Fellowship",
-        "slug": "10-inspiring-stories-of-faith-in-fellowship",
-        "categorySlug": "community-and-fellowship",
-        "categoryName": "Community and Fellowship",
-        "excerpt": "In a world yearning for connection, stories of faith in fellowship illuminate paths of hope and unit...",
-        "image": "images/VaMWZY52j30n.jpg"
-      }
-    ],
-    "mustRead": [
-      {
-        "articleId": "OVbgKfRBp2qO",
-        "title": "How Fellowship Deepens Your Walk with Christ",
-        "slug": "how-fellowship-deepens-your-walk-with-christ",
-        "categorySlug": "community-and-fellowship",
-        "categoryName": "Community and Fellowship",
-        "excerpt": "In the heart of fellowship lies a transformative power, deepening your walk with Christ in ways soli...",
-        "image": "images/OVbgKfRBp2qO.jpg"
-      },
-      {
-        "articleId": "ic5CA8MoBx4E",
-        "title": "Exploring the Beatitudes: Pathways to a Blessed Life",
-        "slug": "exploring-the-beatitudes-pathways-to-a-blessed-life",
-        "categorySlug": "scripture-and-reflection",
-        "categoryName": "Scripture and Reflection",
-        "excerpt": "In the heart of Matthew's Gospel, the Beatitudes unveil profound pathways to living a blessed life. ...",
-        "image": "images/ic5CA8MoBx4E.jpg"
-      },
-      {
-        "articleId": "oideHWFEb9wr",
-        "title": "Finding Joy: A Study of Philippians’ Core Messages",
-        "slug": "finding-joy-a-study-of-philippians-core-messages",
-        "categorySlug": "scripture-and-reflection",
-        "categoryName": "Scripture and Reflection",
-        "excerpt": "Philippians, a beacon of joy amidst trials, invites us to discover profound contentment through fait...",
-        "image": "images/oideHWFEb9wr.jpg"
-      },
-      {
-        "articleId": "ulWWcj1Qz4W1",
-        "title": "Reflecting on the Parables: Wisdom for Daily Living",
-        "slug": "reflecting-on-the-parables-wisdom-for-daily-living",
-        "categorySlug": "scripture-and-reflection",
-        "categoryName": "Scripture and Reflection",
-        "excerpt": "Parables—simple stories with profound truths—encourage us to pause and reflect. Jesus used them mast...",
-        "image": "images/ulWWcj1Qz4W1.jpg"
-      },
-      {
         "articleId": "PM8pYPD6l6EI",
         "title": "The Role of Small Groups in Spiritual Growth",
         "slug": "the-role-of-small-groups-in-spiritual-growth",
@@ -393,35 +384,6 @@
         "categoryName": "Community and Fellowship",
         "excerpt": "Small groups ignite spiritual growth by fostering deep connections and shared journeys in faith. Wit...",
         "image": "images/PM8pYPD6l6EI.jpg"
-      },
-      {
-        "articleId": "USo4BlHnxHZz",
-        "title": "The Power of Unity: Strengthening Church Bonds",
-        "slug": "the-power-of-unity-strengthening-church-bonds",
-        "categorySlug": "community-and-fellowship",
-        "categoryName": "Community and Fellowship",
-        "excerpt": "In the tapestry of faith, unity threads together the vibrant colors of individual believers, creatin...",
-        "image": "images/USo4BlHnxHZz.jpg"
-      },
-      {
-        "articleId": "E51GpnWq9o8X",
-        "title": "The Power of Prayer: Insights from Scripture",
-        "slug": "the-power-of-prayer-insights-from-scripture",
-        "categorySlug": "scripture-and-reflection",
-        "categoryName": "Scripture and Reflection",
-        "excerpt": "Prayer is a powerful connection bridging the divine and the earthly. Throughout Scripture, from Davi...",
-        "image": "images/E51GpnWq9o8X.jpg"
-      }
-    ],
-    "youMightLike": [
-      {
-        "articleId": "aAe7E0f5Copf",
-        "title": "Understanding the Biblical Basis for Community",
-        "slug": "understanding-the-biblical-basis-for-community",
-        "categorySlug": "community-and-fellowship",
-        "categoryName": "Community and Fellowship",
-        "excerpt": "In the Bible, community isn't just a suggestion—it's a divine mandate. From the early church in Acts...",
-        "image": "images/aAe7E0f5Copf.jpg"
       },
       {
         "articleId": "AhfEApm05ldh",
@@ -442,22 +404,60 @@
         "image": "images/lbLN1i7bPBya.jpg"
       },
       {
-        "articleId": "VaMWZY52j30n",
-        "title": "10 Inspiring Stories of Faith in Fellowship",
-        "slug": "10-inspiring-stories-of-faith-in-fellowship",
-        "categorySlug": "community-and-fellowship",
-        "categoryName": "Community and Fellowship",
-        "excerpt": "In a world yearning for connection, stories of faith in fellowship illuminate paths of hope and unit...",
-        "image": "images/VaMWZY52j30n.jpg"
+        "articleId": "OevdPi8RIF6y",
+        "title": "Understanding God's Grace: Key Verses and Reflections",
+        "slug": "understanding-gods-grace-key-verses-and-reflections",
+        "categorySlug": "scripture-and-reflection",
+        "categoryName": "Scripture and Reflection",
+        "excerpt": "God's grace, a profound mystery, is the unearned, unmerited favor showered upon us. Ephesians 2:8 re...",
+        "image": "images/OevdPi8RIF6y.jpg"
+      }
+    ],
+    "youMightLike": [
+      {
+        "articleId": "gbtx1Fls9vB6",
+        "title": "Journey Through the Gospels: A Reflective Study Guide",
+        "slug": "journey-through-the-gospels-a-reflective-study-guide",
+        "categorySlug": "scripture-and-reflection",
+        "categoryName": "Scripture and Reflection",
+        "excerpt": "Embark on a transformative journey through the Gospels, where ancient wisdom meets modern reflection...",
+        "image": "images/gbtx1Fls9vB6.jpg"
       },
       {
-        "articleId": "Gns67bdl4U46",
-        "title": "Building Bridges: Intergenerational Church Activities",
-        "slug": "building-bridges-intergenerational-church-activities",
+        "articleId": "oideHWFEb9wr",
+        "title": "Finding Joy: A Study of Philippians’ Core Messages",
+        "slug": "finding-joy-a-study-of-philippians-core-messages",
+        "categorySlug": "scripture-and-reflection",
+        "categoryName": "Scripture and Reflection",
+        "excerpt": "Philippians, a beacon of joy amidst trials, invites us to discover profound contentment through fait...",
+        "image": "images/oideHWFEb9wr.jpg"
+      },
+      {
+        "articleId": "AhfEApm05ldh",
+        "title": "Lessons from the Apostles: Faithful Servants of God",
+        "slug": "lessons-from-the-apostles-faithful-servants-of-god",
+        "categorySlug": "scripture-and-reflection",
+        "categoryName": "Scripture and Reflection",
+        "excerpt": "The apostles, pillars of early Christianity, are timeless examples of unwavering faith and dedicatio...",
+        "image": "images/AhfEApm05ldh.jpg"
+      },
+      {
+        "articleId": "uRw2m4gCZRi4",
+        "title": "Finding Your Place in God's Community",
+        "slug": "finding-your-place-in-gods-community",
         "categorySlug": "community-and-fellowship",
         "categoryName": "Community and Fellowship",
-        "excerpt": "Imagine a church where wisdom meets youthful energy, a community thriving through intergenerational ...",
-        "image": "images/Gns67bdl4U46.jpg"
+        "excerpt": "In a world brimming with noise, finding your place in God's community can be transformative. Imagine...",
+        "image": "images/uRw2m4gCZRi4.jpg"
+      },
+      {
+        "articleId": "FAhwV3pFxBsp",
+        "title": "Creating Lasting Connections Through Service",
+        "slug": "creating-lasting-connections-through-service",
+        "categorySlug": "community-and-fellowship",
+        "categoryName": "Community and Fellowship",
+        "excerpt": "In a world craving genuine connection, serving others can light the path to deeper fellowship. Servi...",
+        "image": "images/FAhwV3pFxBsp.jpg"
       }
     ]
   },
@@ -465,48 +465,48 @@
     "living-in-grace": {
       "hero": [
         {
-          "articleId": "AArSmZcnyGQn",
-          "title": "Finding Grace in Challenging Relationships",
-          "slug": "finding-grace-in-challenging-relationships",
-          "excerpt": "Navigating challenging relationships can feel like walking through a storm. Yet,...",
-          "image": "images/AArSmZcnyGQn.jpg"
-        },
-        {
-          "articleId": "ec2QUUIgiZ3f",
-          "title": "10 Ways God's Grace Transforms Daily Life",
-          "slug": "10-ways-gods-grace-transforms-daily-life",
-          "excerpt": "Imagine starting each day wrapped in the gentle embrace of God's grace. It trans...",
-          "image": "images/ec2QUUIgiZ3f.jpg"
-        },
-        {
-          "articleId": "PDZjz3rX93Yr",
-          "title": "The Power of Grace in the Workplace",
-          "slug": "the-power-of-grace-in-the-workplace",
-          "excerpt": "Imagine a workplace where grace reigns supreme—where forgiveness and understandi...",
-          "image": "images/PDZjz3rX93Yr.jpg"
-        }
-      ],
-      "featured": [
-        {
-          "articleId": "l5qB3loInAy7",
-          "title": "How to Live Gracefully in a Broken World",
-          "slug": "how-to-live-gracefully-in-a-broken-world",
-          "excerpt": "In a world marred by brokenness, living gracefully requires embracing God’s love and extending it to...",
-          "image": "images/l5qB3loInAy7.jpg"
-        },
-        {
           "articleId": "SNMJep9uD9dA",
           "title": "7 Biblical Stories of Grace in Action",
           "slug": "7-biblical-stories-of-grace-in-action",
-          "excerpt": "In the Bible, grace emerges as a profound theme, illustrating God's boundless love. Consider Noah, w...",
+          "excerpt": "In the Bible, grace emerges as a profound theme, illustrating God's boundless lo...",
           "image": "images/SNMJep9uD9dA.jpg"
         },
         {
           "articleId": "K43zZlmghSHZ",
           "title": "Exploring Grace: Theological Insights for Today",
           "slug": "exploring-grace-theological-insights-for-today",
-          "excerpt": "In the hustle of modern life, grace stands as a gentle whisper, reminding us of God’s unmerited favo...",
+          "excerpt": "In the hustle of modern life, grace stands as a gentle whisper, reminding us of ...",
           "image": "images/K43zZlmghSHZ.jpg"
+        },
+        {
+          "articleId": "pjN7D84DGC27",
+          "title": "Embracing Grace: A Guide to Spiritual Growth",
+          "slug": "embracing-grace-a-guide-to-spiritual-growth",
+          "excerpt": "In the journey of faith, embracing grace is transformative. It calls for a heart...",
+          "image": "images/pjN7D84DGC27.jpg"
+        }
+      ],
+      "featured": [
+        {
+          "articleId": "PDZjz3rX93Yr",
+          "title": "The Power of Grace in the Workplace",
+          "slug": "the-power-of-grace-in-the-workplace",
+          "excerpt": "Imagine a workplace where grace reigns supreme—where forgiveness and understanding replace criticism...",
+          "image": "images/PDZjz3rX93Yr.jpg"
+        },
+        {
+          "articleId": "MYD1Ob05xrzD",
+          "title": "Living with Grace: Practical Tips for Families",
+          "slug": "living-with-grace-practical-tips-for-families",
+          "excerpt": "Living with grace transforms family life into a harmonious symphony. Begin each day with a prayer, i...",
+          "image": "images/MYD1Ob05xrzD.jpg"
+        },
+        {
+          "articleId": "l5qB3loInAy7",
+          "title": "How to Live Gracefully in a Broken World",
+          "slug": "how-to-live-gracefully-in-a-broken-world",
+          "excerpt": "In a world marred by brokenness, living gracefully requires embracing God’s love and extending it to...",
+          "image": "images/l5qB3loInAy7.jpg"
         },
         {
           "articleId": "njIUjpKBwH4p",
@@ -523,6 +523,13 @@
           "image": "images/JdsAkC6xBGmK.jpg"
         },
         {
+          "articleId": "AArSmZcnyGQn",
+          "title": "Finding Grace in Challenging Relationships",
+          "slug": "finding-grace-in-challenging-relationships",
+          "excerpt": "Navigating challenging relationships can feel like walking through a storm. Yet, grace is our compas...",
+          "image": "images/AArSmZcnyGQn.jpg"
+        },
+        {
           "articleId": "9cL9huk4G6jv",
           "title": "Cultivating a Grace-Filled Mindset Every Day",
           "slug": "cultivating-a-grace-filled-mindset-every-day",
@@ -530,40 +537,33 @@
           "image": "images/9cL9huk4G6jv.jpg"
         },
         {
-          "articleId": "pjN7D84DGC27",
-          "title": "Embracing Grace: A Guide to Spiritual Growth",
-          "slug": "embracing-grace-a-guide-to-spiritual-growth",
-          "excerpt": "In the journey of faith, embracing grace is transformative. It calls for a heart open to receiving G...",
-          "image": "images/pjN7D84DGC27.jpg"
-        },
-        {
-          "articleId": "R4gUMZMG6kkX",
-          "title": "Deep Dive: Understanding Divine Grace",
-          "slug": "deep-dive-understanding-divine-grace",
-          "excerpt": "Divine grace, a cornerstone of Christian faith, invites us into a transformative relationship with G...",
-          "image": "images/R4gUMZMG6kkX.jpg"
+          "articleId": "ec2QUUIgiZ3f",
+          "title": "10 Ways God's Grace Transforms Daily Life",
+          "slug": "10-ways-gods-grace-transforms-daily-life",
+          "excerpt": "Imagine starting each day wrapped in the gentle embrace of God's grace. It transforms mundane routin...",
+          "image": "images/ec2QUUIgiZ3f.jpg"
         }
       ],
       "spotlight": {
         "main": {
-          "articleId": "MYD1Ob05xrzD",
-          "title": "Living with Grace: Practical Tips for Families",
-          "slug": "living-with-grace-practical-tips-for-families",
-          "excerpt": "Living with grace transforms family life into a harmonious symphony. Begin each day with a prayer, inviting God's peace into your home. Practice grati...",
-          "image": "images/MYD1Ob05xrzD.jpg"
+          "articleId": "R4gUMZMG6kkX",
+          "title": "Deep Dive: Understanding Divine Grace",
+          "slug": "deep-dive-understanding-divine-grace",
+          "excerpt": "Divine grace, a cornerstone of Christian faith, invites us into a transformative relationship with God. Imagine a gift, unsolicited yet life-changing,...",
+          "image": "images/R4gUMZMG6kkX.jpg"
         },
         "list": [
           {
-            "articleId": "njIUjpKBwH4p",
-            "title": "God's Grace: The Key to Personal Healing",
-            "slug": "gods-grace-the-key-to-personal-healing",
-            "image": "images/njIUjpKBwH4p.jpg"
+            "articleId": "R4gUMZMG6kkX",
+            "title": "Deep Dive: Understanding Divine Grace",
+            "slug": "deep-dive-understanding-divine-grace",
+            "image": "images/R4gUMZMG6kkX.jpg"
           },
           {
-            "articleId": "9cL9huk4G6jv",
-            "title": "Cultivating a Grace-Filled Mindset Every Day",
-            "slug": "cultivating-a-grace-filled-mindset-every-day",
-            "image": "images/9cL9huk4G6jv.jpg"
+            "articleId": "JdsAkC6xBGmK",
+            "title": "Grace in Action: Stories from Everyday Believers",
+            "slug": "grace-in-action-stories-from-everyday-believers",
+            "image": "images/JdsAkC6xBGmK.jpg"
           }
         ]
       },
@@ -576,44 +576,6 @@
           "categoryName": "Scripture and Reflection",
           "excerpt": "Unlock the treasures of Scripture with these five transformative steps. Begin by choosing a quiet, d...",
           "image": "images/QBhrNJP9tEvo.jpg"
-        },
-        {
-          "articleId": "VaMWZY52j30n",
-          "title": "10 Inspiring Stories of Faith in Fellowship",
-          "slug": "10-inspiring-stories-of-faith-in-fellowship",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "In a world yearning for connection, stories of faith in fellowship illuminate paths of hope and unit...",
-          "image": "images/VaMWZY52j30n.jpg"
-        },
-        {
-          "articleId": "OaJ5pCyxf03C",
-          "title": "How to Build a Strong Christian Community",
-          "slug": "how-to-build-a-strong-christian-community",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "Building a strong Christian community begins with genuine relationships. Start with open-hearted fel...",
-          "image": "images/OaJ5pCyxf03C.jpg"
-        },
-        {
-          "articleId": "ulWWcj1Qz4W1",
-          "title": "Reflecting on the Parables: Wisdom for Daily Living",
-          "slug": "reflecting-on-the-parables-wisdom-for-daily-living",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "Parables—simple stories with profound truths—encourage us to pause and reflect. Jesus used them mast...",
-          "image": "images/ulWWcj1Qz4W1.jpg"
-        }
-      ],
-      "recommended": [
-        {
-          "articleId": "QaMyB4Oh2CK7",
-          "title": "Volunteer Opportunities That Enrich Your Faith",
-          "slug": "volunteer-opportunities-that-enrich-your-faith",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "Are you seeking ways to deepen your faith while making a real impact? Volunteering offers a path to ...",
-          "image": "images/QaMyB4Oh2CK7.jpg"
         },
         {
           "articleId": "oideHWFEb9wr",
@@ -634,237 +596,6 @@
           "image": "images/ic5CA8MoBx4E.jpg"
         },
         {
-          "articleId": "uRw2m4gCZRi4",
-          "title": "Finding Your Place in God's Community",
-          "slug": "finding-your-place-in-gods-community",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "In a world brimming with noise, finding your place in God's community can be transformative. Imagine...",
-          "image": "images/uRw2m4gCZRi4.jpg"
-        },
-        {
-          "articleId": "Wrxbj1FYmx4z",
-          "title": "Building Faith: Insights from Hebrews Chapter 11",
-          "slug": "building-faith-insights-from-hebrews-chapter-11",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "Faith, the cornerstone of Christian life, is beautifully illustrated in Hebrews 11. This chapter, of...",
-          "image": "images/Wrxbj1FYmx4z.jpg"
-        },
-        {
-          "articleId": "0rVLRGZNrrxg",
-          "title": "How to Reflect on Psalm 23 for Inner Peace",
-          "slug": "how-to-reflect-on-psalm-23-for-inner-peace",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "In a world brimming with chaos, Psalm 23 offers a sanctuary of peace. Begin by reciting its verses s...",
-          "image": "images/0rVLRGZNrrxg.jpg"
-        },
-        {
-          "articleId": "hIe2QljfWFRM",
-          "title": "10 Old Testament Stories with Modern Relevance",
-          "slug": "10-old-testament-stories-with-modern-relevance",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "The Old Testament, a tapestry of timeless stories, speaks to modern hearts with profound relevance. ...",
-          "image": "images/hIe2QljfWFRM.jpg"
-        },
-        {
-          "articleId": "E51GpnWq9o8X",
-          "title": "The Power of Prayer: Insights from Scripture",
-          "slug": "the-power-of-prayer-insights-from-scripture",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "Prayer is a powerful connection bridging the divine and the earthly. Throughout Scripture, from Davi...",
-          "image": "images/E51GpnWq9o8X.jpg"
-        },
-        {
-          "articleId": "UCudb5VsT8nh",
-          "title": "5 Ways to Foster Fellowship in Your Church",
-          "slug": "5-ways-to-foster-fellowship-in-your-church",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "Building a vibrant church community starts with fostering deeper connections. Begin by hosting small...",
-          "image": "images/UCudb5VsT8nh.jpg"
-        },
-        {
-          "articleId": "FAhwV3pFxBsp",
-          "title": "Creating Lasting Connections Through Service",
-          "slug": "creating-lasting-connections-through-service",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "In a world craving genuine connection, serving others can light the path to deeper fellowship. Servi...",
-          "image": "images/FAhwV3pFxBsp.jpg"
-        }
-      ],
-      "mostPopular": [
-        {
-          "articleId": "lbLN1i7bPBya",
-          "title": "Discover Hope: 10 Uplifting Scriptures for Troubling Times",
-          "slug": "discover-hope-10-uplifting-scriptures-for-troubling-times",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "In life’s storms, finding a beacon of hope can transform despair into peace. The Bible offers profou...",
-          "image": "images/lbLN1i7bPBya.jpg"
-        },
-        {
-          "articleId": "OaJ5pCyxf03C",
-          "title": "How to Build a Strong Christian Community",
-          "slug": "how-to-build-a-strong-christian-community",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "Building a strong Christian community begins with genuine relationships. Start with open-hearted fel...",
-          "image": "images/OaJ5pCyxf03C.jpg"
-        },
-        {
-          "articleId": "AhfEApm05ldh",
-          "title": "Lessons from the Apostles: Faithful Servants of God",
-          "slug": "lessons-from-the-apostles-faithful-servants-of-god",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "The apostles, pillars of early Christianity, are timeless examples of unwavering faith and dedicatio...",
-          "image": "images/AhfEApm05ldh.jpg"
-        },
-        {
-          "articleId": "hIe2QljfWFRM",
-          "title": "10 Old Testament Stories with Modern Relevance",
-          "slug": "10-old-testament-stories-with-modern-relevance",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "The Old Testament, a tapestry of timeless stories, speaks to modern hearts with profound relevance. ...",
-          "image": "images/hIe2QljfWFRM.jpg"
-        },
-        {
-          "articleId": "ic5CA8MoBx4E",
-          "title": "Exploring the Beatitudes: Pathways to a Blessed Life",
-          "slug": "exploring-the-beatitudes-pathways-to-a-blessed-life",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "In the heart of Matthew's Gospel, the Beatitudes unveil profound pathways to living a blessed life. ...",
-          "image": "images/ic5CA8MoBx4E.jpg"
-        },
-        {
-          "articleId": "gbtx1Fls9vB6",
-          "title": "Journey Through the Gospels: A Reflective Study Guide",
-          "slug": "journey-through-the-gospels-a-reflective-study-guide",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "Embark on a transformative journey through the Gospels, where ancient wisdom meets modern reflection...",
-          "image": "images/gbtx1Fls9vB6.jpg"
-        },
-        {
-          "articleId": "0rVLRGZNrrxg",
-          "title": "How to Reflect on Psalm 23 for Inner Peace",
-          "slug": "how-to-reflect-on-psalm-23-for-inner-peace",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "In a world brimming with chaos, Psalm 23 offers a sanctuary of peace. Begin by reciting its verses s...",
-          "image": "images/0rVLRGZNrrxg.jpg"
-        }
-      ],
-      "mustRead": [
-        {
-          "articleId": "USo4BlHnxHZz",
-          "title": "The Power of Unity: Strengthening Church Bonds",
-          "slug": "the-power-of-unity-strengthening-church-bonds",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "In the tapestry of faith, unity threads together the vibrant colors of individual believers, creatin...",
-          "image": "images/USo4BlHnxHZz.jpg"
-        },
-        {
-          "articleId": "OVbgKfRBp2qO",
-          "title": "How Fellowship Deepens Your Walk with Christ",
-          "slug": "how-fellowship-deepens-your-walk-with-christ",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "In the heart of fellowship lies a transformative power, deepening your walk with Christ in ways soli...",
-          "image": "images/OVbgKfRBp2qO.jpg"
-        },
-        {
-          "articleId": "QaMyB4Oh2CK7",
-          "title": "Volunteer Opportunities That Enrich Your Faith",
-          "slug": "volunteer-opportunities-that-enrich-your-faith",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "Are you seeking ways to deepen your faith while making a real impact? Volunteering offers a path to ...",
-          "image": "images/QaMyB4Oh2CK7.jpg"
-        },
-        {
-          "articleId": "ic5CA8MoBx4E",
-          "title": "Exploring the Beatitudes: Pathways to a Blessed Life",
-          "slug": "exploring-the-beatitudes-pathways-to-a-blessed-life",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "In the heart of Matthew's Gospel, the Beatitudes unveil profound pathways to living a blessed life. ...",
-          "image": "images/ic5CA8MoBx4E.jpg"
-        },
-        {
-          "articleId": "gbtx1Fls9vB6",
-          "title": "Journey Through the Gospels: A Reflective Study Guide",
-          "slug": "journey-through-the-gospels-a-reflective-study-guide",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "Embark on a transformative journey through the Gospels, where ancient wisdom meets modern reflection...",
-          "image": "images/gbtx1Fls9vB6.jpg"
-        },
-        {
-          "articleId": "AhfEApm05ldh",
-          "title": "Lessons from the Apostles: Faithful Servants of God",
-          "slug": "lessons-from-the-apostles-faithful-servants-of-god",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "The apostles, pillars of early Christianity, are timeless examples of unwavering faith and dedicatio...",
-          "image": "images/AhfEApm05ldh.jpg"
-        },
-        {
-          "articleId": "0rVLRGZNrrxg",
-          "title": "How to Reflect on Psalm 23 for Inner Peace",
-          "slug": "how-to-reflect-on-psalm-23-for-inner-peace",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "In a world brimming with chaos, Psalm 23 offers a sanctuary of peace. Begin by reciting its verses s...",
-          "image": "images/0rVLRGZNrrxg.jpg"
-        }
-      ],
-      "youMightLike": [
-        {
-          "articleId": "OaJ5pCyxf03C",
-          "title": "How to Build a Strong Christian Community",
-          "slug": "how-to-build-a-strong-christian-community",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "Building a strong Christian community begins with genuine relationships. Start with open-hearted fel...",
-          "image": "images/OaJ5pCyxf03C.jpg"
-        },
-        {
-          "articleId": "hIe2QljfWFRM",
-          "title": "10 Old Testament Stories with Modern Relevance",
-          "slug": "10-old-testament-stories-with-modern-relevance",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "The Old Testament, a tapestry of timeless stories, speaks to modern hearts with profound relevance. ...",
-          "image": "images/hIe2QljfWFRM.jpg"
-        },
-        {
-          "articleId": "FAhwV3pFxBsp",
-          "title": "Creating Lasting Connections Through Service",
-          "slug": "creating-lasting-connections-through-service",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "In a world craving genuine connection, serving others can light the path to deeper fellowship. Servi...",
-          "image": "images/FAhwV3pFxBsp.jpg"
-        },
-        {
-          "articleId": "ulWWcj1Qz4W1",
-          "title": "Reflecting on the Parables: Wisdom for Daily Living",
-          "slug": "reflecting-on-the-parables-wisdom-for-daily-living",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "Parables—simple stories with profound truths—encourage us to pause and reflect. Jesus used them mast...",
-          "image": "images/ulWWcj1Qz4W1.jpg"
-        },
-        {
           "articleId": "aAe7E0f5Copf",
           "title": "Understanding the Biblical Basis for Community",
           "slug": "understanding-the-biblical-basis-for-community",
@@ -873,196 +604,16 @@
           "excerpt": "In the Bible, community isn't just a suggestion—it's a divine mandate. From the early church in Acts...",
           "image": "images/aAe7E0f5Copf.jpg"
         }
-      ]
-    },
-    "scripture-and-reflection": {
-      "hero": [
-        {
-          "articleId": "0rVLRGZNrrxg",
-          "title": "How to Reflect on Psalm 23 for Inner Peace",
-          "slug": "how-to-reflect-on-psalm-23-for-inner-peace",
-          "excerpt": "In a world brimming with chaos, Psalm 23 offers a sanctuary of peace. Begin by r...",
-          "image": "images/0rVLRGZNrrxg.jpg"
-        },
-        {
-          "articleId": "ulWWcj1Qz4W1",
-          "title": "Reflecting on the Parables: Wisdom for Daily Living",
-          "slug": "reflecting-on-the-parables-wisdom-for-daily-living",
-          "excerpt": "Parables—simple stories with profound truths—encourage us to pause and reflect. ...",
-          "image": "images/ulWWcj1Qz4W1.jpg"
-        },
-        {
-          "articleId": "Wrxbj1FYmx4z",
-          "title": "Building Faith: Insights from Hebrews Chapter 11",
-          "slug": "building-faith-insights-from-hebrews-chapter-11",
-          "excerpt": "Faith, the cornerstone of Christian life, is beautifully illustrated in Hebrews ...",
-          "image": "images/Wrxbj1FYmx4z.jpg"
-        }
-      ],
-      "featured": [
-        {
-          "articleId": "AhfEApm05ldh",
-          "title": "Lessons from the Apostles: Faithful Servants of God",
-          "slug": "lessons-from-the-apostles-faithful-servants-of-god",
-          "excerpt": "The apostles, pillars of early Christianity, are timeless examples of unwavering faith and dedicatio...",
-          "image": "images/AhfEApm05ldh.jpg"
-        },
-        {
-          "articleId": "ic5CA8MoBx4E",
-          "title": "Exploring the Beatitudes: Pathways to a Blessed Life",
-          "slug": "exploring-the-beatitudes-pathways-to-a-blessed-life",
-          "excerpt": "In the heart of Matthew's Gospel, the Beatitudes unveil profound pathways to living a blessed life. ...",
-          "image": "images/ic5CA8MoBx4E.jpg"
-        },
-        {
-          "articleId": "OevdPi8RIF6y",
-          "title": "Understanding God's Grace: Key Verses and Reflections",
-          "slug": "understanding-gods-grace-key-verses-and-reflections",
-          "excerpt": "God's grace, a profound mystery, is the unearned, unmerited favor showered upon us. Ephesians 2:8 re...",
-          "image": "images/OevdPi8RIF6y.jpg"
-        },
-        {
-          "articleId": "E51GpnWq9o8X",
-          "title": "The Power of Prayer: Insights from Scripture",
-          "slug": "the-power-of-prayer-insights-from-scripture",
-          "excerpt": "Prayer is a powerful connection bridging the divine and the earthly. Throughout Scripture, from Davi...",
-          "image": "images/E51GpnWq9o8X.jpg"
-        },
-        {
-          "articleId": "gbtx1Fls9vB6",
-          "title": "Journey Through the Gospels: A Reflective Study Guide",
-          "slug": "journey-through-the-gospels-a-reflective-study-guide",
-          "excerpt": "Embark on a transformative journey through the Gospels, where ancient wisdom meets modern reflection...",
-          "image": "images/gbtx1Fls9vB6.jpg"
-        },
-        {
-          "articleId": "QBhrNJP9tEvo",
-          "title": "5 Steps to Deepen Your Bible Study Experience",
-          "slug": "5-steps-to-deepen-your-bible-study-experience",
-          "excerpt": "Unlock the treasures of Scripture with these five transformative steps. Begin by choosing a quiet, d...",
-          "image": "images/QBhrNJP9tEvo.jpg"
-        },
-        {
-          "articleId": "hIe2QljfWFRM",
-          "title": "10 Old Testament Stories with Modern Relevance",
-          "slug": "10-old-testament-stories-with-modern-relevance",
-          "excerpt": "The Old Testament, a tapestry of timeless stories, speaks to modern hearts with profound relevance. ...",
-          "image": "images/hIe2QljfWFRM.jpg"
-        },
-        {
-          "articleId": "lbLN1i7bPBya",
-          "title": "Discover Hope: 10 Uplifting Scriptures for Troubling Times",
-          "slug": "discover-hope-10-uplifting-scriptures-for-troubling-times",
-          "excerpt": "In life’s storms, finding a beacon of hope can transform despair into peace. The Bible offers profou...",
-          "image": "images/lbLN1i7bPBya.jpg"
-        }
-      ],
-      "spotlight": {
-        "main": {
-          "articleId": "oideHWFEb9wr",
-          "title": "Finding Joy: A Study of Philippians’ Core Messages",
-          "slug": "finding-joy-a-study-of-philippians-core-messages",
-          "excerpt": "Philippians, a beacon of joy amidst trials, invites us to discover profound contentment through faith. Paul's epistle, penned from prison, reveals tha...",
-          "image": "images/oideHWFEb9wr.jpg"
-        },
-        "list": [
-          {
-            "articleId": "hIe2QljfWFRM",
-            "title": "10 Old Testament Stories with Modern Relevance",
-            "slug": "10-old-testament-stories-with-modern-relevance",
-            "image": "images/hIe2QljfWFRM.jpg"
-          },
-          {
-            "articleId": "OevdPi8RIF6y",
-            "title": "Understanding God's Grace: Key Verses and Reflections",
-            "slug": "understanding-gods-grace-key-verses-and-reflections",
-            "image": "images/OevdPi8RIF6y.jpg"
-          }
-        ]
-      },
-      "relatedInfo": [
-        {
-          "articleId": "ec2QUUIgiZ3f",
-          "title": "10 Ways God's Grace Transforms Daily Life",
-          "slug": "10-ways-gods-grace-transforms-daily-life",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "Imagine starting each day wrapped in the gentle embrace of God's grace. It transforms mundane routin...",
-          "image": "images/ec2QUUIgiZ3f.jpg"
-        },
-        {
-          "articleId": "OaJ5pCyxf03C",
-          "title": "How to Build a Strong Christian Community",
-          "slug": "how-to-build-a-strong-christian-community",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "Building a strong Christian community begins with genuine relationships. Start with open-hearted fel...",
-          "image": "images/OaJ5pCyxf03C.jpg"
-        },
-        {
-          "articleId": "MYD1Ob05xrzD",
-          "title": "Living with Grace: Practical Tips for Families",
-          "slug": "living-with-grace-practical-tips-for-families",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "Living with grace transforms family life into a harmonious symphony. Begin each day with a prayer, i...",
-          "image": "images/MYD1Ob05xrzD.jpg"
-        },
-        {
-          "articleId": "SNMJep9uD9dA",
-          "title": "7 Biblical Stories of Grace in Action",
-          "slug": "7-biblical-stories-of-grace-in-action",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "In the Bible, grace emerges as a profound theme, illustrating God's boundless love. Consider Noah, w...",
-          "image": "images/SNMJep9uD9dA.jpg"
-        }
       ],
       "recommended": [
         {
-          "articleId": "AArSmZcnyGQn",
-          "title": "Finding Grace in Challenging Relationships",
-          "slug": "finding-grace-in-challenging-relationships",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "Navigating challenging relationships can feel like walking through a storm. Yet, grace is our compas...",
-          "image": "images/AArSmZcnyGQn.jpg"
-        },
-        {
-          "articleId": "njIUjpKBwH4p",
-          "title": "God's Grace: The Key to Personal Healing",
-          "slug": "gods-grace-the-key-to-personal-healing",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "In a world filled with turmoil, God's grace offers a sanctuary of healing. Embracing this divine gif...",
-          "image": "images/njIUjpKBwH4p.jpg"
-        },
-        {
-          "articleId": "pjN7D84DGC27",
-          "title": "Embracing Grace: A Guide to Spiritual Growth",
-          "slug": "embracing-grace-a-guide-to-spiritual-growth",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "In the journey of faith, embracing grace is transformative. It calls for a heart open to receiving G...",
-          "image": "images/pjN7D84DGC27.jpg"
-        },
-        {
-          "articleId": "l5qB3loInAy7",
-          "title": "How to Live Gracefully in a Broken World",
-          "slug": "how-to-live-gracefully-in-a-broken-world",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "In a world marred by brokenness, living gracefully requires embracing God’s love and extending it to...",
-          "image": "images/l5qB3loInAy7.jpg"
-        },
-        {
-          "articleId": "OVbgKfRBp2qO",
-          "title": "How Fellowship Deepens Your Walk with Christ",
-          "slug": "how-fellowship-deepens-your-walk-with-christ",
+          "articleId": "USo4BlHnxHZz",
+          "title": "The Power of Unity: Strengthening Church Bonds",
+          "slug": "the-power-of-unity-strengthening-church-bonds",
           "categorySlug": "community-and-fellowship",
           "categoryName": "Community and Fellowship",
-          "excerpt": "In the heart of fellowship lies a transformative power, deepening your walk with Christ in ways soli...",
-          "image": "images/OVbgKfRBp2qO.jpg"
+          "excerpt": "In the tapestry of faith, unity threads together the vibrant colors of individual believers, creatin...",
+          "image": "images/USo4BlHnxHZz.jpg"
         },
         {
           "articleId": "PM8pYPD6l6EI",
@@ -1074,13 +625,96 @@
           "image": "images/PM8pYPD6l6EI.jpg"
         },
         {
-          "articleId": "UCudb5VsT8nh",
-          "title": "5 Ways to Foster Fellowship in Your Church",
-          "slug": "5-ways-to-foster-fellowship-in-your-church",
+          "articleId": "AhfEApm05ldh",
+          "title": "Lessons from the Apostles: Faithful Servants of God",
+          "slug": "lessons-from-the-apostles-faithful-servants-of-god",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "The apostles, pillars of early Christianity, are timeless examples of unwavering faith and dedicatio...",
+          "image": "images/AhfEApm05ldh.jpg"
+        },
+        {
+          "articleId": "x6DEkQ1tG4TS",
+          "title": "Why Fellowship Matters for Modern Christians",
+          "slug": "why-fellowship-matters-for-modern-christians",
           "categorySlug": "community-and-fellowship",
           "categoryName": "Community and Fellowship",
-          "excerpt": "Building a vibrant church community starts with fostering deeper connections. Begin by hosting small...",
-          "image": "images/UCudb5VsT8nh.jpg"
+          "excerpt": "In a world where virtual connections often replace face-to-face interactions, fellowship remains cru...",
+          "image": "images/x6DEkQ1tG4TS.jpg"
+        },
+        {
+          "articleId": "QaMyB4Oh2CK7",
+          "title": "Volunteer Opportunities That Enrich Your Faith",
+          "slug": "volunteer-opportunities-that-enrich-your-faith",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "Are you seeking ways to deepen your faith while making a real impact? Volunteering offers a path to ...",
+          "image": "images/QaMyB4Oh2CK7.jpg"
+        },
+        {
+          "articleId": "E51GpnWq9o8X",
+          "title": "The Power of Prayer: Insights from Scripture",
+          "slug": "the-power-of-prayer-insights-from-scripture",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "Prayer is a powerful connection bridging the divine and the earthly. Throughout Scripture, from Davi...",
+          "image": "images/E51GpnWq9o8X.jpg"
+        },
+        {
+          "articleId": "lbLN1i7bPBya",
+          "title": "Discover Hope: 10 Uplifting Scriptures for Troubling Times",
+          "slug": "discover-hope-10-uplifting-scriptures-for-troubling-times",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "In life’s storms, finding a beacon of hope can transform despair into peace. The Bible offers profou...",
+          "image": "images/lbLN1i7bPBya.jpg"
+        },
+        {
+          "articleId": "OVbgKfRBp2qO",
+          "title": "How Fellowship Deepens Your Walk with Christ",
+          "slug": "how-fellowship-deepens-your-walk-with-christ",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In the heart of fellowship lies a transformative power, deepening your walk with Christ in ways soli...",
+          "image": "images/OVbgKfRBp2qO.jpg"
+        },
+        {
+          "articleId": "uRw2m4gCZRi4",
+          "title": "Finding Your Place in God's Community",
+          "slug": "finding-your-place-in-gods-community",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In a world brimming with noise, finding your place in God's community can be transformative. Imagine...",
+          "image": "images/uRw2m4gCZRi4.jpg"
+        },
+        {
+          "articleId": "hIe2QljfWFRM",
+          "title": "10 Old Testament Stories with Modern Relevance",
+          "slug": "10-old-testament-stories-with-modern-relevance",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "The Old Testament, a tapestry of timeless stories, speaks to modern hearts with profound relevance. ...",
+          "image": "images/hIe2QljfWFRM.jpg"
+        }
+      ],
+      "mostPopular": [
+        {
+          "articleId": "QBhrNJP9tEvo",
+          "title": "5 Steps to Deepen Your Bible Study Experience",
+          "slug": "5-steps-to-deepen-your-bible-study-experience",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "Unlock the treasures of Scripture with these five transformative steps. Begin by choosing a quiet, d...",
+          "image": "images/QBhrNJP9tEvo.jpg"
+        },
+        {
+          "articleId": "FAhwV3pFxBsp",
+          "title": "Creating Lasting Connections Through Service",
+          "slug": "creating-lasting-connections-through-service",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In a world craving genuine connection, serving others can light the path to deeper fellowship. Servi...",
+          "image": "images/FAhwV3pFxBsp.jpg"
         },
         {
           "articleId": "USo4BlHnxHZz",
@@ -1092,13 +726,96 @@
           "image": "images/USo4BlHnxHZz.jpg"
         },
         {
-          "articleId": "R4gUMZMG6kkX",
-          "title": "Deep Dive: Understanding Divine Grace",
-          "slug": "deep-dive-understanding-divine-grace",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "Divine grace, a cornerstone of Christian faith, invites us into a transformative relationship with G...",
-          "image": "images/R4gUMZMG6kkX.jpg"
+          "articleId": "ulWWcj1Qz4W1",
+          "title": "Reflecting on the Parables: Wisdom for Daily Living",
+          "slug": "reflecting-on-the-parables-wisdom-for-daily-living",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "Parables—simple stories with profound truths—encourage us to pause and reflect. Jesus used them mast...",
+          "image": "images/ulWWcj1Qz4W1.jpg"
+        },
+        {
+          "articleId": "Gns67bdl4U46",
+          "title": "Building Bridges: Intergenerational Church Activities",
+          "slug": "building-bridges-intergenerational-church-activities",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "Imagine a church where wisdom meets youthful energy, a community thriving through intergenerational ...",
+          "image": "images/Gns67bdl4U46.jpg"
+        },
+        {
+          "articleId": "oideHWFEb9wr",
+          "title": "Finding Joy: A Study of Philippians’ Core Messages",
+          "slug": "finding-joy-a-study-of-philippians-core-messages",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "Philippians, a beacon of joy amidst trials, invites us to discover profound contentment through fait...",
+          "image": "images/oideHWFEb9wr.jpg"
+        },
+        {
+          "articleId": "E51GpnWq9o8X",
+          "title": "The Power of Prayer: Insights from Scripture",
+          "slug": "the-power-of-prayer-insights-from-scripture",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "Prayer is a powerful connection bridging the divine and the earthly. Throughout Scripture, from Davi...",
+          "image": "images/E51GpnWq9o8X.jpg"
+        }
+      ],
+      "mustRead": [
+        {
+          "articleId": "ic5CA8MoBx4E",
+          "title": "Exploring the Beatitudes: Pathways to a Blessed Life",
+          "slug": "exploring-the-beatitudes-pathways-to-a-blessed-life",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "In the heart of Matthew's Gospel, the Beatitudes unveil profound pathways to living a blessed life. ...",
+          "image": "images/ic5CA8MoBx4E.jpg"
+        },
+        {
+          "articleId": "OaJ5pCyxf03C",
+          "title": "How to Build a Strong Christian Community",
+          "slug": "how-to-build-a-strong-christian-community",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "Building a strong Christian community begins with genuine relationships. Start with open-hearted fel...",
+          "image": "images/OaJ5pCyxf03C.jpg"
+        },
+        {
+          "articleId": "oideHWFEb9wr",
+          "title": "Finding Joy: A Study of Philippians’ Core Messages",
+          "slug": "finding-joy-a-study-of-philippians-core-messages",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "Philippians, a beacon of joy amidst trials, invites us to discover profound contentment through fait...",
+          "image": "images/oideHWFEb9wr.jpg"
+        },
+        {
+          "articleId": "E51GpnWq9o8X",
+          "title": "The Power of Prayer: Insights from Scripture",
+          "slug": "the-power-of-prayer-insights-from-scripture",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "Prayer is a powerful connection bridging the divine and the earthly. Throughout Scripture, from Davi...",
+          "image": "images/E51GpnWq9o8X.jpg"
+        },
+        {
+          "articleId": "PM8pYPD6l6EI",
+          "title": "The Role of Small Groups in Spiritual Growth",
+          "slug": "the-role-of-small-groups-in-spiritual-growth",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "Small groups ignite spiritual growth by fostering deep connections and shared journeys in faith. Wit...",
+          "image": "images/PM8pYPD6l6EI.jpg"
+        },
+        {
+          "articleId": "Gns67bdl4U46",
+          "title": "Building Bridges: Intergenerational Church Activities",
+          "slug": "building-bridges-intergenerational-church-activities",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "Imagine a church where wisdom meets youthful energy, a community thriving through intergenerational ...",
+          "image": "images/Gns67bdl4U46.jpg"
         },
         {
           "articleId": "x6DEkQ1tG4TS",
@@ -1110,298 +827,24 @@
           "image": "images/x6DEkQ1tG4TS.jpg"
         }
       ],
-      "mostPopular": [
-        {
-          "articleId": "USo4BlHnxHZz",
-          "title": "The Power of Unity: Strengthening Church Bonds",
-          "slug": "the-power-of-unity-strengthening-church-bonds",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "In the tapestry of faith, unity threads together the vibrant colors of individual believers, creatin...",
-          "image": "images/USo4BlHnxHZz.jpg"
-        },
-        {
-          "articleId": "OVbgKfRBp2qO",
-          "title": "How Fellowship Deepens Your Walk with Christ",
-          "slug": "how-fellowship-deepens-your-walk-with-christ",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "In the heart of fellowship lies a transformative power, deepening your walk with Christ in ways soli...",
-          "image": "images/OVbgKfRBp2qO.jpg"
-        },
-        {
-          "articleId": "QaMyB4Oh2CK7",
-          "title": "Volunteer Opportunities That Enrich Your Faith",
-          "slug": "volunteer-opportunities-that-enrich-your-faith",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "Are you seeking ways to deepen your faith while making a real impact? Volunteering offers a path to ...",
-          "image": "images/QaMyB4Oh2CK7.jpg"
-        },
-        {
-          "articleId": "AArSmZcnyGQn",
-          "title": "Finding Grace in Challenging Relationships",
-          "slug": "finding-grace-in-challenging-relationships",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "Navigating challenging relationships can feel like walking through a storm. Yet, grace is our compas...",
-          "image": "images/AArSmZcnyGQn.jpg"
-        },
-        {
-          "articleId": "njIUjpKBwH4p",
-          "title": "God's Grace: The Key to Personal Healing",
-          "slug": "gods-grace-the-key-to-personal-healing",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "In a world filled with turmoil, God's grace offers a sanctuary of healing. Embracing this divine gif...",
-          "image": "images/njIUjpKBwH4p.jpg"
-        },
-        {
-          "articleId": "MYD1Ob05xrzD",
-          "title": "Living with Grace: Practical Tips for Families",
-          "slug": "living-with-grace-practical-tips-for-families",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "Living with grace transforms family life into a harmonious symphony. Begin each day with a prayer, i...",
-          "image": "images/MYD1Ob05xrzD.jpg"
-        },
-        {
-          "articleId": "pjN7D84DGC27",
-          "title": "Embracing Grace: A Guide to Spiritual Growth",
-          "slug": "embracing-grace-a-guide-to-spiritual-growth",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "In the journey of faith, embracing grace is transformative. It calls for a heart open to receiving G...",
-          "image": "images/pjN7D84DGC27.jpg"
-        }
-      ],
-      "mustRead": [
-        {
-          "articleId": "OaJ5pCyxf03C",
-          "title": "How to Build a Strong Christian Community",
-          "slug": "how-to-build-a-strong-christian-community",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "Building a strong Christian community begins with genuine relationships. Start with open-hearted fel...",
-          "image": "images/OaJ5pCyxf03C.jpg"
-        },
-        {
-          "articleId": "SNMJep9uD9dA",
-          "title": "7 Biblical Stories of Grace in Action",
-          "slug": "7-biblical-stories-of-grace-in-action",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "In the Bible, grace emerges as a profound theme, illustrating God's boundless love. Consider Noah, w...",
-          "image": "images/SNMJep9uD9dA.jpg"
-        },
-        {
-          "articleId": "FAhwV3pFxBsp",
-          "title": "Creating Lasting Connections Through Service",
-          "slug": "creating-lasting-connections-through-service",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "In a world craving genuine connection, serving others can light the path to deeper fellowship. Servi...",
-          "image": "images/FAhwV3pFxBsp.jpg"
-        },
-        {
-          "articleId": "R4gUMZMG6kkX",
-          "title": "Deep Dive: Understanding Divine Grace",
-          "slug": "deep-dive-understanding-divine-grace",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "Divine grace, a cornerstone of Christian faith, invites us into a transformative relationship with G...",
-          "image": "images/R4gUMZMG6kkX.jpg"
-        },
-        {
-          "articleId": "aAe7E0f5Copf",
-          "title": "Understanding the Biblical Basis for Community",
-          "slug": "understanding-the-biblical-basis-for-community",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "In the Bible, community isn't just a suggestion—it's a divine mandate. From the early church in Acts...",
-          "image": "images/aAe7E0f5Copf.jpg"
-        },
-        {
-          "articleId": "9cL9huk4G6jv",
-          "title": "Cultivating a Grace-Filled Mindset Every Day",
-          "slug": "cultivating-a-grace-filled-mindset-every-day",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "In a world buzzing with distractions, cultivating a grace-filled mindset requires intentional focus....",
-          "image": "images/9cL9huk4G6jv.jpg"
-        },
-        {
-          "articleId": "uRw2m4gCZRi4",
-          "title": "Finding Your Place in God's Community",
-          "slug": "finding-your-place-in-gods-community",
-          "categorySlug": "community-and-fellowship",
-          "categoryName": "Community and Fellowship",
-          "excerpt": "In a world brimming with noise, finding your place in God's community can be transformative. Imagine...",
-          "image": "images/uRw2m4gCZRi4.jpg"
-        }
-      ],
       "youMightLike": [
         {
-          "articleId": "AArSmZcnyGQn",
-          "title": "Finding Grace in Challenging Relationships",
-          "slug": "finding-grace-in-challenging-relationships",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "Navigating challenging relationships can feel like walking through a storm. Yet, grace is our compas...",
-          "image": "images/AArSmZcnyGQn.jpg"
-        },
-        {
-          "articleId": "SNMJep9uD9dA",
-          "title": "7 Biblical Stories of Grace in Action",
-          "slug": "7-biblical-stories-of-grace-in-action",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "In the Bible, grace emerges as a profound theme, illustrating God's boundless love. Consider Noah, w...",
-          "image": "images/SNMJep9uD9dA.jpg"
-        },
-        {
-          "articleId": "OVbgKfRBp2qO",
-          "title": "How Fellowship Deepens Your Walk with Christ",
-          "slug": "how-fellowship-deepens-your-walk-with-christ",
+          "articleId": "x6DEkQ1tG4TS",
+          "title": "Why Fellowship Matters for Modern Christians",
+          "slug": "why-fellowship-matters-for-modern-christians",
           "categorySlug": "community-and-fellowship",
           "categoryName": "Community and Fellowship",
-          "excerpt": "In the heart of fellowship lies a transformative power, deepening your walk with Christ in ways soli...",
-          "image": "images/OVbgKfRBp2qO.jpg"
-        },
-        {
-          "articleId": "R4gUMZMG6kkX",
-          "title": "Deep Dive: Understanding Divine Grace",
-          "slug": "deep-dive-understanding-divine-grace",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "Divine grace, a cornerstone of Christian faith, invites us into a transformative relationship with G...",
-          "image": "images/R4gUMZMG6kkX.jpg"
-        },
-        {
-          "articleId": "PDZjz3rX93Yr",
-          "title": "The Power of Grace in the Workplace",
-          "slug": "the-power-of-grace-in-the-workplace",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "Imagine a workplace where grace reigns supreme—where forgiveness and understanding replace criticism...",
-          "image": "images/PDZjz3rX93Yr.jpg"
-        }
-      ]
-    },
-    "community-and-fellowship": {
-      "hero": [
-        {
-          "articleId": "PM8pYPD6l6EI",
-          "title": "The Role of Small Groups in Spiritual Growth",
-          "slug": "the-role-of-small-groups-in-spiritual-growth",
-          "excerpt": "Small groups ignite spiritual growth by fostering deep connections and shared jo...",
-          "image": "images/PM8pYPD6l6EI.jpg"
-        },
-        {
-          "articleId": "VaMWZY52j30n",
-          "title": "10 Inspiring Stories of Faith in Fellowship",
-          "slug": "10-inspiring-stories-of-faith-in-fellowship",
-          "excerpt": "In a world yearning for connection, stories of faith in fellowship illuminate pa...",
-          "image": "images/VaMWZY52j30n.jpg"
-        },
-        {
-          "articleId": "uRw2m4gCZRi4",
-          "title": "Finding Your Place in God's Community",
-          "slug": "finding-your-place-in-gods-community",
-          "excerpt": "In a world brimming with noise, finding your place in God's community can be tra...",
-          "image": "images/uRw2m4gCZRi4.jpg"
-        }
-      ],
-      "featured": [
-        {
-          "articleId": "USo4BlHnxHZz",
-          "title": "The Power of Unity: Strengthening Church Bonds",
-          "slug": "the-power-of-unity-strengthening-church-bonds",
-          "excerpt": "In the tapestry of faith, unity threads together the vibrant colors of individual believers, creatin...",
-          "image": "images/USo4BlHnxHZz.jpg"
-        },
-        {
-          "articleId": "OaJ5pCyxf03C",
-          "title": "How to Build a Strong Christian Community",
-          "slug": "how-to-build-a-strong-christian-community",
-          "excerpt": "Building a strong Christian community begins with genuine relationships. Start with open-hearted fel...",
-          "image": "images/OaJ5pCyxf03C.jpg"
-        },
-        {
-          "articleId": "aAe7E0f5Copf",
-          "title": "Understanding the Biblical Basis for Community",
-          "slug": "understanding-the-biblical-basis-for-community",
-          "excerpt": "In the Bible, community isn't just a suggestion—it's a divine mandate. From the early church in Acts...",
-          "image": "images/aAe7E0f5Copf.jpg"
-        },
-        {
-          "articleId": "Gns67bdl4U46",
-          "title": "Building Bridges: Intergenerational Church Activities",
-          "slug": "building-bridges-intergenerational-church-activities",
-          "excerpt": "Imagine a church where wisdom meets youthful energy, a community thriving through intergenerational ...",
-          "image": "images/Gns67bdl4U46.jpg"
-        },
-        {
-          "articleId": "QaMyB4Oh2CK7",
-          "title": "Volunteer Opportunities That Enrich Your Faith",
-          "slug": "volunteer-opportunities-that-enrich-your-faith",
-          "excerpt": "Are you seeking ways to deepen your faith while making a real impact? Volunteering offers a path to ...",
-          "image": "images/QaMyB4Oh2CK7.jpg"
+          "excerpt": "In a world where virtual connections often replace face-to-face interactions, fellowship remains cru...",
+          "image": "images/x6DEkQ1tG4TS.jpg"
         },
         {
           "articleId": "UCudb5VsT8nh",
           "title": "5 Ways to Foster Fellowship in Your Church",
           "slug": "5-ways-to-foster-fellowship-in-your-church",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
           "excerpt": "Building a vibrant church community starts with fostering deeper connections. Begin by hosting small...",
           "image": "images/UCudb5VsT8nh.jpg"
-        },
-        {
-          "articleId": "OVbgKfRBp2qO",
-          "title": "How Fellowship Deepens Your Walk with Christ",
-          "slug": "how-fellowship-deepens-your-walk-with-christ",
-          "excerpt": "In the heart of fellowship lies a transformative power, deepening your walk with Christ in ways soli...",
-          "image": "images/OVbgKfRBp2qO.jpg"
-        },
-        {
-          "articleId": "FAhwV3pFxBsp",
-          "title": "Creating Lasting Connections Through Service",
-          "slug": "creating-lasting-connections-through-service",
-          "excerpt": "In a world craving genuine connection, serving others can light the path to deeper fellowship. Servi...",
-          "image": "images/FAhwV3pFxBsp.jpg"
-        }
-      ],
-      "spotlight": {
-        "main": {
-          "articleId": "x6DEkQ1tG4TS",
-          "title": "Why Fellowship Matters for Modern Christians",
-          "slug": "why-fellowship-matters-for-modern-christians",
-          "excerpt": "In a world where virtual connections often replace face-to-face interactions, fellowship remains crucial for modern Christians. It provides a sanctuar...",
-          "image": "images/x6DEkQ1tG4TS.jpg"
-        },
-        "list": [
-          {
-            "articleId": "VaMWZY52j30n",
-            "title": "10 Inspiring Stories of Faith in Fellowship",
-            "slug": "10-inspiring-stories-of-faith-in-fellowship",
-            "image": "images/VaMWZY52j30n.jpg"
-          },
-          {
-            "articleId": "QaMyB4Oh2CK7",
-            "title": "Volunteer Opportunities That Enrich Your Faith",
-            "slug": "volunteer-opportunities-that-enrich-your-faith",
-            "image": "images/QaMyB4Oh2CK7.jpg"
-          }
-        ]
-      },
-      "relatedInfo": [
-        {
-          "articleId": "ic5CA8MoBx4E",
-          "title": "Exploring the Beatitudes: Pathways to a Blessed Life",
-          "slug": "exploring-the-beatitudes-pathways-to-a-blessed-life",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "In the heart of Matthew's Gospel, the Beatitudes unveil profound pathways to living a blessed life. ...",
-          "image": "images/ic5CA8MoBx4E.jpg"
         },
         {
           "articleId": "E51GpnWq9o8X",
@@ -1413,87 +856,177 @@
           "image": "images/E51GpnWq9o8X.jpg"
         },
         {
+          "articleId": "VaMWZY52j30n",
+          "title": "10 Inspiring Stories of Faith in Fellowship",
+          "slug": "10-inspiring-stories-of-faith-in-fellowship",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In a world yearning for connection, stories of faith in fellowship illuminate paths of hope and unit...",
+          "image": "images/VaMWZY52j30n.jpg"
+        },
+        {
+          "articleId": "OVbgKfRBp2qO",
+          "title": "How Fellowship Deepens Your Walk with Christ",
+          "slug": "how-fellowship-deepens-your-walk-with-christ",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In the heart of fellowship lies a transformative power, deepening your walk with Christ in ways soli...",
+          "image": "images/OVbgKfRBp2qO.jpg"
+        }
+      ]
+    },
+    "scripture-and-reflection": {
+      "hero": [
+        {
+          "articleId": "AhfEApm05ldh",
+          "title": "Lessons from the Apostles: Faithful Servants of God",
+          "slug": "lessons-from-the-apostles-faithful-servants-of-god",
+          "excerpt": "The apostles, pillars of early Christianity, are timeless examples of unwavering...",
+          "image": "images/AhfEApm05ldh.jpg"
+        },
+        {
+          "articleId": "E51GpnWq9o8X",
+          "title": "The Power of Prayer: Insights from Scripture",
+          "slug": "the-power-of-prayer-insights-from-scripture",
+          "excerpt": "Prayer is a powerful connection bridging the divine and the earthly. Throughout ...",
+          "image": "images/E51GpnWq9o8X.jpg"
+        },
+        {
+          "articleId": "gbtx1Fls9vB6",
+          "title": "Journey Through the Gospels: A Reflective Study Guide",
+          "slug": "journey-through-the-gospels-a-reflective-study-guide",
+          "excerpt": "Embark on a transformative journey through the Gospels, where ancient wisdom mee...",
+          "image": "images/gbtx1Fls9vB6.jpg"
+        }
+      ],
+      "featured": [
+        {
           "articleId": "oideHWFEb9wr",
           "title": "Finding Joy: A Study of Philippians’ Core Messages",
           "slug": "finding-joy-a-study-of-philippians-core-messages",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
           "excerpt": "Philippians, a beacon of joy amidst trials, invites us to discover profound contentment through fait...",
           "image": "images/oideHWFEb9wr.jpg"
         },
         {
-          "articleId": "AArSmZcnyGQn",
-          "title": "Finding Grace in Challenging Relationships",
-          "slug": "finding-grace-in-challenging-relationships",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "Navigating challenging relationships can feel like walking through a storm. Yet, grace is our compas...",
-          "image": "images/AArSmZcnyGQn.jpg"
-        }
-      ],
-      "recommended": [
-        {
-          "articleId": "njIUjpKBwH4p",
-          "title": "God's Grace: The Key to Personal Healing",
-          "slug": "gods-grace-the-key-to-personal-healing",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "In a world filled with turmoil, God's grace offers a sanctuary of healing. Embracing this divine gif...",
-          "image": "images/njIUjpKBwH4p.jpg"
-        },
-        {
-          "articleId": "MYD1Ob05xrzD",
-          "title": "Living with Grace: Practical Tips for Families",
-          "slug": "living-with-grace-practical-tips-for-families",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "Living with grace transforms family life into a harmonious symphony. Begin each day with a prayer, i...",
-          "image": "images/MYD1Ob05xrzD.jpg"
-        },
-        {
-          "articleId": "pjN7D84DGC27",
-          "title": "Embracing Grace: A Guide to Spiritual Growth",
-          "slug": "embracing-grace-a-guide-to-spiritual-growth",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "In the journey of faith, embracing grace is transformative. It calls for a heart open to receiving G...",
-          "image": "images/pjN7D84DGC27.jpg"
-        },
-        {
-          "articleId": "OevdPi8RIF6y",
-          "title": "Understanding God's Grace: Key Verses and Reflections",
-          "slug": "understanding-gods-grace-key-verses-and-reflections",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "God's grace, a profound mystery, is the unearned, unmerited favor showered upon us. Ephesians 2:8 re...",
-          "image": "images/OevdPi8RIF6y.jpg"
+          "articleId": "ulWWcj1Qz4W1",
+          "title": "Reflecting on the Parables: Wisdom for Daily Living",
+          "slug": "reflecting-on-the-parables-wisdom-for-daily-living",
+          "excerpt": "Parables—simple stories with profound truths—encourage us to pause and reflect. Jesus used them mast...",
+          "image": "images/ulWWcj1Qz4W1.jpg"
         },
         {
           "articleId": "QBhrNJP9tEvo",
           "title": "5 Steps to Deepen Your Bible Study Experience",
           "slug": "5-steps-to-deepen-your-bible-study-experience",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
           "excerpt": "Unlock the treasures of Scripture with these five transformative steps. Begin by choosing a quiet, d...",
           "image": "images/QBhrNJP9tEvo.jpg"
         },
         {
-          "articleId": "AhfEApm05ldh",
-          "title": "Lessons from the Apostles: Faithful Servants of God",
-          "slug": "lessons-from-the-apostles-faithful-servants-of-god",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "The apostles, pillars of early Christianity, are timeless examples of unwavering faith and dedicatio...",
-          "image": "images/AhfEApm05ldh.jpg"
+          "articleId": "Wrxbj1FYmx4z",
+          "title": "Building Faith: Insights from Hebrews Chapter 11",
+          "slug": "building-faith-insights-from-hebrews-chapter-11",
+          "excerpt": "Faith, the cornerstone of Christian life, is beautifully illustrated in Hebrews 11. This chapter, of...",
+          "image": "images/Wrxbj1FYmx4z.jpg"
         },
         {
+          "articleId": "ic5CA8MoBx4E",
+          "title": "Exploring the Beatitudes: Pathways to a Blessed Life",
+          "slug": "exploring-the-beatitudes-pathways-to-a-blessed-life",
+          "excerpt": "In the heart of Matthew's Gospel, the Beatitudes unveil profound pathways to living a blessed life. ...",
+          "image": "images/ic5CA8MoBx4E.jpg"
+        },
+        {
+          "articleId": "0rVLRGZNrrxg",
+          "title": "How to Reflect on Psalm 23 for Inner Peace",
+          "slug": "how-to-reflect-on-psalm-23-for-inner-peace",
+          "excerpt": "In a world brimming with chaos, Psalm 23 offers a sanctuary of peace. Begin by reciting its verses s...",
+          "image": "images/0rVLRGZNrrxg.jpg"
+        },
+        {
+          "articleId": "OevdPi8RIF6y",
+          "title": "Understanding God's Grace: Key Verses and Reflections",
+          "slug": "understanding-gods-grace-key-verses-and-reflections",
+          "excerpt": "God's grace, a profound mystery, is the unearned, unmerited favor showered upon us. Ephesians 2:8 re...",
+          "image": "images/OevdPi8RIF6y.jpg"
+        },
+        {
+          "articleId": "lbLN1i7bPBya",
+          "title": "Discover Hope: 10 Uplifting Scriptures for Troubling Times",
+          "slug": "discover-hope-10-uplifting-scriptures-for-troubling-times",
+          "excerpt": "In life’s storms, finding a beacon of hope can transform despair into peace. The Bible offers profou...",
+          "image": "images/lbLN1i7bPBya.jpg"
+        }
+      ],
+      "spotlight": {
+        "main": {
           "articleId": "hIe2QljfWFRM",
           "title": "10 Old Testament Stories with Modern Relevance",
           "slug": "10-old-testament-stories-with-modern-relevance",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "The Old Testament, a tapestry of timeless stories, speaks to modern hearts with profound relevance. ...",
+          "excerpt": "The Old Testament, a tapestry of timeless stories, speaks to modern hearts with profound relevance. Consider Joseph's journey from pit to palace—a tes...",
           "image": "images/hIe2QljfWFRM.jpg"
+        },
+        "list": [
+          {
+            "articleId": "ic5CA8MoBx4E",
+            "title": "Exploring the Beatitudes: Pathways to a Blessed Life",
+            "slug": "exploring-the-beatitudes-pathways-to-a-blessed-life",
+            "image": "images/ic5CA8MoBx4E.jpg"
+          },
+          {
+            "articleId": "gbtx1Fls9vB6",
+            "title": "Journey Through the Gospels: A Reflective Study Guide",
+            "slug": "journey-through-the-gospels-a-reflective-study-guide",
+            "image": "images/gbtx1Fls9vB6.jpg"
+          }
+        ]
+      },
+      "relatedInfo": [
+        {
+          "articleId": "l5qB3loInAy7",
+          "title": "How to Live Gracefully in a Broken World",
+          "slug": "how-to-live-gracefully-in-a-broken-world",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "In a world marred by brokenness, living gracefully requires embracing God’s love and extending it to...",
+          "image": "images/l5qB3loInAy7.jpg"
+        },
+        {
+          "articleId": "FAhwV3pFxBsp",
+          "title": "Creating Lasting Connections Through Service",
+          "slug": "creating-lasting-connections-through-service",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In a world craving genuine connection, serving others can light the path to deeper fellowship. Servi...",
+          "image": "images/FAhwV3pFxBsp.jpg"
+        },
+        {
+          "articleId": "USo4BlHnxHZz",
+          "title": "The Power of Unity: Strengthening Church Bonds",
+          "slug": "the-power-of-unity-strengthening-church-bonds",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In the tapestry of faith, unity threads together the vibrant colors of individual believers, creatin...",
+          "image": "images/USo4BlHnxHZz.jpg"
+        },
+        {
+          "articleId": "R4gUMZMG6kkX",
+          "title": "Deep Dive: Understanding Divine Grace",
+          "slug": "deep-dive-understanding-divine-grace",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "Divine grace, a cornerstone of Christian faith, invites us into a transformative relationship with G...",
+          "image": "images/R4gUMZMG6kkX.jpg"
+        }
+      ],
+      "recommended": [
+        {
+          "articleId": "Gns67bdl4U46",
+          "title": "Building Bridges: Intergenerational Church Activities",
+          "slug": "building-bridges-intergenerational-church-activities",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "Imagine a church where wisdom meets youthful energy, a community thriving through intergenerational ...",
+          "image": "images/Gns67bdl4U46.jpg"
         },
         {
           "articleId": "JdsAkC6xBGmK",
@@ -1505,69 +1038,105 @@
           "image": "images/JdsAkC6xBGmK.jpg"
         },
         {
-          "articleId": "l5qB3loInAy7",
-          "title": "How to Live Gracefully in a Broken World",
-          "slug": "how-to-live-gracefully-in-a-broken-world",
+          "articleId": "9cL9huk4G6jv",
+          "title": "Cultivating a Grace-Filled Mindset Every Day",
+          "slug": "cultivating-a-grace-filled-mindset-every-day",
           "categorySlug": "living-in-grace",
           "categoryName": "Living in Grace",
-          "excerpt": "In a world marred by brokenness, living gracefully requires embracing God’s love and extending it to...",
-          "image": "images/l5qB3loInAy7.jpg"
+          "excerpt": "In a world buzzing with distractions, cultivating a grace-filled mindset requires intentional focus....",
+          "image": "images/9cL9huk4G6jv.jpg"
         },
         {
-          "articleId": "PDZjz3rX93Yr",
-          "title": "The Power of Grace in the Workplace",
-          "slug": "the-power-of-grace-in-the-workplace",
+          "articleId": "K43zZlmghSHZ",
+          "title": "Exploring Grace: Theological Insights for Today",
+          "slug": "exploring-grace-theological-insights-for-today",
           "categorySlug": "living-in-grace",
           "categoryName": "Living in Grace",
-          "excerpt": "Imagine a workplace where grace reigns supreme—where forgiveness and understanding replace criticism...",
-          "image": "images/PDZjz3rX93Yr.jpg"
+          "excerpt": "In the hustle of modern life, grace stands as a gentle whisper, reminding us of God’s unmerited favo...",
+          "image": "images/K43zZlmghSHZ.jpg"
+        },
+        {
+          "articleId": "OVbgKfRBp2qO",
+          "title": "How Fellowship Deepens Your Walk with Christ",
+          "slug": "how-fellowship-deepens-your-walk-with-christ",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In the heart of fellowship lies a transformative power, deepening your walk with Christ in ways soli...",
+          "image": "images/OVbgKfRBp2qO.jpg"
+        },
+        {
+          "articleId": "AArSmZcnyGQn",
+          "title": "Finding Grace in Challenging Relationships",
+          "slug": "finding-grace-in-challenging-relationships",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "Navigating challenging relationships can feel like walking through a storm. Yet, grace is our compas...",
+          "image": "images/AArSmZcnyGQn.jpg"
+        },
+        {
+          "articleId": "njIUjpKBwH4p",
+          "title": "God's Grace: The Key to Personal Healing",
+          "slug": "gods-grace-the-key-to-personal-healing",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "In a world filled with turmoil, God's grace offers a sanctuary of healing. Embracing this divine gif...",
+          "image": "images/njIUjpKBwH4p.jpg"
+        },
+        {
+          "articleId": "uRw2m4gCZRi4",
+          "title": "Finding Your Place in God's Community",
+          "slug": "finding-your-place-in-gods-community",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In a world brimming with noise, finding your place in God's community can be transformative. Imagine...",
+          "image": "images/uRw2m4gCZRi4.jpg"
+        },
+        {
+          "articleId": "PM8pYPD6l6EI",
+          "title": "The Role of Small Groups in Spiritual Growth",
+          "slug": "the-role-of-small-groups-in-spiritual-growth",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "Small groups ignite spiritual growth by fostering deep connections and shared journeys in faith. Wit...",
+          "image": "images/PM8pYPD6l6EI.jpg"
+        },
+        {
+          "articleId": "aAe7E0f5Copf",
+          "title": "Understanding the Biblical Basis for Community",
+          "slug": "understanding-the-biblical-basis-for-community",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In the Bible, community isn't just a suggestion—it's a divine mandate. From the early church in Acts...",
+          "image": "images/aAe7E0f5Copf.jpg"
         }
       ],
       "mostPopular": [
         {
-          "articleId": "0rVLRGZNrrxg",
-          "title": "How to Reflect on Psalm 23 for Inner Peace",
-          "slug": "how-to-reflect-on-psalm-23-for-inner-peace",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "In a world brimming with chaos, Psalm 23 offers a sanctuary of peace. Begin by reciting its verses s...",
-          "image": "images/0rVLRGZNrrxg.jpg"
-        },
-        {
-          "articleId": "SNMJep9uD9dA",
-          "title": "7 Biblical Stories of Grace in Action",
-          "slug": "7-biblical-stories-of-grace-in-action",
+          "articleId": "AArSmZcnyGQn",
+          "title": "Finding Grace in Challenging Relationships",
+          "slug": "finding-grace-in-challenging-relationships",
           "categorySlug": "living-in-grace",
           "categoryName": "Living in Grace",
-          "excerpt": "In the Bible, grace emerges as a profound theme, illustrating God's boundless love. Consider Noah, w...",
-          "image": "images/SNMJep9uD9dA.jpg"
+          "excerpt": "Navigating challenging relationships can feel like walking through a storm. Yet, grace is our compas...",
+          "image": "images/AArSmZcnyGQn.jpg"
         },
         {
-          "articleId": "OevdPi8RIF6y",
-          "title": "Understanding God's Grace: Key Verses and Reflections",
-          "slug": "understanding-gods-grace-key-verses-and-reflections",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "God's grace, a profound mystery, is the unearned, unmerited favor showered upon us. Ephesians 2:8 re...",
-          "image": "images/OevdPi8RIF6y.jpg"
+          "articleId": "OaJ5pCyxf03C",
+          "title": "How to Build a Strong Christian Community",
+          "slug": "how-to-build-a-strong-christian-community",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "Building a strong Christian community begins with genuine relationships. Start with open-hearted fel...",
+          "image": "images/OaJ5pCyxf03C.jpg"
         },
         {
-          "articleId": "R4gUMZMG6kkX",
-          "title": "Deep Dive: Understanding Divine Grace",
-          "slug": "deep-dive-understanding-divine-grace",
+          "articleId": "JdsAkC6xBGmK",
+          "title": "Grace in Action: Stories from Everyday Believers",
+          "slug": "grace-in-action-stories-from-everyday-believers",
           "categorySlug": "living-in-grace",
           "categoryName": "Living in Grace",
-          "excerpt": "Divine grace, a cornerstone of Christian faith, invites us into a transformative relationship with G...",
-          "image": "images/R4gUMZMG6kkX.jpg"
-        },
-        {
-          "articleId": "ulWWcj1Qz4W1",
-          "title": "Reflecting on the Parables: Wisdom for Daily Living",
-          "slug": "reflecting-on-the-parables-wisdom-for-daily-living",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "Parables—simple stories with profound truths—encourage us to pause and reflect. Jesus used them mast...",
-          "image": "images/ulWWcj1Qz4W1.jpg"
+          "excerpt": "Every day, ordinary believers perform extraordinary acts of grace. Take Anna, who quietly pays for g...",
+          "image": "images/JdsAkC6xBGmK.jpg"
         },
         {
           "articleId": "9cL9huk4G6jv",
@@ -1579,16 +1148,117 @@
           "image": "images/9cL9huk4G6jv.jpg"
         },
         {
-          "articleId": "AhfEApm05ldh",
-          "title": "Lessons from the Apostles: Faithful Servants of God",
-          "slug": "lessons-from-the-apostles-faithful-servants-of-god",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "The apostles, pillars of early Christianity, are timeless examples of unwavering faith and dedicatio...",
-          "image": "images/AhfEApm05ldh.jpg"
+          "articleId": "PM8pYPD6l6EI",
+          "title": "The Role of Small Groups in Spiritual Growth",
+          "slug": "the-role-of-small-groups-in-spiritual-growth",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "Small groups ignite spiritual growth by fostering deep connections and shared journeys in faith. Wit...",
+          "image": "images/PM8pYPD6l6EI.jpg"
+        },
+        {
+          "articleId": "Gns67bdl4U46",
+          "title": "Building Bridges: Intergenerational Church Activities",
+          "slug": "building-bridges-intergenerational-church-activities",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "Imagine a church where wisdom meets youthful energy, a community thriving through intergenerational ...",
+          "image": "images/Gns67bdl4U46.jpg"
+        },
+        {
+          "articleId": "x6DEkQ1tG4TS",
+          "title": "Why Fellowship Matters for Modern Christians",
+          "slug": "why-fellowship-matters-for-modern-christians",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In a world where virtual connections often replace face-to-face interactions, fellowship remains cru...",
+          "image": "images/x6DEkQ1tG4TS.jpg"
         }
       ],
       "mustRead": [
+        {
+          "articleId": "x6DEkQ1tG4TS",
+          "title": "Why Fellowship Matters for Modern Christians",
+          "slug": "why-fellowship-matters-for-modern-christians",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In a world where virtual connections often replace face-to-face interactions, fellowship remains cru...",
+          "image": "images/x6DEkQ1tG4TS.jpg"
+        },
+        {
+          "articleId": "UCudb5VsT8nh",
+          "title": "5 Ways to Foster Fellowship in Your Church",
+          "slug": "5-ways-to-foster-fellowship-in-your-church",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "Building a vibrant church community starts with fostering deeper connections. Begin by hosting small...",
+          "image": "images/UCudb5VsT8nh.jpg"
+        },
+        {
+          "articleId": "9cL9huk4G6jv",
+          "title": "Cultivating a Grace-Filled Mindset Every Day",
+          "slug": "cultivating-a-grace-filled-mindset-every-day",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "In a world buzzing with distractions, cultivating a grace-filled mindset requires intentional focus....",
+          "image": "images/9cL9huk4G6jv.jpg"
+        },
+        {
+          "articleId": "VaMWZY52j30n",
+          "title": "10 Inspiring Stories of Faith in Fellowship",
+          "slug": "10-inspiring-stories-of-faith-in-fellowship",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In a world yearning for connection, stories of faith in fellowship illuminate paths of hope and unit...",
+          "image": "images/VaMWZY52j30n.jpg"
+        },
+        {
+          "articleId": "OVbgKfRBp2qO",
+          "title": "How Fellowship Deepens Your Walk with Christ",
+          "slug": "how-fellowship-deepens-your-walk-with-christ",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In the heart of fellowship lies a transformative power, deepening your walk with Christ in ways soli...",
+          "image": "images/OVbgKfRBp2qO.jpg"
+        },
+        {
+          "articleId": "MYD1Ob05xrzD",
+          "title": "Living with Grace: Practical Tips for Families",
+          "slug": "living-with-grace-practical-tips-for-families",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "Living with grace transforms family life into a harmonious symphony. Begin each day with a prayer, i...",
+          "image": "images/MYD1Ob05xrzD.jpg"
+        },
+        {
+          "articleId": "SNMJep9uD9dA",
+          "title": "7 Biblical Stories of Grace in Action",
+          "slug": "7-biblical-stories-of-grace-in-action",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "In the Bible, grace emerges as a profound theme, illustrating God's boundless love. Consider Noah, w...",
+          "image": "images/SNMJep9uD9dA.jpg"
+        }
+      ],
+      "youMightLike": [
+        {
+          "articleId": "K43zZlmghSHZ",
+          "title": "Exploring Grace: Theological Insights for Today",
+          "slug": "exploring-grace-theological-insights-for-today",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "In the hustle of modern life, grace stands as a gentle whisper, reminding us of God’s unmerited favo...",
+          "image": "images/K43zZlmghSHZ.jpg"
+        },
+        {
+          "articleId": "USo4BlHnxHZz",
+          "title": "The Power of Unity: Strengthening Church Bonds",
+          "slug": "the-power-of-unity-strengthening-church-bonds",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In the tapestry of faith, unity threads together the vibrant colors of individual believers, creatin...",
+          "image": "images/USo4BlHnxHZz.jpg"
+        },
         {
           "articleId": "AArSmZcnyGQn",
           "title": "Finding Grace in Challenging Relationships",
@@ -1599,22 +1269,195 @@
           "image": "images/AArSmZcnyGQn.jpg"
         },
         {
-          "articleId": "SNMJep9uD9dA",
-          "title": "7 Biblical Stories of Grace in Action",
-          "slug": "7-biblical-stories-of-grace-in-action",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "In the Bible, grace emerges as a profound theme, illustrating God's boundless love. Consider Noah, w...",
-          "image": "images/SNMJep9uD9dA.jpg"
+          "articleId": "x6DEkQ1tG4TS",
+          "title": "Why Fellowship Matters for Modern Christians",
+          "slug": "why-fellowship-matters-for-modern-christians",
+          "categorySlug": "community-and-fellowship",
+          "categoryName": "Community and Fellowship",
+          "excerpt": "In a world where virtual connections often replace face-to-face interactions, fellowship remains cru...",
+          "image": "images/x6DEkQ1tG4TS.jpg"
         },
         {
-          "articleId": "E51GpnWq9o8X",
-          "title": "The Power of Prayer: Insights from Scripture",
-          "slug": "the-power-of-prayer-insights-from-scripture",
+          "articleId": "pjN7D84DGC27",
+          "title": "Embracing Grace: A Guide to Spiritual Growth",
+          "slug": "embracing-grace-a-guide-to-spiritual-growth",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "In the journey of faith, embracing grace is transformative. It calls for a heart open to receiving G...",
+          "image": "images/pjN7D84DGC27.jpg"
+        }
+      ]
+    },
+    "community-and-fellowship": {
+      "hero": [
+        {
+          "articleId": "OaJ5pCyxf03C",
+          "title": "How to Build a Strong Christian Community",
+          "slug": "how-to-build-a-strong-christian-community",
+          "excerpt": "Building a strong Christian community begins with genuine relationships. Start w...",
+          "image": "images/OaJ5pCyxf03C.jpg"
+        },
+        {
+          "articleId": "USo4BlHnxHZz",
+          "title": "The Power of Unity: Strengthening Church Bonds",
+          "slug": "the-power-of-unity-strengthening-church-bonds",
+          "excerpt": "In the tapestry of faith, unity threads together the vibrant colors of individua...",
+          "image": "images/USo4BlHnxHZz.jpg"
+        },
+        {
+          "articleId": "uRw2m4gCZRi4",
+          "title": "Finding Your Place in God's Community",
+          "slug": "finding-your-place-in-gods-community",
+          "excerpt": "In a world brimming with noise, finding your place in God's community can be tra...",
+          "image": "images/uRw2m4gCZRi4.jpg"
+        }
+      ],
+      "featured": [
+        {
+          "articleId": "PM8pYPD6l6EI",
+          "title": "The Role of Small Groups in Spiritual Growth",
+          "slug": "the-role-of-small-groups-in-spiritual-growth",
+          "excerpt": "Small groups ignite spiritual growth by fostering deep connections and shared journeys in faith. Wit...",
+          "image": "images/PM8pYPD6l6EI.jpg"
+        },
+        {
+          "articleId": "QaMyB4Oh2CK7",
+          "title": "Volunteer Opportunities That Enrich Your Faith",
+          "slug": "volunteer-opportunities-that-enrich-your-faith",
+          "excerpt": "Are you seeking ways to deepen your faith while making a real impact? Volunteering offers a path to ...",
+          "image": "images/QaMyB4Oh2CK7.jpg"
+        },
+        {
+          "articleId": "VaMWZY52j30n",
+          "title": "10 Inspiring Stories of Faith in Fellowship",
+          "slug": "10-inspiring-stories-of-faith-in-fellowship",
+          "excerpt": "In a world yearning for connection, stories of faith in fellowship illuminate paths of hope and unit...",
+          "image": "images/VaMWZY52j30n.jpg"
+        },
+        {
+          "articleId": "Gns67bdl4U46",
+          "title": "Building Bridges: Intergenerational Church Activities",
+          "slug": "building-bridges-intergenerational-church-activities",
+          "excerpt": "Imagine a church where wisdom meets youthful energy, a community thriving through intergenerational ...",
+          "image": "images/Gns67bdl4U46.jpg"
+        },
+        {
+          "articleId": "UCudb5VsT8nh",
+          "title": "5 Ways to Foster Fellowship in Your Church",
+          "slug": "5-ways-to-foster-fellowship-in-your-church",
+          "excerpt": "Building a vibrant church community starts with fostering deeper connections. Begin by hosting small...",
+          "image": "images/UCudb5VsT8nh.jpg"
+        },
+        {
+          "articleId": "FAhwV3pFxBsp",
+          "title": "Creating Lasting Connections Through Service",
+          "slug": "creating-lasting-connections-through-service",
+          "excerpt": "In a world craving genuine connection, serving others can light the path to deeper fellowship. Servi...",
+          "image": "images/FAhwV3pFxBsp.jpg"
+        },
+        {
+          "articleId": "x6DEkQ1tG4TS",
+          "title": "Why Fellowship Matters for Modern Christians",
+          "slug": "why-fellowship-matters-for-modern-christians",
+          "excerpt": "In a world where virtual connections often replace face-to-face interactions, fellowship remains cru...",
+          "image": "images/x6DEkQ1tG4TS.jpg"
+        },
+        {
+          "articleId": "OVbgKfRBp2qO",
+          "title": "How Fellowship Deepens Your Walk with Christ",
+          "slug": "how-fellowship-deepens-your-walk-with-christ",
+          "excerpt": "In the heart of fellowship lies a transformative power, deepening your walk with Christ in ways soli...",
+          "image": "images/OVbgKfRBp2qO.jpg"
+        }
+      ],
+      "spotlight": {
+        "main": {
+          "articleId": "aAe7E0f5Copf",
+          "title": "Understanding the Biblical Basis for Community",
+          "slug": "understanding-the-biblical-basis-for-community",
+          "excerpt": "In the Bible, community isn't just a suggestion—it's a divine mandate. From the early church in Acts to the wisdom of Proverbs, fellowship is woven in...",
+          "image": "images/aAe7E0f5Copf.jpg"
+        },
+        "list": [
+          {
+            "articleId": "USo4BlHnxHZz",
+            "title": "The Power of Unity: Strengthening Church Bonds",
+            "slug": "the-power-of-unity-strengthening-church-bonds",
+            "image": "images/USo4BlHnxHZz.jpg"
+          },
+          {
+            "articleId": "OVbgKfRBp2qO",
+            "title": "How Fellowship Deepens Your Walk with Christ",
+            "slug": "how-fellowship-deepens-your-walk-with-christ",
+            "image": "images/OVbgKfRBp2qO.jpg"
+          }
+        ]
+      },
+      "relatedInfo": [
+        {
+          "articleId": "AArSmZcnyGQn",
+          "title": "Finding Grace in Challenging Relationships",
+          "slug": "finding-grace-in-challenging-relationships",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "Navigating challenging relationships can feel like walking through a storm. Yet, grace is our compas...",
+          "image": "images/AArSmZcnyGQn.jpg"
+        },
+        {
+          "articleId": "0rVLRGZNrrxg",
+          "title": "How to Reflect on Psalm 23 for Inner Peace",
+          "slug": "how-to-reflect-on-psalm-23-for-inner-peace",
           "categorySlug": "scripture-and-reflection",
           "categoryName": "Scripture and Reflection",
-          "excerpt": "Prayer is a powerful connection bridging the divine and the earthly. Throughout Scripture, from Davi...",
-          "image": "images/E51GpnWq9o8X.jpg"
+          "excerpt": "In a world brimming with chaos, Psalm 23 offers a sanctuary of peace. Begin by reciting its verses s...",
+          "image": "images/0rVLRGZNrrxg.jpg"
+        },
+        {
+          "articleId": "JdsAkC6xBGmK",
+          "title": "Grace in Action: Stories from Everyday Believers",
+          "slug": "grace-in-action-stories-from-everyday-believers",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "Every day, ordinary believers perform extraordinary acts of grace. Take Anna, who quietly pays for g...",
+          "image": "images/JdsAkC6xBGmK.jpg"
+        },
+        {
+          "articleId": "9cL9huk4G6jv",
+          "title": "Cultivating a Grace-Filled Mindset Every Day",
+          "slug": "cultivating-a-grace-filled-mindset-every-day",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "In a world buzzing with distractions, cultivating a grace-filled mindset requires intentional focus....",
+          "image": "images/9cL9huk4G6jv.jpg"
+        }
+      ],
+      "recommended": [
+        {
+          "articleId": "gbtx1Fls9vB6",
+          "title": "Journey Through the Gospels: A Reflective Study Guide",
+          "slug": "journey-through-the-gospels-a-reflective-study-guide",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "Embark on a transformative journey through the Gospels, where ancient wisdom meets modern reflection...",
+          "image": "images/gbtx1Fls9vB6.jpg"
+        },
+        {
+          "articleId": "hIe2QljfWFRM",
+          "title": "10 Old Testament Stories with Modern Relevance",
+          "slug": "10-old-testament-stories-with-modern-relevance",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "The Old Testament, a tapestry of timeless stories, speaks to modern hearts with profound relevance. ...",
+          "image": "images/hIe2QljfWFRM.jpg"
+        },
+        {
+          "articleId": "Wrxbj1FYmx4z",
+          "title": "Building Faith: Insights from Hebrews Chapter 11",
+          "slug": "building-faith-insights-from-hebrews-chapter-11",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "Faith, the cornerstone of Christian life, is beautifully illustrated in Hebrews 11. This chapter, of...",
+          "image": "images/Wrxbj1FYmx4z.jpg"
         },
         {
           "articleId": "R4gUMZMG6kkX",
@@ -1624,6 +1467,15 @@
           "categoryName": "Living in Grace",
           "excerpt": "Divine grace, a cornerstone of Christian faith, invites us into a transformative relationship with G...",
           "image": "images/R4gUMZMG6kkX.jpg"
+        },
+        {
+          "articleId": "OevdPi8RIF6y",
+          "title": "Understanding God's Grace: Key Verses and Reflections",
+          "slug": "understanding-gods-grace-key-verses-and-reflections",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "God's grace, a profound mystery, is the unearned, unmerited favor showered upon us. Ephesians 2:8 re...",
+          "image": "images/OevdPi8RIF6y.jpg"
         },
         {
           "articleId": "PDZjz3rX93Yr",
@@ -1635,33 +1487,13 @@
           "image": "images/PDZjz3rX93Yr.jpg"
         },
         {
-          "articleId": "l5qB3loInAy7",
-          "title": "How to Live Gracefully in a Broken World",
-          "slug": "how-to-live-gracefully-in-a-broken-world",
+          "articleId": "ec2QUUIgiZ3f",
+          "title": "10 Ways God's Grace Transforms Daily Life",
+          "slug": "10-ways-gods-grace-transforms-daily-life",
           "categorySlug": "living-in-grace",
           "categoryName": "Living in Grace",
-          "excerpt": "In a world marred by brokenness, living gracefully requires embracing God’s love and extending it to...",
-          "image": "images/l5qB3loInAy7.jpg"
-        },
-        {
-          "articleId": "ulWWcj1Qz4W1",
-          "title": "Reflecting on the Parables: Wisdom for Daily Living",
-          "slug": "reflecting-on-the-parables-wisdom-for-daily-living",
-          "categorySlug": "scripture-and-reflection",
-          "categoryName": "Scripture and Reflection",
-          "excerpt": "Parables—simple stories with profound truths—encourage us to pause and reflect. Jesus used them mast...",
-          "image": "images/ulWWcj1Qz4W1.jpg"
-        }
-      ],
-      "youMightLike": [
-        {
-          "articleId": "njIUjpKBwH4p",
-          "title": "God's Grace: The Key to Personal Healing",
-          "slug": "gods-grace-the-key-to-personal-healing",
-          "categorySlug": "living-in-grace",
-          "categoryName": "Living in Grace",
-          "excerpt": "In a world filled with turmoil, God's grace offers a sanctuary of healing. Embracing this divine gif...",
-          "image": "images/njIUjpKBwH4p.jpg"
+          "excerpt": "Imagine starting each day wrapped in the gentle embrace of God's grace. It transforms mundane routin...",
+          "image": "images/ec2QUUIgiZ3f.jpg"
         },
         {
           "articleId": "oideHWFEb9wr",
@@ -1673,6 +1505,100 @@
           "image": "images/oideHWFEb9wr.jpg"
         },
         {
+          "articleId": "MYD1Ob05xrzD",
+          "title": "Living with Grace: Practical Tips for Families",
+          "slug": "living-with-grace-practical-tips-for-families",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "Living with grace transforms family life into a harmonious symphony. Begin each day with a prayer, i...",
+          "image": "images/MYD1Ob05xrzD.jpg"
+        },
+        {
+          "articleId": "E51GpnWq9o8X",
+          "title": "The Power of Prayer: Insights from Scripture",
+          "slug": "the-power-of-prayer-insights-from-scripture",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "Prayer is a powerful connection bridging the divine and the earthly. Throughout Scripture, from Davi...",
+          "image": "images/E51GpnWq9o8X.jpg"
+        }
+      ],
+      "mostPopular": [
+        {
+          "articleId": "Wrxbj1FYmx4z",
+          "title": "Building Faith: Insights from Hebrews Chapter 11",
+          "slug": "building-faith-insights-from-hebrews-chapter-11",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "Faith, the cornerstone of Christian life, is beautifully illustrated in Hebrews 11. This chapter, of...",
+          "image": "images/Wrxbj1FYmx4z.jpg"
+        },
+        {
+          "articleId": "QBhrNJP9tEvo",
+          "title": "5 Steps to Deepen Your Bible Study Experience",
+          "slug": "5-steps-to-deepen-your-bible-study-experience",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "Unlock the treasures of Scripture with these five transformative steps. Begin by choosing a quiet, d...",
+          "image": "images/QBhrNJP9tEvo.jpg"
+        },
+        {
+          "articleId": "9cL9huk4G6jv",
+          "title": "Cultivating a Grace-Filled Mindset Every Day",
+          "slug": "cultivating-a-grace-filled-mindset-every-day",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "In a world buzzing with distractions, cultivating a grace-filled mindset requires intentional focus....",
+          "image": "images/9cL9huk4G6jv.jpg"
+        },
+        {
+          "articleId": "lbLN1i7bPBya",
+          "title": "Discover Hope: 10 Uplifting Scriptures for Troubling Times",
+          "slug": "discover-hope-10-uplifting-scriptures-for-troubling-times",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "In life’s storms, finding a beacon of hope can transform despair into peace. The Bible offers profou...",
+          "image": "images/lbLN1i7bPBya.jpg"
+        },
+        {
+          "articleId": "E51GpnWq9o8X",
+          "title": "The Power of Prayer: Insights from Scripture",
+          "slug": "the-power-of-prayer-insights-from-scripture",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "Prayer is a powerful connection bridging the divine and the earthly. Throughout Scripture, from Davi...",
+          "image": "images/E51GpnWq9o8X.jpg"
+        },
+        {
+          "articleId": "MYD1Ob05xrzD",
+          "title": "Living with Grace: Practical Tips for Families",
+          "slug": "living-with-grace-practical-tips-for-families",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "Living with grace transforms family life into a harmonious symphony. Begin each day with a prayer, i...",
+          "image": "images/MYD1Ob05xrzD.jpg"
+        },
+        {
+          "articleId": "SNMJep9uD9dA",
+          "title": "7 Biblical Stories of Grace in Action",
+          "slug": "7-biblical-stories-of-grace-in-action",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "In the Bible, grace emerges as a profound theme, illustrating God's boundless love. Consider Noah, w...",
+          "image": "images/SNMJep9uD9dA.jpg"
+        }
+      ],
+      "mustRead": [
+        {
+          "articleId": "K43zZlmghSHZ",
+          "title": "Exploring Grace: Theological Insights for Today",
+          "slug": "exploring-grace-theological-insights-for-today",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "In the hustle of modern life, grace stands as a gentle whisper, reminding us of God’s unmerited favo...",
+          "image": "images/K43zZlmghSHZ.jpg"
+        },
+        {
           "articleId": "ic5CA8MoBx4E",
           "title": "Exploring the Beatitudes: Pathways to a Blessed Life",
           "slug": "exploring-the-beatitudes-pathways-to-a-blessed-life",
@@ -1680,6 +1606,80 @@
           "categoryName": "Scripture and Reflection",
           "excerpt": "In the heart of Matthew's Gospel, the Beatitudes unveil profound pathways to living a blessed life. ...",
           "image": "images/ic5CA8MoBx4E.jpg"
+        },
+        {
+          "articleId": "AArSmZcnyGQn",
+          "title": "Finding Grace in Challenging Relationships",
+          "slug": "finding-grace-in-challenging-relationships",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "Navigating challenging relationships can feel like walking through a storm. Yet, grace is our compas...",
+          "image": "images/AArSmZcnyGQn.jpg"
+        },
+        {
+          "articleId": "Wrxbj1FYmx4z",
+          "title": "Building Faith: Insights from Hebrews Chapter 11",
+          "slug": "building-faith-insights-from-hebrews-chapter-11",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "Faith, the cornerstone of Christian life, is beautifully illustrated in Hebrews 11. This chapter, of...",
+          "image": "images/Wrxbj1FYmx4z.jpg"
+        },
+        {
+          "articleId": "pjN7D84DGC27",
+          "title": "Embracing Grace: A Guide to Spiritual Growth",
+          "slug": "embracing-grace-a-guide-to-spiritual-growth",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "In the journey of faith, embracing grace is transformative. It calls for a heart open to receiving G...",
+          "image": "images/pjN7D84DGC27.jpg"
+        },
+        {
+          "articleId": "lbLN1i7bPBya",
+          "title": "Discover Hope: 10 Uplifting Scriptures for Troubling Times",
+          "slug": "discover-hope-10-uplifting-scriptures-for-troubling-times",
+          "categorySlug": "scripture-and-reflection",
+          "categoryName": "Scripture and Reflection",
+          "excerpt": "In life’s storms, finding a beacon of hope can transform despair into peace. The Bible offers profou...",
+          "image": "images/lbLN1i7bPBya.jpg"
+        },
+        {
+          "articleId": "R4gUMZMG6kkX",
+          "title": "Deep Dive: Understanding Divine Grace",
+          "slug": "deep-dive-understanding-divine-grace",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "Divine grace, a cornerstone of Christian faith, invites us into a transformative relationship with G...",
+          "image": "images/R4gUMZMG6kkX.jpg"
+        }
+      ],
+      "youMightLike": [
+        {
+          "articleId": "l5qB3loInAy7",
+          "title": "How to Live Gracefully in a Broken World",
+          "slug": "how-to-live-gracefully-in-a-broken-world",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "In a world marred by brokenness, living gracefully requires embracing God’s love and extending it to...",
+          "image": "images/l5qB3loInAy7.jpg"
+        },
+        {
+          "articleId": "PDZjz3rX93Yr",
+          "title": "The Power of Grace in the Workplace",
+          "slug": "the-power-of-grace-in-the-workplace",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "Imagine a workplace where grace reigns supreme—where forgiveness and understanding replace criticism...",
+          "image": "images/PDZjz3rX93Yr.jpg"
+        },
+        {
+          "articleId": "njIUjpKBwH4p",
+          "title": "God's Grace: The Key to Personal Healing",
+          "slug": "gods-grace-the-key-to-personal-healing",
+          "categorySlug": "living-in-grace",
+          "categoryName": "Living in Grace",
+          "excerpt": "In a world filled with turmoil, God's grace offers a sanctuary of healing. Embracing this divine gif...",
+          "image": "images/njIUjpKBwH4p.jpg"
         },
         {
           "articleId": "ec2QUUIgiZ3f",
@@ -1691,51 +1691,51 @@
           "image": "images/ec2QUUIgiZ3f.jpg"
         },
         {
-          "articleId": "R4gUMZMG6kkX",
-          "title": "Deep Dive: Understanding Divine Grace",
-          "slug": "deep-dive-understanding-divine-grace",
+          "articleId": "K43zZlmghSHZ",
+          "title": "Exploring Grace: Theological Insights for Today",
+          "slug": "exploring-grace-theological-insights-for-today",
           "categorySlug": "living-in-grace",
           "categoryName": "Living in Grace",
-          "excerpt": "Divine grace, a cornerstone of Christian faith, invites us into a transformative relationship with G...",
-          "image": "images/R4gUMZMG6kkX.jpg"
+          "excerpt": "In the hustle of modern life, grace stands as a gentle whisper, reminding us of God’s unmerited favo...",
+          "image": "images/K43zZlmghSHZ.jpg"
         }
       ]
     }
   },
   "spotlightArticle": {
-    "articleId": "OVbgKfRBp2qO",
-    "title": "How Fellowship Deepens Your Walk with Christ",
-    "slug": "how-fellowship-deepens-your-walk-with-christ",
+    "articleId": "USo4BlHnxHZz",
+    "title": "The Power of Unity: Strengthening Church Bonds",
+    "slug": "the-power-of-unity-strengthening-church-bonds",
     "categorySlug": "community-and-fellowship",
     "categoryName": "Community and Fellowship",
-    "excerpt": "In the heart of fellowship lies a transformative power, deepening your walk with Christ in ways soli...",
-    "image": "images/OVbgKfRBp2qO.jpg"
+    "excerpt": "In the tapestry of faith, unity threads together the vibrant colors of individual believers, creatin...",
+    "image": "images/USo4BlHnxHZz.jpg"
   },
   "popularArticles": [
     {
-      "articleId": "njIUjpKBwH4p",
-      "title": "God's Grace: The Key to Personal Healing",
-      "categorySlug": "living-in-grace"
-    },
-    {
-      "articleId": "aAe7E0f5Copf",
-      "title": "Understanding the Biblical Basis for Community",
+      "articleId": "OaJ5pCyxf03C",
+      "title": "How to Build a Strong Christian Community",
       "categorySlug": "community-and-fellowship"
     },
     {
-      "articleId": "uRw2m4gCZRi4",
-      "title": "Finding Your Place in God's Community",
+      "articleId": "K43zZlmghSHZ",
+      "title": "Exploring Grace: Theological Insights for Today",
+      "categorySlug": "living-in-grace"
+    },
+    {
+      "articleId": "oideHWFEb9wr",
+      "title": "Finding Joy: A Study of Philippians’ Core Messages",
+      "categorySlug": "scripture-and-reflection"
+    },
+    {
+      "articleId": "Gns67bdl4U46",
+      "title": "Building Bridges: Intergenerational Church Activities",
       "categorySlug": "community-and-fellowship"
     },
     {
-      "articleId": "ec2QUUIgiZ3f",
-      "title": "10 Ways God's Grace Transforms Daily Life",
-      "categorySlug": "living-in-grace"
-    },
-    {
-      "articleId": "AArSmZcnyGQn",
-      "title": "Finding Grace in Challenging Relationships",
-      "categorySlug": "living-in-grace"
+      "articleId": "Wrxbj1FYmx4z",
+      "title": "Building Faith: Insights from Hebrews Chapter 11",
+      "categorySlug": "scripture-and-reflection"
     }
   ],
   "readNextArticles": [
@@ -1747,18 +1747,18 @@
       "image": "images/UCudb5VsT8nh.jpg"
     },
     {
-      "articleId": "njIUjpKBwH4p",
-      "title": "God's Grace: The Key to Personal Healing",
-      "slug": "gods-grace-the-key-to-personal-healing",
-      "excerpt": "In a world filled with turmoil, God's grace offers a sanctuary of healing. Embracing this divine gif...",
-      "image": "images/njIUjpKBwH4p.jpg"
+      "articleId": "R4gUMZMG6kkX",
+      "title": "Deep Dive: Understanding Divine Grace",
+      "slug": "deep-dive-understanding-divine-grace",
+      "excerpt": "Divine grace, a cornerstone of Christian faith, invites us into a transformative relationship with G...",
+      "image": "images/R4gUMZMG6kkX.jpg"
     },
     {
-      "articleId": "Wrxbj1FYmx4z",
-      "title": "Building Faith: Insights from Hebrews Chapter 11",
-      "slug": "building-faith-insights-from-hebrews-chapter-11",
-      "excerpt": "Faith, the cornerstone of Christian life, is beautifully illustrated in Hebrews 11. This chapter, of...",
-      "image": "images/Wrxbj1FYmx4z.jpg"
+      "articleId": "hIe2QljfWFRM",
+      "title": "10 Old Testament Stories with Modern Relevance",
+      "slug": "10-old-testament-stories-with-modern-relevance",
+      "excerpt": "The Old Testament, a tapestry of timeless stories, speaks to modern hearts with profound relevance. ...",
+      "image": "images/hIe2QljfWFRM.jpg"
     }
   ],
   "allArticles": [
@@ -2025,78 +2025,15 @@
       "categoryName": "Living in Grace",
       "categorySlug": "living-in-grace",
       "description": "Explore how God's grace influences everyday life through inspiring stories, practical advice, and deep theological insights. This category invites believers to discover the profound impact of divine grace in relationships, work, and personal growth, providing a guide to living a grace-filled life.",
-      "headerImage": "images/SNMJep9uD9dA.jpg",
-      "buildSeed": 1768647872330,
+      "headerImage": "images/MYD1Ob05xrzD.jpg",
+      "buildSeed": 1768708881608,
       "articles": [
-        {
-          "articleId": "SNMJep9uD9dA",
-          "title": "7 Biblical Stories of Grace in Action",
-          "slug": "7-biblical-stories-of-grace-in-action",
-          "excerpt": "In the Bible, grace emerges as a profound theme, illustrating God's boundless lo...",
-          "image": "images/SNMJep9uD9dA.jpg"
-        },
-        {
-          "articleId": "njIUjpKBwH4p",
-          "title": "God's Grace: The Key to Personal Healing",
-          "slug": "gods-grace-the-key-to-personal-healing",
-          "excerpt": "In a world filled with turmoil, God's grace offers a sanctuary of healing. Embra...",
-          "image": "images/njIUjpKBwH4p.jpg"
-        },
-        {
-          "articleId": "JdsAkC6xBGmK",
-          "title": "Grace in Action: Stories from Everyday Believers",
-          "slug": "grace-in-action-stories-from-everyday-believers",
-          "excerpt": "Every day, ordinary believers perform extraordinary acts of grace. Take Anna, wh...",
-          "image": "images/JdsAkC6xBGmK.jpg"
-        },
         {
           "articleId": "MYD1Ob05xrzD",
           "title": "Living with Grace: Practical Tips for Families",
           "slug": "living-with-grace-practical-tips-for-families",
           "excerpt": "Living with grace transforms family life into a harmonious symphony. Begin each ...",
           "image": "images/MYD1Ob05xrzD.jpg"
-        },
-        {
-          "articleId": "AArSmZcnyGQn",
-          "title": "Finding Grace in Challenging Relationships",
-          "slug": "finding-grace-in-challenging-relationships",
-          "excerpt": "Navigating challenging relationships can feel like walking through a storm. Yet,...",
-          "image": "images/AArSmZcnyGQn.jpg"
-        },
-        {
-          "articleId": "9cL9huk4G6jv",
-          "title": "Cultivating a Grace-Filled Mindset Every Day",
-          "slug": "cultivating-a-grace-filled-mindset-every-day",
-          "excerpt": "In a world buzzing with distractions, cultivating a grace-filled mindset require...",
-          "image": "images/9cL9huk4G6jv.jpg"
-        },
-        {
-          "articleId": "PDZjz3rX93Yr",
-          "title": "The Power of Grace in the Workplace",
-          "slug": "the-power-of-grace-in-the-workplace",
-          "excerpt": "Imagine a workplace where grace reigns supreme—where forgiveness and understandi...",
-          "image": "images/PDZjz3rX93Yr.jpg"
-        },
-        {
-          "articleId": "l5qB3loInAy7",
-          "title": "How to Live Gracefully in a Broken World",
-          "slug": "how-to-live-gracefully-in-a-broken-world",
-          "excerpt": "In a world marred by brokenness, living gracefully requires embracing God’s love...",
-          "image": "images/l5qB3loInAy7.jpg"
-        },
-        {
-          "articleId": "pjN7D84DGC27",
-          "title": "Embracing Grace: A Guide to Spiritual Growth",
-          "slug": "embracing-grace-a-guide-to-spiritual-growth",
-          "excerpt": "In the journey of faith, embracing grace is transformative. It calls for a heart...",
-          "image": "images/pjN7D84DGC27.jpg"
-        },
-        {
-          "articleId": "R4gUMZMG6kkX",
-          "title": "Deep Dive: Understanding Divine Grace",
-          "slug": "deep-dive-understanding-divine-grace",
-          "excerpt": "Divine grace, a cornerstone of Christian faith, invites us into a transformative...",
-          "image": "images/R4gUMZMG6kkX.jpg"
         },
         {
           "articleId": "K43zZlmghSHZ",
@@ -2106,11 +2043,74 @@
           "image": "images/K43zZlmghSHZ.jpg"
         },
         {
+          "articleId": "njIUjpKBwH4p",
+          "title": "God's Grace: The Key to Personal Healing",
+          "slug": "gods-grace-the-key-to-personal-healing",
+          "excerpt": "In a world filled with turmoil, God's grace offers a sanctuary of healing. Embra...",
+          "image": "images/njIUjpKBwH4p.jpg"
+        },
+        {
+          "articleId": "R4gUMZMG6kkX",
+          "title": "Deep Dive: Understanding Divine Grace",
+          "slug": "deep-dive-understanding-divine-grace",
+          "excerpt": "Divine grace, a cornerstone of Christian faith, invites us into a transformative...",
+          "image": "images/R4gUMZMG6kkX.jpg"
+        },
+        {
+          "articleId": "pjN7D84DGC27",
+          "title": "Embracing Grace: A Guide to Spiritual Growth",
+          "slug": "embracing-grace-a-guide-to-spiritual-growth",
+          "excerpt": "In the journey of faith, embracing grace is transformative. It calls for a heart...",
+          "image": "images/pjN7D84DGC27.jpg"
+        },
+        {
+          "articleId": "JdsAkC6xBGmK",
+          "title": "Grace in Action: Stories from Everyday Believers",
+          "slug": "grace-in-action-stories-from-everyday-believers",
+          "excerpt": "Every day, ordinary believers perform extraordinary acts of grace. Take Anna, wh...",
+          "image": "images/JdsAkC6xBGmK.jpg"
+        },
+        {
+          "articleId": "l5qB3loInAy7",
+          "title": "How to Live Gracefully in a Broken World",
+          "slug": "how-to-live-gracefully-in-a-broken-world",
+          "excerpt": "In a world marred by brokenness, living gracefully requires embracing God’s love...",
+          "image": "images/l5qB3loInAy7.jpg"
+        },
+        {
+          "articleId": "PDZjz3rX93Yr",
+          "title": "The Power of Grace in the Workplace",
+          "slug": "the-power-of-grace-in-the-workplace",
+          "excerpt": "Imagine a workplace where grace reigns supreme—where forgiveness and understandi...",
+          "image": "images/PDZjz3rX93Yr.jpg"
+        },
+        {
+          "articleId": "9cL9huk4G6jv",
+          "title": "Cultivating a Grace-Filled Mindset Every Day",
+          "slug": "cultivating-a-grace-filled-mindset-every-day",
+          "excerpt": "In a world buzzing with distractions, cultivating a grace-filled mindset require...",
+          "image": "images/9cL9huk4G6jv.jpg"
+        },
+        {
           "articleId": "ec2QUUIgiZ3f",
           "title": "10 Ways God's Grace Transforms Daily Life",
           "slug": "10-ways-gods-grace-transforms-daily-life",
           "excerpt": "Imagine starting each day wrapped in the gentle embrace of God's grace. It trans...",
           "image": "images/ec2QUUIgiZ3f.jpg"
+        },
+        {
+          "articleId": "SNMJep9uD9dA",
+          "title": "7 Biblical Stories of Grace in Action",
+          "slug": "7-biblical-stories-of-grace-in-action",
+          "excerpt": "In the Bible, grace emerges as a profound theme, illustrating God's boundless lo...",
+          "image": "images/SNMJep9uD9dA.jpg"
+        },
+        {
+          "articleId": "AArSmZcnyGQn",
+          "title": "Finding Grace in Challenging Relationships",
+          "slug": "finding-grace-in-challenging-relationships",
+          "excerpt": "Navigating challenging relationships can feel like walking through a storm. Yet,...",
+          "image": "images/AArSmZcnyGQn.jpg"
         }
       ]
     },
@@ -2118,15 +2118,29 @@
       "categoryName": "Scripture and Reflection",
       "categorySlug": "scripture-and-reflection",
       "description": "Dive deep into the Word with thoughtful reflections and Bible studies designed to illuminate the path of faith. This category offers readers a chance to reflect on scripture with devotionals and insights that foster a deeper understanding of God's message.",
-      "headerImage": "images/ulWWcj1Qz4W1.jpg",
-      "buildSeed": 1768647872330,
+      "headerImage": "images/Wrxbj1FYmx4z.jpg",
+      "buildSeed": 1768708881608,
       "articles": [
         {
-          "articleId": "ulWWcj1Qz4W1",
-          "title": "Reflecting on the Parables: Wisdom for Daily Living",
-          "slug": "reflecting-on-the-parables-wisdom-for-daily-living",
-          "excerpt": "Parables—simple stories with profound truths—encourage us to pause and reflect. ...",
-          "image": "images/ulWWcj1Qz4W1.jpg"
+          "articleId": "Wrxbj1FYmx4z",
+          "title": "Building Faith: Insights from Hebrews Chapter 11",
+          "slug": "building-faith-insights-from-hebrews-chapter-11",
+          "excerpt": "Faith, the cornerstone of Christian life, is beautifully illustrated in Hebrews ...",
+          "image": "images/Wrxbj1FYmx4z.jpg"
+        },
+        {
+          "articleId": "hIe2QljfWFRM",
+          "title": "10 Old Testament Stories with Modern Relevance",
+          "slug": "10-old-testament-stories-with-modern-relevance",
+          "excerpt": "The Old Testament, a tapestry of timeless stories, speaks to modern hearts with ...",
+          "image": "images/hIe2QljfWFRM.jpg"
+        },
+        {
+          "articleId": "lbLN1i7bPBya",
+          "title": "Discover Hope: 10 Uplifting Scriptures for Troubling Times",
+          "slug": "discover-hope-10-uplifting-scriptures-for-troubling-times",
+          "excerpt": "In life’s storms, finding a beacon of hope can transform despair into peace. The...",
+          "image": "images/lbLN1i7bPBya.jpg"
         },
         {
           "articleId": "QBhrNJP9tEvo",
@@ -2143,6 +2157,13 @@
           "image": "images/E51GpnWq9o8X.jpg"
         },
         {
+          "articleId": "gbtx1Fls9vB6",
+          "title": "Journey Through the Gospels: A Reflective Study Guide",
+          "slug": "journey-through-the-gospels-a-reflective-study-guide",
+          "excerpt": "Embark on a transformative journey through the Gospels, where ancient wisdom mee...",
+          "image": "images/gbtx1Fls9vB6.jpg"
+        },
+        {
           "articleId": "ic5CA8MoBx4E",
           "title": "Exploring the Beatitudes: Pathways to a Blessed Life",
           "slug": "exploring-the-beatitudes-pathways-to-a-blessed-life",
@@ -2150,25 +2171,11 @@
           "image": "images/ic5CA8MoBx4E.jpg"
         },
         {
-          "articleId": "Wrxbj1FYmx4z",
-          "title": "Building Faith: Insights from Hebrews Chapter 11",
-          "slug": "building-faith-insights-from-hebrews-chapter-11",
-          "excerpt": "Faith, the cornerstone of Christian life, is beautifully illustrated in Hebrews ...",
-          "image": "images/Wrxbj1FYmx4z.jpg"
-        },
-        {
-          "articleId": "oideHWFEb9wr",
-          "title": "Finding Joy: A Study of Philippians’ Core Messages",
-          "slug": "finding-joy-a-study-of-philippians-core-messages",
-          "excerpt": "Philippians, a beacon of joy amidst trials, invites us to discover profound cont...",
-          "image": "images/oideHWFEb9wr.jpg"
-        },
-        {
-          "articleId": "hIe2QljfWFRM",
-          "title": "10 Old Testament Stories with Modern Relevance",
-          "slug": "10-old-testament-stories-with-modern-relevance",
-          "excerpt": "The Old Testament, a tapestry of timeless stories, speaks to modern hearts with ...",
-          "image": "images/hIe2QljfWFRM.jpg"
+          "articleId": "0rVLRGZNrrxg",
+          "title": "How to Reflect on Psalm 23 for Inner Peace",
+          "slug": "how-to-reflect-on-psalm-23-for-inner-peace",
+          "excerpt": "In a world brimming with chaos, Psalm 23 offers a sanctuary of peace. Begin by r...",
+          "image": "images/0rVLRGZNrrxg.jpg"
         },
         {
           "articleId": "OevdPi8RIF6y",
@@ -2178,18 +2185,11 @@
           "image": "images/OevdPi8RIF6y.jpg"
         },
         {
-          "articleId": "lbLN1i7bPBya",
-          "title": "Discover Hope: 10 Uplifting Scriptures for Troubling Times",
-          "slug": "discover-hope-10-uplifting-scriptures-for-troubling-times",
-          "excerpt": "In life’s storms, finding a beacon of hope can transform despair into peace. The...",
-          "image": "images/lbLN1i7bPBya.jpg"
-        },
-        {
-          "articleId": "gbtx1Fls9vB6",
-          "title": "Journey Through the Gospels: A Reflective Study Guide",
-          "slug": "journey-through-the-gospels-a-reflective-study-guide",
-          "excerpt": "Embark on a transformative journey through the Gospels, where ancient wisdom mee...",
-          "image": "images/gbtx1Fls9vB6.jpg"
+          "articleId": "ulWWcj1Qz4W1",
+          "title": "Reflecting on the Parables: Wisdom for Daily Living",
+          "slug": "reflecting-on-the-parables-wisdom-for-daily-living",
+          "excerpt": "Parables—simple stories with profound truths—encourage us to pause and reflect. ...",
+          "image": "images/ulWWcj1Qz4W1.jpg"
         },
         {
           "articleId": "AhfEApm05ldh",
@@ -2199,11 +2199,11 @@
           "image": "images/AhfEApm05ldh.jpg"
         },
         {
-          "articleId": "0rVLRGZNrrxg",
-          "title": "How to Reflect on Psalm 23 for Inner Peace",
-          "slug": "how-to-reflect-on-psalm-23-for-inner-peace",
-          "excerpt": "In a world brimming with chaos, Psalm 23 offers a sanctuary of peace. Begin by r...",
-          "image": "images/0rVLRGZNrrxg.jpg"
+          "articleId": "oideHWFEb9wr",
+          "title": "Finding Joy: A Study of Philippians’ Core Messages",
+          "slug": "finding-joy-a-study-of-philippians-core-messages",
+          "excerpt": "Philippians, a beacon of joy amidst trials, invites us to discover profound cont...",
+          "image": "images/oideHWFEb9wr.jpg"
         }
       ]
     },
@@ -2212,7 +2212,7 @@
       "categorySlug": "community-and-fellowship",
       "description": "Celebrate the power of Christian community through stories of fellowship, service, and unity. This category provides resources and narratives that highlight the importance of coming together in faith to support, uplift, and spread the love of Christ.",
       "headerImage": "images/aAe7E0f5Copf.jpg",
-      "buildSeed": 1768647872330,
+      "buildSeed": 1768708881608,
       "articles": [
         {
           "articleId": "aAe7E0f5Copf",
@@ -2222,53 +2222,11 @@
           "image": "images/aAe7E0f5Copf.jpg"
         },
         {
-          "articleId": "PM8pYPD6l6EI",
-          "title": "The Role of Small Groups in Spiritual Growth",
-          "slug": "the-role-of-small-groups-in-spiritual-growth",
-          "excerpt": "Small groups ignite spiritual growth by fostering deep connections and shared jo...",
-          "image": "images/PM8pYPD6l6EI.jpg"
-        },
-        {
           "articleId": "QaMyB4Oh2CK7",
           "title": "Volunteer Opportunities That Enrich Your Faith",
           "slug": "volunteer-opportunities-that-enrich-your-faith",
           "excerpt": "Are you seeking ways to deepen your faith while making a real impact? Volunteeri...",
           "image": "images/QaMyB4Oh2CK7.jpg"
-        },
-        {
-          "articleId": "FAhwV3pFxBsp",
-          "title": "Creating Lasting Connections Through Service",
-          "slug": "creating-lasting-connections-through-service",
-          "excerpt": "In a world craving genuine connection, serving others can light the path to deep...",
-          "image": "images/FAhwV3pFxBsp.jpg"
-        },
-        {
-          "articleId": "OaJ5pCyxf03C",
-          "title": "How to Build a Strong Christian Community",
-          "slug": "how-to-build-a-strong-christian-community",
-          "excerpt": "Building a strong Christian community begins with genuine relationships. Start w...",
-          "image": "images/OaJ5pCyxf03C.jpg"
-        },
-        {
-          "articleId": "uRw2m4gCZRi4",
-          "title": "Finding Your Place in God's Community",
-          "slug": "finding-your-place-in-gods-community",
-          "excerpt": "In a world brimming with noise, finding your place in God's community can be tra...",
-          "image": "images/uRw2m4gCZRi4.jpg"
-        },
-        {
-          "articleId": "USo4BlHnxHZz",
-          "title": "The Power of Unity: Strengthening Church Bonds",
-          "slug": "the-power-of-unity-strengthening-church-bonds",
-          "excerpt": "In the tapestry of faith, unity threads together the vibrant colors of individua...",
-          "image": "images/USo4BlHnxHZz.jpg"
-        },
-        {
-          "articleId": "UCudb5VsT8nh",
-          "title": "5 Ways to Foster Fellowship in Your Church",
-          "slug": "5-ways-to-foster-fellowship-in-your-church",
-          "excerpt": "Building a vibrant church community starts with fostering deeper connections. Be...",
-          "image": "images/UCudb5VsT8nh.jpg"
         },
         {
           "articleId": "OVbgKfRBp2qO",
@@ -2278,6 +2236,34 @@
           "image": "images/OVbgKfRBp2qO.jpg"
         },
         {
+          "articleId": "VaMWZY52j30n",
+          "title": "10 Inspiring Stories of Faith in Fellowship",
+          "slug": "10-inspiring-stories-of-faith-in-fellowship",
+          "excerpt": "In a world yearning for connection, stories of faith in fellowship illuminate pa...",
+          "image": "images/VaMWZY52j30n.jpg"
+        },
+        {
+          "articleId": "OaJ5pCyxf03C",
+          "title": "How to Build a Strong Christian Community",
+          "slug": "how-to-build-a-strong-christian-community",
+          "excerpt": "Building a strong Christian community begins with genuine relationships. Start w...",
+          "image": "images/OaJ5pCyxf03C.jpg"
+        },
+        {
+          "articleId": "USo4BlHnxHZz",
+          "title": "The Power of Unity: Strengthening Church Bonds",
+          "slug": "the-power-of-unity-strengthening-church-bonds",
+          "excerpt": "In the tapestry of faith, unity threads together the vibrant colors of individua...",
+          "image": "images/USo4BlHnxHZz.jpg"
+        },
+        {
+          "articleId": "uRw2m4gCZRi4",
+          "title": "Finding Your Place in God's Community",
+          "slug": "finding-your-place-in-gods-community",
+          "excerpt": "In a world brimming with noise, finding your place in God's community can be tra...",
+          "image": "images/uRw2m4gCZRi4.jpg"
+        },
+        {
           "articleId": "Gns67bdl4U46",
           "title": "Building Bridges: Intergenerational Church Activities",
           "slug": "building-bridges-intergenerational-church-activities",
@@ -2285,11 +2271,25 @@
           "image": "images/Gns67bdl4U46.jpg"
         },
         {
-          "articleId": "VaMWZY52j30n",
-          "title": "10 Inspiring Stories of Faith in Fellowship",
-          "slug": "10-inspiring-stories-of-faith-in-fellowship",
-          "excerpt": "In a world yearning for connection, stories of faith in fellowship illuminate pa...",
-          "image": "images/VaMWZY52j30n.jpg"
+          "articleId": "UCudb5VsT8nh",
+          "title": "5 Ways to Foster Fellowship in Your Church",
+          "slug": "5-ways-to-foster-fellowship-in-your-church",
+          "excerpt": "Building a vibrant church community starts with fostering deeper connections. Be...",
+          "image": "images/UCudb5VsT8nh.jpg"
+        },
+        {
+          "articleId": "FAhwV3pFxBsp",
+          "title": "Creating Lasting Connections Through Service",
+          "slug": "creating-lasting-connections-through-service",
+          "excerpt": "In a world craving genuine connection, serving others can light the path to deep...",
+          "image": "images/FAhwV3pFxBsp.jpg"
+        },
+        {
+          "articleId": "PM8pYPD6l6EI",
+          "title": "The Role of Small Groups in Spiritual Growth",
+          "slug": "the-role-of-small-groups-in-spiritual-growth",
+          "excerpt": "Small groups ignite spiritual growth by fostering deep connections and shared jo...",
+          "image": "images/PM8pYPD6l6EI.jpg"
         },
         {
           "articleId": "x6DEkQ1tG4TS",

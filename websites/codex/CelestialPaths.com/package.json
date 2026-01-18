@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "description": "Jubilee SSO and Identity Services",
-  "type": "module",
   "workspaces": [
     "services/*",
     "packages/*",

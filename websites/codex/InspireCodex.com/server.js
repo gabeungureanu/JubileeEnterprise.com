@@ -8,6 +8,7 @@
  */
 
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '.env'), override: true });
 const express = require('express');
 const cors = require('cors');
@@ -5399,6 +5400,1100 @@ app.delete('/api/v1/daily-news/cleanup', async (req, res) => {
 });
 
 // =============================================================================
+// SERVICE MANAGEMENT API - Inspire 8.0 Services Configuration
+// =============================================================================
+
+const SERVICES_DIR = path.join(__dirname, '..', '..', '..', 'services', 'Inspire.8.0');
+
+// Get all service configurations
+app.get('/api/v1/services', async (req, res) => {
+    try {
+        const configs = {};
+
+        // Read website services config
+        const websitesPath = path.join(SERVICES_DIR, 'websites-services.json');
+        if (fs.existsSync(websitesPath)) {
+            configs.websites = JSON.parse(fs.readFileSync(websitesPath, 'utf8'));
+        }
+
+        // Read API services config
+        const apiPath = path.join(SERVICES_DIR, 'api-services.json');
+        if (fs.existsSync(apiPath)) {
+            configs.api = JSON.parse(fs.readFileSync(apiPath, 'utf8'));
+        }
+
+        // Read Docker services config
+        const dockerPath = path.join(SERVICES_DIR, 'docker-services.json');
+        if (fs.existsSync(dockerPath)) {
+            configs.docker = JSON.parse(fs.readFileSync(dockerPath, 'utf8'));
+        }
+
+        res.json({
+            success: true,
+            configs,
+            servicesDirectory: SERVICES_DIR
+        });
+    } catch (err) {
+        console.error('[Services] Error loading configs:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to load service configurations',
+            message: err.message
+        });
+    }
+});
+
+// =============================================================================
+// URL PROBE API - Test any URL and return status (used by frontend health checks)
+// Must be defined BEFORE the :type route to avoid being caught by it
+// =============================================================================
+app.get('/api/v1/services/probe', async (req, res) => {
+    const { url } = req.query;
+
+    if (!url) {
+        return res.status(400).json({ ok: false, error: 'URL parameter required' });
+    }
+
+    // Validate URL format
+    let parsedUrl;
+    try {
+        parsedUrl = new URL(url);
+    } catch (e) {
+        return res.status(400).json({ ok: false, error: 'Invalid URL format' });
+    }
+
+    // Only allow HTTPS URLs for security
+    if (parsedUrl.protocol !== 'https:') {
+        return res.status(400).json({ ok: false, error: 'Only HTTPS URLs allowed' });
+    }
+
+    const startTime = Date.now();
+
+    try {
+        const https = require('https');
+        const result = await new Promise((resolve) => {
+            const req = https.get(url, {
+                timeout: 5000,
+                rejectUnauthorized: false, // Accept self-signed certs
+                headers: {
+                    'User-Agent': 'JubileeHealthCheck/1.0'
+                }
+            }, (response) => {
+                const ok = response.statusCode >= 200 && response.statusCode < 400;
+                resolve({
+                    ok,
+                    status: response.statusCode,
+                    responseTime: Date.now() - startTime,
+                    error: ok ? null : `HTTP ${response.statusCode}`
+                });
+            });
+
+            req.on('error', (err) => {
+                resolve({
+                    ok: false,
+                    status: 0,
+                    responseTime: Date.now() - startTime,
+                    error: err.code || err.message
+                });
+            });
+
+            req.on('timeout', () => {
+                req.destroy();
+                resolve({
+                    ok: false,
+                    status: 0,
+                    responseTime: Date.now() - startTime,
+                    error: 'TIMEOUT'
+                });
+            });
+        });
+
+        res.json(result);
+    } catch (err) {
+        res.json({
+            ok: false,
+            status: 0,
+            responseTime: Date.now() - startTime,
+            error: err.message
+        });
+    }
+});
+
+// Get specific service configuration (websites, api, docker)
+app.get('/api/v1/services/:type', async (req, res) => {
+    try {
+        const { type } = req.params;
+        const configMap = {
+            'websites': 'websites-services.json',
+            'api': 'api-services.json',
+            'docker': 'docker-services.json'
+        };
+
+        if (!configMap[type]) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid service type',
+                validTypes: Object.keys(configMap)
+            });
+        }
+
+        const configPath = path.join(SERVICES_DIR, configMap[type]);
+        if (!fs.existsSync(configPath)) {
+            return res.status(404).json({
+                success: false,
+                error: 'Configuration file not found',
+                path: configPath
+            });
+        }
+
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        res.json({
+            success: true,
+            type,
+            config
+        });
+    } catch (err) {
+        console.error('[Services] Error loading config:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to load configuration',
+            message: err.message
+        });
+    }
+});
+
+// Update a single service within a configuration
+app.put('/api/v1/services/:type/:serviceName', async (req, res) => {
+    try {
+        const { type, serviceName } = req.params;
+        const updates = req.body;
+
+        const configMap = {
+            'websites': 'websites-services.json',
+            'api': 'api-services.json',
+            'docker': 'docker-services.json'
+        };
+
+        if (!configMap[type]) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid service type',
+                validTypes: Object.keys(configMap)
+            });
+        }
+
+        const configPath = path.join(SERVICES_DIR, configMap[type]);
+        if (!fs.existsSync(configPath)) {
+            return res.status(404).json({
+                success: false,
+                error: 'Configuration file not found'
+            });
+        }
+
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+
+        // Find and update the service
+        const serviceKey = type === 'docker' ? 'containers' : 'services';
+        const serviceIndex = config[serviceKey].findIndex(s => s.name === serviceName);
+
+        if (serviceIndex === -1) {
+            return res.status(404).json({
+                success: false,
+                error: 'Service not found',
+                serviceName
+            });
+        }
+
+        // Merge updates with existing service config
+        const existingService = config[serviceKey][serviceIndex];
+        config[serviceKey][serviceIndex] = {
+            ...existingService,
+            ...updates
+        };
+
+        // Write updated config back to file
+        fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+
+        console.log(`[Services] Updated ${serviceName} in ${type} config`);
+
+        res.json({
+            success: true,
+            message: `Service ${serviceName} updated successfully`,
+            service: config[serviceKey][serviceIndex],
+            requiresReload: true
+        });
+    } catch (err) {
+        console.error('[Services] Error updating service:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update service',
+            message: err.message
+        });
+    }
+});
+
+// Bulk update services configuration
+app.put('/api/v1/services/:type', async (req, res) => {
+    try {
+        const { type } = req.params;
+        const updates = req.body;
+
+        const configMap = {
+            'websites': 'websites-services.json',
+            'api': 'api-services.json',
+            'docker': 'docker-services.json'
+        };
+
+        if (!configMap[type]) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid service type',
+                validTypes: Object.keys(configMap)
+            });
+        }
+
+        const configPath = path.join(SERVICES_DIR, configMap[type]);
+        if (!fs.existsSync(configPath)) {
+            return res.status(404).json({
+                success: false,
+                error: 'Configuration file not found'
+            });
+        }
+
+        // Backup existing config
+        const existingConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        const backupPath = configPath.replace('.json', `.backup-${Date.now()}.json`);
+        fs.writeFileSync(backupPath, JSON.stringify(existingConfig, null, 2));
+
+        // Write new config
+        const newConfig = {
+            ...existingConfig,
+            ...updates
+        };
+        fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2));
+
+        console.log(`[Services] Updated ${type} config, backup created at ${backupPath}`);
+
+        res.json({
+            success: true,
+            message: `${type} configuration updated successfully`,
+            backupPath,
+            requiresReload: true
+        });
+    } catch (err) {
+        console.error('[Services] Error updating config:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update configuration',
+            message: err.message
+        });
+    }
+});
+
+// Trigger service reload (touches .reload-trigger file)
+app.post('/api/v1/services/:type/reload', async (req, res) => {
+    try {
+        const { type } = req.params;
+        const reloadTrigger = path.join(SERVICES_DIR, '.reload-trigger');
+
+        // Touch the reload trigger file
+        const now = new Date();
+        fs.utimesSync(reloadTrigger, now, now);
+
+        console.log(`[Services] Reload triggered for ${type} services`);
+
+        res.json({
+            success: true,
+            message: `Reload triggered for ${type} services`,
+            timestamp: now.toISOString()
+        });
+    } catch (err) {
+        // File might not exist, create it
+        try {
+            const reloadTrigger = path.join(SERVICES_DIR, '.reload-trigger');
+            fs.writeFileSync(reloadTrigger, new Date().toISOString());
+            res.json({
+                success: true,
+                message: 'Reload trigger created',
+                timestamp: new Date().toISOString()
+            });
+        } catch (createErr) {
+            console.error('[Services] Error triggering reload:', createErr);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to trigger reload',
+                message: createErr.message
+            });
+        }
+    }
+});
+
+// Get service health from service manager health endpoints
+app.get('/api/v1/services/health/:type', async (req, res) => {
+    try {
+        const { type } = req.params;
+        const healthPorts = {
+            'websites': 3900,
+            'api': 3901,
+            'docker': 3902
+        };
+
+        if (!healthPorts[type]) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid service type',
+                validTypes: Object.keys(healthPorts)
+            });
+        }
+
+        const port = healthPorts[type];
+        const healthUrl = `http://localhost:${port}/health`;
+
+        const healthResponse = await new Promise((resolve) => {
+            const req = http.get(healthUrl, { timeout: 5000 }, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => {
+                    try {
+                        resolve({ status: 'ok', data: JSON.parse(data) });
+                    } catch (e) {
+                        resolve({ status: 'error', error: 'Invalid JSON response' });
+                    }
+                });
+            });
+            req.on('error', (err) => resolve({ status: 'offline', error: err.message }));
+            req.on('timeout', () => {
+                req.destroy();
+                resolve({ status: 'timeout', error: 'Request timed out' });
+            });
+        });
+
+        res.json({
+            success: healthResponse.status === 'ok',
+            type,
+            port,
+            ...healthResponse
+        });
+    } catch (err) {
+        console.error('[Services] Error fetching health:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch service health',
+            message: err.message
+        });
+    }
+});
+
+// Check individual service HTTP health by making actual HTTP requests
+// Tests PUBLIC URLs (https://domain.com) to reflect what users actually experience
+app.get('/api/v1/services/check/:type', async (req, res) => {
+    try {
+        const { type } = req.params;
+        const configPath = path.join(SERVICES_DIR, `${type}-services.json`);
+
+        if (!fs.existsSync(configPath)) {
+            return res.status(404).json({
+                success: false,
+                error: `Configuration file not found for type: ${type}`
+            });
+        }
+
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        const services = config.services || [];
+
+        // Helper to extract domain from cwd path
+        const getDomainFromCwd = (cwd) => {
+            if (!cwd) return null;
+            const parts = cwd.replace(/\\/g, '/').split('/');
+            const domain = parts[parts.length - 1];
+            if (domain && domain.includes('.')) return domain;
+            return null;
+        };
+
+        // Helper to check a URL with HTTPS support
+        const checkUrl = (url, timeout = 5000) => {
+            return new Promise((resolve) => {
+                const startTime = Date.now();
+                const protocol = url.startsWith('https') ? require('https') : http;
+
+                const reqOptions = {
+                    timeout,
+                    rejectUnauthorized: false, // Accept self-signed certs
+                    headers: {
+                        'User-Agent': 'JubileeHealthCheck/1.0'
+                    }
+                };
+
+                const req = protocol.get(url, reqOptions, (response) => {
+                    // Follow redirects (301, 302, 307, 308)
+                    if ([301, 302, 307, 308].includes(response.statusCode) && response.headers.location) {
+                        // Don't follow redirects, just report the status
+                        resolve({
+                            status: response.statusCode,
+                            ok: true, // Redirects are considered OK
+                            responseTime: Date.now() - startTime,
+                            redirect: response.headers.location
+                        });
+                        return;
+                    }
+
+                    resolve({
+                        status: response.statusCode,
+                        ok: response.statusCode >= 200 && response.statusCode < 400,
+                        responseTime: Date.now() - startTime
+                    });
+                });
+
+                req.on('error', (err) => {
+                    resolve({
+                        status: 0,
+                        ok: false,
+                        error: err.code || err.message,
+                        responseTime: Date.now() - startTime
+                    });
+                });
+
+                req.on('timeout', () => {
+                    req.destroy();
+                    resolve({
+                        status: 0,
+                        ok: false,
+                        error: 'TIMEOUT',
+                        responseTime: Date.now() - startTime
+                    });
+                });
+            });
+        };
+
+        // Check each service with HTTP request
+        const checkPromises = services.map(async (service) => {
+            const { name, port, enabled, cwd } = service;
+
+            // If disabled in config, report as disabled
+            if (enabled === false) {
+                return {
+                    name,
+                    port,
+                    configStatus: 'disabled',
+                    httpStatus: null,
+                    httpOk: null,
+                    responseTime: null,
+                    error: null,
+                    publicUrl: null,
+                    internalOk: null
+                };
+            }
+
+            // Get the public domain from cwd - PRODUCTION ONLY
+            const domain = getDomainFromCwd(cwd);
+
+            if (!domain) {
+                // No valid domain found - cannot check
+                return {
+                    name,
+                    port,
+                    configStatus: 'enabled',
+                    httpStatus: 0,
+                    httpOk: false,
+                    responseTime: 0,
+                    error: 'NO_DOMAIN_CONFIGURED',
+                    publicUrl: null
+                };
+            }
+
+            const publicUrl = `https://${domain}/`;
+
+            // Check ONLY the production public URL - that's what users access
+            const publicCheck = await checkUrl(publicUrl, 5000);
+
+            return {
+                name,
+                port,
+                configStatus: 'enabled',
+                httpStatus: publicCheck.status,
+                httpOk: publicCheck.ok,
+                responseTime: publicCheck.responseTime,
+                error: publicCheck.error || null,
+                publicUrl
+            };
+        });
+
+        const results = await Promise.all(checkPromises);
+
+        // Summary statistics
+        const online = results.filter(r => r.httpOk === true).length;
+        const offline = results.filter(r => r.configStatus === 'enabled' && r.httpOk === false).length;
+        const disabled = results.filter(r => r.configStatus === 'disabled').length;
+
+        // Log services that are offline for debugging
+        const offline_services = results.filter(r =>
+            r.configStatus === 'enabled' &&
+            r.httpOk === false
+        );
+        if (offline_services.length > 0) {
+            console.log(`[Health] ${offline_services.length} services are OFFLINE:`);
+            offline_services.forEach(r => {
+                console.log(`  - ${r.name} (${r.publicUrl}): ${r.error || `HTTP ${r.httpStatus}`}`);
+            });
+        }
+
+        res.json({
+            success: true,
+            type,
+            timestamp: new Date().toISOString(),
+            summary: {
+                total: results.length,
+                online,
+                offline,
+                disabled
+            },
+            services: results
+        });
+    } catch (err) {
+        console.error('[Services] Error checking services:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to check services',
+            message: err.message
+        });
+    }
+});
+
+// =============================================================================
+// INFRASTRUCTURE STATUS API - WSL2, Docker, Cloudflared Status
+// =============================================================================
+
+const { exec, execSync } = require('child_process');
+const util = require('util');
+const execPromise = util.promisify(exec);
+
+// Helper to clean UTF-16LE encoded output from WSL
+function cleanWslOutput(str) {
+    if (!str) return '';
+    // Remove null characters and extra spaces from UTF-16LE
+    return str
+        .replace(/\0/g, '')
+        .replace(/\r/g, '')
+        .split('\n')
+        .map(line => line.replace(/(.)\s/g, '$1').trim())
+        .filter(l => l)
+        .join('\n');
+}
+
+// Helper to run WSL commands properly (uses bash -c to handle special characters)
+async function runWslCommand(command, timeout = 10000) {
+    return new Promise((resolve, reject) => {
+        // Escape double quotes in command and wrap in bash -c
+        const escapedCmd = command.replace(/"/g, '\\"');
+        exec(`wsl -d Ubuntu-24.04 -- bash -c "${escapedCmd}"`, { timeout, encoding: 'utf8' }, (error, stdout, stderr) => {
+            if (error && !stdout) {
+                reject(error);
+            } else {
+                resolve(stdout || '');
+            }
+        });
+    });
+}
+
+// Helper to check if a port is listening
+async function checkPort(port, host = 'localhost') {
+    return new Promise((resolve) => {
+        const net = require('net');
+        const socket = new net.Socket();
+        socket.setTimeout(2000);
+        socket.on('connect', () => {
+            socket.destroy();
+            resolve(true);
+        });
+        socket.on('timeout', () => {
+            socket.destroy();
+            resolve(false);
+        });
+        socket.on('error', () => {
+            resolve(false);
+        });
+        socket.connect(port, host);
+    });
+}
+
+// Get WSL2 and infrastructure status
+app.get('/api/v1/infrastructure/status', async (req, res) => {
+    try {
+        const status = {
+            wsl2: { status: 'unknown', distro: null, version: null },
+            docker: { status: 'unknown', containers: [] },
+            cloudflared: { status: 'unknown', tunnels: [] },
+            databases: { status: 'unknown', services: [] },
+            timestamp: new Date().toISOString()
+        };
+
+        // Check WSL2 by looking for vmmem process (WSL2 VM)
+        try {
+            const { stdout: taskList } = await execPromise('tasklist /FI "IMAGENAME eq vmmem" /FO CSV /NH', { timeout: 5000 });
+            if (taskList.includes('vmmem')) {
+                status.wsl2.status = 'running';
+                status.wsl2.distro = 'Ubuntu-24.04';
+                status.wsl2.version = '2';
+            } else {
+                // Also check for wslhost.exe
+                const { stdout: wslHost } = await execPromise('tasklist /FI "IMAGENAME eq wslhost.exe" /FO CSV /NH', { timeout: 5000 });
+                if (wslHost.includes('wslhost.exe')) {
+                    status.wsl2.status = 'running';
+                    status.wsl2.distro = 'Ubuntu-24.04';
+                    status.wsl2.version = '2';
+                } else {
+                    status.wsl2.status = 'stopped';
+                }
+            }
+        } catch (e) {
+            status.wsl2.status = 'error';
+            status.wsl2.error = 'Cannot check WSL status';
+        }
+
+        // Check Docker by probing known container ports
+        try {
+            const dockerPorts = [
+                { port: 5432, name: 'postgres-codex', service: 'PostgreSQL Codex' },
+                { port: 5433, name: 'postgres-inspire', service: 'PostgreSQL Inspire' },
+                { port: 5434, name: 'postgres-continuum', service: 'PostgreSQL Continuum' },
+                { port: 6333, name: 'qdrant', service: 'Qdrant Vector DB' },
+                { port: 6379, name: 'redis', service: 'Redis Cache' },
+                { port: 5050, name: 'pgadmin', service: 'pgAdmin' }
+            ];
+
+            const portChecks = await Promise.all(
+                dockerPorts.map(async (p) => ({
+                    ...p,
+                    running: await checkPort(p.port)
+                }))
+            );
+
+            const runningContainers = portChecks.filter(p => p.running);
+            status.docker.status = runningContainers.length > 0 ? 'running' : 'stopped';
+            status.docker.containers = portChecks.map(p => ({
+                name: p.name,
+                service: p.service,
+                port: p.port,
+                status: p.running ? 'Up' : 'Down'
+            }));
+            status.docker.count = runningContainers.length;
+            status.docker.totalExpected = dockerPorts.length;
+        } catch (e) {
+            status.docker.status = 'error';
+            status.docker.error = 'Cannot check Docker containers';
+        }
+
+        // Check cloudflared tunnel
+        try {
+            const { stdout: cfStatus } = await execPromise('tasklist /FI "IMAGENAME eq cloudflared.exe" /FO CSV /NH', { timeout: 5000 });
+            if (cfStatus.includes('cloudflared.exe')) {
+                status.cloudflared.status = 'running';
+                const instances = cfStatus.split('\n').filter(l => l.includes('cloudflared.exe')).length;
+                status.cloudflared.instances = instances;
+            } else {
+                status.cloudflared.status = 'stopped';
+            }
+        } catch (e) {
+            status.cloudflared.status = 'error';
+            status.cloudflared.error = e.message;
+        }
+
+        // Check database connectivity
+        try {
+            const dbServices = [];
+
+            // Check Codex DB
+            try {
+                const codexResult = await codexPool.query('SELECT 1');
+                dbServices.push({ name: 'Codex DB', status: 'connected', port: 5432 });
+            } catch (e) {
+                dbServices.push({ name: 'Codex DB', status: 'disconnected', error: e.message, port: 5432 });
+            }
+
+            // Check Inspire DB
+            try {
+                const inspireResult = await inspirePool.query('SELECT 1');
+                dbServices.push({ name: 'Inspire DB', status: 'connected', port: 5433 });
+            } catch (e) {
+                dbServices.push({ name: 'Inspire DB', status: 'disconnected', error: e.message, port: 5433 });
+            }
+
+            // Check Qdrant
+            try {
+                const qdrantOk = await checkPort(6333);
+                dbServices.push({ name: 'Qdrant', status: qdrantOk ? 'connected' : 'disconnected', port: 6333 });
+            } catch (e) {
+                dbServices.push({ name: 'Qdrant', status: 'disconnected', error: e.message, port: 6333 });
+            }
+
+            // Check Redis
+            try {
+                const redisOk = await checkPort(6379);
+                dbServices.push({ name: 'Redis', status: redisOk ? 'connected' : 'disconnected', port: 6379 });
+            } catch (e) {
+                dbServices.push({ name: 'Redis', status: 'disconnected', error: e.message, port: 6379 });
+            }
+
+            const connectedCount = dbServices.filter(d => d.status === 'connected').length;
+            status.databases.status = connectedCount === dbServices.length ? 'healthy' : (connectedCount > 0 ? 'degraded' : 'down');
+            status.databases.services = dbServices;
+            status.databases.connectedCount = connectedCount;
+            status.databases.totalCount = dbServices.length;
+        } catch (e) {
+            status.databases.status = 'error';
+            status.databases.error = 'Cannot check database connectivity';
+        }
+
+        res.json({ success: true, infrastructure: status });
+    } catch (err) {
+        console.error('[Infrastructure] Error getting status:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get infrastructure status',
+            message: err.message
+        });
+    }
+});
+
+// Get detailed Docker container info
+app.get('/api/v1/infrastructure/docker', async (req, res) => {
+    try {
+        const stdout = await runWslCommand("docker ps -a --format '{{.Names}}|{{.Image}}|{{.Status}}|{{.Ports}}|{{.State}}'", 15000);
+        const containers = stdout.split('\n').filter(l => l.trim()).map(line => {
+            const [name, image, status, ports, state] = line.split('|');
+            return { name, image, status, ports, state };
+        }).filter(c => c.name);
+
+        res.json({ success: true, containers });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Get cloudflared tunnel status
+app.get('/api/v1/infrastructure/cloudflared', async (req, res) => {
+    try {
+        // Check if cloudflared is running
+        const { stdout: taskList } = await execPromise('tasklist /FI "IMAGENAME eq cloudflared.exe" /FO CSV /NH', { timeout: 5000 });
+        const isRunning = taskList.includes('cloudflared.exe');
+
+        // Get tunnel info if possible
+        let tunnelInfo = null;
+        if (isRunning) {
+            try {
+                // Try to get tunnel metrics
+                const response = await fetch('http://localhost:45678/metrics', { timeout: 3000 });
+                if (response.ok) {
+                    tunnelInfo = { metricsAvailable: true };
+                }
+            } catch (e) {
+                // Metrics not available
+            }
+        }
+
+        res.json({
+            success: true,
+            cloudflared: {
+                running: isRunning,
+                tunnelInfo
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// =============================================================================
+// QDRANT MANAGEMENT API
+// =============================================================================
+
+// Get all Qdrant containers from docker-services.json
+app.get('/api/v1/qdrant/containers', async (req, res) => {
+    try {
+        const dockerConfigPath = path.join(SERVICES_DIR, 'docker-services.json');
+
+        if (!fs.existsSync(dockerConfigPath)) {
+            return res.status(404).json({
+                success: false,
+                error: 'Docker services configuration not found'
+            });
+        }
+
+        const dockerConfig = JSON.parse(fs.readFileSync(dockerConfigPath, 'utf8'));
+        const qdrantContainers = dockerConfig.containers.filter(c =>
+            c.image && c.image.toLowerCase().includes('qdrant')
+        );
+
+        res.json({
+            success: true,
+            containers: qdrantContainers
+        });
+    } catch (err) {
+        console.error('[Qdrant] Error fetching containers:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch Qdrant containers',
+            message: err.message
+        });
+    }
+});
+
+// Get all collections from a Qdrant instance
+app.get('/api/v1/qdrant/collections', async (req, res) => {
+    const { host = 'localhost', port = 6333 } = req.query;
+
+    try {
+        const response = await new Promise((resolve, reject) => {
+            const request = http.request({
+                hostname: host,
+                port: parseInt(port),
+                path: '/collections',
+                method: 'GET',
+                timeout: 5000
+            }, (response) => {
+                let data = '';
+                response.on('data', chunk => data += chunk);
+                response.on('end', () => {
+                    try {
+                        resolve(JSON.parse(data));
+                    } catch (e) {
+                        reject(new Error('Invalid JSON response'));
+                    }
+                });
+            });
+
+            request.on('error', reject);
+            request.on('timeout', () => {
+                request.destroy();
+                reject(new Error('Connection timeout'));
+            });
+            request.end();
+        });
+
+        res.json({
+            success: true,
+            host,
+            port: parseInt(port),
+            collections: response.result?.collections || []
+        });
+    } catch (err) {
+        console.error('[Qdrant] Error fetching collections:', err);
+        res.json({
+            success: false,
+            host,
+            port: parseInt(port),
+            error: err.message,
+            collections: []
+        });
+    }
+});
+
+// Get collection details
+app.get('/api/v1/qdrant/collections/:name', async (req, res) => {
+    const { name } = req.params;
+    const { host = 'localhost', port = 6333 } = req.query;
+
+    try {
+        const response = await new Promise((resolve, reject) => {
+            const request = http.request({
+                hostname: host,
+                port: parseInt(port),
+                path: `/collections/${encodeURIComponent(name)}`,
+                method: 'GET',
+                timeout: 5000
+            }, (response) => {
+                let data = '';
+                response.on('data', chunk => data += chunk);
+                response.on('end', () => {
+                    try {
+                        resolve(JSON.parse(data));
+                    } catch (e) {
+                        reject(new Error('Invalid JSON response'));
+                    }
+                });
+            });
+
+            request.on('error', reject);
+            request.on('timeout', () => {
+                request.destroy();
+                reject(new Error('Connection timeout'));
+            });
+            request.end();
+        });
+
+        res.json({
+            success: true,
+            collection: name,
+            details: response.result || response
+        });
+    } catch (err) {
+        console.error('[Qdrant] Error fetching collection details:', err);
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+    }
+});
+
+// Get Qdrant cluster info
+app.get('/api/v1/qdrant/cluster', async (req, res) => {
+    const { host = 'localhost', port = 6333 } = req.query;
+
+    try {
+        const response = await new Promise((resolve, reject) => {
+            const request = http.request({
+                hostname: host,
+                port: parseInt(port),
+                path: '/cluster',
+                method: 'GET',
+                timeout: 5000
+            }, (response) => {
+                let data = '';
+                response.on('data', chunk => data += chunk);
+                response.on('end', () => {
+                    try {
+                        resolve(JSON.parse(data));
+                    } catch (e) {
+                        reject(new Error('Invalid JSON response'));
+                    }
+                });
+            });
+
+            request.on('error', reject);
+            request.on('timeout', () => {
+                request.destroy();
+                reject(new Error('Connection timeout'));
+            });
+            request.end();
+        });
+
+        res.json({
+            success: true,
+            cluster: response.result || response
+        });
+    } catch (err) {
+        console.error('[Qdrant] Error fetching cluster info:', err);
+        res.json({
+            success: false,
+            error: err.message
+        });
+    }
+});
+
+// Create a new collection
+app.post('/api/v1/qdrant/collections', async (req, res) => {
+    const { host = 'localhost', port = 6333 } = req.query;
+    const { name, vectorSize = 1536, distance = 'Cosine' } = req.body;
+
+    if (!name) {
+        return res.status(400).json({
+            success: false,
+            error: 'Collection name is required'
+        });
+    }
+
+    try {
+        const payload = JSON.stringify({
+            vectors: {
+                size: parseInt(vectorSize),
+                distance: distance
+            }
+        });
+
+        const response = await new Promise((resolve, reject) => {
+            const request = http.request({
+                hostname: host,
+                port: parseInt(port),
+                path: `/collections/${encodeURIComponent(name)}`,
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(payload)
+                },
+                timeout: 10000
+            }, (response) => {
+                let data = '';
+                response.on('data', chunk => data += chunk);
+                response.on('end', () => {
+                    try {
+                        resolve({ statusCode: response.statusCode, data: JSON.parse(data) });
+                    } catch (e) {
+                        resolve({ statusCode: response.statusCode, data: data });
+                    }
+                });
+            });
+
+            request.on('error', reject);
+            request.on('timeout', () => {
+                request.destroy();
+                reject(new Error('Connection timeout'));
+            });
+            request.write(payload);
+            request.end();
+        });
+
+        res.json({
+            success: response.statusCode === 200,
+            collection: name,
+            result: response.data
+        });
+    } catch (err) {
+        console.error('[Qdrant] Error creating collection:', err);
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+    }
+});
+
+// Delete a collection
+app.delete('/api/v1/qdrant/collections/:name', async (req, res) => {
+    const { name } = req.params;
+    const { host = 'localhost', port = 6333 } = req.query;
+
+    try {
+        const response = await new Promise((resolve, reject) => {
+            const request = http.request({
+                hostname: host,
+                port: parseInt(port),
+                path: `/collections/${encodeURIComponent(name)}`,
+                method: 'DELETE',
+                timeout: 10000
+            }, (response) => {
+                let data = '';
+                response.on('data', chunk => data += chunk);
+                response.on('end', () => {
+                    try {
+                        resolve({ statusCode: response.statusCode, data: JSON.parse(data) });
+                    } catch (e) {
+                        resolve({ statusCode: response.statusCode, data: data });
+                    }
+                });
+            });
+
+            request.on('error', reject);
+            request.on('timeout', () => {
+                request.destroy();
+                reject(new Error('Connection timeout'));
+            });
+            request.end();
+        });
+
+        res.json({
+            success: response.statusCode === 200,
+            collection: name,
+            result: response.data
+        });
+    } catch (err) {
+        console.error('[Qdrant] Error deleting collection:', err);
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+    }
+});
+
+// =============================================================================
 // ERROR HANDLING
 // =============================================================================
 
@@ -5447,6 +6542,23 @@ app.use((req, res) => {
                 image: 'GET /api/v1/daily-news/:id/image',
                 stats: 'GET /api/v1/daily-news/stats',
                 cleanup: 'DELETE /api/v1/daily-news/cleanup'
+            },
+            services: {
+                list: 'GET /api/v1/services',
+                byType: 'GET /api/v1/services/:type',
+                update: 'PUT /api/v1/services/:type/:serviceName',
+                bulkUpdate: 'PUT /api/v1/services/:type',
+                reload: 'POST /api/v1/services/:type/reload',
+                health: 'GET /api/v1/services/health/:type',
+                check: 'GET /api/v1/services/check/:type (real HTTP health check)'
+            },
+            qdrant: {
+                containers: 'GET /api/v1/qdrant/containers',
+                collections: 'GET /api/v1/qdrant/collections',
+                collectionDetails: 'GET /api/v1/qdrant/collections/:name',
+                cluster: 'GET /api/v1/qdrant/cluster',
+                createCollection: 'POST /api/v1/qdrant/collections',
+                deleteCollection: 'DELETE /api/v1/qdrant/collections/:name'
             }
         }
     });

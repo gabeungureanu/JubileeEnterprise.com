@@ -14,7 +14,7 @@ const svc = new Service({
   workingDirectory: __dirname,
   env: [
     { name: 'NODE_ENV', value: 'production' },
-    { name: 'PORT', value: '3003' }
+    { name: 'PORT', value: '3116' }
   ],
   maxRestarts: 5,
   maxRetries: 3,

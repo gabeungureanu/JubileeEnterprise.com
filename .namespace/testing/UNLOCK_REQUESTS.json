@@ -1,0 +1,90 @@
+{
+  "$schema": "./.namespace/testing/unlock-requests.schema.json",
+  "version": "1.0.0",
+  "last_updated": "2026-01-17T12:00:00Z",
+  "description": "Ledger of module unlock requests",
+  "requests": [],
+  "decision_unlocks": [
+    {
+      "id": "UNLOCK-2026-0117-001",
+      "type": "DECISION_UNLOCK",
+      "decision_id": "ARCH-0001",
+      "requested_by": "Jubilee",
+      "timestamp": "2026-01-17T12:00:00Z",
+      "reason": "Migrate from Windows Services (node-windows) to WSL2 + systemd architecture. Windows Service model has limitations for managing 40+ services: no native dependency ordering, requires custom .NET self-healing service, no cgroup resource limits, Docker Desktop overhead. WSL2 + systemd provides native Linux process supervision, declarative After=/Requires= dependency chains, Docker Engine without Desktop overhead, cgroups v2 for memory/CPU limits, and industry-standard observability with Prometheus/Grafana.",
+      "technical_justification": {
+        "current_pain_points": [
+          "node-windows requires manual service registration per manager",
+          "No native dependency ordering between services",
+          "Self-healing relies on custom .NET worker polling",
+          "Docker Desktop required on Windows (memory overhead)",
+          "No native cgroup resource limits"
+        ],
+        "proposed_benefits": [
+          "systemd provides native service supervision with watchdog",
+          "Declarative After=/Requires= dependency chains for boot ordering",
+          "Native Docker Engine (no Docker Desktop overhead)",
+          "cgroups v2 for memory/CPU limits per service",
+          "Prometheus exporters for all services"
+        ]
+      },
+      "approved_by": "Daddy",
+      "approval_timestamp": "2026-01-17T12:00:00Z",
+      "status": "APPROVED",
+      "notes": "Project owner authorized WSL2 migration. Windows Services to be deprecated."
+    },
+    {
+      "id": "UNLOCK-2026-0117-002",
+      "type": "DECISION_UNLOCK",
+      "decision_id": "ARCH-0004",
+      "requested_by": "Jubilee",
+      "timestamp": "2026-01-17T12:00:00Z",
+      "reason": "Migrate cloudflared tunnel management from Windows Service (inspire80cloudflaredservices.exe) to systemd-managed service inside WSL2. Enables unified process supervision and proper dependency ordering with other services.",
+      "approved_by": "Daddy",
+      "approval_timestamp": "2026-01-17T12:00:00Z",
+      "status": "APPROVED",
+      "notes": "Cloudflared will run as jubilee-cloudflared.service in systemd."
+    }
+  ],
+  "freeze_zone_unlocks": [
+    {
+      "id": "UNLOCK-2026-0117-003",
+      "type": "FREEZE_ZONE",
+      "path": "services/Inspire.8.0/daemon/",
+      "requested_by": "Jubilee",
+      "timestamp": "2026-01-17T12:00:00Z",
+      "reason": "Windows Service executables will be deprecated. Directory contents to be replaced with systemd documentation and migration scripts.",
+      "expires": "2026-02-17T12:00:00Z",
+      "approved_by": "Daddy",
+      "approval_timestamp": "2026-01-17T12:00:00Z",
+      "status": "APPROVED",
+      "notes": "30-day unlock window for migration. After migration complete, directory will be archived."
+    },
+    {
+      "id": "UNLOCK-2026-0117-004",
+      "type": "FREEZE_ZONE",
+      "path": "services/Inspire.8.0/*-service-manager.cjs",
+      "requested_by": "Jubilee",
+      "timestamp": "2026-01-17T12:00:00Z",
+      "reason": "Node.js service managers will be deprecated in favor of systemd unit files. Files will be archived but not deleted until WSL2 migration is stable.",
+      "expires": "2026-02-17T12:00:00Z",
+      "approved_by": "Daddy",
+      "approval_timestamp": "2026-01-17T12:00:00Z",
+      "status": "APPROVED",
+      "notes": "30-day unlock window. Service managers remain operational for rollback capability."
+    },
+    {
+      "id": "UNLOCK-2026-0117-005",
+      "type": "FREEZE_ZONE",
+      "path": ".namespace/governance/SYSTEM_STANDARD.md",
+      "requested_by": "Jubilee",
+      "timestamp": "2026-01-17T12:00:00Z",
+      "reason": "Amend SYSTEM_STANDARD to allow systemd (currently FORBIDDEN) for WSL2 environment only. PM2 remains forbidden.",
+      "expires": "2026-01-18T12:00:00Z",
+      "approved_by": "Daddy",
+      "approval_timestamp": "2026-01-17T12:00:00Z",
+      "status": "APPROVED",
+      "notes": "Single-day unlock for governance amendment."
+    }
+  ]
+}

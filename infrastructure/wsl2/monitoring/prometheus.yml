@@ -1,0 +1,99 @@
+# Jubilee Enterprise Prometheus Configuration
+# ARCH-0007: WSL2 + systemd Architecture
+#
+# Metrics collection for all Jubilee services.
+# Copy to /opt/jubilee/monitoring/prometheus.yml
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: production
+    platform: jubilee-enterprise
+
+# Alertmanager configuration (optional)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Rule files (optional)
+rule_files: []
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Node Exporter (system metrics)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'jubilee-server'
+
+  # Nginx metrics
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['localhost:9113']
+
+  # PostgreSQL metrics (via postgres_exporter)
+  - job_name: 'postgres-codex'
+    static_configs:
+      - targets: ['localhost:9187']
+    params:
+      database: ['codex']
+
+  - job_name: 'postgres-inspire'
+    static_configs:
+      - targets: ['localhost:9188']
+    params:
+      database: ['inspire']
+
+  - job_name: 'postgres-continuum'
+    static_configs:
+      - targets: ['localhost:9189']
+    params:
+      database: ['continuum']
+
+  # Redis metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['localhost:9121']
+
+  # Qdrant metrics
+  - job_name: 'qdrant'
+    static_configs:
+      - targets: ['localhost:6333']
+    metrics_path: /metrics
+
+  # Jubilee health endpoints
+  - job_name: 'jubilee-nginx-health'
+    static_configs:
+      - targets: ['localhost:3900']
+    metrics_path: /nginx-status
+
+  # API services health (custom endpoint if implemented)
+  - job_name: 'jubilee-apis'
+    static_configs:
+      - targets:
+          - 'localhost:3100'  # InspireCodex
+          - 'localhost:3200'  # InspireContinuum
+          - 'localhost:3134'  # InspireFlywheel
+          - 'localhost:3135'  # InspireReactors
+    metrics_path: /health
+    scrape_interval: 30s
+
+  # Website services health (sample - add more as needed)
+  - job_name: 'jubilee-websites'
+    static_configs:
+      - targets:
+          - 'localhost:3000'  # JubileeVerse
+          - 'localhost:3008'  # JubileeWebsites
+          - 'localhost:3107'  # JubileeGoodNews
+    metrics_path: /health
+    scrape_interval: 60s

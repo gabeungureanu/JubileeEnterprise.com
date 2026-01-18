@@ -1,0 +1,35 @@
+# Jubilee Cloudflared Tunnel Service
+# ARCH-0007: WSL2 + systemd Architecture
+#
+# Manages the Cloudflare tunnel for routing external traffic.
+# Tunnel name: jubilee-enterprise
+# Config: /home/eliana/.cloudflared/config.yml
+
+[Unit]
+Description=Jubilee Cloudflare Tunnel
+Documentation=https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/
+Requires=jubilee-websites.target
+After=jubilee-websites.target
+PartOf=jubilee.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=eliana
+Group=eliana
+
+# Run the tunnel
+ExecStart=/usr/local/bin/cloudflared tunnel run jubilee-enterprise
+
+# Restart policy
+Restart=always
+RestartSec=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=jubilee-cloudflared
+
+[Install]
+WantedBy=jubilee.target

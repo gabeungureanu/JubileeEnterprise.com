@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-Inspire.SelfHealing-9fe2d1ad-c9a8-4133-882c-308dea08e761</UserSecretsId>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Inspire.SelfHealing</AssemblyName>
+    <RootNamespace>Inspire.SelfHealing</RootNamespace>
+    <Description>Inspire 8.0: Self-Healing Windows Service for health monitoring and automatic recovery</Description>
+    <Company>Jubilee Enterprise</Company>
+    <Product>Inspire 8.0: Self-Healing</Product>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.2" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="monitored-services.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

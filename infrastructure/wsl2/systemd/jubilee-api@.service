@@ -1,0 +1,61 @@
+# Jubilee API Service Template
+# ARCH-0007: WSL2 + systemd Architecture
+#
+# Template for API services. Instance name is the website directory.
+# Usage: systemctl start jubilee-api@InspireCodex.com
+#
+# API Services:
+# - jubilee-api@InspireCodex.com (port 3100)
+# - jubilee-api@InspireContinuum.com (port 3200)
+# - jubilee-api@InspireFlywheel.com (port 3134)
+# - jubilee-api@InspireReactors.com (port 3135)
+
+[Unit]
+Description=Jubilee API Service - %i
+Documentation=https://github.com/gabeungureanu/JubileeEnterprise.com
+Requires=jubilee-docker.target
+After=jubilee-docker.target
+PartOf=jubilee-api.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=eliana
+Group=eliana
+WorkingDirectory=/mnt/c/data/JubileeEnterprise.com Bibleweb/websites/codex/%i
+Environment=NODE_ENV=production
+EnvironmentFile=-/opt/jubilee/env/%i.env
+
+# Start Node.js server
+ExecStart=/usr/bin/node server.js
+
+# Graceful restart
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Restart policy with backoff
+Restart=always
+RestartSec=5
+
+# Watchdog (service must ping within 30s or be restarted)
+WatchdogSec=30
+NotifyAccess=all
+
+# Resource limits (APIs get more resources)
+MemoryMax=2G
+MemoryHigh=1.5G
+CPUQuota=200%
+
+# Security
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=jubilee-api-%i
+
+[Install]
+WantedBy=jubilee-api.target

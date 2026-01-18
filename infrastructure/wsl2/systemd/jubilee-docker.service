@@ -1,0 +1,40 @@
+# Jubilee Docker Infrastructure Service
+# ARCH-0007: WSL2 + systemd Architecture
+#
+# Manages the Docker Compose stack for infrastructure containers:
+# - PostgreSQL (Codex, Inspire, Continuum)
+# - Qdrant (Vector database)
+# - Redis (Cache)
+# - pgAdmin (Database management)
+
+[Unit]
+Description=Jubilee Docker Infrastructure (PostgreSQL, Qdrant, Redis)
+Documentation=https://github.com/gabeungureanu/JubileeEnterprise.com
+Requires=docker.service
+After=docker.service
+PartOf=jubilee-docker.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/mnt/c/data/JubileeEnterprise.com Bibleweb/infrastructure/wsl2/docker
+
+# Start all containers and wait for health checks
+ExecStart=/usr/bin/docker compose up -d --wait
+
+# Stop all containers gracefully
+ExecStop=/usr/bin/docker compose down
+
+# Reload (restart) containers
+ExecReload=/usr/bin/docker compose up -d --wait
+
+# Give containers time to start and pass health checks
+TimeoutStartSec=300
+TimeoutStopSec=120
+
+# Restart policy
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=jubilee-docker.target

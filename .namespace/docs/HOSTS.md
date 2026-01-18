@@ -12,7 +12,7 @@ Add the following entries to your system hosts file for local development.
 # ================================================
 127.0.0.1    dev.biblelujah.com
 127.0.0.1    dev.celestialpaths.com
-127.0.0.1    dev.daisywyider.com
+127.0.0.1    dev.daisywylder.com
 127.0.0.1    dev.fatherelohim.com
 127.0.0.1    dev.gagedarron.com
 127.0.0.1    dev.gopartygiggles.com

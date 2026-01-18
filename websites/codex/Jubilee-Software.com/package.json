@@ -1,0 +1,15 @@
+{
+  "name": "@jubilee/jubilee-software",
+  "version": "1.0.0",
+  "description": "Jubilee-Software.com - Software Downloads",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

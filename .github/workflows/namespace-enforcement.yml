@@ -1,0 +1,140 @@
+name: Namespace Enforcement
+
+on:
+  push:
+    branches: [main, 'GU*', 'LX*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  governance-check:
+    name: Governance Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for diff
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run namespace enforcement check
+        run: node .namespace/enforcement/check-namespace.cjs ci
+
+      - name: Check for forbidden files
+        run: |
+          echo "Checking for forbidden files..."
+
+          FORBIDDEN_FILES=(
+            "pm2.config.js"
+            "pm2.config.cjs"
+            "ecosystem.config.js"
+            "ecosystem.config.cjs"
+          )
+
+          for file in "${FORBIDDEN_FILES[@]}"; do
+            if find . -name "$file" -type f | grep -q .; then
+              echo "::error::Forbidden file found: $file"
+              exit 1
+            fi
+          done
+
+          echo "No forbidden files found"
+
+      - name: Check for PM2 references
+        run: |
+          echo "Checking for PM2 references..."
+
+          if grep -r "pm2" --include="*.js" --include="*.cjs" --include="*.ts" . 2>/dev/null | grep -v "node_modules" | grep -v ".git"; then
+            echo "::error::PM2 references found in code. PM2 is forbidden."
+            exit 1
+          fi
+
+          echo "No PM2 references found"
+
+      - name: Check for alternate standards files
+        run: |
+          echo "Checking for alternate standards files..."
+
+          BLOCKED=(
+            "STANDARDS.md"
+            "GOVERNANCE.md"
+            "CODING_STANDARDS.md"
+          )
+
+          for file in "${BLOCKED[@]}"; do
+            if find . -name "$file" -type f -not -path "./.namespace/*" | grep -q .; then
+              echo "::error::Standards file found outside .namespace/: $file"
+              echo "All standards must be in .namespace/"
+              exit 1
+            fi
+          done
+
+          echo "No alternate standards files found"
+
+      - name: Validate AI bootstrap marker (PRs only)
+        if: github.event_name == 'pull_request'
+        run: |
+          PR_BODY="${{ github.event.pull_request.body }}"
+
+          # Check if PR mentions AI assistance
+          if echo "$PR_BODY" | grep -iE "(AI|Claude|GPT|Copilot|LLM)" > /dev/null; then
+            # Verify bootstrap marker is present
+            if ! echo "$PR_BODY" | grep -q "NAMESPACE-BOOTSTRAP: VERIFIED"; then
+              echo "::warning::AI-assisted PR detected but NAMESPACE-BOOTSTRAP marker not found"
+              echo "Consider adding [NAMESPACE-BOOTSTRAP: VERIFIED] to confirm governance compliance"
+            fi
+          fi
+
+  test-and-lock:
+    name: Test and Lock
+    runs-on: ubuntu-latest
+    needs: governance-check
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          elif [ -f "package.json" ]; then
+            npm install
+          fi
+
+      - name: Run tests
+        run: |
+          if [ -f "package.json" ] && grep -q '"test"' package.json; then
+            npm test || echo "No tests configured yet"
+          else
+            echo "No test script found in package.json"
+          fi
+
+      - name: Update lock registry
+        if: success()
+        run: |
+          node .namespace/enforcement/update-registry.cjs || true
+
+      - name: Commit registry updates
+        if: success() && github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet .namespace/testing/TEST_REGISTRY.json; then
+            echo "No registry changes to commit"
+          else
+            git add .namespace/testing/TEST_REGISTRY.json
+            git commit -m "chore: Update test registry [skip ci]"
+            git push
+          fi

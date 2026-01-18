@@ -1,0 +1,34 @@
+<service>
+	<id>jubileegoodnews.exe</id>
+	<name>JubileeGoodNews</name>
+	<description>JubileeGoodNews.com Content Portal (Port 3107)</description>
+	<executable>C:\Program Files\nodejs\node.exe</executable>
+	<argument>C:\data\JubileeEnterprise.com Bibleweb\websites\codex\JubileeGoodNews.com\node_modules\node-windows\lib\wrapper.js</argument>
+	<argument>--file</argument>
+	<argument>C:\data\JubileeEnterprise.com Bibleweb\websites\codex\JubileeGoodNews.com\server.js</argument>
+	<argument>--scriptoptions=</argument>
+	<argument>--log</argument>
+	<argument>JubileeGoodNews wrapper</argument>
+	<argument>--grow</argument>
+	<argument>0.5</argument>
+	<argument>--wait</argument>
+	<argument>2</argument>
+	<argument>--maxrestarts</argument>
+	<argument>5</argument>
+	<argument>--abortonerror</argument>
+	<argument>n</argument>
+	<argument>--stopparentfirst</argument>
+	<argument>undefined</argument>
+	<argument>--maxretries</argument>
+	<argument>3</argument>
+	<logmode>rotate</logmode>
+	<stoptimeout>30sec</stoptimeout>
+	<env name="NODE_ENV" value="production"/>
+	<env name="PORT" value="3107"/>
+	<serviceaccount>
+		<domain>INSPIRESERVER</domain>
+		<user>LocalSystem</user>
+		<password></password>
+	</serviceaccount>
+	<workingdirectory>C:\data\JubileeEnterprise.com Bibleweb\websites\codex\JubileeGoodNews.com</workingdirectory>
+</service>
