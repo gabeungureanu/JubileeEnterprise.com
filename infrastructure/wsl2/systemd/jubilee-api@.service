@@ -16,6 +16,8 @@ Documentation=https://github.com/gabeungureanu/JubileeEnterprise.com
 Requires=jubilee-docker.target
 After=jubilee-docker.target
 PartOf=jubilee-api.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Service]
 Type=simple
@@ -34,8 +36,6 @@ ExecReload=/bin/kill -HUP $MAINPID
 # Restart policy with backoff
 Restart=always
 RestartSec=5
-StartLimitIntervalSec=60
-StartLimitBurst=5
 
 # Watchdog (service must ping within 30s or be restarted)
 WatchdogSec=30

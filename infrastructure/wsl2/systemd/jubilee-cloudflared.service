@@ -11,6 +11,8 @@ Documentation=https://developers.cloudflare.com/cloudflare-one/connections/conne
 Requires=jubilee-websites.target
 After=jubilee-websites.target
 PartOf=jubilee.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Service]
 Type=simple
@@ -23,8 +25,6 @@ ExecStart=/usr/local/bin/cloudflared tunnel run jubilee-enterprise
 # Restart policy
 Restart=always
 RestartSec=5
-StartLimitIntervalSec=60
-StartLimitBurst=5
 
 # Logging
 StandardOutput=journal
