@@ -19,18 +19,25 @@
             padding: 20px;
         }
 
+        /* Unified yellow color variable */
+        :root {
+            --inspire-yellow: #f0c040;
+            --inspire-yellow-bg: #f0c04033;
+            --neutral-gray: #6e7681;
+        }
+
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
             border-bottom: 1px solid #30363d;
         }
 
         .header h1 {
-            font-size: 1.5rem;
-            color: #58a6ff;
+            font-size: 1.4rem;
+            color: var(--inspire-yellow);
         }
 
         .header-actions {
@@ -40,11 +47,11 @@
         }
 
         .nav-link {
-            color: #8b949e;
+            color: #ffffff;
             text-decoration: none;
-            font-size: 0.9rem;
-            padding: 8px 16px;
-            border-radius: 6px;
+            font-size: 0.85rem;
+            padding: 6px 12px;
+            border-radius: 4px;
             transition: all 0.2s;
         }
 
@@ -56,157 +63,74 @@
         .tabs {
             display: flex;
             gap: 5px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #30363d;
-            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .tab {
-            padding: 10px 20px;
-            background-color: transparent;
-            border: none;
-            color: #8b949e;
+            padding: 8px 16px;
+            background-color: #21262d;
+            border: 1px solid #30363d;
+            color: #ffffff;
             cursor: pointer;
-            border-radius: 6px 6px 0 0;
-            font-size: 0.9rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
             transition: all 0.2s;
         }
 
         .tab:hover {
-            background-color: #21262d;
+            background-color: #30363d;
             color: #c9d1d9;
         }
 
         .tab.active {
-            background-color: #21262d;
-            color: #58a6ff;
-            border-bottom: 2px solid #58a6ff;
+            background-color: #238636;
+            border-color: #238636;
+            color: #fff;
+        }
+
+        .tab.active .tab-text {
+            color: var(--inspire-yellow);
         }
 
         .tab-count {
-            background-color: #30363d;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.75rem;
-            margin-left: 6px;
+            background-color: rgba(255,255,255,0.2);
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            margin-left: 5px;
         }
 
-        .service-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-            gap: 15px;
-        }
-
-        .service-card {
+        .summary-bar {
+            display: flex;
+            gap: 30px;
+            padding: 10px 20px;
             background-color: #161b22;
             border: 1px solid #30363d;
-            border-radius: 8px;
-            padding: 15px;
-            transition: all 0.2s;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            align-items: center;
         }
 
-        .service-card:hover {
-            border-color: #58a6ff;
-        }
-
-        .service-card.disabled {
-            opacity: 0.6;
-        }
-
-        .service-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
-        }
-
-        .service-name {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #c9d1d9;
-        }
-
-        .service-description {
-            font-size: 0.8rem;
-            color: #8b949e;
-            margin-top: 2px;
-        }
-
-        .service-status {
+        .summary-item {
             display: flex;
             align-items: center;
-            gap: 6px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .status-dot.enabled {
-            background-color: #3fb950;
-            box-shadow: 0 0 6px #3fb950;
-        }
-
-        .status-dot.disabled {
-            background-color: #f85149;
-        }
-
-        .status-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-        }
-
-        .service-details {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .detail-item {
-            background-color: #0d1117;
-            padding: 8px 12px;
-            border-radius: 4px;
-        }
-
-        .detail-label {
-            font-size: 0.7rem;
-            color: #8b949e;
-            text-transform: uppercase;
-            margin-bottom: 2px;
-        }
-
-        .detail-value {
-            font-size: 0.9rem;
-            color: #c9d1d9;
-        }
-
-        .detail-value input {
-            width: 100%;
-            background-color: transparent;
-            border: none;
-            color: #c9d1d9;
-            font-size: 0.9rem;
-            padding: 0;
-        }
-
-        .detail-value input:focus {
-            outline: none;
-            border-bottom: 1px solid #58a6ff;
-        }
-
-        .service-actions {
-            display: flex;
             gap: 8px;
-            flex-wrap: wrap;
+        }
+
+        .summary-count {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .summary-label {
+            font-size: 0.8rem;
+            color: #ffffff;
         }
 
         .btn {
-            padding: 6px 12px;
+            padding: 5px 10px;
             border: 1px solid #30363d;
-            border-radius: 6px;
+            border-radius: 4px;
             font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.2s;
@@ -216,6 +140,11 @@
 
         .btn:hover {
             background-color: #30363d;
+        }
+
+        .btn-sm {
+            padding: 3px 7px;
+            font-size: 0.75rem;
         }
 
         .btn-primary {
@@ -229,127 +158,260 @@
         }
 
         .btn-danger {
-            background-color: transparent;
-            border-color: #f85149;
-            color: #f85149;
+            background-color: #da3633;
+            border-color: #da3633;
+            color: white;
         }
 
         .btn-danger:hover {
-            background-color: #f8514933;
+            background-color: #f85149;
         }
 
-        .btn-warning {
-            background-color: transparent;
-            border-color: #d29922;
-            color: #d29922;
-        }
-
-        .btn-warning:hover {
-            background-color: #d2992233;
-        }
-
-        .toggle-switch {
-            position: relative;
-            width: 44px;
-            height: 24px;
-            background-color: #30363d;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .toggle-switch.active {
-            background-color: #238636;
-        }
-
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            background-color: #c9d1d9;
-            border-radius: 50%;
-            top: 3px;
-            left: 3px;
-            transition: transform 0.2s;
-        }
-
-        .toggle-switch.active::after {
-            transform: translateX(20px);
-        }
-
-        .health-section {
+        /* Table Styles - reduced row height by 20% */
+        .table-container {
             background-color: #161b22;
             border: 1px solid #30363d;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
+            border-radius: 6px;
+            overflow: hidden;
         }
 
-        .health-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .health-title {
-            font-size: 1rem;
-            color: #58a6ff;
-        }
-
-        .health-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 4px 12px;
-            background-color: #0d1117;
-            border-radius: 20px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
             font-size: 0.85rem;
         }
 
-        .health-status.online {
-            color: #3fb950;
+        thead {
+            background-color: #21262d;
         }
 
-        .health-status.offline {
-            color: #f85149;
+        th {
+            text-align: left;
+            padding: 8px 10px;
+            font-weight: 600;
+            color: var(--inspire-yellow);
+            border-bottom: 1px solid #30363d;
+            white-space: nowrap;
         }
 
-        .health-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-        }
-
-        .health-stat {
+        th.center, td.center {
             text-align: center;
         }
 
-        .health-stat-value {
-            font-size: 1.5rem;
-            font-weight: 600;
+        td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #21262d;
+            vertical-align: middle;
+        }
+
+        tr:hover {
+            background-color: #1c2128;
+        }
+
+        tr.disabled {
+            opacity: 0.5;
+        }
+
+        tr.disabled:hover {
+            opacity: 0.7;
+        }
+
+        /* White gear icon for Web APIs */
+        .gear-icon {
+            color: #ffffff;
+            margin-right: 8px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* White globe icon for websites */
+        .globe-icon {
+            color: #ffffff;
+            margin-right: 8px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .service-name {
+            font-weight: 500;
+            color: var(--inspire-yellow);
+            display: flex;
+            align-items: center;
+        }
+
+        .service-link {
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .service-link:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        .service-link:visited {
+            color: var(--inspire-yellow);
+        }
+
+        .service-desc {
+            color: #ffffff;
+            font-size: 0.8rem;
+        }
+
+        .status-cell {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .response-time {
+            font-size: 0.7rem;
+            color: #8b949e;
+            min-width: 45px;
+            text-align: right;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-badge.enabled, .status-badge.active {
+            background-color: #238636;
+            color: #fff;
+        }
+
+        .status-badge.disabled {
+            background-color: #30363d;
+            color: var(--inspire-yellow);
+        }
+
+        .status-badge.green {
+            background-color: #238636;
+            color: #fff;
+        }
+
+        .status-badge.yellow {
+            background-color: #9e6a03;
+            color: #fff;
+        }
+
+        .status-badge.red {
+            background-color: #da3633;
+            color: #fff;
+        }
+
+        /* Real-time health status styles */
+        .status-badge.online {
+            background-color: #238636;
+            color: #fff;
+        }
+
+        .status-badge.offline {
+            background-color: #da3633;
+            color: #fff;
+        }
+
+        .status-badge.checking {
+            background-color: #9e6a03;
+            color: #fff;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Row style for offline services */
+        tr.offline-row {
+            background-color: rgba(218, 54, 51, 0.1);
+        }
+
+        tr.offline-row:hover {
+            background-color: rgba(218, 54, 51, 0.15);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+
+        .port-badge {
+            background-color: var(--inspire-yellow-bg);
+            color: var(--inspire-yellow);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        /* Workers control with plus/minus buttons - neutral gray color */
+        .workers-control {
+            display: inline-flex;
+            align-items: center;
+            gap: 0;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .workers-btn {
+            width: 24px;
+            height: 24px;
+            border: none;
+            background-color: #21262d;
+            color: var(--neutral-gray);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .workers-btn:hover {
+            background-color: #30363d;
             color: #c9d1d9;
         }
 
-        .health-stat-label {
-            font-size: 0.75rem;
-            color: #8b949e;
-            text-transform: uppercase;
+        .workers-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .workers-value {
+            min-width: 32px;
+            padding: 2px 6px;
+            text-align: center;
+            color: var(--inspire-yellow);
+            font-weight: 600;
+            font-size: 0.85rem;
+            background-color: #0d1117;
         }
 
         .loading {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 60px;
+            padding: 32px;
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
             border: 3px solid #30363d;
-            border-top-color: #58a6ff;
+            border-top-color: var(--inspire-yellow);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -362,10 +424,10 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            padding: 15px 25px;
-            border-radius: 8px;
+            padding: 12px 20px;
+            border-radius: 6px;
             color: white;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             z-index: 1000;
             transform: translateY(100px);
             opacity: 0;
@@ -377,217 +439,974 @@
             opacity: 1;
         }
 
-        .toast.success {
+        .toast.success { background-color: #238636; }
+        .toast.error { background-color: #da3633; }
+        .toast.warning { background-color: #9e6a03; }
+
+        .bulk-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .health-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background-color: #0d1117;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .health-indicator.online {
+            color: #3fb950;
+        }
+
+        .health-indicator.offline {
+            color: #f85149;
+        }
+
+        .footer {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #30363d;
+            text-align: center;
+            color: #ffffff;
+            font-size: 0.8rem;
+        }
+
+        /* Qdrant-specific styles */
+        .container-section {
+            margin-bottom: 20px;
+        }
+
+        .container-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .container-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .container-title h2 {
+            font-size: 1.1rem;
+            color: var(--inspire-yellow);
+        }
+
+        .container-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .container-badge.online {
             background-color: #238636;
+            color: #fff;
         }
 
-        .toast.error {
-            background-color: #f85149;
+        .container-badge.offline {
+            background-color: #da3633;
+            color: #fff;
         }
 
-        .toast.warning {
-            background-color: #d29922;
+        .container-info {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+            color: #ffffff;
         }
 
+        .container-info span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .qdrant-table-container {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            overflow: hidden;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px 20px;
+            color: #ffffff;
+        }
+
+        .empty-state p {
+            margin-bottom: 15px;
+        }
+
+        .no-containers {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 32px;
+            text-align: center;
+        }
+
+        /* Modal */
         .modal-overlay {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            right: 0;
+            bottom: 0;
             background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
+            z-index: 1000;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s;
         }
 
         .modal-overlay.show {
-            opacity: 1;
-            visibility: visible;
+            display: flex;
         }
 
         .modal {
             background-color: #161b22;
             border: 1px solid #30363d;
-            border-radius: 12px;
-            padding: 25px;
-            width: 100%;
+            border-radius: 8px;
+            width: 90%;
             max-width: 500px;
-            transform: scale(0.9);
-            transition: transform 0.2s;
+            padding: 20px;
         }
 
-        .modal-overlay.show .modal {
-            transform: scale(1);
-        }
-
-        .modal-header {
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 1.2rem;
-            color: #c9d1d9;
-        }
-
-        .modal-body {
-            margin-bottom: 20px;
+        .modal h3 {
+            margin-bottom: 15px;
+            color: var(--inspire-yellow);
         }
 
         .form-group {
             margin-bottom: 15px;
         }
 
-        .form-label {
+        .form-group label {
             display: block;
-            font-size: 0.85rem;
-            color: #8b949e;
             margin-bottom: 5px;
+            font-size: 0.85rem;
+            color: #ffffff;
         }
 
-        .form-input {
+        .form-group input, .form-group select {
             width: 100%;
-            padding: 10px 12px;
+            padding: 8px 12px;
             background-color: #0d1117;
             border: 1px solid #30363d;
-            border-radius: 6px;
+            border-radius: 4px;
             color: #c9d1d9;
             font-size: 0.9rem;
         }
 
-        .form-input:focus {
+        .form-group input:focus, .form-group select:focus {
             outline: none;
-            border-color: #58a6ff;
+            border-color: var(--inspire-yellow);
         }
 
-        .modal-footer {
+        .modal-actions {
             display: flex;
             justify-content: flex-end;
             gap: 10px;
+            margin-top: 20px;
         }
 
-        .summary-bar {
-            display: flex;
-            gap: 20px;
-            padding: 15px 20px;
-            background-color: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        /* Tab content visibility */
+        .tab-content {
+            display: none;
         }
 
-        .summary-item {
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Last updated indicator */
+        .last-updated {
+            font-size: 0.75rem;
+            color: #6e7681;
+            margin-left: auto;
+            padding-right: 10px;
+        }
+
+        /* Collection description */
+        .collection-desc {
+            color: #ffffff;
+            font-size: 0.8rem;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Atom icon for Qdrant collections */
+        .atom-icon {
+            color: var(--inspire-yellow);
+            margin-right: 8px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Collection name text in yellow */
+        .collection-name {
+            color: var(--inspire-yellow);
+            font-weight: 500;
+        }
+
+        /* Category header row for Qdrant collections - 20% transparency yellow with white text */
+        .category-header {
+            background-color: rgba(240, 192, 64, 0.2) !important;
+            color: #ffffff;
+        }
+
+        .category-header td {
+            padding: 8px 10px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #30363d;
+            color: #ffffff;
+        }
+
+        .category-header:hover {
+            background-color: rgba(240, 192, 64, 0.2) !important;
+        }
+
+        .category-icon {
+            margin-right: 8px;
+            font-size: 1rem;
+        }
+
+        /* User icon for Users tab */
+        .user-icon {
+            color: #ffffff;
+            margin-right: 8px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* User display name */
+        .user-name {
+            color: var(--inspire-yellow);
+            font-weight: 500;
+        }
+
+        /* User email */
+        .user-email {
+            color: #8b949e;
+            font-size: 0.8rem;
+        }
+
+        /* User avatar */
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #30363d;
             display: flex;
             align-items: center;
-            gap: 8px;
-        }
-
-        .summary-count {
-            font-size: 1.2rem;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: var(--inspire-yellow);
             font-weight: 600;
         }
 
-        .summary-label {
-            font-size: 0.85rem;
-            color: #8b949e;
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
         }
 
-        .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #30363d;
-            text-align: center;
+        /* User info container */
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Last activity styling */
+        .last-activity {
             color: #8b949e;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+        }
+
+        .last-activity-time {
+            color: #c9d1d9;
+            font-size: 0.75rem;
+        }
+
+        /* Last click styling */
+        .last-click {
+            color: #58a6ff;
+            font-size: 0.8rem;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .last-click-time {
+            color: #6e7681;
+            font-size: 0.7rem;
+        }
+
+        /* Online status indicator */
+        .online-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .online-indicator.online {
+            background-color: #3fb950;
+            box-shadow: 0 0 4px #3fb950;
+        }
+
+        .online-indicator.offline {
+            background-color: #6e7681;
+        }
+
+        .online-indicator.away {
+            background-color: #f0883e;
+        }
+
+        /* Session count badge */
+        .session-count {
+            background-color: rgba(88, 166, 255, 0.2);
+            color: #58a6ff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 500;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <div>
-            <h1>Jubilee Platform - Service Management</h1>
-            <span style="color: #8b949e; font-size: 0.85rem;">Inspire 8.0 Windows Services Configuration</span>
+            <h1>Inspire 8.0 - Service Management</h1>
         </div>
         <div class="header-actions">
+            <div class="health-indicator" id="manager-health">
+                <span class="status-dot"></span>
+                <span>Checking...</span>
+            </div>
+            <span class="last-updated" id="last-updated"></span>
             <a href="/" class="nav-link">Dashboard</a>
-            <button class="btn btn-primary" onclick="reloadAllServices()">Reload All Services</button>
+            <button class="btn btn-primary" onclick="reloadCurrentTab()">Reload Services</button>
         </div>
     </div>
 
     <div class="tabs">
+        <button class="tab" data-tab="infra" onclick="switchTab('infra')">
+            <span class="tab-text">Infrastructure</span>
+        </button>
         <button class="tab active" data-tab="websites" onclick="switchTab('websites')">
-            Websites <span class="tab-count" id="websites-count">0</span>
+            <span class="tab-text">Websites</span> <span class="tab-count" id="websites-count">0</span>
         </button>
         <button class="tab" data-tab="api" onclick="switchTab('api')">
-            Web APIs <span class="tab-count" id="api-count">0</span>
+            <span class="tab-text">Web APIs</span> <span class="tab-count" id="api-count">0</span>
         </button>
-        <button class="tab" data-tab="docker" onclick="switchTab('docker')">
-            Docker <span class="tab-count" id="docker-count">0</span>
+        <button class="tab" data-tab="qdrant" onclick="switchTab('qdrant')">
+            <span class="tab-text">Qdrant</span> <span class="tab-count" id="qdrant-count">0</span>
+        </button>
+        <button class="tab" data-tab="users" onclick="switchTab('users')">
+            <span class="tab-text">Users</span> <span class="tab-count" id="users-count">0</span>
         </button>
     </div>
 
-    <div id="health-section" class="health-section" style="display: none;">
-        <div class="health-header">
-            <span class="health-title">Service Manager Health</span>
-            <div class="health-status" id="manager-status">
-                <span class="status-dot"></span>
-                <span>Checking...</span>
-            </div>
+    <!-- Infrastructure Summary Bar -->
+    <div class="summary-bar" id="infra-summary" style="display: none;">
+        <div class="summary-item">
+            <span class="summary-count" id="wsl2-status" style="color: #6e7681;">--</span>
+            <span class="summary-label">WSL2</span>
         </div>
-        <div class="health-stats" id="health-stats"></div>
+        <div class="summary-item">
+            <span class="summary-count" id="docker-count" style="color: #6e7681;">--</span>
+            <span class="summary-label">Docker Containers</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-count" id="cloudflared-status" style="color: #6e7681;">--</span>
+            <span class="summary-label">Cloudflared</span>
+        </div>
+        <div class="bulk-actions">
+            <button class="btn btn-sm btn-primary" onclick="loadInfrastructure()">Refresh Status</button>
+        </div>
     </div>
 
-    <div class="summary-bar" id="summary-bar">
+    <!-- Services Summary Bar (for websites and api tabs) -->
+    <div class="summary-bar" id="services-summary">
         <div class="summary-item">
             <span class="summary-count" id="enabled-count" style="color: #3fb950;">0</span>
-            <span class="summary-label">Enabled</span>
+            <span class="summary-label">Online</span>
         </div>
         <div class="summary-item">
-            <span class="summary-count" id="disabled-count" style="color: #f85149;">0</span>
-            <span class="summary-label">Disabled</span>
+            <span class="summary-count" id="disabled-count" style="color: #da3633;">0</span>
+            <span class="summary-label">Offline/Disabled</span>
         </div>
-        <div class="summary-item">
-            <span class="summary-count" id="total-workers" style="color: #58a6ff;">0</span>
+        <div class="summary-item" id="workers-summary">
+            <span class="summary-count" id="total-workers" style="color: var(--inspire-yellow);">0</span>
             <span class="summary-label">Total Workers</span>
+        </div>
+        <div class="bulk-actions">
+            <button class="btn btn-sm btn-primary" onclick="enableAll()">Enable All</button>
+            <button class="btn btn-sm" onclick="disableAll()">Disable All</button>
         </div>
     </div>
 
-    <div id="content">
-        <div class="loading">
-            <div class="spinner"></div>
+    <!-- Qdrant Summary Bar -->
+    <div class="summary-bar" id="qdrant-summary" style="display: none;">
+        <div class="summary-item">
+            <span class="summary-count" id="container-count" style="color: var(--inspire-yellow);">0</span>
+            <span class="summary-label">Containers</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-count" id="collection-count" style="color: #3fb950;">0</span>
+            <span class="summary-label">Collections</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-count" id="total-points" style="color: #f0883e;">0</span>
+            <span class="summary-label">Total Points</span>
+        </div>
+        <div class="bulk-actions">
+            <button class="btn btn-sm btn-primary" onclick="showCreateModal()">Create Collection</button>
+        </div>
+    </div>
+
+    <!-- Services Table Content (websites and api tabs) -->
+    <div class="tab-content active" id="services-content">
+        <div class="table-container">
+            <table>
+                <thead id="table-header">
+                    <!-- Dynamic header -->
+                </thead>
+                <tbody id="table-body">
+                    <tr>
+                        <td colspan="5" class="loading">
+                            <div class="spinner"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Qdrant Content -->
+    <div class="tab-content" id="qdrant-content">
+        <div id="containers-list">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Summary Bar -->
+    <div class="summary-bar" id="users-summary" style="display: none;">
+        <div class="summary-item">
+            <span class="summary-count" id="total-users-count" style="color: var(--inspire-yellow);">0</span>
+            <span class="summary-label">Total Users</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-count" id="active-users-count" style="color: #3fb950;">0</span>
+            <span class="summary-label">Active</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-count" id="online-users-count" style="color: #58a6ff;">0</span>
+            <span class="summary-label">Online Now</span>
+        </div>
+        <div class="bulk-actions">
+            <button class="btn btn-sm btn-primary" onclick="refreshUsers()">Refresh</button>
+        </div>
+    </div>
+
+    <!-- Users Content -->
+    <div class="tab-content" id="users-content">
+        <div class="table-container">
+            <table>
+                <thead id="users-table-header">
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th class="center">Status</th>
+                        <th>Last Activity</th>
+                        <th>Last Click</th>
+                        <th class="center">Sessions</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table-body">
+                    <tr>
+                        <td colspan="6" class="loading">
+                            <div class="spinner"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Infrastructure Content -->
+    <div class="tab-content" id="infra-content">
+        <div class="container-section">
+            <div class="container-header">
+                <div class="container-title">
+                    <h2>WSL2 Environment</h2>
+                    <span class="container-badge" id="wsl2-badge">Checking...</span>
+                </div>
+            </div>
+            <div class="qdrant-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Value</th>
+                            <th class="center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="wsl2-table-body">
+                        <tr>
+                            <td colspan="3" class="loading">
+                                <div class="spinner"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="container-section">
+            <div class="container-header">
+                <div class="container-title">
+                    <h2>Docker Containers</h2>
+                    <span class="container-badge" id="docker-badge">Checking...</span>
+                </div>
+            </div>
+            <div class="qdrant-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Container</th>
+                            <th>Image</th>
+                            <th>Ports</th>
+                            <th class="center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="docker-table-body">
+                        <tr>
+                            <td colspan="4" class="loading">
+                                <div class="spinner"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="container-section">
+            <div class="container-header">
+                <div class="container-title">
+                    <h2>Cloudflare Tunnel</h2>
+                    <span class="container-badge" id="cloudflared-badge">Checking...</span>
+                </div>
+            </div>
+            <div class="qdrant-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Value</th>
+                            <th class="center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cloudflared-table-body">
+                        <tr>
+                            <td colspan="3" class="loading">
+                                <div class="spinner"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="container-section">
+            <div class="container-header">
+                <div class="container-title">
+                    <h2>Database Connectivity</h2>
+                    <span class="container-badge" id="databases-badge">Checking...</span>
+                </div>
+            </div>
+            <div class="qdrant-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th class="center">Port</th>
+                            <th class="center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="databases-table-body">
+                        <tr>
+                            <td colspan="3" class="loading">
+                                <div class="spinner"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <div class="footer">
-        <p>InspireCodex Service Management | Inspire 8.0</p>
+        InspireCodex Service Management | Inspire 8.0
     </div>
 
     <div class="toast" id="toast"></div>
 
-    <div class="modal-overlay" id="edit-modal">
+    <!-- Create Collection Modal -->
+    <div class="modal-overlay" id="create-modal">
         <div class="modal">
-            <div class="modal-header">
-                <h3 class="modal-title">Edit Service</h3>
+            <h3>Create New Collection</h3>
+            <div class="form-group">
+                <label>Collection Name</label>
+                <input type="text" id="new-collection-name" placeholder="my_collection">
             </div>
-            <div class="modal-body" id="modal-body">
-                <!-- Dynamic content -->
+            <div class="form-group">
+                <label>Vector Size</label>
+                <input type="number" id="new-vector-size" value="1536" min="1">
             </div>
-            <div class="modal-footer">
-                <button class="btn" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveServiceChanges()">Save Changes</button>
+            <div class="form-group">
+                <label>Distance Metric</label>
+                <select id="new-distance">
+                    <option value="Cosine" selected>Cosine</option>
+                    <option value="Euclid">Euclidean</option>
+                    <option value="Dot">Dot Product</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Target Container</label>
+                <select id="target-container"></select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="hideCreateModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createCollection()">Create</button>
             </div>
         </div>
     </div>
 
     <script>
+        // =====================================================================
+        // STATE MANAGEMENT - Persistent state via localStorage
+        // =====================================================================
+        const STATE_KEY = 'inspire_services_state';
+
+        function saveState() {
+            const state = {
+                currentTab,
+                scrollPosition: window.scrollY,
+                timestamp: Date.now()
+            };
+            localStorage.setItem(STATE_KEY, JSON.stringify(state));
+        }
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STATE_KEY);
+                if (saved) {
+                    return JSON.parse(saved);
+                }
+            } catch (e) {
+                console.error('Error loading state:', e);
+            }
+            return null;
+        }
+
+        function restoreState() {
+            const state = loadState();
+            if (state) {
+                if (state.currentTab && ['websites', 'api', 'qdrant', 'users', 'infra'].includes(state.currentTab)) {
+                    currentTab = state.currentTab;
+                }
+                if (state.scrollPosition) {
+                    setTimeout(() => {
+                        window.scrollTo(0, state.scrollPosition);
+                    }, 100);
+                }
+            }
+        }
+
+        window.addEventListener('beforeunload', saveState);
+
+        // =====================================================================
+        // MAIN STATE
+        // =====================================================================
         let servicesData = {};
         let currentTab = 'websites';
-        let editingService = null;
+        let containersData = [];
+        let collectionsData = {};
+        let lastStatusCheck = null;
+        let previousServiceState = null;
+        let serviceHealthData = {}; // Real-time HTTP health status per service
+        let healthCheckInterval = null; // Interval for periodic health checks
 
+        // Approved websites and APIs whitelist - only these domains will be displayed
+        const approvedDomains = new Set([
+            'biblelujah.com',
+            'celestialpaths.com',
+            'daisywylder.com',
+            'fatherelohim.com',
+            'gagedarron.com',
+            'gopartygiggles.com',
+            'gospelbymusic.com',
+            'heidisquest.com',
+            'inspirecodex.com',
+            'inspirecontinuum.com',
+            'inspireshalom.com',
+            'jsvbible.com',
+            'jubileeadspots.com',
+            'jubileebooks.com',
+            'jubileebrowser.com',
+            'jubileecircles.com',
+            'jubileedonations.com',
+            'jubileegoodnews.com',
+            'jubileeinspire.com',
+            'jubileemessages.com',
+            'jubileeparadox.com',
+            'jubileepathfinders.com',
+            'jubileepodcasts.com',
+            'jubileesearch.com',
+            'jubileesermons.com',
+            'jubileeshekels.com',
+            'jubileesmallgroups.com',
+            'jubilee-software.com',
+            'jubileeverse.com',
+            'jubileevibes.com',
+            'jubileewebsites.com',
+            'jubiflix.com',
+            'kjubilee.com',
+            'myjubileeradio.com',
+            'mytinytiggles.com',
+            'onegod.com',
+            'spirituallabel.com',
+            'talk2characters.com',
+            'wwbibleweb.com',
+            'yeshuamashiach.com',
+            // APIs
+            'inspirecodex.com',
+            'inspirecontinuum.com'
+        ]);
+
+        // Filter services to only include approved domains
+        function filterApprovedServices(services) {
+            if (!services) return [];
+            return services.filter(service => {
+                const domain = getDomainFromCwd(service.cwd);
+                return domain && approvedDomains.has(domain.toLowerCase());
+            });
+        }
+
+        // Collection descriptions mapping (using actual Qdrant collection names)
+        const collectionDescriptions = {
+            // Authority Foundation
+            'scripture': 'Bible verse embeddings for semantic search',
+            'doctrine': 'Core doctrinal teachings and beliefs',
+            'governance': 'Organizational governance and policies',
+            'inspire-family': 'Inspire Family persona configurations',
+            'persona_gabriel_inspire': 'Gabriel pastoral AI persona',
+            'persona_jubilee_inspire': 'Jubilee Inspire persona embeddings',
+            'persona_melody_inspire': 'Melody Inspire persona embeddings',
+            'persona_zariah_inspire': 'Zariah Inspire persona embeddings',
+            'persona_elias_inspire': 'Elias Inspire persona embeddings',
+            'persona_eliana_inspire': 'Eliana Inspire persona embeddings',
+            'persona_caleb_inspire': 'Caleb Inspire persona embeddings',
+            'persona_imani_inspire': 'Imani Inspire persona embeddings',
+            'persona_zev_inspire': 'Zev Inspire persona embeddings',
+            'persona_amir_inspire': 'Amir Inspire persona embeddings',
+            'persona_nova_inspire': 'Nova Inspire persona embeddings',
+            'persona_santiago_inspire': 'Santiago Inspire persona embeddings',
+            'persona_tahoma_inspire': 'Tahoma Inspire persona embeddings',
+            'persona_index': 'Master index of all personas',
+            // Goal-Driven Intelligence
+            'model_registry': 'AI model configurations and metadata',
+            'execution_contracts': 'Workflow execution contracts',
+            'endgame': 'Goal and outcome definitions',
+            'experiments': 'A/B testing and experiment data',
+            'learning_memory': 'Adaptive learning memory store',
+            'evaluation': 'Performance evaluation metrics',
+            'execution_logs': 'Workflow execution history',
+            'scenarios': 'Scenario planning and modeling',
+            'kingdom_builder': 'Kingdom building game data',
+            'creative_fire': 'Creative content generation',
+            'gospel_pulse': 'Gospel engagement metrics',
+            'shepherds_voice': 'Shepherding and pastoral content',
+            'hebraic_roots': 'Hebrew language and cultural content',
+            // Kingdom Impact
+            'prompts': 'Prompt templates and configurations',
+            'resources': 'Ministry resource embeddings',
+            'languages': 'Multi-language support vectors',
+            'countries': 'Geographic and cultural data',
+            'jubilee_ministry': 'Ministry organization data',
+            'ministers': 'Minister profiles and data',
+            'users': 'User profile embeddings',
+            'insights': 'Analytics and insight data',
+            'analytics': 'Platform analytics vectors',
+            'marketing': 'Marketing content embeddings',
+            // Other/Legacy
+            'inspire_knowledge': 'Core knowledge base for AI responses'
+        };
+
+        // Display labels for collections (friendly names shown in UI, using actual Qdrant collection names)
+        const collectionDisplayNames = {
+            // Authority Foundation
+            'scripture': 'Scripture',
+            'doctrine': 'Doctrine',
+            'governance': 'Governance',
+            'inspire-family': 'Inspire Family',
+            'persona_gabriel_inspire': 'Gabriel (Pastoral Voice)',
+            'persona_jubilee_inspire': 'Jubilee Inspire',
+            'persona_melody_inspire': 'Melody Inspire',
+            'persona_zariah_inspire': 'Zariah Inspire',
+            'persona_elias_inspire': 'Elias Inspire',
+            'persona_eliana_inspire': 'Eliana Inspire',
+            'persona_caleb_inspire': 'Caleb Inspire',
+            'persona_imani_inspire': 'Imani Inspire',
+            'persona_zev_inspire': 'Zev Inspire',
+            'persona_amir_inspire': 'Amir Inspire',
+            'persona_nova_inspire': 'Nova Inspire',
+            'persona_santiago_inspire': 'Santiago Inspire',
+            'persona_tahoma_inspire': 'Tahoma Inspire',
+            'persona_index': 'Persona Index',
+            // Goal-Driven Intelligence
+            'model_registry': 'Model Registry',
+            'execution_contracts': 'Execution Contracts',
+            'endgame': 'Endgame',
+            'experiments': 'Experiments',
+            'learning_memory': 'Learning Memory',
+            'evaluation': 'Evaluation',
+            'execution_logs': 'Execution Logs',
+            'scenarios': 'Scenarios',
+            'kingdom_builder': 'Kingdom Builder',
+            'creative_fire': 'Creative Fire',
+            'gospel_pulse': 'Gospel Pulse',
+            'shepherds_voice': "Shepherd's Voice",
+            'hebraic_roots': 'Hebraic Roots',
+            // Kingdom Impact
+            'prompts': 'Prompts',
+            'resources': 'Resources',
+            'languages': 'Languages',
+            'countries': 'Countries',
+            'jubilee_ministry': 'Jubilee Ministry',
+            'ministers': 'Ministers',
+            'users': 'Users',
+            'insights': 'Insights',
+            'analytics': 'Analytics',
+            'marketing': 'Marketing',
+            // Other
+            'inspire_knowledge': 'Inspire Knowledge'
+        };
+
+        // Get display name for a collection
+        function getCollectionDisplayName(name) {
+            return collectionDisplayNames[name] || name;
+        }
+
+        // Category mappings for collections (using actual Qdrant collection names)
+        const collectionCategories = {
+            'AUTHORITY FOUNDATION': [
+                'scripture', 'doctrine', 'governance', 'inspire-family',
+                'persona_gabriel_inspire', 'persona_jubilee_inspire', 'persona_melody_inspire',
+                'persona_zariah_inspire', 'persona_elias_inspire', 'persona_eliana_inspire', 'persona_caleb_inspire',
+                'persona_imani_inspire', 'persona_zev_inspire', 'persona_amir_inspire', 'persona_nova_inspire',
+                'persona_santiago_inspire', 'persona_tahoma_inspire', 'persona_index'
+            ],
+            'GOAL-DRIVEN INTELLIGENCE': [
+                'model_registry', 'execution_contracts', 'endgame', 'experiments',
+                'learning_memory', 'evaluation', 'execution_logs', 'scenarios',
+                'kingdom_builder', 'creative_fire', 'gospel_pulse', 'shepherds_voice',
+                'hebraic_roots'
+            ],
+            'KINGDOM IMPACT': [
+                'prompts', 'resources', 'languages', 'countries', 'jubilee_ministry',
+                'ministers', 'users', 'insights', 'analytics', 'marketing'
+            ]
+        };
+
+        // Display order within each category (using actual Qdrant collection names)
+        const collectionDisplayOrder = {
+            'AUTHORITY FOUNDATION': [
+                'scripture', 'doctrine', 'governance', 'inspire-family',
+                'persona_gabriel_inspire', 'persona_jubilee_inspire', 'persona_melody_inspire',
+                'persona_zariah_inspire', 'persona_elias_inspire', 'persona_eliana_inspire', 'persona_caleb_inspire',
+                'persona_imani_inspire', 'persona_zev_inspire', 'persona_amir_inspire', 'persona_nova_inspire',
+                'persona_santiago_inspire', 'persona_tahoma_inspire', 'persona_index'
+            ],
+            'GOAL-DRIVEN INTELLIGENCE': [
+                'model_registry', 'execution_contracts', 'endgame', 'experiments',
+                'learning_memory', 'evaluation', 'execution_logs', 'scenarios',
+                'kingdom_builder', 'creative_fire', 'gospel_pulse', 'shepherds_voice',
+                'hebraic_roots'
+            ],
+            'KINGDOM IMPACT': [
+                'prompts', 'resources', 'languages', 'countries', 'jubilee_ministry',
+                'ministers', 'users', 'insights', 'analytics', 'marketing'
+            ]
+        };
+
+        // Get category for a collection
+        function getCollectionCategory(name) {
+            for (const [category, collections] of Object.entries(collectionCategories)) {
+                if (collections.includes(name)) {
+                    return category;
+                }
+            }
+            return 'OTHER';
+        }
+
+        // Extract domain name from cwd path (e.g., "C:/data/.../JubileeVerse.com" -> "JubileeVerse.com")
+        function getDomainFromCwd(cwd) {
+            if (!cwd) return null;
+            // Get the last part of the path (folder name which is the domain)
+            const parts = cwd.replace(/\\/g, '/').split('/');
+            const domain = parts[parts.length - 1];
+            // Validate it looks like a domain (contains a dot)
+            if (domain && domain.includes('.')) {
+                return domain;
+            }
+            return null;
+        }
+
+        // Get public URL for a service
+        function getServiceUrl(service) {
+            const domain = getDomainFromCwd(service.cwd);
+            if (domain) {
+                return `https://${domain}`;
+            }
+            // Fallback to localhost if domain extraction fails
+            return `http://localhost:${service.port}`;
+        }
+
+        // =====================================================================
+        // SERVICES LOADING
+        // =====================================================================
         async function loadServices() {
             try {
                 const response = await fetch('/api/v1/services');
@@ -596,8 +1415,11 @@
                 if (data.success) {
                     servicesData = data.configs;
                     updateTabCounts();
-                    renderServices();
-                    loadHealthStatus();
+                    if (currentTab !== 'qdrant') {
+                        renderTable();
+                        loadHealthStatus();
+                    }
+                    updateLastUpdated();
                 } else {
                     showToast('Failed to load services', 'error');
                 }
@@ -609,171 +1431,582 @@
 
         function updateTabCounts() {
             if (servicesData.websites) {
-                document.getElementById('websites-count').textContent = servicesData.websites.services.length;
+                const filteredWebsites = filterApprovedServices(servicesData.websites.services);
+                document.getElementById('websites-count').textContent = filteredWebsites.length;
             }
             if (servicesData.api) {
-                document.getElementById('api-count').textContent = servicesData.api.services.length;
-            }
-            if (servicesData.docker) {
-                document.getElementById('docker-count').textContent = servicesData.docker.containers.length;
+                const filteredApis = filterApprovedServices(servicesData.api.services);
+                document.getElementById('api-count').textContent = filteredApis.length;
             }
         }
 
+        function updateLastUpdated() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString();
+            document.getElementById('last-updated').textContent = `Updated: ${timeStr}`;
+            lastStatusCheck = now;
+        }
+
+        // =====================================================================
+        // TAB SWITCHING
+        // =====================================================================
         function switchTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-            renderServices();
-            loadHealthStatus();
+
+            const servicesContent = document.getElementById('services-content');
+            const qdrantContent = document.getElementById('qdrant-content');
+            const usersContent = document.getElementById('users-content');
+            const infraContent = document.getElementById('infra-content');
+            const servicesSummary = document.getElementById('services-summary');
+            const qdrantSummary = document.getElementById('qdrant-summary');
+            const usersSummary = document.getElementById('users-summary');
+            const infraSummary = document.getElementById('infra-summary');
+
+            // Hide all content sections
+            servicesContent.classList.remove('active');
+            qdrantContent.classList.remove('active');
+            usersContent.classList.remove('active');
+            infraContent.classList.remove('active');
+            servicesSummary.style.display = 'none';
+            qdrantSummary.style.display = 'none';
+            usersSummary.style.display = 'none';
+            infraSummary.style.display = 'none';
+
+            if (tab === 'qdrant') {
+                qdrantContent.classList.add('active');
+                qdrantSummary.style.display = 'flex';
+                stopHealthCheckInterval(); // Stop health checks for Qdrant tab
+                loadQdrantContainers();
+            } else if (tab === 'users') {
+                usersContent.classList.add('active');
+                usersSummary.style.display = 'flex';
+                stopHealthCheckInterval(); // Stop health checks for Users tab
+                loadUsers();
+            } else if (tab === 'infra') {
+                infraContent.classList.add('active');
+                infraSummary.style.display = 'flex';
+                stopHealthCheckInterval(); // Stop health checks for Infra tab
+                loadInfrastructure();
+            } else {
+                servicesContent.classList.add('active');
+                servicesSummary.style.display = 'flex';
+                renderTable();
+                loadHealthStatus();
+                startHealthCheckInterval(); // Start real HTTP health checks
+            }
+
+            saveState();
         }
 
+        // =====================================================================
+        // HEALTH STATUS
+        // =====================================================================
         async function loadHealthStatus() {
-            const healthSection = document.getElementById('health-section');
-            const statusDiv = document.getElementById('manager-status');
-            const statsDiv = document.getElementById('health-stats');
-
+            const healthDiv = document.getElementById('manager-health');
+            if (currentTab === 'qdrant') {
+                healthDiv.className = 'health-indicator';
+                healthDiv.innerHTML = `<span class="status-dot"></span><span>Qdrant</span>`;
+                return;
+            }
             try {
                 const response = await fetch(`/api/v1/services/health/${currentTab}`);
                 const data = await response.json();
 
                 if (data.success && data.data) {
-                    healthSection.style.display = 'block';
-                    statusDiv.className = 'health-status online';
-                    statusDiv.innerHTML = `<span class="status-dot enabled"></span><span>Online</span>`;
-
-                    const managerData = data.data.manager || {};
-                    const services = data.data.services || [];
-
-                    statsDiv.innerHTML = `
-                        <div class="health-stat">
-                            <div class="health-stat-value">${managerData.pid || 'N/A'}</div>
-                            <div class="health-stat-label">Manager PID</div>
-                        </div>
-                        <div class="health-stat">
-                            <div class="health-stat-value">${formatUptime(managerData.uptime || 0)}</div>
-                            <div class="health-stat-label">Uptime</div>
-                        </div>
-                        <div class="health-stat">
-                            <div class="health-stat-value">${services.length}</div>
-                            <div class="health-stat-label">Running Services</div>
-                        </div>
-                        <div class="health-stat">
-                            <div class="health-stat-value">${services.reduce((sum, s) => sum + (s.workers || 1), 0)}</div>
-                            <div class="health-stat-label">Active Workers</div>
-                        </div>
-                    `;
+                    healthDiv.className = 'health-indicator online';
+                    healthDiv.innerHTML = `<span class="status-dot"></span><span>Online (PID: ${data.data.manager?.pid || 'N/A'})</span>`;
                 } else {
-                    healthSection.style.display = 'block';
-                    statusDiv.className = 'health-status offline';
-                    statusDiv.innerHTML = `<span class="status-dot disabled"></span><span>Offline</span>`;
-                    statsDiv.innerHTML = '<p style="color: #8b949e; text-align: center;">Service manager not running</p>';
+                    healthDiv.className = 'health-indicator offline';
+                    healthDiv.innerHTML = `<span class="status-dot"></span><span>Offline</span>`;
                 }
             } catch (error) {
-                healthSection.style.display = 'block';
-                statusDiv.className = 'health-status offline';
-                statusDiv.innerHTML = `<span class="status-dot disabled"></span><span>Error</span>`;
-                statsDiv.innerHTML = `<p style="color: #f85149; text-align: center;">${error.message}</p>`;
+                healthDiv.className = 'health-indicator offline';
+                healthDiv.innerHTML = `<span class="status-dot"></span><span>Error</span>`;
             }
         }
 
-        function formatUptime(seconds) {
-            if (!seconds) return '0s';
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            const secs = Math.floor(seconds % 60);
-            if (hours > 0) return `${hours}h ${minutes}m`;
-            if (minutes > 0) return `${minutes}m ${secs}s`;
-            return `${secs}s`;
-        }
+        // =====================================================================
+        // TABLE RENDERING - No Actions column
+        // =====================================================================
+        function renderTable() {
+            const header = document.getElementById('table-header');
+            const body = document.getElementById('table-body');
+            const workersSummary = document.getElementById('workers-summary');
 
-        function renderServices() {
-            const content = document.getElementById('content');
             let services = [];
-            let isDocker = currentTab === 'docker';
 
             if (currentTab === 'websites' && servicesData.websites) {
-                services = servicesData.websites.services;
+                services = filterApprovedServices([...servicesData.websites.services]).sort((a, b) => a.name.localeCompare(b.name));
             } else if (currentTab === 'api' && servicesData.api) {
-                services = servicesData.api.services;
-            } else if (currentTab === 'docker' && servicesData.docker) {
-                services = servicesData.docker.containers;
+                services = filterApprovedServices([...servicesData.api.services]).sort((a, b) => a.name.localeCompare(b.name));
             }
 
             // Update summary
             const enabled = services.filter(s => s.enabled !== false).length;
             const disabled = services.filter(s => s.enabled === false).length;
-            const totalWorkers = services.reduce((sum, s) => sum + (s.workers || 1), 0);
+            const totalWorkers = services.filter(s => s.enabled !== false).reduce((sum, s) => sum + (s.workers || 1), 0);
 
             document.getElementById('enabled-count').textContent = enabled;
             document.getElementById('disabled-count').textContent = disabled;
-            document.getElementById('total-workers').textContent = isDocker ? 'N/A' : totalWorkers;
+            document.getElementById('total-workers').textContent = totalWorkers;
+            workersSummary.style.display = 'flex';
+
+            // Render header - Port before Description for both tabs
+            header.innerHTML = `
+                <tr>
+                    <th>Service</th>
+                    <th class="center">Port</th>
+                    <th>Description</th>
+                    <th class="center">Core Servers</th>
+                    <th class="center">Status</th>
+                </tr>
+            `;
 
             if (services.length === 0) {
-                content.innerHTML = '<p style="text-align: center; color: #8b949e; padding: 40px;">No services configured</p>';
+                body.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 24px; color: #ffffff;">No services configured</td></tr>';
                 return;
             }
 
-            let html = '<div class="service-grid">';
-
+            let html = '';
             for (const service of services) {
                 const isEnabled = service.enabled !== false;
-                html += `
-                    <div class="service-card ${isEnabled ? '' : 'disabled'}">
-                        <div class="service-header">
-                            <div>
-                                <div class="service-name">${service.name}</div>
-                                <div class="service-description">${service.description || ''}</div>
-                            </div>
-                            <div class="service-status">
-                                <div class="toggle-switch ${isEnabled ? 'active' : ''}"
-                                     onclick="toggleService('${service.name}', ${!isEnabled})"></div>
-                            </div>
-                        </div>
-                        <div class="service-details">
-                            ${isDocker ? `
-                                <div class="detail-item">
-                                    <div class="detail-label">Image</div>
-                                    <div class="detail-value">${service.image}</div>
+                const workers = service.workers || 1;
+
+                // Get the public-facing URL for this service
+                const serviceUrl = getServiceUrl(service);
+
+                // Get real HTTP health status for this service
+                const health = serviceHealthData[service.name];
+                let statusClass, statusText, rowClass;
+
+                let responseTimeText = '';
+                if (!isEnabled) {
+                    statusClass = 'disabled';
+                    statusText = 'Disabled';
+                    rowClass = 'disabled';
+                } else if (!health) {
+                    // Health check not yet run
+                    statusClass = 'checking';
+                    statusText = 'Checking...';
+                    rowClass = '';
+                } else if (health.httpOk) {
+                    statusClass = 'online';
+                    statusText = 'Online';
+                    responseTimeText = `${health.responseTime}ms`;
+                    rowClass = '';
+                } else {
+                    statusClass = 'offline';
+                    statusText = health.error || `Error ${health.httpStatus}`;
+                    rowClass = 'offline-row';
+                }
+
+                if (currentTab === 'api') {
+                    // Web APIs: Port before Description - use gear icon
+                    html += `
+                        <tr class="${rowClass}" data-service="${service.name}">
+                            <td>
+                                <a href="${serviceUrl}" target="_blank" class="service-name service-link">
+                                    <span class="gear-icon">&#9881;</span>
+                                    ${service.name}
+                                </a>
+                            </td>
+                            <td class="center"><span class="port-badge">:${service.port}</span></td>
+                            <td><span class="service-desc">${service.description || ''}</span></td>
+                            <td class="center">
+                                <div class="workers-control">
+                                    <button class="workers-btn" onclick="decrementWorkers('${service.name}', ${workers})" ${!isEnabled || workers <= 1 ? 'disabled' : ''}>−</button>
+                                    <span class="workers-value">${workers}</span>
+                                    <button class="workers-btn" onclick="incrementWorkers('${service.name}', ${workers})" ${!isEnabled || workers >= 64 ? 'disabled' : ''}>+</button>
                                 </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Port</div>
-                                    <div class="detail-value">${service.port}</div>
+                            </td>
+                            <td class="center">
+                                <div class="status-cell">
+                                    <span class="response-time">${responseTimeText}</span>
+                                    <span class="status-badge ${statusClass}">
+                                        <span class="status-dot"></span>
+                                        ${statusText}
+                                    </span>
                                 </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Restart</div>
-                                    <div class="detail-value">${service.restartPolicy || 'always'}</div>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    // Websites: Port before Description - use globe icon
+                    html += `
+                        <tr class="${rowClass}" data-service="${service.name}">
+                            <td>
+                                <a href="${serviceUrl}" target="_blank" class="service-name service-link">
+                                    <span class="globe-icon">&#127760;</span>
+                                    ${service.name}
+                                </a>
+                            </td>
+                            <td class="center"><span class="port-badge">:${service.port}</span></td>
+                            <td><span class="service-desc">${service.description || ''}</span></td>
+                            <td class="center">
+                                <div class="workers-control">
+                                    <button class="workers-btn" onclick="decrementWorkers('${service.name}', ${workers})" ${!isEnabled || workers <= 1 ? 'disabled' : ''}>−</button>
+                                    <span class="workers-value">${workers}</span>
+                                    <button class="workers-btn" onclick="incrementWorkers('${service.name}', ${workers})" ${!isEnabled || workers >= 64 ? 'disabled' : ''}>+</button>
                                 </div>
-                            ` : `
-                                <div class="detail-item">
-                                    <div class="detail-label">Port</div>
-                                    <div class="detail-value">${service.port}</div>
+                            </td>
+                            <td class="center">
+                                <div class="status-cell">
+                                    <span class="response-time">${responseTimeText}</span>
+                                    <span class="status-badge ${statusClass}">
+                                        <span class="status-dot"></span>
+                                        ${statusText}
+                                    </span>
                                 </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Workers</div>
-                                    <div class="detail-value">${service.workers || 1}</div>
-                                </div>
-                                <div class="detail-item">
-                                    <div class="detail-label">Script</div>
-                                    <div class="detail-value">${service.script}</div>
-                                </div>
-                            `}
-                        </div>
-                        <div class="service-actions">
-                            <button class="btn" onclick="editService('${service.name}')">Edit</button>
-                            ${!isDocker ? `
-                                <button class="btn btn-warning" onclick="setWorkers('${service.name}', ${service.workers || 1})">
-                                    Set Workers
-                                </button>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
+                            </td>
+                        </tr>
+                    `;
+                }
             }
 
-            html += '</div>';
-            content.innerHTML = html;
+            body.innerHTML = html;
         }
 
+        // =====================================================================
+        // HTTP HEALTH CHECKS - Real-time service availability monitoring
+        // Tests PRODUCTION URLs directly from browser (not localhost)
+        // =====================================================================
+
+        // Check a single URL and return health status
+        // Uses an image beacon technique to detect if site is truly reachable
+        async function checkSingleUrl(url, timeout = 5000) {
+            const startTime = Date.now();
+
+            return new Promise((resolve) => {
+                // Use an Image load test - this works cross-origin and detects real failures
+                const img = new Image();
+                let resolved = false;
+
+                const timeoutHandler = setTimeout(() => {
+                    if (!resolved) {
+                        resolved = true;
+                        img.src = ''; // Cancel the request
+                        resolve({
+                            httpOk: false,
+                            httpStatus: 0,
+                            responseTime: Date.now() - startTime,
+                            error: 'TIMEOUT'
+                        });
+                    }
+                }, timeout);
+
+                img.onload = () => {
+                    if (!resolved) {
+                        resolved = true;
+                        clearTimeout(timeoutHandler);
+                        resolve({
+                            httpOk: true,
+                            httpStatus: 200,
+                            responseTime: Date.now() - startTime,
+                            error: null
+                        });
+                    }
+                };
+
+                img.onerror = () => {
+                    if (!resolved) {
+                        resolved = true;
+                        clearTimeout(timeoutHandler);
+                        // Image failed to load - but this could be because:
+                        // 1. Site is down (502, 503, etc.)
+                        // 2. No favicon/image at that URL
+                        // 3. CORS blocking
+                        // We need to use fetch as a fallback to determine actual status
+                        checkWithFetch(url, timeout - (Date.now() - startTime)).then(resolve);
+                    }
+                };
+
+                // Try to load a small resource from the site
+                // First try favicon, which most sites have
+                img.src = url + (url.endsWith('/') ? '' : '/') + 'favicon.ico?' + Date.now();
+            });
+        }
+
+        // Fallback fetch check when image fails
+        async function checkWithFetch(url, remainingTimeout = 3000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), Math.max(remainingTimeout, 1000));
+            const startTime = Date.now();
+
+            try {
+                // Use cors mode to get actual response status
+                const response = await fetch(url, {
+                    method: 'GET',
+                    mode: 'cors',
+                    credentials: 'omit',
+                    signal: controller.signal,
+                    cache: 'no-store',
+                    redirect: 'follow'
+                });
+
+                clearTimeout(timeoutId);
+                const responseTime = Date.now() - startTime;
+                const httpOk = response.ok; // true if 200-299
+
+                return {
+                    httpOk,
+                    httpStatus: response.status,
+                    responseTime,
+                    error: httpOk ? null : `HTTP ${response.status}`
+                };
+            } catch (err) {
+                clearTimeout(timeoutId);
+                const responseTime = Date.now() - startTime;
+
+                // Check if this is a CORS error - many production sites block CORS
+                // In that case, try the backend proxy
+                // Chrome: 'Failed to fetch', Firefox: 'NetworkError when attempting to fetch resource'
+                if (err.name === 'TypeError' && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError'))) {
+                    // Could be CORS or network error - use backend proxy to check
+                    return await checkViaBackendProxy(url, remainingTimeout);
+                }
+
+                if (err.name === 'AbortError') {
+                    return { httpOk: false, httpStatus: 0, responseTime, error: 'TIMEOUT' };
+                }
+
+                return {
+                    httpOk: false,
+                    httpStatus: 0,
+                    responseTime,
+                    error: err.message || 'NETWORK_ERROR'
+                };
+            }
+        }
+
+        // Use backend proxy to check URL (avoids CORS issues)
+        async function checkViaBackendProxy(url, timeout = 3000) {
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch(`/api/v1/services/probe?url=${encodeURIComponent(url)}`, {
+                    method: 'GET',
+                    cache: 'no-store',
+                    signal: AbortSignal.timeout(timeout)
+                });
+
+                const data = await response.json();
+                return {
+                    httpOk: data.ok === true,
+                    httpStatus: data.status || 0,
+                    responseTime: data.responseTime || (Date.now() - startTime),
+                    error: data.error || null
+                };
+            } catch (err) {
+                return {
+                    httpOk: false,
+                    httpStatus: 0,
+                    responseTime: Date.now() - startTime,
+                    error: 'PROXY_ERROR'
+                };
+            }
+        }
+
+        async function checkServiceHealth() {
+            if (currentTab === 'qdrant' || currentTab === 'users' || currentTab === 'infra') return;
+
+            console.log('[Health] Starting health check for', currentTab, 'services...');
+
+            // Get the current services list
+            const services = getServicesForCurrentTab();
+            if (services.length === 0) {
+                console.log('[Health] No services to check');
+                return;
+            }
+
+            let online = 0;
+            let offline = 0;
+            let disabled = 0;
+
+            // Check each service by hitting its PRODUCTION URL directly
+            const checkPromises = services.map(async (service) => {
+                const isEnabled = service.enabled !== false;
+
+                if (!isEnabled) {
+                    disabled++;
+                    serviceHealthData[service.name] = {
+                        httpOk: null,
+                        httpStatus: null,
+                        responseTime: null,
+                        error: null,
+                        configStatus: 'disabled',
+                        lastChecked: new Date()
+                    };
+                    return;
+                }
+
+                // Get the production URL for this service
+                const publicUrl = getServiceUrl(service);
+
+                // Only check HTTPS production URLs, not localhost
+                if (!publicUrl.startsWith('https://')) {
+                    console.warn(`[Health] Skipping non-HTTPS URL for ${service.name}: ${publicUrl}`);
+                    offline++;
+                    serviceHealthData[service.name] = {
+                        httpOk: false,
+                        httpStatus: 0,
+                        responseTime: 0,
+                        error: 'NO_HTTPS_URL',
+                        configStatus: 'enabled',
+                        lastChecked: new Date()
+                    };
+                    return;
+                }
+
+                // Check the production URL
+                const result = await checkSingleUrl(publicUrl, 5000);
+
+                if (result.httpOk) {
+                    online++;
+                } else {
+                    offline++;
+                }
+
+                serviceHealthData[service.name] = {
+                    httpOk: result.httpOk,
+                    httpStatus: result.httpStatus,
+                    responseTime: result.responseTime,
+                    error: result.error,
+                    configStatus: 'enabled',
+                    publicUrl: publicUrl,
+                    lastChecked: new Date()
+                };
+
+                // Log failures for debugging
+                if (!result.httpOk) {
+                    console.warn(`[Health] ${service.name} OFFLINE: ${publicUrl} - ${result.error}`);
+                }
+            });
+
+            await Promise.all(checkPromises);
+
+            // Update the summary counts
+            document.getElementById('enabled-count').textContent = online;
+            document.getElementById('disabled-count').textContent = offline + disabled;
+
+            // Update status badges in-place without re-rendering the whole table
+            updateStatusBadges();
+            updateLastUpdated();
+
+            console.log(`[Health] Checked ${services.length} services: ${online} online, ${offline} offline, ${disabled} disabled`);
+        }
+
+        // Update status badges in-place to avoid flashing
+        function updateStatusBadges() {
+            const rows = document.querySelectorAll('#table-body tr[data-service]');
+            const services = getServicesForCurrentTab();
+            rows.forEach(row => {
+                const serviceName = row.dataset.service;
+                const health = serviceHealthData[serviceName];
+                const statusBadge = row.querySelector('.status-badge');
+                const responseTimeEl = row.querySelector('.response-time');
+
+                if (!statusBadge) return;
+
+                // Check if service is disabled
+                const service = services.find(s => s.name === serviceName);
+                const isEnabled = service && service.enabled !== false;
+
+                let statusClass, statusText, responseTimeText = '';
+
+                if (!isEnabled) {
+                    statusClass = 'disabled';
+                    statusText = 'Disabled';
+                } else if (!health) {
+                    statusClass = 'checking';
+                    statusText = 'Checking...';
+                } else if (health.httpOk) {
+                    statusClass = 'online';
+                    statusText = 'Online';
+                    responseTimeText = `${health.responseTime}ms`;
+                    row.classList.remove('offline-row');
+                } else {
+                    statusClass = 'offline';
+                    statusText = health.error || `Error ${health.httpStatus}`;
+                    row.classList.add('offline-row');
+                }
+
+                statusBadge.className = `status-badge ${statusClass}`;
+                statusBadge.innerHTML = `<span class="status-dot"></span>${statusText}`;
+                if (responseTimeEl) {
+                    responseTimeEl.textContent = responseTimeText;
+                }
+            });
+        }
+
+        // Start periodic health checks
+        function startHealthCheckInterval() {
+            // Clear any existing interval
+            if (healthCheckInterval) {
+                clearInterval(healthCheckInterval);
+            }
+
+            // Run immediately
+            checkServiceHealth();
+
+            // Then run every 5 minutes
+            healthCheckInterval = setInterval(checkServiceHealth, 300000);
+            console.log('[Health] Started periodic health checks (every 5 minutes)');
+        }
+
+        // Stop periodic health checks
+        function stopHealthCheckInterval() {
+            if (healthCheckInterval) {
+                clearInterval(healthCheckInterval);
+                healthCheckInterval = null;
+                console.log('[Health] Stopped periodic health checks');
+            }
+        }
+
+        // =====================================================================
+        // WORKERS CONTROL
+        // =====================================================================
+        async function incrementWorkers(serviceName, currentValue) {
+            if (currentValue >= 64) return;
+            await updateWorkers(serviceName, currentValue + 1);
+        }
+
+        async function decrementWorkers(serviceName, currentValue) {
+            if (currentValue <= 1) return;
+            await updateWorkers(serviceName, currentValue - 1);
+        }
+
+        async function updateWorkers(serviceName, workers) {
+            const workerCount = parseInt(workers);
+            if (isNaN(workerCount) || workerCount < 1 || workerCount > 64) {
+                showToast('Workers must be between 1 and 64', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/v1/services/${currentTab}/${serviceName}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ workers: workerCount })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`${serviceName} workers set to ${workerCount}`, 'success');
+                    await loadServices();
+                } else {
+                    showToast('Failed to update workers', 'error');
+                }
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+            }
+        }
+
+        // =====================================================================
+        // SERVICE ACTIONS
+        // =====================================================================
         async function toggleService(serviceName, enabled) {
             try {
                 const response = await fetch(`/api/v1/services/${currentTab}/${serviceName}`, {
@@ -795,152 +2028,695 @@
             }
         }
 
-        function editService(serviceName) {
-            const services = currentTab === 'docker'
-                ? servicesData.docker.containers
-                : (currentTab === 'api' ? servicesData.api.services : servicesData.websites.services);
+        async function enableAll() {
+            if (!confirm('Enable all services in this category?')) return;
 
-            const service = services.find(s => s.name === serviceName);
-            if (!service) return;
+            const services = getServicesForCurrentTab();
+            let count = 0;
 
-            editingService = serviceName;
-            const isDocker = currentTab === 'docker';
-
-            const modalBody = document.getElementById('modal-body');
-            modalBody.innerHTML = `
-                <div class="form-group">
-                    <label class="form-label">Service Name</label>
-                    <input type="text" class="form-input" id="edit-name" value="${service.name}" disabled>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <input type="text" class="form-input" id="edit-description" value="${service.description || ''}">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Port</label>
-                    <input type="number" class="form-input" id="edit-port" value="${service.port}">
-                </div>
-                ${!isDocker ? `
-                    <div class="form-group">
-                        <label class="form-label">Workers</label>
-                        <input type="number" class="form-input" id="edit-workers" value="${service.workers || 1}" min="1" max="64">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Script</label>
-                        <input type="text" class="form-input" id="edit-script" value="${service.script}">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Working Directory</label>
-                        <input type="text" class="form-input" id="edit-cwd" value="${service.cwd}">
-                    </div>
-                ` : `
-                    <div class="form-group">
-                        <label class="form-label">Docker Image</label>
-                        <input type="text" class="form-input" id="edit-image" value="${service.image}">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Restart Policy</label>
-                        <select class="form-input" id="edit-restart">
-                            <option value="always" ${service.restartPolicy === 'always' ? 'selected' : ''}>always</option>
-                            <option value="unless-stopped" ${service.restartPolicy === 'unless-stopped' ? 'selected' : ''}>unless-stopped</option>
-                            <option value="on-failure" ${service.restartPolicy === 'on-failure' ? 'selected' : ''}>on-failure</option>
-                            <option value="no" ${service.restartPolicy === 'no' ? 'selected' : ''}>no</option>
-                        </select>
-                    </div>
-                `}
-            `;
-
-            document.getElementById('edit-modal').classList.add('show');
-        }
-
-        function closeModal() {
-            document.getElementById('edit-modal').classList.remove('show');
-            editingService = null;
-        }
-
-        async function saveServiceChanges() {
-            if (!editingService) return;
-
-            const isDocker = currentTab === 'docker';
-            const updates = {
-                description: document.getElementById('edit-description').value,
-                port: parseInt(document.getElementById('edit-port').value)
-            };
-
-            if (!isDocker) {
-                updates.workers = parseInt(document.getElementById('edit-workers').value);
-                updates.script = document.getElementById('edit-script').value;
-                updates.cwd = document.getElementById('edit-cwd').value;
-            } else {
-                updates.image = document.getElementById('edit-image').value;
-                updates.restartPolicy = document.getElementById('edit-restart').value;
+            for (const service of services) {
+                if (service.enabled === false) {
+                    try {
+                        await fetch(`/api/v1/services/${currentTab}/${service.name}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ enabled: true })
+                        });
+                        count++;
+                    } catch (e) {}
+                }
             }
 
-            try {
-                const response = await fetch(`/api/v1/services/${currentTab}/${editingService}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updates)
-                });
+            showToast(`Enabled ${count} services`, 'success');
+            await loadServices();
+        }
 
+        async function disableAll() {
+            if (!confirm('Disable all services in this category?')) return;
+
+            const services = getServicesForCurrentTab();
+            let count = 0;
+
+            for (const service of services) {
+                if (service.enabled !== false) {
+                    try {
+                        await fetch(`/api/v1/services/${currentTab}/${service.name}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ enabled: false })
+                        });
+                        count++;
+                    } catch (e) {}
+                }
+            }
+
+            showToast(`Disabled ${count} services`, 'success');
+            await loadServices();
+        }
+
+        function getServicesForCurrentTab() {
+            if (currentTab === 'websites' && servicesData.websites) {
+                return filterApprovedServices(servicesData.websites.services);
+            } else if (currentTab === 'api' && servicesData.api) {
+                return filterApprovedServices(servicesData.api.services);
+            }
+            return [];
+        }
+
+        async function reloadCurrentTab() {
+            if (currentTab === 'qdrant') {
+                await loadQdrantContainers();
+                showToast('Refreshed', 'success');
+            } else {
+                try {
+                    await fetch(`/api/v1/services/${currentTab}/reload`, { method: 'POST' });
+                    showToast('Reload triggered', 'success');
+                    setTimeout(loadHealthStatus, 2000);
+                } catch (error) {
+                    showToast('Error triggering reload: ' + error.message, 'error');
+                }
+            }
+        }
+
+        // =====================================================================
+        // QDRANT FUNCTIONS
+        // =====================================================================
+        async function loadQdrantContainers() {
+            try {
+                const response = await fetch('/api/v1/qdrant/containers');
                 const data = await response.json();
 
                 if (data.success) {
-                    showToast('Service updated successfully', 'success');
-                    closeModal();
-                    await loadServices();
+                    containersData = data.containers;
+                    document.getElementById('container-count').textContent = containersData.length;
+                    document.getElementById('qdrant-count').textContent = containersData.length;
+                    updateTargetContainerSelect();
+                    await loadAllCollections();
+                    updateLastUpdated();
                 } else {
-                    showToast('Failed to update service', 'error');
+                    showToast('Failed to load containers', 'error');
+                    renderNoContainers();
                 }
             } catch (error) {
-                showToast('Error: ' + error.message, 'error');
+                console.error('Error loading containers:', error);
+                showToast('Error loading containers: ' + error.message, 'error');
+                renderNoContainers();
             }
         }
 
-        async function setWorkers(serviceName, currentWorkers) {
-            const newWorkers = prompt(`Set workers for ${serviceName}:`, currentWorkers);
-            if (newWorkers === null) return;
+        function updateTargetContainerSelect() {
+            const select = document.getElementById('target-container');
+            select.innerHTML = containersData.map(c =>
+                `<option value="${c.port}">${c.name} (port ${c.port})</option>`
+            ).join('');
+        }
 
-            const workers = parseInt(newWorkers);
-            if (isNaN(workers) || workers < 1 || workers > 64) {
-                showToast('Workers must be between 1 and 64', 'error');
+        async function loadAllCollections() {
+            let totalCollections = 0;
+            let totalPoints = 0;
+            collectionsData = {};
+
+            for (const container of containersData) {
+                try {
+                    const response = await fetch(`/api/v1/qdrant/collections?port=${container.port}`);
+                    const data = await response.json();
+
+                    collectionsData[container.port] = {
+                        container,
+                        online: data.success,
+                        collections: data.collections || [],
+                        error: data.error
+                    };
+
+                    if (data.success && data.collections) {
+                        totalCollections += data.collections.length;
+
+                        for (const coll of data.collections) {
+                            try {
+                                const detailResp = await fetch(`/api/v1/qdrant/collections/${coll.name}?port=${container.port}`);
+                                const detailData = await detailResp.json();
+                                if (detailData.success && detailData.details) {
+                                    coll.points_count = detailData.details.points_count || 0;
+                                    coll.vectors_count = detailData.details.vectors_count || 0;
+                                    coll.status = detailData.details.status;
+                                    coll.config = detailData.details.config;
+                                    totalPoints += coll.points_count;
+                                }
+                            } catch (e) {
+                                console.error('Error loading collection details:', e);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    collectionsData[container.port] = {
+                        container,
+                        online: false,
+                        collections: [],
+                        error: error.message
+                    };
+                }
+            }
+
+            document.getElementById('collection-count').textContent = totalCollections;
+            document.getElementById('total-points').textContent = formatNumber(totalPoints);
+            renderQdrantContainers();
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        function renderNoContainers() {
+            document.getElementById('containers-list').innerHTML = `
+                <div class="no-containers">
+                    <p style="color: #ffffff; margin-bottom: 15px;">No Qdrant containers found in docker-services.json</p>
+                    <p style="color: #ffffff; font-size: 0.85rem;">Add a Qdrant container configuration to get started.</p>
+                </div>
+            `;
+        }
+
+        function renderQdrantContainers() {
+            if (containersData.length === 0) {
+                renderNoContainers();
+                return;
+            }
+
+            let html = '';
+
+            for (const container of containersData) {
+                const data = collectionsData[container.port] || { online: false, collections: [] };
+                const isOnline = data.online;
+                const collections = data.collections || [];
+
+                html += `
+                    <div class="container-section">
+                        <div class="container-header">
+                            <div class="container-title">
+                                <h2>${container.name}</h2>
+                                <span class="container-badge ${isOnline ? 'online' : 'offline'}">
+                                    ${isOnline ? 'Active' : 'Offline'}
+                                </span>
+                            </div>
+                            <div class="container-info">
+                                <span>Image: <strong>${container.image}</strong></span>
+                                <span>Port: <span class="port-badge">${container.port}</span></span>
+                                <span>Collections: <strong>${collections.length}</strong></span>
+                            </div>
+                        </div>
+                        <div class="qdrant-table-container">
+                            ${isOnline ? renderCollectionsTable(collections, container.port) : renderOfflineMessage(data.error)}
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('containers-list').innerHTML = html;
+        }
+
+        function getCollectionDescription(name) {
+            return collectionDescriptions[name] || 'Vector collection for data storage';
+        }
+
+        function renderCollectionsTable(collections, port) {
+            if (collections.length === 0) {
+                return `
+                    <div class="empty-state">
+                        <p>No collections found in this Qdrant instance.</p>
+                        <button class="btn btn-primary btn-sm" onclick="showCreateModalForPort(${port})">Create First Collection</button>
+                    </div>
+                `;
+            }
+
+            // Group collections by category
+            const categoryOrder = ['AUTHORITY FOUNDATION', 'GOAL-DRIVEN INTELLIGENCE', 'KINGDOM IMPACT', 'OTHER'];
+            const groupedCollections = {};
+
+            for (const coll of collections) {
+                const category = getCollectionCategory(coll.name);
+                if (!groupedCollections[category]) {
+                    groupedCollections[category] = [];
+                }
+                groupedCollections[category].push(coll);
+            }
+
+            // Sort collections by display order within each category
+            for (const category of Object.keys(groupedCollections)) {
+                const order = collectionDisplayOrder[category] || [];
+                groupedCollections[category].sort((a, b) => {
+                    const indexA = order.indexOf(a.name);
+                    const indexB = order.indexOf(b.name);
+                    // If not in order list, put at end alphabetically
+                    if (indexA === -1 && indexB === -1) return a.name.localeCompare(b.name);
+                    if (indexA === -1) return 1;
+                    if (indexB === -1) return -1;
+                    return indexA - indexB;
+                });
+            }
+
+            // Collections table without Actions column
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Collection</th>
+                            <th>Description</th>
+                            <th class="center">Points</th>
+                            <th class="center">Vectors</th>
+                            <th class="center">Status</th>
+                            <th class="center">Vector Size</th>
+                            <th class="center">Distance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            // Render collections grouped by category
+            for (const category of categoryOrder) {
+                const categoryCollections = groupedCollections[category];
+                if (!categoryCollections || categoryCollections.length === 0) continue;
+
+                // Category header row
+                html += `
+                    <tr class="category-header">
+                        <td colspan="7">
+                            <span class="category-icon">&#9883;</span>
+                            ${category}
+                        </td>
+                    </tr>
+                `;
+
+                // Collection rows for this category
+                for (const coll of categoryCollections) {
+                    const statusDisplay = coll.status === 'green' ? 'Active' : (coll.status || 'unknown');
+                    const statusClass = coll.status === 'green' ? 'green' : (coll.status === 'yellow' ? 'yellow' : 'red');
+                    const vectorSize = coll.config?.params?.vectors?.size || 'N/A';
+                    const distance = coll.config?.params?.vectors?.distance || 'N/A';
+                    const description = getCollectionDescription(coll.name);
+                    const displayName = getCollectionDisplayName(coll.name);
+
+                    html += `
+                        <tr data-collection="${coll.name}">
+                            <td>
+                                <span class="service-name" title="${coll.name}">
+                                    <span class="atom-icon">&#9883;</span>
+                                    <span class="collection-name">${displayName}</span>
+                                </span>
+                            </td>
+                            <td><span class="collection-desc" title="${description}">${description}</span></td>
+                            <td class="center">${formatNumber(coll.points_count || 0)}</td>
+                            <td class="center">${formatNumber(coll.vectors_count || 0)}</td>
+                            <td class="center">
+                                <span class="status-badge ${statusClass}">
+                                    ${statusDisplay}
+                                </span>
+                            </td>
+                            <td class="center">${vectorSize}</td>
+                            <td class="center">${distance}</td>
+                        </tr>
+                    `;
+                }
+            }
+
+            html += '</tbody></table>';
+            return html;
+        }
+
+        function renderOfflineMessage(error) {
+            return `
+                <div class="empty-state">
+                    <p style="color: #f85149;">Cannot connect to Qdrant instance</p>
+                    <p style="font-size: 0.85rem;">${error || 'Connection refused or timeout'}</p>
+                </div>
+            `;
+        }
+
+        // =====================================================================
+        // CREATE COLLECTION MODAL
+        // =====================================================================
+        function showCreateModal() {
+            document.getElementById('create-modal').classList.add('show');
+            document.getElementById('new-collection-name').value = '';
+            document.getElementById('new-vector-size').value = '1536';
+            document.getElementById('new-distance').value = 'Cosine';
+        }
+
+        function showCreateModalForPort(port) {
+            showCreateModal();
+            document.getElementById('target-container').value = port;
+        }
+
+        function hideCreateModal() {
+            document.getElementById('create-modal').classList.remove('show');
+        }
+
+        async function createCollection() {
+            const name = document.getElementById('new-collection-name').value.trim();
+            const vectorSize = document.getElementById('new-vector-size').value;
+            const distance = document.getElementById('new-distance').value;
+            const port = document.getElementById('target-container').value;
+
+            if (!name) {
+                showToast('Collection name is required', 'error');
                 return;
             }
 
             try {
-                const response = await fetch(`/api/v1/services/${currentTab}/${serviceName}`, {
-                    method: 'PUT',
+                const response = await fetch(`/api/v1/qdrant/collections?port=${port}`, {
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ workers })
+                    body: JSON.stringify({ name, vectorSize, distance })
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    showToast(`Workers set to ${workers} for ${serviceName}`, 'success');
-                    await loadServices();
+                    showToast(`Collection "${name}" created successfully`, 'success');
+                    hideCreateModal();
+                    await loadAllCollections();
                 } else {
-                    showToast('Failed to update workers', 'error');
+                    showToast('Failed to create collection: ' + (data.error || 'Unknown error'), 'error');
                 }
             } catch (error) {
-                showToast('Error: ' + error.message, 'error');
+                showToast('Error creating collection: ' + error.message, 'error');
             }
         }
 
-        async function reloadAllServices() {
-            if (!confirm('This will reload all services. Continue?')) return;
+        // =====================================================================
+        // INFRASTRUCTURE STATUS
+        // =====================================================================
+        let infrastructureData = null;
 
+        async function loadInfrastructure() {
             try {
-                const types = ['websites', 'api', 'docker'];
-                for (const type of types) {
-                    await fetch(`/api/v1/services/${type}/reload`, { method: 'POST' });
+                const response = await fetch('/api/v1/infrastructure/status');
+                const data = await response.json();
+
+                if (data.success) {
+                    infrastructureData = data.infrastructure;
+                    renderInfrastructure();
+                    updateLastUpdated();
+                } else {
+                    showToast('Failed to load infrastructure status', 'error');
                 }
-                showToast('Reload triggered for all services', 'success');
             } catch (error) {
-                showToast('Error triggering reload: ' + error.message, 'error');
+                console.error('Error loading infrastructure:', error);
+                showToast('Error loading infrastructure: ' + error.message, 'error');
+                renderInfrastructureError(error.message);
             }
         }
 
+        function renderInfrastructure() {
+            if (!infrastructureData) return;
+
+            const { wsl2, docker, cloudflared, databases } = infrastructureData;
+
+            // Update summary bar
+            const wsl2StatusEl = document.getElementById('wsl2-status');
+            const dockerCountEl = document.getElementById('docker-count');
+            const cloudflaredStatusEl = document.getElementById('cloudflared-status');
+
+            if (wsl2.status === 'running') {
+                wsl2StatusEl.textContent = 'Running';
+                wsl2StatusEl.style.color = '#3fb950';
+            } else {
+                wsl2StatusEl.textContent = wsl2.status || 'Unknown';
+                wsl2StatusEl.style.color = '#da3633';
+            }
+
+            const runningContainers = docker.containers?.filter(c => c.status === 'Up').length || 0;
+            dockerCountEl.textContent = `${runningContainers}/${docker.totalExpected || docker.containers?.length || 0}`;
+            dockerCountEl.style.color = runningContainers > 0 ? '#3fb950' : '#da3633';
+
+            if (cloudflared.status === 'running') {
+                cloudflaredStatusEl.textContent = 'Running';
+                cloudflaredStatusEl.style.color = '#3fb950';
+            } else {
+                cloudflaredStatusEl.textContent = cloudflared.status || 'Unknown';
+                cloudflaredStatusEl.style.color = '#da3633';
+            }
+
+            // Render WSL2 table
+            renderWsl2Table(wsl2);
+
+            // Render Docker table
+            renderDockerTable(docker);
+
+            // Render Cloudflared table
+            renderCloudflaredTable(cloudflared);
+
+            // Render Databases table
+            renderDatabasesTable(databases);
+        }
+
+        function renderWsl2Table(wsl2) {
+            const tbody = document.getElementById('wsl2-table-body');
+            const badge = document.getElementById('wsl2-badge');
+
+            if (wsl2.status === 'running') {
+                badge.className = 'container-badge online';
+                badge.textContent = 'Running';
+            } else {
+                badge.className = 'container-badge offline';
+                badge.textContent = wsl2.status || 'Unknown';
+            }
+
+            let html = '';
+            html += `
+                <tr>
+                    <td><span class="service-name">Distribution</span></td>
+                    <td>${wsl2.distro || 'N/A'}</td>
+                    <td class="center">
+                        <span class="status-badge ${wsl2.status === 'running' ? 'online' : 'offline'}">
+                            ${wsl2.status === 'running' ? 'Active' : wsl2.status || 'Unknown'}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="service-name">WSL Version</span></td>
+                    <td>${wsl2.version || 'N/A'}</td>
+                    <td class="center">
+                        <span class="status-badge green">${wsl2.version === '2' ? 'WSL2' : 'WSL1'}</span>
+                    </td>
+                </tr>
+            `;
+            if (wsl2.error) {
+                html += `
+                    <tr class="offline-row">
+                        <td><span class="service-name">Error</span></td>
+                        <td colspan="2" style="color: #f85149;">${wsl2.error}</td>
+                    </tr>
+                `;
+            }
+            tbody.innerHTML = html;
+        }
+
+        function renderDockerTable(docker) {
+            const tbody = document.getElementById('docker-table-body');
+            const badge = document.getElementById('docker-badge');
+
+            const runningCount = docker.containers?.filter(c => c.status === 'Up').length || 0;
+            const totalCount = docker.totalExpected || docker.containers?.length || 0;
+
+            if (runningCount > 0) {
+                badge.className = 'container-badge online';
+                badge.textContent = `${runningCount}/${totalCount} Running`;
+            } else {
+                badge.className = 'container-badge offline';
+                badge.textContent = docker.error ? 'Error' : 'No Containers';
+            }
+
+            if (docker.error) {
+                tbody.innerHTML = `
+                    <tr class="offline-row">
+                        <td colspan="4" style="color: #f85149; text-align: center; padding: 20px;">
+                            ${docker.error}
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            if (!docker.containers || docker.containers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 20px; color: #8b949e;">
+                            No Docker containers found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            for (const container of docker.containers) {
+                const isUp = container.status === 'Up';
+                html += `
+                    <tr class="${isUp ? '' : 'offline-row'}">
+                        <td><span class="service-name">${container.name}</span></td>
+                        <td><span class="service-desc">${container.service || 'N/A'}</span></td>
+                        <td><span class="port-badge">${container.port || 'N/A'}</span></td>
+                        <td class="center">
+                            <span class="status-badge ${isUp ? 'online' : 'offline'}">
+                                ${isUp ? 'Running' : 'Down'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }
+            tbody.innerHTML = html;
+        }
+
+        function renderCloudflaredTable(cloudflared) {
+            const tbody = document.getElementById('cloudflared-table-body');
+            const badge = document.getElementById('cloudflared-badge');
+
+            if (cloudflared.status === 'running') {
+                badge.className = 'container-badge online';
+                badge.textContent = 'Running';
+            } else {
+                badge.className = 'container-badge offline';
+                badge.textContent = cloudflared.status || 'Unknown';
+            }
+
+            let html = '';
+            html += `
+                <tr>
+                    <td><span class="service-name">Tunnel Process</span></td>
+                    <td>cloudflared.exe</td>
+                    <td class="center">
+                        <span class="status-badge ${cloudflared.status === 'running' ? 'online' : 'offline'}">
+                            ${cloudflared.status === 'running' ? 'Running' : cloudflared.status || 'Unknown'}
+                        </span>
+                    </td>
+                </tr>
+            `;
+            if (cloudflared.instances) {
+                html += `
+                    <tr>
+                        <td><span class="service-name">Instances</span></td>
+                        <td>${cloudflared.instances}</td>
+                        <td class="center">
+                            <span class="status-badge green">${cloudflared.instances} active</span>
+                        </td>
+                    </tr>
+                `;
+            }
+            if (cloudflared.error) {
+                html += `
+                    <tr class="offline-row">
+                        <td><span class="service-name">Error</span></td>
+                        <td colspan="2" style="color: #f85149;">${cloudflared.error}</td>
+                    </tr>
+                `;
+            }
+            tbody.innerHTML = html;
+        }
+
+        function renderDatabasesTable(databases) {
+            const tbody = document.getElementById('databases-table-body');
+            const badge = document.getElementById('databases-badge');
+
+            // Guard against null/undefined databases object
+            if (!databases) {
+                badge.className = 'container-badge offline';
+                badge.textContent = 'No Data';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 20px; color: #8b949e;">
+                            No database information available
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const connectedCount = databases.connectedCount || 0;
+            const totalCount = databases.totalCount || 0;
+
+            if (databases.status === 'healthy') {
+                badge.className = 'container-badge online';
+                badge.textContent = `${connectedCount}/${totalCount} Connected`;
+            } else if (databases.status === 'degraded') {
+                badge.className = 'container-badge';
+                badge.style.backgroundColor = '#f0c040';
+                badge.style.color = '#000';
+                badge.textContent = `${connectedCount}/${totalCount} Connected`;
+            } else {
+                badge.className = 'container-badge offline';
+                badge.textContent = databases.status || 'Unknown';
+            }
+
+            if (databases.error) {
+                tbody.innerHTML = `
+                    <tr class="offline-row">
+                        <td colspan="3" style="color: #f85149; text-align: center; padding: 20px;">
+                            ${databases.error}
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            if (!databases.services || databases.services.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 20px; color: #8b949e;">
+                            No database services configured
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            for (const service of databases.services) {
+                const isConnected = service.status === 'connected';
+                html += `
+                    <tr class="${isConnected ? '' : 'offline-row'}">
+                        <td><span class="service-name">${service.name}</span></td>
+                        <td class="center"><span class="port-badge">${service.port}</span></td>
+                        <td class="center">
+                            <span class="status-badge ${isConnected ? 'online' : 'offline'}">
+                                ${isConnected ? 'Connected' : 'Disconnected'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }
+            tbody.innerHTML = html;
+        }
+
+        function renderInfrastructureError(errorMessage) {
+            const tables = ['wsl2-table-body', 'docker-table-body', 'cloudflared-table-body', 'databases-table-body'];
+            for (const tableId of tables) {
+                const tbody = document.getElementById(tableId);
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr class="offline-row">
+                            <td colspan="4" style="color: #f85149; text-align: center; padding: 20px;">
+                                Failed to load: ${errorMessage}
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+
+            // Update badges
+            const badges = ['wsl2-badge', 'docker-badge', 'cloudflared-badge', 'databases-badge'];
+            for (const badgeId of badges) {
+                const badge = document.getElementById(badgeId);
+                if (badge) {
+                    badge.className = 'container-badge offline';
+                    badge.textContent = 'Error';
+                }
+            }
+        }
+
+        // =====================================================================
+        // TOAST NOTIFICATIONS
+        // =====================================================================
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
@@ -950,13 +2726,331 @@
             }, 3000);
         }
 
-        // Auto-refresh every 30 seconds
-        setInterval(() => {
-            loadHealthStatus();
-        }, 30000);
+        // =====================================================================
+        // BACKGROUND STATUS CHECK (every 60 seconds)
+        // =====================================================================
+        async function backgroundStatusCheck() {
+            try {
+                const response = await fetch('/api/v1/services');
+                const data = await response.json();
 
-        // Initial load
-        loadServices();
+                if (data.success) {
+                    const currentState = JSON.stringify(data.configs);
+                    if (previousServiceState && currentState !== previousServiceState) {
+                        servicesData = data.configs;
+                        updateTabCounts();
+                        if (currentTab !== 'qdrant') {
+                            renderTable();
+                        }
+                        updateLastUpdated();
+                    }
+                    previousServiceState = currentState;
+                }
+            } catch (error) {
+                console.error('Background status check failed:', error);
+            }
+        }
+
+        setInterval(backgroundStatusCheck, 300000);
+
+        // Note: Individual service health checks are now handled by startHealthCheckInterval()
+        // which runs every 5 minutes and performs actual HTTP checks on each service
+
+        // =====================================================================
+        // USERS LOADING (InspireCodex API for users, InspireContinuum for activity)
+        // =====================================================================
+        let usersData = [];
+        let userActivityData = {};
+        let continuumAvailable = false;
+
+        async function loadUsers() {
+            const tableBody = document.getElementById('users-table-body');
+            tableBody.innerHTML = '<tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr>';
+
+            try {
+                // Fetch users from InspireCodex API (this runs locally on same server)
+                const usersResponse = await fetch('/api/v1/codex/users?limit=100');
+
+                if (!usersResponse.ok) {
+                    throw new Error(`Codex API returned ${usersResponse.status}`);
+                }
+
+                const usersResult = await usersResponse.json();
+                usersData = usersResult.users || [];
+
+                // Update summary counts
+                const activeUsers = usersData.filter(u => u.is_active !== false).length;
+                document.getElementById('total-users-count').textContent = usersResult.total || usersData.length;
+                document.getElementById('active-users-count').textContent = activeUsers;
+                document.getElementById('users-count').textContent = usersData.length;
+
+                // Try to get session/activity data from InspireContinuum API (optional)
+                let sessions = [];
+                let recentActivity = [];
+                continuumAvailable = false;
+
+                try {
+                    const continuumResponse = await fetch('http://localhost:3200/api/v1/admin/dashboard', {
+                        signal: AbortSignal.timeout(3000) // 3 second timeout
+                    });
+                    if (continuumResponse.ok) {
+                        const continuumData = await continuumResponse.json();
+                        sessions = continuumData.sessions || [];
+                        recentActivity = continuumData.recentActivity || [];
+                        continuumAvailable = true;
+                    }
+                } catch (e) {
+                    console.log('InspireContinuum API not available - activity data will not be shown');
+                }
+
+                // Update online count
+                const onlineCount = sessions.filter(s => s.is_active).length;
+                document.getElementById('online-users-count').textContent = continuumAvailable ? onlineCount : '—';
+
+                // Build user activity map from recent activity
+                userActivityData = {};
+                for (const event of recentActivity) {
+                    if (!userActivityData[event.user_id]) {
+                        userActivityData[event.user_id] = {
+                            lastActivity: event,
+                            lastClick: null
+                        };
+                    }
+                    if (event.event_type === 'click' && !userActivityData[event.user_id].lastClick) {
+                        userActivityData[event.user_id].lastClick = event;
+                    }
+                }
+
+                // Build session count per user
+                const sessionCounts = {};
+                for (const session of sessions) {
+                    if (session.is_active) {
+                        sessionCounts[session.user_id] = (sessionCounts[session.user_id] || 0) + 1;
+                    }
+                }
+
+                // Render users table
+                renderUsersTable(usersData, sessions, sessionCounts);
+                updateLastUpdated();
+
+            } catch (error) {
+                console.error('Error loading users:', error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 24px; color: #f85149;">
+                            <div style="margin-bottom: 10px;">Failed to load users</div>
+                            <div style="font-size: 0.8rem; color: #8b949e;">${error.message}</div>
+                            <button class="btn btn-sm btn-primary" style="margin-top: 10px;" onclick="loadUsers()">Retry</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function renderUsersTable(users, sessions, sessionCounts) {
+            const tableBody = document.getElementById('users-table-body');
+
+            if (users.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 24px; color: #ffffff;">No users found</td></tr>';
+                return;
+            }
+
+            // Create session lookup by user_id
+            const userSessions = {};
+            for (const session of sessions) {
+                if (!userSessions[session.user_id]) {
+                    userSessions[session.user_id] = [];
+                }
+                userSessions[session.user_id].push(session);
+            }
+
+            let html = '';
+            for (const user of users) {
+                const isOnline = sessionCounts[user.id] > 0;
+                const isActive = user.is_active !== false;
+                const sessionCount = sessionCounts[user.id] || 0;
+                const activity = userActivityData[user.id];
+
+                // Get initials for avatar
+                const initials = getInitials(user.display_name || user.email);
+
+                // Determine status
+                let statusClass = 'offline';
+                let statusText = 'Offline';
+                if (isOnline) {
+                    statusClass = 'online';
+                    statusText = 'Online';
+                } else if (!isActive) {
+                    statusClass = 'offline';
+                    statusText = 'Inactive';
+                }
+
+                // Format last activity
+                const lastActivityHtml = formatLastActivity(user.last_login_at, activity?.lastActivity);
+
+                // Format last click
+                const lastClickHtml = formatLastClick(activity?.lastClick);
+
+                html += `
+                    <tr data-user="${user.id}">
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar">
+                                    ${user.avatar_url ? `<img src="${user.avatar_url}" alt="${user.display_name}">` : initials}
+                                </div>
+                                <div class="user-details">
+                                    <span class="user-name">${user.display_name || 'Unknown User'}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="user-email">${user.email || ''}</span></td>
+                        <td class="center">
+                            <span class="status-badge ${statusClass}">
+                                <span class="online-indicator ${statusClass}"></span>
+                                ${statusText}
+                            </span>
+                        </td>
+                        <td>${lastActivityHtml}</td>
+                        <td>${lastClickHtml}</td>
+                        <td class="center">
+                            <span class="session-count">${sessionCount}</span>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            tableBody.innerHTML = html;
+        }
+
+        function getInitials(name) {
+            if (!name) return '?';
+            const parts = name.split(' ').filter(p => p.length > 0);
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            }
+            return name.substring(0, 2).toUpperCase();
+        }
+
+        function formatLastActivity(lastLoginAt, lastEvent) {
+            if (lastEvent) {
+                const time = formatRelativeTime(lastEvent.created_at);
+                const eventType = lastEvent.event_type || 'activity';
+                return `
+                    <div class="last-activity">${eventType}</div>
+                    <div class="last-activity-time">${time}</div>
+                `;
+            }
+            if (lastLoginAt) {
+                const time = formatRelativeTime(lastLoginAt);
+                return `
+                    <div class="last-activity">Last login</div>
+                    <div class="last-activity-time">${time}</div>
+                `;
+            }
+            return '<span class="last-activity" style="color: #6e7681;">Never</span>';
+        }
+
+        function formatLastClick(clickEvent) {
+            if (!clickEvent) {
+                return '<span class="last-click" style="color: #6e7681;">—</span>';
+            }
+
+            const time = formatRelativeTime(clickEvent.created_at);
+            const pageUrl = clickEvent.page_url || '';
+            const eventData = clickEvent.event_data || {};
+            const elementInfo = eventData.element_id || eventData.context || truncateUrl(pageUrl);
+
+            return `
+                <div class="last-click" title="${pageUrl}">${elementInfo || 'click'}</div>
+                <div class="last-click-time">${time}</div>
+            `;
+        }
+
+        function truncateUrl(url) {
+            if (!url) return '';
+            try {
+                const parsed = new URL(url);
+                return parsed.pathname.slice(-30);
+            } catch {
+                return url.slice(-30);
+            }
+        }
+
+        function formatRelativeTime(dateStr) {
+            if (!dateStr) return 'Unknown';
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffSec = Math.floor(diffMs / 1000);
+            const diffMin = Math.floor(diffSec / 60);
+            const diffHour = Math.floor(diffMin / 60);
+            const diffDay = Math.floor(diffHour / 24);
+
+            if (diffSec < 60) return 'Just now';
+            if (diffMin < 60) return `${diffMin}m ago`;
+            if (diffHour < 24) return `${diffHour}h ago`;
+            if (diffDay < 7) return `${diffDay}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        function refreshUsers() {
+            loadUsers();
+        }
+
+        // =====================================================================
+        // INITIALIZATION
+        // =====================================================================
+        async function init() {
+            restoreState();
+
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-tab="${currentTab}"]`)?.classList.add('active');
+
+            await loadServices();
+
+            if (currentTab === 'qdrant') {
+                document.getElementById('services-content').classList.remove('active');
+                document.getElementById('qdrant-content').classList.add('active');
+                document.getElementById('services-summary').style.display = 'none';
+                document.getElementById('qdrant-summary').style.display = 'flex';
+                await loadQdrantContainers();
+            } else if (currentTab === 'users') {
+                document.getElementById('services-content').classList.remove('active');
+                document.getElementById('users-content').classList.add('active');
+                document.getElementById('services-summary').style.display = 'none';
+                document.getElementById('users-summary').style.display = 'flex';
+                await loadUsers();
+            } else if (currentTab === 'infra') {
+                document.getElementById('services-content').classList.remove('active');
+                document.getElementById('infra-content').classList.add('active');
+                document.getElementById('services-summary').style.display = 'none';
+                document.getElementById('infra-summary').style.display = 'flex';
+                await loadInfrastructure();
+            } else {
+                // Start health checks for websites/api tabs
+                startHealthCheckInterval();
+            }
+        }
+
+        // Clean up interval when page unloads
+        window.addEventListener('beforeunload', () => {
+            stopHealthCheckInterval();
+        });
+
+        // Auto-refresh the entire page every 5 minutes
+        let pageRefreshInterval = null;
+        function startPageRefresh() {
+            pageRefreshInterval = setInterval(() => {
+                console.log('[Auto-Refresh] Reloading page...');
+                window.location.reload();
+            }, 300000);
+            console.log('[Auto-Refresh] Page will refresh every 5 minutes');
+        }
+
+        // Start page refresh after init
+        init().then(() => {
+            startPageRefresh();
+        });
     </script>
 </body>
 </html>

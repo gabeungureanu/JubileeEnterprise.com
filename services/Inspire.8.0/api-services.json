@@ -10,7 +10,7 @@
       "script": "server.js",
       "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/InspireCodex.com",
       "port": 3100,
-      "workers": 16,
+      "workers": 2,
       "enabled": true
     },
     {
@@ -18,9 +18,27 @@
       "description": "InspireContinuum.com - User Activity & Chat API",
       "script": "server.js",
       "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/InspireContinuum.com",
-      "port": 3200,
-      "workers": 16,
-      "enabled": false
+      "port": 3101,
+      "workers": 2,
+      "enabled": true
+    },
+    {
+      "name": "inspireflywheel-api",
+      "description": "InspireFlywheel.com - Automation & Workflow API",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/InspireFlywheel.com",
+      "port": 3134,
+      "workers": 2,
+      "enabled": true
+    },
+    {
+      "name": "inspirereactors-api",
+      "description": "InspireReactors.com - Event Processing API",
+      "script": "server.js",
+      "cwd": "C:/data/JubileeEnterprise.com Bibleweb/websites/codex/InspireReactors.com",
+      "port": 3135,
+      "workers": 2,
+      "enabled": true
     }
   ]
 }

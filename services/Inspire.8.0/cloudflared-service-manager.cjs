@@ -14,6 +14,10 @@ const TUNNEL_NAME = 'jubilee-enterprise';
 const HEALTH_PORT = 3903;
 const CHECK_INTERVAL = 60000; // 60 seconds
 
+// Cloudflared configuration paths (needed when running as LocalSystem)
+const CLOUDFLARED_CONFIG = 'C:\\Users\\elian\\.cloudflared\\config.yml';
+const CLOUDFLARED_CREDS = 'C:\\Users\\elian\\.cloudflared\\c4c875e2-55a9-4ad7-a0e9-36c391229c0b.json';
+
 let tunnelProcess = null;
 let isShuttingDown = false;
 let restartCount = 0;
@@ -79,7 +83,12 @@ async function startTunnel() {
 
     console.log(`[Cloudflared Manager] Starting tunnel: ${TUNNEL_NAME}`);
 
-    tunnelProcess = spawn('cloudflared', ['tunnel', 'run', TUNNEL_NAME], {
+    tunnelProcess = spawn('cloudflared', [
+        'tunnel',
+        '--config', CLOUDFLARED_CONFIG,
+        '--credentials-file', CLOUDFLARED_CREDS,
+        'run', TUNNEL_NAME
+    ], {
         stdio: ['pipe', 'pipe', 'pipe'],
         detached: false,
         windowsHide: true
