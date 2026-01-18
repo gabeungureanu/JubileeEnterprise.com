@@ -1,0 +1,13 @@
+# Jubilee Website Services Target
+# ARCH-0007: WSL2 + systemd Architecture
+#
+# Groups all 36 website services (ports 3000-3137)
+
+[Unit]
+Description=Jubilee Website Services
+Documentation=https://github.com/gabeungureanu/JubileeEnterprise.com
+Requires=jubilee-api.target
+After=jubilee-api.target
+
+[Install]
+WantedBy=jubilee.target

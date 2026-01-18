@@ -20,10 +20,12 @@ The following technologies are **PERMANENTLY BANNED** from this codebase. Any at
 ### 2.1 Process Managers
 | Technology | Status | Reason |
 |------------|--------|--------|
-| PM2 | **FORBIDDEN** | Custom Windows Service architecture is the approved solution |
-| Forever | **FORBIDDEN** | Not compatible with Windows Service model |
+| PM2 | **FORBIDDEN** | systemd provides equivalent functionality without PM2 overhead |
+| Forever | **FORBIDDEN** | Not compatible with systemd model |
 | Nodemon (production) | **FORBIDDEN** | Development only; never in production |
-| systemd (for Node) | **FORBIDDEN** | Windows-native services required |
+| systemd (for Node) | **APPROVED (WSL2)** | Primary process supervisor for all Node.js services in WSL2 |
+
+> **Amendment (2026-01-17)**: systemd is now APPROVED for WSL2 environment per UNLOCK-2026-0117-001. PM2 remains permanently FORBIDDEN.
 
 ### 2.2 Forbidden Patterns
 - **Direct database connections** from application code (use InspireCodex.com API or InspireContinuum.com API)
@@ -45,27 +47,42 @@ pm2-*.json
 
 ## 3. APPROVED ARCHITECTURE
 
-### 3.1 Windows Service Model
-All production Node.js services run as Windows Services using:
-- **node-windows** package for service creation
-- **inspire-service-manager.cjs** for multi-service orchestration
-- **Automatic restart** with exponential backoff
+### 3.1 WSL2 + systemd Architecture (Primary)
+All production Node.js services run inside WSL2 Ubuntu using systemd:
+- **systemd unit files** for service supervision (`jubilee-*.service`)
+- **Deterministic boot order** via After=/Requires= dependencies
+- **Automatic restart** with watchdog and exponential backoff
 - **Health endpoints** on dedicated ports (3900-3903)
+- **Docker Engine** (not Desktop) for infrastructure containers
+- **Nginx** reverse proxy for zero-downtime restarts
 
-### 3.2 Service Tiers
-| Tier | Health Port | Manager | Services |
-|------|-------------|---------|----------|
-| Websites | 3900 | inspire-service-manager.cjs | All website frontends |
-| Web API | 3901 | inspire-service-manager.cjs | InspireCodex, InspireContinuum APIs |
-| Docker | 3902 | docker-service-manager.cjs | Qdrant, Redis, PgAdmin |
-| Cloudflared | 3903 | cloudflared-service-manager.cjs | Tunnel management |
+> **Note**: Windows Service model (node-windows) is deprecated as of 2026-01-17 per UNLOCK-2026-0117-001. Existing Windows Services remain operational for rollback capability during 30-day migration window.
 
-### 3.3 Database Access
+### 3.2 Service Tiers (systemd)
+| Tier | Target/Service | Description |
+|------|----------------|-------------|
+| Infrastructure | `jubilee-docker.service` | PostgreSQL, Qdrant, Redis via Docker Compose |
+| APIs | `jubilee-api.target` | InspireCodex, InspireContinuum, Flywheel, Reactors |
+| Websites | `jubilee-websites.target` | All 36 website frontends |
+| Tunnel | `jubilee-cloudflared.service` | Cloudflare tunnel management |
+| Monitoring | `prometheus`, `grafana` | Metrics and dashboards |
+
+### 3.3 Boot Order (Deterministic)
+```
+multi-user.target
+└── docker.service
+    └── jubilee-docker.service (PostgreSQL, Qdrant, Redis)
+        └── jubilee-api.target (4 API services)
+            └── jubilee-websites.target (36 websites)
+                └── jubilee-cloudflared.service
+```
+
+### 3.4 Database Access
 - **Codex/Inspire databases**: Access ONLY via InspireCodex.com API (port 3100)
 - **Continuum database**: Access ONLY via InspireContinuum.com API (port 3200)
 - **No direct PostgreSQL connections** from frontend or other services
 
-### 3.4 Health Check Standard
+### 3.5 Health Check Standard
 All health checks MUST:
 1. Test **production HTTPS URLs** (e.g., `https://domain.com/`)
 2. **NEVER** test localhost ports for production status reporting
@@ -124,3 +141,4 @@ Changes to this document require:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-01-18 | Jubilee | Initial system standard |
+| 1.1.0 | 2026-01-17 | Jubilee | WSL2 + systemd architecture approved (UNLOCK-2026-0117-001). Windows Services deprecated. |

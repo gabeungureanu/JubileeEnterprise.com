@@ -1,0 +1,57 @@
+# Jubilee Website Service Template
+# ARCH-0007: WSL2 + systemd Architecture
+#
+# Template for website services. Instance name is the website directory.
+# Usage: systemctl start jubilee-website@JubileeVerse.com
+#
+# See websites-services.json for full list of 36 websites
+
+[Unit]
+Description=Jubilee Website Service - %i
+Documentation=https://github.com/gabeungureanu/JubileeEnterprise.com
+Requires=jubilee-api.target
+After=jubilee-api.target
+PartOf=jubilee-websites.target
+
+[Service]
+Type=simple
+User=eliana
+Group=eliana
+WorkingDirectory=/mnt/c/data/JubileeEnterprise.com Bibleweb/websites/codex/%i
+Environment=NODE_ENV=production
+EnvironmentFile=-/opt/jubilee/env/%i.env
+
+# Start Node.js server
+ExecStart=/usr/bin/node server.js
+
+# Graceful restart
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Restart policy with faster recovery for websites
+Restart=always
+RestartSec=3
+StartLimitIntervalSec=60
+StartLimitBurst=10
+
+# Watchdog
+WatchdogSec=30
+NotifyAccess=all
+
+# Resource limits (websites get less than APIs)
+MemoryMax=512M
+MemoryHigh=384M
+CPUQuota=100%
+
+# Security
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=jubilee-website-%i
+
+[Install]
+WantedBy=jubilee-websites.target

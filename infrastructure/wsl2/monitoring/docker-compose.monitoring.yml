@@ -1,0 +1,129 @@
+# Jubilee Enterprise Monitoring Stack
+# ARCH-0007: WSL2 + systemd Architecture
+#
+# Prometheus + Grafana monitoring stack.
+# Run separately from main infrastructure.
+
+version: '3.8'
+
+services:
+  # ============================================
+  # Prometheus - Metrics Collection
+  # ============================================
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - /opt/jubilee/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - monitoring-network
+
+  # ============================================
+  # Grafana - Dashboards
+  # ============================================
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    ports:
+      - "3950:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-jubilee-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - /opt/jubilee/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring-network
+
+  # ============================================
+  # Node Exporter - System Metrics
+  # ============================================
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: always
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - monitoring-network
+
+  # ============================================
+  # Redis Exporter
+  # ============================================
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: redis-exporter
+    restart: always
+    ports:
+      - "9121:9121"
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+    networks:
+      - monitoring-network
+      - jubilee-network
+
+  # ============================================
+  # Nginx Exporter
+  # ============================================
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx-exporter
+    restart: always
+    ports:
+      - "9113:9113"
+    command:
+      - '-nginx.scrape-uri=http://host.docker.internal:3900/nginx-status'
+    networks:
+      - monitoring-network
+
+# ============================================
+# Networks
+# ============================================
+
+networks:
+  monitoring-network:
+    driver: bridge
+    name: monitoring-network
+  jubilee-network:
+    external: true
+    name: jubilee-network
+
+# ============================================
+# Volumes
+# ============================================
+
+volumes:
+  prometheus-data:
+    name: prometheus-data
+  grafana-data:
+    name: grafana-data

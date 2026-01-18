@@ -1,0 +1,17 @@
+# Jubilee API Services Target
+# ARCH-0007: WSL2 + systemd Architecture
+#
+# Groups all API services:
+# - InspireCodex.com (port 3100)
+# - InspireContinuum.com (port 3200)
+# - InspireFlywheel.com (port 3134)
+# - InspireReactors.com (port 3135)
+
+[Unit]
+Description=Jubilee API Services
+Documentation=https://github.com/gabeungureanu/JubileeEnterprise.com
+Requires=jubilee-docker.target
+After=jubilee-docker.target
+
+[Install]
+WantedBy=jubilee.target

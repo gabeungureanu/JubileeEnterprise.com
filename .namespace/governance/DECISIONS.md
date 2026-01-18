@@ -21,8 +21,9 @@ Each decision follows this structure:
 ## FINAL DECISIONS
 
 ### ARCH-0001: Windows Service Architecture
-**Status**: FINAL
+**Status**: DEPRECATED
 **Date**: 2026-01-17
+**Deprecated**: 2026-01-17 (UNLOCK-2026-0117-001)
 **Decision**: All production Node.js services run as Windows Services using node-windows, managed by inspire-service-manager.cjs
 **Rationale**:
 - Native Windows integration
@@ -33,7 +34,10 @@ Each decision follows this structure:
 - PM2 (cross-platform concerns, not Windows-native)
 - Docker for Node services (unnecessary complexity)
 - Manual process management (unreliable)
-**Unlock Required**: Yes - requires explicit unlock workflow in UNLOCK_REQUESTS.json
+**Unlock Required**: N/A - Deprecated
+**Superseded By**: ARCH-0007 (WSL2 + systemd Architecture)
+
+> **Note**: This decision was unlocked and deprecated per UNLOCK-2026-0117-001. Windows Services remain operational for 30-day rollback window.
 
 ---
 
@@ -70,8 +74,9 @@ Each decision follows this structure:
 ---
 
 ### ARCH-0004: Cloudflared Tunnel Management
-**Status**: FINAL
+**Status**: DEPRECATED
 **Date**: 2026-01-18
+**Deprecated**: 2026-01-17 (UNLOCK-2026-0117-002)
 **Decision**: Cloudflared tunnel is managed by inspire80cloudflaredservices.exe Windows Service, which checks for active tunnel connections (not just process existence) before considering tunnel healthy.
 **Rationale**:
 - Bare cloudflared.exe process doesn't mean tunnel is connected
@@ -80,7 +85,8 @@ Each decision follows this structure:
 **Alternatives Rejected**:
 - Simple process existence check (caused tunnel failures)
 - Manual tunnel management
-**Unlock Required**: Yes
+**Unlock Required**: N/A - Deprecated
+**Superseded By**: ARCH-0007 (WSL2 + systemd Architecture) - cloudflared runs as jubilee-cloudflared.service
 
 ---
 
@@ -107,6 +113,47 @@ Each decision follows this structure:
 **Rationale**: Clear separation of work streams
 **Alternatives Rejected**: Feature-based naming, ticket-based naming
 **Unlock Required**: No
+
+---
+
+### ARCH-0007: WSL2 + systemd Architecture
+**Status**: FINAL
+**Date**: 2026-01-17
+**Decision**: All production Node.js services run inside WSL2 Ubuntu using systemd as the process supervisor. Windows acts only as hypervisor.
+**Rationale**:
+- Native Linux process supervision with watchdog and socket activation
+- Declarative dependency ordering via After=/Requires= directives
+- Deterministic boot chain: Docker → Databases → APIs → Websites → Tunnel
+- cgroups v2 for memory/CPU limits per service
+- Docker Engine (not Desktop) eliminates overhead
+- Prometheus/Grafana for industry-standard observability
+- Zero-downtime restarts via Nginx reverse proxy
+- Self-healing via systemd restart policies with backoff
+**Alternatives Rejected**:
+- Windows Services via node-windows (deprecated - lacks dependency ordering, cgroups)
+- PM2 (forbidden - adds unnecessary abstraction over systemd)
+- Docker for Node services (unnecessary containerization overhead)
+- Kubernetes (overkill for single-server deployment)
+**Architecture**:
+```
+Windows 11 Pro (Hypervisor)
+└── WSL2 (Ubuntu 24.04)
+    └── systemd (PID 1)
+        ├── docker.service
+        │   └── jubilee-docker.service (PostgreSQL, Qdrant, Redis)
+        ├── jubilee-api.target (4 API services)
+        ├── jubilee-websites.target (36 website services)
+        ├── jubilee-cloudflared.service
+        ├── nginx.service (reverse proxy)
+        └── prometheus.service + grafana.service
+```
+**Service Configuration**:
+- APIs: 4 workers each, 16 total
+- High-traffic websites: 2 workers each
+- Standard websites: 1 worker each
+- Total workers: 62 (optimized for 16-core CPU)
+**Unlock Required**: Yes
+**Supersedes**: ARCH-0001, ARCH-0004
 
 ---
 
@@ -150,3 +197,4 @@ To unlock a FINAL decision:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | 2026-01-18 | Jubilee | Initial decisions registry |
+| 1.1.0 | 2026-01-17 | Jubilee | Added ARCH-0007 (WSL2 + systemd). Deprecated ARCH-0001, ARCH-0004. |
