@@ -1,0 +1,184 @@
+# CI ENFORCEMENT RULES
+# Version: 1.0.0
+# Purpose: Block PRs and builds that violate governance
+
+# ============================================
+# PIPELINE STAGES
+# ============================================
+
+[stages]
+# Order of enforcement checks
+1=forbidden_check
+2=lock_check
+3=freeze_check
+4=standards_check
+5=ai_bootstrap_check
+6=test_and_lock
+
+# ============================================
+# FORBIDDEN CHECK
+# ============================================
+
+[forbidden_check]
+name=Forbidden Technology Check
+description=Scan for banned technologies and patterns
+fail_on_match=true
+
+# Files that must not exist
+forbidden_files=
+  pm2.config.js
+  pm2.config.cjs
+  ecosystem.config.js
+  ecosystem.config.cjs
+  .pm2/**
+  pm2-*.json
+
+# Patterns that must not appear in code
+forbidden_patterns=
+  pm2\.start\(
+  require\(['"]pm2['"]\)
+  from.*pm2.*import
+  nodemon.*--production
+  forever\s+start
+
+# ============================================
+# LOCK CHECK
+# ============================================
+
+[lock_check]
+name=Module Lock Check
+description=Verify locked modules have valid unlock requests
+registry_path=.namespace/testing/TEST_REGISTRY.json
+unlock_path=.namespace/testing/UNLOCK_REQUESTS.json
+
+# For each changed file:
+# 1. Check if path matches lock_bound module
+# 2. Check if module lock_status is LOCKED
+# 3. Check for valid unlock request
+# 4. Fail if locked without unlock
+
+unlock_validation=
+  status=APPROVED
+  expires>now
+  fingerprint=current
+
+# ============================================
+# FREEZE CHECK
+# ============================================
+
+[freeze_check]
+name=Freeze Zone Check
+description=Verify frozen paths have valid unlock requests
+freeze_zones=
+  services/Inspire.8.0/daemon/**
+  .namespace/governance/**
+  .namespace/context/**
+  .namespace/enforcement/**
+
+freeze_exceptions=
+  .namespace/testing/UNLOCK_REQUESTS.json
+  .namespace/testing/TEST_REGISTRY.json
+
+# ============================================
+# STANDARDS CHECK
+# ============================================
+
+[standards_check]
+name=Alternate Standards Check
+description=Block creation of competing standards documentation
+allowed_standards_path=.namespace/
+
+blocked_filenames=
+  STANDARDS.md
+  GOVERNANCE.md
+  CODING_STANDARDS.md
+  DEV_RULES.md
+  ARCHITECTURE.md
+  SYSTEM_RULES.md
+
+exceptions=
+  .namespace/**
+  README.md
+  CHANGELOG.md
+  CLAUDE.md
+
+# ============================================
+# AI BOOTSTRAP CHECK
+# ============================================
+
+[ai_bootstrap_check]
+name=AI Bootstrap Verification
+description=Verify AI-assisted changes include bootstrap marker
+
+# Detect AI involvement
+ai_indicators=
+  AI-generated
+  Claude
+  GPT
+  Copilot
+  LLM
+
+# Required marker
+required_marker=NAMESPACE-BOOTSTRAP: VERIFIED
+
+# Where to check for marker
+check_locations=
+  commit_message
+  pr_description
+  pr_comments
+
+# ============================================
+# TEST AND LOCK
+# ============================================
+
+[test_and_lock]
+name=Test and Auto-Lock
+description=Run tests and update lock registry
+trigger=on_success
+
+# After all tests pass:
+# 1. Calculate fingerprints for lock-bound modules
+# 2. Update TEST_REGISTRY.json
+# 3. Set lock_status=LOCKED
+# 4. Update last_pass_time
+# 5. Close unlock requests with COMPLETED
+
+registry_path=.namespace/testing/TEST_REGISTRY.json
+unlock_path=.namespace/testing/UNLOCK_REQUESTS.json
+
+fingerprint_algorithm=sha256
+fingerprint_normalize=true
+
+# ============================================
+# FAILURE MESSAGES
+# ============================================
+
+[messages]
+forbidden_file=ERROR: Forbidden file detected: {file}. This technology is banned per SYSTEM_STANDARD.md
+forbidden_pattern=ERROR: Forbidden pattern in {file}: {pattern}. See .namespace/governance/SYSTEM_STANDARD.md
+locked_module=ERROR: Module {module} is LOCKED. Create unlock request in .namespace/testing/UNLOCK_REQUESTS.json
+frozen_zone=ERROR: Path {path} is FROZEN. Create unlock request in .namespace/testing/UNLOCK_REQUESTS.json
+alt_standards=ERROR: Cannot create standards file {file} outside .namespace/. All standards must be in .namespace/
+no_ai_marker=WARNING: AI-assisted changes detected but NAMESPACE-BOOTSTRAP marker not found in PR description
+
+# ============================================
+# GITHUB ACTIONS INTEGRATION
+# ============================================
+
+[github_actions]
+workflow_file=.github/workflows/namespace-enforcement.yml
+runs_on=ubuntu-latest
+node_version=20
+
+# ============================================
+# EXIT CODES
+# ============================================
+
+[exit_codes]
+success=0
+forbidden_violation=1
+lock_violation=2
+freeze_violation=3
+standards_violation=4
+ai_marker_missing=5
+test_failure=6

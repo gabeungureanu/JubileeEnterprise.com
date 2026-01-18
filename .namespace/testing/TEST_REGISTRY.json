@@ -1,0 +1,87 @@
+{
+  "$schema": "./.namespace/testing/test-registry.schema.json",
+  "version": "1.0.0",
+  "last_updated": "2026-01-18T04:55:00Z",
+  "description": "Machine-readable ledger of module lock status",
+  "modules": [
+    {
+      "name": "inspire-service-manager",
+      "path": "services/Inspire.8.0/inspire-service-manager.cjs",
+      "version_hash": null,
+      "test_suite": null,
+      "last_pass_time": null,
+      "lock_status": "UNLOCKED",
+      "lock_bound": true,
+      "exempt": false,
+      "notes": "Core service orchestration - lock after tests created"
+    },
+    {
+      "name": "cloudflared-service-manager",
+      "path": "services/Inspire.8.0/cloudflared-service-manager.cjs",
+      "version_hash": null,
+      "test_suite": null,
+      "last_pass_time": null,
+      "lock_status": "UNLOCKED",
+      "lock_bound": true,
+      "exempt": false,
+      "notes": "Tunnel management - lock after tests created"
+    },
+    {
+      "name": "docker-service-manager",
+      "path": "services/Inspire.8.0/docker-service-manager.cjs",
+      "version_hash": null,
+      "test_suite": null,
+      "last_pass_time": null,
+      "lock_status": "UNLOCKED",
+      "lock_bound": true,
+      "exempt": false,
+      "notes": "Container orchestration - lock after tests created"
+    },
+    {
+      "name": "inspirecodex-server",
+      "path": "websites/codex/InspireCodex.com/server.js",
+      "version_hash": null,
+      "test_suite": null,
+      "last_pass_time": null,
+      "lock_status": "UNLOCKED",
+      "lock_bound": true,
+      "exempt": false,
+      "notes": "Main API server - core endpoints lock-bound"
+    },
+    {
+      "name": "services-admin-dashboard",
+      "path": "websites/codex/InspireCodex.com/public/services.html",
+      "version_hash": null,
+      "test_suite": null,
+      "last_pass_time": null,
+      "lock_status": "UNLOCKED",
+      "lock_bound": true,
+      "exempt": false,
+      "notes": "Admin dashboard UI - lock after tests created"
+    }
+  ],
+  "exemptions": [
+    {
+      "pattern": "websites/codex/*/routes/**",
+      "reason": "API routes evolve continuously",
+      "type": "API_EVOLUTION"
+    },
+    {
+      "pattern": "migrations/**",
+      "reason": "Database migrations evolve continuously",
+      "type": "DATABASE_MIGRATION"
+    },
+    {
+      "pattern": "**/*.json",
+      "reason": "Configuration files are environment-dependent",
+      "type": "CONFIGURATION",
+      "exceptions": [".namespace/testing/TEST_REGISTRY.json"]
+    },
+    {
+      "pattern": "**/*.md",
+      "reason": "Documentation is living",
+      "type": "DOCUMENTATION",
+      "exceptions": [".namespace/**/*.md"]
+    }
+  ]
+}

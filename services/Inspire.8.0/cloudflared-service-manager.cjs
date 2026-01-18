@@ -29,15 +29,53 @@ function execPromise(cmd) {
 
 async function isTunnelRunning() {
     try {
-        const { stdout } = await execPromise('tasklist /FI "IMAGENAME eq cloudflared.exe" /NH');
-        return stdout.includes('cloudflared.exe');
-    } catch {
+        // Check if cloudflared.exe is running
+        const { stdout: taskList } = await execPromise('tasklist /FI "IMAGENAME eq cloudflared.exe" /NH');
+        if (!taskList.includes('cloudflared.exe')) {
+            return false;
+        }
+
+        // Check if the tunnel has an ACTIVE connection (not just process running)
+        // cloudflared tunnel info returns "does not have any active connection" if disconnected
+        const { stdout: tunnelInfo } = await execPromise(`cloudflared tunnel info ${TUNNEL_NAME}`);
+
+        // If tunnel info shows active connectors with EDGE connections, it's truly running
+        const hasActiveConnection = tunnelInfo.includes('EDGE') &&
+                                   !tunnelInfo.includes('does not have any active connection');
+
+        if (!hasActiveConnection) {
+            console.log('[Cloudflared Manager] cloudflared.exe running but tunnel not connected');
+        }
+
+        return hasActiveConnection;
+    } catch (err) {
+        console.log(`[Cloudflared Manager] Error checking tunnel: ${err.message}`);
         return false;
     }
 }
 
-function startTunnel() {
+async function killOrphanedCloudflared() {
+    // Kill any cloudflared processes that aren't connected to our tunnel
+    // This handles the case where a bare cloudflared.exe service starts on boot
+    try {
+        console.log('[Cloudflared Manager] Checking for orphaned cloudflared processes...');
+        await execPromise('taskkill /F /IM cloudflared.exe');
+        console.log('[Cloudflared Manager] Killed orphaned cloudflared processes');
+        // Wait a moment for processes to fully terminate
+        await new Promise(resolve => setTimeout(resolve, 2000));
+    } catch (err) {
+        // taskkill returns error if no processes found - that's fine
+        if (!err.message.includes('not found') && !err.message.includes('Access is denied')) {
+            console.log(`[Cloudflared Manager] Note: ${err.message}`);
+        }
+    }
+}
+
+async function startTunnel() {
     if (tunnelProcess) return;
+
+    // Kill any orphaned cloudflared processes first
+    await killOrphanedCloudflared();
 
     console.log(`[Cloudflared Manager] Starting tunnel: ${TUNNEL_NAME}`);
 
@@ -157,12 +195,12 @@ async function main() {
     console.log('═'.repeat(60));
     console.log('');
 
-    // Check if already running externally
+    // Check if already running externally with active connection
     const alreadyRunning = await isTunnelRunning();
     if (alreadyRunning) {
-        console.log('[Cloudflared Manager] Tunnel already running externally');
+        console.log('[Cloudflared Manager] Tunnel already running with active connection');
     } else {
-        startTunnel();
+        await startTunnel();
     }
 
     startHealthServer();
@@ -172,8 +210,8 @@ async function main() {
         if (isShuttingDown) return;
         const running = await isTunnelRunning();
         if (!running && !tunnelProcess) {
-            console.log('[Cloudflared Manager] Tunnel not running, starting...');
-            startTunnel();
+            console.log('[Cloudflared Manager] Tunnel not running or not connected, starting...');
+            await startTunnel();
         }
     }, CHECK_INTERVAL);
 

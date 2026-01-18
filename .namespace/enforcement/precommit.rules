@@ -1,0 +1,124 @@
+# PRE-COMMIT ENFORCEMENT RULES
+# Version: 1.0.0
+# Purpose: Block commits that violate governance
+
+# ============================================
+# FORBIDDEN PATTERNS
+# ============================================
+
+[forbidden_files]
+# These files are banned from the repository
+pm2.config.js
+pm2.config.cjs
+ecosystem.config.js
+ecosystem.config.cjs
+.pm2/**
+pm2-*.json
+pm2-*.yml
+pm2-*.yaml
+
+[forbidden_content]
+# These patterns are banned from all files
+# Format: regex pattern | description
+pm2\.start\(|PM2 process management banned
+require\(['"]pm2['"]\)|PM2 module import banned
+from.*pm2.*import|PM2 import banned
+nodemon.*--production|Nodemon in production banned
+forever\s+start|Forever process management banned
+
+[forbidden_localhost_health]
+# Health checks must not use localhost for production status
+# Format: file pattern | regex | description
+**/services.html|fetch\(['"]http://localhost:|Localhost health check in admin UI
+**/*-service-manager.cjs|http://localhost:\d+/health.*production|Localhost health check in service manager
+
+# ============================================
+# LOCK ENFORCEMENT
+# ============================================
+
+[lock_bound_paths]
+# Paths that require lock check before modification
+services/Inspire.8.0/inspire-service-manager.cjs
+services/Inspire.8.0/cloudflared-service-manager.cjs
+services/Inspire.8.0/docker-service-manager.cjs
+websites/codex/InspireCodex.com/server.js
+websites/codex/InspireCodex.com/public/services.html
+
+[lock_registry]
+# Path to test registry for lock verification
+.namespace/testing/TEST_REGISTRY.json
+
+[unlock_requests]
+# Path to unlock requests
+.namespace/testing/UNLOCK_REQUESTS.json
+
+# ============================================
+# FREEZE ZONES
+# ============================================
+
+[frozen_paths]
+# Paths that require explicit unlock before any modification
+services/Inspire.8.0/daemon/**
+.namespace/**
+
+[freeze_exceptions]
+# Files in frozen paths that can be modified without unlock
+.namespace/testing/UNLOCK_REQUESTS.json
+.namespace/testing/TEST_REGISTRY.json
+
+# ============================================
+# ALTERNATE STANDARDS CHECK
+# ============================================
+
+[standards_paths]
+# Only these paths may contain standards/governance documentation
+.namespace/
+
+[blocked_standards_patterns]
+# Block creation of competing standards outside .namespace
+**/STANDARDS.md
+**/GOVERNANCE.md
+**/CODING_STANDARDS.md
+**/DEV_RULES.md
+**/ARCHITECTURE.md
+
+[standards_exceptions]
+# Allowed documentation files outside .namespace
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+LICENSE.md
+CLAUDE.md
+
+# ============================================
+# AI BOOTSTRAP CHECK
+# ============================================
+
+[ai_marker_required]
+# If commit message contains these patterns, require NAMESPACE-BOOTSTRAP marker
+AI-generated
+Claude
+GPT
+Copilot
+automated
+
+[ai_marker]
+# Required marker for AI-assisted commits
+NAMESPACE-BOOTSTRAP: VERIFIED
+
+# ============================================
+# VALIDATION ACTIONS
+# ============================================
+
+[on_violation]
+# What to do when violations are found
+action=BLOCK
+message=Governance violation detected. See .namespace/ for rules.
+
+[on_lock_violation]
+action=BLOCK
+message=Module is LOCKED. Create unlock request in .namespace/testing/UNLOCK_REQUESTS.json
+
+[on_freeze_violation]
+action=BLOCK
+message=Path is FROZEN. Create unlock request in .namespace/testing/UNLOCK_REQUESTS.json
