@@ -1968,38 +1968,55 @@
         // WORKERS CONTROL
         // =====================================================================
         async function incrementWorkers(serviceName, currentValue) {
-            if (currentValue >= 64) return;
+            console.log('[Workers] incrementWorkers called:', { serviceName, currentValue });
+            if (currentValue >= 64) {
+                console.log('[Workers] At max workers, returning');
+                return;
+            }
             await updateWorkers(serviceName, currentValue + 1);
         }
 
         async function decrementWorkers(serviceName, currentValue) {
-            if (currentValue <= 1) return;
+            console.log('[Workers] decrementWorkers called:', { serviceName, currentValue });
+            if (currentValue <= 1) {
+                console.log('[Workers] At min workers, returning');
+                return;
+            }
             await updateWorkers(serviceName, currentValue - 1);
         }
 
         async function updateWorkers(serviceName, workers) {
+            console.log('[Workers] updateWorkers called:', { serviceName, workers, currentTab });
             const workerCount = parseInt(workers);
             if (isNaN(workerCount) || workerCount < 1 || workerCount > 64) {
+                console.error('[Workers] Invalid worker count:', workerCount);
                 showToast('Workers must be between 1 and 64', 'error');
                 return;
             }
 
+            const url = `/api/v1/services/${currentTab}/${serviceName}`;
+            console.log('[Workers] Making PUT request to:', url);
+
             try {
-                const response = await fetch(`/api/v1/services/${currentTab}/${serviceName}`, {
+                const response = await fetch(url, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ workers: workerCount })
                 });
 
+                console.log('[Workers] Response status:', response.status);
                 const data = await response.json();
+                console.log('[Workers] Response data:', data);
 
                 if (data.success) {
                     showToast(`${serviceName} workers set to ${workerCount}`, 'success');
                     await loadServices();
                 } else {
-                    showToast('Failed to update workers', 'error');
+                    console.error('[Workers] API returned failure:', data);
+                    showToast(data.error || 'Failed to update workers', 'error');
                 }
             } catch (error) {
+                console.error('[Workers] Error:', error);
                 showToast('Error: ' + error.message, 'error');
             }
         }
@@ -2099,7 +2116,7 @@
         }
 
         // =====================================================================
-        // QDRANT FUNCTIONS - Direct API connection to WSL2 Qdrant (INSPIRE08)
+        // QDRANT FUNCTIONS - All requests go through InspireCodex API
         // =====================================================================
         const QDRANT_CONFIG = {
             name: 'INSPIRE08',
@@ -2110,29 +2127,29 @@
 
         async function loadQdrantContainers() {
             try {
-                // Direct connection to Qdrant API
-                const response = await fetch(`http://${QDRANT_CONFIG.host}:${QDRANT_CONFIG.port}/collections`);
+                // Get Qdrant status through InspireCodex API
+                const response = await fetch('/api/v1/qdrant/status');
                 const data = await response.json();
 
-                if (data.status === 'ok') {
-                    // Create a virtual container entry for display
+                if (data.success && data.status === 'online') {
+                    // Create container entry from API response
                     containersData = [{
-                        name: QDRANT_CONFIG.name,
-                        port: QDRANT_CONFIG.port,
-                        image: QDRANT_CONFIG.image,
-                        host: QDRANT_CONFIG.host
+                        name: data.container.name,
+                        port: data.container.port,
+                        image: data.container.image,
+                        host: data.container.host
                     }];
                     document.getElementById('container-count').textContent = '1';
-                    document.getElementById('qdrant-count').textContent = data.result.collections.length;
+                    document.getElementById('qdrant-count').textContent = data.collections;
                     updateTargetContainerSelect();
                     await loadAllCollections();
                     updateLastUpdated();
                 } else {
-                    showToast('Failed to connect to Qdrant', 'error');
+                    showToast('Qdrant is offline', 'error');
                     renderNoContainers();
                 }
             } catch (error) {
-                console.error('Error connecting to Qdrant:', error);
+                console.error('Error connecting to Qdrant via API:', error);
                 showToast('Error connecting to Qdrant: ' + error.message, 'error');
                 renderNoContainers();
             }
@@ -2152,31 +2169,31 @@
 
             for (const container of containersData) {
                 try {
-                    // Direct Qdrant API call
-                    const response = await fetch(`http://${container.host}:${container.port}/collections`);
+                    // Get collections through InspireCodex API
+                    const response = await fetch('/api/v1/qdrant/collections');
                     const data = await response.json();
 
-                    const collections = data.result?.collections || [];
+                    const collections = data.collections || [];
                     collectionsData[container.port] = {
                         container,
-                        online: data.status === 'ok',
+                        online: data.success,
                         collections: collections.map(c => ({ name: c.name })),
                         error: null
                     };
 
-                    if (data.status === 'ok' && collections.length > 0) {
+                    if (data.success && collections.length > 0) {
                         totalCollections += collections.length;
 
-                        // Load details for each collection
+                        // Load details for each collection through API
                         for (const coll of collectionsData[container.port].collections) {
                             try {
-                                const detailResp = await fetch(`http://${container.host}:${container.port}/collections/${coll.name}`);
+                                const detailResp = await fetch(`/api/v1/qdrant/collections/${encodeURIComponent(coll.name)}`);
                                 const detailData = await detailResp.json();
-                                if (detailData.status === 'ok' && detailData.result) {
-                                    coll.points_count = detailData.result.points_count || 0;
-                                    coll.vectors_count = detailData.result.vectors_count || 0;
-                                    coll.status = detailData.result.status;
-                                    coll.config = detailData.result.config;
+                                if (detailData.success && detailData.collection) {
+                                    coll.points_count = detailData.collection.points_count || 0;
+                                    coll.vectors_count = detailData.collection.vectors_count || 0;
+                                    coll.status = detailData.collection.status;
+                                    coll.config = detailData.collection.config;
                                     totalPoints += coll.points_count;
                                 }
                             } catch (e) {
@@ -2208,10 +2225,10 @@
         function renderNoContainers() {
             document.getElementById('containers-list').innerHTML = `
                 <div class="no-containers">
-                    <p style="color: #ffffff; margin-bottom: 15px;">Cannot connect to Qdrant at localhost:6333</p>
-                    <p style="color: #ffffff; font-size: 0.85rem;">Ensure the INSPIRE08 container is running in WSL2.</p>
+                    <p style="color: #ffffff; margin-bottom: 15px;">Cannot connect to Qdrant via InspireCodex API</p>
+                    <p style="color: #ffffff; font-size: 0.85rem;">Ensure Qdrant is running in WSL2 on INSPIRESERVER01.</p>
                     <p style="color: #6c757d; font-size: 0.8rem; margin-top: 10px;">
-                        Run: <code>wsl -d Ubuntu-24.04 docker start INSPIRE08</code>
+                        Check the Infrastructure tab for service status.
                     </p>
                 </div>
             `;
@@ -2395,7 +2412,6 @@
             const name = document.getElementById('new-collection-name').value.trim();
             const vectorSize = parseInt(document.getElementById('new-vector-size').value);
             const distance = document.getElementById('new-distance').value;
-            const port = document.getElementById('target-container').value;
 
             if (!name) {
                 showToast('Collection name is required', 'error');
@@ -2403,8 +2419,8 @@
             }
 
             try {
-                // Direct Qdrant API call to create collection
-                const response = await fetch(`http://localhost:${port}/collections/${name}`, {
+                // Create collection through InspireCodex API
+                const response = await fetch(`/api/v1/qdrant/collections/${encodeURIComponent(name)}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -2412,19 +2428,18 @@
                             size: vectorSize,
                             distance: distance,
                             on_disk: true
-                        },
-                        on_disk_payload: true
+                        }
                     })
                 });
 
                 const data = await response.json();
 
-                if (data.status === 'ok') {
+                if (data.success) {
                     showToast(`Collection "${name}" created successfully`, 'success');
                     hideCreateModal();
                     await loadAllCollections();
                 } else {
-                    showToast('Failed to create collection: ' + (data.status?.error || 'Unknown error'), 'error');
+                    showToast('Failed to create collection: ' + (data.message || 'Unknown error'), 'error');
                 }
             } catch (error) {
                 showToast('Error creating collection: ' + error.message, 'error');
@@ -2583,7 +2598,7 @@
                 html += `
                     <tr class="${isUp ? '' : 'offline-row'}">
                         <td><span class="service-name">${container.name}</span></td>
-                        <td><span class="service-desc">${container.service || 'N/A'}</span></td>
+                        <td><span class="service-desc">${container.image || 'N/A'}</span></td>
                         <td><span class="port-badge">${container.port || 'N/A'}</span></td>
                         <td class="center">
                             <span class="status-badge ${isUp ? 'online' : 'offline'}">
@@ -2646,8 +2661,8 @@
             const tbody = document.getElementById('databases-table-body');
             const badge = document.getElementById('databases-badge');
 
-            // Guard against null/undefined databases object
-            if (!databases) {
+            // Guard against null/undefined databases
+            if (!databases || (Array.isArray(databases) && databases.length === 0)) {
                 badge.className = 'container-badge offline';
                 badge.textContent = 'No Data';
                 tbody.innerHTML = `
@@ -2660,34 +2675,25 @@
                 return;
             }
 
-            const connectedCount = databases.connectedCount || 0;
-            const totalCount = databases.totalCount || 0;
+            // Handle array format from API
+            const dbList = Array.isArray(databases) ? databases : (databases.services || []);
+            const connectedCount = dbList.filter(db => db.status === 'online' || db.status === 'connected').length;
+            const totalCount = dbList.length;
 
-            if (databases.status === 'healthy') {
+            if (connectedCount === totalCount && totalCount > 0) {
                 badge.className = 'container-badge online';
                 badge.textContent = `${connectedCount}/${totalCount} Connected`;
-            } else if (databases.status === 'degraded') {
+            } else if (connectedCount > 0) {
                 badge.className = 'container-badge';
                 badge.style.backgroundColor = '#f0c040';
                 badge.style.color = '#000';
                 badge.textContent = `${connectedCount}/${totalCount} Connected`;
             } else {
                 badge.className = 'container-badge offline';
-                badge.textContent = databases.status || 'Unknown';
+                badge.textContent = 'Disconnected';
             }
 
-            if (databases.error) {
-                tbody.innerHTML = `
-                    <tr class="offline-row">
-                        <td colspan="3" style="color: #f85149; text-align: center; padding: 20px;">
-                            ${databases.error}
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            if (!databases.services || databases.services.length === 0) {
+            if (dbList.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="3" style="text-align: center; padding: 20px; color: #8b949e;">
@@ -2699,12 +2705,12 @@
             }
 
             let html = '';
-            for (const service of databases.services) {
-                const isConnected = service.status === 'connected';
+            for (const db of dbList) {
+                const isConnected = db.status === 'online' || db.status === 'connected';
                 html += `
                     <tr class="${isConnected ? '' : 'offline-row'}">
-                        <td><span class="service-name">${service.name}</span></td>
-                        <td class="center"><span class="port-badge">${service.port}</span></td>
+                        <td><span class="service-name">${db.name}${db.type ? ` (${db.type})` : ''}</span></td>
+                        <td class="center"><span class="port-badge">${db.port}</span></td>
                         <td class="center">
                             <span class="status-badge ${isConnected ? 'online' : 'offline'}">
                                 ${isConnected ? 'Connected' : 'Disconnected'}

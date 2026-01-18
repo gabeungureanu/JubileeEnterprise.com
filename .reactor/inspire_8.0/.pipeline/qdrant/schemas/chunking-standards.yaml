@@ -1,28 +1,56 @@
 # INSPIRE 8.0 QDRANT CHUNKING STANDARDS
-# Version: 1.0 | Effective: 2026-01-17
-# Purpose: Standardized chunking rules for all content ingested into Qdrant
+# Version: 1.1 | Effective: 2026-01-17
+# Purpose: Standardized chunking strategy to maximize retrieval accuracy,
+#          minimize semantic dilution, and reduce token waste
+#
+# DESIGN GOALS:
+#   - Scripture: Atomic per-verse retrieval with strong structured metadata
+#   - Teachings: Contextual retrieval with single coherent ideas per chunk
+#   - Notes/Memory: Surgical precision retrieval for persona grounding
 
-schema_id: "inspire_8_0.chunking_standards.v1"
-schema_version: "1.0.0"
+schema_id: "inspire_8_0.chunking_standards.v1.1"
+schema_version: "1.1.0"
 effective_date: "2026-01-17"
 
 # =============================================================================
 # OVERVIEW
 # =============================================================================
 overview:
-  purpose: "Define consistent chunking rules for all data ingested into the Inspire 8.0 Qdrant container"
-  rationale: "Chunking quality directly affects retrieval accuracy and token efficiency"
+  purpose: "Define and enforce standardized chunking strategy to maximize retrieval accuracy, minimize semantic dilution, and reduce token waste during activation and execution"
+
+  rationale: |
+    Chunking quality directly affects:
+    - Retrieval accuracy (similarity search performance)
+    - Semantic coherence (grounding quality)
+    - Token efficiency (cost and latency)
+    - Doctrinal integrity (no truncated theological content)
+
   scope: "All collections within the Inspire 8.0 container"
+
+  design_philosophy:
+    scripture: "Retrieved atomically - each verse is a complete, searchable unit"
+    teachings: "Retrieved contextually - each chunk contains one coherent idea"
+    notes: "Retrieved with surgical precision - discrete thoughts and insights"
 
   principles:
     - "Preserve semantic coherence within chunks"
     - "Maintain metadata completeness for each chunk"
     - "Optimize chunk size for retrieval precision"
-    - "Apply overlap to preserve context at boundaries"
+    - "Apply overlap only when context preservation requires it"
     - "Never split atomic units (verses, definitions, rules)"
+    - "Align chunk boundaries with natural content breaks"
+    - "Avoid conversational filler in memory artifacts"
+
+  enforcement:
+    level: "mandatory"
+    validation: "pre-ingestion"
+    rejection_on_violation: true
 
 # =============================================================================
 # SCRIPTURE CONTENT CHUNKING
+# =============================================================================
+# MANDATE: Per-verse chunking as the DEFAULT standard
+# EXCEPTION: Group 2-5 verses ONLY when theological/grammatical meaning requires it
 # =============================================================================
 scripture:
   applies_to:
@@ -30,56 +58,82 @@ scripture:
 
   granularity: "verse_level"
 
+  default_strategy: "per_verse"
+
+  rationale: |
+    Scripture is retrieved atomically. Each verse is stored as an independent chunk
+    with strong, structured verse metadata. This enables:
+    - Precise verse-level retrieval for theological grounding
+    - Accurate cross-referencing and citation
+    - Minimal semantic dilution in search results
+    - Optimal similarity search performance
+
   rules:
     verse:
-      description: "Individual Bible verses"
+      description: "Individual Bible verses (DEFAULT STANDARD)"
+      is_default: true
       chunk_size: "single_verse"
       token_range:
         min: 10
-        max: 100
+        max: 150
         target: 50
       preserve:
-        - "Complete verse text"
+        - "Complete verse text - NEVER truncate"
         - "Verse number reference"
         - "Chapter context in metadata"
         - "Book context in metadata"
-      split_on: null  # Never split a verse
-      overlap: null   # No overlap for single verses
+        - "Translation identifier"
+      split_on: null  # NEVER split a verse
+      overlap: null   # No overlap for single verses - atomic retrieval
       metadata_requirements:
-        - "bible_ref.book"
-        - "bible_ref.chapter"
-        - "bible_ref.verse_start"
-        - "bible_ref.translation"
+        required:
+          - "bible_ref.book"
+          - "bible_ref.chapter"
+          - "bible_ref.verse_start"
+          - "bible_ref.translation"
+        optional:
+          - "tags"
+          - "cross_references"
 
     passage:
-      description: "Multi-verse passages (3-7 verses)"
+      description: "Multi-verse passages (2-5 verses) - EXCEPTION ONLY"
+      is_default: false
+      usage_condition: |
+        Use ONLY when theological or grammatical meaning cannot be preserved if split.
+        Examples:
+        - Compound sentences spanning verses
+        - Hebrew parallelism requiring verse pairs
+        - Narrative sequences that lose meaning when separated
+        - Poetic structures (chiasms, acrostics)
       chunk_size: "verse_group"
       token_range:
-        min: 100
-        max: 300
-        target: 200
+        min: 50
+        max: 250
+        target: 150
       verse_range:
-        min: 3
-        max: 7
+        min: 2
+        max: 5  # Hard limit - never exceed 5 verses per chunk
       preserve:
-        - "Semantic coherence"
-        - "Paragraph boundaries"
-        - "Narrative flow"
-        - "Complete thoughts"
+        - "Semantic coherence - the reason for grouping"
+        - "Complete grammatical unit"
+        - "Theological integrity"
+        - "Narrative or poetic flow"
       split_on:
-        - "Paragraph breaks in source"
-        - "Topic transitions"
-        - "Dialogue boundaries"
-      overlap:
-        type: "verse_count"
-        amount: 1
-        description: "Include last verse of previous chunk in current"
+        - "Paragraph breaks in source text"
+        - "Topic or speaker transitions"
+        - "Selah markers in Psalms"
+      overlap: null  # Clean boundaries for passages
       metadata_requirements:
-        - "bible_ref.book"
-        - "bible_ref.chapter"
-        - "bible_ref.verse_start"
-        - "bible_ref.verse_end"
-        - "bible_ref.translation"
+        required:
+          - "bible_ref.book"
+          - "bible_ref.chapter"
+          - "bible_ref.verse_start"
+          - "bible_ref.verse_end"  # REQUIRED for grouped verses
+          - "bible_ref.translation"
+          - "grouping_reason"  # Must document why verses are grouped
+        optional:
+          - "tags"
+          - "cross_references"
 
     chapter_summary:
       description: "Chapter-level thematic summaries"
@@ -117,87 +171,120 @@ scripture:
 # =============================================================================
 # TEACHING & DOCTRINAL CONTENT CHUNKING
 # =============================================================================
+# MANDATE: Conceptually complete sections, 300-400 tokens target, 500 max
+# RULE: Align chunk boundaries with headings or clear logical breaks
+# GOAL: Each chunk contains ONE coherent idea
+# =============================================================================
 teaching:
   applies_to:
     - "doctrine"
 
-  granularity: "semantic_paragraph"
+  granularity: "conceptual_section"
+
+  rationale: |
+    Teachings are retrieved contextually. Each chunk must contain a single coherent
+    idea with clear boundaries. This enables:
+    - High-quality contextual grounding for persona responses
+    - Minimal semantic dilution (no partial arguments)
+    - Efficient token usage during activation
+    - Doctrinal integrity (complete theological points)
+
+  token_standards:
+    target_range: "300-400 tokens"
+    hard_maximum: 500
+    minimum: 200
+    boundary_rule: "Always align with headings or clear logical breaks"
 
   rules:
     teaching:
       description: "Sermons, lessons, Bible studies"
-      chunk_size: "semantic_unit"
+      chunk_size: "conceptual_unit"
       token_range:
         min: 200
-        max: 500
+        max: 500  # Hard upper limit
         target: 350
+      boundary_alignment:
+        primary: "Heading changes"
+        secondary: "Topic shifts"
+        tertiary: "Paragraph breaks at major points"
       preserve:
-        - "Complete thoughts"
-        - "Heading context"
-        - "Scripture references within"
-        - "Illustrative examples"
+        - "Complete thought - ONE coherent idea per chunk"
+        - "Heading context (include heading in chunk)"
+        - "Scripture references within the thought"
+        - "Illustrative examples that support the point"
       split_on:
-        - "Heading changes"
+        - "Heading changes (PREFERRED)"
         - "Topic shifts"
-        - "Paragraph breaks"
         - "Major point transitions"
+        - "Paragraph breaks (only at logical boundaries)"
+      never_split_on:
+        - "Mid-sentence"
+        - "Mid-paragraph within a single point"
+        - "Between Scripture reference and its explanation"
       overlap:
         type: "token_count"
-        amount: 50
-        description: "50 tokens of context from previous chunk"
+        amount: 30
+        description: "Minimal overlap - just enough for context continuity"
       metadata_requirements:
         - "source"
         - "type"
         - "tags"
+        - "section_heading"
 
     whitepaper:
       description: "Position papers, theological documents"
       chunk_size: "section"
       token_range:
-        min: 300
-        max: 500
+        min: 250
+        max: 500  # Hard upper limit
         target: 400
+      boundary_alignment:
+        primary: "Section headings"
+        secondary: "Argument conclusion points"
       preserve:
         - "Section coherence"
-        - "Argument flow"
+        - "Complete argument unit"
         - "Citation context"
         - "Logical structure"
       split_on:
-        - "Section headings"
-        - "Argument transitions"
-        - "Major claims"
+        - "Section headings (PREFERRED)"
+        - "Argument conclusions"
+        - "Major claims with supporting evidence"
       overlap:
         type: "token_count"
-        amount: 75
-        description: "75 tokens to maintain argument continuity"
+        amount: 40
+        description: "Slightly more overlap for argument continuity"
 
     doctrinal_statement:
       description: "Official doctrinal positions"
       chunk_size: "doctrinal_point"
       token_range:
         min: 200
-        max: 400
-        target: 300
+        max: 500  # Hard upper limit
+        target: 350
+      boundary_alignment:
+        primary: "Article boundaries"
+        secondary: "Numbered points"
       preserve:
         - "Complete doctrinal point"
-        - "Supporting Scripture"
+        - "Supporting Scripture (must stay with point)"
+        - "Affirmation/denial pairs (keep together)"
         - "Logical structure"
-        - "Affirmation/denial pairs"
       split_on:
         - "Numbered points"
         - "Article boundaries"
         - "Topic sections"
       overlap:
         type: "token_count"
-        amount: 50
+        amount: 25
 
     devotional:
       description: "Daily devotional content"
       chunk_size: "complete_devotional"
       token_range:
-        min: 150
-        max: 400
-        target: 275
+        min: 200
+        max: 500  # Hard upper limit
+        target: 350
       preserve:
         - "Complete daily reading"
         - "Scripture text"
@@ -211,56 +298,94 @@ teaching:
       chunk_size: "verse_commentary"
       token_range:
         min: 200
-        max: 500
+        max: 500  # Hard upper limit
         target: 350
+      boundary_alignment:
+        primary: "Verse boundaries"
+        secondary: "Major exposition points"
       preserve:
         - "Complete verse exposition"
         - "Cross-references"
         - "Historical context"
         - "Application points"
       split_on:
-        - "Verse boundaries"
-        - "Sub-point transitions"
+        - "Verse boundaries (PREFERRED)"
+        - "Sub-point conclusions"
       overlap:
         type: "token_count"
-        amount: 50
+        amount: 30
 
 # =============================================================================
 # NOTES & INTERACTION CONTENT CHUNKING
+# =============================================================================
+# MANDATE: High-precision chunking, 120-200 tokens per chunk
+# RULE: Each chunk = ONE discrete thought or insight
+# GOAL: Surgical precision retrieval for persona grounding
+# PROHIBITION: Avoid conversational filler
 # =============================================================================
 notes:
   applies_to:
     - "persona_*"
 
-  granularity: "fine"
+  granularity: "high_precision"
+
+  rationale: |
+    Notes and memory artifacts are retrieved with surgical precision. Each chunk
+    must represent ONE discrete thought or insight. This enables:
+    - Precise persona grounding without irrelevant context
+    - Efficient memory retrieval for relationship continuity
+    - Minimal token waste during activation
+    - Clean, actionable insights without conversational noise
+
+  token_standards:
+    target_range: "120-200 tokens"
+    hard_maximum: 200
+    minimum: 80
+    content_rule: "ONE discrete thought or insight per chunk"
+    exclusion_rule: "Avoid conversational filler"
+
+  content_filtering:
+    remove:
+      - "Conversational filler (um, uh, you know)"
+      - "Redundant pleasantries"
+      - "Non-essential small talk"
+      - "Repeated information"
+    preserve:
+      - "Emotional markers"
+      - "Key insights"
+      - "Relationship-relevant details"
+      - "Actionable information"
 
   rules:
     interaction_summary:
-      description: "Condensed interaction history"
-      chunk_size: "single_interaction"
+      description: "Condensed interaction history - high precision"
+      chunk_size: "single_insight"
       token_range:
-        min: 100
-        max: 250
-        target: 175
+        min: 80
+        max: 200  # Hard upper limit
+        target: 150
       preserve:
-        - "Complete interaction context"
+        - "ONE key takeaway per chunk"
         - "User sentiment"
-        - "Key takeaways"
         - "Emotional markers"
+        - "Actionable context"
+      exclude:
+        - "Conversational filler"
+        - "Redundant greetings"
+        - "Non-essential pleasantries"
       split_on:
-        - "Topic shifts within interaction"
+        - "Topic shifts"
         - "Emotional transitions"
+        - "New insights"
       overflow_handling: "create_continuation_chunk"
-      overlap:
-        type: "token_count"
-        amount: 25
+      overlap: null  # Clean boundaries for precision retrieval
 
     long_term_memory:
       description: "Persistent memory fragments"
       chunk_size: "memory_unit"
       token_range:
-        min: 100
-        max: 200
+        min: 80
+        max: 200  # Hard upper limit
         target: 150
       preserve:
         - "Complete memory fragment"
@@ -270,65 +395,60 @@ notes:
       split_on:
         - "Memory boundaries"
         - "Context shifts"
-      overlap:
-        type: "token_count"
-        amount: 20
+      overlap: null  # Atomic memory units
 
     relationship_context:
       description: "User relationship information"
       chunk_size: "relationship_aspect"
       token_range:
-        min: 75
-        max: 200
-        target: 125
+        min: 80
+        max: 200  # Hard upper limit
+        target: 140
       preserve:
         - "Complete aspect description"
         - "Historical context"
         - "Preference indicators"
       split_on:
         - "Aspect boundaries"
-      overlap: null  # Relationship data should be atomic
+      overlap: null  # Relationship data is atomic
 
     lesson_learned:
       description: "Insights from past interactions"
       chunk_size: "single_lesson"
       token_range:
-        min: 150
-        max: 250
-        target: 200
+        min: 100
+        max: 200  # Hard upper limit
+        target: 160
       preserve:
-        - "Complete insight"
+        - "Complete insight - ONE lesson per chunk"
         - "Context of learning"
         - "Application guidance"
         - "Failure case if applicable"
       split_on: null  # Keep lessons atomic
-      overflow_handling: "expand_token_limit"
-      overlap:
-        type: "token_count"
-        amount: 30
+      overflow_handling: "expand_token_limit_with_approval"
 
     prophetic_word:
       description: "Received prophetic content"
       chunk_size: "complete_word"
       token_range:
         min: 100
-        max: 300
-        target: 200
+        max: 250  # Slightly higher for prophetic content
+        target: 175
       preserve:
-        - "Complete prophetic utterance"
+        - "Complete prophetic utterance - NEVER truncate"
         - "Timestamp"
         - "Context"
         - "Interpretation if present"
-      split_on: null  # Never split prophetic words
-      overflow_handling: "expand_token_limit"
+      split_on: null  # NEVER split prophetic words
+      overflow_handling: "expand_token_limit_with_approval"
 
     prayer_journal:
       description: "Prayer and intercession records"
       chunk_size: "prayer_entry"
       token_range:
-        min: 75
-        max: 200
-        target: 125
+        min: 80
+        max: 200  # Hard upper limit
+        target: 140
       preserve:
         - "Complete prayer entry"
         - "Subject of prayer"
@@ -337,21 +457,72 @@ notes:
       split_on: null  # Keep entries atomic
 
     note:
-      description: "General notes"
-      chunk_size: "note_unit"
+      description: "General notes - high precision"
+      chunk_size: "single_thought"
       token_range:
-        min: 100
-        max: 200
+        min: 80
+        max: 200  # Hard upper limit
+        target: 140
+      preserve:
+        - "ONE complete thought per chunk"
+        - "Reference context"
+      exclude:
+        - "Conversational filler"
+        - "Redundant information"
+      split_on:
+        - "Thought boundaries"
+        - "Topic transitions"
+      overlap: null  # Clean boundaries for precision
+
+# =============================================================================
+# PROMPTS & LIGHTWEIGHT ARTIFACTS CHUNKING
+# =============================================================================
+# MANDATE: High-precision chunking for prompts and system artifacts
+# RULE: Each chunk = ONE discrete, complete unit
+# =============================================================================
+prompts_and_artifacts:
+  applies_to:
+    - "prompts"
+
+  granularity: "high_precision"
+
+  rationale: |
+    Prompts and system artifacts require high-precision chunking to ensure
+    complete, usable units are retrieved without truncation or dilution.
+
+  token_standards:
+    target_range: "120-200 tokens for fragments, complete for full prompts"
+    fragment_maximum: 200
+    complete_prompt_maximum: 1000
+
+  rules:
+    prompt_fragment:
+      description: "Reusable prompt components"
+      chunk_size: "complete_fragment"
+      token_range:
+        min: 80
+        max: 200  # Hard upper limit for fragments
         target: 150
       preserve:
-        - "Complete thought"
-        - "Reference context"
-      split_on:
-        - "Paragraph breaks"
-        - "Topic transitions"
-      overlap:
-        type: "token_count"
-        amount: 20
+        - "Complete fragment - usable as-is"
+        - "Variable placeholders"
+        - "Instruction completeness"
+      split_on: null  # Fragments are atomic
+      overlap: null
+
+    system_prompt:
+      description: "Complete system prompts"
+      chunk_size: "complete_prompt"
+      token_range:
+        min: 100
+        max: 1000  # Full prompts can be larger
+        target: 500
+      preserve:
+        - "Complete prompt - NEVER truncate"
+        - "All instructions"
+        - "Variable definitions"
+      split_on: null  # Never split system prompts
+      overflow_handling: "store_as_single_unit"
 
 # =============================================================================
 # ACTIVATION ANCHOR CHUNKING
@@ -762,3 +933,108 @@ logging:
       severity: "error"
     - condition: "Content type mismatch"
       severity: "error"
+
+# =============================================================================
+# ENFORCEMENT SUMMARY
+# =============================================================================
+# This section provides a quick reference for the three primary chunking tiers
+# =============================================================================
+enforcement_summary:
+
+  tier_1_scripture:
+    name: "Scripture - Atomic Retrieval"
+    default: "Per-verse chunking"
+    exception: "2-5 verse grouping ONLY when meaning requires it"
+    token_range: "10-150 tokens"
+    retrieval_goal: "Atomic - precise verse-level retrieval"
+    metadata_required:
+      - "bible_ref.book"
+      - "bible_ref.chapter"
+      - "bible_ref.verse_start"
+      - "bible_ref.translation"
+    grouping_requires: "grouping_reason field in metadata"
+
+  tier_2_teaching:
+    name: "Teachings - Contextual Retrieval"
+    strategy: "Conceptually complete sections"
+    token_range: "300-400 target, 500 HARD MAX"
+    boundary_rule: "ALWAYS align with headings or clear logical breaks"
+    content_rule: "ONE coherent idea per chunk"
+    retrieval_goal: "Contextual - complete thoughts without semantic dilution"
+    applies_to:
+      - "doctrine"
+      - "whitepaper"
+      - "doctrinal_statement"
+      - "devotional"
+      - "commentary"
+
+  tier_3_notes:
+    name: "Notes/Memory - Surgical Precision"
+    strategy: "High-precision small chunks"
+    token_range: "120-200 tokens, 200 HARD MAX"
+    content_rule: "ONE discrete thought or insight per chunk"
+    exclusion_rule: "Avoid conversational filler"
+    retrieval_goal: "Surgical precision for persona grounding"
+    applies_to:
+      - "interaction_summary"
+      - "long_term_memory"
+      - "relationship_context"
+      - "lesson_learned"
+      - "note"
+      - "prompt_fragment"
+
+  enforcement_rules:
+    - rule: "Reject chunks exceeding hard maximum"
+      action: "Return to ingestion with error"
+      severity: "error"
+
+    - rule: "Reject Scripture chunks >5 verses without grouping_reason"
+      action: "Return to ingestion with error"
+      severity: "error"
+
+    - rule: "Reject teaching chunks with mid-sentence boundaries"
+      action: "Return to ingestion with error"
+      severity: "error"
+
+    - rule: "Reject notes containing conversational filler"
+      action: "Filter and re-chunk"
+      severity: "warning"
+
+    - rule: "All chunks must have complete required metadata"
+      action: "Reject chunk"
+      severity: "error"
+
+  optimization_goals:
+    similarity_search: "Maximize retrieval accuracy through appropriate chunk granularity"
+    persona_grounding: "Improve grounding quality through semantic coherence"
+    token_efficiency: "Reduce waste during activation and execution"
+    doctrinal_integrity: "Maintain complete theological units"
+
+# =============================================================================
+# DOCUMENT CONTROL
+# =============================================================================
+document_control:
+  version: "1.1.0"
+  effective_date: "2026-01-17"
+  author: "Jubilee Development Team"
+  approved_by: "Gabriel Inspire"
+  review_cycle: "Quarterly"
+  classification: "Internal / Production"
+
+  change_log:
+    - version: "1.1.0"
+      date: "2026-01-17"
+      changes:
+        - "Enforced per-verse Scripture chunking as DEFAULT standard"
+        - "Limited verse grouping to 2-5 verses with required grouping_reason"
+        - "Set teaching chunk target to 300-400 tokens with 500 HARD MAX"
+        - "Mandated heading/logical break alignment for teachings"
+        - "Reduced notes/memory to 120-200 token high-precision range"
+        - "Added conversational filler exclusion for notes"
+        - "Added enforcement summary with three-tier system"
+        - "Added explicit enforcement rules with severity levels"
+
+    - version: "1.0.0"
+      date: "2026-01-17"
+      changes:
+        - "Initial chunking standards specification"
