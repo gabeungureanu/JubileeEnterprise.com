@@ -2099,27 +2099,41 @@
         }
 
         // =====================================================================
-        // QDRANT FUNCTIONS
+        // QDRANT FUNCTIONS - Direct API connection to WSL2 Qdrant (INSPIRE08)
         // =====================================================================
+        const QDRANT_CONFIG = {
+            name: 'INSPIRE08',
+            host: 'localhost',
+            port: 6333,
+            image: 'qdrant/qdrant:latest'
+        };
+
         async function loadQdrantContainers() {
             try {
-                const response = await fetch('/api/v1/qdrant/containers');
+                // Direct connection to Qdrant API
+                const response = await fetch(`http://${QDRANT_CONFIG.host}:${QDRANT_CONFIG.port}/collections`);
                 const data = await response.json();
 
-                if (data.success) {
-                    containersData = data.containers;
-                    document.getElementById('container-count').textContent = containersData.length;
-                    document.getElementById('qdrant-count').textContent = containersData.length;
+                if (data.status === 'ok') {
+                    // Create a virtual container entry for display
+                    containersData = [{
+                        name: QDRANT_CONFIG.name,
+                        port: QDRANT_CONFIG.port,
+                        image: QDRANT_CONFIG.image,
+                        host: QDRANT_CONFIG.host
+                    }];
+                    document.getElementById('container-count').textContent = '1';
+                    document.getElementById('qdrant-count').textContent = data.result.collections.length;
                     updateTargetContainerSelect();
                     await loadAllCollections();
                     updateLastUpdated();
                 } else {
-                    showToast('Failed to load containers', 'error');
+                    showToast('Failed to connect to Qdrant', 'error');
                     renderNoContainers();
                 }
             } catch (error) {
-                console.error('Error loading containers:', error);
-                showToast('Error loading containers: ' + error.message, 'error');
+                console.error('Error connecting to Qdrant:', error);
+                showToast('Error connecting to Qdrant: ' + error.message, 'error');
                 renderNoContainers();
             }
         }
@@ -2138,28 +2152,31 @@
 
             for (const container of containersData) {
                 try {
-                    const response = await fetch(`/api/v1/qdrant/collections?port=${container.port}`);
+                    // Direct Qdrant API call
+                    const response = await fetch(`http://${container.host}:${container.port}/collections`);
                     const data = await response.json();
 
+                    const collections = data.result?.collections || [];
                     collectionsData[container.port] = {
                         container,
-                        online: data.success,
-                        collections: data.collections || [],
-                        error: data.error
+                        online: data.status === 'ok',
+                        collections: collections.map(c => ({ name: c.name })),
+                        error: null
                     };
 
-                    if (data.success && data.collections) {
-                        totalCollections += data.collections.length;
+                    if (data.status === 'ok' && collections.length > 0) {
+                        totalCollections += collections.length;
 
-                        for (const coll of data.collections) {
+                        // Load details for each collection
+                        for (const coll of collectionsData[container.port].collections) {
                             try {
-                                const detailResp = await fetch(`/api/v1/qdrant/collections/${coll.name}?port=${container.port}`);
+                                const detailResp = await fetch(`http://${container.host}:${container.port}/collections/${coll.name}`);
                                 const detailData = await detailResp.json();
-                                if (detailData.success && detailData.details) {
-                                    coll.points_count = detailData.details.points_count || 0;
-                                    coll.vectors_count = detailData.details.vectors_count || 0;
-                                    coll.status = detailData.details.status;
-                                    coll.config = detailData.details.config;
+                                if (detailData.status === 'ok' && detailData.result) {
+                                    coll.points_count = detailData.result.points_count || 0;
+                                    coll.vectors_count = detailData.result.vectors_count || 0;
+                                    coll.status = detailData.result.status;
+                                    coll.config = detailData.result.config;
                                     totalPoints += coll.points_count;
                                 }
                             } catch (e) {
@@ -2191,8 +2208,11 @@
         function renderNoContainers() {
             document.getElementById('containers-list').innerHTML = `
                 <div class="no-containers">
-                    <p style="color: #ffffff; margin-bottom: 15px;">No Qdrant containers found in docker-services.json</p>
-                    <p style="color: #ffffff; font-size: 0.85rem;">Add a Qdrant container configuration to get started.</p>
+                    <p style="color: #ffffff; margin-bottom: 15px;">Cannot connect to Qdrant at localhost:6333</p>
+                    <p style="color: #ffffff; font-size: 0.85rem;">Ensure the INSPIRE08 container is running in WSL2.</p>
+                    <p style="color: #6c757d; font-size: 0.8rem; margin-top: 10px;">
+                        Run: <code>wsl -d Ubuntu-24.04 docker start INSPIRE08</code>
+                    </p>
                 </div>
             `;
         }
@@ -2373,7 +2393,7 @@
 
         async function createCollection() {
             const name = document.getElementById('new-collection-name').value.trim();
-            const vectorSize = document.getElementById('new-vector-size').value;
+            const vectorSize = parseInt(document.getElementById('new-vector-size').value);
             const distance = document.getElementById('new-distance').value;
             const port = document.getElementById('target-container').value;
 
@@ -2383,20 +2403,28 @@
             }
 
             try {
-                const response = await fetch(`/api/v1/qdrant/collections?port=${port}`, {
-                    method: 'POST',
+                // Direct Qdrant API call to create collection
+                const response = await fetch(`http://localhost:${port}/collections/${name}`, {
+                    method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, vectorSize, distance })
+                    body: JSON.stringify({
+                        vectors: {
+                            size: vectorSize,
+                            distance: distance,
+                            on_disk: true
+                        },
+                        on_disk_payload: true
+                    })
                 });
 
                 const data = await response.json();
 
-                if (data.success) {
+                if (data.status === 'ok') {
                     showToast(`Collection "${name}" created successfully`, 'success');
                     hideCreateModal();
                     await loadAllCollections();
                 } else {
-                    showToast('Failed to create collection: ' + (data.error || 'Unknown error'), 'error');
+                    showToast('Failed to create collection: ' + (data.status?.error || 'Unknown error'), 'error');
                 }
             } catch (error) {
                 showToast('Error creating collection: ' + error.message, 'error');
