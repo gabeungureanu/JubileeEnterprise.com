@@ -176,8 +176,13 @@ public class EventTopPositionConverter : IValueConverter
     {
         if (value is DateTime startTime)
         {
-            var dayStart = startTime.Date;
-            var duration = startTime - dayStart;
+            // Convert UTC to local time for display
+            var localTime = startTime.Kind == DateTimeKind.Utc
+                ? startTime.ToLocalTime()
+                : startTime;
+
+            var dayStart = localTime.Date;
+            var duration = localTime - dayStart;
             return duration.TotalHours * 60; // 60px per hour
         }
         return 0.0;
@@ -254,16 +259,35 @@ public class EventsByDateConverter : IMultiValueConverter
 {
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
-        if (values.Length >= 2 &&
-            values[0] is System.Collections.IEnumerable events &&
+        // Handle unset or invalid values gracefully
+        if (values == null || values.Length < 2)
+        {
+            return new System.Collections.ObjectModel.ObservableCollection<object>();
+        }
+
+        // Check for DependencyProperty.UnsetValue or null
+        if (values[0] == System.Windows.DependencyProperty.UnsetValue ||
+            values[1] == System.Windows.DependencyProperty.UnsetValue ||
+            values[0] == null || values[1] == null)
+        {
+            return new System.Collections.ObjectModel.ObservableCollection<object>();
+        }
+
+        if (values[0] is System.Collections.IEnumerable events &&
             values[1] is DateTime targetDate)
         {
             var filteredEvents = new System.Collections.ObjectModel.ObservableCollection<object>();
+
             foreach (var evt in events)
             {
                 if (evt is JubileeOutlook.Models.CalendarEvent calEvent)
                 {
-                    if (calEvent.StartTime.Date == targetDate.Date)
+                    // Convert UTC to local time for comparison
+                    var localStartTime = calEvent.StartTime.Kind == DateTimeKind.Utc
+                        ? calEvent.StartTime.ToLocalTime()
+                        : calEvent.StartTime;
+
+                    if (localStartTime.Date == targetDate.Date)
                     {
                         filteredEvents.Add(calEvent);
                     }
@@ -271,6 +295,7 @@ public class EventsByDateConverter : IMultiValueConverter
             }
             return filteredEvents;
         }
+
         return new System.Collections.ObjectModel.ObservableCollection<object>();
     }
 
@@ -537,6 +562,33 @@ public class EventColorConverter : IValueConverter
 }
 
 /// <summary>
+/// Converts an enum value to boolean by comparing with a parameter value
+/// Used for RadioButton binding to enum properties
+/// </summary>
+public class EnumToBoolConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value == null || parameter == null)
+            return false;
+
+        var enumValue = value.ToString();
+        var targetValue = parameter.ToString();
+
+        return string.Equals(enumValue, targetValue, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is bool boolValue && boolValue && parameter != null)
+        {
+            return Enum.Parse(targetType, parameter.ToString()!);
+        }
+        return Binding.DoNothing;
+    }
+}
+
+/// <summary>
 /// Converts a name to initials (e.g., "John Doe" -> "JD", "Jennifer Martinez" -> "JM")
 /// </summary>
 public class InitialsConverter : IValueConverter
@@ -560,6 +612,29 @@ public class InitialsConverter : IValueConverter
             }
         }
         return "?";
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Subtracts a value from the input. Used for calculating widths with margins.
+/// </summary>
+public class SubtractConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is double d && parameter != null)
+        {
+            if (double.TryParse(parameter.ToString(), out var subtractValue))
+            {
+                return Math.Max(0, d - subtractValue);
+            }
+        }
+        return value;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

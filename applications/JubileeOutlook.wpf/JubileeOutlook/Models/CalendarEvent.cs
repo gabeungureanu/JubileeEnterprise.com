@@ -19,6 +19,7 @@ public class CalendarEvent
     public RecurrencePattern? Recurrence { get; set; }
     public EventStatus Status { get; set; } = EventStatus.Free;
     public bool IsPrivate { get; set; }
+    public bool IsInPerson { get; set; } = true;
     public string CalendarName { get; set; } = "My Calendar";
     public Brush EventColor { get; set; } = new SolidColorBrush(Color.FromRgb(0, 120, 212));
     public List<EventAttachment> Attachments { get; set; } = new();
@@ -105,6 +106,7 @@ public enum ReminderTime
 public enum EventStatus
 {
     Free,
+    WorkingElsewhere,
     Tentative,
     Busy,
     OutOfOffice

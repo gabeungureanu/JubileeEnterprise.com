@@ -63,16 +63,19 @@
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
                     <RadioButton Content="Day" GroupName="ViewMode"
                                  Command="{Binding SetViewModeCommand}" CommandParameter="Day"
+                                 IsChecked="{Binding ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Day}"
                                  Style="{StaticResource RibbonTabButtonStyle}" Margin="0,0,4,0"/>
                     <RadioButton Content="Work Week" GroupName="ViewMode"
                                  Command="{Binding SetViewModeCommand}" CommandParameter="WorkWeek"
-                                 Style="{StaticResource RibbonTabButtonStyle}" Margin="0,0,4,0"
-                                 IsChecked="True"/>
+                                 IsChecked="{Binding ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=WorkWeek}"
+                                 Style="{StaticResource RibbonTabButtonStyle}" Margin="0,0,4,0"/>
                     <RadioButton Content="Week" GroupName="ViewMode"
                                  Command="{Binding SetViewModeCommand}" CommandParameter="Week"
+                                 IsChecked="{Binding ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Week}"
                                  Style="{StaticResource RibbonTabButtonStyle}" Margin="0,0,4,0"/>
                     <RadioButton Content="Month" GroupName="ViewMode"
                                  Command="{Binding SetViewModeCommand}" CommandParameter="Month"
+                                 IsChecked="{Binding ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Month}"
                                  Style="{StaticResource RibbonTabButtonStyle}"/>
                 </StackPanel>
 
@@ -129,6 +132,9 @@
             <!-- Left Sidebar -->
             <Border Grid.Column="0" Background="#0A0A0A" BorderBrush="#333333" BorderThickness="0,0,1,0">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer.Resources>
+                        <Style TargetType="ScrollBar" BasedOn="{StaticResource DarkScrollBarStyle}"/>
+                    </ScrollViewer.Resources>
                     <StackPanel Margin="16">
 
                         <!-- Mini Calendar -->
@@ -252,6 +258,9 @@
 
                         <!-- Time Grid -->
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ScrollViewer.Resources>
+                                <Style TargetType="ScrollBar" BasedOn="{StaticResource DarkScrollBarStyle}"/>
+                            </ScrollViewer.Resources>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="60"/>
@@ -259,7 +268,7 @@
                                 </Grid.ColumnDefinitions>
 
                                 <!-- Time Labels -->
-                                <StackPanel Grid.Column="0">
+                                <StackPanel Grid.Column="0" Margin="0,8,0,0">
                                     <TextBlock Text="12 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
                                     <TextBlock Text="1 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
                                     <TextBlock Text="2 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
@@ -287,13 +296,13 @@
                                 </StackPanel>
 
                                 <!-- Day Column with Events -->
-                                <Border Grid.Column="1" Style="{StaticResource DayColumnStyle}">
+                                <Border x:Name="DayViewColumnBorder" Grid.Column="1" Style="{StaticResource DayColumnStyle}">
                                     <Canvas>
-                                        <ItemsControl>
+                                        <ItemsControl Width="{Binding ActualWidth, ElementName=DayViewColumnBorder}">
                                             <ItemsControl.ItemsSource>
                                                 <MultiBinding Converter="{StaticResource EventsByDateConverter}">
                                                     <Binding Path="Events"/>
-                                                    <Binding Path="SelectedDate"/>
+                                                    <Binding Path="VisibleDays[0]"/>
                                                 </MultiBinding>
                                             </ItemsControl.ItemsSource>
                                             <ItemsControl.ItemsPanel>
@@ -304,13 +313,15 @@
                                             <ItemsControl.ItemContainerStyle>
                                                 <Style>
                                                     <Setter Property="Canvas.Top" Value="{Binding StartTime, Converter={StaticResource EventTopPositionConverter}}"/>
+                                                    <Setter Property="Canvas.Left" Value="4"/>
                                                 </Style>
                                             </ItemsControl.ItemContainerStyle>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Border Height="{Binding Converter={StaticResource EventHeightConverter}}"
                                                             Style="{StaticResource CalendarEventBlockStyle}"
-                                                            Background="{Binding DisplayEventColor}" Margin="4,0" MinWidth="200"
+                                                            Background="{Binding DisplayEventColor}"
+                                                            Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource SubtractConverter}, ConverterParameter=8}"
                                                             Cursor="Hand">
                                                         <Border.InputBindings>
                                                             <MouseBinding MouseAction="LeftDoubleClick"
@@ -367,6 +378,9 @@
 
                     <!-- Time Grid -->
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                        <ScrollViewer.Resources>
+                            <Style TargetType="ScrollBar" BasedOn="{StaticResource DarkScrollBarStyle}"/>
+                        </ScrollViewer.Resources>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="60"/>
@@ -378,7 +392,7 @@
                             </Grid.ColumnDefinitions>
 
                             <!-- Time Labels -->
-                            <StackPanel Grid.Column="0">
+                            <StackPanel Grid.Column="0" Margin="0,8,0,0">
                                 <TextBlock Text="12 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
                                 <TextBlock Text="1 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
                                 <TextBlock Text="2 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
@@ -406,9 +420,9 @@
                             </StackPanel>
 
                             <!-- Day Column 1 (Monday) with Dynamic Events -->
-                            <Border Grid.Column="1" Style="{StaticResource DayColumnStyle}">
+                            <Border x:Name="WorkWeekDay1Border" Grid.Column="1" Style="{StaticResource DayColumnStyle}">
                                 <Canvas>
-                                    <ItemsControl>
+                                    <ItemsControl Width="{Binding ActualWidth, ElementName=WorkWeekDay1Border}">
                                         <ItemsControl.ItemsSource>
                                             <MultiBinding Converter="{StaticResource EventsByDateConverter}">
                                                 <Binding Path="Events"/>
@@ -423,13 +437,16 @@
                                         <ItemsControl.ItemContainerStyle>
                                             <Style>
                                                 <Setter Property="Canvas.Top" Value="{Binding StartTime, Converter={StaticResource EventTopPositionConverter}}"/>
+                                                <Setter Property="Canvas.Left" Value="4"/>
+                                                <Setter Property="Canvas.Right" Value="4"/>
                                             </Style>
                                         </ItemsControl.ItemContainerStyle>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Border Height="{Binding Converter={StaticResource EventHeightConverter}}"
                                                         Style="{StaticResource CalendarEventBlockStyle}"
-                                                        Background="{Binding DisplayEventColor}" Margin="4,0" MinWidth="120"
+                                                        Background="{Binding DisplayEventColor}"
+                                                        Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource SubtractConverter}, ConverterParameter=8}"
                                                         Cursor="Hand">
                                                     <Border.InputBindings>
                                                         <MouseBinding MouseAction="LeftDoubleClick"
@@ -449,9 +466,9 @@
                             </Border>
 
                             <!-- Day Column 2 (Tuesday) with Dynamic Events -->
-                            <Border Grid.Column="2" Style="{StaticResource DayColumnStyle}">
+                            <Border x:Name="WorkWeekDay2Border" Grid.Column="2" Style="{StaticResource DayColumnStyle}">
                                 <Canvas>
-                                    <ItemsControl>
+                                    <ItemsControl Width="{Binding ActualWidth, ElementName=WorkWeekDay2Border}">
                                         <ItemsControl.ItemsSource>
                                             <MultiBinding Converter="{StaticResource EventsByDateConverter}">
                                                 <Binding Path="Events"/>
@@ -466,13 +483,15 @@
                                         <ItemsControl.ItemContainerStyle>
                                             <Style>
                                                 <Setter Property="Canvas.Top" Value="{Binding StartTime, Converter={StaticResource EventTopPositionConverter}}"/>
+                                                <Setter Property="Canvas.Left" Value="4"/>
                                             </Style>
                                         </ItemsControl.ItemContainerStyle>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Border Height="{Binding Converter={StaticResource EventHeightConverter}}"
                                                         Style="{StaticResource CalendarEventBlockStyle}"
-                                                        Background="{Binding DisplayEventColor}" Margin="4,0" MinWidth="120"
+                                                        Background="{Binding DisplayEventColor}"
+                                                        Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource SubtractConverter}, ConverterParameter=8}"
                                                         Cursor="Hand">
                                                     <Border.InputBindings>
                                                         <MouseBinding MouseAction="LeftDoubleClick"
@@ -492,9 +511,9 @@
                             </Border>
 
                             <!-- Day Column 3 (Wednesday) with Dynamic Events -->
-                            <Border Grid.Column="3" Style="{StaticResource DayColumnStyle}">
+                            <Border x:Name="WorkWeekDay3Border" Grid.Column="3" Style="{StaticResource DayColumnStyle}">
                                 <Canvas>
-                                    <ItemsControl>
+                                    <ItemsControl Width="{Binding ActualWidth, ElementName=WorkWeekDay3Border}">
                                         <ItemsControl.ItemsSource>
                                             <MultiBinding Converter="{StaticResource EventsByDateConverter}">
                                                 <Binding Path="Events"/>
@@ -509,13 +528,15 @@
                                         <ItemsControl.ItemContainerStyle>
                                             <Style>
                                                 <Setter Property="Canvas.Top" Value="{Binding StartTime, Converter={StaticResource EventTopPositionConverter}}"/>
+                                                <Setter Property="Canvas.Left" Value="4"/>
                                             </Style>
                                         </ItemsControl.ItemContainerStyle>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Border Height="{Binding Converter={StaticResource EventHeightConverter}}"
                                                         Style="{StaticResource CalendarEventBlockStyle}"
-                                                        Background="{Binding DisplayEventColor}" Margin="4,0" MinWidth="120"
+                                                        Background="{Binding DisplayEventColor}"
+                                                        Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource SubtractConverter}, ConverterParameter=8}"
                                                         Cursor="Hand">
                                                     <Border.InputBindings>
                                                         <MouseBinding MouseAction="LeftDoubleClick"
@@ -535,9 +556,9 @@
                             </Border>
 
                             <!-- Day Column 4 (Thursday) with Dynamic Events -->
-                            <Border Grid.Column="4" Style="{StaticResource DayColumnStyle}">
+                            <Border x:Name="WorkWeekDay4Border" Grid.Column="4" Style="{StaticResource DayColumnStyle}">
                                 <Canvas>
-                                    <ItemsControl>
+                                    <ItemsControl Width="{Binding ActualWidth, ElementName=WorkWeekDay4Border}">
                                         <ItemsControl.ItemsSource>
                                             <MultiBinding Converter="{StaticResource EventsByDateConverter}">
                                                 <Binding Path="Events"/>
@@ -552,13 +573,15 @@
                                         <ItemsControl.ItemContainerStyle>
                                             <Style>
                                                 <Setter Property="Canvas.Top" Value="{Binding StartTime, Converter={StaticResource EventTopPositionConverter}}"/>
+                                                <Setter Property="Canvas.Left" Value="4"/>
                                             </Style>
                                         </ItemsControl.ItemContainerStyle>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Border Height="{Binding Converter={StaticResource EventHeightConverter}}"
                                                         Style="{StaticResource CalendarEventBlockStyle}"
-                                                        Background="{Binding DisplayEventColor}" Margin="4,0" MinWidth="120"
+                                                        Background="{Binding DisplayEventColor}"
+                                                        Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource SubtractConverter}, ConverterParameter=8}"
                                                         Cursor="Hand">
                                                     <Border.InputBindings>
                                                         <MouseBinding MouseAction="LeftDoubleClick"
@@ -578,9 +601,9 @@
                             </Border>
 
                             <!-- Day Column 5 (Friday) with Dynamic Events -->
-                            <Border Grid.Column="5" Style="{StaticResource DayColumnStyle}">
+                            <Border x:Name="WorkWeekDay5Border" Grid.Column="5" Style="{StaticResource DayColumnStyle}">
                                 <Canvas>
-                                    <ItemsControl>
+                                    <ItemsControl Width="{Binding ActualWidth, ElementName=WorkWeekDay5Border}">
                                         <ItemsControl.ItemsSource>
                                             <MultiBinding Converter="{StaticResource EventsByDateConverter}">
                                                 <Binding Path="Events"/>
@@ -595,13 +618,15 @@
                                         <ItemsControl.ItemContainerStyle>
                                             <Style>
                                                 <Setter Property="Canvas.Top" Value="{Binding StartTime, Converter={StaticResource EventTopPositionConverter}}"/>
+                                                <Setter Property="Canvas.Left" Value="4"/>
                                             </Style>
                                         </ItemsControl.ItemContainerStyle>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Border Height="{Binding Converter={StaticResource EventHeightConverter}}"
                                                         Style="{StaticResource CalendarEventBlockStyle}"
-                                                        Background="{Binding DisplayEventColor}" Margin="4,0" MinWidth="120"
+                                                        Background="{Binding DisplayEventColor}"
+                                                        Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource SubtractConverter}, ConverterParameter=8}"
                                                         Cursor="Hand">
                                                     <Border.InputBindings>
                                                         <MouseBinding MouseAction="LeftDoubleClick"
@@ -655,6 +680,9 @@
 
                         <!-- Time Grid with 7 columns -->
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                            <ScrollViewer.Resources>
+                                <Style TargetType="ScrollBar" BasedOn="{StaticResource DarkScrollBarStyle}"/>
+                            </ScrollViewer.Resources>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="60"/>
@@ -668,7 +696,7 @@
                                 </Grid.ColumnDefinitions>
 
                                 <!-- Time Labels -->
-                                <StackPanel Grid.Column="0">
+                                <StackPanel Grid.Column="0" Margin="0,8,0,0">
                                     <TextBlock Text="12 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
                                     <TextBlock Text="1 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
                                     <TextBlock Text="2 AM" Style="{StaticResource TimeSlotLabelStyle}"/>
@@ -697,9 +725,9 @@
 
                                 <!-- 7 Day Columns with Dynamic Events -->
                                 <!-- Sunday -->
-                                <Border Grid.Column="1" Style="{StaticResource DayColumnStyle}">
+                                <Border x:Name="WeekDay1Border" Grid.Column="1" Style="{StaticResource DayColumnStyle}">
                                     <Canvas>
-                                        <ItemsControl>
+                                        <ItemsControl Width="{Binding ActualWidth, ElementName=WeekDay1Border}">
                                             <ItemsControl.ItemsSource>
                                                 <MultiBinding Converter="{StaticResource EventsByDateConverter}">
                                                     <Binding Path="Events"/>
@@ -714,13 +742,15 @@
                                             <ItemsControl.ItemContainerStyle>
                                                 <Style>
                                                     <Setter Property="Canvas.Top" Value="{Binding StartTime, Converter={StaticResource EventTopPositionConverter}}"/>
+                                                    <Setter Property="Canvas.Left" Value="2"/>
                                                 </Style>
                                             </ItemsControl.ItemContainerStyle>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Border Height="{Binding Converter={StaticResource EventHeightConverter}}"
                                                             Style="{StaticResource CalendarEventBlockStyle}"
-                                                            Background="{Binding DisplayEventColor}" Margin="2,0" MinWidth="80"
+                                                            Background="{Binding DisplayEventColor}"
+                                                            Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource SubtractConverter}, ConverterParameter=4}"
                                                             Cursor="Hand">
                                                         <Border.InputBindings>
                                                             <MouseBinding MouseAction="LeftDoubleClick"
@@ -739,9 +769,9 @@
                                     </Canvas>
                                 </Border>
                                 <!-- Monday -->
-                                <Border Grid.Column="2" Style="{StaticResource DayColumnStyle}">
+                                <Border x:Name="WeekDay2Border" Grid.Column="2" Style="{StaticResource DayColumnStyle}">
                                     <Canvas>
-                                        <ItemsControl>
+                                        <ItemsControl Width="{Binding ActualWidth, ElementName=WeekDay2Border}">
                                             <ItemsControl.ItemsSource>
                                                 <MultiBinding Converter="{StaticResource EventsByDateConverter}">
                                                     <Binding Path="Events"/>
@@ -756,13 +786,15 @@
                                             <ItemsControl.ItemContainerStyle>
                                                 <Style>
                                                     <Setter Property="Canvas.Top" Value="{Binding StartTime, Converter={StaticResource EventTopPositionConverter}}"/>
+                                                    <Setter Property="Canvas.Left" Value="2"/>
                                                 </Style>
                                             </ItemsControl.ItemContainerStyle>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Border Height="{Binding Converter={StaticResource EventHeightConverter}}"
                                                             Style="{StaticResource CalendarEventBlockStyle}"
-                                                            Background="{Binding DisplayEventColor}" Margin="2,0" MinWidth="80"
+                                                            Background="{Binding DisplayEventColor}"
+                                                            Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource SubtractConverter}, ConverterParameter=4}"
                                                             Cursor="Hand">
                                                         <Border.InputBindings>
                                                             <MouseBinding MouseAction="LeftDoubleClick"
@@ -781,9 +813,9 @@
                                     </Canvas>
                                 </Border>
                                 <!-- Tuesday -->
-                                <Border Grid.Column="3" Style="{StaticResource DayColumnStyle}">
+                                <Border x:Name="WeekDay3Border" Grid.Column="3" Style="{StaticResource DayColumnStyle}">
                                     <Canvas>
-                                        <ItemsControl>
+                                        <ItemsControl Width="{Binding ActualWidth, ElementName=WeekDay3Border}">
                                             <ItemsControl.ItemsSource>
                                                 <MultiBinding Converter="{StaticResource EventsByDateConverter}">
                                                     <Binding Path="Events"/>
@@ -798,13 +830,15 @@
                                             <ItemsControl.ItemContainerStyle>
                                                 <Style>
                                                     <Setter Property="Canvas.Top" Value="{Binding StartTime, Converter={StaticResource EventTopPositionConverter}}"/>
+                                                    <Setter Property="Canvas.Left" Value="2"/>
                                                 </Style>
                                             </ItemsControl.ItemContainerStyle>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Border Height="{Binding Converter={StaticResource EventHeightConverter}}"
                                                             Style="{StaticResource CalendarEventBlockStyle}"
-                                                            Background="{Binding DisplayEventColor}" Margin="2,0" MinWidth="80"
+                                                            Background="{Binding DisplayEventColor}"
+                                                            Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource SubtractConverter}, ConverterParameter=4}"
                                                             Cursor="Hand">
                                                         <Border.InputBindings>
                                                             <MouseBinding MouseAction="LeftDoubleClick"
@@ -823,9 +857,9 @@
                                     </Canvas>
                                 </Border>
                                 <!-- Wednesday -->
-                                <Border Grid.Column="4" Style="{StaticResource DayColumnStyle}">
+                                <Border x:Name="WeekDay4Border" Grid.Column="4" Style="{StaticResource DayColumnStyle}">
                                     <Canvas>
-                                        <ItemsControl>
+                                        <ItemsControl Width="{Binding ActualWidth, ElementName=WeekDay4Border}">
                                             <ItemsControl.ItemsSource>
                                                 <MultiBinding Converter="{StaticResource EventsByDateConverter}">
                                                     <Binding Path="Events"/>
@@ -840,13 +874,15 @@
                                             <ItemsControl.ItemContainerStyle>
                                                 <Style>
                                                     <Setter Property="Canvas.Top" Value="{Binding StartTime, Converter={StaticResource EventTopPositionConverter}}"/>
+                                                    <Setter Property="Canvas.Left" Value="2"/>
                                                 </Style>
                                             </ItemsControl.ItemContainerStyle>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Border Height="{Binding Converter={StaticResource EventHeightConverter}}"
                                                             Style="{StaticResource CalendarEventBlockStyle}"
-                                                            Background="{Binding DisplayEventColor}" Margin="2,0" MinWidth="80"
+                                                            Background="{Binding DisplayEventColor}"
+                                                            Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource SubtractConverter}, ConverterParameter=4}"
                                                             Cursor="Hand">
                                                         <Border.InputBindings>
                                                             <MouseBinding MouseAction="LeftDoubleClick"
@@ -865,9 +901,9 @@
                                     </Canvas>
                                 </Border>
                                 <!-- Thursday -->
-                                <Border Grid.Column="5" Style="{StaticResource DayColumnStyle}">
+                                <Border x:Name="WeekDay5Border" Grid.Column="5" Style="{StaticResource DayColumnStyle}">
                                     <Canvas>
-                                        <ItemsControl>
+                                        <ItemsControl Width="{Binding ActualWidth, ElementName=WeekDay5Border}">
                                             <ItemsControl.ItemsSource>
                                                 <MultiBinding Converter="{StaticResource EventsByDateConverter}">
                                                     <Binding Path="Events"/>
@@ -882,13 +918,15 @@
                                             <ItemsControl.ItemContainerStyle>
                                                 <Style>
                                                     <Setter Property="Canvas.Top" Value="{Binding StartTime, Converter={StaticResource EventTopPositionConverter}}"/>
+                                                    <Setter Property="Canvas.Left" Value="2"/>
                                                 </Style>
                                             </ItemsControl.ItemContainerStyle>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Border Height="{Binding Converter={StaticResource EventHeightConverter}}"
                                                             Style="{StaticResource CalendarEventBlockStyle}"
-                                                            Background="{Binding DisplayEventColor}" Margin="2,0" MinWidth="80"
+                                                            Background="{Binding DisplayEventColor}"
+                                                            Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource SubtractConverter}, ConverterParameter=4}"
                                                             Cursor="Hand">
                                                         <Border.InputBindings>
                                                             <MouseBinding MouseAction="LeftDoubleClick"
@@ -907,9 +945,9 @@
                                     </Canvas>
                                 </Border>
                                 <!-- Friday -->
-                                <Border Grid.Column="6" Style="{StaticResource DayColumnStyle}">
+                                <Border x:Name="WeekDay6Border" Grid.Column="6" Style="{StaticResource DayColumnStyle}">
                                     <Canvas>
-                                        <ItemsControl>
+                                        <ItemsControl Width="{Binding ActualWidth, ElementName=WeekDay6Border}">
                                             <ItemsControl.ItemsSource>
                                                 <MultiBinding Converter="{StaticResource EventsByDateConverter}">
                                                     <Binding Path="Events"/>
@@ -924,13 +962,15 @@
                                             <ItemsControl.ItemContainerStyle>
                                                 <Style>
                                                     <Setter Property="Canvas.Top" Value="{Binding StartTime, Converter={StaticResource EventTopPositionConverter}}"/>
+                                                    <Setter Property="Canvas.Left" Value="2"/>
                                                 </Style>
                                             </ItemsControl.ItemContainerStyle>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Border Height="{Binding Converter={StaticResource EventHeightConverter}}"
                                                             Style="{StaticResource CalendarEventBlockStyle}"
-                                                            Background="{Binding DisplayEventColor}" Margin="2,0" MinWidth="80"
+                                                            Background="{Binding DisplayEventColor}"
+                                                            Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource SubtractConverter}, ConverterParameter=4}"
                                                             Cursor="Hand">
                                                         <Border.InputBindings>
                                                             <MouseBinding MouseAction="LeftDoubleClick"
@@ -949,9 +989,9 @@
                                     </Canvas>
                                 </Border>
                                 <!-- Saturday -->
-                                <Border Grid.Column="7" Style="{StaticResource DayColumnStyle}">
+                                <Border x:Name="WeekDay7Border" Grid.Column="7" Style="{StaticResource DayColumnStyle}">
                                     <Canvas>
-                                        <ItemsControl>
+                                        <ItemsControl Width="{Binding ActualWidth, ElementName=WeekDay7Border}">
                                             <ItemsControl.ItemsSource>
                                                 <MultiBinding Converter="{StaticResource EventsByDateConverter}">
                                                     <Binding Path="Events"/>
@@ -966,13 +1006,15 @@
                                             <ItemsControl.ItemContainerStyle>
                                                 <Style>
                                                     <Setter Property="Canvas.Top" Value="{Binding StartTime, Converter={StaticResource EventTopPositionConverter}}"/>
+                                                    <Setter Property="Canvas.Left" Value="2"/>
                                                 </Style>
                                             </ItemsControl.ItemContainerStyle>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
                                                     <Border Height="{Binding Converter={StaticResource EventHeightConverter}}"
                                                             Style="{StaticResource CalendarEventBlockStyle}"
-                                                            Background="{Binding DisplayEventColor}" Margin="2,0" MinWidth="80"
+                                                            Background="{Binding DisplayEventColor}"
+                                                            Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource SubtractConverter}, ConverterParameter=4}"
                                                             Cursor="Hand">
                                                         <Border.InputBindings>
                                                             <MouseBinding MouseAction="LeftDoubleClick"
@@ -997,6 +1039,49 @@
                     <!-- Month View - Dynamic binding to MonthViewDays -->
                     <Grid Visibility="{Binding ViewMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Month}">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ScrollViewer.Resources>
+                                <Style TargetType="ScrollBar">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Width" Value="10"/>
+                                    <Setter Property="MinWidth" Value="10"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ScrollBar">
+                                                <Grid Background="Transparent">
+                                                    <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                                        <Track.Thumb>
+                                                            <Thumb>
+                                                                <Thumb.Style>
+                                                                    <Style TargetType="Thumb">
+                                                                        <Setter Property="Background" Value="#3A3A3A"/>
+                                                                        <Setter Property="Template">
+                                                                            <Setter.Value>
+                                                                                <ControlTemplate TargetType="Thumb">
+                                                                                    <Border Background="{TemplateBinding Background}"
+                                                                                            CornerRadius="5"
+                                                                                            Margin="2,0"/>
+                                                                                </ControlTemplate>
+                                                                            </Setter.Value>
+                                                                        </Setter>
+                                                                        <Style.Triggers>
+                                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                                <Setter Property="Background" Value="#5A5A5A"/>
+                                                                            </Trigger>
+                                                                            <Trigger Property="IsDragging" Value="True">
+                                                                                <Setter Property="Background" Value="#6A6A6A"/>
+                                                                            </Trigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Thumb.Style>
+                                                            </Thumb>
+                                                        </Track.Thumb>
+                                                    </Track>
+                                                </Grid>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ScrollViewer.Resources>
                             <Grid Margin="20">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>

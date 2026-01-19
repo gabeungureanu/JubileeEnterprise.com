@@ -30,10 +30,10 @@ public partial class NewEventViewModel : ObservableObject
     private DateTime _eventDate = DateTime.Today;
 
     [ObservableProperty]
-    private string _startTime = "08:00";
+    private string _startTime = "8:00 AM";
 
     [ObservableProperty]
-    private string _endTime = "08:30";
+    private string _endTime = "8:30 AM";
 
     [ObservableProperty]
     private ObservableCollection<string> _timeOptions = new();
@@ -120,13 +120,24 @@ public partial class NewEventViewModel : ObservableObject
         Location = eventToEdit.Location;
         Description = eventToEdit.Description;
         EventDate = eventToEdit.StartTime.Date;
-        StartTime = eventToEdit.StartTime.ToString("HH:mm");
-        EndTime = eventToEdit.EndTime.ToString("HH:mm");
+        StartTime = eventToEdit.StartTime.ToString("h:mm tt");
+        EndTime = eventToEdit.EndTime.ToString("h:mm tt");
         IsAllDay = eventToEdit.IsAllDay;
         Attendees = string.Join("; ", eventToEdit.Attendees);
 
+        // Set ShowAsStatus based on the saved Status
+        ShowAsStatus = eventToEdit.Status switch
+        {
+            EventStatus.Free => ShowAsStatusOptions.FirstOrDefault(s => s.Name == "Free"),
+            EventStatus.WorkingElsewhere => ShowAsStatusOptions.FirstOrDefault(s => s.Name == "Working elsewhere"),
+            EventStatus.Tentative => ShowAsStatusOptions.FirstOrDefault(s => s.Name == "Tentative"),
+            EventStatus.Busy => ShowAsStatusOptions.FirstOrDefault(s => s.Name == "Busy"),
+            EventStatus.OutOfOffice => ShowAsStatusOptions.FirstOrDefault(s => s.Name == "Out of office"),
+            _ => ShowAsStatusOptions.FirstOrDefault(s => s.Name == "Busy")
+        };
         IsBusy = eventToEdit.Status == EventStatus.Busy;
         IsPrivate = eventToEdit.IsPrivate;
+        IsInPerson = eventToEdit.IsInPerson;
         SelectedReminder = GetStringFromReminderTime(eventToEdit.Reminder);
 
         var colorHex = GetColorHexFromBrush(eventToEdit.EventColor);
@@ -203,6 +214,19 @@ public partial class NewEventViewModel : ObservableObject
             IsLoadingImages = false;
             LoadingImagesMessage = string.Empty;
         }
+    }
+
+    private EventStatus GetEventStatusFromShowAs()
+    {
+        return ShowAsStatus?.Name switch
+        {
+            "Free" => EventStatus.Free,
+            "Working elsewhere" => EventStatus.WorkingElsewhere,
+            "Tentative" => EventStatus.Tentative,
+            "Busy" => EventStatus.Busy,
+            "Out of office" => EventStatus.OutOfOffice,
+            _ => EventStatus.Busy
+        };
     }
 
     private static string GetColorHexFromBrush(System.Windows.Media.Brush brush)
@@ -295,11 +319,14 @@ public partial class NewEventViewModel : ObservableObject
 
     private void InitializeTimeOptions()
     {
+        // Generate time options in 12-hour AM/PM format
         for (int hour = 0; hour < 24; hour++)
         {
             for (int minute = 0; minute < 60; minute += 30)
             {
-                TimeOptions.Add($"{hour:D2}:{minute:D2}");
+                string period = hour < 12 ? "AM" : "PM";
+                int displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+                TimeOptions.Add($"{displayHour}:{minute:D2} {period}");
             }
         }
     }
@@ -321,17 +348,17 @@ public partial class NewEventViewModel : ObservableObject
 
     private void CalculateEventPosition()
     {
-        // Parse start time to get position (8:00 = 8 * 40 = 320)
-        if (TimeSpan.TryParse(StartTime, out var start))
+        // Parse start time (12-hour AM/PM format) to get position
+        if (DateTime.TryParse(StartTime, out var startDateTime))
         {
-            EventTopPosition = start.TotalHours * 40;
+            EventTopPosition = startDateTime.TimeOfDay.TotalHours * 40;
         }
 
         // Calculate height based on duration
-        if (TimeSpan.TryParse(StartTime, out var startTime) &&
-            TimeSpan.TryParse(EndTime, out var endTime))
+        if (DateTime.TryParse(StartTime, out var start) &&
+            DateTime.TryParse(EndTime, out var end))
         {
-            var duration = endTime - startTime;
+            var duration = end.TimeOfDay - start.TimeOfDay;
             EventHeight = Math.Max(duration.TotalHours * 40, 30);
             EventTimeRange = $"{StartTime} - {EndTime}";
         }
@@ -347,6 +374,33 @@ public partial class NewEventViewModel : ObservableObject
         CalculateEventPosition();
     }
 
+    partial void OnEventDateChanged(DateTime value)
+    {
+        // Close the date picker popup when a date is selected
+        IsDatePickerOpen = false;
+    }
+
+    [ObservableProperty]
+    private bool _isDatePickerOpen;
+
+    [RelayCommand]
+    private void PreviousDay()
+    {
+        EventDate = EventDate.AddDays(-1);
+    }
+
+    [RelayCommand]
+    private void NextDay()
+    {
+        EventDate = EventDate.AddDays(1);
+    }
+
+    [RelayCommand]
+    private void ToggleDatePicker()
+    {
+        IsDatePickerOpen = !IsDatePickerOpen;
+    }
+
     [RelayCommand]
     private void SaveEvent()
     {
@@ -360,24 +414,24 @@ public partial class NewEventViewModel : ObservableObject
             return;
         }
 
-        // Parse start and end times
+        // Parse start and end times (12-hour AM/PM format)
         var startDateTime = EventDate;
         var endDateTime = EventDate;
 
-        if (!TimeSpan.TryParse(StartTime, out var start))
+        if (!DateTime.TryParse(StartTime, out var startParsed))
         {
             ValidationError = "Invalid start time.";
             return;
         }
 
-        if (!TimeSpan.TryParse(EndTime, out var end))
+        if (!DateTime.TryParse(EndTime, out var endParsed))
         {
             ValidationError = "Invalid end time.";
             return;
         }
 
-        startDateTime = EventDate.Add(start);
-        endDateTime = EventDate.Add(end);
+        startDateTime = EventDate.Add(startParsed.TimeOfDay);
+        endDateTime = EventDate.Add(endParsed.TimeOfDay);
 
         // Validate end time is after start time
         if (endDateTime <= startDateTime)
@@ -415,8 +469,9 @@ public partial class NewEventViewModel : ObservableObject
             EndTime = endDateTime,
             Description = Description,
             IsAllDay = IsAllDay,
-            Status = IsBusy ? EventStatus.Busy : EventStatus.Free,
+            Status = GetEventStatusFromShowAs(),
             IsPrivate = IsPrivate,
+            IsInPerson = IsInPerson,
             Reminder = GetReminderTimeFromString(SelectedReminder),
             Category = EventCategory.None,
             CalendarName = "My Calendar",

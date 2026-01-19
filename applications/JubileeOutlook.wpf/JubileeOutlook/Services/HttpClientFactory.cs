@@ -548,13 +548,19 @@ public class HttpClientFactory
         };
     }
 
+    private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    };
+
     private static HttpRequestMessage CreateRequest(HttpMethod method, string requestUri, object? content)
     {
         var request = new HttpRequestMessage(method, requestUri);
 
         if (content != null)
         {
-            var json = JsonSerializer.Serialize(content);
+            var json = JsonSerializer.Serialize(content, _jsonSerializerOptions);
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
         }
 

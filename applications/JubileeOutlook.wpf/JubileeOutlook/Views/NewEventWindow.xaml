@@ -69,19 +69,53 @@
 
             <!-- Left Panel - Form -->
             <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Background="#1A1A1A">
+                <ScrollViewer.Resources>
+                    <Style TargetType="ScrollBar">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Width" Value="10"/>
+                        <Setter Property="MinWidth" Value="10"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ScrollBar">
+                                    <Grid Background="Transparent">
+                                        <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                            <Track.Thumb>
+                                                <Thumb>
+                                                    <Thumb.Style>
+                                                        <Style TargetType="Thumb">
+                                                            <Setter Property="Background" Value="#3A3A3A"/>
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="Thumb">
+                                                                        <Border Background="{TemplateBinding Background}"
+                                                                                CornerRadius="5"
+                                                                                Margin="2,0"/>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                            <Style.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter Property="Background" Value="#5A5A5A"/>
+                                                                </Trigger>
+                                                                <Trigger Property="IsDragging" Value="True">
+                                                                    <Setter Property="Background" Value="#6A6A6A"/>
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Thumb.Style>
+                                                </Thumb>
+                                            </Track.Thumb>
+                                        </Track>
+                                    </Grid>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ScrollViewer.Resources>
                 <StackPanel Margin="20,16">
 
                     <!-- Toolbar Row -->
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                        <!-- Response options -->
-                        <Button Style="{StaticResource EventToolbarButtonStyle}" Margin="0,0,8,0">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xe7fd;" FontFamily="{StaticResource MaterialIcons}" FontSize="16" Margin="0,0,6,0"/>
-                                <TextBlock Text="Response options" FontSize="12"/>
-                                <TextBlock Text="&#xe5c5;" FontFamily="{StaticResource MaterialIcons}" FontSize="14" Margin="4,0,0,0"/>
-                            </StackPanel>
-                        </Button>
-
                         <!-- Show as Status -->
                         <ComboBox ItemsSource="{Binding ShowAsStatusOptions}"
                                  SelectedItem="{Binding ShowAsStatus}"
@@ -711,12 +745,10 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="140"/>
-                            <ColumnDefinition Width="80"/>
                             <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
                         <!-- Clock Icon -->
@@ -736,7 +768,8 @@
                                    BorderThickness="0"
                                    Padding="8,6"
                                    FontSize="13"
-                                   Margin="0,0,8,0">
+                                   Margin="0,0,8,0"
+                                   CalendarStyle="{StaticResource DarkCalendarStyle}">
                             <DatePicker.Resources>
                                 <Style TargetType="DatePickerTextBox">
                                     <Setter Property="Foreground" Value="#FFFFFF"/>
@@ -763,47 +796,34 @@
                             </DatePicker.Resources>
                         </DatePicker>
 
-                        <!-- Start Time -->
+                        <!-- Start Time (hidden when All day is checked) -->
                         <ComboBox Grid.Column="2"
                                  ItemsSource="{Binding TimeOptions}"
                                  SelectedItem="{Binding StartTime}"
                                  Style="{StaticResource DarkComboBoxStyle}"
-                                 Margin="0,0,8,0"/>
+                                 Width="100"
+                                 Margin="0,0,8,0"
+                                 Visibility="{Binding IsAllDay, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
 
                         <TextBlock Grid.Column="3"
                                    Text="to"
                                    FontSize="13"
                                    Foreground="#FFFFFF"
                                    VerticalAlignment="Center"
-                                   Margin="0,0,8,0"/>
+                                   Margin="0,0,8,0"
+                                   Visibility="{Binding IsAllDay, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
 
-                        <!-- End Time -->
+                        <!-- End Time (hidden when All day is checked) -->
                         <ComboBox Grid.Column="4"
                                  ItemsSource="{Binding TimeOptions}"
                                  SelectedItem="{Binding EndTime}"
                                  Style="{StaticResource DarkComboBoxStyle}"
-                                 Margin="0,0,12,0"/>
-
-                        <!-- World Icon -->
-                        <TextBlock Grid.Column="5"
-                                   Text="&#xe894;" FontFamily="{StaticResource MaterialIcons}"
-                                   FontSize="18"
-                                   Foreground="#666666"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,12,0"/>
-
-                        <!-- Make recurring -->
-                        <Button Grid.Column="6"
-                               Style="{StaticResource LinkButtonStyle}"
-                               HorizontalAlignment="Left">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xe627;" FontFamily="{StaticResource MaterialIcons}" FontSize="16" Margin="0,0,6,0"/>
-                                <TextBlock Text="Make recurring" FontSize="13"/>
-                            </StackPanel>
-                        </Button>
+                                 Width="100"
+                                 Margin="0,0,12,0"
+                                 Visibility="{Binding IsAllDay, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
 
                         <!-- All day toggle -->
-                        <StackPanel Grid.Column="7" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <StackPanel Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Right">
                             <ToggleButton IsChecked="{Binding IsAllDay}"
                                          Style="{StaticResource ModernToggleSwitchStyle}"
                                          Margin="0,0,8,0"/>
@@ -893,47 +913,57 @@
                     </Grid>
 
                     <!-- Description Area -->
-                    <Border BorderBrush="#4A4A4A" BorderThickness="0,2,0,0" Padding="0,20,0,0" Margin="0,20,0,0">
+                    <Border Padding="0,20,0,0" Margin="0,0,0,0">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <!-- Icon Header -->
-                            <Grid Grid.Row="0" Margin="0,0,0,8">
-                                <TextBlock Text="&#xe24d;" FontFamily="{StaticResource MaterialIcons}"
+                            <!-- Editor Area with Icon on Left -->
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Note Icon -->
+                                <TextBlock Grid.Column="0"
+                                           Text="&#xe24d;" FontFamily="{StaticResource MaterialIcons}"
                                            FontSize="20"
                                            Foreground="#666666"
-                                           HorizontalAlignment="Left"/>
-                            </Grid>
+                                           VerticalAlignment="Top"
+                                           Margin="0,8,12,0"/>
 
-                            <!-- Editor Area with lighter background -->
-                            <Border Grid.Row="1"
-                                    Background="#202020"
-                                    CornerRadius="4"
-                                    Padding="12"
-                                    MinHeight="180"
-                                    Margin="0,0,0,0">
+                                <!-- Editor Area with lighter background -->
+                                <Border Grid.Column="1"
+                                        Background="#202020"
+                                        CornerRadius="4"
+                                        Padding="12"
+                                        MinHeight="180">
                                 <Grid>
-                                    <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
-                                             AcceptsReturn="True"
-                                             TextWrapping="Wrap"
-                                             Background="Transparent"
-                                             Foreground="#EEEEEE"
-                                             BorderThickness="0"
-                                             Padding="0"
-                                             FontSize="13"
-                                             CaretBrush="#FFFFFF"
-                                             VerticalScrollBarVisibility="Auto">
-                                        <TextBox.Style>
-                                            <Style TargetType="TextBox">
+                                    <RichTextBox x:Name="DescriptionRichTextBox"
+                                                 AcceptsReturn="True"
+                                                 Background="Transparent"
+                                                 Foreground="#EEEEEE"
+                                                 BorderThickness="0"
+                                                 Padding="0"
+                                                 FontSize="13"
+                                                 CaretBrush="#FFFFFF"
+                                                 VerticalScrollBarVisibility="Auto"
+                                                 TextChanged="DescriptionRichTextBox_TextChanged">
+                                        <RichTextBox.Resources>
+                                            <Style TargetType="Paragraph">
+                                                <Setter Property="Margin" Value="0,0,0,6"/>
+                                            </Style>
+                                        </RichTextBox.Resources>
+                                        <RichTextBox.Style>
+                                            <Style TargetType="RichTextBox">
                                                 <Setter Property="Template">
                                                     <Setter.Value>
-                                                        <ControlTemplate TargetType="TextBox">
+                                                        <ControlTemplate TargetType="RichTextBox">
                                                             <ScrollViewer x:Name="PART_ContentHost"
                                                                          VerticalAlignment="Top"
                                                                          Padding="0"/>
@@ -941,36 +971,31 @@
                                                     </Setter.Value>
                                                 </Setter>
                                             </Style>
-                                        </TextBox.Style>
-                                    </TextBox>
-                                    <TextBlock Text="Add notes, links, or attachments"
+                                        </RichTextBox.Style>
+                                        <FlowDocument>
+                                            <Paragraph/>
+                                        </FlowDocument>
+                                    </RichTextBox>
+                                    <TextBlock x:Name="DescriptionPlaceholder"
+                                              Text="Add notes, links, or attachments"
                                               Foreground="#666666"
                                               FontSize="13"
                                               Padding="0"
                                               IsHitTestVisible="False"
-                                              VerticalAlignment="Top">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding Description}" Value="">
-                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                              VerticalAlignment="Top"
+                                              Visibility="Visible"/>
                                 </Grid>
-                            </Border>
+                                </Border>
+                            </Grid>
 
                             <!-- Toolbar with darker background -->
-                            <Border Grid.Row="2"
+                            <Border Grid.Row="1"
                                     Background="#181818"
                                     BorderBrush="#2A2A2A"
                                     BorderThickness="0,1,0,0"
                                     CornerRadius="0,0,4,4"
                                     Padding="8,10"
-                                    Margin="0,8,0,0">
+                                    Margin="32,8,0,0">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                                     <Button ToolTip="Attach file" Margin="0,0,6,0"
                                             Command="{Binding AddAttachmentCommand}">
@@ -1040,7 +1065,7 @@
                                         <TextBlock Text="&#xe3f4;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#888888"/>
                                     </Button>
 
-                                    <Button ToolTip="More" Margin="0,0,0,0">
+                                    <Button x:Name="MoreOptionsButton" ToolTip="More" Margin="0,0,0,0" Click="MoreOptionsButton_Click">
                                         <Button.Style>
                                             <Style TargetType="Button">
                                                 <Setter Property="Background" Value="Transparent"/>
@@ -1072,6 +1097,146 @@
                                         </Button.Style>
                                         <TextBlock Text="&#xe5d4;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#888888"/>
                                     </Button>
+
+                                    <!-- More Options Popup Menu -->
+                                    <Popup x:Name="MoreOptionsPopup"
+                                           PlacementTarget="{Binding ElementName=MoreOptionsButton}"
+                                           Placement="Bottom"
+                                           StaysOpen="False"
+                                           AllowsTransparency="True"
+                                           PopupAnimation="Fade">
+                                        <Border Background="#2D2D2D"
+                                                BorderBrush="#404040"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Padding="4"
+                                                Margin="8">
+                                            <Border.Effect>
+                                                <DropShadowEffect Color="Black" BlurRadius="16" ShadowDepth="4" Opacity="0.5"/>
+                                            </Border.Effect>
+                                            <StackPanel MinWidth="200">
+                                                <!-- Text Formatting Section -->
+                                                <TextBlock Text="Text Formatting"
+                                                           FontFamily="{StaticResource RobotoMedium}"
+                                                           FontSize="11"
+                                                           Foreground="#888888"
+                                                           Margin="12,8,12,4"/>
+
+                                                <Button Style="{StaticResource MenuItemButtonStyle}" Click="MenuBold_Click">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="&#xe238;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#CCCCCC" Width="24"/>
+                                                        <TextBlock Text="Bold" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                        <TextBlock Text="Ctrl+B" Foreground="#666666" VerticalAlignment="Center" Margin="40,0,0,0" FontSize="11"/>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <Button Style="{StaticResource MenuItemButtonStyle}" Click="MenuItalic_Click">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="&#xe23f;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#CCCCCC" Width="24"/>
+                                                        <TextBlock Text="Italic" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                        <TextBlock Text="Ctrl+I" Foreground="#666666" VerticalAlignment="Center" Margin="40,0,0,0" FontSize="11"/>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <Button Style="{StaticResource MenuItemButtonStyle}" Click="MenuUnderline_Click">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="&#xe249;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#CCCCCC" Width="24"/>
+                                                        <TextBlock Text="Underline" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                        <TextBlock Text="Ctrl+U" Foreground="#666666" VerticalAlignment="Center" Margin="20,0,0,0" FontSize="11"/>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <Button Style="{StaticResource MenuItemButtonStyle}" Click="MenuStrikethrough_Click">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="&#xe257;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#CCCCCC" Width="24"/>
+                                                        <TextBlock Text="Strikethrough" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <!-- Separator -->
+                                                <Border Height="1" Background="#404040" Margin="8,4"/>
+
+                                                <!-- List Options Section -->
+                                                <TextBlock Text="Lists"
+                                                           FontFamily="{StaticResource RobotoMedium}"
+                                                           FontSize="11"
+                                                           Foreground="#888888"
+                                                           Margin="12,8,12,4"/>
+
+                                                <Button Style="{StaticResource MenuItemButtonStyle}" Click="MenuBulletedList_Click">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="&#xe241;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#CCCCCC" Width="24"/>
+                                                        <TextBlock Text="Bulleted list" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <Button Style="{StaticResource MenuItemButtonStyle}" Click="MenuNumberedList_Click">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="&#xe242;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#CCCCCC" Width="24"/>
+                                                        <TextBlock Text="Numbered list" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <Button Style="{StaticResource MenuItemButtonStyle}" Click="MenuChecklist_Click">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="&#xe065;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#CCCCCC" Width="24"/>
+                                                        <TextBlock Text="Checklist" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <!-- Separator -->
+                                                <Border Height="1" Background="#404040" Margin="8,4"/>
+
+                                                <!-- Insert Options Section -->
+                                                <TextBlock Text="Insert"
+                                                           FontFamily="{StaticResource RobotoMedium}"
+                                                           FontSize="11"
+                                                           Foreground="#888888"
+                                                           Margin="12,8,12,4"/>
+
+                                                <Button Style="{StaticResource MenuItemButtonStyle}" Click="MenuInsertLink_Click">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="&#xe157;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#CCCCCC" Width="24"/>
+                                                        <TextBlock Text="Insert link" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                        <TextBlock Text="Ctrl+K" Foreground="#666666" VerticalAlignment="Center" Margin="28,0,0,0" FontSize="11"/>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <Button Style="{StaticResource MenuItemButtonStyle}" Click="MenuInsertTable_Click">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="&#xf191;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#CCCCCC" Width="24"/>
+                                                        <TextBlock Text="Insert table" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <Button Style="{StaticResource MenuItemButtonStyle}" Click="MenuInsertLine_Click">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="&#xe925;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#CCCCCC" Width="24"/>
+                                                        <TextBlock Text="Horizontal line" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <!-- Separator -->
+                                                <Border Height="1" Background="#404040" Margin="8,4"/>
+
+                                                <!-- Content Actions Section -->
+                                                <Button Style="{StaticResource MenuItemButtonStyle}" Click="MenuClearFormatting_Click">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="&#xe239;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#CCCCCC" Width="24"/>
+                                                        <TextBlock Text="Clear formatting" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <Button Style="{StaticResource MenuItemButtonStyle}" Click="MenuSelectAll_Click">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="&#xe162;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#CCCCCC" Width="24"/>
+                                                        <TextBlock Text="Select all" Foreground="#E0E0E0" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                                        <TextBlock Text="Ctrl+A" Foreground="#666666" VerticalAlignment="Center" Margin="32,0,0,0" FontSize="11"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </Border>
+                                    </Popup>
                                 </StackPanel>
                             </Border>
 
@@ -1305,24 +1470,70 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <Button Grid.Column="0" Style="{StaticResource IconButtonStyle}" Width="28" Height="28">
+                            <Button Grid.Column="0" Style="{StaticResource IconButtonStyle}" Width="28" Height="28"
+                                    Command="{Binding PreviousDayCommand}">
                                 <TextBlock Text="&#xe5cb;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#CCCCCC"/>
                             </Button>
 
                             <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Button Background="Transparent" BorderThickness="0" Padding="8,4" Cursor="Hand">
+                                <Button Command="{Binding ToggleDatePickerCommand}" Cursor="Hand">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="Padding" Value="12,6"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="border"
+                                                                Background="{TemplateBinding Background}"
+                                                                CornerRadius="4"
+                                                                Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#3A3A3A"/>
+                                                            </Trigger>
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#444444"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="{Binding EventDate, StringFormat='ddd, yyyy, MMM dd'}"
                                                    FontSize="13"
                                                    FontWeight="SemiBold"
                                                    Foreground="#FFFFFF"/>
                                         <TextBlock Text="&#xe5c5;" FontFamily="{StaticResource MaterialIcons}"
-                                                   FontSize="16" Foreground="#CCCCCC" Margin="4,0,0,0"/>
+                                                   FontSize="16" Foreground="#CCCCCC" Margin="4,0,0,0" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
+                                <!-- Date Picker Popup -->
+                                <Popup IsOpen="{Binding IsDatePickerOpen}"
+                                       StaysOpen="False"
+                                       Placement="Bottom"
+                                       PlacementTarget="{Binding RelativeSource={RelativeSource AncestorType=StackPanel}}"
+                                       AllowsTransparency="True"
+                                       PopupAnimation="Fade">
+                                    <Border Background="#2A2A2A"
+                                            BorderBrush="#3A3A3A"
+                                            BorderThickness="1"
+                                            CornerRadius="4"
+                                            Padding="4">
+                                        <Calendar SelectedDate="{Binding EventDate, Mode=TwoWay}"
+                                                  DisplayDate="{Binding EventDate}"
+                                                  Style="{StaticResource DarkCalendarStyle}"/>
+                                    </Border>
+                                </Popup>
                             </StackPanel>
 
-                            <Button Grid.Column="2" Style="{StaticResource IconButtonStyle}" Width="28" Height="28">
+                            <Button Grid.Column="2" Style="{StaticResource IconButtonStyle}" Width="28" Height="28"
+                                    Command="{Binding NextDayCommand}">
                                 <TextBlock Text="&#xe5cc;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#CCCCCC"/>
                             </Button>
                         </Grid>
@@ -1330,159 +1541,175 @@
 
                     <!-- Time Grid -->
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="12,8">
+                        <ScrollViewer.Resources>
+                            <Style TargetType="ScrollBar">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Width" Value="8"/>
+                                <Setter Property="MinWidth" Value="8"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ScrollBar">
+                                            <Grid Background="Transparent">
+                                                <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                                    <Track.Thumb>
+                                                        <Thumb>
+                                                            <Thumb.Style>
+                                                                <Style TargetType="Thumb">
+                                                                    <Setter Property="Background" Value="#3A3A3A"/>
+                                                                    <Setter Property="Template">
+                                                                        <Setter.Value>
+                                                                            <ControlTemplate TargetType="Thumb">
+                                                                                <Border Background="{TemplateBinding Background}"
+                                                                                        CornerRadius="4"
+                                                                                        Margin="2,0"/>
+                                                                            </ControlTemplate>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                    <Style.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter Property="Background" Value="#4A4A4A"/>
+                                                                        </Trigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Thumb.Style>
+                                                        </Thumb>
+                                                    </Track.Thumb>
+                                                </Track>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ScrollViewer.Resources>
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
-                            <!-- Hours Column -->
-                            <ItemsControl Grid.Row="1" Margin="0,0,0,0">
+                            <!-- Hours Column - starts at 10px to show 12 AM fully -->
+                            <ItemsControl Grid.Row="1" Margin="0,10,0,0">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <Canvas Height="960"/>
+                                        <Canvas Height="970"/>
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.Items>
-                                    <!-- Hour markers from 0 to 23 (24-hour timeline) -->
-                                    <Grid Canvas.Top="0">
-                                        <TextBlock Text="0" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <!-- Hour markers in 12-hour AM/PM format -->
+                                    <Grid Canvas.Top="0" Height="40">
+                                        <TextBlock Text="12 AM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="40">
-                                        <TextBlock Text="1" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="40" Height="40">
+                                        <TextBlock Text="1 AM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="80">
-                                        <TextBlock Text="2" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="80" Height="40">
+                                        <TextBlock Text="2 AM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="120">
-                                        <TextBlock Text="3" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="120" Height="40">
+                                        <TextBlock Text="3 AM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="160">
-                                        <TextBlock Text="4" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="160" Height="40">
+                                        <TextBlock Text="4 AM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="200">
-                                        <TextBlock Text="5" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="200" Height="40">
+                                        <TextBlock Text="5 AM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="240">
-                                        <TextBlock Text="6" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="240" Height="40">
+                                        <TextBlock Text="6 AM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="280">
-                                        <TextBlock Text="7" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="280" Height="40">
+                                        <TextBlock Text="7 AM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="320">
-                                        <TextBlock Text="8" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="320" Height="40">
+                                        <TextBlock Text="8 AM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="360">
-                                        <TextBlock Text="9" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="360" Height="40">
+                                        <TextBlock Text="9 AM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="400">
-                                        <TextBlock Text="10" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="400" Height="40">
+                                        <TextBlock Text="10 AM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="440">
-                                        <TextBlock Text="11" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="440" Height="40">
+                                        <TextBlock Text="11 AM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="480">
-                                        <TextBlock Text="12" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="480" Height="40">
+                                        <TextBlock Text="12 PM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="520">
-                                        <TextBlock Text="13" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="520" Height="40">
+                                        <TextBlock Text="1 PM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="560">
-                                        <TextBlock Text="14" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="560" Height="40">
+                                        <TextBlock Text="2 PM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="600">
-                                        <TextBlock Text="15" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="600" Height="40">
+                                        <TextBlock Text="3 PM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="640">
-                                        <TextBlock Text="16" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="640" Height="40">
+                                        <TextBlock Text="4 PM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="680">
-                                        <TextBlock Text="17" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="680" Height="40">
+                                        <TextBlock Text="5 PM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="720">
-                                        <TextBlock Text="18" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="720" Height="40">
+                                        <TextBlock Text="6 PM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="760">
-                                        <TextBlock Text="19" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="760" Height="40">
+                                        <TextBlock Text="7 PM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="800">
-                                        <TextBlock Text="20" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="800" Height="40">
+                                        <TextBlock Text="8 PM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="840">
-                                        <TextBlock Text="21" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="840" Height="40">
+                                        <TextBlock Text="9 PM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="880">
-                                        <TextBlock Text="22" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="880" Height="40">
+                                        <TextBlock Text="10 PM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
-                                    <Grid Canvas.Top="920">
-                                        <TextBlock Text="23" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
-                                        <Rectangle Height="1" Fill="#333333" Margin="20,0,0,0" VerticalAlignment="Top"/>
+                                    <Grid Canvas.Top="920" Height="40">
+                                        <TextBlock Text="11 PM" FontSize="11" Foreground="#666666" VerticalAlignment="Top" Margin="0,-6,0,0"/>
+                                        <Rectangle Height="1" Fill="#333333" Margin="45,0,0,0" VerticalAlignment="Top"/>
                                     </Grid>
                                 </ItemsControl.Items>
                             </ItemsControl>
 
                             <!-- Event Block -->
-                            <Canvas Grid.Row="1" Margin="20,0,0,0">
+                            <Canvas Grid.Row="1" Margin="45,10,0,0">
                                 <Border Canvas.Top="{Binding EventTopPosition}"
-                                        Width="250"
+                                        Width="230"
                                         Height="{Binding EventHeight}"
                                         Background="#4CAF50"
                                         CornerRadius="4"
                                         Padding="8,6">
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-
-                                        <!-- Top drag handle -->
-                                        <Ellipse Grid.Row="0"
-                                                Width="8" Height="8"
-                                                Fill="#FFFFFF"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Top"
-                                                Margin="0,-2,0,0"/>
-
-                                        <!-- Time text -->
-                                        <TextBlock Grid.Row="1"
-                                                  Text="{Binding EventTimeRange}"
-                                                  FontSize="12"
-                                                  FontWeight="Medium"
-                                                  Foreground="#FFFFFF"
-                                                  VerticalAlignment="Center"
-                                                  HorizontalAlignment="Center"/>
-
-                                        <!-- Bottom drag handle -->
-                                        <Ellipse Grid.Row="1"
-                                                Width="8" Height="8"
-                                                Fill="#FFFFFF"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Bottom"
-                                                Margin="0,0,0,-4"/>
-                                    </Grid>
+                                    <!-- Time text -->
+                                    <TextBlock Text="{Binding EventTimeRange}"
+                                              FontSize="12"
+                                              FontWeight="Medium"
+                                              Foreground="#FFFFFF"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Center"/>
                                 </Border>
                             </Canvas>
                         </Grid>

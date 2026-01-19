@@ -235,14 +235,20 @@ public static class ServiceConfiguration
 
     private static ICalendarService CreateCalendarService()
     {
+        // Write to log file for debugging
+        var logPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "JubileeOutlook", "startup.log");
+        System.IO.File.AppendAllText(logPath, $"\n[{DateTime.Now:HH:mm:ss}] CreateCalendarService called, _useApiServices = {_useApiServices}\n");
+
         if (_useApiServices)
         {
             System.Diagnostics.Debug.WriteLine($"[ServiceConfiguration] Creating ApiCalendarService");
+            System.IO.File.AppendAllText(logPath, $"[{DateTime.Now:HH:mm:ss}] Returning ApiCalendarService.Instance\n");
             return ApiCalendarService.Instance;
         }
         else
         {
             System.Diagnostics.Debug.WriteLine($"[ServiceConfiguration] Creating MockCalendarService");
+            System.IO.File.AppendAllText(logPath, $"[{DateTime.Now:HH:mm:ss}] Returning MockCalendarService\n");
             return new MockCalendarService();
         }
     }

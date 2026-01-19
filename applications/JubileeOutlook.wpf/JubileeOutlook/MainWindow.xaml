@@ -770,15 +770,7 @@
                                 <Rectangle Grid.Row="0" Height="1" Fill="{StaticResource BorderBrush}" VerticalAlignment="Bottom"/>
 
                                 <!-- Email Body Content -->
-                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                                    <Border Padding="20,16">
-                                        <TextBlock Text="{Binding MainViewModel.DisplayedMessage.Body}"
-                                                   FontSize="14"
-                                                   Foreground="{StaticResource PrimaryTextBrush}"
-                                                   TextWrapping="Wrap"
-                                                   LineHeight="24"/>
-                                    </Border>
-                                </ScrollViewer>
+                                <WebBrowser x:Name="EmailBodyBrowser" Grid.Row="1"/>
                             </Grid>
 
                             <!-- Compose Mail Panel -->

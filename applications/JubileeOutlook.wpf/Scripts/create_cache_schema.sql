@@ -72,10 +72,12 @@ CREATE TABLE IF NOT EXISTS cached_events (
     calendar_id VARCHAR(255),
     title VARCHAR(500) NOT NULL,
     description TEXT,
+    description_format VARCHAR(20) DEFAULT 'plain',
     location VARCHAR(500),
     start_time TIMESTAMPTZ NOT NULL,
     end_time TIMESTAMPTZ NOT NULL,
     is_all_day BOOLEAN DEFAULT FALSE,
+    is_in_person BOOLEAN DEFAULT TRUE,
     is_recurring BOOLEAN DEFAULT FALSE,
     recurrence_pattern JSONB,
     organizer_name VARCHAR(255),
@@ -85,11 +87,17 @@ CREATE TABLE IF NOT EXISTS cached_events (
     reminder_minutes INTEGER,
     is_private BOOLEAN DEFAULT FALSE,
     categories JSONB DEFAULT '[]',
+    images JSONB DEFAULT '[]',
+    attachments JSONB DEFAULT '[]',
     cached_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     last_modified TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     is_deleted BOOLEAN DEFAULT FALSE,
     sync_status VARCHAR(20) DEFAULT 'synced'
 );
+
+-- description_format: 'plain' for plain text, 'xaml' for WPF FlowDocument XAML, 'html' for HTML
+-- images: Array of {id, file_name, url, thumbnail_url, mime_type}
+-- attachments: Array of {id, file_name, file_size, url, mime_type}
 
 CREATE INDEX IF NOT EXISTS idx_events_calendar ON cached_events(calendar_id);
 CREATE INDEX IF NOT EXISTS idx_events_start ON cached_events(start_time);

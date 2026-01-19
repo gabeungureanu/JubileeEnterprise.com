@@ -20,6 +20,8 @@ const rateLimit = require('express-rate-limit');
 const { Pool } = require('pg');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 
 const app = express();
 const PORT = process.env.PORT || 3101;
@@ -87,6 +89,63 @@ const limiter = rateLimit({
     legacyHeaders: false,
 });
 app.use('/api/', limiter);
+
+// =============================================================================
+// FILE UPLOAD CONFIGURATION
+// =============================================================================
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+const attachmentsDir = path.join(uploadsDir, 'attachments');
+const imagesDir = path.join(uploadsDir, 'images');
+
+[uploadsDir, attachmentsDir, imagesDir].forEach(dir => {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+});
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(uploadsDir));
+
+// Configure multer storage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const isImage = file.mimetype.startsWith('image/');
+        cb(null, isImage ? imagesDir : attachmentsDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueId = uuidv4();
+        const ext = path.extname(file.originalname);
+        cb(null, `${uniqueId}${ext}`);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 25 * 1024 * 1024, // 25MB max file size
+    },
+    fileFilter: (req, file, cb) => {
+        // Allow common file types
+        const allowedTypes = [
+            'image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp',
+            'application/pdf',
+            'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'text/plain', 'text/csv',
+            'application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed',
+            'audio/mpeg', 'audio/wav', 'audio/mp4',
+            'video/mp4', 'video/avi', 'video/quicktime', 'video/x-ms-wmv'
+        ];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error(`File type ${file.mimetype} not allowed`), false);
+        }
+    }
+});
 
 // =============================================================================
 // HELPER FUNCTIONS
@@ -948,8 +1007,14 @@ app.get('/api/v1/outlook/events', async (req, res) => {
             `, [event.id]);
 
             const attachmentsResult = await continuumPool.query(`
-                SELECT id, file_name, file_path, file_size, mime_type, created_at as added_date
+                SELECT id, file_name, file_path, file_size, mime_type, url, created_at as added_date
                 FROM outlook_event_attachments
+                WHERE event_id = $1
+            `, [event.id]);
+
+            const imagesResult = await continuumPool.query(`
+                SELECT id, file_name, file_path, file_size, mime_type, url, thumbnail_url, created_at as added_date
+                FROM outlook_event_images
                 WHERE event_id = $1
             `, [event.id]);
 
@@ -972,10 +1037,23 @@ app.get('/api/v1/outlook/events', async (req, res) => {
                     fileName: a.file_name,
                     filePath: a.file_path,
                     fileSize: a.file_size,
+                    url: a.url,
                     addedDate: a.added_date
                 })),
+                images: imagesResult.rows.map(img => ({
+                    id: img.id,
+                    fileName: img.file_name,
+                    filePath: img.file_path,
+                    fileSize: img.file_size,
+                    mimeType: img.mime_type,
+                    url: img.url,
+                    thumbnailUrl: img.thumbnail_url,
+                    addedDate: img.added_date
+                })),
                 isRecurring: event.is_recurring,
-                reminderMinutes: event.reminder_minutes
+                reminderMinutes: event.reminder_minutes,
+                isPrivate: event.is_private,
+                isInPerson: event.is_in_person
             };
         }));
 
@@ -1008,8 +1086,14 @@ app.get('/api/v1/outlook/events/:id', async (req, res) => {
         `, [event.id]);
 
         const attachmentsResult = await continuumPool.query(`
-            SELECT id, file_name, file_path, file_size, mime_type, created_at as added_date
+            SELECT id, file_name, file_path, file_size, mime_type, url, created_at as added_date
             FROM outlook_event_attachments
+            WHERE event_id = $1
+        `, [event.id]);
+
+        const imagesResult = await continuumPool.query(`
+            SELECT id, file_name, file_path, file_size, mime_type, url, thumbnail_url, created_at as added_date
+            FROM outlook_event_images
             WHERE event_id = $1
         `, [event.id]);
 
@@ -1032,10 +1116,23 @@ app.get('/api/v1/outlook/events/:id', async (req, res) => {
                 fileName: a.file_name,
                 filePath: a.file_path,
                 fileSize: a.file_size,
+                url: a.url,
                 addedDate: a.added_date
             })),
+            images: imagesResult.rows.map(img => ({
+                id: img.id,
+                fileName: img.file_name,
+                filePath: img.file_path,
+                fileSize: img.file_size,
+                mimeType: img.mime_type,
+                url: img.url,
+                thumbnailUrl: img.thumbnail_url,
+                addedDate: img.added_date
+            })),
             isRecurring: event.is_recurring,
-            reminderMinutes: event.reminder_minutes
+            reminderMinutes: event.reminder_minutes,
+            isPrivate: event.is_private,
+            isInPerson: event.is_in_person
         });
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch event', message: err.message });
@@ -1052,7 +1149,9 @@ app.post('/api/v1/outlook/events', async (req, res) => {
             isAllDay, is_all_day, status, category,
             eventColor, event_color, isRecurring, is_recurring,
             reminderMinutes, reminder_minutes,
-            attendees, attachments
+            isPrivate, is_private,
+            isInPerson, is_in_person,
+            attendees, attachments, images
         } = req.body;
 
         const effectiveUserId = userId || user_id;
@@ -1063,6 +1162,8 @@ app.post('/api/v1/outlook/events', async (req, res) => {
         const effectiveEventColor = eventColor || event_color || '#5B9BD5';
         const effectiveIsRecurring = isRecurring ?? is_recurring ?? false;
         const effectiveReminderMinutes = reminderMinutes ?? reminder_minutes ?? 15;
+        const effectiveIsPrivate = isPrivate ?? is_private ?? false;
+        const effectiveIsInPerson = isInPerson ?? is_in_person ?? true;
 
         if (!effectiveUserId || !subject || !effectiveStartTime || !effectiveEndTime) {
             return res.status(400).json({ error: 'userId, subject, startTime, and endTime are required' });
@@ -1096,14 +1197,14 @@ app.post('/api/v1/outlook/events', async (req, res) => {
                 INSERT INTO outlook_calendar_events (
                     calendar_id, user_id, subject, location, description,
                     start_time, end_time, is_all_day, status, category,
-                    event_color, is_recurring, reminder_minutes
+                    event_color, is_recurring, reminder_minutes, is_private, is_in_person
                 )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
                 RETURNING *
             `, [
                 calendarIdToUse, effectiveUserId, subject, location || '', description || '',
                 effectiveStartTime, effectiveEndTime, effectiveIsAllDay, status || 'free', category || '',
-                effectiveEventColor, effectiveIsRecurring, effectiveReminderMinutes
+                effectiveEventColor, effectiveIsRecurring, effectiveReminderMinutes, effectiveIsPrivate, effectiveIsInPerson
             ]);
 
             const newEvent = eventResult.rows[0];
@@ -1124,9 +1225,19 @@ app.post('/api/v1/outlook/events', async (req, res) => {
             if (Array.isArray(attachments) && attachments.length > 0) {
                 for (const att of attachments) {
                     await client.query(`
-                        INSERT INTO outlook_event_attachments (event_id, file_name, file_path, file_size, mime_type)
-                        VALUES ($1, $2, $3, $4, $5)
-                    `, [newEvent.id, att.fileName || att.file_name, att.filePath || att.file_path, att.fileSize || att.file_size || 0, att.mimeType || att.mime_type]);
+                        INSERT INTO outlook_event_attachments (event_id, file_name, file_path, file_size, mime_type, url)
+                        VALUES ($1, $2, $3, $4, $5, $6)
+                    `, [newEvent.id, att.fileName || att.file_name, att.filePath || att.file_path, att.fileSize || att.file_size || 0, att.mimeType || att.mime_type, att.url]);
+                }
+            }
+
+            // Insert images
+            if (Array.isArray(images) && images.length > 0) {
+                for (const img of images) {
+                    await client.query(`
+                        INSERT INTO outlook_event_images (event_id, file_name, file_path, file_size, mime_type, url, thumbnail_url)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7)
+                    `, [newEvent.id, img.fileName || img.file_name, img.filePath || img.file_path, img.fileSize || img.file_size || 0, img.mimeType || img.mime_type || 'image/jpeg', img.url, img.thumbnailUrl || img.thumbnail_url]);
                 }
             }
 
@@ -1145,7 +1256,9 @@ app.post('/api/v1/outlook/events', async (req, res) => {
                 category: newEvent.category,
                 eventColor: newEvent.event_color,
                 isRecurring: newEvent.is_recurring,
-                reminderMinutes: newEvent.reminder_minutes
+                reminderMinutes: newEvent.reminder_minutes,
+                isPrivate: newEvent.is_private,
+                isInPerson: newEvent.is_in_person
             });
         } catch (err) {
             await client.query('ROLLBACK');
@@ -1167,7 +1280,9 @@ app.put('/api/v1/outlook/events/:id', async (req, res) => {
             isAllDay, is_all_day, status, category,
             eventColor, event_color, isRecurring, is_recurring,
             reminderMinutes, reminder_minutes,
-            attendees, attachments
+            isPrivate, is_private,
+            isInPerson, is_in_person,
+            attendees, attachments, images
         } = req.body;
 
         const effectiveStartTime = startTime || start_time;
@@ -1176,6 +1291,8 @@ app.put('/api/v1/outlook/events/:id', async (req, res) => {
         const effectiveEventColor = eventColor || event_color;
         const effectiveIsRecurring = isRecurring ?? is_recurring;
         const effectiveReminderMinutes = reminderMinutes ?? reminder_minutes;
+        const effectiveIsPrivate = isPrivate ?? is_private;
+        const effectiveIsInPerson = isInPerson ?? is_in_person;
 
         const client = await continuumPool.connect();
         try {
@@ -1195,14 +1312,17 @@ app.put('/api/v1/outlook/events/:id', async (req, res) => {
                     event_color = COALESCE($9, event_color),
                     is_recurring = COALESCE($10, is_recurring),
                     reminder_minutes = COALESCE($11, reminder_minutes),
+                    is_private = COALESCE($12, is_private),
+                    is_in_person = COALESCE($13, is_in_person),
                     updated_at = NOW()
-                WHERE id = $12
+                WHERE id = $14
                 RETURNING *
             `, [
                 subject, location, description,
                 effectiveStartTime, effectiveEndTime, effectiveIsAllDay,
                 status, category, effectiveEventColor,
                 effectiveIsRecurring, effectiveReminderMinutes,
+                effectiveIsPrivate, effectiveIsInPerson,
                 req.params.id
             ]);
 
@@ -1231,9 +1351,20 @@ app.put('/api/v1/outlook/events/:id', async (req, res) => {
                 await client.query('DELETE FROM outlook_event_attachments WHERE event_id = $1', [req.params.id]);
                 for (const att of attachments) {
                     await client.query(`
-                        INSERT INTO outlook_event_attachments (event_id, file_name, file_path, file_size, mime_type)
-                        VALUES ($1, $2, $3, $4, $5)
-                    `, [req.params.id, att.fileName || att.file_name, att.filePath || att.file_path, att.fileSize || att.file_size || 0, att.mimeType || att.mime_type]);
+                        INSERT INTO outlook_event_attachments (event_id, file_name, file_path, file_size, mime_type, url)
+                        VALUES ($1, $2, $3, $4, $5, $6)
+                    `, [req.params.id, att.fileName || att.file_name, att.filePath || att.file_path, att.fileSize || att.file_size || 0, att.mimeType || att.mime_type, att.url]);
+                }
+            }
+
+            // Update images if provided
+            if (Array.isArray(images)) {
+                await client.query('DELETE FROM outlook_event_images WHERE event_id = $1', [req.params.id]);
+                for (const img of images) {
+                    await client.query(`
+                        INSERT INTO outlook_event_images (event_id, file_name, file_path, file_size, mime_type, url, thumbnail_url)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7)
+                    `, [req.params.id, img.fileName || img.file_name, img.filePath || img.file_path, img.fileSize || img.file_size || 0, img.mimeType || img.mime_type || 'image/jpeg', img.url, img.thumbnailUrl || img.thumbnail_url]);
                 }
             }
 
@@ -1252,7 +1383,9 @@ app.put('/api/v1/outlook/events/:id', async (req, res) => {
                 category: updatedEvent.category,
                 eventColor: updatedEvent.event_color,
                 isRecurring: updatedEvent.is_recurring,
-                reminderMinutes: updatedEvent.reminder_minutes
+                reminderMinutes: updatedEvent.reminder_minutes,
+                isPrivate: updatedEvent.is_private,
+                isInPerson: updatedEvent.is_in_person
             });
         } catch (err) {
             await client.query('ROLLBACK');
@@ -1279,6 +1412,189 @@ app.delete('/api/v1/outlook/events/:id', async (req, res) => {
         res.json({ success: true, deleted: req.params.id });
     } catch (err) {
         res.status(500).json({ error: 'Failed to delete event', message: err.message });
+    }
+});
+
+// =============================================================================
+// JUBILEE OUTLOOK - FILE UPLOAD ROUTES
+// =============================================================================
+
+// Upload file (attachment or image)
+app.post('/api/v1/outlook/files/upload', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        const { eventId, type } = req.body; // type: 'attachment' or 'image'
+        const file = req.file;
+        const isImage = file.mimetype.startsWith('image/');
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const relativePath = isImage
+            ? `/uploads/images/${file.filename}`
+            : `/uploads/attachments/${file.filename}`;
+        const fileUrl = `${baseUrl}${relativePath}`;
+
+        res.status(201).json({
+            id: uuidv4(),
+            fileName: file.originalname,
+            filePath: file.path,
+            fileSize: file.size,
+            mimeType: file.mimetype,
+            url: fileUrl,
+            relativePath: relativePath,
+            isImage: isImage,
+            eventId: eventId || null
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to upload file', message: err.message });
+    }
+});
+
+// Upload multiple files
+app.post('/api/v1/outlook/files/upload-multiple', upload.array('files', 10), async (req, res) => {
+    try {
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ error: 'No files uploaded' });
+        }
+
+        const { eventId } = req.body;
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+        const uploadedFiles = req.files.map(file => {
+            const isImage = file.mimetype.startsWith('image/');
+            const relativePath = isImage
+                ? `/uploads/images/${file.filename}`
+                : `/uploads/attachments/${file.filename}`;
+
+            return {
+                id: uuidv4(),
+                fileName: file.originalname,
+                filePath: file.path,
+                fileSize: file.size,
+                mimeType: file.mimetype,
+                url: `${baseUrl}${relativePath}`,
+                relativePath: relativePath,
+                isImage: isImage,
+                eventId: eventId || null
+            };
+        });
+
+        res.status(201).json({ files: uploadedFiles });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to upload files', message: err.message });
+    }
+});
+
+// Delete uploaded file
+app.delete('/api/v1/outlook/files/:filename', async (req, res) => {
+    try {
+        const { filename } = req.params;
+
+        // Check both directories
+        const attachmentPath = path.join(attachmentsDir, filename);
+        const imagePath = path.join(imagesDir, filename);
+
+        let filePath = null;
+        if (fs.existsSync(attachmentPath)) {
+            filePath = attachmentPath;
+        } else if (fs.existsSync(imagePath)) {
+            filePath = imagePath;
+        }
+
+        if (!filePath) {
+            return res.status(404).json({ error: 'File not found' });
+        }
+
+        fs.unlinkSync(filePath);
+        res.json({ success: true, deleted: filename });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete file', message: err.message });
+    }
+});
+
+// =============================================================================
+// JUBILEE OUTLOOK - EVENT IMAGES ROUTES
+// =============================================================================
+
+// Get images for an event
+app.get('/api/v1/outlook/events/:eventId/images', async (req, res) => {
+    try {
+        const result = await continuumPool.query(`
+            SELECT id, event_id, file_name, file_path, file_size, mime_type, url, thumbnail_url, created_at
+            FROM outlook_event_images
+            WHERE event_id = $1
+            ORDER BY created_at
+        `, [req.params.eventId]);
+
+        res.json(result.rows.map(img => ({
+            id: img.id,
+            eventId: img.event_id,
+            fileName: img.file_name,
+            filePath: img.file_path,
+            fileSize: img.file_size,
+            mimeType: img.mime_type,
+            url: img.url,
+            thumbnailUrl: img.thumbnail_url,
+            addedDate: img.created_at
+        })));
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to fetch images', message: err.message });
+    }
+});
+
+// Add image to event
+app.post('/api/v1/outlook/events/:eventId/images', async (req, res) => {
+    try {
+        const { fileName, filePath, fileSize, mimeType, url, thumbnailUrl } = req.body;
+
+        const result = await continuumPool.query(`
+            INSERT INTO outlook_event_images (event_id, file_name, file_path, file_size, mime_type, url, thumbnail_url)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *
+        `, [req.params.eventId, fileName, filePath, fileSize || 0, mimeType || 'image/jpeg', url, thumbnailUrl]);
+
+        const img = result.rows[0];
+        res.status(201).json({
+            id: img.id,
+            eventId: img.event_id,
+            fileName: img.file_name,
+            filePath: img.file_path,
+            fileSize: img.file_size,
+            mimeType: img.mime_type,
+            url: img.url,
+            thumbnailUrl: img.thumbnail_url,
+            addedDate: img.created_at
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to add image', message: err.message });
+    }
+});
+
+// Delete image from event
+app.delete('/api/v1/outlook/events/:eventId/images/:imageId', async (req, res) => {
+    try {
+        const result = await continuumPool.query(`
+            DELETE FROM outlook_event_images WHERE id = $1 AND event_id = $2 RETURNING *
+        `, [req.params.imageId, req.params.eventId]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Image not found' });
+        }
+
+        // Optionally delete the file from disk
+        const img = result.rows[0];
+        if (img.file_path && fs.existsSync(img.file_path)) {
+            try {
+                fs.unlinkSync(img.file_path);
+            } catch (e) {
+                console.error('Failed to delete image file:', e.message);
+            }
+        }
+
+        res.json({ success: true, deleted: req.params.imageId });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete image', message: err.message });
     }
 });
 
@@ -1745,7 +2061,6 @@ app.get('/', (req, res) => {
 // =============================================================================
 
 const MIGRATE_SECRET = process.env.MIGRATE_SECRET || 'jubilee-migrate-2026';
-const fs = require('fs');
 
 app.post('/api/v1/migrate', async (req, res) => {
     // Verify migration secret
