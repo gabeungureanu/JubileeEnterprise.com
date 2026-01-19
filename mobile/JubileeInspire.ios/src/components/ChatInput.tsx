@@ -17,12 +17,14 @@ import {
   Pressable,
   Alert,
   Image,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as DocumentPicker from 'expo-document-picker';
 import { spacing, typography } from '../config';
 import { useTheme } from '../contexts/ThemeContext';
+import VoiceMode from './VoiceMode';
 
 // Web Speech API types
 declare global {
@@ -34,6 +36,7 @@ declare global {
 
 interface ChatInputProps {
   onSend: (message: string) => void;
+  onSendWithResponse?: (message: string) => Promise<string>; // For voice mode - sends and returns AI response
   disabled?: boolean;
   placeholder?: string;
   centered?: boolean; // When true, center the input and limit width
@@ -41,6 +44,7 @@ interface ChatInputProps {
 
 const ChatInput: React.FC<ChatInputProps> = ({
   onSend,
+  onSendWithResponse,
   disabled = false,
   placeholder = 'Ask Jubilee Anything...',
   centered = false,
@@ -59,6 +63,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const [inputHeight, setInputHeight] = useState(24); // Initial height for single line
   const [isFocused, setIsFocused] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 30 });
+  const [hoveredMenuItem, setHoveredMenuItem] = useState<string | null>(null);
+  const [showTermsOfUse, setShowTermsOfUse] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<any>(null);
   const plusButtonRef = useRef<any>(null);
@@ -94,7 +101,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         // Position menu above the button, left-aligned with button
         // Menu height is approximately 300px (6 items * ~50px each)
         const menuHeight = 300;
-        const topPosition = y - menuHeight - 8; // 8px gap above the button
+        const topPosition = y - menuHeight + 17; // 25px lower than before (was -8, now +17)
         setMenuPosition({
           top: Math.max(10, topPosition), // Ensure minimum 10px from top
           left: x,
@@ -177,10 +184,21 @@ const ChatInput: React.FC<ChatInputProps> = ({
     if (Platform.OS === 'ios') {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    setShowVoiceMode(!showVoiceMode);
-    if (!showVoiceMode) {
-      Alert.alert('Voice Mode', 'Full voice conversation mode coming soon!');
+    setShowVoiceMode(true);
+  };
+
+  const handleVoiceModeClose = () => {
+    setShowVoiceMode(false);
+  };
+
+  const handleVoiceModeSend = async (message: string): Promise<string> => {
+    // If we have a callback for getting responses, use it
+    if (onSendWithResponse) {
+      return await onSendWithResponse(message);
     }
+    // Otherwise, just send the message and return a placeholder
+    onSend(message);
+    return 'Message received. Check the chat for my response.';
   };
 
   // Initialize speech recognition on mount
@@ -419,7 +437,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           onPress={handleToolsMenu}
           disabled={disabled}
         >
-          <Ionicons name="add" size={22} color="#ffffff" />
+          <Ionicons name="add" size={22} color={colors.chatInputButtonIcon} />
         </TouchableOpacity>
 
         {/* TextInput - scrollbar hidden, overflow handled by wrapper */}
@@ -562,40 +580,60 @@ const ChatInput: React.FC<ChatInputProps> = ({
             {/* Main Tools Menu */}
             <View style={styles.toolsMenu}>
               <TouchableOpacity
-                style={styles.toolItem}
+                style={[styles.toolItem, hoveredMenuItem === 'add-photos' && styles.toolItemHovered]}
                 onPress={() => handleToolSelect('add-photos')}
+                {...(Platform.OS === 'web' ? {
+                  onMouseEnter: () => setHoveredMenuItem('add-photos'),
+                  onMouseLeave: () => setHoveredMenuItem(null),
+                } as any : {})}
               >
                 <Ionicons name="attach-outline" size={20} color={colors.text} />
                 <Text style={styles.toolTitle}>Add photos & files</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.toolItem}
+                style={[styles.toolItem, hoveredMenuItem === 'create-image' && styles.toolItemHovered]}
                 onPress={() => handleToolSelect('create-image')}
+                {...(Platform.OS === 'web' ? {
+                  onMouseEnter: () => setHoveredMenuItem('create-image'),
+                  onMouseLeave: () => setHoveredMenuItem(null),
+                } as any : {})}
               >
                 <Ionicons name="image-outline" size={20} color={colors.text} />
                 <Text style={styles.toolTitle}>Create image</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.toolItem}
+                style={[styles.toolItem, hoveredMenuItem === 'thinking' && styles.toolItemHovered]}
                 onPress={() => handleToolSelect('thinking')}
+                {...(Platform.OS === 'web' ? {
+                  onMouseEnter: () => setHoveredMenuItem('thinking'),
+                  onMouseLeave: () => setHoveredMenuItem(null),
+                } as any : {})}
               >
                 <Ionicons name="bulb-outline" size={20} color={colors.text} />
                 <Text style={styles.toolTitle}>Thinking</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.toolItem}
+                style={[styles.toolItem, hoveredMenuItem === 'deep-research' && styles.toolItemHovered]}
                 onPress={() => handleToolSelect('deep-research')}
+                {...(Platform.OS === 'web' ? {
+                  onMouseEnter: () => setHoveredMenuItem('deep-research'),
+                  onMouseLeave: () => setHoveredMenuItem(null),
+                } as any : {})}
               >
                 <Ionicons name="search-outline" size={20} color={colors.text} />
                 <Text style={styles.toolTitle}>Deep research</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.toolItem}
+                style={[styles.toolItem, hoveredMenuItem === 'shopping-research' && styles.toolItemHovered]}
                 onPress={() => handleToolSelect('shopping-research')}
+                {...(Platform.OS === 'web' ? {
+                  onMouseEnter: () => setHoveredMenuItem('shopping-research'),
+                  onMouseLeave: () => setHoveredMenuItem(null),
+                } as any : {})}
               >
                 <Ionicons name="cart-outline" size={20} color={colors.text} />
                 <Text style={styles.toolTitle}>Shopping research</Text>
@@ -603,10 +641,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
               {/* More item with hover behavior */}
               <View
-                style={[styles.toolItem, styles.lastToolItem]}
+                style={[styles.toolItem, styles.lastToolItem, hoveredMenuItem === 'more' && styles.toolItemHovered]}
                 {...(Platform.OS === 'web' ? {
-                  onMouseEnter: () => setShowMoreMenu(true),
-                  onMouseLeave: () => setShowMoreMenu(false),
+                  onMouseEnter: () => { setShowMoreMenu(true); setHoveredMenuItem('more'); },
+                  onMouseLeave: () => { setShowMoreMenu(false); setHoveredMenuItem(null); },
                 } as any : {})}
               >
                 <Ionicons name="ellipsis-horizontal" size={20} color={colors.text} />
@@ -617,24 +655,36 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 {showMoreMenu && (
                   <View style={styles.moreMenuPopup}>
                     <TouchableOpacity
-                      style={styles.toolItem}
+                      style={[styles.toolItem, hoveredMenuItem === 'bible-search' && styles.toolItemHovered]}
                       onPress={() => handleToolSelect('bible-search')}
+                      {...(Platform.OS === 'web' ? {
+                        onMouseEnter: () => setHoveredMenuItem('bible-search'),
+                        onMouseLeave: () => setHoveredMenuItem('more'),
+                      } as any : {})}
                     >
                       <Ionicons name="book-outline" size={20} color={colors.text} />
                       <Text style={styles.toolTitle}>Bible search</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={styles.toolItem}
+                      style={[styles.toolItem, hoveredMenuItem === 'scripture-notes' && styles.toolItemHovered]}
                       onPress={() => handleToolSelect('scripture-notes')}
+                      {...(Platform.OS === 'web' ? {
+                        onMouseEnter: () => setHoveredMenuItem('scripture-notes'),
+                        onMouseLeave: () => setHoveredMenuItem('more'),
+                      } as any : {})}
                     >
                       <Ionicons name="document-text-outline" size={20} color={colors.text} />
                       <Text style={styles.toolTitle}>Scripture notes</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={[styles.toolItem, styles.lastToolItem]}
+                      style={[styles.toolItem, styles.lastToolItem, hoveredMenuItem === 'bookmarks' && styles.toolItemHovered]}
                       onPress={() => handleToolSelect('bookmarks')}
+                      {...(Platform.OS === 'web' ? {
+                        onMouseEnter: () => setHoveredMenuItem('bookmarks'),
+                        onMouseLeave: () => setHoveredMenuItem('more'),
+                      } as any : {})}
                     >
                       <Ionicons name="bookmark-outline" size={20} color={colors.text} />
                       <Text style={styles.toolTitle}>Bookmarks</Text>
@@ -649,9 +699,296 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
       <View style={styles.disclaimer}>
         <Text style={styles.copyrightText}>
-          Copyright © 2026 JubileeInspire.com | All Rights Reserved. JubileeVerse and AI can make mistakes. | Privacy Policy | Terms of Use
+          Copyright © 2026 JubileeInspire.com | All Rights Reserved. JubileeVerse and AI can make mistakes. |{' '}
+          <Text style={styles.copyrightLink} onPress={() => setShowPrivacyPolicy(true)}>Privacy Policy</Text>
+          {' | '}
+          <Text style={styles.copyrightLink} onPress={() => setShowTermsOfUse(true)}>Terms of Use</Text>
         </Text>
       </View>
+
+      {/* Voice Mode Full-Screen Overlay */}
+      <VoiceMode
+        visible={showVoiceMode}
+        onClose={handleVoiceModeClose}
+        onSendMessage={handleVoiceModeSend}
+      />
+
+      {/* Terms of Use Modal */}
+      <Modal
+        visible={showTermsOfUse}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowTermsOfUse(false)}
+      >
+        <View style={styles.termsModalOverlay}>
+          <View style={styles.termsModalContainer}>
+            <View style={styles.termsModalHeader}>
+              <Text style={styles.termsModalTitle}>Terms of Use (EULA)</Text>
+              <TouchableOpacity
+                style={styles.termsCloseButton}
+                onPress={() => setShowTermsOfUse(false)}
+              >
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              style={styles.termsContent}
+              showsVerticalScrollIndicator={true}
+              {...(Platform.OS === 'web' ? { className: 'themed-scrollbar' } as any : {})}
+            >
+              <Text style={styles.termsIntro}>
+                These Terms of Use (the "Agreement") govern your access to and use of the JubileeInspire mobile application ("App") provided by the app developer ("we," "us," or "our"). By downloading, installing, or using this App, you agree to be bound by this Agreement and comply with all applicable laws and regulations. If you do not agree to these terms, do not use the App.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>1. Intellectual Property</Text>
+              <Text style={styles.termsText}>
+                All content, including but not limited to software, text, graphics, images, layouts, databases, and logos ("Materials"), is the property of the developer or its content suppliers and is protected by United States and international copyright, trademark, and intellectual property laws. Unauthorized use of any Materials is strictly prohibited.
+              </Text>
+              <Text style={styles.termsText}>
+                You may not reproduce, republish, distribute, display, modify, create derivative works from, transmit, or exploit any part of this App without prior written permission, except as explicitly permitted under this Agreement.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>2. License Grant and Restrictions</Text>
+              <Text style={styles.termsText}>
+                We grant you a limited, non-exclusive, non-transferable, revocable license to use the App solely for your personal, non-commercial use on an Apple-branded device owned or controlled by you.
+              </Text>
+              <Text style={styles.termsText}>You agree not to:</Text>
+              <Text style={styles.termsBullet}>• Modify, reverse engineer, decompile, or disassemble the App</Text>
+              <Text style={styles.termsBullet}>• Reproduce, distribute, or publicly display content without authorization</Text>
+              <Text style={styles.termsBullet}>• Access or use the App for unlawful, harmful, or disruptive purposes</Text>
+              <Text style={styles.termsBullet}>• Interfere with the App's operation or attempt to breach its security</Text>
+              <Text style={styles.termsBullet}>• Use automated tools (bots, spiders, etc.) to interact with the App</Text>
+              <Text style={styles.termsText}>
+                This license is automatically terminated if you violate any part of this Agreement.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>3. User Content and Feedback</Text>
+              <Text style={styles.termsText}>
+                Any content or feedback you submit to us through the App or related services (e.g., suggestions, improvements, testimonials) shall be considered non-confidential. You grant us an unrestricted, irrevocable, worldwide license to use such content for business, marketing, or development purposes without compensation or acknowledgment.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>4. Privacy and Data Collection</Text>
+              <Text style={styles.termsText}>
+                Use of the App is governed by our Privacy Policy, which outlines how we collect, store, and use your data. By using the App, you consent to these data practices, including any updates.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>5. Auto-Renewable Subscriptions</Text>
+              <Text style={styles.termsText}>JubileeInspire offers auto-renewable subscription plans:</Text>
+              <Text style={styles.termsBullet}>• Standard Edition: $19.99/month</Text>
+              <Text style={styles.termsBullet}>• Professional Edition: $49.99/month</Text>
+              <Text style={styles.termsText}>
+                Subscriptions renew automatically unless canceled at least 24 hours before the end of the current period. Manage subscriptions via your Apple ID account settings. We do not process or store payment data; Apple handles all billing securely through In-App Purchase.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>6. Links to External Sites</Text>
+              <Text style={styles.termsText}>
+                The App may contain links to third-party websites or services. We are not responsible for the content, security, or practices of those third parties. Access them at your own risk.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>7. Security and Account Responsibility</Text>
+              <Text style={styles.termsText}>
+                You are responsible for maintaining the confidentiality of your account credentials and all activity that occurs under your account. Notify us immediately if you suspect unauthorized access. You may not disrupt or attempt to disrupt the functioning of the App or access data you are not authorized to access.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>8. Usage Restrictions and Prohibited Conduct</Text>
+              <Text style={styles.termsText}>You agree not to:</Text>
+              <Text style={styles.termsBullet}>• Post or transmit unlawful, offensive, or harmful content</Text>
+              <Text style={styles.termsBullet}>• Infringe on the intellectual property or rights of others</Text>
+              <Text style={styles.termsBullet}>• Introduce viruses or malicious code</Text>
+              <Text style={styles.termsBullet}>• Violate local, national, or international laws</Text>
+              <Text style={styles.termsText}>
+                Violations may result in suspension or termination of your account and possible legal action.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>9. U.S. Government Restricted Rights</Text>
+              <Text style={styles.termsText}>
+                If accessed by or on behalf of the United States Government, the App and Materials are provided with "RESTRICTED RIGHTS." Use, duplication, or disclosure is subject to applicable laws, including FAR 52.227-19 and DFARS 252.227-7013.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>10. Indemnification</Text>
+              <Text style={styles.termsText}>
+                You agree to defend, indemnify, and hold harmless the developer, its affiliates, officers, and employees from any claims, liabilities, or expenses (including legal fees) resulting from your use of the App or your breach of this Agreement.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>11. Disclaimer of Warranties</Text>
+              <Text style={styles.termsText}>
+                The App and all Materials are provided "as is" without warranties of any kind, either express or implied. We make no guarantees regarding availability, functionality, or content accuracy. We disclaim all warranties including those of merchantability, fitness for a particular purpose, and non-infringement.
+              </Text>
+              <Text style={styles.termsText}>
+                Some jurisdictions do not allow disclaimers of implied warranties. In such cases, the above limitations may not apply to you.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>12. Limitation of Liability</Text>
+              <Text style={styles.termsText}>
+                To the maximum extent permitted by law, we are not liable for any indirect, incidental, special, or consequential damages, including lost profits or data, arising from your use or inability to use the App. Our total liability shall not exceed $25.00.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>13. Termination</Text>
+              <Text style={styles.termsText}>
+                We may terminate your access to the App at any time, with or without cause. Upon termination, you must cease all use and uninstall the App from your device.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>14. Modifications</Text>
+              <Text style={styles.termsText}>
+                We may revise this Agreement at any time. Updates will be posted in the App or on our official website. Continued use after changes constitutes your acceptance of the revised terms.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>15. Governing Law and Jurisdiction</Text>
+              <Text style={styles.termsText}>
+                This Agreement is governed by the laws of the State of California, without regard to its conflict of law provisions. All disputes shall be resolved exclusively in the state or federal courts located in Sacramento, California.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>16. Contact Us</Text>
+              <Text style={styles.termsText}>
+                If you have questions or concerns regarding these Terms of Use, please contact:
+              </Text>
+              <Text style={styles.termsContact}>JubileeInspire Support Team</Text>
+              <Text style={styles.termsContact}>Email: support@jubileeinspire.com</Text>
+              <Text style={styles.termsContact}>Website: jubileeinspire.com</Text>
+
+              <View style={styles.termsFooterSpacer} />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Privacy Policy Modal */}
+      <Modal
+        visible={showPrivacyPolicy}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowPrivacyPolicy(false)}
+      >
+        <View style={styles.termsModalOverlay}>
+          <View style={styles.termsModalContainer}>
+            <View style={styles.termsModalHeader}>
+              <Text style={styles.termsModalTitle}>Privacy Policy</Text>
+              <TouchableOpacity
+                style={styles.termsCloseButton}
+                onPress={() => setShowPrivacyPolicy(false)}
+              >
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              style={styles.termsContent}
+              showsVerticalScrollIndicator={true}
+              {...(Platform.OS === 'web' ? { className: 'themed-scrollbar' } as any : {})}
+            >
+              <Text style={styles.termsIntro}>
+                JubileeInspire ("we," "us," or "our") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application ("App"). Please read this policy carefully. By using the App, you consent to the practices described herein.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>1. Information We Collect</Text>
+              <Text style={styles.termsText}>We may collect and process the following types of information:</Text>
+
+              <Text style={styles.termsSubtitle}>1.1 Information You Provide</Text>
+              <Text style={styles.termsBullet}>• Account information (name, email address, profile picture)</Text>
+              <Text style={styles.termsBullet}>• User-generated content (chat messages, notes, bookmarks)</Text>
+              <Text style={styles.termsBullet}>• Feedback and correspondence (support requests, surveys)</Text>
+              <Text style={styles.termsBullet}>• Payment information (processed securely by Apple; we do not store payment details)</Text>
+
+              <Text style={styles.termsSubtitle}>1.2 Automatically Collected Information</Text>
+              <Text style={styles.termsBullet}>• Device information (device type, operating system, unique device identifiers)</Text>
+              <Text style={styles.termsBullet}>• Usage data (features accessed, time spent, interaction patterns)</Text>
+              <Text style={styles.termsBullet}>• Log data (IP address, browser type, access times, error logs)</Text>
+              <Text style={styles.termsBullet}>• Analytics data (app performance, crash reports)</Text>
+
+              <Text style={styles.termsSectionTitle}>2. How We Use Your Information</Text>
+              <Text style={styles.termsText}>We use the collected information for the following purposes:</Text>
+              <Text style={styles.termsBullet}>• To provide, maintain, and improve the App</Text>
+              <Text style={styles.termsBullet}>• To personalize your experience and deliver relevant content</Text>
+              <Text style={styles.termsBullet}>• To process transactions and manage subscriptions</Text>
+              <Text style={styles.termsBullet}>• To communicate with you about updates, features, and support</Text>
+              <Text style={styles.termsBullet}>• To analyze usage patterns and optimize performance</Text>
+              <Text style={styles.termsBullet}>• To detect, prevent, and address technical issues or fraud</Text>
+              <Text style={styles.termsBullet}>• To comply with legal obligations</Text>
+
+              <Text style={styles.termsSectionTitle}>3. Data Sharing and Disclosure</Text>
+              <Text style={styles.termsText}>We do not sell your personal information. We may share your information in the following circumstances:</Text>
+
+              <Text style={styles.termsSubtitle}>3.1 Service Providers</Text>
+              <Text style={styles.termsText}>
+                We may share information with third-party vendors who assist us in operating the App (e.g., cloud hosting, analytics, customer support). These providers are contractually bound to protect your data.
+              </Text>
+
+              <Text style={styles.termsSubtitle}>3.2 Legal Requirements</Text>
+              <Text style={styles.termsText}>
+                We may disclose information if required by law, regulation, legal process, or governmental request, or to protect our rights, privacy, safety, or property.
+              </Text>
+
+              <Text style={styles.termsSubtitle}>3.3 Business Transfers</Text>
+              <Text style={styles.termsText}>
+                In the event of a merger, acquisition, or sale of assets, your information may be transferred as part of the transaction.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>4. Data Storage and Security</Text>
+              <Text style={styles.termsText}>
+                We implement industry-standard security measures to protect your information, including encryption, secure servers, and access controls. However, no method of transmission over the Internet or electronic storage is 100% secure.
+              </Text>
+              <Text style={styles.termsText}>
+                Your data is stored on secure servers located in the United States. By using the App, you consent to the transfer of your information to the United States.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>5. Data Retention</Text>
+              <Text style={styles.termsText}>
+                We retain your personal information for as long as necessary to fulfill the purposes outlined in this Privacy Policy, unless a longer retention period is required by law. You may request deletion of your data at any time (see Section 7).
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>6. Children's Privacy</Text>
+              <Text style={styles.termsText}>
+                The App is not intended for children under the age of 13. We do not knowingly collect personal information from children under 13. If we become aware that we have collected such information, we will take steps to delete it promptly.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>7. Your Rights and Choices</Text>
+              <Text style={styles.termsText}>Depending on your jurisdiction, you may have the following rights:</Text>
+              <Text style={styles.termsBullet}>• <Text style={styles.termsBold}>Access:</Text> Request a copy of your personal data</Text>
+              <Text style={styles.termsBullet}>• <Text style={styles.termsBold}>Correction:</Text> Request correction of inaccurate data</Text>
+              <Text style={styles.termsBullet}>• <Text style={styles.termsBold}>Deletion:</Text> Request deletion of your personal data</Text>
+              <Text style={styles.termsBullet}>• <Text style={styles.termsBold}>Portability:</Text> Request transfer of your data in a portable format</Text>
+              <Text style={styles.termsBullet}>• <Text style={styles.termsBold}>Opt-out:</Text> Opt out of marketing communications</Text>
+              <Text style={styles.termsText}>
+                To exercise these rights, please contact us at support@jubileeinspire.com.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>8. Cookies and Tracking Technologies</Text>
+              <Text style={styles.termsText}>
+                We may use cookies, pixels, and similar tracking technologies to collect usage data and improve your experience. You can manage cookie preferences through your device settings.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>9. Third-Party Links</Text>
+              <Text style={styles.termsText}>
+                The App may contain links to third-party websites or services. We are not responsible for the privacy practices of these third parties. We encourage you to review their privacy policies.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>10. Changes to This Privacy Policy</Text>
+              <Text style={styles.termsText}>
+                We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new policy in the App or sending you a notification. Your continued use of the App after such changes constitutes your acceptance of the updated policy.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>11. California Privacy Rights (CCPA)</Text>
+              <Text style={styles.termsText}>
+                If you are a California resident, you have additional rights under the California Consumer Privacy Act (CCPA), including the right to know what personal information we collect, request deletion, and opt out of the sale of personal information (we do not sell personal information).
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>12. International Users (GDPR)</Text>
+              <Text style={styles.termsText}>
+                If you are located in the European Economic Area (EEA), you have rights under the General Data Protection Regulation (GDPR), including access, rectification, erasure, restriction, portability, and objection. Our legal basis for processing includes consent, contractual necessity, and legitimate interests.
+              </Text>
+
+              <Text style={styles.termsSectionTitle}>13. Contact Us</Text>
+              <Text style={styles.termsText}>
+                If you have questions, concerns, or requests regarding this Privacy Policy, please contact us:
+              </Text>
+              <Text style={styles.termsContact}>JubileeInspire Privacy Team</Text>
+              <Text style={styles.termsContact}>Email: privacy@jubileeinspire.com</Text>
+              <Text style={styles.termsContact}>Website: jubileeinspire.com/privacy</Text>
+
+              <View style={styles.termsFooterSpacer} />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -702,10 +1039,10 @@ const createStyles = (colors: any, centered: boolean) => StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center', // Center items vertically
-    backgroundColor: '#5a5a5a',
+    backgroundColor: colors.chatInputBg,
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: '#5a5a5a',
+    borderColor: colors.chatInputBorder,
     paddingLeft: 15,
     paddingRight: 15,
     paddingVertical: spacing.sm,
@@ -721,9 +1058,9 @@ const createStyles = (colors: any, centered: boolean) => StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 4,
-    backgroundColor: '#6b6b6b',
+    backgroundColor: colors.chatInputButtonBg,
     borderWidth: 1,
-    borderColor: '#7b7b7b',
+    borderColor: colors.chatInputButtonBorder,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -766,9 +1103,9 @@ const createStyles = (colors: any, centered: boolean) => StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 4,
-    backgroundColor: '#6b6b6b',
+    backgroundColor: colors.chatInputButtonBg,
     borderWidth: 1,
-    borderColor: '#7b7b7b',
+    borderColor: colors.chatInputButtonBorder,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -816,6 +1153,11 @@ const createStyles = (colors: any, centered: boolean) => StyleSheet.create({
     fontSize: 11,
     color: '#777777',
     textAlign: 'center',
+  },
+  copyrightLink: {
+    fontSize: 11,
+    color: '#777777',
+    textDecorationLine: 'underline',
   },
   modalOverlay: {
     flex: 1,
@@ -877,6 +1219,9 @@ const createStyles = (colors: any, centered: boolean) => StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  toolItemHovered: {
+    backgroundColor: colors.menuItemHover,
+  },
   lastToolItem: {
     borderBottomWidth: 0,
   },
@@ -919,6 +1264,104 @@ const createStyles = (colors: any, centered: boolean) => StyleSheet.create({
   },
   voiceBarActive: {
     backgroundColor: '#000000',
+  },
+  // Terms of Use and Privacy Policy Modal Styles
+  termsModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  termsModalContainer: {
+    backgroundColor: colors.background,
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 600,
+    maxHeight: '90%',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+        elevation: 10,
+      },
+    }),
+  },
+  termsModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  termsModalTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  termsCloseButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  termsContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+  },
+  termsIntro: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text,
+    lineHeight: 22,
+    marginBottom: spacing.lg,
+  },
+  termsSectionTitle: {
+    fontSize: typography.fontSize.base,
+    fontWeight: '700',
+    color: colors.text,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  termsSubtitle: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  termsBold: {
+    fontWeight: '600',
+    color: colors.text,
+  },
+  termsText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+    lineHeight: 22,
+    marginBottom: spacing.sm,
+  },
+  termsBullet: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+    lineHeight: 22,
+    marginLeft: spacing.md,
+    marginBottom: 4,
+  },
+  termsContact: {
+    fontSize: typography.fontSize.sm,
+    color: colors.primary,
+    lineHeight: 22,
+  },
+  termsFooterSpacer: {
+    height: spacing.xl,
   },
 });
 

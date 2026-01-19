@@ -111,6 +111,8 @@ JubileeInspire.ios/
     │   ├── TypingIndicator.tsx  # Loading animation for AI responses
     │   ├── EmptyChat.tsx        # Empty state for new conversations
     │   ├── ConfirmDialog.tsx    # Custom branded confirmation modal
+    │   ├── VoiceMode.tsx        # Full-screen voice conversation interface
+    │   ├── SettingsModal.tsx    # Settings popup with tabs and dropdowns
     │   └── index.ts             # Component exports
     ├── config/             # App configuration
     │   ├── environment.ts
@@ -313,7 +315,7 @@ All API communication goes through the `services/` layer:
 - Real-time updates via navigation state listener
 - Auto-reload when conversation changes
 - Optimized loading with debouncing
-- Settings and Appearance navigation links
+- **Settings Integration**: Settings icon opens SettingsModal popup (same as profile menu)
 - Theme-aware styling with smooth transitions
 - **Search Chats**: Real-time search input with filtering
   - Search by conversation title and preview text
@@ -330,6 +332,28 @@ All API communication goes through the `services/` layer:
 - Backdrop dismiss support
 - Smooth fade animations
 - Used for delete confirmations and success messages
+
+#### SettingsModal (`src/components/SettingsModal.tsx`)
+- Comprehensive settings popup accessible from profile menu and drawer
+- **Tabbed Interface**: General, Personalization, About tabs with animated selection
+- **Dropdown Settings**: Interactive dropdowns for all configurable options
+  - Appearance: System (Auto), Light, Dark themes
+  - Bible Translation: KJV, NIV, ESV, NASB, NLT, NKJV, AMP, MSG, CSB, RSV
+  - Language: Auto-detect, English, Spanish, French, German, Portuguese, Italian, Chinese, Japanese, Korean, Arabic, Hindi, Russian
+  - Default Persona: Gabriel, Michael, Raphael, Uriel personas
+  - Response Style: Concise, Balanced, Detailed styles
+- **Privacy Policy Modal**: Full legal document popup with scroll support
+- **Terms of Use Modal**: Full terms and conditions popup
+- **Clear Chat History**: Confirmation dialog before deletion
+- **Sign Out**: Navigates to authentication screen
+- Smooth animations with slide-up entrance
+
+#### VoiceMode (`src/components/VoiceMode.tsx`)
+- Full-screen voice conversation interface
+- Large animated microphone button with visual feedback
+- Pulsing animation during active listening
+- Modal overlay with backdrop blur
+- Theme-aware styling
 
 #### EmptyChat (`src/components/EmptyChat.tsx`)
 - Empty state for new conversations
@@ -610,6 +634,15 @@ npx expo start --clear --verbose
 - ✅ **Smart New Chat**: Timestamp-based navigation forcing for reliable new conversation creation
 - ✅ **Settings Screen**: Comprehensive settings with profile, preferences, and data management
 - ✅ **Appearance Screen**: Dedicated screen for theme selection with visual previews
+- ✅ **Settings Modal**: Unified settings popup accessible from multiple locations
+  - Dropdown menus for Appearance, Bible Translation, Language, Default Persona, Response Style
+  - Privacy Policy and Terms of Use popup modals with full legal content
+  - Tabbed interface with General, Personalization, and About sections
+  - Consistent behavior whether opened from profile menu or drawer settings icon
+- ✅ **Voice Mode**: Full-screen voice conversation interface
+  - Large animated microphone button with pulsing feedback
+  - Modal overlay with theme-aware styling
+  - Dedicated voice-first conversation experience
 
 #### Bug Fixes
 - Fixed "New Chat" button not creating fresh conversations
@@ -645,6 +678,8 @@ npx expo start --clear --verbose
 - `src/contexts/DrawerContext.tsx` - Drawer state management with 768px responsive breakpoint
 - `src/screens/AppearanceScreen.tsx` - Theme selection UI with visual previews
 - `src/screens/HomeScreen.tsx` - Home/landing screen
+- `src/components/SettingsModal.tsx` - Comprehensive settings popup with dropdown menus
+- `src/components/VoiceMode.tsx` - Full-screen voice conversation interface
 
 #### Dependencies Added
 - `expo-document-picker@^14.0.8` - File attachment handling

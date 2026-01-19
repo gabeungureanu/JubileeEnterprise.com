@@ -24,6 +24,16 @@ export interface ColorScheme {
   assistantBubble: string;
   inputBg: string;
   sidebar: string;
+  // Chat input box
+  chatInputBg: string;
+  chatInputBorder: string;
+  chatInputButtonBg: string;
+  chatInputButtonBorder: string;
+  chatInputButtonIcon: string;
+  // Logo text
+  logoText: string;
+  // Menu hover
+  menuItemHover: string;
 }
 
 // Dark Theme (Default - ChatGPT-style)
@@ -45,6 +55,16 @@ export const darkColors: ColorScheme = {
   assistantBubble: '#2f2f2f', // Dark for assistant
   inputBg: '#3f3f3f',      // Input background
   sidebar: '#171717',      // Darker sidebar
+  // Chat input box
+  chatInputBg: '#5a5a5a',      // Dark input background
+  chatInputBorder: '#5a5a5a',  // Dark input border
+  chatInputButtonBg: '#6b6b6b',    // Button background
+  chatInputButtonBorder: '#7b7b7b', // Button border
+  chatInputButtonIcon: '#ffffff',  // Button icon color (white)
+  // Logo text
+  logoText: '#ffffff',         // White for dark theme
+  // Menu hover
+  menuItemHover: '#3f3f3f',    // Dark hover background
 };
 
 // Light Theme
@@ -65,7 +85,17 @@ export const lightColors: ColorScheme = {
   userBubble: '#10a37f',   // Green for user messages
   assistantBubble: '#f7f7f8', // Light gray for assistant
   inputBg: '#ffffff',      // White input background
-  sidebar: '#f7f7f8',      // Light sidebar
+  sidebar: '#f9f9f9',      // Light sidebar
+  // Chat input box
+  chatInputBg: '#f9f9f9',      // Light input background
+  chatInputBorder: '#d9d9e3',  // Light input border
+  chatInputButtonBg: '#d9d9e3',    // Button background
+  chatInputButtonBorder: '#b9b9b9', // Button border
+  chatInputButtonIcon: '#6e6e80',  // Button icon color (gray)
+  // Logo text
+  logoText: '#cccccc',         // Gray for light theme
+  // Menu hover
+  menuItemHover: '#eeeeee',    // Light hover background
 };
 
 /**

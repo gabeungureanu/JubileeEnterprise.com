@@ -68,7 +68,7 @@ const createStyles = (colors: any, fontSize: number) => StyleSheet.create({
     fontSize: fontSize,
     fontFamily: 'Agency FB',
     fontWeight: '600',
-    color: '#ffffff',
+    color: colors.logoText,
   },
   titleHighlight: {
     fontSize: fontSize,

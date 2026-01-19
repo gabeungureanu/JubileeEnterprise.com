@@ -11,3 +11,5 @@ export { default as ChatInput } from './ChatInput';
 export { default as EmptyChat } from './EmptyChat';
 export { default as DrawerContent } from './DrawerContent';
 export { default as ConfirmDialog } from './ConfirmDialog';
+export { default as VoiceMode } from './VoiceMode';
+export { default as SettingsModal } from './SettingsModal';

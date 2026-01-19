@@ -25,6 +25,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useDrawer } from '../contexts/DrawerContext';
 import { Conversation } from '../types';
 import ConversationItem from './ConversationItem';
+import SettingsModal from './SettingsModal';
 import { storage } from '../services/storage';
 
 const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: drawerNavigation }) => {
@@ -47,6 +48,10 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
   // Menu state - controlled centrally to allow switching between menus with single click
   const [openMenuConversationId, setOpenMenuConversationId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const [hoveredMenuItem, setHoveredMenuItem] = useState<string | null>(null);
+
+  // Settings modal state
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const styles = createStyles(colors, isCollapsed, isMobileView);
 
@@ -174,13 +179,8 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
   };
 
   const handleSettings = () => {
-    drawerNavigation.navigate('HomeStack', {
-      screen: 'Settings'
-    } as any);
-    // Only close drawer automatically on non-mobile views
-    if (!isMobileView) {
-      drawerNavigation.closeDrawer();
-    }
+    // Show the settings modal instead of navigating to a separate screen
+    setShowSettingsModal(true);
   };
 
   const handlePinToggle = async (conversationId: string) => {
@@ -217,11 +217,33 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
   // Menu handlers for centralized control
   const handleMenuOpen = (conversationId: string, position: { top: number; left: number }) => {
     setOpenMenuConversationId(conversationId);
-    setMenuPosition(position);
+    setHoveredMenuItem(null); // Reset hover state when opening new menu
+
+    // Get window dimensions for smart positioning
+    const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+    const menuHeight = 280; // Approximate menu height
+    const padding = 10; // Minimum padding from edges
+
+    // Adjust position: 25px lower than original
+    let adjustedTop = position.top + 25;
+
+    // Check if menu would overflow at the bottom
+    if (adjustedTop + menuHeight > windowHeight - padding) {
+      // Open upward instead: position above the trigger point
+      adjustedTop = position.top - menuHeight - 25;
+    }
+
+    // Ensure menu doesn't go above the top edge
+    if (adjustedTop < padding) {
+      adjustedTop = padding;
+    }
+
+    setMenuPosition({ top: adjustedTop, left: position.left });
   };
 
   const handleMenuClose = () => {
     setOpenMenuConversationId(null);
+    setHoveredMenuItem(null);
   };
 
   // Get the conversation for the open menu
@@ -566,48 +588,64 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
             { position: 'absolute', top: menuPosition.top, left: menuPosition.left }
           ]}>
             <TouchableOpacity
-              style={styles.menuItem}
+              style={[styles.optionsMenuItem, hoveredMenuItem === 'share' && styles.menuItemHovered]}
               onPress={() => {
                 handleMenuClose();
                 // Share functionality would go here
               }}
+              {...(Platform.OS === 'web' ? {
+                onMouseEnter: () => setHoveredMenuItem('share'),
+                onMouseLeave: () => setHoveredMenuItem(null),
+              } as any : {})}
             >
               <Ionicons name="share-outline" size={20} color={colors.text} />
               <Text style={styles.menuItemText}>Share</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.menuItem}
+              style={[styles.optionsMenuItem, hoveredMenuItem === 'group' && styles.menuItemHovered]}
               onPress={() => {
                 handleMenuClose();
                 // Group chat functionality
               }}
+              {...(Platform.OS === 'web' ? {
+                onMouseEnter: () => setHoveredMenuItem('group'),
+                onMouseLeave: () => setHoveredMenuItem(null),
+              } as any : {})}
             >
               <Ionicons name="people-outline" size={20} color={colors.text} />
               <Text style={styles.menuItemText}>Start a group chat</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.menuItem}
+              style={[styles.optionsMenuItem, hoveredMenuItem === 'rename' && styles.menuItemHovered]}
               onPress={() => {
                 if (openMenuConversationId) {
                   handleMenuClose();
                   handleStartEditing(openMenuConversationId);
                 }
               }}
+              {...(Platform.OS === 'web' ? {
+                onMouseEnter: () => setHoveredMenuItem('rename'),
+                onMouseLeave: () => setHoveredMenuItem(null),
+              } as any : {})}
             >
               <Ionicons name="create-outline" size={20} color={colors.text} />
               <Text style={styles.menuItemText}>Rename</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.menuItem}
+              style={[styles.optionsMenuItem, hoveredMenuItem === 'pin' && styles.menuItemHovered]}
               onPress={() => {
                 if (openMenuConversationId) {
                   handleMenuClose();
                   handlePinToggle(openMenuConversationId);
                 }
               }}
+              {...(Platform.OS === 'web' ? {
+                onMouseEnter: () => setHoveredMenuItem('pin'),
+                onMouseLeave: () => setHoveredMenuItem(null),
+              } as any : {})}
             >
               <Ionicons
                 name={openMenuConversation?.isPinned ? "pin" : "pin-outline"}
@@ -620,11 +658,15 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.menuItem}
+              style={[styles.optionsMenuItem, hoveredMenuItem === 'archive' && styles.menuItemHovered]}
               onPress={() => {
                 handleMenuClose();
                 // Archive functionality
               }}
+              {...(Platform.OS === 'web' ? {
+                onMouseEnter: () => setHoveredMenuItem('archive'),
+                onMouseLeave: () => setHoveredMenuItem(null),
+              } as any : {})}
             >
               <Ionicons name="archive-outline" size={20} color={colors.text} />
               <Text style={styles.menuItemText}>Archive</Text>
@@ -633,13 +675,17 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
             <View style={styles.menuDivider} />
 
             <TouchableOpacity
-              style={styles.menuItem}
+              style={[styles.optionsMenuItem, hoveredMenuItem === 'delete' && styles.menuItemHovered]}
               onPress={() => {
                 if (openMenuConversationId) {
                   handleMenuClose();
                   handleDeleteConversation(openMenuConversationId);
                 }
               }}
+              {...(Platform.OS === 'web' ? {
+                onMouseEnter: () => setHoveredMenuItem('delete'),
+                onMouseLeave: () => setHoveredMenuItem(null),
+              } as any : {})}
             >
               <Ionicons name="trash-outline" size={20} color="#ef4444" />
               <Text style={[styles.menuItemText, styles.deleteText]}>Delete</Text>
@@ -647,6 +693,33 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Settings Modal */}
+      <SettingsModal
+        visible={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        onNavigateToAuth={() => {
+          setShowSettingsModal(false);
+          drawerNavigation.navigate('HomeStack', {
+            screen: 'Auth'
+          } as any);
+        }}
+        onClearHistory={() => {
+          setShowSettingsModal(false);
+          // Navigate to new chat after clearing history
+          drawerNavigation.navigate('HomeStack', {
+            screen: 'Chat',
+            params: {
+              conversationId: undefined,
+              timestamp: Date.now()
+            }
+          } as any);
+          // Reload conversations
+          setTimeout(() => {
+            loadConversations();
+          }, 500);
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -654,12 +727,12 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
 const createStyles = (colors: any, isCollapsed: boolean, isMobileView: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: colors.sidebar,
     // On mobile view, always use full width; on desktop, use collapsed or full width
     width: isMobileView ? '100%' : (isCollapsed ? 56 : '100%'),
     // Right border visible in both collapsed and expanded modes
     borderRightWidth: 1,
-    borderRightColor: '#3f3f3f',
+    borderRightColor: colors.border,
   },
   header: {
     flexDirection: 'row',
@@ -876,6 +949,16 @@ const createStyles = (colors: any, isCollapsed: boolean, isMobileView: boolean) 
     paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
     gap: spacing.sm,
+  },
+  optionsMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
+  },
+  menuItemHovered: {
+    backgroundColor: colors.menuItemHover,
   },
   menuItemText: {
     fontSize: typography.fontSize.sm,
