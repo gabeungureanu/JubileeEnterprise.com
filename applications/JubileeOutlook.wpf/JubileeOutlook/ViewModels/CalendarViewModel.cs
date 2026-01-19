@@ -90,9 +90,12 @@ public partial class CalendarViewModel : ObservableObject
     public async Task OnViewActivatedAsync()
     {
         System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] OnViewActivatedAsync called. Initialized: {_isInitialized}");
+        try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"\n[{DateTime.Now:HH:mm:ss}] OnViewActivatedAsync called. Initialized: {_isInitialized}\n"); } catch { }
 
         // Refresh service reference in case it changed
         _calendarService = ServiceConfiguration.GetCalendarService();
+        System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] CalendarService type: {_calendarService.GetType().Name}");
+        try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] CalendarService type: {_calendarService.GetType().Name}\n"); } catch { }
 
         // Load events for the current visible date range
         await LoadEventsForVisibleRangeAsync();
@@ -114,9 +117,12 @@ public partial class CalendarViewModel : ObservableObject
         var loadEndDate = endDate.AddDays(bufferDays);
 
         System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] LoadEventsForVisibleRangeAsync: {loadStartDate:yyyy-MM-dd} to {loadEndDate:yyyy-MM-dd}");
+        try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] LoadEventsForVisibleRangeAsync: {loadStartDate:yyyy-MM-dd} to {loadEndDate:yyyy-MM-dd}\n"); } catch { }
 
         // Check if this range is already cached
-        if (IsDateRangeCached(loadStartDate, loadEndDate))
+        var isCached = IsDateRangeCached(loadStartDate, loadEndDate);
+        try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] IsDateRangeCached: {isCached}\n"); } catch { }
+        if (isCached)
         {
             System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Date range is cached, updating visible events");
             UpdateVisibleEventsFromCache(startDate, endDate);
@@ -128,6 +134,7 @@ public partial class CalendarViewModel : ObservableObject
 
         // Update visible events
         UpdateVisibleEventsFromCache(startDate, endDate);
+        try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] After LoadEventsForRangeAsync, Events.Count: {Events.Count}\n"); } catch { }
     }
 
     /// <summary>
@@ -186,8 +193,23 @@ public partial class CalendarViewModel : ObservableObject
             lock (_cacheLock)
             {
                 // Get events that fall within or overlap the visible range
+                // Convert event times to local time for proper comparison with local date ranges
                 var visibleEvents = _cachedEvents
-                    .Where(e => e.EndTime >= startDate && e.StartTime <= endDate.AddDays(1))
+                    .Where(e =>
+                    {
+                        // Convert UTC times to local for comparison
+                        var localStartTime = e.StartTime.Kind == DateTimeKind.Utc
+                            ? e.StartTime.ToLocalTime()
+                            : e.StartTime;
+                        var localEndTime = e.EndTime.Kind == DateTimeKind.Utc
+                            ? e.EndTime.ToLocalTime()
+                            : e.EndTime;
+
+                        // Event overlaps with visible range if:
+                        // - Event ends on or after the start date AND
+                        // - Event starts before the end of the end date (next day midnight)
+                        return localEndTime.Date >= startDate.Date && localStartTime.Date <= endDate.Date;
+                    })
                     .OrderBy(e => e.StartTime)
                     .ToList();
 
@@ -200,6 +222,10 @@ public partial class CalendarViewModel : ObservableObject
 
                 System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Updated visible events: {Events.Count} events for {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
             }
+
+            // Force property change notification to refresh bindings
+            OnPropertyChanged(nameof(Events));
+            OnPropertyChanged(nameof(VisibleDays));
         });
     }
 
@@ -497,7 +523,7 @@ public partial class CalendarViewModel : ObservableObject
         if (Enum.TryParse<CalendarViewMode>(mode, out var viewMode))
         {
             ViewMode = viewMode;
-            UpdateViewDates();
+            // Note: UpdateViewDates() is called by OnViewModeChanged partial method
 
             // Lazy load events for the new view
             await LoadEventsForVisibleRangeAsync();
@@ -700,6 +726,7 @@ public partial class CalendarViewModel : ObservableObject
                 ViewStartDate = SelectedDate.Date;
                 ViewEndDate = SelectedDate.Date;
                 DateRangeText = SelectedDate.ToString("MMMM dd, yyyy");
+                // Create new collection to trigger proper binding updates
                 VisibleDays = new ObservableCollection<DateTime> { SelectedDate.Date };
                 break;
 
@@ -713,11 +740,13 @@ public partial class CalendarViewModel : ObservableObject
 
                 DateRangeText = $"{ViewStartDate:MMMM dd}–{ViewEndDate:dd, yyyy}";
 
-                VisibleDays.Clear();
+                // Create new collection to trigger proper binding updates
+                var workWeekDays = new ObservableCollection<DateTime>();
                 for (int i = 0; i < 5; i++)
                 {
-                    VisibleDays.Add(ViewStartDate.AddDays(i));
+                    workWeekDays.Add(ViewStartDate.AddDays(i));
                 }
+                VisibleDays = workWeekDays;
                 break;
 
             case CalendarViewMode.Week:
@@ -727,11 +756,13 @@ public partial class CalendarViewModel : ObservableObject
 
                 DateRangeText = $"{ViewStartDate:MMMM dd}–{ViewEndDate:dd, yyyy}";
 
-                VisibleDays.Clear();
+                // Create new collection to trigger proper binding updates
+                var weekDays = new ObservableCollection<DateTime>();
                 for (int i = 0; i < 7; i++)
                 {
-                    VisibleDays.Add(ViewStartDate.AddDays(i));
+                    weekDays.Add(ViewStartDate.AddDays(i));
                 }
+                VisibleDays = weekDays;
                 break;
 
             case CalendarViewMode.Month:
@@ -742,6 +773,11 @@ public partial class CalendarViewModel : ObservableObject
                 UpdateMonthViewDays();
                 break;
         }
+
+        // Force refresh of all bindings to trigger MultiBinding converters
+        // This ensures events are properly filtered after view/date changes
+        OnPropertyChanged(nameof(VisibleDays));
+        OnPropertyChanged(nameof(Events));
     }
 
     public ObservableCollection<CalendarEvent> GetEventsForDay(DateTime day)

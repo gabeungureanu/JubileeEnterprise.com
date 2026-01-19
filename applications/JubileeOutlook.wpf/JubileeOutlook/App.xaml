@@ -39,6 +39,8 @@
             <helpers:IsTodayToFontWeightConverter x:Key="IsTodayToFontWeightConverter"/>
             <helpers:InitialsConverter x:Key="InitialsConverter"/>
             <helpers:EventColorConverter x:Key="EventColorConverter"/>
+            <helpers:EnumToBoolConverter x:Key="EnumToBoolConverter"/>
+            <helpers:SubtractConverter x:Key="SubtractConverter"/>
 
         </ResourceDictionary>
     </Application.Resources>

@@ -74,6 +74,7 @@ public class ApiCalendarService : ICalendarService
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             PropertyNameCaseInsensitive = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString,
             Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
         };
 
@@ -155,10 +156,15 @@ public class ApiCalendarService : ICalendarService
     {
         try
         {
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] GetEventsWithResultAsync called: {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] NetworkStatus.IsOnline={NetworkStatus.IsOnline}, IsApiReachable={NetworkStatus.IsApiReachable}");
+            try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"\n[{DateTime.Now:HH:mm:ss}] GetEventsWithResultAsync: {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}, IsOnline={NetworkStatus.IsOnline}, IsApiReachable={NetworkStatus.IsApiReachable}\n"); } catch { }
+
             // If offline, return cached events
             if (!IsOnline)
             {
                 System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Offline - returning cached events for {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
+                try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] OFFLINE - returning cached events\n"); } catch { }
                 var cachedEvents = await LocalCache.GetCachedEventsAsync(startDate, endDate);
                 return new CalendarServiceResult<List<CalendarEvent>>
                 {
@@ -180,9 +186,12 @@ public class ApiCalendarService : ICalendarService
 
             var endpoint = $"outlook/events?{string.Join("&", queryParams)}";
             System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] GET {endpoint}");
+            try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] GET {endpoint}\n"); } catch { }
 
             var response = await _httpClientFactory.GetAsync(ApiEndpoint.InspireContinuum, endpoint);
             var content = await response.Content.ReadAsStringAsync();
+            try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Response: {response.StatusCode}, Content length: {content.Length}\n"); } catch { }
+            try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Response content (first 500 chars): {content.Substring(0, Math.Min(500, content.Length))}\n"); } catch { }
 
             if (response.IsSuccessStatusCode)
             {
@@ -190,10 +199,12 @@ public class ApiCalendarService : ICalendarService
                 try
                 {
                     var apiResponse = JsonSerializer.Deserialize<ApiEventsListResponse>(content, _jsonOptions);
+                    try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Parsed apiResponse, Events: {apiResponse?.Events?.Count ?? -1}\n"); } catch { }
                     if (apiResponse?.Events != null)
                     {
                         var events = apiResponse.Events.Select(MapToCalendarEvent).ToList();
                         System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Retrieved {events.Count} events");
+                        try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Retrieved {events.Count} events from API\n"); } catch { }
 
                         // Cache events for offline use
                         _ = Task.Run(async () =>
@@ -219,17 +230,30 @@ public class ApiCalendarService : ICalendarService
                         };
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
                     // Fall back to direct list parsing
+                    try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] ApiEventsListResponse parse failed: {ex.Message}, falling back to direct list\n"); } catch { }
                 }
 
                 // Try parsing as direct list
-                var directEvents = JsonSerializer.Deserialize<List<CalendarEventDto>>(content, _jsonOptions);
+                try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Trying direct list parse...\n"); } catch { }
+                List<CalendarEventDto>? directEvents = null;
+                try
+                {
+                    directEvents = JsonSerializer.Deserialize<List<CalendarEventDto>>(content, _jsonOptions);
+                    try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Direct parse result: {directEvents?.Count ?? -1} events\n"); } catch { }
+                }
+                catch (Exception parseEx)
+                {
+                    try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Direct list parse EXCEPTION: {parseEx.Message}\n"); } catch { }
+                }
                 if (directEvents != null)
                 {
+                    try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] About to call MapToCalendarEvent for {directEvents.Count} items\n"); } catch { }
                     var events = directEvents.Select(MapToCalendarEvent).ToList();
                     System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Retrieved {events.Count} events (direct)");
+                    try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Retrieved {events.Count} events (direct)\n"); } catch { }
 
                     // Cache events for offline use
                     _ = Task.Run(async () =>
@@ -381,7 +405,10 @@ public class ApiCalendarService : ICalendarService
             var dto = MapToDto(calendarEvent);
             var endpoint = "outlook/events";
 
-            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] POST {endpoint} - {calendarEvent.Subject}");
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] POST {endpoint} - {calendarEvent.Subject}, IsPrivate={calendarEvent.IsPrivate}");
+            var dtoJson = JsonSerializer.Serialize(dto, _jsonOptions);
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Request body: {dtoJson}");
+            try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"\n[{DateTime.Now:HH:mm:ss}] POST {endpoint} - IsPrivate={calendarEvent.IsPrivate}\n[{DateTime.Now:HH:mm:ss}] Request body: {dtoJson}\n"); } catch { }
 
             var response = await _httpClientFactory.PostAsync(ApiEndpoint.InspireContinuum, endpoint, dto);
             var content = await response.Content.ReadAsStringAsync();
@@ -581,7 +608,10 @@ public class ApiCalendarService : ICalendarService
             var dto = MapToDto(calendarEvent);
             var endpoint = $"outlook/events/{Uri.EscapeDataString(calendarEvent.Id)}";
 
-            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] PUT {endpoint} - {calendarEvent.Subject}");
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] PUT {endpoint} - {calendarEvent.Subject}, IsPrivate={calendarEvent.IsPrivate}");
+            var dtoJson = JsonSerializer.Serialize(dto, _jsonOptions);
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Request body: {dtoJson}");
+            try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"\n[{DateTime.Now:HH:mm:ss}] PUT {endpoint} - IsPrivate={calendarEvent.IsPrivate}\n[{DateTime.Now:HH:mm:ss}] Request body: {dtoJson}\n"); } catch { }
 
             var response = await _httpClientFactory.PutAsync(ApiEndpoint.InspireContinuum, endpoint, dto);
             var content = await response.Content.ReadAsStringAsync();
@@ -790,14 +820,27 @@ public class ApiCalendarService : ICalendarService
             Attendees = dto.Attendees ?? new List<string>(),
             Organizer = dto.Organizer ?? string.Empty,
             IsPrivate = dto.IsPrivate,
+            IsInPerson = dto.IsInPerson,
             Attachments = dto.Attachments?.Select(a => new EventAttachment
             {
                 Id = a.Id ?? Guid.NewGuid().ToString(),
                 FileName = a.FileName ?? string.Empty,
                 FilePath = a.FilePath ?? string.Empty,
-                FileSize = a.FileSize,
+                FileSize = a.FileSize ?? 0,
+                Url = a.Url,
                 AddedDate = a.AddedDate
             }).ToList() ?? new List<EventAttachment>(),
+            Images = dto.Images?.Select(i => new EventImage
+            {
+                Id = i.Id ?? Guid.NewGuid().ToString(),
+                FileName = i.FileName ?? string.Empty,
+                FilePath = i.FilePath ?? string.Empty,
+                FileSize = i.FileSize ?? 0,
+                ContentType = i.MimeType ?? "image/jpeg",
+                Url = i.Url,
+                ThumbnailUrl = i.ThumbnailUrl,
+                AddedDate = i.AddedDate
+            }).ToList() ?? new List<EventImage>(),
             IsRecurring = dto.IsRecurring,
             Reminder = ParseReminderTime(dto.ReminderMinutes)
         };
@@ -822,13 +865,26 @@ public class ApiCalendarService : ICalendarService
             Attendees = calendarEvent.Attendees,
             Organizer = calendarEvent.Organizer,
             IsPrivate = calendarEvent.IsPrivate,
+            IsInPerson = calendarEvent.IsInPerson,
             Attachments = calendarEvent.Attachments?.Select(a => new AttachmentDto
             {
                 Id = a.Id,
                 FileName = a.FileName,
                 FilePath = a.FilePath,
                 FileSize = a.FileSize,
+                Url = a.Url,
                 AddedDate = a.AddedDate
+            }).ToList(),
+            Images = calendarEvent.Images?.Select(i => new ImageDto
+            {
+                Id = i.Id,
+                FileName = i.FileName,
+                FilePath = i.FilePath,
+                FileSize = i.FileSize,
+                MimeType = i.ContentType,
+                Url = i.Url,
+                ThumbnailUrl = i.ThumbnailUrl,
+                AddedDate = i.AddedDate
             }).ToList(),
             IsRecurring = calendarEvent.IsRecurring,
             ReminderMinutes = GetReminderMinutes(calendarEvent.Reminder)
@@ -991,7 +1047,9 @@ public class CalendarEventDto
     public List<string>? Attendees { get; set; }
     public string? Organizer { get; set; }
     public bool IsPrivate { get; set; }
+    public bool IsInPerson { get; set; } = true;
     public List<AttachmentDto>? Attachments { get; set; }
+    public List<ImageDto>? Images { get; set; }
     public bool IsRecurring { get; set; }
     public int? ReminderMinutes { get; set; }
     public DateTime? CreatedAt { get; set; }
@@ -1006,9 +1064,25 @@ public class AttachmentDto
     public string? Id { get; set; }
     public string? FileName { get; set; }
     public string? FilePath { get; set; }
-    public long FileSize { get; set; }
+    public long? FileSize { get; set; }
+    public string? Url { get; set; }
     public DateTime AddedDate { get; set; }
     public string? StorageKey { get; set; }
+}
+
+/// <summary>
+/// Image data transfer object for event images
+/// </summary>
+public class ImageDto
+{
+    public string? Id { get; set; }
+    public string? FileName { get; set; }
+    public string? FilePath { get; set; }
+    public long? FileSize { get; set; }
+    public string? MimeType { get; set; }
+    public string? Url { get; set; }
+    public string? ThumbnailUrl { get; set; }
+    public DateTime AddedDate { get; set; }
 }
 
 #endregion
