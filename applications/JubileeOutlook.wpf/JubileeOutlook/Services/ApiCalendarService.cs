@@ -362,7 +362,7 @@ public class ApiCalendarService : ICalendarService
 
     /// <summary>
     /// Creates a new calendar event with detailed result
-    /// Supports offline-first: queues event creation when offline
+    /// Attempts API call first, falls back to offline queue only on network failure
     /// POST /api/outlook/events
     /// </summary>
     public async Task<CalendarServiceResult<CalendarEvent>> CreateEventWithResultAsync(CalendarEvent calendarEvent)
@@ -375,56 +375,6 @@ public class ApiCalendarService : ICalendarService
                 {
                     Success = false,
                     Error = "Calendar event is required"
-                };
-            }
-
-            // If offline, cache the event locally and queue for sync
-            if (!IsOnline)
-            {
-                System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Offline - queueing event creation: {calendarEvent.Subject}");
-
-                // Generate a temporary ID if not set
-                if (string.IsNullOrEmpty(calendarEvent.Id))
-                {
-                    calendarEvent.Id = $"temp-{Guid.NewGuid()}";
-                }
-
-                // Cache the event locally
-                try
-                {
-                    await LocalCache.CacheEventAsync(calendarEvent);
-                    System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Cached event locally: {calendarEvent.Id}");
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Failed to cache event: {ex.Message}");
-                }
-
-                // Queue the create operation
-                var eventPayload = new
-                {
-                    subject = calendarEvent.Subject,
-                    location = calendarEvent.Location,
-                    description = calendarEvent.Description,
-                    startTime = calendarEvent.StartTime,
-                    endTime = calendarEvent.EndTime,
-                    isAllDay = calendarEvent.IsAllDay,
-                    isPrivate = calendarEvent.IsPrivate,
-                    calendarName = calendarEvent.CalendarName,
-                    attendees = calendarEvent.Attendees,
-                    reminder = calendarEvent.Reminder.ToString()
-                };
-
-                await SyncQueue.QueueOperationAsync(
-                    SyncEntityTypes.Event,
-                    calendarEvent.Id,
-                    SyncOperationTypes.Create,
-                    eventPayload);
-
-                return new CalendarServiceResult<CalendarEvent>
-                {
-                    Success = true,
-                    Data = calendarEvent
                 };
             }
 
@@ -484,6 +434,18 @@ public class ApiCalendarService : ICalendarService
                 StatusCode = response.StatusCode
             };
         }
+        catch (HttpRequestException ex)
+        {
+            // Network error - queue for offline sync
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Network error, queueing event: {ex.Message}");
+            return await QueueEventForOfflineCreation(calendarEvent);
+        }
+        catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+        {
+            // Timeout - queue for offline sync
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Request timeout, queueing event: {ex.Message}");
+            return await QueueEventForOfflineCreation(calendarEvent);
+        }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] CreateEvent error: {ex.Message}");
@@ -493,6 +455,56 @@ public class ApiCalendarService : ICalendarService
                 Error = ex.Message
             };
         }
+    }
+
+    /// <summary>
+    /// Queues an event for offline creation when API is unreachable
+    /// </summary>
+    private async Task<CalendarServiceResult<CalendarEvent>> QueueEventForOfflineCreation(CalendarEvent calendarEvent)
+    {
+        // Generate a temporary ID if not set
+        if (string.IsNullOrEmpty(calendarEvent.Id))
+        {
+            calendarEvent.Id = $"temp-{Guid.NewGuid()}";
+        }
+
+        // Cache the event locally
+        try
+        {
+            await LocalCache.CacheEventAsync(calendarEvent);
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Cached event locally: {calendarEvent.Id}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Failed to cache event: {ex.Message}");
+        }
+
+        // Queue the create operation
+        var eventPayload = new
+        {
+            subject = calendarEvent.Subject,
+            location = calendarEvent.Location,
+            description = calendarEvent.Description,
+            startTime = calendarEvent.StartTime,
+            endTime = calendarEvent.EndTime,
+            isAllDay = calendarEvent.IsAllDay,
+            isPrivate = calendarEvent.IsPrivate,
+            calendarName = calendarEvent.CalendarName,
+            attendees = calendarEvent.Attendees,
+            reminder = calendarEvent.Reminder.ToString()
+        };
+
+        await SyncQueue.QueueOperationAsync(
+            SyncEntityTypes.Event,
+            calendarEvent.Id,
+            SyncOperationTypes.Create,
+            eventPayload);
+
+        return new CalendarServiceResult<CalendarEvent>
+        {
+            Success = true,
+            Data = calendarEvent
+        };
     }
 
     /// <summary>

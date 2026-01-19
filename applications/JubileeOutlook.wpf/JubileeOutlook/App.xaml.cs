@@ -33,18 +33,44 @@ public partial class App : Application
         // Check environment variable first, then fall back to config setting
         var useApiEnv = Environment.GetEnvironmentVariable("JUBILEE_USE_API")?.ToLower();
         bool useApi;
+
+        // Write debug info to log file
+        var logPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "JubileeOutlook", "startup.log");
+        System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(logPath)!);
+        var logLines = new System.Collections.Generic.List<string>
+        {
+            $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] JubileeOutlook Starting",
+            $"JUBILEE_USE_API env: '{useApiEnv ?? "(not set)"}'",
+            $"config.Features.EnableDatabaseIntegration: {config.Features.EnableDatabaseIntegration}"
+        };
+
+        Console.WriteLine($"[JubileeOutlook] JUBILEE_USE_API env: '{useApiEnv ?? "(not set)"}'");
+        Console.WriteLine($"[JubileeOutlook] config.Features.EnableDatabaseIntegration: {config.Features.EnableDatabaseIntegration}");
+
         if (!string.IsNullOrEmpty(useApiEnv))
         {
             useApi = useApiEnv == "true" || useApiEnv == "1";
+            logLines.Add($"Using env var, useApi = {useApi}");
+            Console.WriteLine($"[JubileeOutlook] Using env var, useApi = {useApi}");
         }
         else
         {
             // Use config file setting (EnableDatabaseIntegration)
             useApi = config.Features.EnableDatabaseIntegration;
+            logLines.Add($"Using config, useApi = {useApi}");
+            Console.WriteLine($"[JubileeOutlook] Using config, useApi = {useApi}");
         }
 
-        var apiUrl = Environment.GetEnvironmentVariable("CONTINUUM_API_URL") ?? config.Api.InspireContinuum.BaseUrl;
+        logLines.Add($"Final useApi = {useApi}");
+
+        // Use config file URL (environment variable may be stale/outdated)
+        var apiUrl = config.Api.InspireContinuum.BaseUrl;
         var userId = Environment.GetEnvironmentVariable("JUBILEE_USER_ID") ?? "00000000-0000-0000-0000-000000000001";
+
+        logLines.Add($"apiUrl = {apiUrl}");
+        logLines.Add($"userId = {userId}");
+        logLines.Add($"Calling ServiceConfiguration.Initialize({useApi}, {apiUrl}, {userId})");
+        System.IO.File.WriteAllLines(logPath, logLines);
 
         ServiceConfiguration.Initialize(useApi, apiUrl, userId);
         Console.WriteLine($"[JubileeOutlook] Service mode: {(useApi ? "API (Persistent)" : "Mock (In-Memory)")}");

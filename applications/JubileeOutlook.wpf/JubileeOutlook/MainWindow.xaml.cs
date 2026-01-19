@@ -617,6 +617,73 @@ public partial class MainWindow : Window
                 HideComposePanel();
             }
         }
+
+        // When DisplayedMessage changes, update the WebBrowser with HTML content
+        if (e.PropertyName == nameof(MainViewModel.DisplayedMessage))
+        {
+            UpdateEmailBodyBrowser();
+        }
+    }
+
+    private void UpdateEmailBodyBrowser()
+    {
+        if (EmailBodyBrowser == null) return;
+
+        var message = _mainViewModel.DisplayedMessage;
+        if (message == null)
+        {
+            // Clear the browser when no message is selected
+            EmailBodyBrowser.NavigateToString("<html><body style='background-color:#000000;'></body></html>");
+            return;
+        }
+
+        // Wrap the email body in HTML with dark theme styling
+        var htmlContent = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <style>
+        body {{
+            background-color: #000000;
+            color: #FFFFFF;
+            font-family: 'Segoe UI', Calibri, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 20px;
+            margin: 0;
+        }}
+        a {{
+            color: #4A9EFF;
+        }}
+        strong, b {{
+            font-weight: 600;
+        }}
+        ul, ol {{
+            padding-left: 20px;
+        }}
+        li {{
+            margin-bottom: 4px;
+        }}
+        table {{
+            border-collapse: collapse;
+        }}
+        td, th {{
+            padding: 8px;
+            border: 1px solid #333333;
+        }}
+        img {{
+            max-width: 100%;
+            height: auto;
+        }}
+    </style>
+</head>
+<body>
+{message.Body}
+</body>
+</html>";
+
+        EmailBodyBrowser.NavigateToString(htmlContent);
     }
 
     private void MinimizeButton_Click(object sender, RoutedEventArgs e)

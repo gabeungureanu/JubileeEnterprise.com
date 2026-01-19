@@ -520,6 +520,7 @@ public partial class CalendarViewModel : ObservableObject
             if (viewModel?.CreatedEvent != null)
             {
                 System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Creating event: {viewModel.CreatedEvent.Subject}");
+
                 try
                 {
                     IsLoading = true;
@@ -540,6 +541,7 @@ public partial class CalendarViewModel : ObservableObject
 
                     LoadingMessage = "Saving event...";
                     await _calendarService.CreateEventAsync(viewModel.CreatedEvent);
+                    System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] CreateEventAsync completed, event ID: {viewModel.CreatedEvent.Id}");
 
                     // Add to cache and visible events
                     AddEventToCache(viewModel.CreatedEvent);

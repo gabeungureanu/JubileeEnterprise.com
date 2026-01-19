@@ -42,7 +42,6 @@ public partial class CalendarView : UserControl
         if (DataContext is CalendarViewModel viewModel)
         {
             System.Diagnostics.Debug.WriteLine("[CalendarView] Executing NewEventCommand");
-            // CommunityToolkit.Mvvm strips "Async" suffix, so NewEventAsync becomes NewEventCommand
             viewModel.NewEventCommand.Execute(null);
         }
         else
