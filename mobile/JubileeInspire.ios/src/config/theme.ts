@@ -15,6 +15,7 @@ export interface ColorScheme {
   surfaceHover: string;
   text: string;
   textSecondary: string;
+  placeholder: string;
   border: string;
   error: string;
   success: string;
@@ -46,6 +47,7 @@ export const darkColors: ColorScheme = {
   surfaceHover: '#3f3f3f', // Hover state
   text: '#ececec',         // Light text
   textSecondary: '#8e8e8e', // Muted text
+  placeholder: '#8e8e8e',  // Placeholder text (same as textSecondary for dark)
   border: '#3f3f3f',       // Dark border
   error: '#ef4444',
   success: '#10a37f',
@@ -77,6 +79,7 @@ export const lightColors: ColorScheme = {
   surfaceHover: '#ececf1', // Hover state
   text: '#0d0d0d',         // Dark text
   textSecondary: '#6e6e80', // Muted text
+  placeholder: '#777777',  // Placeholder text (visible on light backgrounds)
   border: '#d9d9e3',       // Light border
   error: '#ef4444',
   success: '#10a37f',

@@ -755,7 +755,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                     }
                   ]}
                   placeholder="Provide more details about the issue..."
-                  placeholderTextColor={colors.textSecondary}
+                  placeholderTextColor={colors.placeholder}
                   value={reportComments}
                   onChangeText={setReportComments}
                   multiline

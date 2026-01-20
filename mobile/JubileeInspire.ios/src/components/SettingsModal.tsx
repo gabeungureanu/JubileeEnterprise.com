@@ -15,6 +15,7 @@ import {
   Platform,
   Alert,
   Pressable,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, typography, APP_VERSION } from '../config';
@@ -37,6 +38,14 @@ interface DropdownOption {
   label: string;
 }
 
+// Responsive breakpoints
+const BREAKPOINTS = {
+  mobile: 480,
+  tablet: 768,
+  laptop: 1024,
+  desktop: 1280,
+};
+
 const SettingsModal: React.FC<SettingsModalProps> = ({
   visible,
   onClose,
@@ -45,8 +54,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const { colors, themeMode, setThemeMode, getThemeDisplayName } = useTheme();
   const { user, isAuthenticated, signOut } = useAuth();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const [activeSection, setActiveSection] = useState<SettingsSection>('general');
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  // Responsive helpers
+  const isMobile = windowWidth < BREAKPOINTS.tablet;
+  const isTablet = windowWidth >= BREAKPOINTS.tablet && windowWidth < BREAKPOINTS.laptop;
+  const isLaptop = windowWidth >= BREAKPOINTS.laptop && windowWidth < BREAKPOINTS.desktop;
+  const isDesktop = windowWidth >= BREAKPOINTS.desktop;
 
   // Dropdown states
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -55,12 +71,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   // Settings values
   const [bibleTranslation, setBibleTranslation] = useState('KJV');
   const [language, setLanguage] = useState('auto');
-  const [defaultPersona, setDefaultPersona] = useState('gabriel');
+  const [defaultPersona, setDefaultPersona] = useState('jubilee-inspire');
   const [responseStyle, setResponseStyle] = useState('balanced');
 
   // Modal states for Privacy Policy and Terms of Use
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTermsOfUse, setShowTermsOfUse] = useState(false);
+
+  // Close all dropdowns when modal closes
+  useEffect(() => {
+    if (!visible) {
+      setActiveDropdown(null);
+      setHoveredDropdownItem(null);
+    }
+  }, [visible]);
 
   // Dropdown options
   const appearanceOptions: DropdownOption[] = [
@@ -89,10 +113,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   ];
 
   const personaOptions: DropdownOption[] = [
-    { value: 'gabriel', label: 'Gabriel' },
-    { value: 'michael', label: 'Michael' },
-    { value: 'raphael', label: 'Raphael' },
-    { value: 'uriel', label: 'Uriel' },
+    { value: 'jubilee-inspire', label: 'JubileeInspire' },
   ];
 
   const responseStyleOptions: DropdownOption[] = [
@@ -169,7 +190,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     return option ? option.label : value;
   };
 
-  const styles = createStyles(colors);
+  const styles = createStyles(colors, windowWidth, windowHeight, isMobile);
 
   const sidebarItems: { id: SettingsSection; icon: keyof typeof Ionicons.glyphMap; label: string }[] = [
     { id: 'general', icon: 'settings-outline', label: 'General' },
@@ -181,38 +202,81 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const renderSidebar = () => (
     <View style={styles.sidebar}>
-      {sidebarItems.map((item) => (
-        <TouchableOpacity
-          key={item.id}
-          style={[
-            styles.sidebarItem,
-            activeSection === item.id && styles.sidebarItemActive,
-            hoveredItem === item.id && styles.sidebarItemHovered,
-          ]}
-          onPress={() => {
-            setActiveSection(item.id);
-            setActiveDropdown(null);
-          }}
-          {...(Platform.OS === 'web' ? {
-            onMouseEnter: () => setHoveredItem(item.id),
-            onMouseLeave: () => setHoveredItem(null),
-          } as any : {})}
+      {isMobile ? (
+        // Mobile: Horizontal scrollable tabs
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.sidebarMobileContent}
         >
-          <Ionicons
-            name={item.icon}
-            size={20}
-            color={activeSection === item.id ? colors.text : colors.textSecondary}
-          />
-          <Text style={[
-            styles.sidebarItemText,
-            activeSection === item.id && styles.sidebarItemTextActive,
-          ]}>
-            {item.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
+          {sidebarItems.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={[
+                styles.sidebarItemMobile,
+                activeSection === item.id && styles.sidebarItemActive,
+              ]}
+              onPress={() => {
+                setActiveSection(item.id);
+                setActiveDropdown(null);
+              }}
+            >
+              <Ionicons
+                name={item.icon}
+                size={20}
+                color={activeSection === item.id ? colors.primary : colors.textSecondary}
+              />
+              <Text style={[
+                styles.sidebarItemTextMobile,
+                activeSection === item.id && styles.sidebarItemTextActiveMobile,
+              ]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      ) : (
+        // Desktop/Tablet: Vertical sidebar
+        sidebarItems.map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            style={[
+              styles.sidebarItem,
+              activeSection === item.id && styles.sidebarItemActive,
+              hoveredItem === item.id && styles.sidebarItemHovered,
+            ]}
+            onPress={() => {
+              setActiveSection(item.id);
+              setActiveDropdown(null);
+            }}
+            {...(Platform.OS === 'web' ? {
+              onMouseEnter: () => setHoveredItem(item.id),
+              onMouseLeave: () => setHoveredItem(null),
+            } as any : {})}
+          >
+            <Ionicons
+              name={item.icon}
+              size={20}
+              color={activeSection === item.id ? colors.text : colors.textSecondary}
+            />
+            <Text style={[
+              styles.sidebarItemText,
+              activeSection === item.id && styles.sidebarItemTextActive,
+            ]}>
+              {item.label}
+            </Text>
+          </TouchableOpacity>
+        ))
+      )}
     </View>
   );
+
+  // Close dropdown when clicking outside
+  const handleContentPress = () => {
+    if (activeDropdown) {
+      setActiveDropdown(null);
+    }
+  };
 
   const renderDropdown = (
     id: string,
@@ -220,58 +284,68 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     value: string,
     options: DropdownOption[],
     onSelect: (value: string) => void
-  ) => (
-    <View style={styles.dropdownContainer}>
-      <TouchableOpacity
-        style={styles.settingRow}
-        onPress={() => toggleDropdown(id)}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.settingLabel}>{label}</Text>
-        <View style={styles.settingValueContainer}>
-          <Text style={styles.settingValue}>{getDisplayValue(options, value)}</Text>
-          <Ionicons
-            name={activeDropdown === id ? "chevron-up" : "chevron-down"}
-            size={16}
-            color={colors.textSecondary}
-          />
-        </View>
-      </TouchableOpacity>
+  ) => {
+    const isActive = activeDropdown === id;
 
-      {activeDropdown === id && (
-        <View style={styles.dropdownList}>
-          {options.map((option) => (
-            <TouchableOpacity
-              key={option.value}
-              style={[
-                styles.dropdownItem,
-                value === option.value && styles.dropdownItemSelected,
-                hoveredDropdownItem === `${id}-${option.value}` && styles.dropdownItemHovered,
-              ]}
-              onPress={() => {
-                onSelect(option.value);
-                setActiveDropdown(null);
-              }}
-              {...(Platform.OS === 'web' ? {
-                onMouseEnter: () => setHoveredDropdownItem(`${id}-${option.value}`),
-                onMouseLeave: () => setHoveredDropdownItem(null),
-              } as any : {})}
-            >
-              <Text style={[
-                styles.dropdownItemText,
-                value === option.value && styles.dropdownItemTextSelected,
-              ]}>
-                {option.label}
-              </Text>
-              {value === option.value && (
-                <Ionicons name="checkmark" size={18} color={colors.primary} />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-    </View>
-  );
+    return (
+      <View style={[
+        styles.dropdownContainer,
+        // When this dropdown is active, give it a higher z-index
+        isActive && { zIndex: 9999 }
+      ]}>
+        <TouchableOpacity
+          style={styles.settingRow}
+          onPress={() => toggleDropdown(id)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.settingLabel}>{label}</Text>
+          <View style={styles.settingValueContainer}>
+            <Text style={styles.settingValue}>{getDisplayValue(options, value)}</Text>
+            <Ionicons
+              name={isActive ? "chevron-up" : "chevron-down"}
+              size={16}
+              color={colors.textSecondary}
+            />
+          </View>
+        </TouchableOpacity>
+
+        {isActive && (
+          <View style={styles.dropdownListWrapper}>
+            <View style={styles.dropdownList}>
+              {options.map((option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[
+                    styles.dropdownItem,
+                    value === option.value && styles.dropdownItemSelected,
+                    hoveredDropdownItem === `${id}-${option.value}` && styles.dropdownItemHovered,
+                  ]}
+                  onPress={() => {
+                    onSelect(option.value);
+                    setActiveDropdown(null);
+                  }}
+                  {...(Platform.OS === 'web' ? {
+                    onMouseEnter: () => setHoveredDropdownItem(`${id}-${option.value}`),
+                    onMouseLeave: () => setHoveredDropdownItem(null),
+                  } as any : {})}
+                >
+                  <Text style={[
+                    styles.dropdownItemText,
+                    value === option.value && styles.dropdownItemTextSelected,
+                  ]}>
+                    {option.label}
+                  </Text>
+                  {value === option.value && (
+                    <Ionicons name="checkmark" size={18} color={colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  };
 
   const renderSettingRow = (
     label: string,
@@ -294,63 +368,67 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   );
 
   const renderGeneralContent = () => (
-    <ScrollView
-      style={styles.contentScroll}
-      showsVerticalScrollIndicator={true}
-      {...(Platform.OS === 'web' ? { className: 'settings-modal-scrollbar' } as any : {})}
-    >
-      <Text style={styles.contentTitle}>General</Text>
+    <Pressable style={styles.contentPressable} onPress={handleContentPress}>
+      <ScrollView
+        style={styles.contentScroll}
+        showsVerticalScrollIndicator={true}
+        {...(Platform.OS === 'web' ? { className: 'settings-modal-scrollbar' } as any : {})}
+      >
+        <Text style={styles.contentTitle}>General</Text>
 
-      {renderDropdown(
-        'appearance',
-        'Appearance',
-        themeMode,
-        appearanceOptions,
-        (value) => setThemeMode(value as ThemeMode)
-      )}
+        {renderDropdown(
+          'appearance',
+          'Appearance',
+          themeMode,
+          appearanceOptions,
+          (value) => setThemeMode(value as ThemeMode)
+        )}
 
-      {renderDropdown(
-        'bibleTranslation',
-        'Bible Translation',
-        bibleTranslation,
-        bibleTranslationOptions,
-        setBibleTranslation
-      )}
+        {renderDropdown(
+          'bibleTranslation',
+          'Bible Translation',
+          bibleTranslation,
+          bibleTranslationOptions,
+          setBibleTranslation
+        )}
 
-      {renderDropdown(
-        'language',
-        'Language',
-        language,
-        languageOptions,
-        setLanguage
-      )}
-    </ScrollView>
+        {renderDropdown(
+          'language',
+          'Language',
+          language,
+          languageOptions,
+          setLanguage
+        )}
+      </ScrollView>
+    </Pressable>
   );
 
   const renderPersonalizationContent = () => (
-    <ScrollView
-      style={styles.contentScroll}
-      showsVerticalScrollIndicator={true}
-      {...(Platform.OS === 'web' ? { className: 'settings-modal-scrollbar' } as any : {})}
-    >
-      <Text style={styles.contentTitle}>Personalization</Text>
+    <Pressable style={styles.contentPressable} onPress={handleContentPress}>
+      <ScrollView
+        style={styles.contentScroll}
+        showsVerticalScrollIndicator={true}
+        {...(Platform.OS === 'web' ? { className: 'settings-modal-scrollbar' } as any : {})}
+      >
+        <Text style={styles.contentTitle}>Personalization</Text>
 
-      {renderDropdown(
-        'defaultPersona',
-        'Default Persona',
-        defaultPersona,
-        personaOptions,
-        setDefaultPersona
-      )}
+        {renderDropdown(
+          'defaultPersona',
+          'Default Persona',
+          defaultPersona,
+          personaOptions,
+          setDefaultPersona
+        )}
 
-      {renderDropdown(
-        'responseStyle',
-        'Response Style',
-        responseStyle,
-        responseStyleOptions,
-        setResponseStyle
-      )}
-    </ScrollView>
+        {renderDropdown(
+          'responseStyle',
+          'Response Style',
+          responseStyle,
+          responseStyleOptions,
+          setResponseStyle
+        )}
+      </ScrollView>
+    </Pressable>
   );
 
   const renderDataContent = () => (
@@ -782,97 +860,147 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   );
 };
 
-const createStyles = (colors: any) => StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.xl,
-  },
-  container: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    width: '100%',
-    maxWidth: 700,
-    maxHeight: '90%',
-    minHeight: 500,
-    overflow: 'hidden',
-    ...Platform.select({
-      web: {
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-      },
-      default: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 16,
-        elevation: 10,
-      },
-    }),
-  },
-  closeButton: {
-    position: 'absolute',
-    top: spacing.md,
-    left: spacing.md,
-    zIndex: 10,
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  sidebar: {
-    width: 200,
-    backgroundColor: colors.background,
-    paddingTop: spacing.xl + spacing.lg,
-    paddingHorizontal: spacing.sm,
-    borderRightWidth: 1,
-    borderRightColor: colors.border,
-  },
-  sidebarItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: 8,
-    marginBottom: 2,
-    gap: spacing.sm,
-  },
-  sidebarItemActive: {
-    backgroundColor: colors.surface,
-  },
-  sidebarItemHovered: {
-    backgroundColor: colors.menuItemHover,
-  },
-  sidebarItemText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  sidebarItemTextActive: {
-    color: colors.text,
-    fontWeight: '500',
-  },
-  mainContent: {
-    flex: 1,
-    paddingTop: spacing.xl,
-    paddingHorizontal: spacing.xl,
-  },
-  contentScroll: {
-    flex: 1,
-  },
+const createStyles = (colors: any, windowWidth: number, windowHeight: number, isMobile: boolean) => {
+  // Calculate responsive dimensions
+  const modalWidth = isMobile ? windowWidth - 32 : Math.min(700, windowWidth - 64);
+  const modalHeight = isMobile ? windowHeight - 48 : Math.min(windowHeight * 0.9, 600);
+  const sidebarWidth = isMobile ? '100%' : 200;
+
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: isMobile ? 'flex-end' : 'center',
+      alignItems: 'center',
+      padding: isMobile ? 0 : spacing.lg,
+    },
+    container: {
+      backgroundColor: colors.surface,
+      borderRadius: isMobile ? 16 : 16,
+      borderBottomLeftRadius: isMobile ? 0 : 16,
+      borderBottomRightRadius: isMobile ? 0 : 16,
+      width: isMobile ? '100%' : modalWidth,
+      maxWidth: isMobile ? '100%' : 700,
+      height: isMobile ? modalHeight : 'auto',
+      maxHeight: isMobile ? '95%' : '85%',
+      minHeight: isMobile ? 400 : 450,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderBottomWidth: isMobile ? 0 : 1,
+      ...Platform.select({
+        web: {
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+        },
+        default: {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.4,
+          shadowRadius: 16,
+          elevation: 10,
+        },
+      }),
+    },
+    closeButton: {
+      position: 'absolute',
+      top: spacing.md,
+      right: isMobile ? spacing.md : 'auto',
+      left: isMobile ? 'auto' : spacing.md,
+      zIndex: 10,
+      width: 36,
+      height: 36,
+      borderRadius: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: isMobile ? colors.background : 'transparent',
+    },
+    modalContent: {
+      flex: 1,
+      flexDirection: isMobile ? 'column' : 'row',
+    },
+    sidebar: isMobile ? {
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+    } : {
+      width: sidebarWidth,
+      backgroundColor: colors.background,
+      paddingTop: spacing.xl + spacing.lg,
+      paddingHorizontal: spacing.sm,
+      borderRightWidth: 1,
+      borderRightColor: colors.border,
+    },
+    sidebarMobileContent: {
+      paddingHorizontal: spacing.md,
+      gap: spacing.xs,
+    },
+    sidebarItemMobile: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: 8,
+      minWidth: 70,
+    },
+    sidebarItemTextMobile: {
+      fontSize: 11,
+      color: colors.textSecondary,
+      marginTop: 4,
+      textAlign: 'center',
+    },
+    sidebarItemTextActiveMobile: {
+      color: colors.primary,
+      fontWeight: '600',
+    },
+    sidebarItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: 8,
+      marginBottom: 2,
+      gap: spacing.sm,
+    },
+    sidebarItemActive: {
+      backgroundColor: colors.surface,
+    },
+    sidebarItemHovered: {
+      backgroundColor: colors.menuItemHover,
+    },
+    sidebarItemText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    sidebarItemTextActive: {
+      color: colors.text,
+      fontWeight: '500',
+    },
+    mainContent: {
+      flex: 1,
+      paddingTop: isMobile ? spacing.md : spacing.xl,
+      paddingHorizontal: isMobile ? spacing.md : spacing.xl,
+      paddingRight: isMobile ? spacing.md : 32,
+      paddingBottom: isMobile ? spacing.lg : spacing.md,
+      overflow: 'visible',
+    },
+    contentScroll: {
+      flex: 1,
+      overflow: 'visible',
+    },
   contentTitle: {
-    fontSize: 20,
+    fontSize: isMobile ? 18 : 20,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: spacing.xl,
+    marginBottom: isMobile ? spacing.md : spacing.xl,
+  },
+  contentPressable: {
+    flex: 1,
   },
   dropdownContainer: {
     marginBottom: spacing.xs,
+    position: 'relative',
   },
   settingRow: {
     flexDirection: 'row',
@@ -881,28 +1009,52 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    flexWrap: isMobile ? 'wrap' : 'nowrap',
+    gap: isMobile ? spacing.xs : 0,
   },
   settingLabel: {
-    fontSize: 14,
+    fontSize: isMobile ? 13 : 14,
     color: colors.text,
+    flex: isMobile ? 0 : 1,
+    minWidth: isMobile ? '100%' : 'auto',
   },
   settingValueContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+    flex: isMobile ? 1 : 0,
+    flexShrink: 0,
+    justifyContent: isMobile ? 'space-between' : 'flex-end',
+    width: isMobile ? '100%' : 'auto',
   },
   settingValue: {
-    fontSize: 14,
+    fontSize: isMobile ? 13 : 14,
     color: colors.textSecondary,
+    flexShrink: 0,
+    ...Platform.select({
+      web: {
+        whiteSpace: 'nowrap',
+      } as any,
+      default: {},
+    }),
+  },
+  dropdownListWrapper: {
+    position: isMobile ? 'relative' : 'absolute',
+    top: isMobile ? 0 : '100%',
+    right: isMobile ? 0 : 0,
+    left: isMobile ? 0 : 'auto',
+    marginTop: spacing.xs,
+    marginRight: 0,
+    zIndex: 1000,
   },
   dropdownList: {
     backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 8,
-    marginTop: spacing.xs,
-    marginBottom: spacing.sm,
     overflow: 'hidden',
+    minWidth: isMobile ? '100%' : 250,
+    maxWidth: isMobile ? '100%' : 'auto',
     ...Platform.select({
       web: {
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
@@ -991,16 +1143,18 @@ const createStyles = (colors: any) => StyleSheet.create({
   termsModalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
+    justifyContent: isMobile ? 'flex-end' : 'center',
     alignItems: 'center',
-    padding: spacing.lg,
+    padding: isMobile ? 0 : spacing.lg,
   },
   termsModalContainer: {
     backgroundColor: colors.background,
-    borderRadius: 16,
+    borderRadius: isMobile ? 16 : 16,
+    borderBottomLeftRadius: isMobile ? 0 : 16,
+    borderBottomRightRadius: isMobile ? 0 : 16,
     width: '100%',
-    maxWidth: 600,
-    maxHeight: '90%',
+    maxWidth: isMobile ? '100%' : 600,
+    maxHeight: isMobile ? '95%' : '90%',
     ...Platform.select({
       web: {
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
@@ -1085,6 +1239,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   termsFooterSpacer: {
     height: spacing.xl,
   },
-});
+  });
+};
 
 export default SettingsModal;

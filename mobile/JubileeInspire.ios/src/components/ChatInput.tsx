@@ -464,7 +464,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           value={text}
           onChangeText={handleTextChange}
           placeholder={placeholder}
-          placeholderTextColor="#ffffff"
+          placeholderTextColor={colors.placeholder}
           multiline
           maxLength={4000}
           editable={!disabled}
@@ -1048,7 +1048,7 @@ const createStyles = (colors: any, centered: boolean) => StyleSheet.create({
     paddingVertical: spacing.sm,
     minHeight: 48,
     width: '100%',
-    maxWidth: centered ? 700 : undefined,
+    maxWidth: centered ? 800 : undefined,
   },
   inputWrapperFocused: {
     borderWidth: 2,

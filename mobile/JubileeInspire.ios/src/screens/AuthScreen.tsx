@@ -27,7 +27,7 @@ import { useTheme } from '../contexts/ThemeContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Auth'>;
 
-type AuthMode = 'signin' | 'signup';
+type AuthMode = 'signin' | 'signup' | 'forgotPassword' | 'resetPassword';
 
 const AuthScreen: React.FC<Props> = ({ navigation }) => {
   const { signIn } = useAuth();
@@ -39,6 +39,13 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Forgot password states
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSignIn = async () => {
     if (!email.trim() || !password.trim()) {
@@ -172,9 +179,127 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
   const handleSubmit = () => {
     if (mode === 'signin') {
       handleSignIn();
-    } else {
+    } else if (mode === 'signup') {
       handleSignUp();
+    } else if (mode === 'forgotPassword') {
+      handleForgotPassword();
+    } else if (mode === 'resetPassword') {
+      handleResetPassword();
     }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      Alert.alert('Error', 'Please enter your email address');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const apiUrl = process.env.CODEX_API_URL || 'https://inspirecodex.com/api';
+
+      const response = await fetch(`${apiUrl}/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to send reset email');
+      }
+
+      console.log('✅ Password reset email sent to:', email);
+      setSuccessMessage('Password reset instructions have been sent to your email.');
+
+      // Move to reset password view after delay
+      setTimeout(() => {
+        setSuccessMessage(null);
+        setMode('resetPassword');
+      }, 2000);
+    } catch (error: any) {
+      console.error('❌ Forgot password error:', error);
+      Alert.alert('Error', error.message || 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetCode.trim()) {
+      Alert.alert('Error', 'Please enter the reset code from your email');
+      return;
+    }
+
+    if (!newPassword.trim()) {
+      Alert.alert('Error', 'Please enter a new password');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      Alert.alert('Error', 'Password must be at least 8 characters');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const apiUrl = process.env.CODEX_API_URL || 'https://inspirecodex.com/api';
+
+      const response = await fetch(`${apiUrl}/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          code: resetCode.trim(),
+          newPassword: newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to reset password');
+      }
+
+      console.log('✅ Password reset successful');
+      setSuccessMessage('Password reset successful! You can now sign in with your new password.');
+
+      // Clear reset fields and go back to sign in
+      setResetCode('');
+      setNewPassword('');
+      setConfirmPassword('');
+
+      setTimeout(() => {
+        setSuccessMessage(null);
+        setMode('signin');
+      }, 2500);
+    } catch (error: any) {
+      console.error('❌ Reset password error:', error);
+      Alert.alert('Error', error.message || 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBackToSignIn = () => {
+    setResetCode('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setMode('signin');
   };
 
   const styles = createStyles(colors);
@@ -211,32 +336,46 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
           <View style={styles.titleContainer}>
             <Text style={styles.title}>Jubilee Inspire</Text>
             <Text style={styles.subtitle}>
-              {mode === 'signin' ? 'Welcome back' : 'Create your account'}
+              {mode === 'signin' && 'Welcome back'}
+              {mode === 'signup' && 'Create your account'}
+              {mode === 'forgotPassword' && 'Reset your password'}
+              {mode === 'resetPassword' && 'Enter your new password'}
             </Text>
           </View>
 
-          {/* Mode Tabs */}
-          <View style={styles.tabs}>
-            <TouchableOpacity
-              style={[styles.tab, mode === 'signin' && styles.tabActive]}
-              onPress={() => setMode('signin')}
-            >
-              <Text style={[styles.tabText, mode === 'signin' && styles.tabTextActive]}>
-                Sign In
-              </Text>
+          {/* Mode Tabs - Only show for signin/signup */}
+          {(mode === 'signin' || mode === 'signup') && (
+            <View style={styles.tabs}>
+              <TouchableOpacity
+                style={[styles.tab, mode === 'signin' && styles.tabActive]}
+                onPress={() => setMode('signin')}
+              >
+                <Text style={[styles.tabText, mode === 'signin' && styles.tabTextActive]}>
+                  Sign In
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tab, mode === 'signup' && styles.tabActive]}
+                onPress={() => setMode('signup')}
+              >
+                <Text style={[styles.tabText, mode === 'signup' && styles.tabTextActive]}>
+                  Sign Up
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Back to Sign In - For forgot/reset password modes */}
+          {(mode === 'forgotPassword' || mode === 'resetPassword') && (
+            <TouchableOpacity style={styles.backToSignIn} onPress={handleBackToSignIn}>
+              <Ionicons name="arrow-back" size={20} color={colors.primary} />
+              <Text style={styles.backToSignInText}>Back to Sign In</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, mode === 'signup' && styles.tabActive]}
-              onPress={() => setMode('signup')}
-            >
-              <Text style={[styles.tabText, mode === 'signup' && styles.tabTextActive]}>
-                Sign Up
-              </Text>
-            </TouchableOpacity>
-          </View>
+          )}
 
           {/* Form */}
           <View style={styles.form}>
+            {/* Sign Up: Display Name */}
             {mode === 'signup' && (
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Display Name</Text>
@@ -245,7 +384,7 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
                   value={displayName}
                   onChangeText={setDisplayName}
                   placeholder="Enter your name"
-                  placeholderTextColor={colors.textSecondary}
+                  placeholderTextColor={colors.placeholder}
                   autoCapitalize="words"
                   autoCorrect={false}
                   editable={!loading}
@@ -253,52 +392,142 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
               </View>
             )}
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Enter your email"
-                placeholderTextColor={colors.textSecondary}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!loading}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.passwordContainer}>
+            {/* Sign In/Sign Up/Forgot Password: Email */}
+            {(mode === 'signin' || mode === 'signup' || mode === 'forgotPassword') && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email</Text>
                 <TextInput
-                  style={styles.passwordInput}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Enter your password"
-                  placeholderTextColor={colors.textSecondary}
-                  secureTextEntry={!showPassword}
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="Enter your email"
+                  placeholderTextColor={colors.placeholder}
+                  keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
                   editable={!loading}
                 />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={styles.eyeButton}
-                >
-                  <Ionicons
-                    name={showPassword ? 'eye-outline' : 'eye-off-outline'}
-                    size={24}
-                    color={colors.textSecondary}
-                  />
-                </TouchableOpacity>
               </View>
-            </View>
+            )}
+
+            {/* Sign In/Sign Up: Password */}
+            {(mode === 'signin' || mode === 'signup') && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Password</Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Enter your password"
+                    placeholderTextColor={colors.placeholder}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    editable={!loading}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeButton}
+                  >
+                    <Ionicons
+                      name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                      size={24}
+                      color={colors.textSecondary}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
 
             {mode === 'signup' && (
               <Text style={styles.passwordHint}>
                 Password must be at least 8 characters
               </Text>
+            )}
+
+            {/* Forgot Password: Description */}
+            {mode === 'forgotPassword' && (
+              <Text style={styles.forgotDescription}>
+                Enter your email address and we'll send you instructions to reset your password.
+              </Text>
+            )}
+
+            {/* Reset Password: Code and New Password fields */}
+            {mode === 'resetPassword' && (
+              <>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Reset Code</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={resetCode}
+                    onChangeText={setResetCode}
+                    placeholder="Enter the code from your email"
+                    placeholderTextColor={colors.placeholder}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    editable={!loading}
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>New Password</Text>
+                  <View style={styles.passwordContainer}>
+                    <TextInput
+                      style={styles.passwordInput}
+                      value={newPassword}
+                      onChangeText={setNewPassword}
+                      placeholder="Enter new password"
+                      placeholderTextColor={colors.placeholder}
+                      secureTextEntry={!showNewPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={!loading}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowNewPassword(!showNewPassword)}
+                      style={styles.eyeButton}
+                    >
+                      <Ionicons
+                        name={showNewPassword ? 'eye-outline' : 'eye-off-outline'}
+                        size={24}
+                        color={colors.textSecondary}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Confirm Password</Text>
+                  <View style={styles.passwordContainer}>
+                    <TextInput
+                      style={styles.passwordInput}
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                      placeholder="Confirm new password"
+                      placeholderTextColor={colors.placeholder}
+                      secureTextEntry={!showConfirmPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={!loading}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                      style={styles.eyeButton}
+                    >
+                      <Ionicons
+                        name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
+                        size={24}
+                        color={colors.textSecondary}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <Text style={styles.passwordHint}>
+                  Password must be at least 8 characters
+                </Text>
+              </>
             )}
 
             {/* Submit Button */}
@@ -311,15 +540,31 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
                 <ActivityIndicator color="#000000" />
               ) : (
                 <Text style={styles.submitButtonText}>
-                  {mode === 'signin' ? 'Sign In' : 'Sign Up'}
+                  {mode === 'signin' && 'Sign In'}
+                  {mode === 'signup' && 'Sign Up'}
+                  {mode === 'forgotPassword' && 'Send Reset Email'}
+                  {mode === 'resetPassword' && 'Reset Password'}
                 </Text>
               )}
             </TouchableOpacity>
 
-            {/* Forgot Password */}
+            {/* Forgot Password Link */}
             {mode === 'signin' && (
-              <TouchableOpacity style={styles.forgotPassword}>
+              <TouchableOpacity
+                style={styles.forgotPassword}
+                onPress={() => setMode('forgotPassword')}
+              >
                 <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Resend Code Link */}
+            {mode === 'resetPassword' && (
+              <TouchableOpacity
+                style={styles.forgotPassword}
+                onPress={() => setMode('forgotPassword')}
+              >
+                <Text style={styles.forgotPasswordText}>Didn't receive the code? Resend</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -372,6 +617,24 @@ const createStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 4,
+  },
+  backToSignIn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
+    gap: spacing.xs,
+  },
+  backToSignInText: {
+    fontSize: typography.fontSize.base,
+    color: colors.primary,
+    fontWeight: '500',
+  },
+  forgotDescription: {
+    fontSize: typography.fontSize.base,
+    color: colors.textSecondary,
+    lineHeight: 24,
+    marginBottom: spacing.xl,
   },
   tab: {
     flex: 1,
