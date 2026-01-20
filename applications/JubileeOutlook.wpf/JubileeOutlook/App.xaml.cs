@@ -204,6 +204,7 @@ public partial class App : Application
     /// Handles user sign out by closing the current MainWindow and showing a fresh Authentication window.
     /// If authentication succeeds, a new MainWindow is created with fresh state.
     /// If authentication fails or is cancelled, the application shuts down.
+    /// Preserves window state (size, position, maximized) across the transition.
     /// </summary>
     public void HandleSignOut()
     {
@@ -212,15 +213,52 @@ public partial class App : Application
         // Switch to explicit shutdown mode so closing MainWindow doesn't exit the app
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-        // Close the current MainWindow to clear all session state
+        // Capture current window state before closing
         var oldMainWindow = MainWindow;
+        WindowState savedWindowState = WindowState.Normal;
+        double savedWidth = 1200;
+        double savedHeight = 800;
+        double savedLeft = double.NaN;
+        double savedTop = double.NaN;
+
+        if (oldMainWindow != null)
+        {
+            savedWindowState = oldMainWindow.WindowState;
+            // If maximized, get the restore bounds for the normal size
+            if (savedWindowState == WindowState.Maximized)
+            {
+                savedWidth = oldMainWindow.RestoreBounds.Width;
+                savedHeight = oldMainWindow.RestoreBounds.Height;
+                savedLeft = oldMainWindow.RestoreBounds.Left;
+                savedTop = oldMainWindow.RestoreBounds.Top;
+            }
+            else
+            {
+                savedWidth = oldMainWindow.Width;
+                savedHeight = oldMainWindow.Height;
+                savedLeft = oldMainWindow.Left;
+                savedTop = oldMainWindow.Top;
+            }
+            Console.WriteLine($"[JubileeOutlook] Captured window state: {savedWindowState}, Size: {savedWidth}x{savedHeight}, Pos: {savedLeft},{savedTop}");
+        }
+
+        // Close the current MainWindow to clear all session state
         MainWindow = null;
         oldMainWindow?.Close();
 
         Console.WriteLine("[JubileeOutlook] MainWindow closed, showing fresh Authentication window");
 
-        // Show a fresh authentication window
+        // Show a fresh authentication window with the same dimensions
         var authWindow = new AuthenticationWindow();
+
+        // Apply saved window state to auth window
+        authWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+        authWindow.Width = savedWidth;
+        authWindow.Height = savedHeight;
+        if (!double.IsNaN(savedLeft)) authWindow.Left = savedLeft;
+        if (!double.IsNaN(savedTop)) authWindow.Top = savedTop;
+        authWindow.WindowState = savedWindowState;
+
         var authResult = authWindow.ShowDialog();
 
         if (authResult != true || !authWindow.AuthenticationSuccessful)
@@ -232,14 +270,23 @@ public partial class App : Application
 
         Console.WriteLine("[JubileeOutlook] Re-authentication successful, creating new MainWindow");
 
-        // Create a completely new MainWindow with fresh state
+        // Create a completely new MainWindow with fresh state but preserved window dimensions
         var newMainWindow = new MainWindow();
+
+        // Apply saved window state to new MainWindow
+        newMainWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+        newMainWindow.Width = savedWidth;
+        newMainWindow.Height = savedHeight;
+        if (!double.IsNaN(savedLeft)) newMainWindow.Left = savedLeft;
+        if (!double.IsNaN(savedTop)) newMainWindow.Top = savedTop;
+        newMainWindow.WindowState = savedWindowState;
+
         MainWindow = newMainWindow;
 
         // Switch back to normal shutdown mode
         ShutdownMode = ShutdownMode.OnMainWindowClose;
 
         newMainWindow.Show();
-        Console.WriteLine("[JubileeOutlook] New MainWindow shown");
+        Console.WriteLine("[JubileeOutlook] New MainWindow shown with preserved window state");
     }
 }
