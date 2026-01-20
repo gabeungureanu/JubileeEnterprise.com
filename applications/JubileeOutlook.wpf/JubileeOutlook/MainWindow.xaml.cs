@@ -1247,6 +1247,24 @@ public partial class MainWindow : Window
     {
         ProfilePopup.IsOpen = false;
         await _authManager.SignOutAsync();
+
+        // Clear stored credentials so user must re-authenticate
+        await _secureStorage.DeleteAsync("signInCredentials");
+
+        // Show authentication window - user must sign in again
+        var authWindow = new AuthenticationWindow();
+        var authResult = authWindow.ShowDialog();
+
+        if (authResult != true || !authWindow.AuthenticationSuccessful)
+        {
+            // User cancelled or failed to authenticate - close the application
+            Application.Current.Shutdown();
+        }
+        else
+        {
+            // User successfully signed in - update the UI
+            UpdateProfileUI();
+        }
     }
 
     /// <summary>
