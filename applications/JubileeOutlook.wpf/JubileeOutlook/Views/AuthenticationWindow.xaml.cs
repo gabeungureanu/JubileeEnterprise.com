@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,6 +17,7 @@ public partial class AuthenticationWindow : Window
     private readonly SecureStorageService _secureStorage;
     private enum AuthPanel { SignIn, SignUp, ForgotPassword }
     private AuthPanel _currentPanel = AuthPanel.SignIn;
+    private bool _isPasswordVisible = false;
 
     /// <summary>
     /// Indicates whether authentication was successful
@@ -117,8 +119,8 @@ public partial class AuthenticationWindow : Window
         SignUpPanel.Visibility = panel == AuthPanel.SignUp ? Visibility.Visible : Visibility.Collapsed;
         ForgotPasswordPanel.Visibility = panel == AuthPanel.ForgotPassword ? Visibility.Visible : Visibility.Collapsed;
 
-        // Update header text based on panel
-        // The Sign Up link visibility is controlled by the panel
+        // Clear all error messages when switching panels
+        ClearAllErrors();
     }
 
     private void SignUpLink_Click(object sender, MouseButtonEventArgs e)
@@ -139,10 +141,226 @@ public partial class AuthenticationWindow : Window
 
     #endregion
 
+    #region Validation
+
+    private static readonly Regex EmailRegex = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
+
+    private void ClearAllErrors()
+    {
+        EmailErrorText.Visibility = Visibility.Collapsed;
+        PasswordErrorText.Visibility = Visibility.Collapsed;
+        FullNameErrorText.Visibility = Visibility.Collapsed;
+        SignUpEmailErrorText.Visibility = Visibility.Collapsed;
+        SignUpPasswordErrorText.Visibility = Visibility.Collapsed;
+        ConfirmPasswordErrorText.Visibility = Visibility.Collapsed;
+    }
+
+    private void ShowError(TextBlock errorBlock, string message)
+    {
+        errorBlock.Text = message;
+        errorBlock.Visibility = Visibility.Visible;
+    }
+
+    private void HideError(TextBlock errorBlock)
+    {
+        errorBlock.Visibility = Visibility.Collapsed;
+    }
+
+    private bool ValidateSignIn()
+    {
+        bool isValid = true;
+        var email = EmailTextBox.Text?.Trim();
+        var password = PasswordBox.Password;
+
+        // Validate email
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            ShowError(EmailErrorText, "Email address is required");
+            isValid = false;
+        }
+        else if (!EmailRegex.IsMatch(email))
+        {
+            ShowError(EmailErrorText, "Please enter a valid email address");
+            isValid = false;
+        }
+        else
+        {
+            HideError(EmailErrorText);
+        }
+
+        // Validate password
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            ShowError(PasswordErrorText, "Password is required");
+            isValid = false;
+        }
+        else
+        {
+            HideError(PasswordErrorText);
+        }
+
+        return isValid;
+    }
+
+    private bool ValidateSignUp()
+    {
+        bool isValid = true;
+        var fullName = FullNameTextBox.Text?.Trim();
+        var email = SignUpEmailTextBox.Text?.Trim();
+        var password = SignUpPasswordBox.Password;
+        var confirmPassword = ConfirmPasswordBox.Password;
+
+        // Validate full name
+        if (string.IsNullOrWhiteSpace(fullName))
+        {
+            ShowError(FullNameErrorText, "Full name is required");
+            isValid = false;
+        }
+        else if (fullName.Length < 2)
+        {
+            ShowError(FullNameErrorText, "Name must be at least 2 characters");
+            isValid = false;
+        }
+        else
+        {
+            HideError(FullNameErrorText);
+        }
+
+        // Validate email
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            ShowError(SignUpEmailErrorText, "Email address is required");
+            isValid = false;
+        }
+        else if (!EmailRegex.IsMatch(email))
+        {
+            ShowError(SignUpEmailErrorText, "Please enter a valid email address");
+            isValid = false;
+        }
+        else
+        {
+            HideError(SignUpEmailErrorText);
+        }
+
+        // Validate password
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            ShowError(SignUpPasswordErrorText, "Password is required");
+            isValid = false;
+        }
+        else if (password.Length < 6)
+        {
+            ShowError(SignUpPasswordErrorText, "Password must be at least 6 characters");
+            isValid = false;
+        }
+        else
+        {
+            HideError(SignUpPasswordErrorText);
+        }
+
+        // Validate confirm password
+        if (string.IsNullOrWhiteSpace(confirmPassword))
+        {
+            ShowError(ConfirmPasswordErrorText, "Please confirm your password");
+            isValid = false;
+        }
+        else if (password != confirmPassword)
+        {
+            ShowError(ConfirmPasswordErrorText, "Passwords do not match");
+            isValid = false;
+        }
+        else
+        {
+            HideError(ConfirmPasswordErrorText);
+        }
+
+        return isValid;
+    }
+
+    // Real-time validation event handlers
+    private void EmailTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (EmailErrorText.Visibility == Visibility.Visible)
+        {
+            var email = EmailTextBox.Text?.Trim();
+            if (!string.IsNullOrWhiteSpace(email) && EmailRegex.IsMatch(email))
+            {
+                HideError(EmailErrorText);
+            }
+        }
+    }
+
+    private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+    {
+        if (PasswordErrorText.Visibility == Visibility.Visible)
+        {
+            if (!string.IsNullOrWhiteSpace(PasswordBox.Password))
+            {
+                HideError(PasswordErrorText);
+            }
+        }
+        // Sync with visible textbox if password is shown
+        if (_isPasswordVisible)
+        {
+            PasswordTextBox.Text = PasswordBox.Password;
+        }
+    }
+
+    private void FullNameTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (FullNameErrorText.Visibility == Visibility.Visible)
+        {
+            var name = FullNameTextBox.Text?.Trim();
+            if (!string.IsNullOrWhiteSpace(name) && name.Length >= 2)
+            {
+                HideError(FullNameErrorText);
+            }
+        }
+    }
+
+    private void SignUpEmailTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (SignUpEmailErrorText.Visibility == Visibility.Visible)
+        {
+            var email = SignUpEmailTextBox.Text?.Trim();
+            if (!string.IsNullOrWhiteSpace(email) && EmailRegex.IsMatch(email))
+            {
+                HideError(SignUpEmailErrorText);
+            }
+        }
+    }
+
+    private void SignUpPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+    {
+        if (SignUpPasswordErrorText.Visibility == Visibility.Visible)
+        {
+            if (!string.IsNullOrWhiteSpace(SignUpPasswordBox.Password) && SignUpPasswordBox.Password.Length >= 6)
+            {
+                HideError(SignUpPasswordErrorText);
+            }
+        }
+    }
+
+    private void ConfirmPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+    {
+        if (ConfirmPasswordErrorText.Visibility == Visibility.Visible)
+        {
+            if (SignUpPasswordBox.Password == ConfirmPasswordBox.Password)
+            {
+                HideError(ConfirmPasswordErrorText);
+            }
+        }
+    }
+
+    #endregion
+
     #region Sign In
 
     private async void SignInButton_Click(object sender, RoutedEventArgs e)
     {
+        if (!ValidateSignIn())
+            return;
+
         await PerformSignInAsync();
     }
 
@@ -153,7 +371,6 @@ public partial class AuthenticationWindow : Window
 
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
-            MessageDialog.ShowWarning(this, "Please enter your email and password.", "Sign In");
             return;
         }
 
@@ -202,35 +419,19 @@ public partial class AuthenticationWindow : Window
 
     private async void SignUpButton_Click(object sender, RoutedEventArgs e)
     {
+        if (!ValidateSignUp())
+            return;
+
         var fullName = FullNameTextBox.Text?.Trim();
         var email = SignUpEmailTextBox.Text?.Trim();
         var password = SignUpPasswordBox.Password;
-        var confirmPassword = ConfirmPasswordBox.Password;
-
-        if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-        {
-            MessageDialog.ShowWarning(this, "Please fill in all fields.", "Create Account");
-            return;
-        }
-
-        if (password != confirmPassword)
-        {
-            MessageDialog.ShowWarning(this, "Passwords do not match.", "Create Account");
-            return;
-        }
-
-        if (password.Length < 6)
-        {
-            MessageDialog.ShowWarning(this, "Password must be at least 6 characters long.", "Create Account");
-            return;
-        }
 
         try
         {
             SetLoading(true, "Creating account...");
             SignUpButton.IsEnabled = false;
 
-            await _authManager.RegisterAsync(fullName, email, password, NewsletterCheckBox.IsChecked == true);
+            await _authManager.RegisterAsync(fullName!, email!, password, NewsletterCheckBox.IsChecked == true);
 
             // Save credentials for auto-login
             await _secureStorage.StoreAsync("signInCredentials", new SavedSignInCredentials
@@ -267,6 +468,12 @@ public partial class AuthenticationWindow : Window
         if (string.IsNullOrWhiteSpace(email))
         {
             MessageDialog.ShowWarning(this, "Please enter your email address.", "Forgot Password");
+            return;
+        }
+
+        if (!EmailRegex.IsMatch(email))
+        {
+            MessageDialog.ShowWarning(this, "Please enter a valid email address.", "Forgot Password");
             return;
         }
 
@@ -312,9 +519,25 @@ public partial class AuthenticationWindow : Window
 
     private void TogglePassword_Click(object sender, RoutedEventArgs e)
     {
-        // Note: WPF PasswordBox doesn't support showing password directly
-        // This would require a custom control or overlay TextBox
-        // For now, we'll just toggle the icon as a placeholder
+        _isPasswordVisible = !_isPasswordVisible;
+
+        if (_isPasswordVisible)
+        {
+            // Show password as plain text
+            PasswordTextBox.Text = PasswordBox.Password;
+            PasswordBox.Visibility = Visibility.Collapsed;
+            PasswordTextBox.Visibility = Visibility.Visible;
+            PasswordTextBox.Focus();
+            PasswordTextBox.CaretIndex = PasswordTextBox.Text.Length;
+        }
+        else
+        {
+            // Hide password
+            PasswordBox.Password = PasswordTextBox.Text;
+            PasswordTextBox.Visibility = Visibility.Collapsed;
+            PasswordBox.Visibility = Visibility.Visible;
+            PasswordBox.Focus();
+        }
     }
 
     private void Input_KeyDown(object sender, KeyEventArgs e)

@@ -165,29 +165,50 @@ public partial class MainWindow : Window
         // Set initial state after loading
         Loaded += async (s, e) =>
         {
-            _isLoaded = true;
-            // Ensure Home tab content is visible on start
-            ShowTabContent("HomeTab");
-            // Ensure Mail module is visible on start
-            ShowModuleContent(AppModule.Mail);
-            // Initialize notification service for user-friendly error messages
-            NotificationService.Instance.Initialize(NotificationContainer);
-            // Initialize offline status monitoring (network service already started in constructor)
-            InitializeOfflineStatusMonitoring();
+            try
+            {
+                Console.WriteLine("[MainWindow] Loaded event started");
+                _isLoaded = true;
+                // Ensure Home tab content is visible on start
+                ShowTabContent("HomeTab");
+                Console.WriteLine("[MainWindow] ShowTabContent done");
+                // Ensure Mail module is visible on start
+                ShowModuleContent(AppModule.Mail);
+                Console.WriteLine("[MainWindow] ShowModuleContent done");
+                // Initialize notification service for user-friendly error messages
+                NotificationService.Instance.Initialize(NotificationContainer);
+                Console.WriteLine("[MainWindow] NotificationService initialized");
+                // Initialize offline status monitoring (network service already started in constructor)
+                InitializeOfflineStatusMonitoring();
+                Console.WriteLine("[MainWindow] OfflineStatusMonitoring initialized");
 
-            // Wait for initial network check to complete before loading data
-            var networkService = NetworkStatusService.Instance;
-            await networkService.CheckNetworkStatusAsync();
+                // Wait for initial network check to complete before loading data
+                var networkService = NetworkStatusService.Instance;
+                Console.WriteLine("[MainWindow] Checking network status...");
+                await networkService.CheckNetworkStatusAsync();
+                Console.WriteLine($"[MainWindow] Network status - Online: {networkService.IsOnline}, API Reachable: {networkService.IsApiReachable}");
 
-            // Initialize authentication state
-            await _authManager.InitializeAsync();
-            UpdateProfileUI();
-            // Start the animated accent bar
-            StartAccentBarAnimation();
+                // Initialize authentication state
+                Console.WriteLine("[MainWindow] Initializing auth...");
+                await _authManager.InitializeAsync();
+                Console.WriteLine("[MainWindow] Auth initialized");
+                UpdateProfileUI();
+                Console.WriteLine("[MainWindow] Profile UI updated");
+                // Start the animated accent bar
+                StartAccentBarAnimation();
+                Console.WriteLine("[MainWindow] Accent bar animation started");
 
-            // Now load data after network status is confirmed
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Network status - Online: {networkService.IsOnline}, API Reachable: {networkService.IsApiReachable}");
-            await _mainViewModel.InitializeDataAsync();
+                // Now load data after network status is confirmed
+                Console.WriteLine("[MainWindow] Loading initial data...");
+                await _mainViewModel.InitializeDataAsync();
+                Console.WriteLine("[MainWindow] Initial data loaded");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MainWindow] ERROR in Loaded event: {ex.Message}");
+                Console.WriteLine($"[MainWindow] StackTrace: {ex.StackTrace}");
+                Console.WriteLine($"[MainWindow] InnerException: {ex.InnerException?.Message}");
+            }
         };
 
         // Save window state on closing

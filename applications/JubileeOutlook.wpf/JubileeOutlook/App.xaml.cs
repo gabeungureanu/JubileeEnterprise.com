@@ -23,6 +23,25 @@ public partial class App : Application
         Console.WriteLine("[JubileeOutlook] Console attached for debugging");
 #endif
 
+        // Add global exception handlers
+        AppDomain.CurrentDomain.UnhandledException += (s, args) =>
+        {
+            var ex = args.ExceptionObject as Exception;
+            LogException("AppDomain.UnhandledException", ex);
+        };
+
+        DispatcherUnhandledException += (s, args) =>
+        {
+            LogException("DispatcherUnhandledException", args.Exception);
+            args.Handled = true;
+        };
+
+        TaskScheduler.UnobservedTaskException += (s, args) =>
+        {
+            LogException("TaskScheduler.UnobservedTaskException", args.Exception);
+            args.SetObserved();
+        };
+
         // Initialize service configuration for database integration
         // Configuration is read from appsettings.json (Features.EnableDatabaseIntegration)
         // Environment variables can override:
@@ -80,26 +99,104 @@ public partial class App : Application
         Console.WriteLine($"[JubileeOutlook] UseApiServices: {ServiceConfiguration.UseApiServices}");
 
         // Show authentication window first - this is the mandatory access gate
-        Console.WriteLine("[JubileeOutlook] Showing Authentication Window...");
-        var authWindow = new AuthenticationWindow();
-        var authResult = authWindow.ShowDialog();
-
-        // Check if authentication was successful
-        if (authResult != true || !authWindow.AuthenticationSuccessful)
+        try
         {
-            Console.WriteLine("[JubileeOutlook] Authentication cancelled or failed. Shutting down.");
-            Shutdown();
-            return;
+            // Temporarily prevent app shutdown while showing the auth dialog
+            // This ensures the app doesn't exit when the auth dialog closes
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            Console.WriteLine("[JubileeOutlook] ShutdownMode set to OnExplicitShutdown");
+
+            Console.WriteLine("[JubileeOutlook] Creating Authentication Window...");
+            logLines.Add("Creating Authentication Window...");
+            System.IO.File.WriteAllLines(logPath, logLines);
+
+            var authWindow = new AuthenticationWindow();
+
+            Console.WriteLine("[JubileeOutlook] Showing Authentication Window...");
+            logLines.Add("Showing Authentication Window...");
+            System.IO.File.WriteAllLines(logPath, logLines);
+
+            var authResult = authWindow.ShowDialog();
+
+            // Check if authentication was successful
+            if (authResult != true || !authWindow.AuthenticationSuccessful)
+            {
+                Console.WriteLine("[JubileeOutlook] Authentication cancelled or failed. Shutting down.");
+                logLines.Add("Authentication cancelled or failed. Shutting down.");
+                System.IO.File.WriteAllLines(logPath, logLines);
+                Shutdown();
+                return;
+            }
+
+            Console.WriteLine("[JubileeOutlook] Authentication successful!");
+            logLines.Add("Authentication successful!");
+            System.IO.File.WriteAllLines(logPath, logLines);
+
+            // Create and show the main window after successful authentication
+            Console.WriteLine("[JubileeOutlook] Creating MainWindow...");
+            logLines.Add("Creating MainWindow...");
+            System.IO.File.WriteAllLines(logPath, logLines);
+
+            var mainWindow = new MainWindow();
+            MainWindow = mainWindow;
+
+            // Now switch shutdown mode so app closes when main window closes
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
+            Console.WriteLine("[JubileeOutlook] ShutdownMode set to OnMainWindowClose");
+
+            Console.WriteLine("[JubileeOutlook] Showing MainWindow...");
+            logLines.Add("Showing MainWindow...");
+            System.IO.File.WriteAllLines(logPath, logLines);
+
+            mainWindow.Show();
+            Console.WriteLine("[JubileeOutlook] MainWindow shown");
+            logLines.Add("MainWindow shown - app should now be running");
+            System.IO.File.WriteAllLines(logPath, logLines);
         }
+        catch (Exception ex)
+        {
+            LogException("OnStartup", ex);
+            MessageBox.Show($"Failed to start application:\n\n{ex.Message}\n\n{ex.StackTrace}",
+                "JubileeOutlook Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown();
+        }
+    }
 
-        Console.WriteLine("[JubileeOutlook] Authentication successful!");
+    protected override void OnExit(ExitEventArgs e)
+    {
+        var logPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "JubileeOutlook", "exit.log");
+        try
+        {
+            var exitLog = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Application exiting\n" +
+                          $"ExitCode: {e.ApplicationExitCode}\n" +
+                          $"MainWindow: {(MainWindow != null ? "exists" : "null")}\n" +
+                          $"MainWindow.IsVisible: {(MainWindow?.IsVisible == true ? "true" : "false")}\n" +
+                          $"ShutdownMode: {ShutdownMode}\n" +
+                          $"---\n";
+            System.IO.File.AppendAllText(logPath, exitLog);
+            Console.WriteLine($"[JubileeOutlook] Application exiting - ExitCode: {e.ApplicationExitCode}");
+        }
+        catch { }
+        base.OnExit(e);
+    }
 
-        // Create and show the main window after successful authentication
-        // This ensures the CalendarViewModel gets the properly configured service
-        Console.WriteLine("[JubileeOutlook] Creating MainWindow...");
-        var mainWindow = new MainWindow();
-        Console.WriteLine("[JubileeOutlook] Showing MainWindow...");
-        mainWindow.Show();
-        Console.WriteLine("[JubileeOutlook] MainWindow shown");
+    private static void LogException(string source, Exception? ex)
+    {
+        var logPath = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "JubileeOutlook", "error.log");
+
+        try
+        {
+            var errorLog = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {source}\n" +
+                           $"Message: {ex?.Message}\n" +
+                           $"StackTrace: {ex?.StackTrace}\n" +
+                           $"InnerException: {ex?.InnerException?.Message}\n" +
+                           $"---\n";
+            System.IO.File.AppendAllText(logPath, errorLog);
+            Console.WriteLine($"[JubileeOutlook] ERROR in {source}: {ex?.Message}");
+            Console.WriteLine($"[JubileeOutlook] StackTrace: {ex?.StackTrace}");
+        }
+        catch { }
     }
 }
