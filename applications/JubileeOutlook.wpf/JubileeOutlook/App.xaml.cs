@@ -199,4 +199,47 @@ public partial class App : Application
         }
         catch { }
     }
+
+    /// <summary>
+    /// Handles user sign out by closing the current MainWindow and showing a fresh Authentication window.
+    /// If authentication succeeds, a new MainWindow is created with fresh state.
+    /// If authentication fails or is cancelled, the application shuts down.
+    /// </summary>
+    public void HandleSignOut()
+    {
+        Console.WriteLine("[JubileeOutlook] HandleSignOut called - closing MainWindow and showing auth");
+
+        // Switch to explicit shutdown mode so closing MainWindow doesn't exit the app
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+        // Close the current MainWindow to clear all session state
+        var oldMainWindow = MainWindow;
+        MainWindow = null;
+        oldMainWindow?.Close();
+
+        Console.WriteLine("[JubileeOutlook] MainWindow closed, showing fresh Authentication window");
+
+        // Show a fresh authentication window
+        var authWindow = new AuthenticationWindow();
+        var authResult = authWindow.ShowDialog();
+
+        if (authResult != true || !authWindow.AuthenticationSuccessful)
+        {
+            Console.WriteLine("[JubileeOutlook] Re-authentication cancelled or failed. Shutting down.");
+            Shutdown();
+            return;
+        }
+
+        Console.WriteLine("[JubileeOutlook] Re-authentication successful, creating new MainWindow");
+
+        // Create a completely new MainWindow with fresh state
+        var newMainWindow = new MainWindow();
+        MainWindow = newMainWindow;
+
+        // Switch back to normal shutdown mode
+        ShutdownMode = ShutdownMode.OnMainWindowClose;
+
+        newMainWindow.Show();
+        Console.WriteLine("[JubileeOutlook] New MainWindow shown");
+    }
 }

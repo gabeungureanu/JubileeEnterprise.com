@@ -1251,19 +1251,11 @@ public partial class MainWindow : Window
         // Clear stored credentials so user must re-authenticate
         await _secureStorage.DeleteAsync("signInCredentials");
 
-        // Show authentication window - user must sign in again
-        var authWindow = new AuthenticationWindow();
-        var authResult = authWindow.ShowDialog();
-
-        if (authResult != true || !authWindow.AuthenticationSuccessful)
+        // Delegate to App to handle the sign out flow properly
+        // This will close this MainWindow, show fresh auth, and create a new MainWindow if successful
+        if (Application.Current is App app)
         {
-            // User cancelled or failed to authenticate - close the application
-            Application.Current.Shutdown();
-        }
-        else
-        {
-            // User successfully signed in - update the UI
-            UpdateProfileUI();
+            app.HandleSignOut();
         }
     }
 
