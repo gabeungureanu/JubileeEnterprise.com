@@ -3,6 +3,7 @@ using System.Data;
 using System.Runtime.InteropServices;
 using System.Windows;
 using JubileeOutlook.Services;
+using JubileeOutlook.Views;
 
 namespace JubileeOutlook;
 
@@ -78,7 +79,22 @@ public partial class App : Application
         Console.WriteLine($"[JubileeOutlook] User ID: {ServiceConfiguration.UserId}");
         Console.WriteLine($"[JubileeOutlook] UseApiServices: {ServiceConfiguration.UseApiServices}");
 
-        // Create and show the main window after service configuration is initialized
+        // Show authentication window first - this is the mandatory access gate
+        Console.WriteLine("[JubileeOutlook] Showing Authentication Window...");
+        var authWindow = new AuthenticationWindow();
+        var authResult = authWindow.ShowDialog();
+
+        // Check if authentication was successful
+        if (authResult != true || !authWindow.AuthenticationSuccessful)
+        {
+            Console.WriteLine("[JubileeOutlook] Authentication cancelled or failed. Shutting down.");
+            Shutdown();
+            return;
+        }
+
+        Console.WriteLine("[JubileeOutlook] Authentication successful!");
+
+        // Create and show the main window after successful authentication
         // This ensures the CalendarViewModel gets the properly configured service
         Console.WriteLine("[JubileeOutlook] Creating MainWindow...");
         var mainWindow = new MainWindow();

@@ -13,6 +13,7 @@ using System.Windows.Shapes;
 using JubileeOutlook.ViewModels;
 using JubileeOutlook.Services;
 using JubileeOutlook.Models;
+using JubileeOutlook.Views;
 using System.ComponentModel;
 using IOPath = System.IO.Path;
 using IOFile = System.IO.File;
@@ -1007,7 +1008,7 @@ public partial class MainWindow : Window
         _mainViewModel.SelectedMessage = null;
 
         // Show success notification
-        MessageBox.Show("Mail sent successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+        MessageDialog.ShowSuccess(this, "Mail sent successfully!", "Success");
     }
 
     private void OnComposeCancelled(object? sender, EventArgs e)
@@ -1079,7 +1080,7 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[MainWindow] Error sending email: {ex.Message}");
-            MessageBox.Show($"Failed to send email: {ex.Message}", "Send Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageDialog.ShowError(this, $"Failed to send email: {ex.Message}", "Send Error");
         }
     }
 
@@ -1174,7 +1175,7 @@ public partial class MainWindow : Window
     {
         NewDropdownButton.IsChecked = false;
         // Execute the new meeting command (placeholder for now)
-        MessageBox.Show("New Meeting functionality coming soon!", "New Meeting", MessageBoxButton.OK, MessageBoxImage.Information);
+        MessageDialog.ShowInfo(this, "New Meeting functionality coming soon!", "New Meeting");
     }
 
     private void MessageListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -1728,7 +1729,7 @@ public partial class MainWindow : Window
                 case "signIn":
                     if (string.IsNullOrWhiteSpace(signInEmailBox.Text) || string.IsNullOrWhiteSpace(signInPasswordBox.Password))
                     {
-                        MessageBox.Show("Please enter your email and password.", "Sign In", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageDialog.ShowWarning(authDialog, "Please enter your email and password.", "Sign In");
                         return;
                     }
                     actionButton.IsEnabled = false;
@@ -1752,7 +1753,7 @@ public partial class MainWindow : Window
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show(ex.Message, "Sign In Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageDialog.ShowError(authDialog, ex.Message, "Sign In Failed");
                         actionButton.IsEnabled = true;
                         actionButton.Content = "Sign In";
                     }
@@ -1763,12 +1764,12 @@ public partial class MainWindow : Window
                         string.IsNullOrWhiteSpace(createEmailBox.Text) ||
                         string.IsNullOrWhiteSpace(createPasswordBox.Password))
                     {
-                        MessageBox.Show("Please fill in all fields.", "Create Account", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageDialog.ShowWarning(authDialog, "Please fill in all fields.", "Create Account");
                         return;
                     }
                     if (createPasswordBox.Password != confirmPasswordBox.Password)
                     {
-                        MessageBox.Show("Passwords do not match.", "Create Account", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageDialog.ShowWarning(authDialog, "Passwords do not match.", "Create Account");
                         return;
                     }
                     actionButton.IsEnabled = false;
@@ -1780,7 +1781,7 @@ public partial class MainWindow : Window
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show(ex.Message, "Registration Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageDialog.ShowError(authDialog, ex.Message, "Registration Failed");
                         actionButton.IsEnabled = true;
                         actionButton.Content = "Create Account";
                     }
@@ -1789,7 +1790,7 @@ public partial class MainWindow : Window
                 case "forgotPassword":
                     if (string.IsNullOrWhiteSpace(forgotEmailBox.Text))
                     {
-                        MessageBox.Show("Please enter your email address.", "Forgot Password", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageDialog.ShowWarning(authDialog, "Please enter your email address.", "Forgot Password");
                         return;
                     }
                     actionButton.IsEnabled = false;
@@ -1797,12 +1798,12 @@ public partial class MainWindow : Window
                     var success = await _authManager.RequestPasswordResetAsync(forgotEmailBox.Text);
                     if (success)
                     {
-                        MessageBox.Show("Password reset instructions have been sent to your email.", "Email Sent", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageDialog.ShowSuccess(authDialog, "Password reset instructions have been sent to your email.", "Email Sent");
                         ShowPanel("signIn");
                     }
                     else
                     {
-                        MessageBox.Show("Failed to send reset email. Please try again.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageDialog.ShowError(authDialog, "Failed to send reset email. Please try again.", "Error");
                     }
                     actionButton.IsEnabled = true;
                     actionButton.Content = "Send Reset Link";

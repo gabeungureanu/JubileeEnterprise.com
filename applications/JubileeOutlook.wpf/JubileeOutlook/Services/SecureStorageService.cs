@@ -127,6 +127,15 @@ public class SecureStorageService
     }
 
     /// <summary>
+    /// Remove a stored value (async version)
+    /// </summary>
+    public Task DeleteAsync(string key)
+    {
+        Remove(key);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
     /// Clear all secure storage
     /// </summary>
     public void ClearAll()

@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using JubileeOutlook.ViewModels;
+using JubileeOutlook.Views;
 
 namespace JubileeOutlook.Views;
 
@@ -319,7 +320,7 @@ public partial class ComposeMailView : UserControl
         var selection = MessageBodyEditor.Selection;
         if (selection.IsEmpty)
         {
-            MessageBox.Show("Please select text to convert to a hyperlink.", "No Text Selected", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageDialog.ShowInfo(Window.GetWindow(this), "Please select text to convert to a hyperlink.", "No Text Selected");
             return;
         }
 
@@ -431,7 +432,7 @@ public partial class ComposeMailView : UserControl
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Invalid URL: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageDialog.ShowError(Window.GetWindow(this), $"Invalid URL: {ex.Message}", "Error");
             }
         }
     }
@@ -467,7 +468,7 @@ public partial class ComposeMailView : UserControl
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error inserting image: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageDialog.ShowError(Window.GetWindow(this), $"Error inserting image: {ex.Message}", "Error");
             }
         }
     }
