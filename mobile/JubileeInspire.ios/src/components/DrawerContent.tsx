@@ -23,6 +23,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { spacing, typography } from '../config';
 import { useTheme } from '../contexts/ThemeContext';
 import { useDrawer } from '../contexts/DrawerContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Conversation } from '../types';
 import ConversationItem from './ConversationItem';
 import SettingsModal from './SettingsModal';
@@ -31,6 +32,7 @@ import { storage } from '../services/storage';
 const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: drawerNavigation }) => {
   const { colors } = useTheme();
   const { isCollapsed, setIsCollapsed, toggleCollapse, isMobileView } = useDrawer();
+  const { isAuthenticated } = useAuth();
 
   const navigation = useNavigation();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -350,8 +352,15 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
   };
 
   const handleImages = () => {
-    console.log('[DrawerContent] Images');
-    // TODO: Implement images functionality
+    console.log('[DrawerContent] Navigating to Images');
+    drawerNavigation.navigate('HomeStack', {
+      screen: 'Images',
+      params: { timestamp: Date.now() }
+    } as any);
+    // Close drawer on mobile
+    if (isMobileView) {
+      drawerNavigation.closeDrawer();
+    }
   };
 
   return (
@@ -458,7 +467,7 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
               ref={searchInputRef}
               style={[styles.searchInput, { color: colors.text }]}
               placeholder="Search chats"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={colors.placeholder}
               value={searchQuery}
               onChangeText={setSearchQuery}
               onFocus={handleSearchFocus}
@@ -542,33 +551,37 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
             )}
           </ScrollView>
 
-          {/* Footer */}
-          <View style={styles.footer}>
-            <TouchableOpacity style={styles.footerItem} onPress={handleSettings}>
-              <Ionicons name="settings-outline" size={22} color={colors.text} />
-              <Text style={styles.footerText}>Settings</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Footer - Only show settings for authenticated users */}
+          {isAuthenticated && (
+            <View style={styles.footer}>
+              <TouchableOpacity style={styles.footerItem} onPress={handleSettings}>
+                <Ionicons name="settings-outline" size={22} color={colors.text} />
+                <Text style={styles.footerText}>Settings</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </>
       ) : (
-        /* Collapsed state - Show settings icon only at bottom */
-        <View style={styles.collapsedFooter}>
-          <TouchableOpacity
-            style={styles.collapsedMenuItem}
-            onPress={handleSettings}
-            {...(Platform.OS === 'web' ? {
-              onMouseEnter: () => setHoveredItem('settings'),
-              onMouseLeave: () => setHoveredItem(null)
-            } as any : {})}
-          >
-            <Ionicons name="settings-outline" size={20} color={colors.text} />
-            {hoveredItem === 'settings' && Platform.OS === 'web' && (
-              <View style={styles.tooltip}>
-                <Text style={styles.tooltipText}>Settings</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
+        /* Collapsed state - Show settings icon only at bottom for authenticated users */
+        isAuthenticated && (
+          <View style={styles.collapsedFooter}>
+            <TouchableOpacity
+              style={styles.collapsedMenuItem}
+              onPress={handleSettings}
+              {...(Platform.OS === 'web' ? {
+                onMouseEnter: () => setHoveredItem('settings'),
+                onMouseLeave: () => setHoveredItem(null)
+              } as any : {})}
+            >
+              <Ionicons name="settings-outline" size={20} color={colors.text} />
+              {hoveredItem === 'settings' && Platform.OS === 'web' && (
+                <View style={styles.tooltip}>
+                  <Text style={styles.tooltipText}>Settings</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        )
       )}
 
       {/* Centralized Options Menu Modal */}

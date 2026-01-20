@@ -58,12 +58,9 @@ const sampleResponses = [
   "Great question! The Bible addresses this in several places. Let me walk you through some key passages that relate to your question.\n\nIn the Old Testament, we see...",
 ];
 
-// Available personas (from Codex DB)
+// Available personas
 const personas = [
-  { id: 'gabriel', name: 'Gabriel', description: 'Default Inspire persona' },
-  { id: 'michael', name: 'Michael', description: 'Warrior and protector' },
-  { id: 'raphael', name: 'Raphael', description: 'Healer and guide' },
-  { id: 'uriel', name: 'Uriel', description: 'Light and wisdom' },
+  { id: 'jubilee-inspire', name: 'JubileeInspire', description: 'Your AI assistant' },
 ];
 
 const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
@@ -417,21 +414,23 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
               </View>
             </View>
 
-            {/* Menu Items */}
-            <TouchableOpacity
-              style={[styles.profileDropdownItem, hoveredProfileItem === 'settings' && styles.profileDropdownItemHovered]}
-              onPress={() => {
-                setShowProfileMenu(false);
-                setShowSettingsModal(true);
-              }}
-              {...(Platform.OS === 'web' ? {
-                onMouseEnter: () => setHoveredProfileItem('settings'),
-                onMouseLeave: () => setHoveredProfileItem(null),
-              } as any : {})}
-            >
-              <Ionicons name="settings-outline" size={20} color={colors.text} />
-              <Text style={styles.profileDropdownItemText}>Settings</Text>
-            </TouchableOpacity>
+            {/* Menu Items - Settings only for authenticated users */}
+            {isAuthenticated && (
+              <TouchableOpacity
+                style={[styles.profileDropdownItem, hoveredProfileItem === 'settings' && styles.profileDropdownItemHovered]}
+                onPress={() => {
+                  setShowProfileMenu(false);
+                  setShowSettingsModal(true);
+                }}
+                {...(Platform.OS === 'web' ? {
+                  onMouseEnter: () => setHoveredProfileItem('settings'),
+                  onMouseLeave: () => setHoveredProfileItem(null),
+                } as any : {})}
+              >
+                <Ionicons name="settings-outline" size={20} color={colors.text} />
+                <Text style={styles.profileDropdownItemText}>Settings</Text>
+              </TouchableOpacity>
+            )}
 
             {isAuthenticated ? (
               <TouchableOpacity
@@ -588,7 +587,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   emptyChatContent: {
     alignItems: 'center',
     width: '100%',
-    maxWidth: 700,
+    maxWidth: 800,
   },
   messageList: {
     paddingVertical: spacing.sm,

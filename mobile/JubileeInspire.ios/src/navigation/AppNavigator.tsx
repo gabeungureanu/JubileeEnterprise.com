@@ -18,6 +18,7 @@ import { useDrawer } from '../contexts/DrawerContext';
 
 // Screens
 import ChatScreen from '../screens/ChatScreen';
+import ImagesScreen from '../screens/ImagesScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import AppearanceScreen from '../screens/AppearanceScreen';
 import AuthScreen from '../screens/AuthScreen';
@@ -41,6 +42,13 @@ const MainStack: React.FC = () => {
       <Stack.Screen
         name="Chat"
         component={ChatScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="Images"
+        component={ImagesScreen}
         options={{
           headerShown: false,
         }}
