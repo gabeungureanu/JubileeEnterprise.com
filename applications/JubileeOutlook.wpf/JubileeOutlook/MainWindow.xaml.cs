@@ -33,6 +33,12 @@ public partial class MainWindow : Window
     private bool _isLoaded;
     private ViewModels.ComposeMailViewModel? _composeMailViewModel;
 
+    /// <summary>
+    /// Event raised when initial data loading is complete.
+    /// This allows the caller to know when the mail interface is fully ready to display.
+    /// </summary>
+    public event EventHandler? DataLoadingComplete;
+
     // Window state persistence file path
     private static readonly string WindowStateFilePath = IOPath.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -165,29 +171,67 @@ public partial class MainWindow : Window
         // Set initial state after loading
         Loaded += async (s, e) =>
         {
-            _isLoaded = true;
-            // Ensure Home tab content is visible on start
-            ShowTabContent("HomeTab");
-            // Ensure Mail module is visible on start
-            ShowModuleContent(AppModule.Mail);
-            // Initialize notification service for user-friendly error messages
-            NotificationService.Instance.Initialize(NotificationContainer);
-            // Initialize offline status monitoring (network service already started in constructor)
-            InitializeOfflineStatusMonitoring();
+            try
+            {
+                Console.WriteLine("[MainWindow] Loaded event started");
+                _isLoaded = true;
+                // Ensure Home tab content is visible on start
+                ShowTabContent("HomeTab");
+                Console.WriteLine("[MainWindow] ShowTabContent done");
+                // Ensure Mail module is visible on start
+                ShowModuleContent(AppModule.Mail);
+                Console.WriteLine("[MainWindow] ShowModuleContent done");
+                // Initialize notification service for user-friendly error messages
+                NotificationService.Instance.Initialize(NotificationContainer);
+                Console.WriteLine("[MainWindow] NotificationService initialized");
+                // Initialize offline status monitoring (network service already started in constructor)
+                InitializeOfflineStatusMonitoring();
+                Console.WriteLine("[MainWindow] OfflineStatusMonitoring initialized");
 
-            // Wait for initial network check to complete before loading data
-            var networkService = NetworkStatusService.Instance;
-            await networkService.CheckNetworkStatusAsync();
+                // Wait for initial network check to complete before loading data
+                var networkService = NetworkStatusService.Instance;
+                Console.WriteLine("[MainWindow] Checking network status...");
+                await networkService.CheckNetworkStatusAsync();
+                Console.WriteLine($"[MainWindow] Network status - Online: {networkService.IsOnline}, API Reachable: {networkService.IsApiReachable}");
 
-            // Initialize authentication state
-            await _authManager.InitializeAsync();
-            UpdateProfileUI();
-            // Start the animated accent bar
-            StartAccentBarAnimation();
+                // Initialize authentication state
+                Console.WriteLine("[MainWindow] Initializing auth...");
+                await _authManager.InitializeAsync();
+                Console.WriteLine("[MainWindow] Auth initialized");
+                UpdateProfileUI();
+                Console.WriteLine("[MainWindow] Profile UI updated");
+                // Start the animated accent bar
+                StartAccentBarAnimation();
+                Console.WriteLine("[MainWindow] Accent bar animation started");
 
-            // Now load data after network status is confirmed
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Network status - Online: {networkService.IsOnline}, API Reachable: {networkService.IsApiReachable}");
-            await _mainViewModel.InitializeDataAsync();
+                // Update loading overlay status
+                LoadingStatusText.Text = "Loading your emails...";
+
+                // Now load data after network status is confirmed
+                Console.WriteLine("[MainWindow] Loading initial data...");
+                await _mainViewModel.InitializeDataAsync();
+                Console.WriteLine("[MainWindow] Initial data loaded");
+
+                // Hide the loading overlay - data is ready
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+                Console.WriteLine("[MainWindow] Loading overlay hidden");
+
+                // Signal that data loading is complete - mail interface is ready
+                Console.WriteLine("[MainWindow] Raising DataLoadingComplete event");
+                DataLoadingComplete?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MainWindow] ERROR in Loaded event: {ex.Message}");
+                Console.WriteLine($"[MainWindow] StackTrace: {ex.StackTrace}");
+                Console.WriteLine($"[MainWindow] InnerException: {ex.InnerException?.Message}");
+
+                // Hide the loading overlay even on error
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+
+                // Still signal completion even on error so the transition happens
+                DataLoadingComplete?.Invoke(this, EventArgs.Empty);
+            }
         };
 
         // Save window state on closing
@@ -1226,6 +1270,16 @@ public partial class MainWindow : Window
     {
         ProfilePopup.IsOpen = false;
         await _authManager.SignOutAsync();
+
+        // Clear stored credentials so user must re-authenticate
+        await _secureStorage.DeleteAsync("signInCredentials");
+
+        // Delegate to App to handle the sign out flow properly
+        // This will close this MainWindow, show fresh auth, and create a new MainWindow if successful
+        if (Application.Current is App app)
+        {
+            app.HandleSignOut();
+        }
     }
 
     /// <summary>
