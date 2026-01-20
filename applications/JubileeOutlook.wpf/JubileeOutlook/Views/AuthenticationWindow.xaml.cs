@@ -565,7 +565,12 @@ public partial class AuthenticationWindow : Window
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ClickCount == 1)
+        if (e.ClickCount == 2)
+        {
+            // Double-click to toggle maximize/restore
+            MaximizeRestoreButton_Click(sender, e);
+        }
+        else if (e.ClickCount == 1)
         {
             DragMove();
         }
@@ -574,6 +579,35 @@ public partial class AuthenticationWindow : Window
     private void MinimizeButton_Click(object sender, RoutedEventArgs e)
     {
         WindowState = WindowState.Minimized;
+    }
+
+    private void MaximizeRestoreButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (WindowState == WindowState.Maximized)
+        {
+            WindowState = WindowState.Normal;
+        }
+        else
+        {
+            WindowState = WindowState.Maximized;
+        }
+        UpdateMaximizeRestoreIcon();
+    }
+
+    private void UpdateMaximizeRestoreIcon()
+    {
+        if (MaximizeRestoreIcon != null)
+        {
+            // \ue5d0 = maximize icon (filter_none), \ue5d1 = restore icon (crop_square)
+            MaximizeRestoreIcon.Text = WindowState == WindowState.Maximized ? "\ue5d1" : "\ue5d0";
+            MaximizeRestoreButton.ToolTip = WindowState == WindowState.Maximized ? "Restore" : "Maximize";
+        }
+    }
+
+    protected override void OnStateChanged(EventArgs e)
+    {
+        base.OnStateChanged(e);
+        UpdateMaximizeRestoreIcon();
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)

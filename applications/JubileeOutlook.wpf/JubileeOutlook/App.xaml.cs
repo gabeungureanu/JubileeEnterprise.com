@@ -248,16 +248,9 @@ public partial class App : Application
 
         Console.WriteLine("[JubileeOutlook] MainWindow closed, showing fresh Authentication window");
 
-        // Show a fresh authentication window with the same dimensions
+        // Show a fresh authentication window - always maximized for consistent UX
         var authWindow = new AuthenticationWindow();
-
-        // Apply saved window state to auth window
-        authWindow.WindowStartupLocation = WindowStartupLocation.Manual;
-        authWindow.Width = savedWidth;
-        authWindow.Height = savedHeight;
-        if (!double.IsNaN(savedLeft)) authWindow.Left = savedLeft;
-        if (!double.IsNaN(savedTop)) authWindow.Top = savedTop;
-        authWindow.WindowState = savedWindowState;
+        authWindow.WindowState = WindowState.Maximized;
 
         var authResult = authWindow.ShowDialog();
 
@@ -270,7 +263,7 @@ public partial class App : Application
 
         Console.WriteLine("[JubileeOutlook] Re-authentication successful, creating new MainWindow");
 
-        // Create a completely new MainWindow with fresh state but preserved window dimensions
+        // Create a completely new MainWindow with fresh state, preserving window dimensions
         var newMainWindow = new MainWindow();
 
         // Apply saved window state to new MainWindow

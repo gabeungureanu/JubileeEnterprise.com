@@ -7,7 +7,10 @@
         MinWidth="800"
         MinHeight="600"
         WindowStartupLocation="CenterScreen"
-        WindowStyle="SingleBorderWindow"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        WindowState="Maximized"
+        ResizeMode="CanResize"
         Background="#000000">
 
     <Window.Resources>
@@ -234,34 +237,78 @@
         </ResourceDictionary>
     </Window.Resources>
 
+    <!-- Window Chrome for proper resize behavior -->
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="40"
+                      ResizeBorderThickness="5"
+                      GlassFrameThickness="0"
+                      CornerRadius="0"
+                      UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
     <!-- Main Layout -->
     <Grid Background="#000000">
-        <!-- Window Controls at Top Right -->
-        <StackPanel Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Top"
-                    Panel.ZIndex="100">
-            <Button Style="{StaticResource WindowControlButtonStyle}"
-                    Click="MinimizeButton_Click">
-                <TextBlock Text="&#xe15b;"
-                           FontFamily="{StaticResource MaterialIcons}"
-                           FontSize="18"
-                           Foreground="#808080"/>
-            </Button>
-            <Button Style="{StaticResource CloseButtonStyle}"
-                    Click="CloseButton_Click">
-                <TextBlock Text="&#xe5cd;"
-                           FontFamily="{StaticResource MaterialIcons}"
-                           FontSize="18"
-                           Foreground="#808080"/>
-            </Button>
-        </StackPanel>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-        <!-- Draggable Title Bar Area -->
-        <Border Background="Transparent"
-                Height="32"
-                VerticalAlignment="Top"
-                MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"/>
+        <!-- Custom Title Bar -->
+        <Border Grid.Row="0" Background="#0D0D0D"
+                MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <Grid>
+                <!-- App Title on Left -->
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Margin="16,0,0,0">
+                    <TextBlock Text="Jubilee"
+                               FontFamily="{StaticResource RobotoMedium}"
+                               FontSize="14"
+                               Foreground="#FFFFFF"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="Outlook"
+                               FontFamily="{StaticResource RobotoMedium}"
+                               FontSize="14"
+                               Foreground="{StaticResource GoldBrush}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Window Controls on Right -->
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Style="{StaticResource WindowControlButtonStyle}"
+                            Click="MinimizeButton_Click"
+                            ToolTip="Minimize">
+                        <TextBlock Text="&#xe15b;"
+                                   FontFamily="{StaticResource MaterialIcons}"
+                                   FontSize="18"
+                                   Foreground="#808080"/>
+                    </Button>
+                    <Button x:Name="MaximizeRestoreButton"
+                            Style="{StaticResource WindowControlButtonStyle}"
+                            Click="MaximizeRestoreButton_Click"
+                            ToolTip="Restore">
+                        <TextBlock x:Name="MaximizeRestoreIcon"
+                                   Text="&#xe5d1;"
+                                   FontFamily="{StaticResource MaterialIcons}"
+                                   FontSize="18"
+                                   Foreground="#808080"/>
+                    </Button>
+                    <Button Style="{StaticResource CloseButtonStyle}"
+                            Click="CloseButton_Click"
+                            ToolTip="Close">
+                        <TextBlock Text="&#xe5cd;"
+                                   FontFamily="{StaticResource MaterialIcons}"
+                                   FontSize="18"
+                                   Foreground="#808080"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Content Area -->
+        <Grid Grid.Row="1" Background="#000000">
 
         <!-- Centered Authentication Card -->
         <Border Background="{StaticResource CardBackgroundBrush}"
@@ -546,5 +593,6 @@
                            Margin="0,35,0,0"/>
             </StackPanel>
         </Border>
+        </Grid>
     </Grid>
 </Window>
