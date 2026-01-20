@@ -91,4 +91,61 @@ public class RootConfig
     public FeaturesConfig Features { get; set; } = new();
     public StorageConfig Storage { get; set; } = new();
     public LocalCacheSettings LocalCache { get; set; } = new();
+    public OAuth2Config OAuth2 { get; set; } = new();
+}
+
+/// <summary>
+/// OAuth2 configuration for email providers
+/// </summary>
+public class OAuth2Config
+{
+    public GoogleOAuth2Config Google { get; set; } = new();
+    public MicrosoftOAuth2Config Microsoft { get; set; } = new();
+    public YahooOAuth2Config Yahoo { get; set; } = new();
+}
+
+/// <summary>
+/// Google OAuth2 configuration
+/// </summary>
+public class GoogleOAuth2Config
+{
+    public string ClientId { get; set; } = string.Empty;
+    public string ClientSecret { get; set; } = string.Empty;
+    public string RedirectUri { get; set; } = "http://localhost:8890/oauth2callback";
+
+    public bool IsConfigured =>
+        !string.IsNullOrEmpty(ClientId) &&
+        !ClientId.StartsWith("YOUR_") &&
+        !string.IsNullOrEmpty(ClientSecret) &&
+        !ClientSecret.StartsWith("YOUR_");
+}
+
+/// <summary>
+/// Microsoft OAuth2 configuration
+/// </summary>
+public class MicrosoftOAuth2Config
+{
+    public string ClientId { get; set; } = string.Empty;
+    public string TenantId { get; set; } = "common";
+    public string RedirectUri { get; set; } = "http://localhost:8891/oauth2callback";
+
+    public bool IsConfigured =>
+        !string.IsNullOrEmpty(ClientId) &&
+        !ClientId.StartsWith("YOUR_");
+}
+
+/// <summary>
+/// Yahoo OAuth2 configuration
+/// </summary>
+public class YahooOAuth2Config
+{
+    public string ClientId { get; set; } = string.Empty;
+    public string ClientSecret { get; set; } = string.Empty;
+    public string RedirectUri { get; set; } = "http://localhost:8892/oauth2callback";
+
+    public bool IsConfigured =>
+        !string.IsNullOrEmpty(ClientId) &&
+        !ClientId.StartsWith("YOUR_") &&
+        !string.IsNullOrEmpty(ClientSecret) &&
+        !ClientSecret.StartsWith("YOUR_");
 }

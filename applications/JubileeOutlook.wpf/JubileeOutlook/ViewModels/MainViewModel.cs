@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using JubileeOutlook.Models;
 using JubileeOutlook.Services;
+using JubileeOutlook.Services.EmailSync;
 using System.Collections.ObjectModel;
 using System.Windows.Threading;
 
@@ -11,6 +12,7 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly IMailService _mailService;
     private readonly ICalendarService _calendarService;
+    private readonly SyncedEmailDisplayService _syncedEmailService;
 
     [ObservableProperty]
     private ObservableCollection<MailFolder> _folders = new();
@@ -48,10 +50,14 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private MailFolder? _accountRootFolder;
 
+    [ObservableProperty]
+    private bool _hasSyncedAccounts;
+
     public MainViewModel(IMailService mailService, ICalendarService calendarService)
     {
         _mailService = mailService;
         _calendarService = calendarService;
+        _syncedEmailService = new SyncedEmailDisplayService();
 
         // Note: InitializeData is NOT called here anymore
         // It should be called after network status is confirmed in MainWindow.Loaded event
@@ -151,22 +157,49 @@ public partial class MainViewModel : ObservableObject
         {
             System.Diagnostics.Debug.WriteLine("[MainViewModel] InitializeData started");
 
-            // Build initial folder structure asynchronously to properly load from API
-            await RebuildFolderStructureAsync();
+            // First, check for synced email accounts
+            var syncedFolders = await _syncedEmailService.BuildFolderTreeAsync();
+            HasSyncedAccounts = syncedFolders.Count > 0;
 
-            System.Diagnostics.Debug.WriteLine($"[MainViewModel] InitializeData - Folders loaded: {AccountRootFolder?.SubFolders?.Count ?? 0}");
-
-            // Select inbox by default (look in subfolders of root)
-            var inbox = AccountRootFolder?.SubFolders.FirstOrDefault(f => f.Type == FolderType.Inbox);
-            if (inbox != null)
+            if (HasSyncedAccounts)
             {
-                System.Diagnostics.Debug.WriteLine($"[MainViewModel] InitializeData - Selecting inbox: {inbox.Id}");
-                SelectedFolder = inbox;
-                await LoadMessagesAsync(inbox.Id);
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Found {syncedFolders.Count} synced accounts");
+
+                // Use the first synced account as the root
+                var firstAccount = syncedFolders.First();
+                AccountRootFolder = firstAccount;
+                Folders = new ObservableCollection<MailFolder>(syncedFolders);
+
+                // Select inbox by default
+                var inbox = firstAccount.SubFolders.FirstOrDefault(f => f.Type == FolderType.Inbox);
+                if (inbox != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MainViewModel] Selecting synced inbox: {inbox.Name}");
+                    SelectedFolder = inbox;
+                    await LoadSyncedMessagesAsync(inbox.Id);
+                }
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("[MainViewModel] InitializeData - No inbox folder found!");
+                System.Diagnostics.Debug.WriteLine("[MainViewModel] No synced accounts, using API folders");
+
+                // Build initial folder structure asynchronously to properly load from API
+                await RebuildFolderStructureAsync();
+
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] InitializeData - Folders loaded: {AccountRootFolder?.SubFolders?.Count ?? 0}");
+
+                // Select inbox by default (look in subfolders of root)
+                var inbox = AccountRootFolder?.SubFolders.FirstOrDefault(f => f.Type == FolderType.Inbox);
+                if (inbox != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MainViewModel] InitializeData - Selecting inbox: {inbox.Id}");
+                    SelectedFolder = inbox;
+                    await LoadMessagesAsync(inbox.Id);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("[MainViewModel] InitializeData - No inbox folder found!");
+                }
             }
 
             // Load today's events
@@ -178,6 +211,32 @@ public partial class MainViewModel : ObservableObject
         {
             System.Diagnostics.Debug.WriteLine($"[MainViewModel] InitializeData ERROR: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"[MainViewModel] Stack trace: {ex.StackTrace}");
+        }
+    }
+
+    /// <summary>
+    /// Load messages from synced email storage
+    /// </summary>
+    private async Task LoadSyncedMessagesAsync(string folderId)
+    {
+        try
+        {
+            var messages = await _syncedEmailService.GetDisplayMessagesAsync(folderId);
+            Messages = new ObservableCollection<EmailMessage>(messages);
+
+            // Update folder counts
+            if (SelectedFolder != null)
+            {
+                SelectedFolder.UnreadCount = Messages.Count(m => !m.IsRead);
+                SelectedFolder.TotalCount = Messages.Count;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Loaded {messages.Count} synced messages for folder {folderId}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] LoadSyncedMessagesAsync ERROR: {ex.Message}");
+            Messages = new ObservableCollection<EmailMessage>();
         }
     }
 
@@ -193,7 +252,16 @@ public partial class MainViewModel : ObservableObject
         if (newValue != null)
         {
             newValue.IsSelected = true;
-            _ = LoadMessagesAsync(newValue.Id);
+
+            // Check if this is a synced folder (GUID-based ID) or API folder
+            if (HasSyncedAccounts && Guid.TryParse(newValue.Id, out _))
+            {
+                _ = LoadSyncedMessagesAsync(newValue.Id);
+            }
+            else
+            {
+                _ = LoadMessagesAsync(newValue.Id);
+            }
         }
     }
 
@@ -218,6 +286,7 @@ public partial class MainViewModel : ObservableObject
             }
 
             // Store the message for display in the reading pane
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Setting DisplayedMessage: {value.Subject}, Body length: {value.Body?.Length ?? 0}, Preview length: {value.Preview?.Length ?? 0}");
             DisplayedMessage = value;
         }
     }
