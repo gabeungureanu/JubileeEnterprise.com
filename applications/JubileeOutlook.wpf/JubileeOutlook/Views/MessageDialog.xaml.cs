@@ -180,11 +180,29 @@ public partial class MessageDialog : Window
     public static void Show(Window? owner, string message, string title = "Message", DialogIcon icon = DialogIcon.Information)
     {
         var dialog = new MessageDialog(message, title, icon, DialogButtons.OK);
-        if (owner != null)
+        if (owner != null && IsWindowValid(owner))
         {
             dialog.Owner = owner;
         }
         dialog.ShowDialog();
+    }
+
+    /// <summary>
+    /// Checks if a window is valid for use as an owner (loaded, visible, not closed).
+    /// </summary>
+    private static bool IsWindowValid(Window? window)
+    {
+        if (window == null) return false;
+
+        try
+        {
+            // Check if window is loaded, visible, and not being closed
+            return window.IsLoaded && window.IsVisible && !window.Dispatcher.HasShutdownStarted;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     /// <summary>
@@ -203,7 +221,7 @@ public partial class MessageDialog : Window
     public static MessageDialogResult ShowDialog(Window? owner, string message, string title, DialogIcon icon, DialogButtons buttons)
     {
         var dialog = new MessageDialog(message, title, icon, buttons);
-        if (owner != null)
+        if (owner != null && IsWindowValid(owner))
         {
             dialog.Owner = owner;
         }

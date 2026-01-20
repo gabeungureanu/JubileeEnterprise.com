@@ -1001,5 +1001,64 @@
               VerticalAlignment="Top" HorizontalAlignment="Right"
               IsHitTestVisible="True"
               Panel.ZIndex="1000"/>
+
+        <!-- Loading Overlay (for initial data loading during auto-login) -->
+        <Border x:Name="LoadingOverlay"
+                Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2"
+                Background="#000000"
+                Visibility="Visible"
+                Panel.ZIndex="2000">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <!-- Spinner animation -->
+                <Border Width="60" Height="60"
+                        HorizontalAlignment="Center"
+                        Margin="0,0,0,24">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.6" Color="#FFD700"/>
+                    </Border.Effect>
+                    <Border x:Name="LoadingSpinnerBorder"
+                            Width="60" Height="60"
+                            BorderBrush="{StaticResource GoldBrandBrush}"
+                            BorderThickness="3"
+                            CornerRadius="30">
+                        <Border.RenderTransform>
+                            <RotateTransform x:Name="LoadingSpinnerRotation" CenterX="30" CenterY="30"/>
+                        </Border.RenderTransform>
+                        <Border.Triggers>
+                            <EventTrigger RoutedEvent="Border.Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard RepeatBehavior="Forever">
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="LoadingSpinnerRotation"
+                                            Storyboard.TargetProperty="Angle"
+                                            From="0" To="360"
+                                            Duration="0:0:1"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </Border.Triggers>
+                        <!-- Inner circle for visual effect -->
+                        <Ellipse Width="20" Height="20"
+                                 Fill="{StaticResource GoldBrandBrush}"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Top"
+                                 Margin="0,-2,0,0"/>
+                    </Border>
+                </Border>
+                <TextBlock x:Name="LoadingStatusText"
+                           Text="Preparing your mailbox..."
+                           Foreground="#FFFFFF"
+                           FontFamily="{StaticResource RobotoMedium}"
+                           FontSize="18"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="This will only take a moment"
+                           Foreground="#808080"
+                           FontFamily="{StaticResource RobotoRegular}"
+                           FontSize="13"
+                           HorizontalAlignment="Center"
+                           Margin="0,8,0,0"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

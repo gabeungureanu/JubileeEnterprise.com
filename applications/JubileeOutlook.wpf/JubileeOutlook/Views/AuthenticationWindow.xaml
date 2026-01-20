@@ -37,7 +37,7 @@
                 <Setter Property="Foreground" Value="#FFFFFF"/>
                 <Setter Property="BorderBrush" Value="{StaticResource GoldBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="Padding" Value="16,14"/>
+                <Setter Property="Padding" Value="14,10"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="FontFamily" Value="{StaticResource RobotoRegular}"/>
                 <Setter Property="CaretBrush" Value="#FFFFFF"/>
@@ -72,7 +72,7 @@
                 <Setter Property="Foreground" Value="#FFFFFF"/>
                 <Setter Property="BorderBrush" Value="{StaticResource GoldBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="Padding" Value="16,14"/>
+                <Setter Property="Padding" Value="14,10"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="FontFamily" Value="{StaticResource RobotoRegular}"/>
                 <Setter Property="CaretBrush" Value="#FFFFFF"/>
@@ -106,9 +106,9 @@
                 <Setter Property="Background" Value="{StaticResource GoldBrush}"/>
                 <Setter Property="Foreground" Value="#000000"/>
                 <Setter Property="FontFamily" Value="{StaticResource RobotoMedium}"/>
-                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="FontSize" Value="15"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
-                <Setter Property="Padding" Value="40,16"/>
+                <Setter Property="Padding" Value="32,12"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Template">
                     <Setter.Value>
@@ -195,6 +195,22 @@
                 </Setter>
             </Style>
 
+            <!-- Password Toggle Button Style (no hover background) -->
+            <Style x:Key="PasswordToggleButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="Transparent">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
             <!-- Window Control Button Style -->
             <Style x:Key="WindowControlButtonStyle" TargetType="Button">
                 <Setter Property="Background" Value="Transparent"/>
@@ -230,6 +246,77 @@
                                     <Setter TargetName="bg" Property="Background" Value="#E81123"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Themed Scrollbar Thumb Style -->
+            <Style x:Key="GoldScrollBarThumb" TargetType="Thumb">
+                <Setter Property="OverridesDefaultStyle" Value="True"/>
+                <Setter Property="IsTabStop" Value="False"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Thumb">
+                            <Border x:Name="thumbBorder"
+                                    Background="#4D4D4D"
+                                    CornerRadius="3"
+                                    Margin="1"/>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="thumbBorder" Property="Background" Value="#FFD700"/>
+                                </Trigger>
+                                <Trigger Property="IsDragging" Value="True">
+                                    <Setter TargetName="thumbBorder" Property="Background" Value="#FFDF40"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Themed Vertical ScrollBar Style -->
+            <Style x:Key="GoldScrollBarStyle" TargetType="ScrollBar">
+                <Setter Property="OverridesDefaultStyle" Value="True"/>
+                <Setter Property="Width" Value="8"/>
+                <Setter Property="MinWidth" Value="8"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ScrollBar">
+                            <Grid Background="Transparent">
+                                <Border Background="#1A1A1A" CornerRadius="4"/>
+                                <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                    <Track.Thumb>
+                                        <Thumb Style="{StaticResource GoldScrollBarThumb}"/>
+                                    </Track.Thumb>
+                                </Track>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Themed ScrollViewer Style for Auth Card -->
+            <Style x:Key="GoldScrollViewerStyle" TargetType="ScrollViewer">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ScrollViewer">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ScrollContentPresenter Grid.Column="0"
+                                                        Margin="{TemplateBinding Padding}"/>
+                                <ScrollBar x:Name="PART_VerticalScrollBar"
+                                           Grid.Column="1"
+                                           Style="{StaticResource GoldScrollBarStyle}"
+                                           Value="{TemplateBinding VerticalOffset}"
+                                           Maximum="{TemplateBinding ScrollableHeight}"
+                                           ViewportSize="{TemplateBinding ViewportHeight}"
+                                           Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"
+                                           Margin="4,0,0,0"/>
+                            </Grid>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
@@ -310,12 +397,71 @@
         <!-- Content Area -->
         <Grid Grid.Row="1" Background="#000000">
 
+        <!-- Loading Overlay (covers entire content area when preparing MainWindow) -->
+        <Border x:Name="PreparingMainWindowOverlay"
+                Background="#000000"
+                Visibility="Collapsed"
+                Panel.ZIndex="100">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <!-- Spinner animation -->
+                <Border Width="60" Height="60"
+                        HorizontalAlignment="Center"
+                        Margin="0,0,0,24">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.6" Color="#FFD700"/>
+                    </Border.Effect>
+                    <Border x:Name="SpinnerBorder"
+                            Width="60" Height="60"
+                            BorderBrush="{StaticResource GoldBrush}"
+                            BorderThickness="3"
+                            CornerRadius="30">
+                        <Border.RenderTransform>
+                            <RotateTransform x:Name="SpinnerRotation" CenterX="30" CenterY="30"/>
+                        </Border.RenderTransform>
+                        <Border.Triggers>
+                            <EventTrigger RoutedEvent="Border.Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard RepeatBehavior="Forever">
+                                        <DoubleAnimation
+                                            Storyboard.TargetName="SpinnerRotation"
+                                            Storyboard.TargetProperty="Angle"
+                                            From="0" To="360"
+                                            Duration="0:0:1"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </Border.Triggers>
+                        <!-- Inner circle for visual effect -->
+                        <Ellipse Width="20" Height="20"
+                                 Fill="{StaticResource GoldBrush}"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Top"
+                                 Margin="0,-2,0,0"/>
+                    </Border>
+                </Border>
+                <TextBlock x:Name="PreparingStatusText"
+                           Text="Preparing your mailbox..."
+                           Foreground="#FFFFFF"
+                           FontFamily="{StaticResource RobotoMedium}"
+                           FontSize="18"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="This will only take a moment"
+                           Foreground="{StaticResource TextGrayBrush}"
+                           FontFamily="{StaticResource RobotoRegular}"
+                           FontSize="13"
+                           HorizontalAlignment="Center"
+                           Margin="0,8,0,0"/>
+            </StackPanel>
+        </Border>
+
         <!-- Centered Authentication Card -->
         <Border Background="{StaticResource CardBackgroundBrush}"
                 BorderBrush="{StaticResource GoldBrush}"
                 BorderThickness="1"
                 CornerRadius="16"
                 Width="420"
+                MaxHeight="720"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Padding="40,35">
@@ -323,6 +469,9 @@
                 <DropShadowEffect BlurRadius="60" ShadowDepth="0" Opacity="0.4" Color="#FFD700"/>
             </Border.Effect>
 
+            <ScrollViewer Style="{StaticResource GoldScrollViewerStyle}"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
             <StackPanel>
                 <!-- Avatar with Glow -->
                 <Border Width="100" Height="100"
@@ -344,21 +493,24 @@
                 <!-- Branding: JubileeOutlook -->
                 <TextBlock HorizontalAlignment="Center" Margin="0,0,0,8">
                     <Run Text="Jubilee" FontFamily="{StaticResource RobotoMedium}"
-                         FontSize="32" Foreground="#FFFFFF" FontStyle="Italic"/>
+                         FontSize="32" Foreground="#FFFFFF"/>
                     <Run Text="Outlook" FontFamily="{StaticResource RobotoLight}"
-                         FontSize="32" Foreground="{StaticResource GoldBrush}" FontStyle="Italic"/>
+                         FontSize="32" Foreground="{StaticResource GoldBrush}"/>
                 </TextBlock>
 
-                <!-- Subtitle -->
-                <TextBlock Text="Sign in to sync your email across devices"
+                <!-- Subtitle - changes based on current panel -->
+                <TextBlock x:Name="SubtitleText"
+                           Text="Sign in to sync your email across devices"
                            Foreground="{StaticResource TextGrayBrush}"
                            FontFamily="{StaticResource RobotoRegular}"
                            FontSize="13"
                            HorizontalAlignment="Center"
+                           TextAlignment="Center"
                            Margin="0,0,0,20"/>
 
-                <!-- Sign Up Link -->
-                <StackPanel Orientation="Horizontal"
+                <!-- Navigation Link - changes based on current panel -->
+                <StackPanel x:Name="SignUpLinkPanel"
+                            Orientation="Horizontal"
                             HorizontalAlignment="Center"
                             Margin="0,0,0,30">
                     <TextBlock Text="Don't have an account? "
@@ -373,55 +525,65 @@
 
                 <!-- Sign In Panel -->
                 <StackPanel x:Name="SignInPanel">
-                    <!-- Email Field -->
-                    <TextBox x:Name="EmailTextBox"
-                             Style="{StaticResource AuthInputStyle}"
-                             Margin="0,0,0,6"
-                             KeyDown="Input_KeyDown"
-                             TextChanged="EmailTextBox_TextChanged"/>
+                    <!-- Email Field with Placeholder -->
+                    <Grid Margin="0,0,0,6">
+                        <TextBox x:Name="EmailTextBox"
+                                 Style="{StaticResource AuthInputStyle}"
+                                 KeyDown="Input_KeyDown"
+                                 TextChanged="EmailTextBox_TextChanged"
+                                 GotFocus="EmailTextBox_GotFocus"
+                                 LostFocus="EmailTextBox_LostFocus"/>
+                        <TextBlock x:Name="EmailPlaceholder"
+                                   Text="Email"
+                                   Foreground="#606060"
+                                   FontFamily="{StaticResource RobotoRegular}"
+                                   FontSize="14"
+                                   IsHitTestVisible="False"
+                                   VerticalAlignment="Center"
+                                   Margin="18,0,0,0"/>
+                    </Grid>
                     <TextBlock x:Name="EmailErrorText"
                                Foreground="{StaticResource ErrorBrush}"
                                FontSize="11"
                                Margin="4,0,0,10"
                                Visibility="Collapsed"/>
 
-                    <!-- Password Field with Toggle -->
+                    <!-- Password Field with Placeholder and Toggle -->
                     <Grid Margin="0,0,0,6">
                         <PasswordBox x:Name="PasswordBox"
                                      Style="{StaticResource AuthPasswordStyle}"
                                      KeyDown="Input_KeyDown"
-                                     PasswordChanged="PasswordBox_PasswordChanged"/>
+                                     PasswordChanged="PasswordBox_PasswordChanged"
+                                     GotFocus="PasswordBox_GotFocus"
+                                     LostFocus="PasswordBox_LostFocus"/>
                         <TextBox x:Name="PasswordTextBox"
                                  Style="{StaticResource AuthInputStyle}"
                                  Visibility="Collapsed"
-                                 KeyDown="Input_KeyDown"/>
+                                 KeyDown="Input_KeyDown"
+                                 GotFocus="PasswordTextBox_GotFocus"
+                                 LostFocus="PasswordTextBox_LostFocus"/>
+                        <TextBlock x:Name="PasswordPlaceholder"
+                                   Text="Password"
+                                   Foreground="#606060"
+                                   FontFamily="{StaticResource RobotoRegular}"
+                                   FontSize="14"
+                                   IsHitTestVisible="False"
+                                   VerticalAlignment="Center"
+                                   Margin="18,0,0,0"/>
                         <Button x:Name="TogglePasswordButton"
+                                Style="{StaticResource PasswordToggleButtonStyle}"
                                 Click="TogglePassword_Click"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
                                 Margin="0,0,12,0"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Cursor="Hand"
                                 Width="32" Height="32">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="Transparent">
-                                        <TextBlock x:Name="PasswordIcon"
-                                                   Text="&#xe8f4;"
-                                                   FontFamily="{StaticResource MaterialIcons}"
-                                                   FontSize="20"
-                                                   Foreground="#606060"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="PasswordIcon" Property="Foreground" Value="#909090"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
+                            <TextBlock x:Name="PasswordVisibilityIcon"
+                                       Text="&#xe8f4;"
+                                       FontFamily="{StaticResource MaterialIcons}"
+                                       FontSize="20"
+                                       Foreground="#606060"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
                         </Button>
                     </Grid>
                     <TextBlock x:Name="PasswordErrorText"
@@ -454,7 +616,7 @@
                             Content="Sign In"
                             Style="{StaticResource GoldPillButtonStyle}"
                             Click="SignInButton_Click"
-                            Height="56"
+                            Height="46"
                             HorizontalAlignment="Stretch"/>
 
                     <!-- Loading Indicator -->
@@ -471,68 +633,167 @@
 
                 <!-- Sign Up Panel (Initially Hidden) -->
                 <StackPanel x:Name="SignUpPanel" Visibility="Collapsed">
-                    <!-- Full Name Field -->
-                    <TextBox x:Name="FullNameTextBox"
-                             Style="{StaticResource AuthInputStyle}"
-                             Margin="0,0,0,6"
-                             KeyDown="Input_KeyDown"
-                             TextChanged="FullNameTextBox_TextChanged"/>
+                    <!-- Full Name Field with Placeholder -->
+                    <Grid Margin="0,0,0,6">
+                        <TextBox x:Name="FullNameTextBox"
+                                 Style="{StaticResource AuthInputStyle}"
+                                 KeyDown="Input_KeyDown"
+                                 TextChanged="FullNameTextBox_TextChanged"
+                                 GotFocus="FullNameTextBox_GotFocus"
+                                 LostFocus="FullNameTextBox_LostFocus"/>
+                        <TextBlock x:Name="FullNamePlaceholder"
+                                   Text="Full Name"
+                                   Foreground="#606060"
+                                   FontFamily="{StaticResource RobotoRegular}"
+                                   FontSize="14"
+                                   IsHitTestVisible="False"
+                                   VerticalAlignment="Center"
+                                   Margin="18,0,0,0"/>
+                    </Grid>
                     <TextBlock x:Name="FullNameErrorText"
                                Foreground="{StaticResource ErrorBrush}"
+                               FontFamily="{StaticResource RobotoRegular}"
                                FontSize="11"
-                               Margin="4,0,0,10"
+                               Margin="4,2,0,8"
                                Visibility="Collapsed"/>
 
-                    <!-- Email Field -->
-                    <TextBox x:Name="SignUpEmailTextBox"
-                             Style="{StaticResource AuthInputStyle}"
-                             Margin="0,0,0,6"
-                             KeyDown="Input_KeyDown"
-                             TextChanged="SignUpEmailTextBox_TextChanged"/>
+                    <!-- Email Field with Placeholder -->
+                    <Grid Margin="0,0,0,6">
+                        <TextBox x:Name="SignUpEmailTextBox"
+                                 Style="{StaticResource AuthInputStyle}"
+                                 KeyDown="Input_KeyDown"
+                                 TextChanged="SignUpEmailTextBox_TextChanged"
+                                 GotFocus="SignUpEmailTextBox_GotFocus"
+                                 LostFocus="SignUpEmailTextBox_LostFocus"/>
+                        <TextBlock x:Name="SignUpEmailPlaceholder"
+                                   Text="Email"
+                                   Foreground="#606060"
+                                   FontFamily="{StaticResource RobotoRegular}"
+                                   FontSize="14"
+                                   IsHitTestVisible="False"
+                                   VerticalAlignment="Center"
+                                   Margin="18,0,0,0"/>
+                    </Grid>
                     <TextBlock x:Name="SignUpEmailErrorText"
                                Foreground="{StaticResource ErrorBrush}"
+                               FontFamily="{StaticResource RobotoRegular}"
                                FontSize="11"
-                               Margin="4,0,0,10"
+                               Margin="4,2,0,8"
                                Visibility="Collapsed"/>
 
-                    <!-- Password Field -->
-                    <PasswordBox x:Name="SignUpPasswordBox"
-                                 Style="{StaticResource AuthPasswordStyle}"
-                                 Margin="0,0,0,6"
+                    <!-- Password Field with Placeholder and Toggle -->
+                    <Grid Margin="0,0,0,6">
+                        <PasswordBox x:Name="SignUpPasswordBox"
+                                     Style="{StaticResource AuthPasswordStyle}"
+                                     KeyDown="Input_KeyDown"
+                                     PasswordChanged="SignUpPasswordBox_PasswordChanged"
+                                     GotFocus="SignUpPasswordBox_GotFocus"
+                                     LostFocus="SignUpPasswordBox_LostFocus"/>
+                        <TextBox x:Name="SignUpPasswordTextBox"
+                                 Style="{StaticResource AuthInputStyle}"
+                                 Visibility="Collapsed"
                                  KeyDown="Input_KeyDown"
-                                 PasswordChanged="SignUpPasswordBox_PasswordChanged"/>
+                                 TextChanged="SignUpPasswordTextBox_TextChanged"/>
+                        <TextBlock x:Name="SignUpPasswordPlaceholder"
+                                   Text="Password"
+                                   Foreground="#606060"
+                                   FontFamily="{StaticResource RobotoRegular}"
+                                   FontSize="14"
+                                   IsHitTestVisible="False"
+                                   VerticalAlignment="Center"
+                                   Margin="18,0,0,0"/>
+                        <Button x:Name="ToggleSignUpPasswordButton"
+                                Style="{StaticResource PasswordToggleButtonStyle}"
+                                Click="ToggleSignUpPassword_Click"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Margin="0,0,12,0"
+                                Width="32" Height="32">
+                            <TextBlock x:Name="SignUpPasswordVisibilityIcon"
+                                       Text="&#xe8f4;"
+                                       FontFamily="{StaticResource MaterialIcons}"
+                                       FontSize="20"
+                                       Foreground="#606060"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Button>
+                    </Grid>
                     <TextBlock x:Name="SignUpPasswordErrorText"
                                Foreground="{StaticResource ErrorBrush}"
+                               FontFamily="{StaticResource RobotoRegular}"
                                FontSize="11"
-                               Margin="4,0,0,10"
+                               Margin="4,2,0,8"
                                Visibility="Collapsed"/>
 
-                    <!-- Confirm Password Field -->
-                    <PasswordBox x:Name="ConfirmPasswordBox"
-                                 Style="{StaticResource AuthPasswordStyle}"
-                                 Margin="0,0,0,6"
+                    <!-- Confirm Password Field with Placeholder and Toggle -->
+                    <Grid Margin="0,0,0,6">
+                        <PasswordBox x:Name="ConfirmPasswordBox"
+                                     Style="{StaticResource AuthPasswordStyle}"
+                                     KeyDown="Input_KeyDown"
+                                     PasswordChanged="ConfirmPasswordBox_PasswordChanged"
+                                     GotFocus="ConfirmPasswordBox_GotFocus"
+                                     LostFocus="ConfirmPasswordBox_LostFocus"/>
+                        <TextBox x:Name="ConfirmPasswordTextBox"
+                                 Style="{StaticResource AuthInputStyle}"
+                                 Visibility="Collapsed"
                                  KeyDown="Input_KeyDown"
-                                 PasswordChanged="ConfirmPasswordBox_PasswordChanged"/>
+                                 TextChanged="ConfirmPasswordTextBox_TextChanged"/>
+                        <TextBlock x:Name="ConfirmPasswordPlaceholder"
+                                   Text="Confirm Password"
+                                   Foreground="#606060"
+                                   FontFamily="{StaticResource RobotoRegular}"
+                                   FontSize="14"
+                                   IsHitTestVisible="False"
+                                   VerticalAlignment="Center"
+                                   Margin="18,0,0,0"/>
+                        <Button x:Name="ToggleConfirmPasswordButton"
+                                Style="{StaticResource PasswordToggleButtonStyle}"
+                                Click="ToggleConfirmPassword_Click"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Margin="0,0,12,0"
+                                Width="32" Height="32">
+                            <TextBlock x:Name="ConfirmPasswordVisibilityIcon"
+                                       Text="&#xe8f4;"
+                                       FontFamily="{StaticResource MaterialIcons}"
+                                       FontSize="20"
+                                       Foreground="#606060"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Button>
+                    </Grid>
                     <TextBlock x:Name="ConfirmPasswordErrorText"
                                Foreground="{StaticResource ErrorBrush}"
+                               FontFamily="{StaticResource RobotoRegular}"
                                FontSize="11"
-                               Margin="4,0,0,15"
+                               Margin="4,2,0,12"
                                Visibility="Collapsed"/>
 
                     <!-- Newsletter Checkbox -->
                     <CheckBox x:Name="NewsletterCheckBox"
                               Content="Subscribe to newsletter"
-                              IsChecked="True"
+                              IsChecked="False"
                               Style="{StaticResource GoldCheckBoxStyle}"
-                              Margin="0,0,0,25"/>
+                              Margin="0,8,0,25"/>
 
                     <!-- Sign Up Button -->
                     <Button x:Name="SignUpButton"
-                            Content="Create Account"
+                            Content="Sign Up"
                             Style="{StaticResource GoldPillButtonStyle}"
                             Click="SignUpButton_Click"
-                            Height="56"
+                            Height="46"
                             HorizontalAlignment="Stretch"/>
+
+                    <!-- Sign Up Loading Indicator -->
+                    <StackPanel x:Name="SignUpLoadingPanel"
+                                Visibility="Collapsed"
+                                HorizontalAlignment="Center"
+                                Margin="0,20,0,0">
+                        <TextBlock Text="Creating account..."
+                                   Foreground="{StaticResource TextLightGrayBrush}"
+                                   FontFamily="{StaticResource RobotoRegular}"
+                                   FontSize="13"/>
+                    </StackPanel>
 
                     <!-- Back to Sign In -->
                     <StackPanel Orientation="Horizontal"
@@ -542,8 +803,7 @@
                                    Foreground="{StaticResource TextGrayBrush}"
                                    FontFamily="{StaticResource RobotoRegular}"
                                    FontSize="13"/>
-                        <TextBlock x:Name="BackToSignInLink"
-                                   Text="Sign In."
+                        <TextBlock Text="Sign In"
                                    Style="{StaticResource GoldLinkStyle}"
                                    MouseLeftButtonUp="BackToSignIn_Click"/>
                     </StackPanel>
@@ -570,7 +830,7 @@
                             Content="Send Reset Link"
                             Style="{StaticResource GoldPillButtonStyle}"
                             Click="SendResetButton_Click"
-                            Height="56"
+                            Height="46"
                             HorizontalAlignment="Stretch"/>
 
                     <!-- Back to Sign In -->
@@ -585,13 +845,14 @@
                 </StackPanel>
 
                 <!-- Footer -->
-                <TextBlock Text="© 2025 Jubilee Software, Inc."
+                <TextBlock Text="© 2026 Jubilee Software, Inc."
                            Foreground="#404040"
                            FontFamily="{StaticResource RobotoRegular}"
                            FontSize="11"
                            HorizontalAlignment="Center"
                            Margin="0,35,0,0"/>
             </StackPanel>
+            </ScrollViewer>
         </Border>
         </Grid>
     </Grid>

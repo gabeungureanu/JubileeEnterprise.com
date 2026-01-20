@@ -33,6 +33,12 @@ public partial class MainWindow : Window
     private bool _isLoaded;
     private ViewModels.ComposeMailViewModel? _composeMailViewModel;
 
+    /// <summary>
+    /// Event raised when initial data loading is complete.
+    /// This allows the caller to know when the mail interface is fully ready to display.
+    /// </summary>
+    public event EventHandler? DataLoadingComplete;
+
     // Window state persistence file path
     private static readonly string WindowStateFilePath = IOPath.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -198,16 +204,33 @@ public partial class MainWindow : Window
                 StartAccentBarAnimation();
                 Console.WriteLine("[MainWindow] Accent bar animation started");
 
+                // Update loading overlay status
+                LoadingStatusText.Text = "Loading your emails...";
+
                 // Now load data after network status is confirmed
                 Console.WriteLine("[MainWindow] Loading initial data...");
                 await _mainViewModel.InitializeDataAsync();
                 Console.WriteLine("[MainWindow] Initial data loaded");
+
+                // Hide the loading overlay - data is ready
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+                Console.WriteLine("[MainWindow] Loading overlay hidden");
+
+                // Signal that data loading is complete - mail interface is ready
+                Console.WriteLine("[MainWindow] Raising DataLoadingComplete event");
+                DataLoadingComplete?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[MainWindow] ERROR in Loaded event: {ex.Message}");
                 Console.WriteLine($"[MainWindow] StackTrace: {ex.StackTrace}");
                 Console.WriteLine($"[MainWindow] InnerException: {ex.InnerException?.Message}");
+
+                // Hide the loading overlay even on error
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+
+                // Still signal completion even on error so the transition happens
+                DataLoadingComplete?.Invoke(this, EventArgs.Empty);
             }
         };
 

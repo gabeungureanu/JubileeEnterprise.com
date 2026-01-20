@@ -112,6 +112,115 @@ public partial class App : Application
 
             var authWindow = new AuthenticationWindow();
 
+            // Track if MainWindow was created during the event (for seamless transition)
+            bool mainWindowCreatedInEvent = false;
+
+            // Subscribe to AuthenticationCompleted to create MainWindow BEFORE auth window closes
+            // This ensures a seamless transition with no flicker or gap
+            authWindow.AuthenticationCompleted += async (sender, args) =>
+            {
+                Console.WriteLine("[JubileeOutlook] Authentication successful - preparing MainWindow for seamless transition");
+                logLines.Add("Authentication successful!");
+                logLines.Add("Creating MainWindow for seamless transition...");
+                System.IO.File.WriteAllLines(logPath, logLines);
+
+                // Get auth window reference and its current bounds
+                var authWin = sender as AuthenticationWindow;
+
+                // Check if auth window is actually visible (not during auto-login before ShowDialog)
+                bool authWindowVisible = authWin != null && authWin.IsVisible;
+                Console.WriteLine($"[JubileeOutlook] Auth window visible: {authWindowVisible}");
+
+                // Show the preparing overlay on the auth window to give visual feedback
+                if (authWin != null && authWindowVisible)
+                {
+                    authWin.ShowPreparingOverlay(true, "Preparing your mailbox...");
+                    Console.WriteLine("[JubileeOutlook] Showing preparing overlay");
+
+                    // Give the overlay time to render
+                    await Task.Delay(50);
+                }
+
+                // Create the main window
+                var mainWindow = new MainWindow();
+
+                // Match the auth window's position and state for seamless transition (if visible)
+                if (authWindowVisible && authWin != null)
+                {
+                    mainWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+                    mainWindow.WindowState = authWin.WindowState;
+
+                    if (authWin.WindowState == WindowState.Maximized)
+                    {
+                        // For maximized, just match the state - position doesn't matter
+                        mainWindow.Left = authWin.RestoreBounds.Left;
+                        mainWindow.Top = authWin.RestoreBounds.Top;
+                        mainWindow.Width = authWin.RestoreBounds.Width;
+                        mainWindow.Height = authWin.RestoreBounds.Height;
+                    }
+                    else
+                    {
+                        mainWindow.Left = authWin.Left;
+                        mainWindow.Top = authWin.Top;
+                        mainWindow.Width = authWin.Width;
+                        mainWindow.Height = authWin.Height;
+                    }
+                }
+
+                MainWindow = mainWindow;
+
+                // Switch shutdown mode
+                ShutdownMode = ShutdownMode.OnMainWindowClose;
+                Console.WriteLine("[JubileeOutlook] ShutdownMode set to OnMainWindowClose");
+
+                // Create a TaskCompletionSource to wait for MainWindow data to fully load
+                var dataLoadingComplete = new TaskCompletionSource<bool>();
+
+                // Subscribe to DataLoadingComplete event to know when mail interface is ready
+                void onDataLoadingComplete(object? s, EventArgs e)
+                {
+                    mainWindow.DataLoadingComplete -= onDataLoadingComplete;
+                    Console.WriteLine("[JubileeOutlook] MainWindow DataLoadingComplete event fired");
+                    dataLoadingComplete.TrySetResult(true);
+                }
+                mainWindow.DataLoadingComplete += onDataLoadingComplete;
+
+                // Show MainWindow - it will appear behind the auth window (if visible)
+                mainWindow.Show();
+                Console.WriteLine("[JubileeOutlook] MainWindow.Show() called");
+
+                // Update overlay message to show loading status
+                if (authWin != null && authWindowVisible)
+                {
+                    authWin.ShowPreparingOverlay(true, "Loading your emails...");
+                }
+
+                // Wait for MainWindow data to fully load (includes folders, messages, events)
+                await dataLoadingComplete.Task;
+                Console.WriteLine("[JubileeOutlook] MainWindow data loading complete");
+
+                // Force a complete render of MainWindow with data
+                await mainWindow.Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Loaded);
+                await mainWindow.Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+
+                // Small delay to ensure visual with data is completely ready
+                await Task.Delay(100);
+
+                if (authWindowVisible && authWin != null)
+                {
+                    // Hide auth window - MainWindow is fully loaded with data
+                    authWin.Hide();
+                    Console.WriteLine("[JubileeOutlook] Auth window hidden - seamless transition complete");
+                }
+
+                // Activate MainWindow to bring it to focus
+                mainWindow.Activate();
+
+                mainWindowCreatedInEvent = true;
+                logLines.Add("MainWindow shown - seamless transition complete");
+                System.IO.File.WriteAllLines(logPath, logLines);
+            };
+
             Console.WriteLine("[JubileeOutlook] Showing Authentication Window...");
             logLines.Add("Showing Authentication Window...");
             System.IO.File.WriteAllLines(logPath, logLines);
@@ -128,28 +237,23 @@ public partial class App : Application
                 return;
             }
 
-            Console.WriteLine("[JubileeOutlook] Authentication successful!");
-            logLines.Add("Authentication successful!");
-            System.IO.File.WriteAllLines(logPath, logLines);
+            // If MainWindow wasn't created in the event (e.g., auto-login before window was visible),
+            // create it now as a fallback
+            if (!mainWindowCreatedInEvent || MainWindow == null)
+            {
+                Console.WriteLine("[JubileeOutlook] MainWindow not created in event - creating now as fallback");
+                logLines.Add("Creating MainWindow as fallback...");
 
-            // Create and show the main window after successful authentication
-            Console.WriteLine("[JubileeOutlook] Creating MainWindow...");
-            logLines.Add("Creating MainWindow...");
-            System.IO.File.WriteAllLines(logPath, logLines);
+                var mainWindow = new MainWindow();
+                MainWindow = mainWindow;
+                ShutdownMode = ShutdownMode.OnMainWindowClose;
+                mainWindow.Show();
+                mainWindow.Activate();
 
-            var mainWindow = new MainWindow();
-            MainWindow = mainWindow;
+                logLines.Add("MainWindow created and shown via fallback");
+            }
 
-            // Now switch shutdown mode so app closes when main window closes
-            ShutdownMode = ShutdownMode.OnMainWindowClose;
-            Console.WriteLine("[JubileeOutlook] ShutdownMode set to OnMainWindowClose");
-
-            Console.WriteLine("[JubileeOutlook] Showing MainWindow...");
-            logLines.Add("Showing MainWindow...");
-            System.IO.File.WriteAllLines(logPath, logLines);
-
-            mainWindow.Show();
-            Console.WriteLine("[JubileeOutlook] MainWindow shown");
+            Console.WriteLine("[JubileeOutlook] Authentication flow complete - MainWindow should be visible");
             logLines.Add("MainWindow shown - app should now be running");
             System.IO.File.WriteAllLines(logPath, logLines);
         }
@@ -252,6 +356,91 @@ public partial class App : Application
         var authWindow = new AuthenticationWindow();
         authWindow.WindowState = WindowState.Maximized;
 
+        // Capture window state for the lambda
+        var capturedSavedWindowState = savedWindowState;
+        var capturedSavedWidth = savedWidth;
+        var capturedSavedHeight = savedHeight;
+        var capturedSavedLeft = savedLeft;
+        var capturedSavedTop = savedTop;
+
+        // Subscribe to AuthenticationCompleted to create MainWindow BEFORE auth window closes
+        // This ensures a seamless transition with no flicker or gap
+        authWindow.AuthenticationCompleted += async (sender, args) =>
+        {
+            Console.WriteLine("[JubileeOutlook] Re-authentication successful - preparing MainWindow for seamless transition");
+
+            // Get auth window reference
+            var authWin = sender as AuthenticationWindow;
+
+            // Show the preparing overlay on the auth window
+            if (authWin != null && authWin.IsVisible)
+            {
+                authWin.ShowPreparingOverlay(true, "Preparing your mailbox...");
+                Console.WriteLine("[JubileeOutlook] Showing preparing overlay");
+                await Task.Delay(50);
+            }
+
+            // Create a completely new MainWindow with fresh state, preserving window dimensions
+            var newMainWindow = new MainWindow();
+
+            // Apply saved window state to new MainWindow
+            newMainWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+            newMainWindow.Width = capturedSavedWidth;
+            newMainWindow.Height = capturedSavedHeight;
+            if (!double.IsNaN(capturedSavedLeft)) newMainWindow.Left = capturedSavedLeft;
+            if (!double.IsNaN(capturedSavedTop)) newMainWindow.Top = capturedSavedTop;
+            newMainWindow.WindowState = capturedSavedWindowState;
+
+            MainWindow = newMainWindow;
+
+            // Switch back to normal shutdown mode
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
+
+            // Create a TaskCompletionSource to wait for MainWindow data to fully load
+            var dataLoadingComplete = new TaskCompletionSource<bool>();
+
+            void onDataLoadingComplete(object? s, EventArgs e)
+            {
+                newMainWindow.DataLoadingComplete -= onDataLoadingComplete;
+                Console.WriteLine("[JubileeOutlook] MainWindow DataLoadingComplete event fired");
+                dataLoadingComplete.TrySetResult(true);
+            }
+            newMainWindow.DataLoadingComplete += onDataLoadingComplete;
+
+            // Show MainWindow - it will appear behind the auth window
+            newMainWindow.Show();
+            Console.WriteLine("[JubileeOutlook] MainWindow.Show() called");
+
+            // Update overlay message to show loading status
+            if (authWin != null && authWin.IsVisible)
+            {
+                authWin.ShowPreparingOverlay(true, "Loading your emails...");
+            }
+
+            // Wait for MainWindow data to fully load (includes folders, messages, events)
+            await dataLoadingComplete.Task;
+            Console.WriteLine("[JubileeOutlook] MainWindow data loading complete");
+
+            // Force a complete render of MainWindow with data
+            await newMainWindow.Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Loaded);
+            await newMainWindow.Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+
+            // Small delay to ensure visual with data is completely ready
+            await Task.Delay(100);
+
+            // Now hide auth window - MainWindow is fully loaded with data
+            if (authWin != null)
+            {
+                authWin.Hide();
+                Console.WriteLine("[JubileeOutlook] Auth window hidden - seamless transition complete");
+            }
+
+            // Activate MainWindow to bring it to focus
+            newMainWindow.Activate();
+
+            Console.WriteLine("[JubileeOutlook] New MainWindow shown with preserved window state");
+        };
+
         var authResult = authWindow.ShowDialog();
 
         if (authResult != true || !authWindow.AuthenticationSuccessful)
@@ -261,25 +450,7 @@ public partial class App : Application
             return;
         }
 
-        Console.WriteLine("[JubileeOutlook] Re-authentication successful, creating new MainWindow");
-
-        // Create a completely new MainWindow with fresh state, preserving window dimensions
-        var newMainWindow = new MainWindow();
-
-        // Apply saved window state to new MainWindow
-        newMainWindow.WindowStartupLocation = WindowStartupLocation.Manual;
-        newMainWindow.Width = savedWidth;
-        newMainWindow.Height = savedHeight;
-        if (!double.IsNaN(savedLeft)) newMainWindow.Left = savedLeft;
-        if (!double.IsNaN(savedTop)) newMainWindow.Top = savedTop;
-        newMainWindow.WindowState = savedWindowState;
-
-        MainWindow = newMainWindow;
-
-        // Switch back to normal shutdown mode
-        ShutdownMode = ShutdownMode.OnMainWindowClose;
-
-        newMainWindow.Show();
-        Console.WriteLine("[JubileeOutlook] New MainWindow shown with preserved window state");
+        // MainWindow was already created and shown in the AuthenticationCompleted event
+        Console.WriteLine("[JubileeOutlook] Sign-out and re-authentication flow complete");
     }
 }

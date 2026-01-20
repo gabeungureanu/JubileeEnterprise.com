@@ -18,11 +18,21 @@ public partial class AuthenticationWindow : Window
     private enum AuthPanel { SignIn, SignUp, ForgotPassword }
     private AuthPanel _currentPanel = AuthPanel.SignIn;
     private bool _isPasswordVisible = false;
+    private bool _isSignUpPasswordVisible = false;
+    private bool _isConfirmPasswordVisible = false;
+    private bool _isShownAsDialog = false;
+    private bool _isAutoLogin = false;
 
     /// <summary>
     /// Indicates whether authentication was successful
     /// </summary>
     public bool AuthenticationSuccessful { get; private set; }
+
+    /// <summary>
+    /// Event raised when authentication succeeds, before the window closes.
+    /// This allows the caller to prepare the next window for a seamless transition.
+    /// </summary>
+    public event EventHandler? AuthenticationCompleted;
 
     public AuthenticationWindow()
     {
@@ -34,8 +44,39 @@ public partial class AuthenticationWindow : Window
         // Subscribe to session changes
         _authManager.SessionChanged += OnSessionChanged;
 
-        // Try to auto-login with stored credentials
-        Loaded += async (s, e) => await TryAutoLoginAsync();
+        // Try to auto-login with stored credentials after a brief delay
+        // This allows ShowDialog() to be called first
+        Loaded += async (s, e) =>
+        {
+            // Brief delay to let ShowDialog() establish the dialog context
+            await System.Threading.Tasks.Task.Delay(50);
+            _isShownAsDialog = true;
+            await TryAutoLoginAsync();
+        };
+    }
+
+    /// <summary>
+    /// Safely sets DialogResult only if window is shown as a dialog
+    /// </summary>
+    private void SafeSetDialogResult(bool? result)
+    {
+        if (_isShownAsDialog)
+        {
+            try
+            {
+                DialogResult = result;
+            }
+            catch (InvalidOperationException)
+            {
+                // Window not shown as dialog - just close it
+                Close();
+            }
+        }
+        else
+        {
+            // Not shown as dialog yet, just close
+            Close();
+        }
     }
 
     /// <summary>
@@ -50,13 +91,14 @@ public partial class AuthenticationWindow : Window
             // First, try to initialize from stored tokens
             await _authManager.InitializeAsync();
 
-            // If already signed in from stored tokens, close auth window
+            // If already signed in from stored tokens, close the dialog
+            // Don't raise AuthenticationCompleted during auto-login - let the fallback handle MainWindow creation
+            // This avoids timing issues and duplicate MainWindow creation
             if (_authManager.Session.IsAuthenticated)
             {
                 System.Diagnostics.Debug.WriteLine("[AuthWindow] Auto-login successful from stored tokens");
                 AuthenticationSuccessful = true;
-                DialogResult = true;
-                Close();
+                SafeSetDialogResult(true);
                 return;
             }
 
@@ -77,7 +119,9 @@ public partial class AuthenticationWindow : Window
 
                         // Auto-login if we have both email and password
                         System.Diagnostics.Debug.WriteLine("[AuthWindow] Attempting auto-login with saved credentials");
+                        _isAutoLogin = true;
                         await PerformSignInAsync();
+                        _isAutoLogin = false;
                         return;
                     }
                 }
@@ -103,8 +147,7 @@ public partial class AuthenticationWindow : Window
             if (session.IsAuthenticated)
             {
                 AuthenticationSuccessful = true;
-                DialogResult = true;
-                Close();
+                SafeSetDialogResult(true);
             }
         });
     }
@@ -119,8 +162,80 @@ public partial class AuthenticationWindow : Window
         SignUpPanel.Visibility = panel == AuthPanel.SignUp ? Visibility.Visible : Visibility.Collapsed;
         ForgotPasswordPanel.Visibility = panel == AuthPanel.ForgotPassword ? Visibility.Visible : Visibility.Collapsed;
 
-        // Clear all error messages when switching panels
+        // Update subtitle and navigation links based on panel
+        switch (panel)
+        {
+            case AuthPanel.SignIn:
+                SubtitleText.Text = "Sign in to sync your email across devices";
+                SignUpLinkPanel.Visibility = Visibility.Visible;
+                break;
+            case AuthPanel.SignUp:
+                SubtitleText.Text = "Create an account to get started";
+                SignUpLinkPanel.Visibility = Visibility.Collapsed;
+                break;
+            case AuthPanel.ForgotPassword:
+                SubtitleText.Text = "Reset your password";
+                SignUpLinkPanel.Visibility = Visibility.Collapsed;
+                break;
+        }
+
+        // Clear all fields and error messages when switching panels
+        ClearAllFields(panel);
         ClearAllErrors();
+    }
+
+    /// <summary>
+    /// Clears all input fields for the target panel
+    /// </summary>
+    private void ClearAllFields(AuthPanel targetPanel)
+    {
+        switch (targetPanel)
+        {
+            case AuthPanel.SignIn:
+                // Clear Sign In fields
+                EmailTextBox.Text = string.Empty;
+                PasswordBox.Password = string.Empty;
+                PasswordTextBox.Text = string.Empty;
+                // Reset password visibility
+                _isPasswordVisible = false;
+                PasswordBox.Visibility = Visibility.Visible;
+                PasswordTextBox.Visibility = Visibility.Collapsed;
+                PasswordVisibilityIcon.Text = "\ue8f4";
+                // Show placeholders
+                EmailPlaceholder.Visibility = Visibility.Visible;
+                PasswordPlaceholder.Visibility = Visibility.Visible;
+                break;
+
+            case AuthPanel.SignUp:
+                // Clear Sign Up fields
+                FullNameTextBox.Text = string.Empty;
+                SignUpEmailTextBox.Text = string.Empty;
+                SignUpPasswordBox.Password = string.Empty;
+                SignUpPasswordTextBox.Text = string.Empty;
+                ConfirmPasswordBox.Password = string.Empty;
+                ConfirmPasswordTextBox.Text = string.Empty;
+                NewsletterCheckBox.IsChecked = false;
+                // Reset password visibility
+                _isSignUpPasswordVisible = false;
+                _isConfirmPasswordVisible = false;
+                SignUpPasswordBox.Visibility = Visibility.Visible;
+                SignUpPasswordTextBox.Visibility = Visibility.Collapsed;
+                SignUpPasswordVisibilityIcon.Text = "\ue8f4";
+                ConfirmPasswordBox.Visibility = Visibility.Visible;
+                ConfirmPasswordTextBox.Visibility = Visibility.Collapsed;
+                ConfirmPasswordVisibilityIcon.Text = "\ue8f4";
+                // Show placeholders
+                FullNamePlaceholder.Visibility = Visibility.Visible;
+                SignUpEmailPlaceholder.Visibility = Visibility.Visible;
+                SignUpPasswordPlaceholder.Visibility = Visibility.Visible;
+                ConfirmPasswordPlaceholder.Visibility = Visibility.Visible;
+                break;
+
+            case AuthPanel.ForgotPassword:
+                // Clear Forgot Password fields
+                ForgotEmailTextBox.Text = string.Empty;
+                break;
+        }
     }
 
     private void SignUpLink_Click(object sender, MouseButtonEventArgs e)
@@ -288,6 +403,25 @@ public partial class AuthenticationWindow : Window
                 HideError(EmailErrorText);
             }
         }
+        // Update placeholder visibility (only show if empty AND not focused)
+        if (!EmailTextBox.IsFocused)
+        {
+            EmailPlaceholder.Visibility = string.IsNullOrEmpty(EmailTextBox.Text)
+                ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    private void EmailTextBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        // Hide placeholder when focused
+        EmailPlaceholder.Visibility = Visibility.Collapsed;
+    }
+
+    private void EmailTextBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        // Show placeholder if empty when losing focus
+        EmailPlaceholder.Visibility = string.IsNullOrEmpty(EmailTextBox.Text)
+            ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
@@ -299,11 +433,43 @@ public partial class AuthenticationWindow : Window
                 HideError(PasswordErrorText);
             }
         }
+        // Update placeholder visibility (only show if empty AND not focused)
+        if (!PasswordBox.IsFocused && !PasswordTextBox.IsFocused)
+        {
+            PasswordPlaceholder.Visibility = string.IsNullOrEmpty(PasswordBox.Password)
+                ? Visibility.Visible : Visibility.Collapsed;
+        }
         // Sync with visible textbox if password is shown
         if (_isPasswordVisible)
         {
             PasswordTextBox.Text = PasswordBox.Password;
         }
+    }
+
+    private void PasswordBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        // Hide placeholder when focused
+        PasswordPlaceholder.Visibility = Visibility.Collapsed;
+    }
+
+    private void PasswordBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        // Show placeholder if empty when losing focus
+        PasswordPlaceholder.Visibility = string.IsNullOrEmpty(PasswordBox.Password)
+            ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void PasswordTextBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        // Hide placeholder when focused
+        PasswordPlaceholder.Visibility = Visibility.Collapsed;
+    }
+
+    private void PasswordTextBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        // Show placeholder if empty when losing focus
+        PasswordPlaceholder.Visibility = string.IsNullOrEmpty(PasswordTextBox.Text)
+            ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void FullNameTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -316,6 +482,25 @@ public partial class AuthenticationWindow : Window
                 HideError(FullNameErrorText);
             }
         }
+        // Update placeholder visibility (only show if empty AND not focused)
+        if (!FullNameTextBox.IsFocused)
+        {
+            FullNamePlaceholder.Visibility = string.IsNullOrEmpty(FullNameTextBox.Text)
+                ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    private void FullNameTextBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        // Hide placeholder when focused
+        FullNamePlaceholder.Visibility = Visibility.Collapsed;
+    }
+
+    private void FullNameTextBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        // Show placeholder if empty when losing focus
+        FullNamePlaceholder.Visibility = string.IsNullOrEmpty(FullNameTextBox.Text)
+            ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void SignUpEmailTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -328,6 +513,25 @@ public partial class AuthenticationWindow : Window
                 HideError(SignUpEmailErrorText);
             }
         }
+        // Update placeholder visibility (only show if empty AND not focused)
+        if (!SignUpEmailTextBox.IsFocused)
+        {
+            SignUpEmailPlaceholder.Visibility = string.IsNullOrEmpty(SignUpEmailTextBox.Text)
+                ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    private void SignUpEmailTextBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        // Hide placeholder when focused
+        SignUpEmailPlaceholder.Visibility = Visibility.Collapsed;
+    }
+
+    private void SignUpEmailTextBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        // Show placeholder if empty when losing focus
+        SignUpEmailPlaceholder.Visibility = string.IsNullOrEmpty(SignUpEmailTextBox.Text)
+            ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void SignUpPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
@@ -339,6 +543,28 @@ public partial class AuthenticationWindow : Window
                 HideError(SignUpPasswordErrorText);
             }
         }
+        // Update placeholder visibility (only show if empty AND not focused)
+        if (!SignUpPasswordBox.IsFocused && !SignUpPasswordTextBox.IsFocused)
+        {
+            SignUpPasswordPlaceholder.Visibility = string.IsNullOrEmpty(SignUpPasswordBox.Password)
+                ? Visibility.Visible : Visibility.Collapsed;
+        }
+        // Sync with visible textbox if password is shown
+        if (_isSignUpPasswordVisible)
+        {
+            SignUpPasswordTextBox.Text = SignUpPasswordBox.Password;
+        }
+    }
+
+    private void SignUpPasswordBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        SignUpPasswordPlaceholder.Visibility = Visibility.Collapsed;
+    }
+
+    private void SignUpPasswordBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        SignUpPasswordPlaceholder.Visibility = string.IsNullOrEmpty(SignUpPasswordBox.Password)
+            ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void ConfirmPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
@@ -350,6 +576,28 @@ public partial class AuthenticationWindow : Window
                 HideError(ConfirmPasswordErrorText);
             }
         }
+        // Update placeholder visibility (only show if empty AND not focused)
+        if (!ConfirmPasswordBox.IsFocused && !ConfirmPasswordTextBox.IsFocused)
+        {
+            ConfirmPasswordPlaceholder.Visibility = string.IsNullOrEmpty(ConfirmPasswordBox.Password)
+                ? Visibility.Visible : Visibility.Collapsed;
+        }
+        // Sync with visible textbox if password is shown
+        if (_isConfirmPasswordVisible)
+        {
+            ConfirmPasswordTextBox.Text = ConfirmPasswordBox.Password;
+        }
+    }
+
+    private void ConfirmPasswordBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        ConfirmPasswordPlaceholder.Visibility = Visibility.Collapsed;
+    }
+
+    private void ConfirmPasswordBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        ConfirmPasswordPlaceholder.Visibility = string.IsNullOrEmpty(ConfirmPasswordBox.Password)
+            ? Visibility.Visible : Visibility.Collapsed;
     }
 
     #endregion
@@ -397,10 +645,18 @@ public partial class AuthenticationWindow : Window
                 await _secureStorage.DeleteAsync("signInCredentials");
             }
 
-            // Success - session changed event will close the window
+            // Mark as successful
             AuthenticationSuccessful = true;
-            DialogResult = true;
-            Close();
+
+            // Only raise event for manual sign-in (not auto-login) for seamless transition
+            // Auto-login uses the fallback path to avoid timing issues
+            if (!_isAutoLogin)
+            {
+                AuthenticationCompleted?.Invoke(this, EventArgs.Empty);
+            }
+
+            // Now close the dialog
+            SafeSetDialogResult(true);
         }
         catch (Exception ex)
         {
@@ -441,10 +697,14 @@ public partial class AuthenticationWindow : Window
                 RememberMe = true
             });
 
-            // Success - session changed event will close the window
+            // Mark as successful and raise event for seamless transition
             AuthenticationSuccessful = true;
-            DialogResult = true;
-            Close();
+
+            // Raise event to allow App to prepare MainWindow before this window closes
+            AuthenticationCompleted?.Invoke(this, EventArgs.Empty);
+
+            // Now close the dialog
+            SafeSetDialogResult(true);
         }
         catch (Exception ex)
         {
@@ -517,6 +777,20 @@ public partial class AuthenticationWindow : Window
         }
     }
 
+    /// <summary>
+    /// Shows or hides the full-screen preparing overlay that covers the auth card
+    /// while MainWindow is being prepared. This provides a seamless transition experience.
+    /// </summary>
+    public void ShowPreparingOverlay(bool show, string? message = null)
+    {
+        PreparingMainWindowOverlay.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+
+        if (show && !string.IsNullOrEmpty(message))
+        {
+            PreparingStatusText.Text = message;
+        }
+    }
+
     private void TogglePassword_Click(object sender, RoutedEventArgs e)
     {
         _isPasswordVisible = !_isPasswordVisible;
@@ -527,6 +801,8 @@ public partial class AuthenticationWindow : Window
             PasswordTextBox.Text = PasswordBox.Password;
             PasswordBox.Visibility = Visibility.Collapsed;
             PasswordTextBox.Visibility = Visibility.Visible;
+            PasswordPlaceholder.Visibility = Visibility.Collapsed;
+            PasswordVisibilityIcon.Text = "\ue8f5"; // visibility_off icon
             PasswordTextBox.Focus();
             PasswordTextBox.CaretIndex = PasswordTextBox.Text.Length;
         }
@@ -536,7 +812,87 @@ public partial class AuthenticationWindow : Window
             PasswordBox.Password = PasswordTextBox.Text;
             PasswordTextBox.Visibility = Visibility.Collapsed;
             PasswordBox.Visibility = Visibility.Visible;
+            PasswordVisibilityIcon.Text = "\ue8f4"; // visibility icon
+            // Restore placeholder if empty
+            PasswordPlaceholder.Visibility = string.IsNullOrEmpty(PasswordBox.Password)
+                ? Visibility.Visible : Visibility.Collapsed;
             PasswordBox.Focus();
+        }
+    }
+
+    private void ToggleSignUpPassword_Click(object sender, RoutedEventArgs e)
+    {
+        _isSignUpPasswordVisible = !_isSignUpPasswordVisible;
+
+        if (_isSignUpPasswordVisible)
+        {
+            // Show password as plain text
+            SignUpPasswordTextBox.Text = SignUpPasswordBox.Password;
+            SignUpPasswordBox.Visibility = Visibility.Collapsed;
+            SignUpPasswordTextBox.Visibility = Visibility.Visible;
+            SignUpPasswordPlaceholder.Visibility = Visibility.Collapsed;
+            SignUpPasswordVisibilityIcon.Text = "\ue8f5"; // visibility_off icon
+            SignUpPasswordTextBox.Focus();
+            SignUpPasswordTextBox.CaretIndex = SignUpPasswordTextBox.Text.Length;
+        }
+        else
+        {
+            // Hide password
+            SignUpPasswordBox.Password = SignUpPasswordTextBox.Text;
+            SignUpPasswordTextBox.Visibility = Visibility.Collapsed;
+            SignUpPasswordBox.Visibility = Visibility.Visible;
+            SignUpPasswordVisibilityIcon.Text = "\ue8f4"; // visibility icon
+            // Restore placeholder if empty
+            SignUpPasswordPlaceholder.Visibility = string.IsNullOrEmpty(SignUpPasswordBox.Password)
+                ? Visibility.Visible : Visibility.Collapsed;
+            SignUpPasswordBox.Focus();
+        }
+    }
+
+    private void ToggleConfirmPassword_Click(object sender, RoutedEventArgs e)
+    {
+        _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+
+        if (_isConfirmPasswordVisible)
+        {
+            // Show password as plain text
+            ConfirmPasswordTextBox.Text = ConfirmPasswordBox.Password;
+            ConfirmPasswordBox.Visibility = Visibility.Collapsed;
+            ConfirmPasswordTextBox.Visibility = Visibility.Visible;
+            ConfirmPasswordPlaceholder.Visibility = Visibility.Collapsed;
+            ConfirmPasswordVisibilityIcon.Text = "\ue8f5"; // visibility_off icon
+            ConfirmPasswordTextBox.Focus();
+            ConfirmPasswordTextBox.CaretIndex = ConfirmPasswordTextBox.Text.Length;
+        }
+        else
+        {
+            // Hide password
+            ConfirmPasswordBox.Password = ConfirmPasswordTextBox.Text;
+            ConfirmPasswordTextBox.Visibility = Visibility.Collapsed;
+            ConfirmPasswordBox.Visibility = Visibility.Visible;
+            ConfirmPasswordVisibilityIcon.Text = "\ue8f4"; // visibility icon
+            // Restore placeholder if empty
+            ConfirmPasswordPlaceholder.Visibility = string.IsNullOrEmpty(ConfirmPasswordBox.Password)
+                ? Visibility.Visible : Visibility.Collapsed;
+            ConfirmPasswordBox.Focus();
+        }
+    }
+
+    private void SignUpPasswordTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        // Sync with password box when text box is visible
+        if (_isSignUpPasswordVisible)
+        {
+            SignUpPasswordBox.Password = SignUpPasswordTextBox.Text;
+        }
+    }
+
+    private void ConfirmPasswordTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        // Sync with password box when text box is visible
+        if (_isConfirmPasswordVisible)
+        {
+            ConfirmPasswordBox.Password = ConfirmPasswordTextBox.Text;
         }
     }
 
@@ -613,8 +969,7 @@ public partial class AuthenticationWindow : Window
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
         AuthenticationSuccessful = false;
-        DialogResult = false;
-        Close();
+        SafeSetDialogResult(false);
     }
 
     #endregion
