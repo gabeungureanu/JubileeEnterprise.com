@@ -462,16 +462,16 @@
                                                           VerticalAlignment="Center"
                                                           Margin="0,0,8,0"/>
 
-                                            <!-- WWBW Email Address (Gold) -->
+                                            <!-- User Email Address (Gold) - Shows signed-in user email or "My Account" -->
                                             <TextBlock x:Name="WwbwEmailDisplay"
                                                        Grid.Column="1"
-                                                       Text="My Account"
+                                                       Text="{Binding MainViewModel.AccountRootFolder.Name, FallbackValue='My Account', TargetNullValue='My Account'}"
                                                        Foreground="{StaticResource GoldBrandBrush}"
                                                        FontSize="13"
                                                        FontWeight="SemiBold"
                                                        VerticalAlignment="Center"
                                                        TextTrimming="CharacterEllipsis"
-                                                       ToolTip="My Account"/>
+                                                       ToolTip="{Binding MainViewModel.AccountRootFolder.Name, FallbackValue='My Account', TargetNullValue='My Account'}"/>
                                         </Grid>
                                     </Border>
 
