@@ -148,6 +148,255 @@
         "reveal": "always",
         "panel": "shared"
       }
+    },
+    {
+      "label": "Inspire 8.0: Rebuild Qdrant Index",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/rebuild_qdrant_index.py",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Rebuild Qdrant Index (Dry Run)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/rebuild_qdrant_index.py",
+        "--dry-run",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Validate Qdrant Index",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/rebuild_qdrant_index.py",
+        "--validate-only",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Ingest Documents",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/ingest_documents.py",
+        "${input:ingestSource}",
+        "--collection",
+        "${input:ingestCollection}",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Ingest Documents (Dry Run)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/ingest_documents.py",
+        "${input:ingestSource}",
+        "--collection",
+        "${input:ingestCollection}",
+        "--dry-run",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Activate Persona",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/activate_persona.py",
+        "${input:personaId}",
+        "--mode",
+        "${input:activationMode}",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Activate Persona (Dry Run)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/activate_persona.py",
+        "${input:personaId}",
+        "--dry-run",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Audit Persona Drift",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/audit_persona_drift.py",
+        "${input:personaId}",
+        "--format",
+        "${input:auditFormat}",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Audit All Personas",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/audit_persona_drift.py",
+        "--format",
+        "markdown",
+        "--output",
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/logs/audit/full_audit_report.md",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "ingestSource",
+      "type": "promptString",
+      "description": "Source directory or file to ingest",
+      "default": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/qdrant"
+    },
+    {
+      "id": "ingestCollection",
+      "type": "pickString",
+      "description": "Target Qdrant collection for ingestion",
+      "options": [
+        "inspire_authority_foundation",
+        "inspire_canonical_personas",
+        "inspire_scripture_core",
+        "inspire_theology_systematic",
+        "inspire_theology_pastoral",
+        "inspire_theology_apologetics"
+      ],
+      "default": "inspire_authority_foundation"
+    },
+    {
+      "id": "personaId",
+      "type": "pickString",
+      "description": "Persona to activate or audit",
+      "options": [
+        "inspire_foundation",
+        "inspire_pastor",
+        "inspire_teacher",
+        "inspire_counselor",
+        "inspire_scholar"
+      ],
+      "default": "inspire_foundation"
+    },
+    {
+      "id": "activationMode",
+      "type": "pickString",
+      "description": "Activation mode",
+      "options": [
+        "interactive",
+        "single-shot",
+        "test"
+      ],
+      "default": "interactive"
+    },
+    {
+      "id": "auditFormat",
+      "type": "pickString",
+      "description": "Audit report format",
+      "options": [
+        "text",
+        "json",
+        "markdown"
+      ],
+      "default": "text"
     }
   ]
 }
