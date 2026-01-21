@@ -2,17 +2,18 @@
 # ACTIVATION CONTEXT ASSEMBLER
 # =============================================================================
 """
-Assembles activation anchors into a coherent activation context.
+Assembles activation anchors into a coherent activation packet.
 
-The assembler takes the retrieved PersonaAnchors and transforms them into
-a structured activation context that can be used to initialize a persona's
-state before any prompts are executed.
+The assembler takes the retrieved PersonaAnchors, SharedCanonAnchors, and
+GroundingItems and transforms them into a structured activation packet that
+can be used to initialize a persona's state before any prompts are executed.
 
 CRITICAL INVARIANTS:
 1. Assembly is a pure function - no side effects
 2. Output is deterministic given the same input anchors
 3. No writes to any storage during assembly
 4. Context is optimized for token efficiency
+5. Clear separation: identity, mission, voice, guardrails, canon, grounding
 """
 
 import hashlib
@@ -28,40 +29,74 @@ try:
         AnchorType,
         PersonaAnchors,
     )
+    from .shared_canon import (
+        SharedCanonAnchor,
+        SharedCanonResult,
+        GroundingItem,
+        GroundingResult,
+    )
 except ImportError:
     from anchors import (
         ActivationAnchor,
         AnchorType,
         PersonaAnchors,
     )
+    try:
+        from shared_canon import (
+            SharedCanonAnchor,
+            SharedCanonResult,
+            GroundingItem,
+            GroundingResult,
+        )
+    except ImportError:
+        # Define stub classes if shared_canon not available
+        SharedCanonAnchor = None
+        SharedCanonResult = None
+        GroundingItem = None
+        GroundingResult = None
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
-class ActivationContext:
+class ActivationPacket:
     """
-    The assembled activation context for a persona.
+    The structured activation packet for a persona.
 
     This is the final output of the activation process, containing
-    all the information needed to initialize a persona's state.
+    all information needed to initialize a persona's state. The packet
+    clearly separates:
+    - Identity anchors (who the persona is)
+    - Mission anchors (what the persona does)
+    - Voice anchors (how the persona communicates)
+    - Guardrails anchors (what the persona must not do)
+    - Shared canon (doctrinal and governance alignment)
+    - Contextual grounding (situational awareness from past interactions)
     """
     persona_name: str
     persona_full_name: str
     persona_role: str
 
-    # Assembled context blocks
+    # Assembled context blocks (persona-specific)
     identity_block: str
     mission_block: str
     voice_block: str
     guardrails_block: str
 
+    # Shared canon block (doctrinal alignment)
+    shared_canon_block: str = ""
+
+    # Contextual grounding block (situational awareness)
+    grounding_block: str = ""
+
     # Full assembled context
-    full_context: str
+    full_context: str = ""
 
     # Metadata
     assembled_at: str = field(default_factory=lambda: datetime.now().isoformat())
     anchor_count: int = 0
+    shared_canon_count: int = 0
+    grounding_count: int = 0
     token_estimate: int = 0
     context_hash: str = ""
 
@@ -71,13 +106,18 @@ class ActivationContext:
 
     @property
     def is_valid(self) -> bool:
-        """Check if context has all required blocks."""
+        """Check if packet has all required blocks."""
         return bool(
             self.identity_block and
             self.mission_block and
             self.voice_block and
             self.guardrails_block
         )
+
+    @property
+    def total_items(self) -> int:
+        """Total number of items in the packet."""
+        return self.anchor_count + self.shared_canon_count + self.grounding_count
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
@@ -89,9 +129,14 @@ class ActivationContext:
             "mission_block": self.mission_block,
             "voice_block": self.voice_block,
             "guardrails_block": self.guardrails_block,
+            "shared_canon_block": self.shared_canon_block,
+            "grounding_block": self.grounding_block,
             "full_context": self.full_context,
             "assembled_at": self.assembled_at,
             "anchor_count": self.anchor_count,
+            "shared_canon_count": self.shared_canon_count,
+            "grounding_count": self.grounding_count,
+            "total_items": self.total_items,
             "token_estimate": self.token_estimate,
             "context_hash": self.context_hash,
             "doc_versions": self.doc_versions,
@@ -100,12 +145,21 @@ class ActivationContext:
         }
 
 
+# Alias for backward compatibility
+ActivationContext = ActivationPacket
+
+
 class ContextAssembler:
     """
-    Assembles activation anchors into activation context.
+    Assembles activation anchors into a structured activation packet.
 
-    The assembler is a pure function transformer - it takes anchors
-    as input and produces a context as output with no side effects.
+    The assembler is a pure function transformer - it takes anchors,
+    shared canon, and grounding items as input and produces an
+    activation packet as output with no side effects.
+
+    ============================================================
+    THIS CLASS PERFORMS NO WRITES. Assembly is read-only.
+    ============================================================
     """
 
     # Default section headers
@@ -114,10 +168,12 @@ class ContextAssembler:
         "mission": "## MISSION & PURPOSE",
         "voice": "## VOICE & COMMUNICATION",
         "guardrails": "## GUARDRAILS & BOUNDARIES",
+        "shared_canon": "## DOCTRINAL ALIGNMENT",
+        "grounding": "## CONTEXTUAL GROUNDING",
     }
 
-    # Assembly order
-    ASSEMBLY_ORDER = ["identity", "mission", "guardrails", "voice"]
+    # Assembly order for the activation packet
+    ASSEMBLY_ORDER = ["identity", "mission", "guardrails", "voice", "shared_canon", "grounding"]
 
     def __init__(
         self,
@@ -137,19 +193,27 @@ class ContextAssembler:
         self.include_headers = include_headers
         self.include_metadata = include_metadata
 
-    def assemble(self, anchors: PersonaAnchors) -> ActivationContext:
+    def assemble(
+        self,
+        anchors: PersonaAnchors,
+        shared_canon: Optional["SharedCanonResult"] = None,
+        grounding: Optional["GroundingResult"] = None,
+    ) -> ActivationPacket:
         """
-        Assemble PersonaAnchors into an ActivationContext.
+        Assemble PersonaAnchors into an ActivationPacket.
 
-        This is the main entry point for context assembly.
+        This is the main entry point for context assembly. The packet
+        clearly separates all sections for persona initialization.
 
         Args:
-            anchors: Retrieved persona anchors
+            anchors: Retrieved persona anchors (required)
+            shared_canon: Optional shared canon anchors for doctrinal alignment
+            grounding: Optional contextual grounding for situational awareness
 
         Returns:
-            Assembled ActivationContext
+            Assembled ActivationPacket
         """
-        logger.info(f"Assembling activation context for {anchors.persona_name}")
+        logger.info(f"Assembling activation packet for {anchors.persona_name}")
 
         # Extract persona metadata from identity anchors
         persona_full_name = anchors.persona_name
@@ -161,11 +225,25 @@ class ContextAssembler:
             if hasattr(anchor, 'persona_role') and anchor.persona_role:
                 persona_role = anchor.persona_role
 
-        # Assemble each block
+        # Assemble persona-specific blocks
         identity_block = self._assemble_block(anchors.identity, "identity")
         mission_block = self._assemble_block(anchors.mission, "mission")
         voice_block = self._assemble_block(anchors.voice, "voice")
         guardrails_block = self._assemble_block(anchors.guardrails, "guardrails")
+
+        # Assemble shared canon block (if provided)
+        shared_canon_block = ""
+        shared_canon_count = 0
+        if shared_canon and SharedCanonResult:
+            shared_canon_block = self._assemble_shared_canon(shared_canon)
+            shared_canon_count = shared_canon.total_items
+
+        # Assemble grounding block (if provided)
+        grounding_block = ""
+        grounding_count = 0
+        if grounding and GroundingResult:
+            grounding_block = self._assemble_grounding(grounding)
+            grounding_count = grounding.total_items
 
         # Assemble full context
         full_context = self._assemble_full_context(
@@ -176,6 +254,8 @@ class ContextAssembler:
             mission=mission_block,
             voice=voice_block,
             guardrails=guardrails_block,
+            shared_canon=shared_canon_block,
+            grounding=grounding_block,
         )
 
         # Collect metadata
@@ -189,7 +269,7 @@ class ContextAssembler:
         # Generate context hash for caching
         context_hash = self._hash_context(full_context)
 
-        context = ActivationContext(
+        packet = ActivationPacket(
             persona_name=anchors.persona_name,
             persona_full_name=persona_full_name,
             persona_role=persona_role,
@@ -197,8 +277,12 @@ class ContextAssembler:
             mission_block=mission_block,
             voice_block=voice_block,
             guardrails_block=guardrails_block,
+            shared_canon_block=shared_canon_block,
+            grounding_block=grounding_block,
             full_context=full_context,
             anchor_count=anchors.total_anchors,
+            shared_canon_count=shared_canon_count,
+            grounding_count=grounding_count,
             token_estimate=token_estimate,
             context_hash=context_hash,
             doc_versions=doc_versions,
@@ -206,11 +290,12 @@ class ContextAssembler:
         )
 
         logger.info(
-            f"Assembled context for {anchors.persona_name}: "
-            f"{context.anchor_count} anchors, ~{token_estimate} tokens"
+            f"Assembled packet for {anchors.persona_name}: "
+            f"{packet.anchor_count} anchors, {shared_canon_count} canon, "
+            f"{grounding_count} grounding, ~{token_estimate} tokens"
         )
 
-        return context
+        return packet
 
     def _assemble_block(
         self,
@@ -252,6 +337,89 @@ class ContextAssembler:
 
         return "\n".join(lines)
 
+    def _assemble_shared_canon(self, canon: "SharedCanonResult") -> str:
+        """
+        Assemble shared canon anchors into a block.
+
+        Args:
+            canon: SharedCanonResult from retrieval
+
+        Returns:
+            Assembled shared canon block
+        """
+        if not canon or not canon.get_all_anchors():
+            return ""
+
+        lines = []
+
+        # Add header if configured
+        if self.include_headers:
+            header = self.SECTION_HEADERS.get("shared_canon", "## DOCTRINAL ALIGNMENT")
+            lines.append(header)
+            lines.append("")
+            lines.append("The following anchors ensure doctrinal and governance alignment:")
+            lines.append("")
+
+        # Scripture anchors
+        if canon.scripture:
+            lines.append("### Scripture Foundation")
+            for anchor in canon.scripture:
+                lines.append(f"- {anchor.content.strip()}")
+            lines.append("")
+
+        # Doctrine anchors
+        if canon.doctrine:
+            lines.append("### Doctrinal Anchors")
+            for anchor in canon.doctrine:
+                lines.append(f"- {anchor.content.strip()}")
+            lines.append("")
+
+        # Governance anchors
+        if canon.governance:
+            lines.append("### Governance Guidelines")
+            for anchor in canon.governance:
+                lines.append(f"- {anchor.content.strip()}")
+            lines.append("")
+
+        return "\n".join(lines)
+
+    def _assemble_grounding(self, grounding: "GroundingResult") -> str:
+        """
+        Assemble contextual grounding items into a block.
+
+        Args:
+            grounding: GroundingResult from retrieval
+
+        Returns:
+            Assembled grounding block
+        """
+        if not grounding or not grounding.items:
+            return ""
+
+        lines = []
+
+        # Add header if configured
+        if self.include_headers:
+            header = self.SECTION_HEADERS.get("grounding", "## CONTEXTUAL GROUNDING")
+            lines.append(header)
+            lines.append("")
+            lines.append("Situational awareness from recent interactions (read-only context):")
+            lines.append("")
+
+        # Add each grounding item
+        for i, item in enumerate(grounding.items, 1):
+            if item.timestamp:
+                lines.append(f"### [{item.timestamp}]")
+            else:
+                lines.append(f"### Context {i}")
+
+            lines.append(item.content.strip())
+            lines.append("")
+            lines.append("---")
+            lines.append("")
+
+        return "\n".join(lines)
+
     def _assemble_full_context(
         self,
         persona_name: str,
@@ -261,6 +429,8 @@ class ContextAssembler:
         mission: str,
         voice: str,
         guardrails: str,
+        shared_canon: str = "",
+        grounding: str = "",
     ) -> str:
         """
         Assemble the full activation context.
@@ -273,6 +443,8 @@ class ContextAssembler:
             mission: Assembled mission block
             voice: Assembled voice block
             guardrails: Assembled guardrails block
+            shared_canon: Assembled shared canon block
+            grounding: Assembled grounding block
 
         Returns:
             Full assembled context string
@@ -291,6 +463,8 @@ class ContextAssembler:
             "mission": mission,
             "voice": voice,
             "guardrails": guardrails,
+            "shared_canon": shared_canon,
+            "grounding": grounding,
         }
 
         for block_type in self.ASSEMBLY_ORDER:

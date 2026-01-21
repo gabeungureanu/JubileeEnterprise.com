@@ -13,7 +13,7 @@
 # 4. Persona identity remains stable and reproducible
 # =============================================================================
 
-version: "1.0.0"
+version: "1.1.0"
 activation_name: "inspire_8.0_activation"
 
 # =============================================================================
@@ -170,6 +170,114 @@ personas:
     birth_order: 13
 
 # =============================================================================
+# SHARED CANON COLLECTIONS
+# =============================================================================
+# Approved shared anchors for doctrinal and governance alignment
+# These are loaded for EVERY persona during activation
+shared_canon:
+  # Scripture collection - foundational truth
+  scripture:
+    collection: "scripture"
+    enabled: true
+    load_at_activation: true
+    description: "Jubilee Standard Version scripture for doctrinal grounding"
+    retrieval:
+      # Only load core/foundational verses at activation
+      priority_filter: "core"
+      max_items: 10
+      types:
+        - "verse"
+        - "passage"
+
+  # Doctrine collection - theological anchors
+  doctrine:
+    collection: "doctrine"
+    enabled: true
+    load_at_activation: true
+    description: "Doctrinal statements and theological foundations"
+    retrieval:
+      priority_filter: "core"
+      max_items: 5
+      types:
+        - "doctrinal_statement"
+        - "teaching"
+
+  # Governance collection - behavioral guidelines
+  governance:
+    collection: "governance"
+    enabled: true
+    load_at_activation: true
+    description: "Governance rules and behavioral constraints"
+    retrieval:
+      priority_filter: "core"
+      max_items: 5
+      types:
+        - "identity_anchor"
+        - "guardrail_anchor"
+        - "protocol_anchor"
+
+  # Inspire Family collection - shared family resources
+  inspire_family:
+    collection: "inspire-family"
+    enabled: true
+    load_at_activation: false  # Loaded on-demand, not at activation
+    description: "Shared Inspire Family resources"
+    retrieval:
+      priority_filter: "high"
+      max_items: 3
+      types:
+        - "family_resource"
+
+# =============================================================================
+# CONTEXTUAL GROUNDING
+# =============================================================================
+# Bounded retrieval of existing memory for situational awareness
+# CRITICAL: This is READ-ONLY retrieval, no memory writes occur
+contextual_grounding:
+  enabled: true
+  description: "Optional bounded retrieval of persona memory for situational awareness"
+
+  # Hard limits to ensure token efficiency
+  limits:
+    # Maximum number of memory items to retrieve
+    max_items: 5
+    # Maximum tokens for contextual grounding section
+    max_tokens: 1000
+    # Maximum age of memories to consider (days)
+    max_age_days: 90
+
+  # Types of memory allowed for contextual grounding
+  allowed_types:
+    - interaction_summary     # Brief summaries of past interactions
+    - relationship_context    # Known relationships and preferences
+    - lesson_learned          # Insights from past conversations
+
+  # Types explicitly PROHIBITED from grounding
+  prohibited_types:
+    - raw_transcript          # Never load full transcripts
+    - session_memory          # Session-specific, not for activation
+    - long_term_memory        # Too large for activation context
+
+  # Retrieval strategy for grounding
+  retrieval:
+    # Strategy: "recent" (newest), "relevant" (semantic), "mixed"
+    strategy: "mixed"
+    # Weight for recency vs relevance in mixed mode
+    recency_weight: 0.3
+    relevance_weight: 0.7
+    # Query for semantic relevance (empty = skip semantic)
+    semantic_query_template: "Recent context for {persona_name}"
+
+  # Assembly settings
+  assembly:
+    # Section header in activation packet
+    section_name: "CONTEXTUAL GROUNDING"
+    # Include timestamp of each item
+    include_timestamps: true
+    # Separator between items
+    item_separator: "---"
+
+# =============================================================================
 # ACTIVATION CONTEXT ASSEMBLY
 # =============================================================================
 context_assembly:
@@ -180,14 +288,15 @@ context_assembly:
     - guardrails
     - voice
 
-  # Template sections in final context
+  # Template sections in final activation packet
   template_sections:
     - system_preamble
     - identity_block
     - mission_block
     - guardrails_block
     - voice_block
-    - session_context
+    - shared_canon_block     # Doctrinal and governance alignment
+    - contextual_grounding   # Bounded situational awareness
 
   # Maximum tokens for activation context
   max_tokens: 8000

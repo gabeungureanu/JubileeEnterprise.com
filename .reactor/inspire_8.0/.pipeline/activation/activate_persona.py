@@ -5,28 +5,36 @@
 """
 Main entry point for persona activation (ignition).
 
-This script retrieves activation anchors from Qdrant, assembles them into
-an activation context, and outputs the context for persona initialization.
+This script retrieves activation anchors from Qdrant, shared canon anchors
+for doctrinal alignment, and optional contextual grounding for situational
+awareness. It assembles them into a structured activation packet and outputs
+the packet for persona initialization.
 
 CRITICAL INVARIANTS:
 1. This script is READ-ONLY - it NEVER writes to Qdrant
 2. Only retrieves anchors tagged with activation_anchor types
-3. Output is deterministic for reproducible activation
-4. No memory or interaction data is ever touched
+3. Shared canon provides doctrinal/governance alignment
+4. Contextual grounding is bounded (max items, max tokens)
+5. Output is deterministic for reproducible activation
+6. No memory is ever written during activation
 
 Usage:
     python activate_persona.py --persona jubilee [--output json|text|context]
 
 Options:
-    --persona   Name of the persona to activate (required)
-    --output    Output format: json, text, or context (default: context)
-    --validate  Validate anchors only, don't output context
-    --cache     Use cached context if available
+    --persona      Name of the persona to activate (required)
+    --output       Output format: json, text, or context (default: context)
+    --validate     Validate anchors only, don't output context
+    --no-cache     Disable context caching
+    --no-canon     Skip shared canon retrieval
+    --no-grounding Skip contextual grounding retrieval
+    --quiet        Suppress logging output
 
 Examples:
     python activate_persona.py --persona jubilee
     python activate_persona.py --persona gabriel --output json
     python activate_persona.py --persona melody --validate
+    python activate_persona.py --persona jubilee --no-grounding
 """
 
 import argparse
@@ -43,13 +51,22 @@ sys.path.insert(0, str(SCRIPT_DIR.parent / "ingestion"))
 
 from anchors import PersonaAnchors, AnchorType
 from retriever import AnchorRetriever, RetrievalResult
-from assembler import ContextAssembler, ActivationContext, ContextCache
+from assembler import ContextAssembler, ActivationPacket, ContextCache
+from shared_canon import (
+    SharedCanonRetriever,
+    SharedCanonResult,
+    ContextualGroundingRetriever,
+    GroundingResult,
+)
 from policy import (
     MemoryPolicy,
     ExecutionPhase,
     ActivationPhase,
     get_memory_policy,
 )
+
+# Alias for backward compatibility
+ActivationContext = ActivationPacket
 
 
 # =============================================================================
@@ -90,37 +107,68 @@ class PersonaActivator:
     """
     Handles persona activation by retrieving and assembling anchors.
 
-    This is a READ-ONLY class. It retrieves data but never writes.
+    This is a READ-ONLY class. It retrieves data but NEVER writes.
     The memory policy enforces this invariant.
+
+    ============================================================
+    DO NOT ADD ANY WRITE METHODS TO THIS CLASS.
+    The activation layer must remain purely read-only.
+    ============================================================
     """
 
-    def __init__(self, use_cache: bool = True):
+    def __init__(
+        self,
+        use_cache: bool = True,
+        include_canon: bool = True,
+        include_grounding: bool = True,
+    ):
         """
         Initialize the activator.
 
         Args:
             use_cache: Whether to use context caching
+            include_canon: Whether to retrieve shared canon anchors
+            include_grounding: Whether to retrieve contextual grounding
         """
         self.retriever = AnchorRetriever()
+        self.canon_retriever = SharedCanonRetriever()
+        self.grounding_retriever = ContextualGroundingRetriever()
         self.assembler = ContextAssembler()
         self.policy = get_memory_policy()
         self.cache = ContextCache() if use_cache else None
+        self.include_canon = include_canon
+        self.include_grounding = include_grounding
 
-    def activate(self, persona_name: str) -> ActivationContext:
+    def activate(
+        self,
+        persona_name: str,
+        include_canon: bool = None,
+        include_grounding: bool = None,
+    ) -> ActivationPacket:
         """
         Activate a persona by retrieving anchors and assembling context.
 
-        This is the main entry point for activation.
+        This is the main entry point for activation. The resulting packet
+        contains:
+        - Persona-specific activation anchors (identity, mission, voice, guardrails)
+        - Shared canon anchors for doctrinal alignment (if enabled)
+        - Contextual grounding for situational awareness (if enabled)
 
         Args:
             persona_name: Name of the persona to activate
+            include_canon: Override for shared canon (None = use instance setting)
+            include_grounding: Override for grounding (None = use instance setting)
 
         Returns:
-            Assembled ActivationContext
+            Assembled ActivationPacket
 
         Raises:
             ValueError: If persona is unknown or activation fails
         """
+        # Resolve options
+        should_include_canon = include_canon if include_canon is not None else self.include_canon
+        should_include_grounding = include_grounding if include_grounding is not None else self.include_grounding
+
         # Validate persona
         if persona_name not in PERSONA_COLLECTIONS:
             raise ValueError(
@@ -139,7 +187,7 @@ class PersonaActivator:
         with ActivationPhase(self.policy):
             logger.info(f"Activating persona: {persona_name}")
 
-            # Retrieve anchors
+            # Step 1: Retrieve persona-specific anchors
             collection = PERSONA_COLLECTIONS[persona_name]
             result = self.retriever.retrieve_persona_anchors(
                 persona_name=persona_name,
@@ -156,14 +204,48 @@ class PersonaActivator:
                 for warning in result.warnings:
                     logger.warning(warning)
 
-            # Assemble context
-            context = self.assembler.assemble(result.anchors)
+            # Step 2: Retrieve shared canon (if enabled)
+            shared_canon = None
+            if should_include_canon:
+                logger.info("Retrieving shared canon anchors...")
+                shared_canon = self.canon_retriever.retrieve_shared_canon(
+                    include_scripture=True,
+                    include_doctrine=True,
+                    include_governance=True,
+                    include_family=False,  # Not needed at activation
+                    max_total_tokens=2000,
+                )
+                if shared_canon.errors:
+                    for error in shared_canon.errors:
+                        logger.warning(f"Canon retrieval warning: {error}")
+
+            # Step 3: Retrieve contextual grounding (if enabled)
+            grounding = None
+            if should_include_grounding:
+                logger.info("Retrieving contextual grounding...")
+                grounding = self.grounding_retriever.retrieve_grounding(
+                    persona_name=persona_name,
+                    collection_name=collection,
+                    strategy="mixed",
+                    max_items=5,
+                    max_tokens=1000,
+                )
+                if grounding.errors:
+                    for error in grounding.errors:
+                        logger.warning(f"Grounding retrieval warning: {error}")
+
+            # Step 4: Assemble the activation packet
+            packet = self.assembler.assemble(
+                anchors=result.anchors,
+                shared_canon=shared_canon,
+                grounding=grounding,
+            )
 
             # Cache the result
             if self.cache:
-                self.cache.set(persona_name, context)
+                self.cache.set(persona_name, packet)
 
-            return context
+            return packet
 
     def validate(self, persona_name: str) -> dict:
         """
@@ -232,6 +314,8 @@ class PersonaActivator:
     def cleanup(self):
         """Cleanup resources."""
         self.retriever.disconnect()
+        self.canon_retriever.disconnect()
+        self.grounding_retriever.disconnect()
         if self.cache:
             self.cache.clear()
 
@@ -245,33 +329,53 @@ def output_json(context: ActivationContext) -> str:
     return json.dumps(context.to_dict(), indent=2)
 
 
-def output_text(context: ActivationContext) -> str:
-    """Output context as formatted text."""
+def output_text(packet: ActivationPacket) -> str:
+    """Output packet as formatted text."""
     lines = [
         "=" * 70,
-        f"  PERSONA ACTIVATION: {context.persona_full_name}",
+        f"  PERSONA ACTIVATION PACKET: {packet.persona_full_name}",
         "=" * 70,
-        f"  Role: {context.persona_role}",
-        f"  Anchors: {context.anchor_count}",
-        f"  Tokens (est): ~{context.token_estimate}",
-        f"  Context Hash: {context.context_hash}",
-        f"  Assembled: {context.assembled_at}",
+        f"  Role: {packet.persona_role}",
+        f"  Persona Anchors: {packet.anchor_count}",
+        f"  Shared Canon: {packet.shared_canon_count}",
+        f"  Grounding Items: {packet.grounding_count}",
+        f"  Total Items: {packet.total_items}",
+        f"  Tokens (est): ~{packet.token_estimate}",
+        f"  Context Hash: {packet.context_hash}",
+        f"  Assembled: {packet.assembled_at}",
         "-" * 70,
         "",
         "IDENTITY BLOCK:",
-        context.identity_block if context.identity_block else "(not loaded)",
+        packet.identity_block if packet.identity_block else "(not loaded)",
         "",
         "MISSION BLOCK:",
-        context.mission_block if context.mission_block else "(not loaded)",
+        packet.mission_block if packet.mission_block else "(not loaded)",
         "",
         "VOICE BLOCK:",
-        context.voice_block if context.voice_block else "(not loaded)",
+        packet.voice_block if packet.voice_block else "(not loaded)",
         "",
         "GUARDRAILS BLOCK:",
-        context.guardrails_block if context.guardrails_block else "(not loaded)",
+        packet.guardrails_block if packet.guardrails_block else "(not loaded)",
         "",
-        "=" * 70,
     ]
+
+    # Add shared canon if present
+    if packet.shared_canon_block:
+        lines.extend([
+            "SHARED CANON BLOCK:",
+            packet.shared_canon_block,
+            "",
+        ])
+
+    # Add grounding if present
+    if packet.grounding_block:
+        lines.extend([
+            "CONTEXTUAL GROUNDING BLOCK:",
+            packet.grounding_block,
+            "",
+        ])
+
+    lines.append("=" * 70)
     return "\n".join(lines)
 
 
@@ -286,7 +390,7 @@ def output_context(context: ActivationContext) -> str:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Activate a persona by retrieving and assembling anchors"
+        description="Activate a persona by retrieving and assembling anchors into a structured activation packet"
     )
 
     parser.add_argument(
@@ -318,6 +422,18 @@ def main():
     )
 
     parser.add_argument(
+        "--no-canon",
+        action="store_true",
+        help="Skip shared canon retrieval (doctrinal alignment)"
+    )
+
+    parser.add_argument(
+        "--no-grounding",
+        action="store_true",
+        help="Skip contextual grounding retrieval (situational awareness)"
+    )
+
+    parser.add_argument(
         "--quiet", "-q",
         action="store_true",
         help="Suppress logging output"
@@ -329,8 +445,12 @@ def main():
     if args.quiet:
         logging.getLogger().setLevel(logging.WARNING)
 
-    # Create activator
-    activator = PersonaActivator(use_cache=not args.no_cache)
+    # Create activator with options
+    activator = PersonaActivator(
+        use_cache=not args.no_cache,
+        include_canon=not args.no_canon,
+        include_grounding=not args.no_grounding,
+    )
 
     try:
         if args.validate:
@@ -341,15 +461,15 @@ def main():
 
         else:
             # Activation mode
-            context = activator.activate(args.persona)
+            packet = activator.activate(args.persona)
 
             # Output in requested format
             if args.output == "json":
-                print(output_json(context))
+                print(output_json(packet))
             elif args.output == "text":
-                print(output_text(context))
+                print(output_text(packet))
             else:  # context
-                print(output_context(context))
+                print(output_context(packet))
 
             sys.exit(0)
 
