@@ -1132,6 +1132,122 @@
         "clear": true
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Setup WSL Environment",
+      "type": "shell",
+      "command": "wsl",
+      "args": [
+        "bash",
+        "-c",
+        "cd /mnt/c/data/JubileeEnterprise.com/.reactor/inspire_8.0/.pipeline/environment && chmod +x setup_wsl.sh && ./setup_wsl.sh"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Validate Environment",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/environment/validate_environment.py",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Validate Environment (Strict)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/environment/validate_environment.py",
+        "--strict"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Verify Services",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/environment/verify_services.py",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Verify Services (Quick)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/environment/verify_services.py",
+        "--quick"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Install Python Dependencies",
+      "type": "shell",
+      "command": "pip",
+      "args": [
+        "install",
+        "-r",
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/environment/requirements.txt"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
     }
   ],
   "inputs": [

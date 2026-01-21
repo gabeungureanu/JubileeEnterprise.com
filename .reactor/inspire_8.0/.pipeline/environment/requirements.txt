@@ -1,0 +1,163 @@
+# =============================================================================
+# INSPIRE 8.0 PIPELINE - PYTHON DEPENDENCIES
+# =============================================================================
+# This file defines all Python dependencies required to execute the
+# Inspire 8.0 pipeline inside the canonical WSL execution environment.
+#
+# INSTALLATION:
+#   pip install -r requirements.txt
+#
+# IMPORTANT: All pipeline scripts MUST run within the virtual environment
+# created by setup_wsl.sh to ensure determinism and reproducibility.
+#
+# Version: 1.0.0
+# Last Updated: 2026-01-21
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# QDRANT CLIENT
+# Vector database access for collection queries and management
+# -----------------------------------------------------------------------------
+qdrant-client>=1.7.0,<2.0.0
+
+# -----------------------------------------------------------------------------
+# POSTGRESQL
+# Database connectivity for codex database operations
+# Using binary package to avoid compilation issues
+# -----------------------------------------------------------------------------
+psycopg2-binary>=2.9.9,<3.0.0
+
+# Alternative: Use psycopg (version 3) if preferred
+# psycopg[binary]>=3.1.0,<4.0.0
+
+# -----------------------------------------------------------------------------
+# OPENAI SDK
+# Embeddings generation and LLM execution
+# Required for text-embedding-3-small and GPT-4o models
+# -----------------------------------------------------------------------------
+openai>=1.12.0,<2.0.0
+
+# -----------------------------------------------------------------------------
+# TOKENIZATION
+# Token counting for chunking and budget management
+# Required for accurate token budget enforcement
+# -----------------------------------------------------------------------------
+tiktoken>=0.5.2,<1.0.0
+
+# -----------------------------------------------------------------------------
+# YAML/JSON PROCESSING
+# Pipeline manifest parsing and configuration management
+# -----------------------------------------------------------------------------
+PyYAML>=6.0.1,<7.0.0
+pyyaml-env-tag>=0.1        # Environment variable support in YAML
+
+# -----------------------------------------------------------------------------
+# HTTP CLIENTS
+# Service health checks and API interactions
+# -----------------------------------------------------------------------------
+requests>=2.31.0,<3.0.0
+httpx>=0.26.0,<1.0.0        # Async HTTP client
+aiohttp>=3.9.0,<4.0.0       # Async HTTP for concurrent operations
+
+# -----------------------------------------------------------------------------
+# DATA VALIDATION
+# Schema validation and data modeling
+# -----------------------------------------------------------------------------
+pydantic>=2.5.0,<3.0.0
+pydantic-settings>=2.1.0,<3.0.0
+
+# -----------------------------------------------------------------------------
+# ENVIRONMENT MANAGEMENT
+# Configuration and secrets management
+# -----------------------------------------------------------------------------
+python-dotenv>=1.0.0,<2.0.0
+
+# -----------------------------------------------------------------------------
+# LOGGING AND OUTPUT
+# Structured logging and rich terminal output
+# -----------------------------------------------------------------------------
+structlog>=24.1.0,<25.0.0
+rich>=13.7.0,<14.0.0
+
+# -----------------------------------------------------------------------------
+# ASYNC SUPPORT
+# Asynchronous operation utilities
+# -----------------------------------------------------------------------------
+asyncio-throttle>=1.0.2,<2.0.0
+
+# -----------------------------------------------------------------------------
+# DATE/TIME
+# Timezone handling and date parsing
+# -----------------------------------------------------------------------------
+python-dateutil>=2.8.2,<3.0.0
+pytz>=2024.1
+
+# -----------------------------------------------------------------------------
+# FILE HANDLING
+# File type detection and processing
+# -----------------------------------------------------------------------------
+python-magic>=0.4.27,<1.0.0
+chardet>=5.2.0,<6.0.0
+
+# -----------------------------------------------------------------------------
+# HASHING AND SECURITY
+# Checksum generation and verification
+# -----------------------------------------------------------------------------
+hashlib-compat>=1.0.0       # Compatibility layer (if needed)
+
+# -----------------------------------------------------------------------------
+# TESTING (Development)
+# Test framework and utilities
+# -----------------------------------------------------------------------------
+pytest>=7.4.0,<8.0.0
+pytest-asyncio>=0.23.0,<1.0.0
+pytest-cov>=4.1.0,<5.0.0
+pytest-mock>=3.12.0,<4.0.0
+
+# -----------------------------------------------------------------------------
+# CODE QUALITY (Development)
+# Linting and formatting
+# -----------------------------------------------------------------------------
+black>=24.1.0,<25.0.0
+ruff>=0.1.14,<1.0.0
+mypy>=1.8.0,<2.0.0
+
+# -----------------------------------------------------------------------------
+# DOCUMENTATION (Development)
+# Documentation generation
+# -----------------------------------------------------------------------------
+mkdocs>=1.5.0,<2.0.0
+mkdocs-material>=9.5.0,<10.0.0
+
+# -----------------------------------------------------------------------------
+# NUMPY (Optional)
+# Numerical operations for embedding processing
+# -----------------------------------------------------------------------------
+numpy>=1.26.0,<2.0.0
+
+# -----------------------------------------------------------------------------
+# RETRY AND RESILIENCE
+# Retry logic for transient failures
+# -----------------------------------------------------------------------------
+tenacity>=8.2.0,<9.0.0
+backoff>=2.2.0,<3.0.0
+
+# -----------------------------------------------------------------------------
+# CACHING
+# Local caching utilities
+# -----------------------------------------------------------------------------
+cachetools>=5.3.0,<6.0.0
+diskcache>=5.6.0,<6.0.0
+
+# -----------------------------------------------------------------------------
+# PROGRESS BARS
+# Progress indication for long operations
+# -----------------------------------------------------------------------------
+tqdm>=4.66.0,<5.0.0
+
+# -----------------------------------------------------------------------------
+# CLICK (CLI)
+# Command-line interface utilities
+# -----------------------------------------------------------------------------
+click>=8.1.0,<9.0.0
+typer>=0.9.0,<1.0.0
