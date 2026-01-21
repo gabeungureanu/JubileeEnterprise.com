@@ -169,10 +169,6 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
         setLinkCopied(false);
         setShowShareModal(true);
         break;
-      case 'group':
-        closeMenu();
-        Alert.alert('Start a group chat', 'Group chat functionality coming soon!');
-        break;
       case 'rename':
         // Close menu and notify parent to enter edit mode
         closeMenu();
@@ -423,14 +419,6 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
               >
                 <Ionicons name="share-outline" size={20} color={colors.text} />
                 <Text style={styles.menuItemText}>Share</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => handleOptionPress('group')}
-              >
-                <Ionicons name="people-outline" size={20} color={colors.text} />
-                <Text style={styles.menuItemText}>Start a group chat</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
