@@ -693,6 +693,92 @@
         "clear": true
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Token Budget Status",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/check_token_budget.py",
+        "status",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Token Budget Limits",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/check_token_budget.py",
+        "limits",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Validate Token Request",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/check_token_budget.py",
+        "validate",
+        "--model",
+        "${input:budgetModel}",
+        "--tokens",
+        "${input:requestedTokens}",
+        "--category",
+        "${input:taskCategory}",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Token Usage Summary",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/check_token_budget.py",
+        "usage",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
     }
   ],
   "inputs": [
@@ -813,6 +899,38 @@
         "inspire_ui"
       ],
       "default": "inspire_designer"
+    },
+    {
+      "id": "budgetModel",
+      "type": "pickString",
+      "description": "Model for token budget",
+      "options": [
+        "gpt-4o-mini",
+        "gpt-4o-turbo",
+        "gpt-4o"
+      ],
+      "default": "gpt-4o-mini"
+    },
+    {
+      "id": "requestedTokens",
+      "type": "promptString",
+      "description": "Number of tokens to request",
+      "default": "500"
+    },
+    {
+      "id": "taskCategory",
+      "type": "pickString",
+      "description": "Task category",
+      "options": [
+        "routine",
+        "teaching",
+        "pastoral",
+        "counseling",
+        "doctrinal",
+        "strategic",
+        "scholarly"
+      ],
+      "default": "routine"
     }
   ]
 }
