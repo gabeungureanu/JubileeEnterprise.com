@@ -1114,19 +1114,16 @@ public partial class MainWindow : Window
         // Mail was sent successfully - first hide the compose panel
         HideComposePanel();
 
-        // Refresh the message list for the current folder BEFORE clearing selection
-        // This ensures the UI stays populated
-        if (_mainViewModel.SelectedFolder != null)
+        // Check if we're in the Sent folder - if so, refresh to show the new message
+        if (_mainViewModel.SelectedFolder != null &&
+            _mainViewModel.SelectedFolder.Id.ToLower().Contains("sent"))
         {
             await _mainViewModel.RefreshMessagesAsync();
         }
 
-        // Clear displayed message so reading pane shows blank after sending
-        _mainViewModel.DisplayedMessage = null;
-        _mainViewModel.SelectedMessage = null;
-
-        // Show success notification
-        MessageDialog.ShowSuccess(this, "Mail sent successfully!", "Success");
+        // Note: Don't clear SelectedMessage or DisplayedMessage here
+        // The user may want to continue viewing their inbox after sending
+        // Just show that the compose panel is now hidden and email was sent
     }
 
     private void OnComposeCancelled(object? sender, EventArgs e)
@@ -1177,6 +1174,9 @@ public partial class MainWindow : Window
                 // Also save to Sent Items folder via API for local storage
                 await SaveToSentFolderAsync(e, result.MessageId);
 
+                // Notify the compose view model that send succeeded
+                _composeMailViewModel?.NotifyMailSentSuccess();
+
                 // Show success notification
                 NotificationService.Instance.ShowSuccess("Email sent successfully!");
             }
@@ -1184,12 +1184,8 @@ public partial class MainWindow : Window
             {
                 System.Diagnostics.Debug.WriteLine($"[MainWindow] Email send failed: {result.ErrorMessage}");
 
-                // Update the compose view model with the error
-                if (_composeMailViewModel != null)
-                {
-                    _composeMailViewModel.IsSending = false;
-                    _composeMailViewModel.ValidationError = result.ErrorMessage ?? "Failed to send email";
-                }
+                // Notify the compose view model of the failure
+                _composeMailViewModel?.NotifyMailSentFailed(result.ErrorMessage ?? "Failed to send email");
 
                 // Show error dialog
                 MessageDialog.ShowError(this, result.ErrorMessage ?? "Failed to send email", "Send Error");
@@ -1198,6 +1194,10 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[MainWindow] Error sending email: {ex.Message}");
+
+            // Notify the compose view model of the failure
+            _composeMailViewModel?.NotifyMailSentFailed($"Failed to send email: {ex.Message}");
+
             MessageDialog.ShowError(this, $"Failed to send email: {ex.Message}", "Send Error");
         }
     }
@@ -1245,6 +1245,9 @@ public partial class MainWindow : Window
             // Save to API
             var mailService = Services.ServiceConfiguration.GetMailService();
             await mailService.SendMessageAsync(emailMessage);
+
+            // Add the sent message to the collection for immediate display
+            _mainViewModel.AddSentMessageToCollection(emailMessage);
 
             System.Diagnostics.Debug.WriteLine($"[MainWindow] Email saved to Sent folder");
         }

@@ -309,7 +309,7 @@ public class EmailSendingService
     }
 
     /// <summary>
-    /// Decrypt the stored password
+    /// Decrypt the stored password using SecureStorageService
     /// </summary>
     private string? DecryptPassword(string? encryptedPassword)
     {
@@ -318,12 +318,12 @@ public class EmailSendingService
 
         try
         {
-            // The password is stored encrypted by SecureStorageService using DPAPI
-            // When stored via SecureStorageService, it's already handled
-            return encryptedPassword;
+            // Use the SecureStorageService to properly decrypt the password
+            return _secureStorage.DecryptPassword(encryptedPassword);
         }
-        catch
+        catch (Exception ex)
         {
+            Debug.WriteLine($"[EmailSendingService] Password decryption failed: {ex.Message}");
             return null;
         }
     }

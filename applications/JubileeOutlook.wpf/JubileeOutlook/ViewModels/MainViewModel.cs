@@ -804,4 +804,23 @@ public partial class MainViewModel : ObservableObject
     {
         // Open more apps panel
     }
+
+    /// <summary>
+    /// Adds a sent message to the Messages collection if user is currently viewing Sent folder
+    /// </summary>
+    public void AddSentMessageToCollection(EmailMessage message)
+    {
+        // Check if user is currently viewing Sent folder
+        if (SelectedFolder != null &&
+            (SelectedFolder.Id.Equals("sent", StringComparison.OrdinalIgnoreCase) ||
+             SelectedFolder.Name.Equals("Sent", StringComparison.OrdinalIgnoreCase) ||
+             SelectedFolder.Name.Equals("Sent Items", StringComparison.OrdinalIgnoreCase)))
+        {
+            // Add to the beginning of the collection so it appears at the top
+            Dispatcher.CurrentDispatcher.Invoke(() =>
+            {
+                Messages.Insert(0, message);
+            });
+        }
+    }
 }

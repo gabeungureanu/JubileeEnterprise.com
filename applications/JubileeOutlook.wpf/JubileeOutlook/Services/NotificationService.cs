@@ -19,6 +19,10 @@ public class NotificationService
     private readonly int _maxVisibleNotifications = 3;
     private readonly List<Border> _activeNotifications = new();
 
+    // Deduplication for connection errors
+    private readonly Dictionary<string, DateTime> _recentErrorMessages = new();
+    private readonly TimeSpan _errorDeduplicationWindow = TimeSpan.FromSeconds(10);
+
     /// <summary>
     /// Singleton instance of the notification service
     /// </summary>
@@ -42,6 +46,39 @@ public class NotificationService
         // Subscribe to HTTP client factory events
         HttpClientFactory.Instance.NetworkError += OnNetworkError;
         HttpClientFactory.Instance.RetryAttempted += OnRetryAttempted;
+    }
+
+    /// <summary>
+    /// Checks if an error message should be suppressed due to recent duplicate
+    /// </summary>
+    private bool ShouldSuppressDuplicateError(string message)
+    {
+        var now = DateTime.UtcNow;
+
+        // Clean up old entries
+        var keysToRemove = _recentErrorMessages
+            .Where(kvp => now - kvp.Value > _errorDeduplicationWindow)
+            .Select(kvp => kvp.Key)
+            .ToList();
+
+        foreach (var key in keysToRemove)
+        {
+            _recentErrorMessages.Remove(key);
+        }
+
+        // Check if this message was recently shown
+        if (_recentErrorMessages.TryGetValue(message, out var lastShown))
+        {
+            if (now - lastShown < _errorDeduplicationWindow)
+            {
+                System.Diagnostics.Debug.WriteLine($"[NotificationService] Suppressing duplicate error: {message}");
+                return true;
+            }
+        }
+
+        // Record this message
+        _recentErrorMessages[message] = now;
+        return false;
     }
 
     /// <summary>
@@ -372,7 +409,11 @@ public class NotificationService
 
     private void OnNetworkError(object? sender, NetworkErrorEventArgs e)
     {
-        ShowError(e.FriendlyMessage, "Connection Error");
+        // Check for duplicate error to avoid spamming notifications
+        if (!ShouldSuppressDuplicateError(e.FriendlyMessage))
+        {
+            ShowError(e.FriendlyMessage, "Connection Error");
+        }
     }
 
     private void OnRetryAttempted(object? sender, RetryEventArgs e)

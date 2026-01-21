@@ -112,22 +112,35 @@ public partial class ComposeMailViewModel : ObservableObject
             };
 
             // Request MainWindow to send the email via the service
+            // MainWindow will call NotifyMailSentSuccess() or set error when complete
             SendMailRequested?.Invoke(this, emailData);
-
-            // Notify that mail was sent successfully
-            MailSent?.Invoke(this, EventArgs.Empty);
-            ClearForm();
         }
         catch (Exception ex)
         {
             ValidationError = $"Failed to send email: {ex.Message}";
-        }
-        finally
-        {
             IsSending = false;
         }
 
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Called by MainWindow when send operation completes successfully
+    /// </summary>
+    public void NotifyMailSentSuccess()
+    {
+        IsSending = false;
+        MailSent?.Invoke(this, EventArgs.Empty);
+        ClearForm();
+    }
+
+    /// <summary>
+    /// Called by MainWindow when send operation fails
+    /// </summary>
+    public void NotifyMailSentFailed(string errorMessage)
+    {
+        IsSending = false;
+        ValidationError = errorMessage;
     }
 
     private bool CanSend()
