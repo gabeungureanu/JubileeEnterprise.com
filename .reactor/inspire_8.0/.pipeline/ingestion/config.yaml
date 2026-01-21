@@ -1,0 +1,195 @@
+# =============================================================================
+# INSPIRE 8.0 INGESTION PIPELINE CONFIGURATION
+# =============================================================================
+# Version: 1.0.0
+# Location: .reactor/inspire_8.0/.pipeline/ingestion/
+# Purpose: Central configuration for all data ingestion into Qdrant
+# =============================================================================
+
+version: "1.0.0"
+pipeline_name: "inspire_8.0_ingestion"
+
+# =============================================================================
+# QDRANT CONNECTION
+# =============================================================================
+qdrant:
+  host: "${QDRANT_HOST:-localhost}"
+  port: "${QDRANT_PORT:-6333}"
+  api_key: "${QDRANT_API_KEY:-}"
+  timeout: 30
+  container_name: "inspire_8_0"
+
+# =============================================================================
+# EMBEDDING CONFIGURATION
+# =============================================================================
+embeddings:
+  provider: "openai"
+  model: "text-embedding-3-large"
+  dimensions: 1536
+  api_key: "${OPENAI_API_KEY}"
+  batch_size: 100
+  rate_limit:
+    requests_per_minute: 3000
+    tokens_per_minute: 1000000
+  retry:
+    max_attempts: 3
+    initial_delay_ms: 1000
+    max_delay_ms: 60000
+
+# =============================================================================
+# SOURCE DIRECTORIES
+# =============================================================================
+sources:
+  base_path: "${WORKSPACE_ROOT}/.reactor/inspire_8.0"
+
+  scripture:
+    path: "authority_foundation/a1_scripture/Jubilee_Bible_JSV"
+    pattern: "**/*.json"
+    collection: "scripture"
+
+  doctrine:
+    path: "authority_foundation/a2_doctrine"
+    pattern: "**/*.{json,yaml,md}"
+    collection: "doctrine"
+
+  governance:
+    path: "authority_foundation/a3_governance"
+    pattern: "**/*.{json,yaml}"
+    collection: "governance"
+
+  inspire_family:
+    path: "authority_foundation/a4_inspire_family"
+    pattern: "**/*.{json,yaml}"
+    collection: "inspire-family"
+
+  persona_anchors:
+    path: ".pipeline/schema/anchors/personas"
+    pattern: "**/*.yaml"
+    # Collection determined by persona name
+
+  ministry_docs:
+    paths:
+      - "authority_foundation/a5_gabriel_pastoral_voice"
+      - "authority_foundation/o1_kingdom_builder"
+      - "authority_foundation/i2_jubilee_ministry"
+    pattern: "**/*.{json,yaml,md}"
+    collection: "jubilee_ministry"
+
+# =============================================================================
+# CHUNKING STANDARDS (From chunking-standards.yaml)
+# =============================================================================
+chunking:
+  scripture:
+    strategy: "per_verse"
+    token_range:
+      min: 10
+      target: 50
+      max: 150
+    verse_grouping_max: 5
+    preserve_verse_boundaries: true
+
+  doctrine:
+    strategy: "contextual_sections"
+    token_range:
+      min: 200
+      target: 350
+      max: 500
+    overlap_tokens: 40
+    align_to_headings: true
+    one_idea_per_chunk: true
+
+  notes:
+    strategy: "surgical_precision"
+    token_range:
+      min: 80
+      target: 150
+      max: 200
+    overlap_tokens: 25
+    one_thought_per_chunk: true
+
+  activation_anchors:
+    strategy: "complete_sections"
+    token_range:
+      min: 150
+      target: 300
+      max: 400
+    never_split_sections: true
+
+# =============================================================================
+# DUPLICATE PREVENTION
+# =============================================================================
+deduplication:
+  enabled: true
+  strategy: "content_hash"
+  hash_algorithm: "sha256"
+  hash_fields:
+    - "text"
+    - "type"
+    - "source"
+  # For scripture, use deterministic IDs based on reference
+  scripture_id_format: "jsv_{book}_{chapter}_{verse}"
+  # For other content, use content hash
+  default_id_format: "{collection}_{hash}"
+
+# =============================================================================
+# LOGGING & REPORTING
+# =============================================================================
+logging:
+  level: "INFO"
+  directory: "logs"
+  format: "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+  date_format: "%Y-%m-%d %H:%M:%S"
+  rotate_size_mb: 10
+  backup_count: 5
+
+reports:
+  directory: "reports"
+  format: "json"
+  include:
+    - run_metadata
+    - source_stats
+    - chunk_stats
+    - embedding_stats
+    - upsert_stats
+    - errors
+    - duration
+
+# =============================================================================
+# EXECUTION SETTINGS
+# =============================================================================
+execution:
+  dry_run: false
+  batch_upsert_size: 100
+  parallel_workers: 4
+  continue_on_error: true
+  validate_before_upsert: true
+
+# =============================================================================
+# COLLECTION MAPPINGS
+# =============================================================================
+collections:
+  # Shared collections
+  scripture:
+    types: ["verse", "passage", "chapter_summary", "book_intro"]
+    persona: "shared"
+    priority_default: "core"
+
+  doctrine:
+    types: ["teaching", "whitepaper", "doctrinal_statement", "devotional", "commentary"]
+    persona: "shared"
+    priority_default: "high"
+
+  governance:
+    types: ["identity_anchor", "mission_anchor", "voice_anchor", "guardrail_anchor", "protocol_anchor"]
+    persona: "shared"
+    priority_default: "core"
+
+  inspire-family:
+    types: ["hymn", "worship_song", "liturgy", "psalm_setting", "sacred_poem", "family_resource"]
+    persona: "shared"
+    priority_default: "normal"
+
+  # Persona collections follow pattern: persona_{name}_inspire
+  persona_collections:
+    types: ["activation_anchor", "interaction_summary", "long_term_memory", "relationship_context", "lesson_learned"]
+    priority_default: "high"

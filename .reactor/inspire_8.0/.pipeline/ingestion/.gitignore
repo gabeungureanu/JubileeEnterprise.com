@@ -1,0 +1,12 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Test reports (not needed in git)
+reports/*.json
+logs/*.log
+
+# Keep directory structure
+!reports/.gitkeep
+!logs/.gitkeep
