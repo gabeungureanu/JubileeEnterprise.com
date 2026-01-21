@@ -16,6 +16,8 @@ CRITICAL INVARIANTS:
 - Structured extraction: Decisions, preferences, and scripture references
 - Explicit authorization: All writes require writeback phase + authorization
 - Audit trail: All memory operations are logged
+- FORMAL MEMORY POLICY: Only durable, high-signal content is persisted
+- REQUIRED METADATA: All items MUST have confidence level and scope
 
 MEMORY ITEM TYPES:
 - session_summary: Concise summary of interaction (100-250 tokens)
@@ -27,6 +29,13 @@ MEMORY ITEM TYPES:
 PROHIBITED BY DEFAULT:
 - raw_transcript: Full conversation logs
 - unfiltered_log: Raw system logs
+- Transient content: Routine exchanges, speculative thoughts
+
+FORMAL MEMORY POLICY:
+- Confidence levels: provisional, confirmed, high_confidence
+- Scope designations: private, shared, user_global
+- Durability criteria: new_user_preference, new_decision, etc.
+- Transient reasons: routine_exchange, speculative_thought, etc.
 """
 
 from .config import (
@@ -57,6 +66,18 @@ from .orchestrator import (
     WritebackResult,
     WritebackSession,
 )
+from .memory_policy import (
+    MemoryPolicyEnforcer,
+    MemoryPolicyConfig,
+    PolicyEvaluation,
+    ConfidenceLevel,
+    MemoryScope,
+    DurabilityCriteria,
+    TransientReason,
+    get_memory_policy_enforcer,
+    set_memory_policy_enforcer,
+    reset_memory_policy_enforcer,
+)
 
 __all__ = [
     # Configuration
@@ -82,6 +103,17 @@ __all__ = [
     'WritebackOrchestrator',
     'WritebackResult',
     'WritebackSession',
+    # FORMAL MEMORY POLICY
+    'MemoryPolicyEnforcer',
+    'MemoryPolicyConfig',
+    'PolicyEvaluation',
+    'ConfidenceLevel',
+    'MemoryScope',
+    'DurabilityCriteria',
+    'TransientReason',
+    'get_memory_policy_enforcer',
+    'set_memory_policy_enforcer',
+    'reset_memory_policy_enforcer',
 ]
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'  # Updated for formal memory policy

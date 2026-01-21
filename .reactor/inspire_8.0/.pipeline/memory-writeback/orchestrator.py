@@ -9,7 +9,8 @@ This module coordinates all components of the memory writeback pipeline:
 2. Extract key decisions
 3. Extract durable user preferences
 4. Extract scripture references
-5. Write all items to Qdrant with proper metadata
+5. Apply FORMAL MEMORY POLICY (durability, confidence, scope)
+6. Write all items to Qdrant with proper metadata
 
 CRITICAL INVARIANTS:
 1. Session summary is REQUIRED for all writebacks
@@ -17,6 +18,8 @@ CRITICAL INVARIANTS:
 3. All items have proper metadata
 4. Token budgets are enforced
 5. All operations are logged for audit
+6. FORMAL MEMORY POLICY enforced: only durable, high-signal content persisted
+7. All items MUST have confidence level and scope designation
 """
 
 import hashlib
@@ -44,6 +47,13 @@ try:
         MemoryItem,
         TranscriptBlocker,
     )
+    from .memory_policy import (
+        MemoryPolicyEnforcer,
+        get_memory_policy_enforcer,
+        PolicyEvaluation,
+        ConfidenceLevel,
+        MemoryScope,
+    )
 except ImportError:
     from config import (
         WritebackConfig,
@@ -63,6 +73,13 @@ except ImportError:
         MemoryItem,
         TranscriptBlocker,
     )
+    from memory_policy import (
+        MemoryPolicyEnforcer,
+        get_memory_policy_enforcer,
+        PolicyEvaluation,
+        ConfidenceLevel,
+        MemoryScope,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +90,7 @@ class WritebackResult:
     Complete result of a memory writeback operation.
 
     This captures the results of all writeback steps:
-    summarization, extraction, and writing.
+    summarization, extraction, policy evaluation, and writing.
     """
     success: bool = False
 
@@ -92,6 +109,11 @@ class WritebackResult:
     preferences_extracted: int = 0
     scripture_extracted: int = 0
     total_items_extracted: int = 0
+
+    # FORMAL MEMORY POLICY RESULTS
+    items_policy_approved: int = 0
+    items_policy_rejected: int = 0
+    policy_rejection_reasons: List[str] = field(default_factory=list)
 
     # Write results
     items_written: int = 0
@@ -129,6 +151,11 @@ class WritebackResult:
                 "preferences": self.preferences_extracted,
                 "scripture": self.scripture_extracted,
                 "total": self.total_items_extracted,
+            },
+            "policy": {
+                "approved": self.items_policy_approved,
+                "rejected": self.items_policy_rejected,
+                "rejection_reasons": self.policy_rejection_reasons,
             },
             "writing": {
                 "written": self.items_written,
@@ -184,6 +211,9 @@ class WritebackOrchestrator:
     It coordinates summarization, extraction, and writing while
     enforcing all policies.
 
+    CRITICAL: This orchestrator applies the FORMAL MEMORY POLICY
+    consistently across all personas and all memory writeback operations.
+
     USAGE:
         orchestrator = WritebackOrchestrator()
         result = orchestrator.process_session(
@@ -207,6 +237,9 @@ class WritebackOrchestrator:
         self.extractor = CombinedExtractor(self.config)
         self.writer = MemoryWriter(self.config)
         self.transcript_blocker = TranscriptBlocker(self.config)
+
+        # Initialize FORMAL MEMORY POLICY enforcer
+        self.memory_policy_enforcer = get_memory_policy_enforcer()
 
     def process_session(
         self,
@@ -290,10 +323,15 @@ class WritebackOrchestrator:
             result.total_items_extracted = extraction_result.total_found
             session.extracted_items = extraction_result.items
 
-            # Step 3: Build memory items for storage
-            logger.info(f"Building memory items for {persona_name}...")
-            memory_items = self._build_memory_items(session)
+            # Step 3: Build memory items for storage (with POLICY EVALUATION)
+            logger.info(f"Building memory items for {persona_name} (applying formal memory policy)...")
+            memory_items = self._build_memory_items(session, result)
             session.memory_items = memory_items
+
+            logger.info(
+                f"Policy evaluation: {result.items_policy_approved} approved, "
+                f"{result.items_policy_rejected} rejected"
+            )
 
             # Step 4: Check session limits
             total_tokens = sum(item.token_count for item in memory_items)
@@ -361,11 +399,22 @@ class WritebackOrchestrator:
             persona_name=session.persona_name,
         )
 
-    def _build_memory_items(self, session: WritebackSession) -> List[MemoryItem]:
-        """Build MemoryItem objects from summary and extracted items."""
+    def _build_memory_items(
+        self,
+        session: WritebackSession,
+        result: WritebackResult = None,
+    ) -> List[MemoryItem]:
+        """
+        Build MemoryItem objects from summary and extracted items.
+
+        CRITICAL: This method applies the FORMAL MEMORY POLICY to all
+        extracted items, filtering out transient content and enriching
+        approved items with confidence level and scope designation.
+        """
         items = []
 
-        # Add session summary as a memory item
+        # Add session summary as a memory item (always approved)
+        # Session summaries bypass policy as they are required
         if session.summary and session.summary.success:
             summary_item = MemoryItem(
                 item_type=MemoryItemType.SESSION_SUMMARY.value,
@@ -375,11 +424,40 @@ class WritebackOrchestrator:
                 source="session_summarizer",
                 session_id=session.session_id,
                 tags=["summary", "session"] + session.summary.topics_covered,
+                # Session summaries are high confidence and private by default
+                confidence_level=ConfidenceLevel.HIGH_CONFIDENCE.value,
+                scope=MemoryScope.PRIVATE.value,
+                durability_score=1.0,
+                signal_strength=1.0,
+                policy_justification="Session summary (required, bypasses policy)",
             )
             items.append(summary_item)
+            if result:
+                result.items_policy_approved += 1
 
-        # Add extracted items
+        # Add extracted items WITH POLICY EVALUATION
         for extracted in session.extracted_items:
+            # Evaluate against formal memory policy
+            evaluation = self.memory_policy_enforcer.evaluate(
+                content=extracted.content,
+                item_type=extracted.item_type.value,
+                context={"session_id": session.session_id} if session.session_id else {},
+            )
+
+            if not evaluation.should_persist:
+                # Item rejected by policy
+                logger.info(
+                    f"POLICY REJECTION: {extracted.item_type.value} - "
+                    f"{evaluation.rejection_reason}"
+                )
+                if result:
+                    result.items_policy_rejected += 1
+                    result.policy_rejection_reasons.append(
+                        f"{extracted.item_type.value}: {evaluation.rejection_reason}"
+                    )
+                continue
+
+            # Item approved - build with policy metadata
             item = MemoryItem(
                 item_type=extracted.item_type.value,
                 content=extracted.content,
@@ -392,8 +470,16 @@ class WritebackOrchestrator:
                 reference=extracted.reference,
                 decision_type=extracted.decision_type,
                 preference_key=extracted.preference_key,
+                # FORMAL MEMORY POLICY METADATA (REQUIRED)
+                confidence_level=evaluation.confidence.value if evaluation.confidence else "",
+                scope=evaluation.scope.value if evaluation.scope else "",
+                durability_score=evaluation.durability_score,
+                signal_strength=evaluation.signal_strength,
+                policy_justification=evaluation.justification,
             )
             items.append(item)
+            if result:
+                result.items_policy_approved += 1
 
         # Deduplicate if configured
         if self.config.deduplicate_items:

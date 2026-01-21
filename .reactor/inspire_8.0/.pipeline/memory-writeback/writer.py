@@ -14,6 +14,8 @@ CRITICAL INVARIANTS:
 3. All items have required metadata (timestamp, source, persona)
 4. Token limits are enforced
 5. All writes are logged for audit
+6. FORMAL MEMORY POLICY enforced: only durable, high-signal content persisted
+7. All items MUST have confidence level and scope designation
 """
 
 import hashlib
@@ -28,10 +30,24 @@ try:
     from .config import WritebackConfig, get_writeback_config, MemoryItemType
     from .extractors import ExtractedItem
     from .summarizer import SummaryResult
+    from .memory_policy import (
+        MemoryPolicyEnforcer,
+        get_memory_policy_enforcer,
+        PolicyEvaluation,
+        ConfidenceLevel,
+        MemoryScope,
+    )
 except ImportError:
     from config import WritebackConfig, get_writeback_config, MemoryItemType
     from extractors import ExtractedItem
     from summarizer import SummaryResult
+    from memory_policy import (
+        MemoryPolicyEnforcer,
+        get_memory_policy_enforcer,
+        PolicyEvaluation,
+        ConfidenceLevel,
+        MemoryScope,
+    )
 
 # Import policy from activation layer
 import sys
@@ -73,6 +89,10 @@ class MemoryItem:
 
     This represents the final form of a memory item with all
     required metadata and validation applied.
+
+    POLICY REQUIREMENTS:
+    - confidence_level: REQUIRED (provisional, confirmed, high_confidence)
+    - scope: REQUIRED (private, shared, user_global)
     """
     # Identification
     item_id: str = ""
@@ -98,6 +118,13 @@ class MemoryItem:
     reference: str = ""  # For scripture
     decision_type: str = ""  # For decisions
     preference_key: str = ""  # For preferences
+
+    # FORMAL MEMORY POLICY FIELDS (REQUIRED)
+    confidence_level: str = ""  # provisional, confirmed, high_confidence
+    scope: str = ""  # private, shared, user_global
+    durability_score: float = 0.0
+    signal_strength: float = 0.0
+    policy_justification: str = ""
 
     # Storage metadata
     vector: List[float] = field(default_factory=list)
@@ -135,6 +162,12 @@ class MemoryItem:
             # Memory items are mutable (unlike activation anchors)
             "immutable": False,
             "memory_item": True,
+            # FORMAL MEMORY POLICY FIELDS (REQUIRED)
+            "confidence_level": self.confidence_level,
+            "scope": self.scope,
+            "durability_score": self.durability_score,
+            "signal_strength": self.signal_strength,
+            "policy_justification": self.policy_justification,
         }
 
 
@@ -182,6 +215,7 @@ class MemoryWriter:
     3. Blocks prohibited types
     4. Ensures proper metadata
     5. Logs all write operations
+    6. ENFORCES FORMAL MEMORY POLICY (durability, confidence, scope)
     """
 
     def __init__(
@@ -208,6 +242,9 @@ class MemoryWriter:
 
         self.config = config or get_writeback_config()
         self.policy = get_memory_policy()
+
+        # Initialize formal memory policy enforcer
+        self.memory_policy_enforcer = get_memory_policy_enforcer()
 
         self.host = host or os.getenv('QDRANT_HOST', 'localhost')
         self.port = port or int(os.getenv('QDRANT_PORT', '6333'))
@@ -333,12 +370,15 @@ class MemoryWriter:
         """
         Validate a memory item against policy.
 
+        This includes BOTH the original policy checks AND the formal
+        memory policy (durability, confidence, scope).
+
         Args:
             item: Item to validate
             collection_name: Target collection
 
         Returns:
-            Dict with 'allowed' and 'reason' keys
+            Dict with 'allowed', 'reason', and optional 'evaluation' keys
         """
         # Check 1: Item type allowed?
         try:
@@ -389,7 +429,35 @@ class MemoryWriter:
                 "reason": "Empty content"
             }
 
-        # Check policy if available
+        # Check 5: FORMAL MEMORY POLICY - Durability evaluation
+        # Skip policy for session summaries (always allowed)
+        if item.item_type != MemoryItemType.SESSION_SUMMARY.value:
+            evaluation = self.memory_policy_enforcer.evaluate(
+                content=item.content,
+                item_type=item.item_type,
+                context={"session_id": item.session_id} if item.session_id else {},
+            )
+
+            if not evaluation.should_persist:
+                return {
+                    "allowed": False,
+                    "reason": f"MEMORY POLICY BLOCK: {evaluation.rejection_reason}",
+                    "evaluation": evaluation,
+                }
+
+            # Enrich item with policy metadata if not already set
+            if not item.confidence_level:
+                item.confidence_level = evaluation.confidence.value if evaluation.confidence else ""
+            if not item.scope:
+                item.scope = evaluation.scope.value if evaluation.scope else ""
+            if not item.durability_score:
+                item.durability_score = evaluation.durability_score
+            if not item.signal_strength:
+                item.signal_strength = evaluation.signal_strength
+            if not item.policy_justification:
+                item.policy_justification = evaluation.justification
+
+        # Check activation phase policy if available
         if self.policy:
             # Map our item type to policy writable types
             policy_type = self._map_to_policy_type(item_type)
@@ -405,7 +473,7 @@ class MemoryWriter:
                     "reason": str(e)
                 }
 
-        return {"allowed": True, "reason": "Passed all checks"}
+        return {"allowed": True, "reason": "Passed all checks (including formal memory policy)"}
 
     def _map_to_policy_type(self, item_type: MemoryItemType) -> str:
         """Map MemoryItemType to policy writable type."""
