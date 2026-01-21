@@ -107,7 +107,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         // Position menu above the button, left-aligned with button
         // Menu height is approximately 250px (5 items * ~50px each)
         const menuHeight = 250;
-        const topPosition = y - menuHeight + 67; // 50px lower than before (was +17, now +67)
+        const topPosition = y - menuHeight - 33; // 50px higher (was +17, now -33)
         setMenuPosition({
           top: Math.max(10, topPosition), // Ensure minimum 10px from top
           left: x,
