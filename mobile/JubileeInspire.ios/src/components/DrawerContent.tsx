@@ -15,7 +15,10 @@ import {
   Platform,
   TextInput,
   Modal,
+  Share,
+  Alert,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -54,6 +57,10 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
 
   // Settings modal state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  // Share modal state
+  const [shareConversationId, setShareConversationId] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const styles = createStyles(colors, isCollapsed, isMobileView);
 
@@ -363,6 +370,64 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
     }
   };
 
+  // Share modal handlers
+  const shareConversation = useMemo(() => {
+    if (!shareConversationId) return null;
+    return [...conversations, pendingConversation].find(c => c?.id === shareConversationId) || null;
+  }, [shareConversationId, conversations, pendingConversation]);
+
+  const handleCloseShareModal = () => {
+    setShareConversationId(null);
+    setLinkCopied(false);
+  };
+
+  const handleCopyLink = async () => {
+    if (!shareConversationId) return;
+    const shareUrl = `https://inspire.jubileeenterprise.com/chat/${shareConversationId}`;
+    try {
+      await Clipboard.setStringAsync(shareUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+      Alert.alert('Error', 'Failed to copy link to clipboard');
+    }
+  };
+
+  const handleShare = async () => {
+    if (!shareConversation) return;
+    const shareUrl = `https://inspire.jubileeenterprise.com/chat/${shareConversationId}`;
+    try {
+      if (Platform.OS === 'web') {
+        if (navigator.share) {
+          await navigator.share({
+            title: shareConversation.title,
+            text: `Check out this conversation: ${shareConversation.title}`,
+            url: shareUrl,
+          });
+        } else {
+          await handleCopyLink();
+        }
+      } else {
+        await Share.share({
+          message: `Check out this conversation: ${shareConversation.title}\n${shareUrl}`,
+          title: shareConversation.title,
+        });
+      }
+      handleCloseShareModal();
+    } catch (error) {
+      if ((error as any).name !== 'AbortError') {
+        console.error('Failed to share:', error);
+      }
+    }
+  };
+
+  const handleShareModalKeyPress = (e: any) => {
+    if (e.key === 'Escape') {
+      handleCloseShareModal();
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header with collapse toggle (desktop) or close button (mobile) */}
@@ -604,7 +669,9 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
               style={[styles.optionsMenuItem, hoveredMenuItem === 'share' && styles.menuItemHovered]}
               onPress={() => {
                 handleMenuClose();
-                // Share functionality would go here
+                if (openMenuConversationId) {
+                  setShareConversationId(openMenuConversationId);
+                }
               }}
               {...(Platform.OS === 'web' ? {
                 onMouseEnter: () => setHoveredMenuItem('share'),
@@ -613,21 +680,6 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
             >
               <Ionicons name="share-outline" size={20} color={colors.text} />
               <Text style={styles.menuItemText}>Share</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.optionsMenuItem, hoveredMenuItem === 'group' && styles.menuItemHovered]}
-              onPress={() => {
-                handleMenuClose();
-                // Group chat functionality
-              }}
-              {...(Platform.OS === 'web' ? {
-                onMouseEnter: () => setHoveredMenuItem('group'),
-                onMouseLeave: () => setHoveredMenuItem(null),
-              } as any : {})}
-            >
-              <Ionicons name="people-outline" size={20} color={colors.text} />
-              <Text style={styles.menuItemText}>Start a group chat</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -733,6 +785,94 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
           }, 500);
         }}
       />
+
+      {/* Share Conversation Modal */}
+      <Modal
+        visible={!!shareConversationId}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCloseShareModal}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={handleCloseShareModal}
+          {...(Platform.OS === 'web' ? { onKeyDown: handleShareModalKeyPress } as any : {})}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e: any) => e.stopPropagation()}
+            style={styles.shareModalContent}
+          >
+            {/* Header */}
+            <View style={styles.shareModalHeader}>
+              <View style={styles.shareModalTitleRow}>
+                <Ionicons name="share-social-outline" size={24} color={colors.primary} />
+                <Text style={styles.shareModalTitle}>Share Conversation</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.shareModalCloseButton}
+                onPress={handleCloseShareModal}
+              >
+                <Ionicons name="close" size={22} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Conversation Preview */}
+            {shareConversation && (
+              <View style={styles.shareConversationPreview}>
+                <Ionicons name="chatbubble-outline" size={18} color={colors.textSecondary} />
+                <Text style={styles.shareConversationTitle} numberOfLines={1}>
+                  {shareConversation.title}
+                </Text>
+              </View>
+            )}
+
+            {/* Share Link Section */}
+            <View style={styles.shareLinkSection}>
+              <Text style={styles.shareLinkLabel}>Share Link</Text>
+              <View style={styles.shareLinkContainer}>
+                <Text style={styles.shareLinkText} numberOfLines={1}>
+                  inspire.jubileeenterprise.com/chat/{shareConversationId?.slice(0, 12)}...
+                </Text>
+              </View>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.shareModalButtons}>
+              <TouchableOpacity
+                style={[styles.shareButton, styles.copyLinkButton]}
+                onPress={handleCopyLink}
+              >
+                <Ionicons
+                  name={linkCopied ? "checkmark-circle" : "copy-outline"}
+                  size={18}
+                  color={linkCopied ? "#22c55e" : colors.primary}
+                />
+                <Text style={[styles.copyLinkButtonText, linkCopied && styles.copiedText]}>
+                  {linkCopied ? 'Copied!' : 'Copy Link'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.shareButton, styles.shareActionButton]}
+                onPress={handleShare}
+              >
+                <Ionicons name="share-outline" size={18} color="#ffffff" />
+                <Text style={styles.shareActionButtonText}>Share</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Cancel Button */}
+            <TouchableOpacity
+              style={styles.shareCancelButton}
+              onPress={handleCloseShareModal}
+            >
+              <Text style={styles.shareCancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -985,6 +1125,130 @@ const createStyles = (colors: any, isCollapsed: boolean, isMobileView: boolean) 
   },
   deleteText: {
     color: '#ef4444',
+  },
+  // Share Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shareModalContent: {
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    padding: spacing.xl,
+    width: '90%',
+    maxWidth: 420,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+      },
+    }),
+  },
+  shareModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+  },
+  shareModalTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  shareModalTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  shareModalCloseButton: {
+    padding: spacing.xs,
+    borderRadius: 6,
+    backgroundColor: colors.surface,
+  },
+  shareConversationPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: 8,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  shareConversationTitle: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text,
+    flex: 1,
+  },
+  shareLinkSection: {
+    marginBottom: spacing.lg,
+  },
+  shareLinkLabel: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  shareLinkContainer: {
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  shareLinkText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+    fontFamily: Platform.OS === 'web' ? 'monospace' : undefined,
+  },
+  shareModalButtons: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  shareButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: 8,
+    gap: spacing.xs,
+  },
+  copyLinkButton: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  copyLinkButtonText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  copiedText: {
+    color: '#22c55e',
+  },
+  shareActionButton: {
+    backgroundColor: colors.primary,
+  },
+  shareActionButtonText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  shareCancelButton: {
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  shareCancelButtonText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+    fontWeight: '500',
   },
 });
 
