@@ -1134,11 +1134,13 @@ const createStyles = (colors: any, isCollapsed: boolean, isMobileView: boolean) 
     alignItems: 'center',
   },
   shareModalContent: {
-    backgroundColor: colors.background,
+    backgroundColor: '#2f2f2f',
     borderRadius: 12,
     padding: spacing.xl,
     width: '90%',
     maxWidth: 420,
+    borderWidth: 1,
+    borderColor: '#2f2f2f',
     ...Platform.select({
       web: {
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
