@@ -44,6 +44,7 @@ from utils.logger import IngestionLogger, RunStats, create_run_report, generate_
 from utils.qdrant_client import QdrantIngestionClient
 from utils.chunker import Chunker, ChunkingStrategy
 from utils.embedder import EmbeddingService
+from utils.versioner import DocumentVersioner, VersionStrategy, ChangelogManager
 
 try:
     import yaml
@@ -58,6 +59,7 @@ except ImportError:
 
 WORKSPACE_ROOT = Path(__file__).parent.parent.parent.parent.parent
 AUTHORITY_PATH = WORKSPACE_ROOT / ".reactor/inspire_8.0/authority_foundation"
+CHANGELOG_DIR = SCRIPT_DIR / "changelogs"
 LOG_DIR = SCRIPT_DIR / "logs"
 REPORT_DIR = SCRIPT_DIR / "reports"
 
@@ -123,11 +125,21 @@ class MinistryDocsIngester:
         self.hasher = ContentHasher()
         self.chunker = Chunker()
 
+        # Version tracking
+        self.versioner = DocumentVersioner(
+            workspace_root=WORKSPACE_ROOT,
+            default_strategy=VersionStrategy.COMPOSITE
+        )
+        self.changelog = ChangelogManager(CHANGELOG_DIR)
+
         self.stats = RunStats(
             run_id=self.run_id,
             script_name="ingest_ministry_docs",
             collection="multiple"
         )
+
+        # Track points per collection for changelog
+        self._collection_points: Dict[str, List[Dict[str, Any]]] = {}
 
         self._qdrant_client = None
         self._embedder = None
@@ -237,10 +249,16 @@ class MinistryDocsIngester:
 
         self.logger.info(f"Created {len(all_points)} chunks from {source_key}")
 
+        # Track points per collection for changelog
+        if collection not in self._collection_points:
+            self._collection_points[collection] = []
+        self._collection_points[collection].extend(all_points)
+
         # Generate embeddings and upsert
         if all_points and not self.dry_run:
             self._generate_embeddings(all_points)
             self._upsert_points(all_points, collection)
+            self._record_changelog(collection, all_points)
 
     def _discover_files(self, source_path: Path) -> List[Path]:
         """Discover all document files in source path."""
@@ -286,7 +304,14 @@ class MinistryDocsIngester:
                     content_hash=content_hash
                 )
 
-                # Build payload
+                # Compute document version for traceability
+                version_info = self.versioner.compute_version(
+                    content=chunk.text,
+                    source_path=file_path,
+                    strategy=VersionStrategy.COMPOSITE
+                )
+
+                # Build payload with doc_version for strict versioning
                 payload = {
                     "type": content_type,
                     "persona": "shared",
@@ -294,7 +319,12 @@ class MinistryDocsIngester:
                     "priority": config["priority"],
                     "timestamp": datetime.now().isoformat(),
                     "version": "1.0.0",
+                    "doc_version": version_info.doc_version,
+                    "version_strategy": version_info.strategy,
                     "content_hash": content_hash,
+                    "file_hash": version_info.file_hash,
+                    "git_commit": version_info.git_commit,
+                    "ingested_at": version_info.ingested_at,
                     "chunk_index": i,
                     "total_chunks": len(chunks),
                     "text": chunk.text,
@@ -428,6 +458,33 @@ class MinistryDocsIngester:
             f"{collection}: upserted {result.points_upserted}, "
             f"skipped {result.points_skipped}"
         )
+
+    def _record_changelog(self, collection: str, points: List[Dict[str, Any]]):
+        """Record changelog entry for this collection's ingestion."""
+        # Collect unique source files
+        source_files = list(set(
+            p['payload'].get('source', '') for p in points if p.get('payload')
+        ))
+
+        # Get representative doc_version from first point
+        doc_version = "unknown"
+        if points and points[0].get('payload'):
+            doc_version = points[0]['payload'].get('doc_version', 'unknown')
+
+        # Determine change type
+        change_type = "reindexed" if self.force else "added"
+
+        self.changelog.add_entry(
+            collection=collection,
+            change_type=change_type,
+            description=f"Ingested {len(points)} ministry document chunks",
+            version=doc_version,
+            source_files=source_files[:50],  # Limit to first 50
+            points_affected=len(points),
+            author=f"ingest_ministry_docs/{self.run_id}"
+        )
+
+        self.logger.info(f"Changelog entry recorded for {collection}")
 
     def _log_summary(self):
         """Log ingestion summary."""

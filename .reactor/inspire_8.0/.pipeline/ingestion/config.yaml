@@ -6,7 +6,7 @@
 # Purpose: Central configuration for all data ingestion into Qdrant
 # =============================================================================
 
-version: "1.0.0"
+version: "1.1.0"
 pipeline_name: "inspire_8.0_ingestion"
 
 # =============================================================================
@@ -130,6 +130,98 @@ deduplication:
   scripture_id_format: "jsv_{book}_{chapter}_{verse}"
   # For other content, use content hash
   default_id_format: "{collection}_{hash}"
+
+# =============================================================================
+# VERSION TRACKING
+# =============================================================================
+# Strict versioning ensures every payload includes doc_version field
+# for traceability, audits, and deterministic rebuilds
+versioning:
+  enabled: true
+  default_strategy: "composite"
+  strategies:
+    content_hash:
+      description: "Version derived from SHA-256 hash of content"
+      format: "ch:{hash[:12]}"
+    file_hash:
+      description: "Version derived from SHA-256 hash of source file"
+      format: "fh:{hash[:12]}"
+    git_commit:
+      description: "Version derived from Git commit hash of source file"
+      format: "git:{commit[:8]}"
+    semantic:
+      description: "Explicit semantic version from source metadata"
+      format: "{major}.{minor}.{patch}"
+    composite:
+      description: "Combined file hash + git commit for maximum traceability"
+      format: "{file_hash[:8]}.{git_commit[:8]}"
+
+  # Fields added to every payload for version tracking
+  payload_fields:
+    - doc_version        # Primary version identifier
+    - version_strategy   # Strategy used to derive version
+    - content_hash       # SHA-256 of content
+    - file_hash          # SHA-256 of source file (if applicable)
+    - git_commit         # Git commit hash (if available)
+    - ingested_at        # Timestamp of ingestion
+
+# =============================================================================
+# CHANGELOG MANAGEMENT
+# =============================================================================
+# Maintains human-readable changelog for all ingested content
+# Git serves as canonical history; changelogs enable audit trails
+changelog:
+  enabled: true
+  directory: "changelogs"
+  format: "json"
+
+  # Generate Markdown changelogs for human readability
+  generate_markdown: true
+
+  # Entry fields
+  entry_fields:
+    - timestamp
+    - version
+    - change_type      # added, modified, removed, reindexed
+    - description
+    - source_files
+    - collection
+    - points_affected
+    - author
+
+  # Change types
+  change_types:
+    added: "New content added to collection"
+    modified: "Existing content updated"
+    removed: "Content removed from collection"
+    reindexed: "Content re-ingested with --force flag"
+
+# =============================================================================
+# REBUILD MANIFEST
+# =============================================================================
+# Enables deterministic rebuilds from Git history
+rebuild:
+  manifest_file: "rebuild-manifest.json"
+  rebuild_order:
+    - scripture        # Foundation layer
+    - doctrine         # Doctrinal content
+    - governance       # Governance rules
+    - kingdom_builder  # Kingdom strategy
+    - jubilee_ministry # Ministry docs
+    # Persona collections (in birth order)
+    - gabriel
+    - michael
+    - uriel
+    - raphael
+    - selah
+    - ezra
+    - lydia
+    - enoch
+    - seraph
+    - malachi
+    - anna
+    - nathaniel
+    - elias
 
 # =============================================================================
 # LOGGING & REPORTING

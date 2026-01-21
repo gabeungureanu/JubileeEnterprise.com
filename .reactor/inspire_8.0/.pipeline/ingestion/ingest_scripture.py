@@ -39,6 +39,7 @@ from utils.logger import IngestionLogger, RunStats, create_run_report, generate_
 from utils.qdrant_client import QdrantIngestionClient
 from utils.chunker import Chunker
 from utils.embedder import EmbeddingService
+from utils.versioner import DocumentVersioner, VersionStrategy, ChangelogManager
 
 
 # =============================================================================
@@ -50,6 +51,7 @@ WORKSPACE_ROOT = Path(__file__).parent.parent.parent.parent.parent
 SCRIPTURE_PATH = WORKSPACE_ROOT / ".reactor/inspire_8.0/authority_foundation/a1_scripture/Jubilee_Bible_JSV"
 LOG_DIR = SCRIPT_DIR / "logs"
 REPORT_DIR = SCRIPT_DIR / "reports"
+CHANGELOG_DIR = SCRIPT_DIR / "changelogs"
 
 # Bible book mappings (folder name -> canonical name)
 BOOK_MAPPINGS = {
@@ -144,11 +146,21 @@ class ScriptureIngester:
         self.hasher = ContentHasher()
         self.chunker = Chunker()
 
+        # Version tracking
+        self.versioner = DocumentVersioner(
+            workspace_root=WORKSPACE_ROOT,
+            default_strategy=VersionStrategy.COMPOSITE
+        )
+        self.changelog = ChangelogManager(CHANGELOG_DIR)
+
         self.stats = RunStats(
             run_id=self.run_id,
             script_name="ingest_scripture",
             collection=COLLECTION_NAME
         )
+
+        # Track files processed for changelog
+        self._processed_files: List[str] = []
 
         # Initialize services (lazy)
         self._qdrant_client = None
@@ -229,6 +241,10 @@ class ScriptureIngester:
             if all_points and not self.dry_run:
                 self.logger.section("UPSERTING TO QDRANT")
                 self._upsert_points(all_points)
+
+            # Step 6: Record changelog entry
+            if all_points and not self.dry_run:
+                self._record_changelog(all_points)
 
             # Success
             self.stats.status = "completed"
@@ -337,7 +353,14 @@ class ScriptureIngester:
                 # Generate content hash for deduplication
                 content_hash = self.hasher.hash_content(text)
 
-                # Build payload
+                # Compute document version for traceability
+                version_info = self.versioner.compute_version(
+                    content=text,
+                    source_path=chapter_file,
+                    strategy=VersionStrategy.COMPOSITE
+                )
+
+                # Build payload with doc_version for strict versioning
                 payload = {
                     "type": "verse",
                     "persona": "shared",
@@ -345,7 +368,12 @@ class ScriptureIngester:
                     "priority": "core",
                     "timestamp": datetime.now().isoformat(),
                     "version": "1.0.0",
+                    "doc_version": version_info.doc_version,
+                    "version_strategy": version_info.strategy,
                     "content_hash": content_hash,
+                    "file_hash": version_info.file_hash,
+                    "git_commit": version_info.git_commit,
+                    "ingested_at": version_info.ingested_at,
                     "bible_ref": {
                         "book": book_name,
                         "chapter": chapter_num,
@@ -430,6 +458,33 @@ class ScriptureIngester:
             f"Upserted {result.points_upserted} points, "
             f"skipped {result.points_skipped} existing"
         )
+
+    def _record_changelog(self, points: List[Dict[str, Any]]):
+        """Record changelog entry for this ingestion run."""
+        # Collect unique source files
+        source_files = list(set(
+            p['payload'].get('source', '') for p in points if p.get('payload')
+        ))
+
+        # Get representative doc_version from first point
+        doc_version = "unknown"
+        if points and points[0].get('payload'):
+            doc_version = points[0]['payload'].get('doc_version', 'unknown')
+
+        # Determine change type
+        change_type = "reindexed" if self.force else "added"
+
+        self.changelog.add_entry(
+            collection=COLLECTION_NAME,
+            change_type=change_type,
+            description=f"Ingested {len(points)} scripture verses from JSV Bible",
+            version=doc_version,
+            source_files=source_files[:50],  # Limit to first 50
+            points_affected=self.stats.points_upserted,
+            author=f"ingest_scripture/{self.run_id}"
+        )
+
+        self.logger.info(f"Changelog entry recorded for {COLLECTION_NAME}")
 
     def _log_summary(self):
         """Log ingestion summary."""

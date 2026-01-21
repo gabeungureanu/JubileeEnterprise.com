@@ -44,6 +44,7 @@ from utils.logger import IngestionLogger, RunStats, create_run_report, generate_
 from utils.qdrant_client import QdrantIngestionClient
 from utils.chunker import Chunker
 from utils.embedder import EmbeddingService
+from utils.versioner import DocumentVersioner, VersionStrategy, ChangelogManager
 
 try:
     import yaml
@@ -58,6 +59,7 @@ except ImportError:
 
 WORKSPACE_ROOT = Path(__file__).parent.parent.parent.parent.parent
 ANCHORS_PATH = WORKSPACE_ROOT / ".reactor/inspire_8.0/.pipeline/schema/anchors/personas"
+CHANGELOG_DIR = SCRIPT_DIR / "changelogs"
 AUTHORITY_PATH = WORKSPACE_ROOT / ".reactor/inspire_8.0/authority_foundation"
 LOG_DIR = SCRIPT_DIR / "logs"
 REPORT_DIR = SCRIPT_DIR / "reports"
@@ -230,11 +232,21 @@ class PersonaAnchorsIngester:
         self.hasher = ContentHasher()
         self.chunker = Chunker()
 
+        # Version tracking
+        self.versioner = DocumentVersioner(
+            workspace_root=WORKSPACE_ROOT,
+            default_strategy=VersionStrategy.COMPOSITE
+        )
+        self.changelog = ChangelogManager(CHANGELOG_DIR)
+
         self.stats = RunStats(
             run_id=self.run_id,
             script_name="ingest_persona_anchors",
             collection="personas"
         )
+
+        # Track points per persona for changelog
+        self._persona_points: Dict[str, List[Dict[str, Any]]] = {}
 
         self._qdrant_client = None
         self._embedder = None
@@ -345,10 +357,16 @@ class PersonaAnchorsIngester:
 
         self.logger.info(f"Created {len(all_points)} anchor points for {persona_key}")
 
+        # Track points per persona for changelog
+        if persona_key not in self._persona_points:
+            self._persona_points[persona_key] = []
+        self._persona_points[persona_key].extend(all_points)
+
         # Generate embeddings and upsert
         if all_points and not self.dry_run:
             self._generate_embeddings(all_points)
             self._upsert_points(all_points, collection)
+            self._record_changelog(persona_key, collection, all_points)
 
     def _find_anchor_files(self, base_path: Path, patterns: List[str]) -> List[Path]:
         """Find anchor files matching patterns."""
@@ -406,7 +424,14 @@ class PersonaAnchorsIngester:
                 # Content hash for change detection
                 content_hash = self.hasher.hash_content(text)
 
-                # Build payload
+                # Compute document version for traceability
+                version_info = self.versioner.compute_version(
+                    content=text,
+                    source_path=file_path,
+                    strategy=VersionStrategy.COMPOSITE
+                )
+
+                # Build payload with doc_version for strict versioning
                 payload = {
                     "type": anchor_config["type"],
                     "persona": f"{persona_key}.inspire",
@@ -414,7 +439,12 @@ class PersonaAnchorsIngester:
                     "priority": "core",
                     "timestamp": datetime.now().isoformat(),
                     "version": data.get("version", "1.0.0"),
+                    "doc_version": version_info.doc_version,
+                    "version_strategy": version_info.strategy,
                     "content_hash": content_hash,
+                    "file_hash": version_info.file_hash,
+                    "git_commit": version_info.git_commit,
+                    "ingested_at": version_info.ingested_at,
                     "anchor_version": "v1.0",
                     "anchor_section": section_name,
                     "immutable": True,
@@ -523,6 +553,38 @@ class PersonaAnchorsIngester:
             f"{collection}: upserted {result.points_upserted}, "
             f"skipped {result.points_skipped}"
         )
+
+    def _record_changelog(
+        self,
+        persona_key: str,
+        collection: str,
+        points: List[Dict[str, Any]]
+    ):
+        """Record changelog entry for this persona's ingestion."""
+        # Collect unique source files
+        source_files = list(set(
+            p['payload'].get('source', '') for p in points if p.get('payload')
+        ))
+
+        # Get representative doc_version from first point
+        doc_version = "unknown"
+        if points and points[0].get('payload'):
+            doc_version = points[0]['payload'].get('doc_version', 'unknown')
+
+        # Determine change type
+        change_type = "reindexed" if self.force else "added"
+
+        self.changelog.add_entry(
+            collection=collection,
+            change_type=change_type,
+            description=f"Ingested {len(points)} anchor sections for {persona_key}.inspire",
+            version=doc_version,
+            source_files=source_files,
+            points_affected=len(points),
+            author=f"ingest_persona_anchors/{self.run_id}"
+        )
+
+        self.logger.info(f"Changelog entry recorded for {collection}")
 
     def _log_summary(self):
         """Log ingestion summary."""

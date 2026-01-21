@@ -7,6 +7,10 @@ __pycache__/
 reports/*.json
 logs/*.log
 
+# Changelog JSON files (generated, not tracked)
+changelogs/*.json
+
 # Keep directory structure
 !reports/.gitkeep
 !logs/.gitkeep
+!changelogs/.gitkeep
