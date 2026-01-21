@@ -1,0 +1,3 @@
+# Key decisions storage directory
+# This directory stores extracted key decisions for debugging/audit
+# Actual decisions are persisted in Qdrant

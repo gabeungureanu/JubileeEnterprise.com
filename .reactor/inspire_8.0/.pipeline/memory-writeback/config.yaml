@@ -1,0 +1,199 @@
+# =============================================================================
+# INSPIRE 8.0 MEMORY WRITEBACK CONFIGURATION
+# =============================================================================
+# This configuration defines the memory writeback policy for the Inspire 8.0
+# persona system. It enforces summarization-first storage to maintain
+# high-quality, token-efficient memory.
+#
+# CRITICAL POLICIES:
+# 1. Session summaries are REQUIRED (100-250 tokens)
+# 2. Raw transcripts are PROHIBITED by default
+# 3. All memory items must have proper metadata
+# 4. Token limits are enforced on all item types
+# =============================================================================
+
+version: "1.0.0"
+module_name: "memory_writeback"
+
+# =============================================================================
+# SUMMARIZATION POLICY (REQUIRED)
+# =============================================================================
+# All sessions MUST generate a summary before writeback
+summarization:
+  # Session summary is required for all writebacks
+  require_summary: true
+
+  # Token limits for session summary
+  min_tokens: 100
+  max_tokens: 250
+
+  # Summary content requirements
+  include_context: true
+  include_outcome: true
+  include_actions: true
+  include_notes: optional
+
+  # Quality thresholds
+  min_completeness_score: 0.5
+
+# =============================================================================
+# TRANSCRIPT POLICY (PROHIBITED BY DEFAULT)
+# =============================================================================
+# Raw transcripts are NEVER stored by default to:
+# - Preserve retrieval quality
+# - Reduce token waste
+# - Maintain memory hygiene
+transcript_policy:
+  # Default: PROHIBITED
+  # Options: prohibited, audit_only, debug_only, explicit_request
+  default_policy: "prohibited"
+
+  # Even when allowed, transcripts require justification
+  require_justification: true
+
+  # Valid justification categories
+  valid_justifications:
+    - "audit_compliance"
+    - "debug_session"
+    - "legal_requirement"
+    - "explicit_user_request"
+
+  # Transcript retention (when allowed)
+  max_retention_days: 30
+  auto_delete: true
+
+# =============================================================================
+# MEMORY ITEM TYPES
+# =============================================================================
+# Define which item types are allowed and their constraints
+memory_items:
+  # Session summary - REQUIRED
+  session_summary:
+    enabled: true
+    required: true
+    max_tokens: 250
+    description: "Concise summary of session outcomes (100-250 tokens)"
+
+  # Key decisions - important choices made
+  key_decision:
+    enabled: true
+    required: false
+    max_tokens: 150
+    max_per_session: 5
+    description: "Important decisions made during conversation"
+
+  # User preferences - durable only
+  user_preference:
+    enabled: true
+    required: false
+    max_tokens: 100
+    max_per_session: 5
+    durable_only: true
+    description: "Durable user preferences (not session-specific)"
+
+  # Scripture references - citations used
+  scripture_reference:
+    enabled: true
+    required: false
+    max_tokens: 200
+    max_per_session: 10
+    description: "Scripture references cited or discussed"
+
+  # Interaction summary - brief record
+  interaction_summary:
+    enabled: true
+    required: false
+    max_tokens: 300
+    description: "Brief interaction record"
+
+  # Lesson learned - insights gained
+  lesson_learned:
+    enabled: true
+    required: false
+    max_tokens: 200
+    max_per_session: 3
+    description: "Insights from past conversations"
+
+  # Relationship context - known facts
+  relationship_context:
+    enabled: true
+    required: false
+    max_tokens: 150
+    description: "Durable relationship facts and context"
+
+# =============================================================================
+# PROHIBITED TYPES (BLOCKED BY DEFAULT)
+# =============================================================================
+prohibited_types:
+  raw_transcript:
+    blocked: true
+    override_allowed: false  # Can only be changed by system admin
+    reason: "Raw transcripts prohibited to maintain memory hygiene"
+
+  unfiltered_log:
+    blocked: true
+    override_allowed: false
+    reason: "Unfiltered logs contain noise and waste tokens"
+
+  debug_data:
+    blocked: true
+    override_allowed: true  # Can be enabled for debug sessions
+    reason: "Debug data is temporary and should not persist"
+
+# =============================================================================
+# SESSION LIMITS
+# =============================================================================
+# Limits applied to each writeback session
+session_limits:
+  # Maximum items per session
+  max_items: 20
+
+  # Maximum total tokens per session
+  max_tokens: 2000
+
+  # Enable deduplication
+  deduplicate: true
+  deduplication_threshold: 0.85
+
+# =============================================================================
+# METADATA REQUIREMENTS
+# =============================================================================
+# All memory items MUST have these metadata fields
+required_metadata:
+  timestamp: true
+  source: true
+  persona_name: true
+  session_id: recommended
+  content_hash: true
+
+# =============================================================================
+# QDRANT STORAGE SETTINGS
+# =============================================================================
+storage:
+  # Vector dimensions (must match embedding model)
+  vector_size: 1536
+
+  # Distance metric
+  distance: "cosine"
+
+  # Mark all memory items as mutable (unlike activation anchors)
+  mutable: true
+
+  # Tag for identifying memory items
+  memory_item_tag: true
+
+# =============================================================================
+# LOGGING AND AUDIT
+# =============================================================================
+logging:
+  # Log all writeback operations
+  log_writebacks: true
+
+  # Log blocked items
+  log_blocked: true
+
+  # Log transcript storage attempts (even when blocked)
+  log_transcript_attempts: true
+
+  # Alert on policy violations
+  alert_on_violation: true

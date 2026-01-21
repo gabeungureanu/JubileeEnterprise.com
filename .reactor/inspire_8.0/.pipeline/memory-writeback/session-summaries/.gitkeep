@@ -1,0 +1,3 @@
+# Session summaries storage directory
+# This directory stores session summary outputs for debugging/audit
+# Actual summaries are persisted in Qdrant

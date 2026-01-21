@@ -1,0 +1,3 @@
+# Scripture references storage directory
+# This directory stores extracted scripture references for debugging/audit
+# Actual references are persisted in Qdrant
