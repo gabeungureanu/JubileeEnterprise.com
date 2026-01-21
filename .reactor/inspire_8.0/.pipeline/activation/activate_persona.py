@@ -15,8 +15,14 @@ CRITICAL INVARIANTS:
 2. Only retrieves anchors tagged with activation_anchor types
 3. Shared canon provides doctrinal/governance alignment
 4. Contextual grounding is bounded (max items, max tokens)
-5. Output is deterministic for reproducible activation
+5. Output is DETERMINISTIC for reproducible activation
 6. No memory is ever written during activation
+7. All activations are LOGGED with full anchor details
+
+DETERMINISM GUARANTEE:
+Each activation with the same inputs produces the exact same boot context.
+Assembly order is fixed: identity → mission → guardrails → voice → canon → grounding.
+All retrieved anchors are logged for audit, replay, and debugging.
 
 Usage:
     python activate_persona.py --persona jubilee [--output json|text|context]
@@ -28,6 +34,7 @@ Options:
     --no-cache     Disable context caching
     --no-canon     Skip shared canon retrieval
     --no-grounding Skip contextual grounding retrieval
+    --no-log       Disable activation logging
     --quiet        Suppress logging output
 
 Examples:
@@ -63,6 +70,12 @@ from policy import (
     ExecutionPhase,
     ActivationPhase,
     get_memory_policy,
+)
+from activation_log import (
+    ActivationLogger,
+    ActivationLogEntry,
+    AnchorLogEntry,
+    get_activation_logger,
 )
 
 # Alias for backward compatibility
@@ -121,6 +134,7 @@ class PersonaActivator:
         use_cache: bool = True,
         include_canon: bool = True,
         include_grounding: bool = True,
+        enable_logging: bool = True,
     ):
         """
         Initialize the activator.
@@ -129,6 +143,7 @@ class PersonaActivator:
             use_cache: Whether to use context caching
             include_canon: Whether to retrieve shared canon anchors
             include_grounding: Whether to retrieve contextual grounding
+            enable_logging: Whether to log activation details for audit
         """
         self.retriever = AnchorRetriever()
         self.canon_retriever = SharedCanonRetriever()
@@ -138,6 +153,7 @@ class PersonaActivator:
         self.cache = ContextCache() if use_cache else None
         self.include_canon = include_canon
         self.include_grounding = include_grounding
+        self.activation_logger = ActivationLogger(enabled=enable_logging)
 
     def activate(
         self,
@@ -153,6 +169,9 @@ class PersonaActivator:
         - Persona-specific activation anchors (identity, mission, voice, guardrails)
         - Shared canon anchors for doctrinal alignment (if enabled)
         - Contextual grounding for situational awareness (if enabled)
+
+        All activations are logged with full anchor details for audit,
+        replay, and debugging purposes.
 
         Args:
             persona_name: Name of the persona to activate
@@ -183,26 +202,40 @@ class PersonaActivator:
                 logger.info(f"Using cached context for {persona_name}")
                 return cached
 
+        # Create activation log entry
+        collection = PERSONA_COLLECTIONS[persona_name]
+        log_entry = self.activation_logger.create_entry(
+            persona_name=persona_name,
+            persona_collection=collection,
+        )
+        activation_errors = []
+        activation_warnings = []
+
         # Enter activation phase (enforces read-only)
         with ActivationPhase(self.policy):
             logger.info(f"Activating persona: {persona_name}")
 
             # Step 1: Retrieve persona-specific anchors
-            collection = PERSONA_COLLECTIONS[persona_name]
             result = self.retriever.retrieve_persona_anchors(
                 persona_name=persona_name,
                 collection_name=collection,
             )
 
             if not result.success:
+                activation_errors.extend(result.errors)
+                self._finalize_log(log_entry, "", False, activation_errors, activation_warnings)
                 raise ValueError(
                     f"Failed to retrieve anchors for {persona_name}: "
                     f"{'; '.join(result.errors)}"
                 )
 
             if result.warnings:
+                activation_warnings.extend(result.warnings)
                 for warning in result.warnings:
                     logger.warning(warning)
+
+            # Log retrieved anchors by type
+            self._log_anchors(log_entry, result.anchors)
 
             # Step 2: Retrieve shared canon (if enabled)
             shared_canon = None
@@ -216,8 +249,12 @@ class PersonaActivator:
                     max_total_tokens=2000,
                 )
                 if shared_canon.errors:
+                    activation_warnings.extend(shared_canon.errors)
                     for error in shared_canon.errors:
                         logger.warning(f"Canon retrieval warning: {error}")
+
+                # Log shared canon anchors
+                self._log_shared_canon(log_entry, shared_canon)
 
             # Step 3: Retrieve contextual grounding (if enabled)
             grounding = None
@@ -231,14 +268,30 @@ class PersonaActivator:
                     max_tokens=1000,
                 )
                 if grounding.errors:
+                    activation_warnings.extend(grounding.errors)
                     for error in grounding.errors:
                         logger.warning(f"Grounding retrieval warning: {error}")
 
-            # Step 4: Assemble the activation packet
+                # Log grounding items
+                self._log_grounding(log_entry, grounding)
+
+            # Step 4: Assemble the activation packet (deterministic order)
             packet = self.assembler.assemble(
                 anchors=result.anchors,
                 shared_canon=shared_canon,
                 grounding=grounding,
+            )
+
+            # Record assembly order in log
+            log_entry.assembly_order = self.assembler.ASSEMBLY_ORDER.copy()
+
+            # Finalize and write log entry
+            self._finalize_log(
+                log_entry,
+                packet.context_hash,
+                True,
+                activation_errors,
+                activation_warnings,
             )
 
             # Cache the result
@@ -246,6 +299,161 @@ class PersonaActivator:
                 self.cache.set(persona_name, packet)
 
             return packet
+
+    def _log_anchors(self, log_entry: ActivationLogEntry, anchors: PersonaAnchors):
+        """Log all persona-specific anchors."""
+        # Identity anchors
+        for anchor in anchors.identity:
+            log_entry.identity_anchors.append(
+                self.activation_logger.create_anchor_entry(
+                    anchor_id=getattr(anchor, 'id', '') or anchor.section,
+                    anchor_type=AnchorType.IDENTITY.value,
+                    section=anchor.section,
+                    content=anchor.content,
+                    point_id=getattr(anchor, 'point_id', ''),
+                    priority=getattr(anchor, 'priority', 'normal'),
+                    source=anchor.source,
+                    collection=anchors.persona_name,
+                    doc_version=anchor.doc_version,
+                )
+            )
+
+        # Mission anchors
+        for anchor in anchors.mission:
+            log_entry.mission_anchors.append(
+                self.activation_logger.create_anchor_entry(
+                    anchor_id=getattr(anchor, 'id', '') or anchor.section,
+                    anchor_type=AnchorType.MISSION.value,
+                    section=anchor.section,
+                    content=anchor.content,
+                    point_id=getattr(anchor, 'point_id', ''),
+                    priority=getattr(anchor, 'priority', 'normal'),
+                    source=anchor.source,
+                    collection=anchors.persona_name,
+                    doc_version=anchor.doc_version,
+                )
+            )
+
+        # Voice anchors
+        for anchor in anchors.voice:
+            log_entry.voice_anchors.append(
+                self.activation_logger.create_anchor_entry(
+                    anchor_id=getattr(anchor, 'id', '') or anchor.section,
+                    anchor_type=AnchorType.VOICE.value,
+                    section=anchor.section,
+                    content=anchor.content,
+                    point_id=getattr(anchor, 'point_id', ''),
+                    priority=getattr(anchor, 'priority', 'normal'),
+                    source=anchor.source,
+                    collection=anchors.persona_name,
+                    doc_version=anchor.doc_version,
+                )
+            )
+
+        # Guardrail anchors
+        for anchor in anchors.guardrails:
+            log_entry.guardrail_anchors.append(
+                self.activation_logger.create_anchor_entry(
+                    anchor_id=getattr(anchor, 'id', '') or anchor.section,
+                    anchor_type=AnchorType.GUARDRAIL.value,
+                    section=anchor.section,
+                    content=anchor.content,
+                    point_id=getattr(anchor, 'point_id', ''),
+                    priority=getattr(anchor, 'priority', 'normal'),
+                    source=anchor.source,
+                    collection=anchors.persona_name,
+                    doc_version=anchor.doc_version,
+                )
+            )
+
+    def _log_shared_canon(self, log_entry: ActivationLogEntry, canon: SharedCanonResult):
+        """Log shared canon anchors."""
+        if not canon:
+            return
+
+        # Scripture anchors
+        for anchor in canon.scripture:
+            log_entry.scripture_anchors.append(
+                self.activation_logger.create_anchor_entry(
+                    anchor_id=getattr(anchor, 'id', '') or 'scripture',
+                    anchor_type='scripture_anchor',
+                    section=getattr(anchor, 'section', 'scripture'),
+                    content=anchor.content,
+                    priority='core',
+                    source=getattr(anchor, 'source', 'shared_canon'),
+                    collection='shared_canon',
+                    doc_version=getattr(anchor, 'doc_version', ''),
+                )
+            )
+
+        # Doctrine anchors
+        for anchor in canon.doctrine:
+            log_entry.doctrine_anchors.append(
+                self.activation_logger.create_anchor_entry(
+                    anchor_id=getattr(anchor, 'id', '') or 'doctrine',
+                    anchor_type='doctrine_anchor',
+                    section=getattr(anchor, 'section', 'doctrine'),
+                    content=anchor.content,
+                    priority='core',
+                    source=getattr(anchor, 'source', 'shared_canon'),
+                    collection='shared_canon',
+                    doc_version=getattr(anchor, 'doc_version', ''),
+                )
+            )
+
+        # Governance anchors
+        for anchor in canon.governance:
+            log_entry.governance_anchors.append(
+                self.activation_logger.create_anchor_entry(
+                    anchor_id=getattr(anchor, 'id', '') or 'governance',
+                    anchor_type='governance_anchor',
+                    section=getattr(anchor, 'section', 'governance'),
+                    content=anchor.content,
+                    priority='high',
+                    source=getattr(anchor, 'source', 'shared_canon'),
+                    collection='shared_canon',
+                    doc_version=getattr(anchor, 'doc_version', ''),
+                )
+            )
+
+    def _log_grounding(self, log_entry: ActivationLogEntry, grounding: GroundingResult):
+        """Log contextual grounding items."""
+        if not grounding or not grounding.items:
+            return
+
+        for item in grounding.items:
+            log_entry.grounding_items.append(
+                self.activation_logger.create_anchor_entry(
+                    anchor_id=getattr(item, 'id', '') or 'grounding',
+                    anchor_type='grounding_item',
+                    section=getattr(item, 'item_type', 'context'),
+                    content=item.content,
+                    priority='low',
+                    source=getattr(item, 'source', 'grounding'),
+                    collection=getattr(item, 'collection', ''),
+                    doc_version='',
+                )
+            )
+
+    def _finalize_log(
+        self,
+        log_entry: ActivationLogEntry,
+        context_hash: str,
+        success: bool,
+        errors: list,
+        warnings: list,
+    ):
+        """Finalize and write the activation log."""
+        log_entry = self.activation_logger.finalize_entry(
+            entry=log_entry,
+            context_hash=context_hash,
+            success=success,
+            errors=errors,
+            warnings=warnings,
+        )
+        log_path = self.activation_logger.write_entry(log_entry)
+        if log_path:
+            logger.info(f"Activation logged to: {log_path}")
 
     def validate(self, persona_name: str) -> dict:
         """
@@ -434,6 +642,12 @@ def main():
     )
 
     parser.add_argument(
+        "--no-log",
+        action="store_true",
+        help="Disable activation logging (not recommended for production)"
+    )
+
+    parser.add_argument(
         "--quiet", "-q",
         action="store_true",
         help="Suppress logging output"
@@ -450,6 +664,7 @@ def main():
         use_cache=not args.no_cache,
         include_canon=not args.no_canon,
         include_grounding=not args.no_grounding,
+        enable_logging=not args.no_log,
     )
 
     try:

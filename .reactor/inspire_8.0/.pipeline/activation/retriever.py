@@ -8,11 +8,15 @@ CRITICAL INVARIANTS:
 1. This module is READ-ONLY - it NEVER writes to Qdrant
 2. Only retrieves anchors tagged with activation_anchor types
 3. Explicitly filters OUT memory and interaction data
-4. Returns deterministic results for reproducible activation
+4. Returns DETERMINISTIC results for reproducible activation
+5. Anchors are sorted by priority, section, then content hash
 
 The retriever queries Qdrant to load Identity, Mission, Voice, and Guardrail
 anchors for a specific persona, assembles them into a PersonaAnchors object,
 and ensures all required anchors are present before activation can proceed.
+
+DETERMINISM: All anchor retrieval applies consistent sorting to ensure
+the same anchors always appear in the same order across activations.
 """
 
 import logging
@@ -28,6 +32,10 @@ try:
         PersonaAnchors,
         create_anchor_from_payload,
     )
+    from .activation_log import (
+        sort_anchors_deterministically,
+        get_deterministic_sort_key,
+    )
 except ImportError:
     from anchors import (
         ActivationAnchor,
@@ -35,6 +43,17 @@ except ImportError:
         PersonaAnchors,
         create_anchor_from_payload,
     )
+    try:
+        from activation_log import (
+            sort_anchors_deterministically,
+            get_deterministic_sort_key,
+        )
+    except ImportError:
+        # Fallback if activation_log not available
+        def sort_anchors_deterministically(anchors):
+            return sorted(anchors, key=lambda a: (a.section, a.content[:50] if a.content else ""))
+        def get_deterministic_sort_key(anchor):
+            return (0, 0, "")
 
 try:
     from qdrant_client import QdrantClient
@@ -199,15 +218,18 @@ class AnchorRetriever:
                 )
                 total_points += count
 
+                # Apply deterministic sorting to ensure consistent order
+                sorted_anchors = sort_anchors_deterministically(anchors)
+
                 # Categorize by type
                 if anchor_type == AnchorType.IDENTITY.value:
-                    persona_anchors.identity.extend(anchors)
+                    persona_anchors.identity.extend(sorted_anchors)
                 elif anchor_type == AnchorType.MISSION.value:
-                    persona_anchors.mission.extend(anchors)
+                    persona_anchors.mission.extend(sorted_anchors)
                 elif anchor_type == AnchorType.VOICE.value:
-                    persona_anchors.voice.extend(anchors)
+                    persona_anchors.voice.extend(sorted_anchors)
                 elif anchor_type == AnchorType.GUARDRAIL.value:
-                    persona_anchors.guardrails.extend(anchors)
+                    persona_anchors.guardrails.extend(sorted_anchors)
 
             result.anchors = persona_anchors
             result.points_retrieved = total_points

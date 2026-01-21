@@ -10,10 +10,16 @@ can be used to initialize a persona's state before any prompts are executed.
 
 CRITICAL INVARIANTS:
 1. Assembly is a pure function - no side effects
-2. Output is deterministic given the same input anchors
+2. Output is DETERMINISTIC given the same input anchors
 3. No writes to any storage during assembly
 4. Context is optimized for token efficiency
 5. Clear separation: identity, mission, voice, guardrails, canon, grounding
+6. FIXED ASSEMBLY ORDER: identity → mission → guardrails → voice → canon → grounding
+
+DETERMINISM GUARANTEE:
+The same set of anchors will ALWAYS produce the exact same activation packet.
+Assembly order is fixed and immutable. Anchors within each block are sorted
+by section name for consistent ordering.
 """
 
 import hashlib
@@ -160,6 +166,17 @@ class ContextAssembler:
     ============================================================
     THIS CLASS PERFORMS NO WRITES. Assembly is read-only.
     ============================================================
+
+    DETERMINISTIC ASSEMBLY ORDER (IMMUTABLE):
+    1. Identity - Who the persona is
+    2. Mission - What the persona does
+    3. Guardrails - What the persona must not do
+    4. Voice - How the persona communicates
+    5. Shared Canon - Doctrinal alignment (if included)
+    6. Grounding - Situational awareness (if included)
+
+    This order is FIXED and must not change to ensure deterministic
+    activation across all invocations.
     """
 
     # Default section headers
@@ -172,7 +189,8 @@ class ContextAssembler:
         "grounding": "## CONTEXTUAL GROUNDING",
     }
 
-    # Assembly order for the activation packet
+    # FIXED Assembly order for the activation packet - DO NOT MODIFY
+    # This order ensures deterministic, reproducible activation
     ASSEMBLY_ORDER = ["identity", "mission", "guardrails", "voice", "shared_canon", "grounding"]
 
     def __init__(

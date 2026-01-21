@@ -1,0 +1,5 @@
+# Ignore activation log files (contain runtime data)
+activations/*.json
+
+# Keep the .gitkeep file
+!activations/.gitkeep

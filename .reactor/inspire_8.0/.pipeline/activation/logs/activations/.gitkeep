@@ -1,0 +1,3 @@
+# This directory contains activation logs for audit and debugging.
+# Logs are written here during persona activation.
+# Files in this directory should not be committed to version control.

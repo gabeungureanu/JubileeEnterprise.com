@@ -54,6 +54,16 @@ from .policy import (
     WritebackPhase,
     get_memory_policy,
 )
+from .activation_log import (
+    AnchorLogEntry,
+    ActivationLogEntry,
+    ActivationLogger,
+    get_activation_logger,
+    sort_anchors_deterministically,
+    get_deterministic_sort_key,
+    PRIORITY_ORDER,
+    SECTION_ORDER,
+)
 
 __all__ = [
     # Anchor types
@@ -87,6 +97,15 @@ __all__ = [
     'ActivationPhase',
     'WritebackPhase',
     'get_memory_policy',
+    # Activation logging
+    'AnchorLogEntry',
+    'ActivationLogEntry',
+    'ActivationLogger',
+    'get_activation_logger',
+    'sort_anchors_deterministically',
+    'get_deterministic_sort_key',
+    'PRIORITY_ORDER',
+    'SECTION_ORDER',
 ]
 
-__version__ = '1.1.0'
+__version__ = '1.2.0'
