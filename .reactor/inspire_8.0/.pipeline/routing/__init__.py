@@ -25,6 +25,19 @@ deterministic classification before invoking any language model:
    - Minimal, constrained prompt
    - Fixed, machine-readable output (INTENT:X)
 
+AUTOMATIC DOWNGRADE GOVERNANCE:
+The routing layer enforces mandatory usage limits to prevent uncontrolled
+escalation and ensure predictable token usage:
+
+- Premium (gpt-4o): Max 2 successful executions per session
+  → Automatically downgrades to STANDARD after limit reached
+- Standard (gpt-4o-turbo): Max 3 successful executions per session
+  → Automatically downgrades to ECONOMY after limit reached
+- Economy (gpt-4o-mini): Unlimited (baseline tier)
+
+Counters decrement ONLY on successful execution with valid response.
+Failed, timed-out, or aborted executions do NOT affect counters.
+
 ROUTING TIERS:
 1. gpt-4o-mini (ECONOMY):
    - Routine interactions
@@ -50,7 +63,9 @@ CRITICAL INVARIANTS:
 3. Routing is DETERMINISTIC (rules-based, not intuition)
 4. Router is a MANDATORY pre-execution step
 5. Higher models require explicit justification from classification
-6. All routing decisions are logged for audit
+6. DOWNGRADE governance is MANDATORY and cannot be bypassed
+7. Counters decrement ONLY on successful execution
+8. All routing decisions are logged for audit
 """
 
 from .router import (
@@ -87,6 +102,23 @@ from .cheap_first import (
     get_cost_first_classifier,
     set_cost_first_classifier,
     reset_cost_first_classifier,
+)
+from .downgrade import (
+    # Downgrade governor
+    DowngradeGovernor,
+    DowngradeConfig,
+    DowngradeDecision,
+    DowngradeReason,
+    TierUsageCounter,
+    # Global instance
+    get_downgrade_governor,
+    set_downgrade_governor,
+    reset_downgrade_governor,
+    # Convenience functions
+    apply_downgrade,
+    record_execution_success,
+    get_tier_remaining,
+    is_tier_available,
 )
 from .models import (
     ModelTier,
@@ -142,6 +174,19 @@ __all__ = [
     'get_cost_first_classifier',
     'set_cost_first_classifier',
     'reset_cost_first_classifier',
+    # DOWNGRADE GOVERNANCE (MANDATORY)
+    'DowngradeGovernor',
+    'DowngradeConfig',
+    'DowngradeDecision',
+    'DowngradeReason',
+    'TierUsageCounter',
+    'get_downgrade_governor',
+    'set_downgrade_governor',
+    'reset_downgrade_governor',
+    'apply_downgrade',
+    'record_execution_success',
+    'get_tier_remaining',
+    'is_tier_available',
     # Models
     'ModelTier',
     'ModelConfig',
@@ -165,4 +210,4 @@ __all__ = [
     'execute_with_routing',
 ]
 
-__version__ = '1.1.0'  # Updated for cost-first integration
+__version__ = '1.2.0'  # Updated for downgrade governance
