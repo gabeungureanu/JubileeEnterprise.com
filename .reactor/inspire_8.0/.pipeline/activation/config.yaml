@@ -1,0 +1,275 @@
+# =============================================================================
+# INSPIRE 8.0 PERSONA ACTIVATION CONFIGURATION
+# =============================================================================
+# Version: 1.0.0
+# Location: .reactor/inspire_8.0/.pipeline/activation/
+# Purpose: Configuration for deterministic persona activation (ignition)
+# =============================================================================
+#
+# CRITICAL PRINCIPLES:
+# 1. Activation anchors are READ-ONLY at runtime
+# 2. Activation scripts NEVER write to Qdrant
+# 3. Memory writing occurs ONLY in designated writeback phase
+# 4. Persona identity remains stable and reproducible
+# =============================================================================
+
+version: "1.0.0"
+activation_name: "inspire_8.0_activation"
+
+# =============================================================================
+# QDRANT CONNECTION (READ-ONLY)
+# =============================================================================
+qdrant:
+  host: "${QDRANT_HOST:-localhost}"
+  port: "${QDRANT_PORT:-6333}"
+  api_key: "${QDRANT_API_KEY:-}"
+  timeout: 10
+  # CRITICAL: Activation layer is READ-ONLY
+  read_only: true
+
+# =============================================================================
+# ACTIVATION ANCHOR TYPES
+# =============================================================================
+# These are the four immutable anchor types loaded at persona ignition
+anchor_types:
+  identity:
+    type: "identity_anchor"
+    description: "Core identity, spiritual identity, psychological profile"
+    required: true
+    load_order: 1
+    sections:
+      - core_identity
+      - spiritual_identity
+      - psychological_identity
+      - cultural_identity
+      - temporal_identity
+      - relational_identity
+      - visual_identity
+      - audience
+      - authority
+
+  mission:
+    type: "mission_anchor"
+    description: "Calling, purpose, ministry focus, goals"
+    required: true
+    load_order: 2
+    sections:
+      - calling
+      - purpose
+      - ministry_focus
+      - goals
+      - success_criteria
+      - impact_areas
+
+  voice:
+    type: "voice_anchor"
+    description: "Tone, cadence, vocabulary, communication style"
+    required: true
+    load_order: 3
+    sections:
+      - tone
+      - cadence
+      - vocabulary
+      - speech_patterns
+      - emotional_range
+      - communication_style
+
+  guardrails:
+    type: "guardrail_anchor"
+    description: "Hard stops, soft boundaries, doctrinal constraints"
+    required: true
+    load_order: 4
+    sections:
+      - hard_stops
+      - soft_boundaries
+      - doctrinal_constraints
+      - ethical_boundaries
+      - forbidden_topics
+
+# =============================================================================
+# PERSONA COLLECTIONS
+# =============================================================================
+# Maps persona names to their Qdrant collections
+personas:
+  gabriel:
+    collection: "gabriel"
+    full_name: "Gabriel Inspire"
+    role: "Pastoral Voice & Lead Family Spokesperson"
+    birth_order: 1
+
+  jubilee:
+    collection: "jubilee"
+    full_name: "Jubilee Inspire"
+    role: "Developer Mode Senior Software Engineer"
+    birth_order: 2
+
+  melody:
+    collection: "melody"
+    full_name: "Melody Inspire"
+    role: "Worship & Music Ministry"
+    birth_order: 3
+
+  zev:
+    collection: "zev"
+    full_name: "Zev Inspire"
+    role: "Youth & Outreach Ministry"
+    birth_order: 4
+
+  eliana:
+    collection: "eliana"
+    full_name: "Eliana Inspire"
+    role: "Children's Ministry & Education"
+    birth_order: 5
+
+  caleb:
+    collection: "caleb"
+    full_name: "Caleb Inspire"
+    role: "Men's Ministry & Discipleship"
+    birth_order: 6
+
+  imani:
+    collection: "imani"
+    full_name: "Imani Inspire"
+    role: "Women's Ministry & Community"
+    birth_order: 7
+
+  amir:
+    collection: "amir"
+    full_name: "Amir Inspire"
+    role: "Apologetics & Theology"
+    birth_order: 8
+
+  nova:
+    collection: "nova"
+    full_name: "Nova Inspire"
+    role: "Creative Arts & Media"
+    birth_order: 9
+
+  tahoma:
+    collection: "tahoma"
+    full_name: "Tahoma Inspire"
+    role: "Missions & Global Outreach"
+    birth_order: 10
+
+  santiago:
+    collection: "santiago"
+    full_name: "Santiago Inspire"
+    role: "Hispanic Ministry & Multicultural Outreach"
+    birth_order: 11
+
+  zariah:
+    collection: "zariah"
+    full_name: "Zariah Inspire"
+    role: "Prayer & Intercession Ministry"
+    birth_order: 12
+
+  elias:
+    collection: "elias"
+    full_name: "Elias Inspire"
+    role: "Prophetic Ministry & Spiritual Warfare"
+    birth_order: 13
+
+# =============================================================================
+# ACTIVATION CONTEXT ASSEMBLY
+# =============================================================================
+context_assembly:
+  # Order in which anchors appear in activation context
+  anchor_order:
+    - identity
+    - mission
+    - guardrails
+    - voice
+
+  # Template sections in final context
+  template_sections:
+    - system_preamble
+    - identity_block
+    - mission_block
+    - guardrails_block
+    - voice_block
+    - session_context
+
+  # Maximum tokens for activation context
+  max_tokens: 8000
+
+  # Cache activation contexts for efficiency
+  enable_cache: true
+  cache_ttl_seconds: 3600
+
+# =============================================================================
+# RETRIEVAL FILTERS
+# =============================================================================
+# Filters used to retrieve activation anchors from Qdrant
+retrieval:
+  # Filter for activation anchors only (never memory or interactions)
+  anchor_filter:
+    must:
+      - key: "type"
+        match:
+          any:
+            - "identity_anchor"
+            - "mission_anchor"
+            - "voice_anchor"
+            - "guardrail_anchor"
+      - key: "immutable"
+        match:
+          value: true
+
+  # Explicitly exclude memory and interaction data
+  exclude_types:
+    - "interaction_summary"
+    - "long_term_memory"
+    - "relationship_context"
+    - "lesson_learned"
+    - "session_memory"
+
+# =============================================================================
+# MEMORY WRITEBACK POLICY
+# =============================================================================
+# CRITICAL: Memory writing is PROHIBITED during activation
+# This section defines when and how memory CAN be written
+memory_policy:
+  # Activation phase: NO WRITES ALLOWED
+  activation_phase:
+    writes_allowed: false
+    reason: "Activation must be deterministic and reproducible"
+
+  # Execution phase: NO WRITES ALLOWED
+  execution_phase:
+    writes_allowed: false
+    reason: "Memory commits only after explicit authorization"
+
+  # Writeback phase: WRITES ALLOWED (only phase that can write)
+  writeback_phase:
+    writes_allowed: true
+    requires_authorization: true
+    authorization_methods:
+      - explicit_user_request
+      - memory_policy_trigger
+      - session_end_commit
+
+  # Types of memory that can be written (only in writeback phase)
+  writable_types:
+    - interaction_summary
+    - long_term_memory
+    - relationship_context
+    - lesson_learned
+
+  # Types that are NEVER writable at runtime
+  immutable_types:
+    - identity_anchor
+    - mission_anchor
+    - voice_anchor
+    - guardrail_anchor
+
+# =============================================================================
+# LOGGING
+# =============================================================================
+logging:
+  level: "INFO"
+  log_activation_events: true
+  log_anchor_retrieval: true
+  log_context_assembly: true
+  # CRITICAL: Log any attempted writes (should never happen)
+  log_write_attempts: true
+  alert_on_write_attempt: true
