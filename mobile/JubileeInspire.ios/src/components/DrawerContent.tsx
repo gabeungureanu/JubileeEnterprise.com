@@ -62,6 +62,10 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
   const [shareConversationId, setShareConversationId] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
 
+  // Archive view state
+  const [showArchivedView, setShowArchivedView] = useState(false);
+  const [archivedConversations, setArchivedConversations] = useState<Conversation[]>([]);
+
   const styles = createStyles(colors, isCollapsed, isMobileView);
 
   const loadConversations = useCallback(async () => {
@@ -213,6 +217,41 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
     }
   };
 
+  const handleArchive = async (conversationId: string) => {
+    console.log('[DrawerContent] Archive conversation:', conversationId);
+    try {
+      await storage.archiveConversation(conversationId);
+      await loadConversations();
+      // If archived conversation was current, navigate to new chat
+      if (currentConversationId === conversationId) {
+        setCurrentConversationId(null);
+        handleNewChat();
+      }
+    } catch (error) {
+      console.error('[DrawerContent] Error archiving conversation:', error);
+    }
+  };
+
+  const handleUnarchive = async (conversationId: string) => {
+    console.log('[DrawerContent] Unarchive conversation:', conversationId);
+    try {
+      await storage.unarchiveConversation(conversationId);
+      await loadConversations();
+      // Reload archived conversations
+      const archived = await storage.loadArchivedConversations();
+      setArchivedConversations(archived);
+    } catch (error) {
+      console.error('[DrawerContent] Error unarchiving conversation:', error);
+    }
+  };
+
+  const handleShowArchivedChats = async () => {
+    console.log('[DrawerContent] Showing archived chats');
+    const archived = await storage.loadArchivedConversations();
+    setArchivedConversations(archived);
+    setShowArchivedView(true);
+  };
+
   const handleStartEditing = (conversationId: string) => {
     console.log('[DrawerContent] Start editing conversation:', conversationId);
     setEditingConversationId(conversationId);
@@ -261,14 +300,17 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
     return [...conversations, pendingConversation].find(c => c?.id === openMenuConversationId) || null;
   }, [openMenuConversationId, conversations, pendingConversation]);
 
-  // Filter conversations based on search query
+  // Filter conversations based on search query and exclude archived
   const filteredConversations = useMemo(() => {
+    // First filter out archived conversations
+    const activeConversations = conversations.filter(conv => !conv.isArchived);
+
     if (!searchQuery.trim()) {
-      return conversations;
+      return activeConversations;
     }
 
     const query = searchQuery.toLowerCase().trim();
-    return conversations.filter(conv => {
+    return activeConversations.filter(conv => {
       // Search in title
       if (conv.title.toLowerCase().includes(query)) {
         return true;
@@ -508,6 +550,22 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
               </View>
             )}
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.collapsedMenuItem}
+            onPress={handleShowArchivedChats}
+            {...(Platform.OS === 'web' ? {
+              onMouseEnter: () => setHoveredItem('archived'),
+              onMouseLeave: () => setHoveredItem(null)
+            } as any : {})}
+          >
+            <Ionicons name="archive-outline" size={20} color={colors.text} />
+            {hoveredItem === 'archived' && Platform.OS === 'web' && (
+              <View style={styles.tooltip}>
+                <Text style={styles.tooltipText}>Archived chats</Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.expandedMenu}>
@@ -549,6 +607,11 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
           <TouchableOpacity style={styles.menuItem} onPress={handleImages}>
             <Ionicons name="image-outline" size={20} color={colors.text} />
             <Text style={styles.menuText}>Images</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem} onPress={handleShowArchivedChats}>
+            <Ionicons name="archive-outline" size={20} color={colors.text} />
+            <Text style={styles.menuText}>Archived chats</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -725,8 +788,10 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
             <TouchableOpacity
               style={[styles.optionsMenuItem, hoveredMenuItem === 'archive' && styles.menuItemHovered]}
               onPress={() => {
-                handleMenuClose();
-                // Archive functionality
+                if (openMenuConversationId) {
+                  handleMenuClose();
+                  handleArchive(openMenuConversationId);
+                }
               }}
               {...(Platform.OS === 'web' ? {
                 onMouseEnter: () => setHoveredMenuItem('archive'),
@@ -872,6 +937,79 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
             </TouchableOpacity>
           </TouchableOpacity>
         </TouchableOpacity>
+      </Modal>
+
+      {/* Archived Chats Modal */}
+      <Modal
+        visible={showArchivedView}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowArchivedView(false)}
+      >
+        <View style={styles.archivedModalContainer}>
+          <View style={styles.archivedModalContent}>
+            {/* Header */}
+            <View style={styles.archivedModalHeader}>
+              <TouchableOpacity
+                style={styles.archivedBackButton}
+                onPress={() => setShowArchivedView(false)}
+              >
+                <Ionicons name="arrow-back" size={24} color={colors.text} />
+              </TouchableOpacity>
+              <Text style={styles.archivedModalTitle}>Archived Chats</Text>
+              <View style={{ width: 40 }} />
+            </View>
+
+            {/* Archived Conversations List */}
+            <ScrollView style={styles.archivedList} showsVerticalScrollIndicator={false}>
+              {archivedConversations.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <Ionicons name="archive-outline" size={48} color={colors.border} />
+                  <Text style={styles.emptyText}>No archived chats</Text>
+                  <Text style={styles.emptySubtext}>Archived conversations will appear here</Text>
+                </View>
+              ) : (
+                archivedConversations.map(conversation => (
+                  <View key={conversation.id} style={styles.archivedItem}>
+                    <TouchableOpacity
+                      style={styles.archivedItemContent}
+                      onPress={() => {
+                        setShowArchivedView(false);
+                        setCurrentConversationId(conversation.id);
+                        drawerNavigation.navigate('HomeStack', {
+                          screen: 'Chat',
+                          params: { conversationId: conversation.id }
+                        } as any);
+                        if (!isMobileView) {
+                          drawerNavigation.closeDrawer();
+                        }
+                      }}
+                    >
+                      <Ionicons name="chatbubble-outline" size={18} color={colors.textSecondary} />
+                      <View style={styles.archivedItemText}>
+                        <Text style={styles.archivedItemTitle} numberOfLines={1}>
+                          {conversation.title}
+                        </Text>
+                        {conversation.archivedAt && (
+                          <Text style={styles.archivedItemDate}>
+                            Archived {new Date(conversation.archivedAt).toLocaleDateString()}
+                          </Text>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.unarchiveButton}
+                      onPress={() => handleUnarchive(conversation.id)}
+                    >
+                      <Ionicons name="arrow-undo-outline" size={20} color={colors.primary} />
+                      <Text style={styles.unarchiveButtonText}>Unarchive</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+          </View>
+        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -1251,6 +1389,75 @@ const createStyles = (colors: any, isCollapsed: boolean, isMobileView: boolean) 
     fontSize: typography.fontSize.sm,
     color: colors.textSecondary,
     fontWeight: '500',
+  },
+  // Archived Modal Styles
+  archivedModalContainer: {
+    flex: 1,
+    backgroundColor: colors.sidebar,
+  },
+  archivedModalContent: {
+    flex: 1,
+  },
+  archivedModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  archivedBackButton: {
+    padding: spacing.xs,
+  },
+  archivedModalTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  archivedList: {
+    flex: 1,
+    paddingHorizontal: spacing.md,
+  },
+  archivedItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  archivedItemContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  archivedItemText: {
+    flex: 1,
+  },
+  archivedItemTitle: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  archivedItemDate: {
+    fontSize: typography.fontSize.xs,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  unarchiveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    gap: spacing.xs,
+    borderRadius: 6,
+    backgroundColor: `${colors.primary}15`,
+  },
+  unarchiveButtonText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: '600',
+    color: colors.primary,
   },
 });
 

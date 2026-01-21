@@ -62,6 +62,8 @@ export interface Conversation {
   preview?: string;
   isPinned?: boolean;
   pinnedAt?: Date;
+  isArchived?: boolean;
+  archivedAt?: Date;
 }
 
 // Environment Configuration

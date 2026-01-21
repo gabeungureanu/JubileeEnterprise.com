@@ -44,6 +44,7 @@ export const storage = {
           createdAt: new Date(conv.createdAt),
           updatedAt: new Date(conv.updatedAt),
           pinnedAt: conv.pinnedAt ? new Date(conv.pinnedAt) : undefined,
+          archivedAt: conv.archivedAt ? new Date(conv.archivedAt) : undefined,
           messages: conv.messages.map(msg => ({
             ...msg,
             timestamp: new Date(msg.timestamp),
@@ -343,6 +344,71 @@ export const storage = {
       console.error('Failed to rename conversation:', error);
       throw error;
     }
+  },
+
+  /**
+   * Archive a conversation
+   * Archived conversations are hidden from the main list but not deleted
+   */
+  async archiveConversation(conversationId: string): Promise<void> {
+    try {
+      const conversations = await this.loadConversations();
+      const index = conversations.findIndex(c => c.id === conversationId);
+
+      if (index >= 0 && !conversations[index].isArchived) {
+        conversations[index] = {
+          ...conversations[index],
+          isArchived: true,
+          archivedAt: new Date(),
+          // Unpin when archiving
+          isPinned: false,
+          pinnedAt: undefined,
+        };
+        await this.saveConversations(conversations);
+      }
+    } catch (error) {
+      console.error('Failed to archive conversation:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Unarchive a conversation
+   * Restores the conversation to the main list
+   */
+  async unarchiveConversation(conversationId: string): Promise<void> {
+    try {
+      const conversations = await this.loadConversations();
+      const index = conversations.findIndex(c => c.id === conversationId);
+
+      if (index >= 0 && conversations[index].isArchived) {
+        conversations[index] = {
+          ...conversations[index],
+          isArchived: false,
+          archivedAt: undefined,
+        };
+        await this.saveConversations(conversations);
+      }
+    } catch (error) {
+      console.error('Failed to unarchive conversation:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Load only active (non-archived) conversations
+   */
+  async loadActiveConversations(): Promise<Conversation[]> {
+    const conversations = await this.loadConversations();
+    return conversations.filter(c => !c.isArchived);
+  },
+
+  /**
+   * Load only archived conversations
+   */
+  async loadArchivedConversations(): Promise<Conversation[]> {
+    const conversations = await this.loadConversations();
+    return conversations.filter(c => c.isArchived);
   },
 };
 
