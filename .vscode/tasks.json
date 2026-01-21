@@ -340,6 +340,142 @@
         "clear": true
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Doctrine Alignment Audit",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/run_doctrine_audit.py",
+        "${input:personaId}",
+        "--format",
+        "${input:doctrineAuditFormat}",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Doctrine Audit (All Personas)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/run_doctrine_audit.py",
+        "--format",
+        "markdown",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Doctrine Audit (Strict Mode)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/run_doctrine_audit.py",
+        "--format",
+        "markdown",
+        "--strict",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Check Deployment Gate",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/run_doctrine_audit.py",
+        "--format",
+        "text",
+        "--check-gate",
+        "deployment",
+        "--strict",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Check Evolution Gate",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/run_doctrine_audit.py",
+        "${input:personaId}",
+        "--format",
+        "text",
+        "--check-gate",
+        "persona_evolution",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Check Memory Update Gate",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/run_doctrine_audit.py",
+        "--format",
+        "text",
+        "--check-gate",
+        "memory_update",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
     }
   ],
   "inputs": [
@@ -397,6 +533,18 @@
         "markdown"
       ],
       "default": "text"
+    },
+    {
+      "id": "doctrineAuditFormat",
+      "type": "pickString",
+      "description": "Doctrine audit report format",
+      "options": [
+        "markdown",
+        "html",
+        "json",
+        "text"
+      ],
+      "default": "markdown"
     }
   ]
 }
