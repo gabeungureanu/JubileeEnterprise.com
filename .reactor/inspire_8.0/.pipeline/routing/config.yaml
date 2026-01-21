@@ -1,0 +1,243 @@
+# =============================================================================
+# INSPIRE 8.0 MODEL ROUTING CONFIGURATION
+# =============================================================================
+# This configuration defines the model routing policy for the Inspire 8.0
+# persona system. It enforces deterministic model selection to minimize
+# token cost while preserving accuracy and authority.
+#
+# CRITICAL POLICIES:
+# 1. Routing is DETERMINISTIC (rules-based, not intuition)
+# 2. Router is a MANDATORY pre-execution step
+# 3. Classification evaluates intent, complexity, and risk
+# 4. Higher models used ONLY when justified
+# 5. All routing decisions are logged for audit
+# =============================================================================
+
+version: "1.0.0"
+module_name: "model_routing"
+
+# =============================================================================
+# MODEL TIERS
+# =============================================================================
+# Define the three-tier model hierarchy with cost and capability mappings
+
+model_tiers:
+  economy:
+    model_id: "gpt-4o-mini"
+    display_name: "GPT-4o Mini"
+    cost_multiplier: 1.0  # Baseline cost
+    max_tokens: 4096
+    context_window: 128000
+    description: |
+      Economy tier for routine interactions, factual lookups,
+      clarifications, and low-risk queries. Optimized for cost efficiency.
+    use_cases:
+      - Greetings and acknowledgments
+      - Simple factual questions
+      - Clarifications
+      - Routine requests
+
+  standard:
+    model_id: "gpt-4o-turbo"
+    display_name: "GPT-4o Turbo"
+    cost_multiplier: 3.0  # 3x economy cost
+    max_tokens: 4096
+    context_window: 128000
+    description: |
+      Standard tier for teaching-oriented, pastoral, explanatory,
+      or moderately complex requests. Balances depth and efficiency.
+    use_cases:
+      - Teaching and explanation
+      - Pastoral guidance
+      - Prayer requests
+      - Scripture application
+      - Moderate complexity questions
+
+  premium:
+    model_id: "gpt-4o"
+    display_name: "GPT-4o"
+    cost_multiplier: 6.0  # 6x economy cost
+    max_tokens: 4096
+    context_window: 128000
+    description: |
+      Premium tier for deep doctrinal questions, high-stakes leadership
+      guidance, strategic decisions, or theologically sensitive matters.
+      Maximum reasoning quality and faithfulness.
+    use_cases:
+      - Deep doctrinal questions
+      - Theological debates
+      - Leadership decisions
+      - Strategic planning
+      - Crisis guidance
+      - Sensitive matters
+      - Ethical dilemmas
+
+# =============================================================================
+# DEFAULT ROUTING BEHAVIOR
+# =============================================================================
+
+defaults:
+  # Default tier when no rules match
+  default_tier: "economy"
+
+  # Unknown intents get routed to standard for safety
+  unknown_intent_tier: "standard"
+
+  # Log all routing decisions
+  log_decisions: true
+
+  # Include message preview in logs (first N chars)
+  log_message_preview: true
+  preview_length: 100
+
+  # Track cost savings statistics
+  enable_cost_tracking: true
+
+# =============================================================================
+# INTENT CATEGORIES
+# =============================================================================
+# Map intents to their default tiers (rules can override)
+
+intent_tier_mapping:
+  # ECONOMY TIER INTENTS
+  greeting: "economy"
+  clarification: "economy"
+  factual_lookup: "economy"
+  simple_question: "economy"
+  acknowledgment: "economy"
+  routine_request: "economy"
+
+  # STANDARD TIER INTENTS
+  teaching_request: "standard"
+  explanation: "standard"
+  pastoral_guidance: "standard"
+  scripture_application: "standard"
+  prayer_request: "standard"
+  encouragement: "standard"
+
+  # PREMIUM TIER INTENTS
+  doctrinal_question: "premium"
+  theological_debate: "premium"
+  leadership_decision: "premium"
+  strategic_planning: "premium"
+  crisis_guidance: "premium"
+  ethical_dilemma: "premium"
+  sensitive_matter: "premium"
+
+  # UNKNOWN defaults to standard
+  unknown: "standard"
+
+# =============================================================================
+# RISK-BASED ESCALATION
+# =============================================================================
+# Higher risk always escalates to higher tiers
+
+risk_escalation:
+  low: null  # No escalation
+  medium: "standard"  # At least standard
+  high: "standard"  # At least standard
+  critical: "premium"  # Must be premium
+
+# =============================================================================
+# COMPLEXITY-BASED ESCALATION
+# =============================================================================
+
+complexity_escalation:
+  low: null  # No escalation
+  medium: null  # No escalation
+  high: "standard"  # At least standard
+  very_high: "premium"  # Consider premium
+
+# =============================================================================
+# PERSONA-SPECIFIC OVERRIDES
+# =============================================================================
+# Some personas may require different default routing
+
+persona_overrides:
+  # Example: A scholarly persona might need higher tier more often
+  # scholar:
+  #   default_tier: "standard"
+  #   doctrinal_threshold: "standard"  # Lower threshold for doctrinal
+
+  # Example: A crisis counselor always needs premium
+  # crisis_counselor:
+  #   default_tier: "premium"
+
+# =============================================================================
+# KEYWORDS FOR CLASSIFICATION
+# =============================================================================
+# These keywords help classify messages into intents
+
+classification_keywords:
+  # Premium tier keywords
+  premium_triggers:
+    - "doctrine"
+    - "doctrinal"
+    - "theology"
+    - "theological"
+    - "heresy"
+    - "heretical"
+    - "trinity"
+    - "salvation"
+    - "predestination"
+    - "election"
+    - "atonement"
+    - "justification"
+    - "sanctification"
+    - "eschatology"
+    - "rapture"
+    - "tribulation"
+    - "crisis"
+    - "emergency"
+    - "urgent"
+    - "suicide"
+    - "abuse"
+    - "divorce"
+    - "addiction"
+
+  # Standard tier keywords
+  standard_triggers:
+    - "teach"
+    - "explain"
+    - "understand"
+    - "meaning"
+    - "interpret"
+    - "struggling"
+    - "worried"
+    - "anxious"
+    - "pray"
+    - "prayer"
+    - "guidance"
+    - "advice"
+    - "help me"
+
+  # Economy tier keywords
+  economy_triggers:
+    - "hello"
+    - "hi"
+    - "hey"
+    - "thanks"
+    - "thank you"
+    - "ok"
+    - "okay"
+    - "got it"
+    - "where is"
+    - "what is"
+    - "when was"
+
+# =============================================================================
+# LOGGING AND AUDIT
+# =============================================================================
+
+logging:
+  # Log all routing decisions
+  log_decisions: true
+
+  # Log tier escalations
+  log_escalations: true
+
+  # Log cost savings
+  log_savings: true
+
+  # Alert threshold for premium usage (percentage)
+  premium_alert_threshold: 30
