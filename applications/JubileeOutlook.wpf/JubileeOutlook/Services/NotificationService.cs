@@ -418,11 +418,10 @@ public class NotificationService
 
     private void OnRetryAttempted(object? sender, RetryEventArgs e)
     {
-        // Only show retry notifications for later attempts to avoid spam
-        if (e.AttemptNumber >= 2)
-        {
-            ShowRetry(e.AttemptNumber, e.MaxAttempts, e.Reason);
-        }
+        // Suppress retry notifications entirely - they create noise when operations succeed eventually
+        // The success notification is more meaningful to users
+        // Only log for debugging
+        System.Diagnostics.Debug.WriteLine($"[NotificationService] Retry attempt {e.AttemptNumber}/{e.MaxAttempts}: {e.Reason}");
     }
 }
 

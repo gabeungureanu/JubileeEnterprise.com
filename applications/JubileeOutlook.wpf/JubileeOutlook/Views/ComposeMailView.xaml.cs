@@ -19,8 +19,28 @@ public partial class ComposeMailView : UserControl
         // Add keyboard shortcuts
         MessageBodyEditor.PreviewKeyDown += MessageBodyEditor_PreviewKeyDown;
 
+        // Sync RichTextBox content to ViewModel when text changes
+        MessageBodyEditor.TextChanged += MessageBodyEditor_TextChanged;
+
         // Subscribe to DataContext changes
         DataContextChanged += OnDataContextChanged;
+    }
+
+    /// <summary>
+    /// Syncs the RichTextBox content to the ViewModel's Body property
+    /// </summary>
+    private void MessageBodyEditor_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (DataContext is ComposeMailViewModel viewModel)
+        {
+            var textRange = new TextRange(
+                MessageBodyEditor.Document.ContentStart,
+                MessageBodyEditor.Document.ContentEnd);
+
+            // Get plain text content (trim trailing newline that FlowDocument adds)
+            var bodyText = textRange.Text.TrimEnd('\r', '\n');
+            viewModel.SetBodyContent(bodyText);
+        }
     }
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)

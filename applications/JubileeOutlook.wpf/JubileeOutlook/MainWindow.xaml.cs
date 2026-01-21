@@ -754,13 +754,48 @@ public partial class MainWindow : Window
             return;
         }
 
-        // Wrap the email body in HTML with dark theme styling
+        // Wrap the email body in HTML with dark theme styling and custom scrollbar
         var htmlContent = $@"
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset='UTF-8'>
     <style>
+        /* Custom Scrollbar Styling for WebKit browsers */
+        ::-webkit-scrollbar {{
+            width: 12px;
+            height: 12px;
+        }}
+        ::-webkit-scrollbar-track {{
+            background: #1A1A1A;
+        }}
+        ::-webkit-scrollbar-thumb {{
+            background: #3A3A3A;
+            border-radius: 6px;
+            border: 2px solid #1A1A1A;
+        }}
+        ::-webkit-scrollbar-thumb:hover {{
+            background: #505050;
+        }}
+        ::-webkit-scrollbar-thumb:active {{
+            background: #606060;
+        }}
+        ::-webkit-scrollbar-corner {{
+            background: #1A1A1A;
+        }}
+
+        /* IE/Edge scrollbar styling */
+        body {{
+            scrollbar-face-color: #3A3A3A;
+            scrollbar-track-color: #1A1A1A;
+            scrollbar-arrow-color: #808080;
+            scrollbar-shadow-color: #1A1A1A;
+        }}
+
+        html {{
+            background-color: #000000;
+        }}
+
         body {{
             background-color: #000000;
             color: #FFFFFF;
@@ -1114,16 +1149,16 @@ public partial class MainWindow : Window
         // Mail was sent successfully - first hide the compose panel
         HideComposePanel();
 
+        // Clear the mail preview to show blank after sending
+        _mainViewModel.DisplayedMessage = null;
+        _mainViewModel.SelectedMessage = null;
+
         // Check if we're in the Sent folder - if so, refresh to show the new message
         if (_mainViewModel.SelectedFolder != null &&
             _mainViewModel.SelectedFolder.Id.ToLower().Contains("sent"))
         {
             await _mainViewModel.RefreshMessagesAsync();
         }
-
-        // Note: Don't clear SelectedMessage or DisplayedMessage here
-        // The user may want to continue viewing their inbox after sending
-        // Just show that the compose panel is now hidden and email was sent
     }
 
     private void OnComposeCancelled(object? sender, EventArgs e)
