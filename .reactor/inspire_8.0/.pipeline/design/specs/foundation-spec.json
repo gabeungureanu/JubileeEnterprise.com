@@ -1,0 +1,69 @@
+{
+  "spec_id": "foundation-design-system",
+  "spec_type": "foundation",
+  "name": "Inspire Design System Foundation",
+  "description": "Core design principles and visual language for the Inspire 8.0 ecosystem",
+  "version": "1.0.0",
+  "created_at": "2026-01-21T00:00:00Z",
+  "updated_at": "2026-01-21T00:00:00Z",
+  "created_by": "design_governance",
+  "source": {
+    "collection": "inspire_design_canon",
+    "document": "foundation-design-system",
+    "path": "design/specs/foundation-spec.json"
+  },
+  "content_preview": "Core design principles establishing visual consistency across the Inspire ecosystem",
+  "scope": {
+    "applies_to": ["inspire_designer", "inspire_frontend", "inspire_ui"],
+    "task_types": ["page_design", "component_design", "layout_design", "style_update"],
+    "components": []
+  },
+  "authority": {
+    "level": "primary",
+    "mandatory": true,
+    "supersedes": []
+  },
+  "status": {
+    "current": "active",
+    "deprecation_date": "",
+    "replacement_spec_id": ""
+  },
+  "principles": {
+    "clarity": {
+      "description": "Design should communicate clearly and reduce cognitive load",
+      "guidelines": [
+        "Use clear visual hierarchy",
+        "Minimize unnecessary decoration",
+        "Prioritize readability over aesthetics"
+      ]
+    },
+    "consistency": {
+      "description": "Maintain visual consistency across all touchpoints",
+      "guidelines": [
+        "Use established component patterns",
+        "Follow spacing and typography rules",
+        "Apply color system uniformly"
+      ]
+    },
+    "accessibility": {
+      "description": "Design for all users regardless of ability",
+      "guidelines": [
+        "Meet WCAG 2.1 AA standards minimum",
+        "Ensure sufficient color contrast",
+        "Support keyboard navigation",
+        "Provide text alternatives for non-text content"
+      ]
+    },
+    "intentionality": {
+      "description": "Every design decision should have purpose",
+      "guidelines": [
+        "Reference specs for all decisions",
+        "Document rationale for deviations",
+        "Avoid ad hoc or improvised solutions"
+      ]
+    }
+  },
+  "design_tokens": {
+    "reference": "See typography-spec.json, color-spec.json, spacing-spec.json"
+  }
+}

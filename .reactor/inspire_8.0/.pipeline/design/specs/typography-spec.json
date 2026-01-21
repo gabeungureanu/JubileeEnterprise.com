@@ -1,0 +1,96 @@
+{
+  "spec_id": "typography-system",
+  "spec_type": "typography",
+  "name": "Inspire Typography System",
+  "description": "Typography rules, font families, type scale, and text styles",
+  "version": "1.0.0",
+  "created_at": "2026-01-21T00:00:00Z",
+  "updated_at": "2026-01-21T00:00:00Z",
+  "created_by": "design_governance",
+  "source": {
+    "collection": "inspire_design_canon",
+    "document": "typography-system",
+    "path": "design/specs/typography-spec.json"
+  },
+  "content_preview": "Typography specifications including font families, scale, and text styles",
+  "scope": {
+    "applies_to": ["inspire_designer", "inspire_frontend", "inspire_ui"],
+    "task_types": ["page_design", "component_design", "style_update"],
+    "components": []
+  },
+  "authority": {
+    "level": "primary",
+    "mandatory": true,
+    "supersedes": []
+  },
+  "status": {
+    "current": "active",
+    "deprecation_date": "",
+    "replacement_spec_id": ""
+  },
+  "font_families": {
+    "primary": {
+      "name": "Inter",
+      "fallback": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      "usage": "Body text, UI elements"
+    },
+    "heading": {
+      "name": "Inter",
+      "weight": "600-700",
+      "fallback": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      "usage": "Headlines, titles"
+    },
+    "monospace": {
+      "name": "JetBrains Mono",
+      "fallback": "'SF Mono', Monaco, Consolas, monospace",
+      "usage": "Code, technical content"
+    }
+  },
+  "type_scale": {
+    "base_size": "16px",
+    "scale_ratio": 1.25,
+    "sizes": {
+      "xs": {"size": "12px", "line_height": "16px"},
+      "sm": {"size": "14px", "line_height": "20px"},
+      "base": {"size": "16px", "line_height": "24px"},
+      "lg": {"size": "18px", "line_height": "28px"},
+      "xl": {"size": "20px", "line_height": "28px"},
+      "2xl": {"size": "24px", "line_height": "32px"},
+      "3xl": {"size": "30px", "line_height": "36px"},
+      "4xl": {"size": "36px", "line_height": "40px"},
+      "5xl": {"size": "48px", "line_height": "48px"}
+    }
+  },
+  "text_styles": {
+    "heading1": {"size": "4xl", "weight": "700", "tracking": "-0.025em"},
+    "heading2": {"size": "3xl", "weight": "600", "tracking": "-0.025em"},
+    "heading3": {"size": "2xl", "weight": "600", "tracking": "-0.02em"},
+    "heading4": {"size": "xl", "weight": "600", "tracking": "-0.01em"},
+    "body": {"size": "base", "weight": "400", "tracking": "0"},
+    "body_small": {"size": "sm", "weight": "400", "tracking": "0"},
+    "caption": {"size": "xs", "weight": "400", "tracking": "0.02em"},
+    "label": {"size": "sm", "weight": "500", "tracking": "0.01em"}
+  },
+  "requirements": [
+    {
+      "requirement_id": "typo-001",
+      "description": "Body text must use base (16px) size minimum",
+      "property_name": "font-size",
+      "allowed_values": ["16px", "18px", "20px"],
+      "severity": "error"
+    },
+    {
+      "requirement_id": "typo-002",
+      "description": "Line height must be at least 1.5 for body text",
+      "property_name": "line-height",
+      "severity": "warning"
+    },
+    {
+      "requirement_id": "typo-003",
+      "description": "Headings must use designated heading weights",
+      "property_name": "font-weight",
+      "allowed_values": ["600", "700"],
+      "severity": "error"
+    }
+  ]
+}

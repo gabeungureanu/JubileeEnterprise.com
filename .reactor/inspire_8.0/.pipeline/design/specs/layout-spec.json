@@ -1,0 +1,85 @@
+{
+  "spec_id": "layout-system",
+  "spec_type": "layout",
+  "name": "Inspire Layout System",
+  "description": "Grid systems, responsive breakpoints, and page layout patterns",
+  "version": "1.0.0",
+  "created_at": "2026-01-21T00:00:00Z",
+  "updated_at": "2026-01-21T00:00:00Z",
+  "created_by": "design_governance",
+  "source": {
+    "collection": "inspire_design_canon",
+    "document": "layout-system",
+    "path": "design/specs/layout-spec.json"
+  },
+  "content_preview": "Grid systems and responsive layout patterns for consistent page structure",
+  "scope": {
+    "applies_to": ["inspire_designer", "inspire_frontend", "inspire_ui"],
+    "task_types": ["page_design", "layout_design", "responsive"],
+    "components": []
+  },
+  "authority": {
+    "level": "primary",
+    "mandatory": true,
+    "supersedes": []
+  },
+  "status": {
+    "current": "active",
+    "deprecation_date": "",
+    "replacement_spec_id": ""
+  },
+  "grid": {
+    "columns": 12,
+    "gutter": "24px",
+    "margin": "16px",
+    "max_width": "1280px"
+  },
+  "breakpoints": {
+    "sm": {"min_width": "640px", "columns": 4, "margin": "16px"},
+    "md": {"min_width": "768px", "columns": 8, "margin": "24px"},
+    "lg": {"min_width": "1024px", "columns": 12, "margin": "32px"},
+    "xl": {"min_width": "1280px", "columns": 12, "margin": "40px"},
+    "2xl": {"min_width": "1536px", "columns": 12, "margin": "48px"}
+  },
+  "containers": {
+    "prose": {"max_width": "65ch", "usage": "Long-form text content"},
+    "narrow": {"max_width": "640px", "usage": "Forms, dialogs"},
+    "default": {"max_width": "1024px", "usage": "General content"},
+    "wide": {"max_width": "1280px", "usage": "Dashboard layouts"},
+    "full": {"max_width": "100%", "usage": "Edge-to-edge content"}
+  },
+  "page_patterns": {
+    "single_column": {
+      "description": "Centered content column",
+      "use_cases": ["Article pages", "Forms", "Landing sections"]
+    },
+    "sidebar_content": {
+      "description": "Fixed sidebar with scrolling content",
+      "sidebar_width": "240px",
+      "use_cases": ["Documentation", "Settings", "Navigation"]
+    },
+    "dashboard": {
+      "description": "Multi-column card layout",
+      "use_cases": ["Overview pages", "Analytics", "Home screens"]
+    }
+  },
+  "requirements": [
+    {
+      "requirement_id": "layout-001",
+      "description": "Use 12-column grid for layout",
+      "severity": "warning"
+    },
+    {
+      "requirement_id": "layout-002",
+      "description": "Content must be responsive across all breakpoints",
+      "severity": "error"
+    },
+    {
+      "requirement_id": "layout-003",
+      "description": "Maximum content width should not exceed 1280px",
+      "property_name": "max-width",
+      "expected_value": "1280px",
+      "severity": "warning"
+    }
+  ]
+}

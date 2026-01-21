@@ -608,6 +608,91 @@
         "clear": true
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Check Design Gate",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/check_design_governance.py",
+        "${input:designTaskType}",
+        "--persona",
+        "${input:designPersona}",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: List Design Specs",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/check_design_governance.py",
+        "--list-specs",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Validate Design Context",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/check_design_governance.py",
+        "${input:designTaskType}",
+        "--persona",
+        "${input:designPersona}",
+        "--validate",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: List Governed Task Types",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/check_design_governance.py",
+        "--list-tasks",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
     }
   ],
   "inputs": [
@@ -701,6 +786,33 @@
       "type": "promptString",
       "description": "Current period (e.g., 2026-02)",
       "default": "2026-02"
+    },
+    {
+      "id": "designTaskType",
+      "type": "pickString",
+      "description": "Design task type",
+      "options": [
+        "page_design",
+        "component_design",
+        "layout_design",
+        "style_update",
+        "responsive",
+        "interaction",
+        "icon_design",
+        "prototype"
+      ],
+      "default": "component_design"
+    },
+    {
+      "id": "designPersona",
+      "type": "pickString",
+      "description": "Design persona",
+      "options": [
+        "inspire_designer",
+        "inspire_frontend",
+        "inspire_ui"
+      ],
+      "default": "inspire_designer"
     }
   ]
 }

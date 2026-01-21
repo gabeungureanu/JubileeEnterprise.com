@@ -1,0 +1,109 @@
+{
+  "spec_id": "spacing-system",
+  "spec_type": "spacing",
+  "name": "Inspire Spacing System",
+  "description": "Spacing scale, margins, padding, and sizing rules",
+  "version": "1.0.0",
+  "created_at": "2026-01-21T00:00:00Z",
+  "updated_at": "2026-01-21T00:00:00Z",
+  "created_by": "design_governance",
+  "source": {
+    "collection": "inspire_design_canon",
+    "document": "spacing-system",
+    "path": "design/specs/spacing-spec.json"
+  },
+  "content_preview": "Spacing scale and rules for consistent layout and component spacing",
+  "scope": {
+    "applies_to": ["inspire_designer", "inspire_frontend", "inspire_ui"],
+    "task_types": ["page_design", "component_design", "layout_design", "style_update"],
+    "components": []
+  },
+  "authority": {
+    "level": "primary",
+    "mandatory": true,
+    "supersedes": []
+  },
+  "status": {
+    "current": "active",
+    "deprecation_date": "",
+    "replacement_spec_id": ""
+  },
+  "scale": {
+    "base": "4px",
+    "values": {
+      "0": "0",
+      "0.5": "2px",
+      "1": "4px",
+      "1.5": "6px",
+      "2": "8px",
+      "2.5": "10px",
+      "3": "12px",
+      "3.5": "14px",
+      "4": "16px",
+      "5": "20px",
+      "6": "24px",
+      "7": "28px",
+      "8": "32px",
+      "9": "36px",
+      "10": "40px",
+      "11": "44px",
+      "12": "48px",
+      "14": "56px",
+      "16": "64px",
+      "20": "80px",
+      "24": "96px"
+    }
+  },
+  "application": {
+    "component_padding": {
+      "button_sm": "2 3",
+      "button_md": "2.5 4",
+      "button_lg": "3 5",
+      "input": "2.5 3",
+      "card": "4 5"
+    },
+    "layout_gaps": {
+      "inline_items": "2",
+      "stack_items": "3",
+      "section_gap": "8",
+      "page_section_gap": "12"
+    },
+    "margins": {
+      "container_x": "4",
+      "container_y": "6",
+      "section_y": "10"
+    }
+  },
+  "sizing": {
+    "icon_sizes": {
+      "xs": "12px",
+      "sm": "16px",
+      "md": "20px",
+      "lg": "24px",
+      "xl": "32px"
+    },
+    "touch_targets": {
+      "minimum": "44px",
+      "recommended": "48px"
+    }
+  },
+  "requirements": [
+    {
+      "requirement_id": "space-001",
+      "description": "All spacing must use values from the spacing scale",
+      "severity": "error"
+    },
+    {
+      "requirement_id": "space-002",
+      "description": "Touch targets must be at least 44px",
+      "property_name": "min-height",
+      "expected_value": "44px",
+      "severity": "error"
+    },
+    {
+      "requirement_id": "space-003",
+      "description": "Component padding should follow component_padding guidelines",
+      "severity": "warning"
+    }
+  ]
+}
