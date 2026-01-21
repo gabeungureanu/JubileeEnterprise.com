@@ -4,7 +4,7 @@
  * Sign In and Sign Up functionality with tab-based interface.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -46,6 +46,35 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Inject CSS to hide browser's native password reveal button on web
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const styleId = 'auth-password-style';
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+          /* Hide Edge/IE password reveal button */
+          input::-ms-reveal,
+          input::-ms-clear {
+            display: none !important;
+          }
+          /* Hide Chrome/Safari password reveal button */
+          input::-webkit-credentials-auto-fill-button,
+          input::-webkit-textfield-decoration-container {
+            display: none !important;
+          }
+          /* Additional webkit password toggle hiding */
+          input[type="password"]::-webkit-contacts-auto-fill-button,
+          input[type="password"]::-webkit-caps-lock-indicator {
+            display: none !important;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    }
+  }, []);
 
   const handleSignIn = async () => {
     if (!email.trim() || !password.trim()) {
@@ -689,6 +718,12 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingVertical: spacing.md,
     fontSize: typography.fontSize.base,
     color: colors.text,
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+      } as any,
+      default: {},
+    }),
   },
   eyeButton: {
     padding: spacing.md,

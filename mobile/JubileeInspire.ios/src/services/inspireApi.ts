@@ -17,6 +17,7 @@ interface SendMessageRequest {
   conversationId?: string;
   message: string;
   context?: string;
+  thinkingMode?: boolean;
 }
 
 interface SendMessageResponse {
@@ -37,16 +38,22 @@ interface ConversationListResponse {
 export const inspireApi = {
   /**
    * Send a message to the AI assistant
+   * @param message - The user's message
+   * @param conversationId - Optional conversation ID for context
+   * @param context - Optional additional context
+   * @param thinkingMode - When true, enables extended reasoning before response
    */
   async sendMessage(
     message: string,
     conversationId?: string,
-    context?: string
+    context?: string,
+    thinkingMode?: boolean
   ): Promise<ApiResponse<SendMessageResponse>> {
     return client.post<SendMessageResponse>('/chat/message', {
       message,
       conversationId,
       context,
+      thinkingMode,
     } as SendMessageRequest);
   },
 

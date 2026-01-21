@@ -35,11 +35,13 @@ declare global {
 }
 
 interface ChatInputProps {
-  onSend: (message: string) => void;
+  onSend: (message: string, options?: { thinkingMode?: boolean }) => void;
   onSendWithResponse?: (message: string) => Promise<string>; // For voice mode - sends and returns AI response
   disabled?: boolean;
   placeholder?: string;
   centered?: boolean; // When true, center the input and limit width
+  thinkingMode?: boolean; // Thinking mode state from parent
+  onThinkingModeChange?: (enabled: boolean) => void; // Callback when thinking mode changes
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -48,6 +50,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   disabled = false,
   placeholder = 'Ask Jubilee Anything...',
   centered = false,
+  thinkingMode = false,
+  onThinkingModeChange,
 }) => {
   const { colors } = useTheme();
   const styles = createStyles(colors, centered);
@@ -84,7 +88,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
-    onSend(text.trim());
+    onSend(text.trim(), { thinkingMode });
     setText('');
     setAttachedFile(null); // Clear attachment after sending
     setInputHeight(MIN_HEIGHT); // Reset height after sending
@@ -163,7 +167,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
         Alert.alert('Create Image', 'Image generation feature coming soon!');
         break;
       case 'thinking':
-        Alert.alert('Thinking Mode', 'Extended reasoning mode coming soon!');
+        // Toggle thinking mode
+        if (onThinkingModeChange) {
+          onThinkingModeChange(!thinkingMode);
+          console.log('[ChatInput] Thinking mode toggled to:', !thinkingMode);
+        }
         break;
       case 'deep-research':
         Alert.alert('Deep Research', 'Research mode coming soon!');
@@ -403,6 +411,19 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <View style={styles.container}>
+      {/* Thinking Mode Indicator */}
+      {thinkingMode && (
+        <TouchableOpacity
+          style={styles.thinkingModeIndicator}
+          onPress={() => onThinkingModeChange && onThinkingModeChange(false)}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="bulb" size={14} color={colors.primary} />
+          <Text style={styles.thinkingModeText}>Thinking Mode</Text>
+          <Ionicons name="close" size={14} color={colors.textSecondary} />
+        </TouchableOpacity>
+      )}
+
       {/* Attachment Preview */}
       {attachedFile && (
         <View style={styles.attachmentPreview}>
@@ -611,8 +632,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
                   onMouseLeave: () => setHoveredMenuItem(null),
                 } as any : {})}
               >
-                <Ionicons name="bulb-outline" size={20} color={colors.text} />
-                <Text style={styles.toolTitle}>Thinking</Text>
+                <View style={styles.toolItemContent}>
+                  <Ionicons name={thinkingMode ? "bulb" : "bulb-outline"} size={20} color={thinkingMode ? colors.primary : colors.text} />
+                  <Text style={[styles.toolTitle, thinkingMode && { color: colors.primary }]}>Thinking</Text>
+                </View>
+                {thinkingMode && (
+                  <Ionicons name="checkmark" size={18} color={colors.primary} />
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -1036,6 +1062,24 @@ const createStyles = (colors: any, centered: boolean) => StyleSheet.create({
   removeAttachmentButton: {
     padding: spacing.xs,
   },
+  thinkingModeIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.xs,
+    gap: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  thinkingModeText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: '500',
+    color: colors.primary,
+  },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center', // Center items vertically
@@ -1213,11 +1257,17 @@ const createStyles = (colors: any, centered: boolean) => StyleSheet.create({
   toolItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 4,
-    gap: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  toolItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flex: 1,
   },
   toolItemHovered: {
     backgroundColor: colors.menuItemHover,
@@ -1229,7 +1279,6 @@ const createStyles = (colors: any, centered: boolean) => StyleSheet.create({
     fontSize: typography.fontSize.sm,
     fontWeight: '400',
     color: colors.text,
-    flex: 1,
   },
   chevron: {
     marginLeft: 'auto',

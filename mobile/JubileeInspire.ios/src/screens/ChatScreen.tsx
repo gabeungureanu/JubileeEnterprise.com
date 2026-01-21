@@ -76,6 +76,8 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [isThinking, setIsThinking] = useState(false); // For "Thinking deeply..." indicator
+  const [thinkingMode, setThinkingMode] = useState(false); // Toggle for thinking mode
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
   const [showPersonaSelector, setShowPersonaSelector] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -194,8 +196,10 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
     setStreamingMessageId(null);
   };
 
-  const handleSend = async (text: string) => {
+  const handleSend = async (text: string, options?: { thinkingMode?: boolean }) => {
     if (!text.trim() || isTyping || !conversation) return;
+
+    const useThinkingMode = options?.thinkingMode || false;
 
     // Add user message
     const userMessage: ChatMessage = {
@@ -221,13 +225,19 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
       console.log('[ChatScreen] Pending conversation promoted to saved conversation');
     }
 
-    // Show typing indicator
-    setIsTyping(true);
-
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500));
-
-    setIsTyping(false);
+    // Show thinking/typing indicator based on mode
+    if (useThinkingMode) {
+      setIsThinking(true);
+      console.log('[ChatScreen] Thinking Mode enabled - using extended reasoning');
+      // Longer delay for thinking mode to simulate deeper analysis
+      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 1500));
+      setIsThinking(false);
+    } else {
+      setIsTyping(true);
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 500));
+      setIsTyping(false);
+    }
 
     // Add assistant message with streaming
     const assistantMessage: ChatMessage = {
@@ -242,7 +252,11 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
     setStreamingMessageId(assistantMessage.id);
 
     // Get random response and stream it
-    const response = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
+    // In thinking mode, prepend a note about extended reasoning (for demo purposes)
+    let response = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
+    if (useThinkingMode) {
+      response = "After careful analysis and extended reasoning, here's my response:\n\n" + response;
+    }
     await simulateStreaming(response, assistantMessage.id);
   };
 
@@ -494,7 +508,13 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
           <View style={styles.emptyChatContainer}>
             <View style={styles.emptyChatContent}>
               <EmptyChat onSuggestionPress={handleSuggestionPress} />
-              <ChatInput onSend={handleSend} disabled={isTyping || !!streamingMessageId} centered={true} />
+              <ChatInput
+                onSend={handleSend}
+                disabled={isTyping || isThinking || !!streamingMessageId}
+                centered={true}
+                thinkingMode={thinkingMode}
+                onThinkingModeChange={setThinkingMode}
+              />
             </View>
           </View>
         ) : (
@@ -507,9 +527,14 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
               contentContainerStyle={styles.messageList}
               onContentSizeChange={scrollToBottom}
               showsVerticalScrollIndicator={false}
-              ListFooterComponent={isTyping ? <TypingIndicator /> : null}
+              ListFooterComponent={isTyping || isThinking ? <TypingIndicator isThinking={isThinking} /> : null}
             />
-            <ChatInput onSend={handleSend} disabled={isTyping || !!streamingMessageId} />
+            <ChatInput
+              onSend={handleSend}
+              disabled={isTyping || isThinking || !!streamingMessageId}
+              thinkingMode={thinkingMode}
+              onThinkingModeChange={setThinkingMode}
+            />
           </>
         )}
       </KeyboardAvoidingView>

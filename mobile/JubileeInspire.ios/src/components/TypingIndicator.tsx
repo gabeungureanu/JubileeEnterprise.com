@@ -2,16 +2,22 @@
  * Jubilee Inspire - Typing Indicator Component
  *
  * Animated typing indicator shown when AI is generating a response.
+ * Supports "Thinking Mode" for extended reasoning visualization.
  */
 
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { spacing, typography } from '../config';
 import { useTheme } from '../contexts/ThemeContext';
 
 const jubileeProfile = require('../../assets/jubilee-profile.png');
 
-const TypingIndicator: React.FC = () => {
+interface TypingIndicatorProps {
+  isThinking?: boolean; // When true, shows "Thinking deeply..." instead of dots
+}
+
+const TypingIndicator: React.FC<TypingIndicatorProps> = ({ isThinking = false }) => {
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
@@ -69,14 +75,26 @@ const TypingIndicator: React.FC = () => {
       {/* Avatar */}
       <Image source={jubileeProfile} style={styles.avatar} />
 
-      {/* Typing Indicator */}
+      {/* Typing/Thinking Indicator */}
       <View style={styles.contentContainer}>
         <Text style={styles.roleLabel}>Jubilee Inspire</Text>
-        <View style={styles.dotsContainer}>
-          <Animated.View style={[styles.dot, getDotStyle(dot1)]} />
-          <Animated.View style={[styles.dot, getDotStyle(dot2)]} />
-          <Animated.View style={[styles.dot, getDotStyle(dot3)]} />
-        </View>
+        {isThinking ? (
+          <View style={styles.thinkingContainer}>
+            <Ionicons name="bulb" size={16} color={colors.primary} style={styles.thinkingIcon} />
+            <Text style={styles.thinkingText}>Thinking deeply</Text>
+            <View style={styles.dotsContainer}>
+              <Animated.View style={[styles.dot, styles.thinkingDot, getDotStyle(dot1)]} />
+              <Animated.View style={[styles.dot, styles.thinkingDot, getDotStyle(dot2)]} />
+              <Animated.View style={[styles.dot, styles.thinkingDot, getDotStyle(dot3)]} />
+            </View>
+          </View>
+        ) : (
+          <View style={styles.dotsContainer}>
+            <Animated.View style={[styles.dot, getDotStyle(dot1)]} />
+            <Animated.View style={[styles.dot, getDotStyle(dot2)]} />
+            <Animated.View style={[styles.dot, getDotStyle(dot3)]} />
+          </View>
+        )}
       </View>
     </View>
   );
@@ -115,6 +133,27 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderRadius: 4,
     backgroundColor: colors.textSecondary,
     marginRight: 4,
+  },
+  thinkingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 24,
+  },
+  thinkingIcon: {
+    marginRight: spacing.xs,
+  },
+  thinkingText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.primary,
+    fontWeight: '500',
+    marginRight: spacing.xs,
+  },
+  thinkingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.primary,
+    marginRight: 3,
   },
 });
 
