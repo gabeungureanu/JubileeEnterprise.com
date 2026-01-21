@@ -1,8 +1,8 @@
 # JubileeOutlook Feature Status Report
 
 **Project:** JubileeOutlook Email Client
-**Version:** 1.6.0
-**Date:** January 17, 2026
+**Version:** 1.7.0
+**Date:** January 21, 2026
 **Platform:** WPF / .NET 9.0
 
 ---
@@ -186,7 +186,7 @@
 #### Module Navigation
 - [x] Mail module
 - [x] Calendar module
-- [x] People module (UI only)
+- [x] People module (UI with ViewModel)
 - [x] Tasks module (UI only)
 - [x] More Apps section
 
@@ -258,7 +258,24 @@
 | ImageService | ✅ **COMPLETE** - Upload/download with retry | - |
 | NetworkStatusService | ✅ **COMPLETE** - Health check monitoring | - |
 
-### 2.2 Ribbon Commands
+### 2.2 Reply/Reply All/Forward Functionality
+
+| Feature | Current State | Remaining Work |
+|---------|---------------|----------------|
+| Reply Button UI | ✅ Implemented, hidden | Body display issues |
+| Reply All Button UI | ✅ Implemented, hidden | Body display issues |
+| Forward Button UI | ✅ Implemented, hidden | Body display issues |
+| Event-based Architecture | ✅ Complete | - |
+| Compose Panel Integration | ✅ Complete | - |
+| HTML-to-Plain Text Conversion | ✅ Complete | Improve edge cases |
+| SetBodyContent Method | ✅ Complete | - |
+
+**Note:** Reply/Reply All/Forward buttons are implemented but currently hidden (`Visibility="Collapsed"`) until body display issues are fully resolved. The architecture is in place with:
+- Events: `ReplyRequested`, `ReplyAllRequested`, `ForwardRequested` in MainViewModel
+- Methods: `ShowComposePanelForReply()`, `ShowComposePanelForReplyAll()`, `ShowComposePanelForForward()` in MainWindow.xaml.cs
+- HTML conversion: `ConvertHtmlToPlainText()` in ComposeMailView.xaml.cs
+
+### 2.3 Ribbon Commands
 
 | Command | Status |
 |---------|--------|
@@ -331,16 +348,19 @@
 
 ### 3.2 People/Contacts Module
 
-| Feature | Priority | Description |
-|---------|----------|-------------|
-| Contact List Display | High | View all contacts |
-| Contact Creation | High | Add new contacts |
-| Contact Editing | High | Modify contact details |
-| Contact Deletion | High | Remove contacts |
-| Contact Search | Medium | Find contacts quickly |
-| Contact Groups | Medium | Organize contacts |
-| Contact Import/Export | Low | vCard support |
-| Contact Sync | Medium | Sync with server |
+| Feature | Priority | Status |
+|---------|----------|--------|
+| People View UI | High | ✅ Complete (PeopleView.xaml) |
+| People ViewModel | High | ✅ Complete (PeopleViewModel.cs) |
+| SetUserEmail Method | High | ✅ Complete |
+| Contact List Display | High | Pending API integration |
+| Contact Creation | High | Pending |
+| Contact Editing | High | Pending |
+| Contact Deletion | High | Pending |
+| Contact Search | Medium | Pending |
+| Contact Groups | Medium | Pending |
+| Contact Import/Export | Low | Pending |
+| Contact Sync | Medium | Pending API integration |
 
 ### 3.3 Tasks Module
 
@@ -434,14 +454,47 @@
 | Email Backend | 85% |
 | Calendar UI | 98% |
 | Calendar Backend | 90% |
-| People/Contacts | 5% |
+| People/Contacts | 15% |
 | Tasks | 0% |
 | Authentication | 15% |
 | Database Integration | 90% |
 
-### Recent Updates (v1.6.0 - January 17, 2026)
+### Recent Updates (v1.7.0 - January 21, 2026)
 
 **Completed in this release:**
+- ✅ **People Module Foundation** - Created PeopleView.xaml, PeopleView.xaml.cs, and PeopleViewModel.cs
+- ✅ **Reply/Reply All/Forward Architecture** - Implemented event-based communication pattern for compose operations
+- ✅ **SetBodyContent Method** - Added method to ComposeMailView for setting email body content programmatically
+- ✅ **HTML-to-Plain Text Converter** - Added ConvertHtmlToPlainText() for proper email quoting in replies/forwards
+- ✅ **ShowAttachmentsSection Method** - Added method to display attachments panel when replying/forwarding
+- ✅ **Email Sending Improvements** - Enhanced send mail flow with dark theme scrollbars and error deduplication
+- ✅ **Email Body Sync Fix** - Fixed email body synchronization in mail preview
+- ✅ **Post-Send UX** - Improved user experience after sending emails
+
+**Key Technical Changes:**
+- Event-based architecture: `ReplyRequested`, `ReplyAllRequested`, `ForwardRequested` events in MainViewModel
+- Compose panel methods: `ShowComposePanelForReply()`, `ShowComposePanelForReplyAll()`, `ShowComposePanelForForward()` in MainWindow.xaml.cs
+- HTML processing: Removes inline images, converts HTML entities, br/p/div tags to newlines
+- Reply/Reply All/Forward buttons temporarily hidden pending body display improvements
+
+**Files Created:**
+- `JubileeOutlook/ViewModels/PeopleViewModel.cs`
+- `JubileeOutlook/Views/PeopleView.xaml`
+- `JubileeOutlook/Views/PeopleView.xaml.cs`
+
+**Files Modified:**
+- `MainViewModel.cs` - Added events and modified Reply/ReplyAll/Forward commands
+- `MainWindow.xaml` - Added Reply/Reply All/Forward buttons (hidden)
+- `MainWindow.xaml.cs` - Added event subscriptions and compose panel methods
+- `ComposeMailView.xaml.cs` - Added SetBodyContent, ConvertHtmlToPlainText, ShowAttachmentsSection
+- `ComposeMailViewModel.cs` - Enhanced reply/forward functionality
+- `EmailSyncService.cs` - Improved body sync
+- `EmailSendingService.cs` - Enhanced send flow
+- `SyncedEmailDisplayService.cs` - Fixed display issues
+
+### Previous Updates (v1.6.0 - January 17, 2026)
+
+**Completed:**
 - ✅ **ApiMailService Full Integration** - Messages now load and display correctly from InspireContinuum API
 - ✅ **JSON Deserialization Fixes** - Added explicit `[JsonPropertyName]` attributes for proper snake_case mapping
 - ✅ **Email List UI Enhancements** - Hover highlight, selection highlight, and pointer cursor on email items
@@ -499,4 +552,4 @@
 ---
 
 **Document Prepared By:** Jubilee Development Team
-**Last Updated:** January 17, 2026
+**Last Updated:** January 21, 2026

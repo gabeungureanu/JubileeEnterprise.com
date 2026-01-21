@@ -1,3 +1,5 @@
+using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -27,20 +29,134 @@ public partial class ComposeMailView : UserControl
     }
 
     /// <summary>
-    /// Syncs the RichTextBox content to the ViewModel's Body property
+    /// Syncs the RichTextBox content to the ViewModel's Body property as HTML
     /// </summary>
     private void MessageBodyEditor_TextChanged(object sender, TextChangedEventArgs e)
     {
         if (DataContext is ComposeMailViewModel viewModel)
         {
-            var textRange = new TextRange(
-                MessageBodyEditor.Document.ContentStart,
-                MessageBodyEditor.Document.ContentEnd);
+            // Clear previous embedded images
+            viewModel.EmbeddedImages.Clear();
 
-            // Get plain text content (trim trailing newline that FlowDocument adds)
-            var bodyText = textRange.Text.TrimEnd('\r', '\n');
-            viewModel.SetBodyContent(bodyText);
+            // Convert FlowDocument to HTML for proper formatting support
+            var htmlBody = ConvertFlowDocumentToHtml(MessageBodyEditor.Document, viewModel.EmbeddedImages);
+            viewModel.SetBodyContent(htmlBody);
         }
+    }
+
+    /// <summary>
+    /// Converts a FlowDocument to HTML string preserving formatting
+    /// </summary>
+    private string ConvertFlowDocumentToHtml(FlowDocument document, List<EmbeddedImageData> embeddedImages)
+    {
+        var html = new StringBuilder();
+
+        foreach (var block in document.Blocks)
+        {
+            if (block is Paragraph paragraph)
+            {
+                html.Append("<p>");
+                html.Append(ConvertInlinesToHtml(paragraph.Inlines, embeddedImages));
+                html.Append("</p>");
+            }
+            else if (block is List list)
+            {
+                var listTag = list.MarkerStyle == TextMarkerStyle.Decimal ? "ol" : "ul";
+                html.Append($"<{listTag}>");
+                foreach (var listItem in list.ListItems)
+                {
+                    html.Append("<li>");
+                    foreach (var listBlock in listItem.Blocks)
+                    {
+                        if (listBlock is Paragraph listParagraph)
+                        {
+                            html.Append(ConvertInlinesToHtml(listParagraph.Inlines, embeddedImages));
+                        }
+                    }
+                    html.Append("</li>");
+                }
+                html.Append($"</{listTag}>");
+            }
+        }
+
+        var result = html.ToString().Trim();
+        // Return empty string if content is just empty paragraph tags
+        if (result == "<p></p>" || string.IsNullOrWhiteSpace(result))
+            return string.Empty;
+
+        return result;
+    }
+
+    /// <summary>
+    /// Converts Inline elements to HTML with formatting
+    /// </summary>
+    private string ConvertInlinesToHtml(InlineCollection inlines, List<EmbeddedImageData> embeddedImages)
+    {
+        var html = new StringBuilder();
+
+        foreach (var inline in inlines)
+        {
+            if (inline is Run run)
+            {
+                var text = run.Text;
+                if (string.IsNullOrEmpty(text)) continue;
+
+                // Check formatting
+                var isBold = run.FontWeight == FontWeights.Bold;
+                var isItalic = run.FontStyle == FontStyles.Italic;
+                var isUnderline = run.TextDecorations != null && run.TextDecorations.Contains(TextDecorations.Underline[0]);
+
+                // Apply formatting tags
+                if (isBold) html.Append("<strong>");
+                if (isItalic) html.Append("<em>");
+                if (isUnderline) html.Append("<u>");
+
+                // HTML encode the text
+                html.Append(System.Web.HttpUtility.HtmlEncode(text));
+
+                // Close tags in reverse order
+                if (isUnderline) html.Append("</u>");
+                if (isItalic) html.Append("</em>");
+                if (isBold) html.Append("</strong>");
+            }
+            else if (inline is Span span)
+            {
+                // Recursively process spans
+                html.Append(ConvertInlinesToHtml(span.Inlines, embeddedImages));
+            }
+            else if (inline is LineBreak)
+            {
+                html.Append("<br/>");
+            }
+            else if (inline is InlineUIContainer container)
+            {
+                // Handle embedded images using CID references
+                if (container.Child is Image image)
+                {
+                    // Get file path from Tag property
+                    var filePath = image.Tag as string;
+                    if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                    {
+                        // Generate a unique Content-ID for this image
+                        var contentId = $"img_{Guid.NewGuid():N}";
+                        var fileName = Path.GetFileName(filePath);
+
+                        // Add to embedded images list
+                        embeddedImages.Add(new EmbeddedImageData
+                        {
+                            ContentId = contentId,
+                            FilePath = filePath,
+                            FileName = fileName
+                        });
+
+                        // Use CID reference in HTML
+                        html.Append($"<img src=\"cid:{contentId}\" style=\"max-width:600px;\" />");
+                    }
+                }
+            }
+        }
+
+        return html.ToString();
     }
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -94,6 +210,98 @@ public partial class ComposeMailView : UserControl
         if (FormattingToolbar != null)
         {
             FormattingToolbar.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    /// <summary>
+    /// Sets the body content for reply/forward operations
+    /// </summary>
+    /// <param name="bodyText">The text content to display (can contain newlines or HTML)</param>
+    public void SetBodyContent(string bodyText)
+    {
+        if (MessageBodyEditor == null || string.IsNullOrEmpty(bodyText)) return;
+
+        MessageBodyEditor.Document.Blocks.Clear();
+
+        // Check if content is HTML and convert to plain text
+        var displayText = bodyText;
+        if (bodyText.Contains("<") && bodyText.Contains(">"))
+        {
+            displayText = ConvertHtmlToPlainText(bodyText);
+        }
+
+        // Split by newlines and create paragraphs
+        var lines = displayText.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+        foreach (var line in lines)
+        {
+            var paragraph = new Paragraph(new Run(line));
+            MessageBodyEditor.Document.Blocks.Add(paragraph);
+        }
+
+        // Move cursor to the beginning (so user can type their reply before the quoted text)
+        MessageBodyEditor.CaretPosition = MessageBodyEditor.Document.ContentStart;
+        MessageBodyEditor.Focus();
+    }
+
+    /// <summary>
+    /// Converts HTML content to plain text for display in RichTextBox
+    /// </summary>
+    private string ConvertHtmlToPlainText(string html)
+    {
+        if (string.IsNullOrEmpty(html)) return string.Empty;
+
+        var text = html;
+
+        // Remove inline images (data:image/...) - they're too long to display
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"<img[^>]*src=""data:image[^""]*""[^>]*>", "[Image]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        // Replace common HTML entities
+        text = text.Replace("&nbsp;", " ");
+        text = text.Replace("&amp;", "&");
+        text = text.Replace("&lt;", "<");
+        text = text.Replace("&gt;", ">");
+        text = text.Replace("&quot;", "\"");
+        text = text.Replace("&apos;", "'");
+
+        // Replace <br>, <br/>, <br /> with newlines
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"<br\s*/?>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        // Replace block-level elements with newlines
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"</p>|</div>|</li>|</tr>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"<p[^>]*>|<div[^>]*>|<li[^>]*>|<tr[^>]*>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        // Handle headers
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"</h[1-6]>", "\n\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"<h[1-6][^>]*>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        // Remove all remaining HTML tags
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"<[^>]+>", "");
+
+        // Decode any remaining HTML entities
+        text = System.Net.WebUtility.HtmlDecode(text);
+
+        // Normalize multiple newlines to maximum of two
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"\n{3,}", "\n\n");
+
+        // Trim leading/trailing whitespace from each line while preserving structure
+        var lines = text.Split('\n');
+        for (int i = 0; i < lines.Length; i++)
+        {
+            lines[i] = lines[i].Trim();
+        }
+        text = string.Join("\n", lines);
+
+        return text.Trim();
+    }
+
+    /// <summary>
+    /// Shows the attachments section (for forward operations with attachments)
+    /// </summary>
+    public void ShowAttachmentsSection()
+    {
+        if (AttachmentsSection != null)
+        {
+            AttachmentsSection.Visibility = Visibility.Visible;
         }
     }
 
@@ -475,7 +683,8 @@ public partial class ComposeMailView : UserControl
                     Source = new BitmapImage(new Uri(openFileDialog.FileName)),
                     MaxWidth = 600,
                     Stretch = Stretch.Uniform,
-                    Margin = new Thickness(0, 4, 0, 4)
+                    Margin = new Thickness(0, 4, 0, 4),
+                    Tag = openFileDialog.FileName // Store file path for email sending
                 };
 
                 // Create an InlineUIContainer to host the image
