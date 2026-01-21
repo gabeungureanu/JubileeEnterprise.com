@@ -903,6 +903,235 @@
         "clear": true
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Create Backup",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/manage_backups.py",
+        "backup",
+        "--retention",
+        "${input:backupRetention}",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Restore Backup",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/manage_backups.py",
+        "restore",
+        "--manifest-id",
+        "${input:backupManifestId}",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Verify Backup",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/manage_backups.py",
+        "verify",
+        "--manifest-id",
+        "${input:backupManifestId}",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Archive Backup",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/manage_backups.py",
+        "archive",
+        "--manifest-id",
+        "${input:backupManifestId}",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Rebuild From Source",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/manage_backups.py",
+        "rebuild",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Rebuild From Source (Dry Run)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/manage_backups.py",
+        "rebuild",
+        "--dry-run",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: List Backups",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/manage_backups.py",
+        "list",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Backup Status",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/manage_backups.py",
+        "status",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Cleanup Old Backups",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/manage_backups.py",
+        "cleanup",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Backup Config",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/manage_backups.py",
+        "config",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Test Backup/Restore",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/manage_backups.py",
+        "test",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
     }
   ],
   "inputs": [
@@ -1076,6 +1305,25 @@
         "manual_clear"
       ],
       "default": "explicit_request"
+    },
+    {
+      "id": "backupRetention",
+      "type": "pickString",
+      "description": "Backup retention policy",
+      "options": [
+        "daily",
+        "weekly",
+        "monthly",
+        "quarterly",
+        "permanent"
+      ],
+      "default": "daily"
+    },
+    {
+      "id": "backupManifestId",
+      "type": "promptString",
+      "description": "Backup manifest ID",
+      "default": "backup_20260121_000000"
     }
   ]
 }
