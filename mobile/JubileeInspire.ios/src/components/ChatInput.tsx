@@ -101,13 +101,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
-    // Measure plus button position to position menu above it
+    // Measure plus button position to position menu just above the + button
     if (plusButtonRef.current) {
       plusButtonRef.current.measureInWindow((x: number, y: number, width: number, height: number) => {
-        // Position menu above the button, left-aligned with button
-        // Menu height is approximately 250px (5 items * ~50px each)
-        const menuHeight = 250;
-        const topPosition = y - menuHeight - 33; // 50px higher (was +17, now -33)
+        // Position menu just above the + button with small gap
+        const menuHeight = 250; // Approximate menu height (5 items * ~50px each)
+        const gap = 8; // Small gap between menu and button
+        const topPosition = y - menuHeight - gap;
         setMenuPosition({
           top: Math.max(10, topPosition), // Ensure minimum 10px from top
           left: x,
