@@ -176,9 +176,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
       case 'deep-research':
         Alert.alert('Deep Research', 'Research mode coming soon!');
         break;
-      case 'shopping-research':
-        Alert.alert('Shopping Research', 'Shopping research coming soon!');
-        break;
       case 'more':
         setShowMoreMenu(true);
         // Keep tools menu open when showing more menu
@@ -632,12 +629,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
                   onMouseLeave: () => setHoveredMenuItem(null),
                 } as any : {})}
               >
-                <View style={styles.toolItemContent}>
-                  <Ionicons name={thinkingMode ? "bulb" : "bulb-outline"} size={20} color={thinkingMode ? colors.primary : colors.text} />
-                  <Text style={[styles.toolTitle, thinkingMode && { color: colors.primary }]}>Thinking</Text>
-                </View>
+                <Ionicons name={thinkingMode ? "bulb" : "bulb-outline"} size={20} color={thinkingMode ? colors.primary : colors.text} />
+                <Text style={[styles.toolTitle, thinkingMode && { color: colors.primary }]}>Thinking</Text>
                 {thinkingMode && (
-                  <Ionicons name="checkmark" size={18} color={colors.primary} />
+                  <Ionicons name="checkmark" size={18} color={colors.primary} style={styles.checkmarkIcon} />
                 )}
               </TouchableOpacity>
 
@@ -651,18 +646,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
               >
                 <Ionicons name="search-outline" size={20} color={colors.text} />
                 <Text style={styles.toolTitle}>Deep research</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.toolItem, hoveredMenuItem === 'shopping-research' && styles.toolItemHovered]}
-                onPress={() => handleToolSelect('shopping-research')}
-                {...(Platform.OS === 'web' ? {
-                  onMouseEnter: () => setHoveredMenuItem('shopping-research'),
-                  onMouseLeave: () => setHoveredMenuItem(null),
-                } as any : {})}
-              >
-                <Ionicons name="cart-outline" size={20} color={colors.text} />
-                <Text style={styles.toolTitle}>Shopping research</Text>
               </TouchableOpacity>
 
               {/* More item with hover behavior */}
@@ -1257,17 +1240,11 @@ const createStyles = (colors: any, centered: boolean) => StyleSheet.create({
   toolItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 4,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-  },
-  toolItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: spacing.sm,
-    flex: 1,
   },
   toolItemHovered: {
     backgroundColor: colors.menuItemHover,
@@ -1279,6 +1256,10 @@ const createStyles = (colors: any, centered: boolean) => StyleSheet.create({
     fontSize: typography.fontSize.sm,
     fontWeight: '400',
     color: colors.text,
+    flex: 1,
+  },
+  checkmarkIcon: {
+    marginLeft: 'auto',
   },
   chevron: {
     marginLeft: 'auto',
