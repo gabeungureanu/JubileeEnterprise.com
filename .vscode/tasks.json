@@ -476,6 +476,138 @@
         "clear": true
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Detect Drift",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/run_drift_detection.py",
+        "${input:personaId}",
+        "--format",
+        "${input:driftReportFormat}",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Detect Drift (All Personas)",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/run_drift_detection.py",
+        "--format",
+        "markdown",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Establish Baseline",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/run_drift_detection.py",
+        "${input:personaId}",
+        "--establish-baseline",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Establish All Baselines",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/run_drift_detection.py",
+        "--establish-baseline",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Compare Periods",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/run_drift_detection.py",
+        "${input:personaId}",
+        "--compare-only",
+        "--baseline-period",
+        "${input:baselinePeriod}",
+        "--current-period",
+        "${input:currentPeriod}",
+        "--format",
+        "${input:driftReportFormat}",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Inspire 8.0: Monthly Drift Report",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "${workspaceFolder}/.reactor/inspire_8.0/.pipeline/scripts/run_drift_detection.py",
+        "--format",
+        "html",
+        "--verbose"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/.reactor/inspire_8.0/.pipeline"
+      },
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
     }
   ],
   "inputs": [
@@ -545,6 +677,30 @@
         "text"
       ],
       "default": "markdown"
+    },
+    {
+      "id": "driftReportFormat",
+      "type": "pickString",
+      "description": "Drift detection report format",
+      "options": [
+        "markdown",
+        "html",
+        "json",
+        "text"
+      ],
+      "default": "markdown"
+    },
+    {
+      "id": "baselinePeriod",
+      "type": "promptString",
+      "description": "Baseline period (e.g., 2026-01)",
+      "default": "2026-01"
+    },
+    {
+      "id": "currentPeriod",
+      "type": "promptString",
+      "description": "Current period (e.g., 2026-02)",
+      "default": "2026-02"
     }
   ]
 }

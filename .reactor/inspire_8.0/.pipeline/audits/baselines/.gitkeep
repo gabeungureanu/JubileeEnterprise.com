@@ -1,0 +1,4 @@
+# Persona baselines directory
+# This folder contains JSON baseline files for drift detection.
+# Baselines are established from historical persona outputs and
+# used as reference points for detecting drift over time.

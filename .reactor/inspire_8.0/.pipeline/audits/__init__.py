@@ -24,6 +24,12 @@ AUDIT CATEGORIES:
    - Validates scriptural references
    - Checks theological consistency
 
+4. DRIFT DETECTION:
+   - Month-over-month comparison of outputs
+   - Detects gradual changes in tone, doctrine, behavior
+   - Establishes and maintains persona baselines
+   - Flags material shifts exceeding tolerance thresholds
+
 GOVERNANCE ENFORCEMENT:
 
 - Identified issues MUST be reviewed before:
@@ -79,6 +85,32 @@ from .audit_report import (
     generate_audit_report,
     save_audit_report,
 )
+from .drift_detection import (
+    DriftDetector,
+    DriftDetectionConfig,
+    DriftDetectionResult,
+    DriftFinding,
+    DriftMetrics,
+    DriftCategory,
+    DriftSeverity,
+    DriftAction,
+    PersonaBaseline,
+    BaselineMode,
+    DriftAnalyzer,
+    get_drift_detector,
+    set_drift_detector,
+    reset_drift_detector,
+    detect_persona_drift,
+    establish_persona_baseline,
+    run_drift_detection,
+)
+from .drift_report import (
+    DriftReportGenerator,
+    DriftReportFormat,
+    DriftReport,
+    generate_drift_report,
+    save_drift_report,
+)
 
 __all__ = [
     # Doctrine alignment
@@ -112,6 +144,30 @@ __all__ = [
     'ReportFormat',
     'generate_audit_report',
     'save_audit_report',
+    # Drift detection
+    'DriftDetector',
+    'DriftDetectionConfig',
+    'DriftDetectionResult',
+    'DriftFinding',
+    'DriftMetrics',
+    'DriftCategory',
+    'DriftSeverity',
+    'DriftAction',
+    'PersonaBaseline',
+    'BaselineMode',
+    'DriftAnalyzer',
+    'get_drift_detector',
+    'set_drift_detector',
+    'reset_drift_detector',
+    'detect_persona_drift',
+    'establish_persona_baseline',
+    'run_drift_detection',
+    # Drift reports
+    'DriftReportGenerator',
+    'DriftReportFormat',
+    'DriftReport',
+    'generate_drift_report',
+    'save_drift_report',
 ]
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
