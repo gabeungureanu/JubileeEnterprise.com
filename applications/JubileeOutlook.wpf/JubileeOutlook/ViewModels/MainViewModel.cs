@@ -13,6 +13,7 @@ public partial class MainViewModel : ObservableObject
     private readonly IMailService _mailService;
     private readonly ICalendarService _calendarService;
     private readonly SyncedEmailDisplayService _syncedEmailService;
+    private readonly EmailSyncCoordinator _syncCoordinator;
 
     [ObservableProperty]
     private ObservableCollection<MailFolder> _folders = new();
@@ -53,11 +54,38 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _hasSyncedAccounts;
 
+    [ObservableProperty]
+    private bool _isSyncing;
+
+    [ObservableProperty]
+    private string _syncStatusMessage = string.Empty;
+
+    /// <summary>
+    /// Event raised when email body content is updated and UI needs to refresh
+    /// </summary>
+    public event EventHandler? EmailBodyUpdated;
+
+    /// <summary>
+    /// Event raised when Reply button is clicked
+    /// </summary>
+    public event EventHandler? ReplyRequested;
+
+    /// <summary>
+    /// Event raised when Reply All button is clicked
+    /// </summary>
+    public event EventHandler? ReplyAllRequested;
+
+    /// <summary>
+    /// Event raised when Forward button is clicked
+    /// </summary>
+    public event EventHandler? ForwardRequested;
+
     public MainViewModel(IMailService mailService, ICalendarService calendarService)
     {
         _mailService = mailService;
         _calendarService = calendarService;
         _syncedEmailService = new SyncedEmailDisplayService();
+        _syncCoordinator = new EmailSyncCoordinator();
 
         // Note: InitializeData is NOT called here anymore
         // It should be called after network status is confirmed in MainWindow.Loaded event
@@ -175,7 +203,29 @@ public partial class MainViewModel : ObservableObject
                 {
                     System.Diagnostics.Debug.WriteLine($"[MainViewModel] Selecting synced inbox: {inbox.Name}");
                     SelectedFolder = inbox;
-                    await LoadSyncedMessagesAsync(inbox.Id);
+
+                    // Check if we have any messages already
+                    var existingMessages = await _syncedEmailService.GetDisplayMessagesAsync(inbox.Id);
+
+                    if (existingMessages.Count == 0)
+                    {
+                        // No messages yet - do a full sync first, then load messages
+                        System.Diagnostics.Debug.WriteLine("[MainViewModel] No cached messages, performing initial sync...");
+                        await TriggerEmailSyncAsync();
+                        // Messages will be loaded by TriggerEmailSyncAsync after sync completes
+                    }
+                    else
+                    {
+                        // Load cached messages immediately
+                        Messages = new ObservableCollection<EmailMessage>(existingMessages);
+                        // Trigger background sync to get updates
+                        _ = TriggerEmailSyncAsync();
+                    }
+                }
+                else
+                {
+                    // No inbox found, just trigger sync in background
+                    _ = TriggerEmailSyncAsync();
                 }
             }
             else
@@ -211,6 +261,88 @@ public partial class MainViewModel : ObservableObject
             System.Diagnostics.Debug.WriteLine($"[MainViewModel] InitializeDataCoreAsync ERROR: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"[MainViewModel] Stack trace: {ex.StackTrace}");
         }
+    }
+
+    /// <summary>
+    /// Trigger email sync from the server for all synced accounts
+    /// This runs in the background and refreshes the UI when complete
+    /// </summary>
+    private async Task TriggerEmailSyncAsync()
+    {
+        if (IsSyncing)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] Sync already in progress, skipping");
+            return;
+        }
+
+        try
+        {
+            IsSyncing = true;
+            SyncStatusMessage = "Syncing...";
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] Starting email sync from server...");
+
+            // Subscribe to sync progress events
+            _syncCoordinator.SyncStatusChanged += OnSyncStatusChanged;
+
+            // Sync all enabled accounts
+            await _syncCoordinator.SyncAllAccountsAsync();
+
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] Email sync completed, refreshing UI...");
+
+            // Refresh folder tree and messages after sync
+            var syncedFolders = await _syncedEmailService.BuildFolderTreeAsync();
+            if (syncedFolders.Count > 0)
+            {
+                var firstAccount = syncedFolders.First();
+                AccountRootFolder = firstAccount;
+                Folders = new ObservableCollection<MailFolder>(syncedFolders);
+
+                // Reload current folder's messages
+                if (SelectedFolder != null)
+                {
+                    await LoadSyncedMessagesAsync(SelectedFolder.Id);
+                }
+            }
+
+            SyncStatusMessage = "Up to date";
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] UI refreshed after sync");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Email sync error: {ex.Message}");
+            SyncStatusMessage = "Sync failed";
+        }
+        finally
+        {
+            IsSyncing = false;
+            _syncCoordinator.SyncStatusChanged -= OnSyncStatusChanged;
+
+            // Clear status after a delay
+            _ = ClearSyncStatusAfterDelay();
+        }
+    }
+
+    private void OnSyncStatusChanged(object? sender, Services.EmailSync.SyncStatusChangedEventArgs e)
+    {
+        SyncStatusMessage = e.Message;
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Sync status: {e.Status} - {e.Message}");
+    }
+
+    private async Task ClearSyncStatusAfterDelay()
+    {
+        await Task.Delay(3000);
+        if (SyncStatusMessage == "Up to date" || SyncStatusMessage == "Sync failed")
+        {
+            SyncStatusMessage = string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Manually trigger a sync (can be called from UI button)
+    /// </summary>
+    public async Task ManualSyncAsync()
+    {
+        await TriggerEmailSyncAsync();
     }
 
     /// <summary>
@@ -285,8 +417,60 @@ public partial class MainViewModel : ObservableObject
             }
 
             // Store the message for display in the reading pane
-            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Setting DisplayedMessage: {value.Subject}, Body length: {value.Body?.Length ?? 0}, Preview length: {value.Preview?.Length ?? 0}");
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Setting DisplayedMessage: {value.Subject}, Body length: {value.Body?.Length ?? 0}, Preview length: {value.Preview?.Length ?? 0}, NeedsBodyFetch: {value.NeedsBodyFetch}");
             DisplayedMessage = value;
+
+            // Fetch body on-demand if needed for synced messages
+            if (value.NeedsBodyFetch && value.AccountId.HasValue && !string.IsNullOrEmpty(value.RemoteMessageId) && value.SyncedMessageId.HasValue)
+            {
+                _ = FetchMessageBodyOnDemandAsync(value);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Fetch message body on-demand for synced messages
+    /// </summary>
+    private async Task FetchMessageBodyOnDemandAsync(EmailMessage message)
+    {
+        try
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Fetching body on-demand for: {message.Subject}");
+
+            // Get folder ID
+            Guid folderId = Guid.Empty;
+            if (Guid.TryParse(message.FolderId, out var parsedFolderId))
+            {
+                folderId = parsedFolderId;
+            }
+
+            var body = await _syncedEmailService.FetchMessageBodyAsync(
+                message.AccountId!.Value,
+                message.RemoteMessageId!,
+                folderId);
+
+            if (!string.IsNullOrEmpty(body))
+            {
+                message.Body = body;
+                message.IsHtml = body.Contains("<html") || body.Contains("<div") || body.Contains("<p>");
+                message.NeedsBodyFetch = false;
+
+                // Update the display if this is still the selected message
+                if (DisplayedMessage == message)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MainViewModel] Body fetched, updating display. Body length: {body.Length}");
+                    // Raise event to tell MainWindow to refresh the email body browser
+                    EmailBodyUpdated?.Invoke(this, EventArgs.Empty);
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Body fetch returned empty/null");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Error fetching body on-demand: {ex.Message}");
         }
     }
 
@@ -327,62 +511,104 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task Reply()
+    private void Reply()
     {
-        if (SelectedMessage == null) return;
+        if (DisplayedMessage == null) return;
 
-        var replyMessage = new EmailMessage
-        {
-            Subject = "RE: " + SelectedMessage.Subject,
-            To = new List<string> { SelectedMessage.FromEmail },
-            Body = $"\n\n--- Original Message ---\nFrom: {SelectedMessage.From}\nDate: {SelectedMessage.ReceivedDate}\nSubject: {SelectedMessage.Subject}\n\n{SelectedMessage.Body}"
-        };
-
-        await _mailService.SendMessageAsync(replyMessage);
-        IsComposingNewMessage = false;
+        // Raise event to show compose panel in reply mode
+        ReplyRequested?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
-    private async Task ReplyAll()
+    private void ReplyAll()
     {
-        if (SelectedMessage == null) return;
+        if (DisplayedMessage == null) return;
 
-        var replyMessage = new EmailMessage
-        {
-            Subject = "RE: " + SelectedMessage.Subject,
-            To = new List<string> { SelectedMessage.FromEmail },
-            Cc = SelectedMessage.Cc,
-            Body = $"\n\n--- Original Message ---\nFrom: {SelectedMessage.From}\nDate: {SelectedMessage.ReceivedDate}\nSubject: {SelectedMessage.Subject}\n\n{SelectedMessage.Body}"
-        };
-
-        await _mailService.SendMessageAsync(replyMessage);
-        IsComposingNewMessage = false;
+        // Raise event to show compose panel in reply-all mode
+        ReplyAllRequested?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
-    private async Task Forward()
+    private void Forward()
     {
-        if (SelectedMessage == null) return;
+        if (DisplayedMessage == null) return;
 
-        var forwardMessage = new EmailMessage
-        {
-            Subject = "FW: " + SelectedMessage.Subject,
-            Body = $"\n\n--- Forwarded Message ---\nFrom: {SelectedMessage.From}\nDate: {SelectedMessage.ReceivedDate}\nSubject: {SelectedMessage.Subject}\n\n{SelectedMessage.Body}",
-            Attachments = SelectedMessage.Attachments
-        };
-
-        await _mailService.SendMessageAsync(forwardMessage);
-        IsComposingNewMessage = false;
+        // Raise event to show compose panel in forward mode
+        ForwardRequested?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
     private async Task Delete()
     {
-        if (SelectedMessage == null) return;
+        if (SelectedMessage == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] Delete: No message selected");
+            return;
+        }
 
-        await _mailService.DeleteMessageAsync(SelectedMessage.Id);
-        Messages.Remove(SelectedMessage);
-        SelectedMessage = null;
+        var messageToDelete = SelectedMessage;
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Delete requested for message: {messageToDelete.Subject}");
+
+        // Check if this is a synced message (has AccountId and RemoteMessageId)
+        if (messageToDelete.AccountId.HasValue && !string.IsNullOrEmpty(messageToDelete.RemoteMessageId))
+        {
+            if (Guid.TryParse(messageToDelete.FolderId, out var folderId))
+            {
+                // OPTIMISTIC UPDATE: Remove from UI immediately for instant feedback
+                Messages.Remove(messageToDelete);
+                SelectedMessage = Messages.FirstOrDefault();
+                System.Diagnostics.Debug.WriteLine("[MainViewModel] Message removed from UI (optimistic update)");
+
+                // Move to trash in background - don't await
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var success = await _syncedEmailService.MoveMessageToTrashAsync(
+                            messageToDelete.AccountId.Value,
+                            folderId,
+                            messageToDelete.RemoteMessageId);
+
+                        if (success)
+                        {
+                            System.Diagnostics.Debug.WriteLine("[MainViewModel] Message moved to trash on server successfully");
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine("[MainViewModel] Failed to move message to trash on server");
+                            // Could add the message back to the UI here if needed
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Exception in background Delete: {ex.Message}");
+                    }
+                });
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Failed to parse FolderId: {messageToDelete.FolderId}");
+            }
+        }
+        else
+        {
+            // Non-synced messages - also do optimistic update
+            Messages.Remove(messageToDelete);
+            SelectedMessage = Messages.FirstOrDefault();
+
+            // Delete in background
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _mailService.DeleteMessageAsync(messageToDelete.Id);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MainViewModel] Exception deleting non-synced message: {ex.Message}");
+                }
+            });
+        }
     }
 
     [RelayCommand]
@@ -719,17 +945,18 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task ReplyAndDelete()
     {
-        if (SelectedMessage == null) return;
-        await Reply();
+        if (DisplayedMessage == null) return;
+        // Open reply compose panel - delete handled separately by user
+        Reply();
         await Delete();
     }
 
     [RelayCommand]
-    private async Task ForwardToManager()
+    private void ForwardToManager()
     {
-        if (SelectedMessage == null) return;
-        // Forward to a predefined manager email
-        await Forward();
+        if (DisplayedMessage == null) return;
+        // Open forward compose panel
+        Forward();
     }
 
     [RelayCommand]

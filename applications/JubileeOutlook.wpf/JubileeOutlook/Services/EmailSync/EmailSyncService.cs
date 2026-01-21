@@ -137,6 +137,7 @@ public class EmailSyncService
                     "receivedDateTime", "sentDateTime", "isRead", "isDraft",
                     "importance", "hasAttachments", "bodyPreview", "body", "flag"
                 };
+                config.QueryParameters.Expand = new[] { "attachments($select=id,name,contentType,size,isInline)" };
                 config.QueryParameters.Orderby = new[] { "receivedDateTime desc" };
             }, cancellationToken);
 
@@ -176,6 +177,7 @@ public class EmailSyncService
                                 "receivedDateTime", "sentDateTime", "isRead", "isDraft",
                                 "importance", "hasAttachments", "bodyPreview", "body", "flag"
                             };
+                            config.QueryParameters.Expand = new[] { "attachments($select=id,name,contentType,size,isInline)" };
                             config.QueryParameters.Orderby = new[] { "receivedDateTime desc" };
                         }, cancellationToken);
                 }
@@ -339,6 +341,24 @@ public class EmailSyncService
             }
         }
 
+        // Map attachment metadata from Graph API response
+        var attachments = new List<SyncedAttachment>();
+        if (msg.Attachments != null)
+        {
+            foreach (var attachment in msg.Attachments)
+            {
+                attachments.Add(new SyncedAttachment
+                {
+                    Id = attachment.Id ?? Guid.NewGuid().ToString(),
+                    FileName = attachment.Name ?? "attachment",
+                    ContentType = attachment.ContentType ?? "application/octet-stream",
+                    FileSize = attachment.Size ?? 0,
+                    IsInline = attachment.IsInline ?? false,
+                    ContentId = attachment.Id
+                });
+            }
+        }
+
         return new SyncedMessage
         {
             Id = Guid.NewGuid(),
@@ -356,7 +376,8 @@ public class EmailSyncService
             IsDraft = msg.IsDraft ?? false,
             IsFlagged = msg.Flag?.FlagStatus == FollowupFlagStatus.Flagged,
             Importance = MapImportance(msg.Importance),
-            HasAttachments = msg.HasAttachments ?? false,
+            HasAttachments = attachments.Count > 0 || (msg.HasAttachments ?? false),
+            Attachments = attachments,
             BodyPreview = msg.BodyPreview ?? "",
             BodyHtml = bodyHtml,
             BodyText = bodyText,
@@ -495,10 +516,15 @@ public class EmailSyncService
             var storedFolder = await _secureStorage.RetrieveAsync<SyncedEmailFolder>($"folder_sync_{folder.Id}");
             var syncState = storedFolder?.SyncState ?? folder.SyncState;
 
-            if (string.IsNullOrEmpty(syncState))
+            // Check if we have existing messages in local storage
+            // If sync state exists but no messages, we need to do a full sync (messages were cleared)
+            var existingMessages = await _secureStorage.RetrieveAsync<List<SyncedMessage>>($"messages_{account.Id}_{folder.Id}");
+            var hasExistingMessages = existingMessages != null && existingMessages.Count > 0;
+
+            if (string.IsNullOrEmpty(syncState) || !hasExistingMessages)
             {
-                Debug.WriteLine("[EmailSync] No sync state found, performing initial sync");
-                return await InitialSyncImapFolderAsync(account, folder, imapClient, 100, cancellationToken);
+                Debug.WriteLine($"[EmailSync] No sync state or no existing messages (hasMessages={hasExistingMessages}), performing initial sync");
+                return await InitialSyncImapFolderAsync(account, folder, imapClient, 500, cancellationToken);
             }
 
             // Parse sync state (format: "UIDVALIDITY:LASTUID")
@@ -546,6 +572,25 @@ public class EmailSyncService
                 foreach (var summary in summaries)
                 {
                     var syncedMessage = MapImapMessage(summary, account.Id, folder.Id);
+
+                    // Fetch full message body for proper HTML display
+                    try
+                    {
+                        var mimeMessage = await imapFolder.GetMessageAsync(summary.UniqueId, cancellationToken);
+                        if (mimeMessage.HtmlBody != null)
+                        {
+                            syncedMessage.BodyHtml = mimeMessage.HtmlBody;
+                        }
+                        if (mimeMessage.TextBody != null)
+                        {
+                            syncedMessage.BodyText = mimeMessage.TextBody;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"[EmailSync] Failed to fetch body for message {summary.UniqueId}: {ex.Message}");
+                    }
+
                     messages.Add(syncedMessage);
                     result.NewMessages++;
                 }
@@ -601,6 +646,24 @@ public class EmailSyncService
         var envelope = summary.Envelope;
         var flags = summary.Flags ?? MessageFlags.None;
 
+        // Map attachment metadata from body structure
+        var attachments = new List<SyncedAttachment>();
+        if (summary.Attachments != null)
+        {
+            foreach (var attachment in summary.Attachments)
+            {
+                attachments.Add(new SyncedAttachment
+                {
+                    Id = attachment.ContentId ?? Guid.NewGuid().ToString(),
+                    FileName = attachment.FileName ?? "attachment",
+                    ContentType = attachment.ContentType?.MimeType ?? "application/octet-stream",
+                    FileSize = attachment.Octets,
+                    IsInline = attachment.IsAttachment == false,
+                    ContentId = attachment.ContentId
+                });
+            }
+        }
+
         return new SyncedMessage
         {
             Id = Guid.NewGuid(),
@@ -619,7 +682,8 @@ public class EmailSyncService
             IsDraft = flags.HasFlag(MessageFlags.Draft),
             IsFlagged = flags.HasFlag(MessageFlags.Flagged),
             Importance = flags.HasFlag(MessageFlags.Flagged) ? MessageImportance.High : MessageImportance.Normal,
-            HasAttachments = summary.Attachments?.Any() ?? false,
+            HasAttachments = attachments.Count > 0 || (summary.Attachments?.Any() ?? false),
+            Attachments = attachments,
             BodyPreview = summary.PreviewText ?? "",
             MessageSize = (int)summary.Size,
             SyncedAt = DateTime.UtcNow
@@ -770,10 +834,35 @@ public class EmailSyncService
         // For now, store in secure storage as JSON
         var key = $"messages_{accountId}_{folderId}";
         var existing = await _secureStorage.RetrieveAsync<List<SyncedMessage>>(key) ?? new List<SyncedMessage>();
-        existing.AddRange(messages);
+
+        // Create a dictionary of existing messages by RemoteMessageId for efficient lookup
+        var existingByRemoteId = existing.ToDictionary(m => m.RemoteMessageId, m => m);
+
+        // Add or replace messages (prefer new messages with body content)
+        foreach (var msg in messages)
+        {
+            if (existingByRemoteId.TryGetValue(msg.RemoteMessageId, out var existingMsg))
+            {
+                // Replace if new message has body content and existing doesn't
+                bool newHasBody = !string.IsNullOrEmpty(msg.BodyHtml) || !string.IsNullOrEmpty(msg.BodyText);
+                bool existingHasBody = !string.IsNullOrEmpty(existingMsg.BodyHtml) || !string.IsNullOrEmpty(existingMsg.BodyText);
+
+                if (newHasBody || !existingHasBody)
+                {
+                    existingByRemoteId[msg.RemoteMessageId] = msg;
+                }
+            }
+            else
+            {
+                existingByRemoteId[msg.RemoteMessageId] = msg;
+            }
+        }
 
         // Keep only the most recent 1000 messages per folder in local cache
-        var toStore = existing.OrderByDescending(m => m.ReceivedAt).Take(1000).ToList();
+        var toStore = existingByRemoteId.Values
+            .OrderByDescending(m => m.ReceivedAt)
+            .Take(1000)
+            .ToList();
         await _secureStorage.StoreAsync(key, toStore);
 
         Debug.WriteLine($"[EmailSync] Stored {messages.Count} messages locally (total: {toStore.Count})");
@@ -804,6 +893,113 @@ public class EmailSyncService
     {
         // Placeholder - will be replaced with database delete
         await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Move a message to the Trash folder on the server and locally
+    /// </summary>
+    /// <param name="account">The synced email account</param>
+    /// <param name="message">The message to move to trash</param>
+    /// <param name="connection">The active connection</param>
+    /// <returns>True if successful, false otherwise</returns>
+    public async Task<bool> MoveMessageToTrashAsync(
+        SyncedEmailAccount account,
+        SyncedMessage message,
+        ConnectionResult connection,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            Debug.WriteLine($"[EmailSync] Moving message '{message.Subject}' to Trash");
+
+            // Get the trash folder
+            var folders = await _secureStorage.RetrieveAsync<List<SyncedEmailFolder>>($"folders_{account.Id}");
+            var trashFolder = folders?.FirstOrDefault(f => f.FolderType == FolderType.Trash);
+
+            if (trashFolder == null)
+            {
+                Debug.WriteLine("[EmailSync] Trash folder not found");
+                return false;
+            }
+
+            bool movedOnServer = false;
+
+            if (connection.ConnectionType == ConnectionType.MicrosoftGraph && connection.GraphClient != null)
+            {
+                // Move message using Microsoft Graph API
+                var moveRequest = new Microsoft.Graph.Me.Messages.Item.Move.MovePostRequestBody
+                {
+                    DestinationId = trashFolder.RemoteFolderId
+                };
+
+                await connection.GraphClient.Me.Messages[message.RemoteMessageId]
+                    .Move.PostAsync(moveRequest, cancellationToken: cancellationToken);
+
+                movedOnServer = true;
+                Debug.WriteLine("[EmailSync] Message moved to Trash via Graph API");
+            }
+            else if (connection.ConnectionType == ConnectionType.IMAP && connection.ImapClient != null)
+            {
+                // Move message using IMAP
+                // Find the source folder
+                var sourceFolder = folders?.FirstOrDefault(f => f.Id == message.FolderId);
+                if (sourceFolder == null)
+                {
+                    Debug.WriteLine("[EmailSync] Source folder not found");
+                    return false;
+                }
+
+                var imapSourceFolder = await connection.ImapClient.GetFolderAsync(sourceFolder.RemoteFolderId, cancellationToken);
+                var imapTrashFolder = await connection.ImapClient.GetFolderAsync(trashFolder.RemoteFolderId, cancellationToken);
+
+                await imapSourceFolder.OpenAsync(FolderAccess.ReadWrite, cancellationToken);
+
+                // Parse the UID
+                if (uint.TryParse(message.RemoteMessageId, out var uid))
+                {
+                    var uniqueId = new UniqueId(uid);
+
+                    // Move the message to trash
+                    await imapSourceFolder.MoveToAsync(uniqueId, imapTrashFolder, cancellationToken);
+
+                    movedOnServer = true;
+                    Debug.WriteLine("[EmailSync] Message moved to Trash via IMAP");
+                }
+
+                await imapSourceFolder.CloseAsync();
+            }
+
+            if (movedOnServer)
+            {
+                // Remove from source folder's local cache
+                var sourceKey = $"messages_{account.Id}_{message.FolderId}";
+                var sourceMessages = await _secureStorage.RetrieveAsync<List<SyncedMessage>>(sourceKey) ?? new List<SyncedMessage>();
+                sourceMessages.RemoveAll(m => m.RemoteMessageId == message.RemoteMessageId);
+                await _secureStorage.StoreAsync(sourceKey, sourceMessages);
+                Debug.WriteLine("[EmailSync] Message removed from source folder cache");
+
+                // Add to trash folder's local cache
+                var trashKey = $"messages_{account.Id}_{trashFolder.Id}";
+                var trashMessages = await _secureStorage.RetrieveAsync<List<SyncedMessage>>(trashKey) ?? new List<SyncedMessage>();
+
+                // Update the message's folder ID to the trash folder
+                message.FolderId = trashFolder.Id;
+
+                // Add to trash folder (at the beginning so it appears first)
+                trashMessages.Insert(0, message);
+                await _secureStorage.StoreAsync(trashKey, trashMessages);
+                Debug.WriteLine($"[EmailSync] Message added to trash folder cache (now {trashMessages.Count} messages in trash)");
+
+                return true;
+            }
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[EmailSync] Error moving message to trash: {ex.Message}");
+            return false;
+        }
     }
 
     private void RaiseProgress(string message, int current, int total)
@@ -841,11 +1037,25 @@ public class SyncedMessage
     public bool IsFlagged { get; set; }
     public MessageImportance Importance { get; set; }
     public bool HasAttachments { get; set; }
+    public List<SyncedAttachment> Attachments { get; set; } = new();
     public string BodyPreview { get; set; } = string.Empty;
     public string? BodyHtml { get; set; }
     public string? BodyText { get; set; }
     public int MessageSize { get; set; }
     public DateTime SyncedAt { get; set; }
+}
+
+/// <summary>
+/// Synced email attachment metadata (content is fetched on-demand)
+/// </summary>
+public class SyncedAttachment
+{
+    public string Id { get; set; } = string.Empty;
+    public string FileName { get; set; } = string.Empty;
+    public string ContentType { get; set; } = string.Empty;
+    public long FileSize { get; set; }
+    public bool IsInline { get; set; }
+    public string? ContentId { get; set; }
 }
 
 /// <summary>

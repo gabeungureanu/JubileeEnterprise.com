@@ -39,6 +39,22 @@ public class InverseBoolToVisibilityConverter : IValueConverter
 }
 
 /// <summary>
+/// Converts a null object to false, non-null to true (for IsEnabled bindings)
+/// </summary>
+public class NullToBoolConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return value != null;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
 /// Converts a null object to Collapsed visibility, non-null to Visible
 /// </summary>
 public class NullToVisibilityConverter : IValueConverter
