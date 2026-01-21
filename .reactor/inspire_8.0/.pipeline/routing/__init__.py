@@ -8,6 +8,23 @@ This module implements a deterministic model routing mechanism that minimizes
 token cost while preserving accuracy and authority by dynamically selecting
 the lowest sufficient model for each interaction.
 
+COST-FIRST ROUTING STRATEGY:
+The routing layer implements a cost-first approach that prioritizes inexpensive,
+deterministic classification before invoking any language model:
+
+1. ZERO-TOKEN CLASSIFICATION (always first):
+   - Keyword detection
+   - Pattern matching (regex)
+   - Message length thresholds
+   - Persona role requirements
+   - Contextual flags
+
+2. MINIMAL LLM CLASSIFIER (only if needed):
+   - Invoked only when zero-token confidence is insufficient
+   - Uses cheapest available model (gpt-4o-mini)
+   - Minimal, constrained prompt
+   - Fixed, machine-readable output (INTENT:X)
+
 ROUTING TIERS:
 1. gpt-4o-mini (ECONOMY):
    - Routine interactions
@@ -28,11 +45,12 @@ ROUTING TIERS:
    - Theologically sensitive matters
 
 CRITICAL INVARIANTS:
-1. Routing is DETERMINISTIC (rules-based, not intuition)
-2. Router is a MANDATORY pre-execution step
-3. Classification evaluates intent, complexity, and risk
-4. Higher models used ONLY when justified
-5. All routing decisions are logged for audit
+1. Zero-token classification is ALWAYS attempted first
+2. LLM is only invoked if rule-based confidence is insufficient
+3. Routing is DETERMINISTIC (rules-based, not intuition)
+4. Router is a MANDATORY pre-execution step
+5. Higher models require explicit justification from classification
+6. All routing decisions are logged for audit
 """
 
 from .router import (
@@ -51,6 +69,24 @@ from .classifier import (
     IntentCategory,
     ComplexityLevel,
     RiskLevel,
+)
+from .cheap_first import (
+    # Cost-first classifier (primary)
+    CostFirstClassifier,
+    CheapClassificationResult,
+    ClassificationSource,
+    # Zero-token classifier
+    ZeroTokenClassifier,
+    ZeroTokenConfig,
+    # Minimal LLM classifier
+    MinimalLLMClassifier,
+    MinimalClassifierConfig,
+    MINIMAL_CLASSIFIER_PROMPT,
+    CLASSIFIER_MAX_TOKENS,
+    # Global instance
+    get_cost_first_classifier,
+    set_cost_first_classifier,
+    reset_cost_first_classifier,
 )
 from .models import (
     ModelTier,
@@ -87,12 +123,25 @@ __all__ = [
     'reset_model_router',
     'route_message',
     'get_model_for_message',
-    # Classifier
+    # Legacy Classifier
     'MessageClassifier',
     'ClassificationResult',
     'IntentCategory',
     'ComplexityLevel',
     'RiskLevel',
+    # Cost-First Classifier (PRIMARY)
+    'CostFirstClassifier',
+    'CheapClassificationResult',
+    'ClassificationSource',
+    'ZeroTokenClassifier',
+    'ZeroTokenConfig',
+    'MinimalLLMClassifier',
+    'MinimalClassifierConfig',
+    'MINIMAL_CLASSIFIER_PROMPT',
+    'CLASSIFIER_MAX_TOKENS',
+    'get_cost_first_classifier',
+    'set_cost_first_classifier',
+    'reset_cost_first_classifier',
     # Models
     'ModelTier',
     'ModelConfig',
@@ -116,4 +165,4 @@ __all__ = [
     'execute_with_routing',
 ]
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'  # Updated for cost-first integration
