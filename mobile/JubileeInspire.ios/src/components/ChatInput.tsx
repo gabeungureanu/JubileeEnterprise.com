@@ -104,9 +104,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
     // Measure plus button position to position menu just above the + button
     if (plusButtonRef.current) {
       plusButtonRef.current.measureInWindow((x: number, y: number, width: number, height: number) => {
-        // Position menu just above the + button with small gap
+        // Position menu just above the + button with gap
         const menuHeight = 250; // Approximate menu height (5 items * ~50px each)
-        const gap = 8; // Small gap between menu and button
+        const gap = -12; // 20px more downward (was 8, now -12)
         const topPosition = y - menuHeight - gap;
         setMenuPosition({
           top: Math.max(10, topPosition), // Ensure minimum 10px from top
