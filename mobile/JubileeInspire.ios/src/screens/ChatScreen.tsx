@@ -514,6 +514,7 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
                 centered={true}
                 thinkingMode={thinkingMode}
                 onThinkingModeChange={setThinkingMode}
+                onOpenImages={() => navigation.navigate('Images', { timestamp: Date.now() })}
               />
             </View>
           </View>
@@ -534,6 +535,7 @@ const ChatScreen: React.FC<Props> = ({ route, navigation }) => {
               disabled={isTyping || isThinking || !!streamingMessageId}
               thinkingMode={thinkingMode}
               onThinkingModeChange={setThinkingMode}
+              onOpenImages={() => navigation.navigate('Images', { timestamp: Date.now() })}
             />
           </>
         )}

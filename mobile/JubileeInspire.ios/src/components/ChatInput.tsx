@@ -42,6 +42,7 @@ interface ChatInputProps {
   centered?: boolean; // When true, center the input and limit width
   thinkingMode?: boolean; // Thinking mode state from parent
   onThinkingModeChange?: (enabled: boolean) => void; // Callback when thinking mode changes
+  onOpenImages?: () => void; // Callback to open Images tab
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -52,6 +53,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   centered = false,
   thinkingMode = false,
   onThinkingModeChange,
+  onOpenImages,
 }) => {
   const { colors } = useTheme();
   const styles = createStyles(colors, centered);
@@ -103,9 +105,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
     if (plusButtonRef.current) {
       plusButtonRef.current.measureInWindow((x: number, y: number, width: number, height: number) => {
         // Position menu above the button, left-aligned with button
-        // Menu height is approximately 300px (6 items * ~50px each)
-        const menuHeight = 300;
-        const topPosition = y - menuHeight + 17; // 25px lower than before (was -8, now +17)
+        // Menu height is approximately 250px (5 items * ~50px each)
+        const menuHeight = 250;
+        const topPosition = y - menuHeight + 67; // 50px lower than before (was +17, now +67)
         setMenuPosition({
           top: Math.max(10, topPosition), // Ensure minimum 10px from top
           left: x,
@@ -164,7 +166,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
         await handleFileAttachment();
         break;
       case 'create-image':
-        Alert.alert('Create Image', 'Image generation feature coming soon!');
+        if (onOpenImages) {
+          onOpenImages();
+        }
         break;
       case 'thinking':
         // Toggle thinking mode
