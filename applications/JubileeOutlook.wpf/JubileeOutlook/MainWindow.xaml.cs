@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using JubileeOutlook.ViewModels;
 using JubileeOutlook.Services;
+using JubileeOutlook.Services.EmailSync;
 using JubileeOutlook.Models;
 using JubileeOutlook.Views;
 using System.ComponentModel;
@@ -211,6 +212,10 @@ public partial class MainWindow : Window
                 Console.WriteLine("[MainWindow] Loading initial data...");
                 await _mainViewModel.InitializeDataAsync();
                 Console.WriteLine("[MainWindow] Initial data loaded");
+
+                // Update profile UI for synced email accounts (if any)
+                UpdateProfileUIForSyncedAccounts();
+                Console.WriteLine("[MainWindow] Profile UI updated for synced accounts");
 
                 // Hide the loading overlay - data is ready
                 LoadingOverlay.Visibility = Visibility.Collapsed;
@@ -583,6 +588,73 @@ public partial class MainWindow : Window
             // Reset to default account name when signed out
             dataContext?.MainViewModel?.SetWwbwEmail(null);
         }
+    }
+
+    /// <summary>
+    /// Updates the profile UI based on synced email accounts (IMAP/OAuth).
+    /// This is called after data loading to show user info when emails are synced
+    /// even if Jubilee SSO authentication hasn't been performed.
+    /// </summary>
+    private void UpdateProfileUIForSyncedAccounts()
+    {
+        // Skip if already authenticated via Jubilee SSO
+        if (_authManager.Session.IsAuthenticated)
+        {
+            LogDebug("UpdateProfileUIForSyncedAccounts: Already authenticated via SSO, skipping");
+            return;
+        }
+
+        // Check if we have synced email accounts
+        if (_mainViewModel.HasSyncedAccounts && _mainViewModel.AccountRootFolder != null)
+        {
+            var emailAddress = _mainViewModel.AccountRootFolder.WwbwEmailAddress
+                ?? _mainViewModel.AccountRootFolder.Name;
+
+            if (!string.IsNullOrEmpty(emailAddress) && emailAddress != "My Account")
+            {
+                LogDebug($"UpdateProfileUIForSyncedAccounts: Found synced account - {emailAddress}");
+
+                // Show signed-in state for synced account
+                ProfileDefaultAvatar.Visibility = Visibility.Collapsed;
+                ProfileDefaultIcon.Visibility = Visibility.Collapsed;
+                ProfileUserAvatar.Visibility = Visibility.Visible;
+                ProfileSyncIndicator.Visibility = Visibility.Visible;
+
+                ProfileSignedOutPanel.Visibility = Visibility.Collapsed;
+                ProfileSignedInPanel.Visibility = Visibility.Visible;
+
+                // Set user info from synced account
+                ProfilePopupName.Text = emailAddress;
+                ProfilePopupEmail.Text = emailAddress;
+                ProfileButton.ToolTip = emailAddress;
+
+                // Create a default avatar with initials
+                var initials = GetInitialsFromEmail(emailAddress);
+                // Note: For now we keep the default avatar circle, but show it as "signed in"
+            }
+        }
+        else
+        {
+            LogDebug("UpdateProfileUIForSyncedAccounts: No synced accounts found");
+        }
+    }
+
+    /// <summary>
+    /// Extracts initials from an email address for avatar display
+    /// </summary>
+    private string GetInitialsFromEmail(string email)
+    {
+        if (string.IsNullOrEmpty(email)) return "?";
+
+        var namePart = email.Split('@')[0];
+        if (namePart.Contains('.'))
+        {
+            var parts = namePart.Split('.');
+            return (parts[0].FirstOrDefault().ToString() + parts[1].FirstOrDefault().ToString()).ToUpper();
+        }
+        return namePart.Length >= 2
+            ? namePart.Substring(0, 2).ToUpper()
+            : namePart.ToUpper();
     }
 
     private async Task FetchAndSetWwbwEmailAsync()
@@ -970,10 +1042,11 @@ public partial class MainWindow : Window
             _composeMailViewModel.SaveDraftRequested += OnSaveDraftRequested;
         }
 
-        // Get the WWBW email address (same as shown in sidebar) - fall back to profile email
-        var userEmail = !string.IsNullOrEmpty(_mainViewModel.WwbwEmailAddress)
-            ? _mainViewModel.WwbwEmailAddress
-            : _authManager.Session?.Profile?.Email;
+        // Get the user's email address from synced account or fallback to profile email
+        var userEmail = _mainViewModel.AccountRootFolder?.WwbwEmailAddress
+            ?? _mainViewModel.AccountRootFolder?.Name
+            ?? _mainViewModel.WwbwEmailAddress
+            ?? _authManager.Session?.Profile?.Email;
 
         // Reset the form and start composing with the user's email
         _composeMailViewModel.StartComposing(userEmail);
@@ -1001,10 +1074,11 @@ public partial class MainWindow : Window
             _composeMailViewModel.SaveDraftRequested += OnSaveDraftRequested;
         }
 
-        // Get the WWBW email address (same as shown in sidebar) - fall back to profile email
-        var userEmail = !string.IsNullOrEmpty(_mainViewModel.WwbwEmailAddress)
-            ? _mainViewModel.WwbwEmailAddress
-            : _authManager.Session?.Profile?.Email;
+        // Get the user's email address from synced account or fallback to profile email
+        var userEmail = _mainViewModel.AccountRootFolder?.WwbwEmailAddress
+            ?? _mainViewModel.AccountRootFolder?.Name
+            ?? _mainViewModel.WwbwEmailAddress
+            ?? _authManager.Session?.Profile?.Email;
 
         // Load the draft into the compose form
         _composeMailViewModel.LoadDraft(
@@ -1069,31 +1143,93 @@ public partial class MainWindow : Window
     {
         try
         {
-            // Get sender display name from profile or use email
-            var senderName = _authManager.Session?.Profile?.DisplayName ?? "You";
-            var senderEmail = e.From;
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Sending email from: {e.From}");
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] To: {string.Join(", ", e.To)}");
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Subject: {e.Subject}");
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Attachments: {e.Attachments.Count}");
 
-            // Create the email message
+            // Use the EmailSendingService to send via SMTP
+            var emailSendingService = new EmailSendingService();
+
+            // Convert attachments to the service format
+            var attachments = e.Attachments.Select(a => new EmailAttachmentInfo
+            {
+                FileName = a.FileName,
+                FilePath = a.FilePath,
+                FileSize = System.IO.File.Exists(a.FilePath) ? new System.IO.FileInfo(a.FilePath).Length : 0
+            }).ToList();
+
+            // Send the email via SMTP
+            var result = await emailSendingService.SendEmailAsync(
+                fromEmail: e.From,
+                toRecipients: e.To,
+                ccRecipients: e.Cc,
+                bccRecipients: e.Bcc,
+                subject: e.Subject,
+                body: e.Body,
+                isHtml: false, // Plain text from compose for now
+                attachments: attachments);
+
+            if (result.Success)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] Email sent successfully! MessageId: {result.MessageId}");
+
+                // Also save to Sent Items folder via API for local storage
+                await SaveToSentFolderAsync(e, result.MessageId);
+
+                // Show success notification
+                NotificationService.Instance.ShowSuccess("Email sent successfully!");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] Email send failed: {result.ErrorMessage}");
+
+                // Update the compose view model with the error
+                if (_composeMailViewModel != null)
+                {
+                    _composeMailViewModel.IsSending = false;
+                    _composeMailViewModel.ValidationError = result.ErrorMessage ?? "Failed to send email";
+                }
+
+                // Show error dialog
+                MessageDialog.ShowError(this, result.ErrorMessage ?? "Failed to send email", "Send Error");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Error sending email: {ex.Message}");
+            MessageDialog.ShowError(this, $"Failed to send email: {ex.Message}", "Send Error");
+        }
+    }
+
+    /// <summary>
+    /// Save the sent email to the Sent Items folder via API
+    /// </summary>
+    private async Task SaveToSentFolderAsync(ViewModels.SendMailEventArgs e, string? messageId)
+    {
+        try
+        {
+            var senderName = _mainViewModel.AccountRootFolder?.Name ?? e.From;
+
             var emailMessage = new Models.EmailMessage
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = messageId ?? Guid.NewGuid().ToString(),
                 Subject = string.IsNullOrWhiteSpace(e.Subject) ? "(No Subject)" : e.Subject,
                 From = senderName,
-                FromEmail = senderEmail,
+                FromEmail = e.From,
                 To = e.To,
                 Cc = e.Cc,
                 Bcc = e.Bcc,
                 Body = e.Body,
-                IsHtml = false, // Plain text from compose
+                IsHtml = false,
                 SentDate = DateTime.Now,
                 ReceivedDate = DateTime.Now,
                 IsRead = true,
-                FolderId = "sent", // Will be placed in Sent Items folder
+                FolderId = "sent",
                 Preview = e.Body.Length > 100 ? e.Body.Substring(0, 100) + "..." : e.Body,
                 HasAttachments = e.Attachments.Count > 0
             };
 
-            // Add attachments if any
             if (e.Attachments.Count > 0)
             {
                 emailMessage.Attachments = e.Attachments.Select(a => new Models.EmailAttachment
@@ -1106,25 +1242,16 @@ public partial class MainWindow : Window
                 }).ToList();
             }
 
-            // Get the mail service and send the message via API
+            // Save to API
             var mailService = Services.ServiceConfiguration.GetMailService();
-
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Sending email to: {string.Join(", ", e.To)}");
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Subject: {emailMessage.Subject}");
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Attachments: {emailMessage.Attachments.Count}");
-
-            // Send the message - this will save to Sent Items via API
             await mailService.SendMessageAsync(emailMessage);
 
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Email sent successfully!");
-
-            // Show success notification (optional)
-            // MessageBox.Show("Email sent successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Email saved to Sent folder");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Error sending email: {ex.Message}");
-            MessageDialog.ShowError(this, $"Failed to send email: {ex.Message}", "Send Error");
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Error saving to Sent folder: {ex.Message}");
+            // Don't fail the send operation if saving to API fails
         }
     }
 
@@ -1967,7 +2094,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void SyncService_SyncProgressChanged(object? sender, SyncProgressEventArgs e)
+    private void SyncService_SyncProgressChanged(object? sender, Services.SyncProgressEventArgs e)
     {
         Dispatcher.Invoke(() =>
         {

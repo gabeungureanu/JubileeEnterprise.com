@@ -69,8 +69,7 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     public async Task InitializeDataAsync()
     {
-        InitializeData();
-        await Task.CompletedTask; // Ensure async signature for await usage
+        await InitializeDataCoreAsync();
     }
 
     /// <summary>
@@ -151,11 +150,11 @@ public partial class MainViewModel : ObservableObject
         Folders = new ObservableCollection<MailFolder>(new[] { rootFolder });
     }
 
-    private async void InitializeData()
+    private async Task InitializeDataCoreAsync()
     {
         try
         {
-            System.Diagnostics.Debug.WriteLine("[MainViewModel] InitializeData started");
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] InitializeDataCoreAsync started");
 
             // First, check for synced email accounts
             var syncedFolders = await _syncedEmailService.BuildFolderTreeAsync();
@@ -205,11 +204,11 @@ public partial class MainViewModel : ObservableObject
             // Load today's events
             await LoadEventsAsync(DateTime.Today, DateTime.Today.AddDays(1));
 
-            System.Diagnostics.Debug.WriteLine("[MainViewModel] InitializeData completed");
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] InitializeDataCoreAsync completed");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[MainViewModel] InitializeData ERROR: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] InitializeDataCoreAsync ERROR: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"[MainViewModel] Stack trace: {ex.StackTrace}");
         }
     }
