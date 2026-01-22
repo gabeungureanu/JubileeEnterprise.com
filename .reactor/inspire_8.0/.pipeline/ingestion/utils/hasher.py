@@ -13,7 +13,12 @@ This module ensures that:
 import hashlib
 import json
 import re
+import uuid
 from typing import Any, Dict, List, Optional
+
+# Namespace UUID for generating deterministic UUIDs (UUID5)
+# This is a custom namespace for Inspire 8.0 content
+INSPIRE_NAMESPACE = uuid.UUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8')  # DNS namespace as base
 
 
 class ContentHasher:
@@ -147,25 +152,22 @@ def generate_point_id(
 
 def _sanitize_id(raw_id: str) -> str:
     """
-    Sanitize an ID string for use as a Qdrant point ID.
+    Convert a human-readable ID string to a valid Qdrant point ID (UUID).
 
-    - Converts to lowercase
-    - Replaces spaces and special chars with underscores
-    - Removes consecutive underscores
-    - Limits length to 128 characters
+    Qdrant requires point IDs to be either unsigned integers or UUIDs.
+    This function generates a deterministic UUID5 from the raw ID string,
+    ensuring that the same input always produces the same UUID.
+
+    Args:
+        raw_id: Human-readable identifier (e.g., 'jsv_genesis_1_1')
+
+    Returns:
+        UUID string (e.g., '550e8400-e29b-41d4-a716-446655440000')
     """
-    # Lowercase
-    sanitized = raw_id.lower()
-    # Replace problematic characters
-    sanitized = re.sub(r'[^a-z0-9_-]', '_', sanitized)
-    # Remove consecutive underscores
-    sanitized = re.sub(r'_+', '_', sanitized)
-    # Strip leading/trailing underscores
-    sanitized = sanitized.strip('_')
-    # Limit length
-    if len(sanitized) > 128:
-        sanitized = sanitized[:128]
-    return sanitized
+    # Normalize the ID for consistency
+    normalized = raw_id.lower().strip()
+    # Generate deterministic UUID5 from the normalized ID
+    return str(uuid.uuid5(INSPIRE_NAMESPACE, normalized))
 
 
 def compute_file_hash(file_path: str) -> str:
