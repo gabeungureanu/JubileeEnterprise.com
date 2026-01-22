@@ -1,7 +1,7 @@
 {
   "name": "Inspire 8.0: Website Services",
   "version": "1.0.0",
-  "description": "Manages 40 Jubilee Enterprise frontend websites - Running on WSL INSPIRESERVER01",
+  "description": "Manages 43 Jubilee Enterprise frontend websites - Running on WSL INSPIRESERVER01",
   "healthPort": 3900,
   "runtime": "WSL Ubuntu-24.04",
   "services": [
@@ -362,6 +362,33 @@
       "script": "server.cjs",
       "cwd": "/var/www/apps/YeshuaMashiach.com",
       "port": 3521,
+      "workers": 1,
+      "enabled": true
+    },
+    {
+      "name": "jixqr",
+      "description": "jixqr.com - QR Code & URL Shortening Service",
+      "script": "server.js",
+      "cwd": "/mnt/c/data/JubileeEnterprise.com Bibleweb/websites/codex/jixqr.com",
+      "port": 3137,
+      "workers": 1,
+      "enabled": true
+    },
+    {
+      "name": "jubileechat",
+      "description": "JubileeChat.com - Chat Platform",
+      "script": "server.js",
+      "cwd": "/mnt/c/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeChat.com",
+      "port": 3127,
+      "workers": 1,
+      "enabled": true
+    },
+    {
+      "name": "biblewebdomains",
+      "description": "biblewebDomains.com - Premium Bible Domain Names",
+      "script": "server.js",
+      "cwd": "/mnt/c/data/JubileeEnterprise.com Bibleweb/websites/codex/biblewebDomains.com",
+      "port": 3138,
       "workers": 1,
       "enabled": true
     }
