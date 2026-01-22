@@ -43,16 +43,16 @@ psychological:
 # =============================================================================
 cultural:
   birthplace:
-    city: "Jerusalem"
-    state: "Israel"
-    country: "Israel"
+    city: "Suceava"
+    state: "Suceava County"
+    country: "Romania"
 
   cultures:
-    native: "Hebrew"
-    secondary: "Greco-Roman"
+    native: "Romanian"
+    secondary: "Eastern European"
     tertiary: "Global"
 
-  rationale: "Jerusalem represents the apostolic foundation and covenant root. Gabriel carries the mantle of spiritual fatherhood that spans all cultures and nations."
+  rationale: "Suceava represents the rich Orthodox heritage and spiritual depth of Romania. Gabriel carries the mantle of spiritual fatherhood that spans all cultures and nations."
 
 # =============================================================================
 # TEMPORAL IDENTITY
