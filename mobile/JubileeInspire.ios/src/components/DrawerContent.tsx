@@ -35,7 +35,7 @@ import { storage } from '../services/storage';
 const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: drawerNavigation }) => {
   const { colors } = useTheme();
   const { isCollapsed, setIsCollapsed, toggleCollapse, isMobileView } = useDrawer();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const navigation = useNavigation();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -104,6 +104,18 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
       return () => clearTimeout(timeoutId);
     }, [loadConversations])
   );
+
+  // Reload conversations when user changes (login/logout)
+  useEffect(() => {
+    console.log('[DrawerContent] Auth state changed, user:', user?.id || 'anonymous');
+    // Reset current conversation when user changes
+    setCurrentConversationId(null);
+    // Clear pending conversation state
+    setPendingConversation(null);
+    // Load conversations for the new user context
+    loadConversations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Track current conversation from navigation state
   useEffect(() => {
