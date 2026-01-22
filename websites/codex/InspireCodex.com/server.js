@@ -5185,6 +5185,8 @@ app.get('/api/v1/contacts', async (req, res) => {
                 spouse: row.spouse,
                 website: row.website,
                 isFavorite: row.is_favorite,
+                isDeleted: row.is_deleted || false,
+                deletedAt: row.deleted_at,
                 category: row.category,
                 createdAt: row.created_at,
                 updatedAt: row.updated_at
@@ -5240,6 +5242,8 @@ app.get('/api/v1/contacts/:id', async (req, res) => {
                 spouse: row.spouse,
                 website: row.website,
                 isFavorite: row.is_favorite,
+                isDeleted: row.is_deleted || false,
+                deletedAt: row.deleted_at,
                 category: row.category,
                 createdAt: row.created_at,
                 updatedAt: row.updated_at
@@ -5277,6 +5281,8 @@ app.post('/api/v1/contacts', async (req, res) => {
             spouse,
             website,
             isFavorite,
+            isDeleted,
+            deletedAt,
             category
         } = req.body;
 
@@ -5291,8 +5297,8 @@ app.post('/api/v1/contacts', async (req, res) => {
                 user_id, display_name, first_name, last_name, email_addresses, phone_numbers,
                 mobile_phone, company, job_title, department, address, city, state,
                 postal_code, country, notes, photo_url, birthday, anniversary, spouse,
-                website, is_favorite, category, created_at, updated_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, NOW(), NOW())
+                website, is_favorite, is_deleted, deleted_at, category, created_at, updated_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, NOW(), NOW())
             RETURNING *
         `, [
             userId || '00000000-0000-0000-0000-000000000001',
@@ -5317,6 +5323,8 @@ app.post('/api/v1/contacts', async (req, res) => {
             spouse || null,
             website || null,
             isFavorite || false,
+            isDeleted || false,
+            deletedAt || null,
             category || null
         ]);
 
@@ -5347,6 +5355,8 @@ app.post('/api/v1/contacts', async (req, res) => {
                 spouse: row.spouse,
                 website: row.website,
                 isFavorite: row.is_favorite,
+                isDeleted: row.is_deleted || false,
+                deletedAt: row.deleted_at,
                 category: row.category,
                 createdAt: row.created_at,
                 updatedAt: row.updated_at
@@ -5384,6 +5394,8 @@ app.put('/api/v1/contacts/:id', async (req, res) => {
             spouse,
             website,
             isFavorite,
+            isDeleted,
+            deletedAt,
             category
         } = req.body;
 
@@ -5412,9 +5424,11 @@ app.put('/api/v1/contacts/:id', async (req, res) => {
                 spouse = $19,
                 website = $20,
                 is_favorite = COALESCE($21, is_favorite),
-                category = $22,
+                is_deleted = COALESCE($22, is_deleted),
+                deleted_at = $23,
+                category = $24,
                 updated_at = NOW()
-            WHERE id = $23
+            WHERE id = $25
             RETURNING *
         `, [
             finalDisplayName,
@@ -5438,6 +5452,8 @@ app.put('/api/v1/contacts/:id', async (req, res) => {
             spouse || null,
             website || null,
             isFavorite,
+            isDeleted,
+            deletedAt || null,
             category || null,
             id
         ]);
@@ -5473,6 +5489,8 @@ app.put('/api/v1/contacts/:id', async (req, res) => {
                 spouse: row.spouse,
                 website: row.website,
                 isFavorite: row.is_favorite,
+                isDeleted: row.is_deleted || false,
+                deletedAt: row.deleted_at,
                 category: row.category,
                 createdAt: row.created_at,
                 updatedAt: row.updated_at
@@ -7284,6 +7302,8 @@ async function startServer() {
                 spouse VARCHAR(255),
                 website VARCHAR(500),
                 is_favorite BOOLEAN DEFAULT FALSE,
+                is_deleted BOOLEAN DEFAULT FALSE,
+                deleted_at TIMESTAMPTZ,
                 category VARCHAR(100),
                 created_at TIMESTAMPTZ DEFAULT NOW(),
                 updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -7292,6 +7312,20 @@ async function startServer() {
             CREATE INDEX IF NOT EXISTS idx_user_contacts_display_name ON user_contacts(display_name);
             CREATE INDEX IF NOT EXISTS idx_user_contacts_favorite ON user_contacts(is_favorite);
         `);
+
+        // Add is_deleted and deleted_at columns if they don't exist (migration for soft delete support)
+        await codexPool.query(`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='user_contacts' AND column_name='is_deleted') THEN
+                    ALTER TABLE user_contacts ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='user_contacts' AND column_name='deleted_at') THEN
+                    ALTER TABLE user_contacts ADD COLUMN deleted_at TIMESTAMPTZ;
+                END IF;
+            END $$;
+        `);
+        await codexPool.query(`CREATE INDEX IF NOT EXISTS idx_user_contacts_deleted ON user_contacts(is_deleted);`);
         console.log('✅ User contacts table ready');
 
         // Add OAuth columns to users table if they don't exist (for OAuth login support)

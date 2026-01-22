@@ -70,17 +70,29 @@ public partial class PeopleViewModel : ObservableObject
 
             var result = await _contactService.GetContactsWithResultAsync();
 
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] API result - Success: {result.Success}, Data count: {result.Data?.Count ?? 0}, Error: {result.Error ?? "(none)"}");
+
             if (result.Success && result.Data != null)
             {
                 Contacts.Clear();
                 foreach (var apiContact in result.Data)
                 {
+                    System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] ---- Processing contact: {apiContact.DisplayName} ----");
+                    System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] API Contact EmailAddresses count: {apiContact.EmailAddresses?.Count ?? 0}");
+                    if (apiContact.EmailAddresses?.Count > 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] API Contact Emails: {string.Join(", ", apiContact.EmailAddresses)}");
+                    }
+                    System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] API Contact PrimaryEmail: '{apiContact.PrimaryEmail}'");
+
                     var contact = MapFromApiContact(apiContact);
                     Contacts.Add(contact);
+                    System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] VM Contact Email: '{contact.Email}'");
+                    System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Added contact: {contact.DisplayName}");
                 }
 
                 FilterContacts();
-                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Loaded {Contacts.Count} contacts from API");
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Loaded {Contacts.Count} contacts, FilteredContacts: {FilteredContacts.Count}");
             }
             else
             {
@@ -207,6 +219,10 @@ public partial class PeopleViewModel : ObservableObject
     /// </summary>
     private Contact MapFromApiContact(DbContact apiContact)
     {
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] MapFromApiContact - DisplayName: '{apiContact.DisplayName}', FirstName: '{apiContact.FirstName}', LastName: '{apiContact.LastName}'");
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] MapFromApiContact - EmailAddresses: [{string.Join(", ", apiContact.EmailAddresses)}], PrimaryEmail: '{apiContact.PrimaryEmail}'");
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] MapFromApiContact - PhoneNumbers: [{string.Join(", ", apiContact.PhoneNumbers)}], PrimaryPhone: '{apiContact.PrimaryPhone}'");
+
         return new Contact
         {
             Id = apiContact.Id,
@@ -231,6 +247,8 @@ public partial class PeopleViewModel : ObservableObject
             Website = apiContact.Website ?? string.Empty,
             AvatarPath = apiContact.PhotoUrl,
             IsFavorite = apiContact.IsFavorite,
+            IsDeleted = apiContact.IsDeleted,
+            DeletedAt = apiContact.DeletedAt,
             Category = apiContact.Category ?? string.Empty,
             CreatedAt = apiContact.CreatedDate,
             ModifiedAt = apiContact.ModifiedDate
@@ -274,6 +292,8 @@ public partial class PeopleViewModel : ObservableObject
             Website = string.IsNullOrEmpty(contact.Website) ? null : contact.Website,
             PhotoUrl = contact.AvatarPath,
             IsFavorite = contact.IsFavorite,
+            IsDeleted = contact.IsDeleted,
+            DeletedAt = contact.DeletedAt,
             Category = string.IsNullOrEmpty(contact.Category) ? null : contact.Category,
             CreatedDate = contact.CreatedAt,
             ModifiedDate = contact.ModifiedAt
@@ -302,9 +322,22 @@ public partial class PeopleViewModel : ObservableObject
         FilteredContacts.Clear();
 
         var query = SearchText?.Trim().ToLowerInvariant() ?? string.Empty;
+        var folderName = SelectedFolder?.Name ?? "Your contacts";
 
         foreach (var contact in Contacts)
         {
+            // Apply folder filter first
+            bool matchesFolder = folderName switch
+            {
+                "Your contacts" => !contact.IsDeleted,
+                "Favorites" => contact.IsFavorite && !contact.IsDeleted,
+                "Deleted" => contact.IsDeleted,
+                _ => !contact.IsDeleted
+            };
+
+            if (!matchesFolder) continue;
+
+            // Then apply search filter
             if (string.IsNullOrEmpty(query) ||
                 contact.DisplayName.ToLowerInvariant().Contains(query) ||
                 contact.Email.ToLowerInvariant().Contains(query) ||
@@ -315,17 +348,12 @@ public partial class PeopleViewModel : ObservableObject
         }
 
         HasContacts = FilteredContacts.Count > 0;
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] FilterContacts - Folder: {folderName}, Total: {Contacts.Count}, Filtered: {FilteredContacts.Count}");
     }
 
     private void LoadContactsForFolder()
     {
-        // Clear existing contacts
-        Contacts.Clear();
-        FilteredContacts.Clear();
-        HasContacts = false;
-
-        // TODO: Load contacts from the selected folder
-        // For now, just update the filtered view
+        // Just re-filter the existing contacts for the selected folder
         FilterContacts();
     }
 
@@ -418,10 +446,45 @@ public partial class PeopleViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void EditContact()
+    private async Task EditContactAsync()
     {
         if (SelectedContact == null) return;
-        EditContactRequested?.Invoke(this, SelectedContact);
+
+        try
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] EditContact - Fetching contact by ID: {SelectedContact.Id}");
+
+            // Fetch fresh contact data from API
+            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var result = await _contactService.GetContactByIdWithResultAsync(SelectedContact.Id);
+
+            if (result.Success && result.Data != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] EditContact - Fetched contact: {result.Data.DisplayName}");
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] EditContact - FirstName: '{result.Data.FirstName}', LastName: '{result.Data.LastName}'");
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] EditContact - EmailAddresses: [{string.Join(", ", result.Data.EmailAddresses)}]");
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] EditContact - PhoneNumbers: [{string.Join(", ", result.Data.PhoneNumbers)}]");
+
+                // Map the API contact to ViewModel contact
+                var contactToEdit = MapFromApiContact(result.Data);
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] EditContact - Mapped Email: '{contactToEdit.Email}', Phone: '{contactToEdit.Phone}'");
+
+                // Invoke the edit dialog with fresh data
+                EditContactRequested?.Invoke(this, contactToEdit);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] EditContact - Failed to fetch contact: {result.Error}");
+                // Fall back to using local data
+                EditContactRequested?.Invoke(this, SelectedContact);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] EditContact error: {ex.Message}");
+            // Fall back to using local data
+            EditContactRequested?.Invoke(this, SelectedContact);
+        }
     }
 
     [RelayCommand]
@@ -432,23 +495,79 @@ public partial class PeopleViewModel : ObservableObject
         try
         {
             var contactToDelete = SelectedContact;
-            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Deleting contact: {contactToDelete.DisplayName}");
+            var folderName = SelectedFolder?.Name ?? "Your contacts";
 
-            // Delete via API
-            await DeleteContactViaApiAsync(contactToDelete.Id);
+            // If already in Deleted folder, permanently delete
+            if (folderName == "Deleted")
+            {
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Permanently deleting contact: {contactToDelete.DisplayName}");
 
-            // Remove from local collection
-            Contacts.Remove(contactToDelete);
+                // Hard delete via API
+                await DeleteContactViaApiAsync(contactToDelete.Id);
+
+                // Remove from local collection
+                Contacts.Remove(contactToDelete);
+                FilterContacts();
+
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Contact permanently deleted: {contactToDelete.DisplayName}");
+            }
+            else
+            {
+                // Soft delete - move to Deleted folder
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Moving contact to Deleted: {contactToDelete.DisplayName}");
+
+                contactToDelete.IsDeleted = true;
+                contactToDelete.DeletedAt = DateTime.UtcNow;
+
+                // Update via API
+                await UpdateContactViaApiAsync(contactToDelete);
+
+                // Refresh the filtered view
+                FilterContacts();
+
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Contact moved to Deleted: {contactToDelete.DisplayName}");
+            }
+
+            // Clear selection
+            SelectedContact = null;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to delete contact: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Restore a contact from the Deleted folder
+    /// </summary>
+    [RelayCommand]
+    private async Task RestoreContactAsync()
+    {
+        if (SelectedContact == null || !SelectedContact.IsDeleted) return;
+
+        try
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Restoring contact: {SelectedContact.DisplayName}");
+
+            SelectedContact.IsDeleted = false;
+            SelectedContact.DeletedAt = null;
+
+            // Update via API
+            await UpdateContactViaApiAsync(SelectedContact);
+
+            // Refresh the filtered view
             FilterContacts();
 
             // Clear selection
             SelectedContact = null;
 
-            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Contact deleted successfully: {contactToDelete.DisplayName}");
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Contact restored successfully");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to delete contact: {ex.Message}");
+            // Revert on error
+            SelectedContact.IsDeleted = true;
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to restore contact: {ex.Message}");
         }
     }
 
@@ -485,11 +604,30 @@ public partial class PeopleViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void AddToFavorites()
+    private async Task AddToFavoritesAsync()
     {
         if (SelectedContact == null) return;
-        SelectedContact.IsFavorite = !SelectedContact.IsFavorite;
-        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Toggle favorite: {SelectedContact.DisplayName} = {SelectedContact.IsFavorite}");
+
+        try
+        {
+            // Toggle favorite status
+            SelectedContact.IsFavorite = !SelectedContact.IsFavorite;
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Toggle favorite: {SelectedContact.DisplayName} = {SelectedContact.IsFavorite}");
+
+            // Update via API
+            await UpdateContactViaApiAsync(SelectedContact);
+
+            // Refresh the filtered view
+            FilterContacts();
+
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Favorite status saved for: {SelectedContact.DisplayName}");
+        }
+        catch (Exception ex)
+        {
+            // Revert on error
+            SelectedContact.IsFavorite = !SelectedContact.IsFavorite;
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to toggle favorite: {ex.Message}");
+        }
     }
 
     [RelayCommand]
@@ -610,6 +748,12 @@ public partial class Contact : ObservableObject
 
     [ObservableProperty]
     private bool _isFavorite = false;
+
+    [ObservableProperty]
+    private bool _isDeleted = false;
+
+    [ObservableProperty]
+    private DateTime? _deletedAt = null;
 
     [ObservableProperty]
     private string _category = string.Empty;

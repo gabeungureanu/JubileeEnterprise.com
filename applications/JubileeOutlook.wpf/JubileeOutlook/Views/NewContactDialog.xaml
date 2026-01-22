@@ -289,7 +289,8 @@
             <!-- Title Bar -->
             <Border Grid.Row="0" Background="#0D0D0D" CornerRadius="8,8,0,0" MouseLeftButtonDown="TitleBar_MouseDown">
                 <Grid>
-                    <TextBlock Text="New contact"
+                    <TextBlock x:Name="DialogTitleText"
+                               Text="New contact"
                                Foreground="#FFD700"
                                FontWeight="SemiBold"
                                FontSize="14"

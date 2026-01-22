@@ -454,10 +454,12 @@
                         </StackPanel>
 
                         <!-- Contacts List (when has contacts) -->
-                        <ListBox Visibility="{Binding HasContacts, Converter={StaticResource BoolToVisibilityConverter}}"
+                        <ListBox x:Name="ContactsListBox"
+                                 Visibility="{Binding HasContacts, Converter={StaticResource BoolToVisibilityConverter}}"
                                  ItemsSource="{Binding FilteredContacts}"
                                  SelectedItem="{Binding SelectedContact}"
-                                 Background="Transparent" BorderThickness="0">
+                                 Background="Transparent" BorderThickness="0"
+                                 MouseDoubleClick="ContactsListBox_MouseDoubleClick">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Margin="16,8">
@@ -467,11 +469,12 @@
                                         </Grid.ColumnDefinitions>
 
                                         <!-- Avatar (Gold theme) -->
-                                        <Ellipse Grid.Column="0" Width="40" Height="40" Margin="0,0,12,0"
-                                                 Fill="{StaticResource GoldBrandBrush}"/>
-                                        <TextBlock Grid.Column="0" Text="{Binding Initials}"
-                                                   FontSize="14" FontWeight="SemiBold" Foreground="#1E1E1E"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Grid Grid.Column="0" Width="40" Height="40" Margin="0,0,12,0">
+                                            <Ellipse Fill="{StaticResource GoldBrandBrush}"/>
+                                            <TextBlock Text="{Binding Initials}"
+                                                       FontSize="14" FontWeight="SemiBold" Foreground="#1E1E1E"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Grid>
 
                                         <!-- Contact Info -->
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">

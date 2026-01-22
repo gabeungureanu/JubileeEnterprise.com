@@ -139,7 +139,11 @@ public static class ServiceConfiguration
         _userId = userId;
         _userEmail = email;
 
-        System.Diagnostics.Debug.WriteLine($"[ServiceConfiguration] Authenticated user set: {email ?? "null"} (ID: {userId ?? "null"})");
+        System.Diagnostics.Debug.WriteLine($"[ServiceConfiguration] ========== USER AUTHENTICATED ==========");
+        System.Diagnostics.Debug.WriteLine($"[ServiceConfiguration] Previous UserId: {previousUserId ?? "(null)"}");
+        System.Diagnostics.Debug.WriteLine($"[ServiceConfiguration] New UserId: {userId ?? "(null)"}");
+        System.Diagnostics.Debug.WriteLine($"[ServiceConfiguration] Email: {email ?? "(null)"}");
+        System.Diagnostics.Debug.WriteLine($"[ServiceConfiguration] ========================================");
 
         // Notify listeners of user change
         if (previousUserId != userId)

@@ -16,6 +16,7 @@ public class SyncQueueService : ISyncQueueService, IDisposable
     private readonly string _connectionString;
     private readonly JsonSerializerOptions _jsonOptions;
     private readonly int _maxRetryAttempts;
+    private readonly bool _offlineModeEnabled;
     private bool _isInitialized = false;
     private bool _disposed = false;
 
@@ -44,15 +45,17 @@ public class SyncQueueService : ISyncQueueService, IDisposable
 
     private SyncQueueService()
     {
-        _connectionString = ConfigurationService.Instance.GetLocalCacheConnectionString();
-        _maxRetryAttempts = ConfigurationService.Instance.LocalCache.MaxRetryAttempts;
+        var config = ConfigurationService.Instance;
+        _offlineModeEnabled = config.IsOfflineModeEnabled();
+        _connectionString = config.GetLocalCacheConnectionString();
+        _maxRetryAttempts = config.LocalCache.MaxRetryAttempts;
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = false
         };
 
-        System.Diagnostics.Debug.WriteLine("[SyncQueueService] Created with connection to local PostgreSQL cache");
+        System.Diagnostics.Debug.WriteLine($"[SyncQueueService] Created, OfflineMode={_offlineModeEnabled}");
     }
 
     #region Initialization
@@ -106,6 +109,13 @@ public class SyncQueueService : ISyncQueueService, IDisposable
     /// </summary>
     public async Task<Guid> QueueOperationAsync(string entityType, string entityId, string operation, object? payload = null)
     {
+        // Skip queueing if offline mode is disabled
+        if (!_offlineModeEnabled)
+        {
+            System.Diagnostics.Debug.WriteLine($"[SyncQueueService] Skipping queue - offline mode disabled");
+            return Guid.Empty;
+        }
+
         const string sql = @"
             INSERT INTO sync_queue (
                 id, entity_type, entity_id, operation, payload,

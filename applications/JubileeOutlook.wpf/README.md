@@ -118,18 +118,24 @@ JubileeOutlook.wpf/
 │   │   ├── EmailMessage.cs        # Email message entity
 │   │   ├── MailFolder.cs          # Folder entity with hierarchy
 │   │   ├── CalendarEvent.cs       # Calendar event entity
-│   │   └── MailAccount.cs         # Account configuration
+│   │   ├── MailAccount.cs         # Account configuration
+│   │   └── Contact.cs             # Contact entity for People module
 │   ├── ViewModels/                # MVVM view models
 │   │   ├── MainViewModel.cs       # Main application view model
 │   │   ├── ApplicationViewModel.cs # App-level view model with folder toggle
 │   │   ├── CalendarViewModel.cs   # Calendar view management
 │   │   ├── ComposeMailViewModel.cs # Email composition with attachments
-│   │   └── NewEventViewModel.cs   # Event creation with status/categories
+│   │   ├── NewEventViewModel.cs   # Event creation with status/categories
+│   │   └── PeopleViewModel.cs     # People/Contacts management
 │   ├── Views/                     # User controls and windows
 │   │   ├── ComposeMailView.xaml   # Email composition window
 │   │   ├── ComposeMailView.xaml.cs # Composition logic & formatting
 │   │   ├── NewEventWindow.xaml    # Event creation dialog
-│   │   └── NewEventWindow.xaml.cs # Event window code-behind
+│   │   ├── NewEventWindow.xaml.cs # Event window code-behind
+│   │   ├── PeopleView.xaml        # People/Contacts view
+│   │   ├── PeopleView.xaml.cs     # People view code-behind
+│   │   ├── NewContactDialog.xaml  # Contact creation/edit dialog
+│   │   └── NewContactDialog.xaml.cs # Contact dialog code-behind
 │   ├── Controls/                  # Custom controls
 │   │   ├── AppRailControl.xaml    # Left navigation rail with hamburger
 │   │   └── AppRailControl.xaml.cs # App rail code-behind
@@ -137,7 +143,12 @@ JubileeOutlook.wpf/
 │   │   ├── IMailService.cs        # Mail service contract
 │   │   ├── MockMailService.cs     # Mock implementation
 │   │   ├── ICalendarService.cs    # Calendar service contract
-│   │   └── MockCalendarService.cs # Mock implementation
+│   │   ├── MockCalendarService.cs # Mock implementation
+│   │   ├── ApiContactService.cs   # Contact API service for InspireCodex
+│   │   ├── LocalCacheService.cs   # Local PostgreSQL cache service
+│   │   ├── NetworkStatusService.cs # Network/API health monitoring
+│   │   ├── SyncQueueService.cs    # Offline sync queue management
+│   │   └── ServiceConfiguration.cs # API endpoints and user config
 │   ├── Helpers/                   # Utility classes
 │   │   └── Converters.cs          # Value converters for data binding
 │   ├── Themes/                    # UI styling
@@ -489,6 +500,67 @@ This application is part of the Jubilee Enterprise suite. Refer to the root repo
 - Mock data services with realistic sample data
 - Value converters for UI formatting
 - Theme fixes for white text on ribbon buttons and labels
+
+### Version 1.7.0 (2026-01-22)
+- **People Module - Complete Contact Management**:
+  - Full People view with contacts list displaying user initials in gold avatar circles
+  - Contact search functionality with real-time filtering
+  - Contacts loaded from InspireCodex.com API (`/api/v1/contacts` endpoint)
+  - Gold-themed avatar circles with properly centered initials
+  - Contact display showing name and primary email
+
+- **New Contact Dialog**:
+  - Comprehensive contact creation dialog with Outlook-style design
+  - Tabbed interface: Contact Info, Work, Address, Other, Notes
+  - Fields for personal info: First Name, Last Name, Email, Phone, Mobile
+  - Work fields: Company, Job Title, Department
+  - Address fields: Street, City, State, Postal Code, Country
+  - Other fields: Birthday, Anniversary, Spouse, Website
+  - Contact photo upload with image preview
+  - Gold-themed title bar and buttons matching app theme
+
+- **Edit Contact Functionality**:
+  - Click edit icon or double-click contact to open edit dialog
+  - Fresh data fetched from API via `GetContactByIdWithResultAsync`
+  - All contact fields populated in edit mode
+  - Dialog title changes to "Edit contact" when editing
+  - Preserves existing contact ID, IsFavorite, IsDeleted, timestamps on save
+  - Contact updates persisted via PUT API endpoint
+
+- **Add to Favorites**:
+  - Star icon toggle for marking contacts as favorites
+  - Favorites filter in People view navigation
+  - `is_favorite` flag persisted to database
+
+- **Soft Delete with Deleted Folder**:
+  - Contacts soft deleted with `is_deleted` flag and `deleted_at` timestamp
+  - Deleted contacts appear in "Deleted" folder in People navigation
+  - Restore functionality for deleted contacts
+  - Permanent delete option for contacts in Deleted folder
+
+- **Contact Service Integration**:
+  - `ApiContactService` with full CRUD operations via InspireCodex.com API
+  - GET `/api/v1/contacts` - List contacts with pagination
+  - GET `/api/v1/contacts/:id` - Get single contact
+  - POST `/api/v1/contacts` - Create new contact
+  - PUT `/api/v1/contacts/:id` - Update existing contact
+  - DELETE `/api/v1/contacts/:id` - Delete contact
+  - PATCH `/api/v1/contacts/:id/favorite` - Toggle favorite status
+  - PATCH `/api/v1/contacts/:id/soft-delete` - Soft delete contact
+  - PATCH `/api/v1/contacts/:id/restore` - Restore deleted contact
+
+- **Database Migration**:
+  - Added `0004_user_contacts.sql` migration for codex database
+  - `user_contacts` table with all contact fields
+  - Indexes for user_id, display_name, is_favorite, is_deleted
+  - GIN index on email_addresses array for efficient search
+  - Auto-updating `updated_at` trigger
+
+- **UI/UX Improvements**:
+  - Avatar initials properly centered within gold circles (40x40px Grid container)
+  - Contact list with hover and selection states
+  - Consistent dark theme throughout People module
+  - Loading states while fetching contacts
 
 ### Version 1.6.0 (2026-01-17)
 - **Full ApiMailService Integration**:

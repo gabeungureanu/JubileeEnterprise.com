@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using JubileeOutlook.ViewModels;
 
 namespace JubileeOutlook.Views;
@@ -82,6 +83,7 @@ public partial class PeopleView : UserControl
 
     private async void ViewModel_EditContactRequested(object? sender, Contact contact)
     {
+        System.Diagnostics.Debug.WriteLine($"[PeopleView] EditContactRequested - DisplayName: {contact.DisplayName}, FirstName: {contact.FirstName}, LastName: {contact.LastName}, Email: {contact.Email}, Phone: {contact.Phone}");
         var dialog = new NewContactDialog(contact);
         dialog.Owner = Window.GetWindow(this);
 
@@ -114,6 +116,17 @@ public partial class PeopleView : UserControl
         if (DataContext is PeopleViewModel viewModel)
         {
             viewModel.SetUserEmail(email);
+        }
+    }
+
+    /// <summary>
+    /// Handle double-click on contact to open edit dialog
+    /// </summary>
+    private void ContactsListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (DataContext is PeopleViewModel viewModel && viewModel.SelectedContact != null)
+        {
+            viewModel.EditContactCommand.Execute(null);
         }
     }
 }

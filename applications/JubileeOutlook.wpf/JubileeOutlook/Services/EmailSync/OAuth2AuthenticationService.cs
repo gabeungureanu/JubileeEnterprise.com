@@ -143,6 +143,9 @@ public class OAuth2AuthenticationService
             var response = await httpClientFactory.PostAsync(ApiEndpoint.Auth, "oauth-register", payload);
             var content = await response.Content.ReadAsStringAsync();
 
+            Debug.WriteLine($"[OAuth2] oauth-register response status: {response.StatusCode}");
+            Debug.WriteLine($"[OAuth2] oauth-register response: {content}");
+
             if (response.IsSuccessStatusCode)
             {
                 var result = JsonSerializer.Deserialize<OAuthRegisterResponse>(content, new JsonSerializerOptions

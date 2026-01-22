@@ -1019,7 +1019,7 @@ public partial class MainWindow : Window
                 break;
             case AppModule.People:
                 if (PeopleModuleContent != null) PeopleModuleContent.Visibility = Visibility.Visible;
-                // Set the user email for the People view
+                // Set the user email for the People view and reload contacts
                 if (PeopleViewControl != null)
                 {
                     var userEmail = _mainViewModel.AccountRootFolder?.WwbwEmailAddress
@@ -1028,6 +1028,13 @@ public partial class MainWindow : Window
                         ?? _authManager.Session?.Profile?.Email
                         ?? "user@example.com";
                     PeopleViewControl.SetUserEmail(userEmail);
+
+                    // Reload contacts when People module is shown (ensures correct user ID is used)
+                    if (PeopleViewControl.DataContext is ViewModels.PeopleViewModel peopleViewModel)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[MainWindow] Reloading contacts for People module, UserId: {Services.ServiceConfiguration.UserId}");
+                        _ = peopleViewModel.LoadContactsFromDatabaseAsync();
+                    }
                 }
                 break;
             case AppModule.Tasks:
