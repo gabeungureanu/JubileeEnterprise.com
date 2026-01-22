@@ -2013,8 +2013,8 @@
   <!-- PIN Modal -->
   <div class="pin-modal-overlay" id="pinModalOverlay">
     <div class="pin-modal">
-      <div class="pin-modal-title" id="pinModalTitle">Private Chat</div>
-      <div class="pin-modal-text" id="pinModalText">Please enter a four digit pin to encrypt your conversation for privacy.</div>
+      <div class="pin-modal-title" id="pinModalTitle" data-i18n="privateChat">Private Chat</div>
+      <div class="pin-modal-text" id="pinModalText" data-i18n="enterPin">Please enter a four digit pin to encrypt your conversation for privacy.</div>
       <div class="pin-inputs">
         <input type="text" class="pin-input" id="pin1" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
         <input type="text" class="pin-input" id="pin2" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
@@ -2034,27 +2034,27 @@
         </button>
         <div class="settings-nav-item active" data-tab="general">
           <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22l-1.92 3.32c-.12.21-.07.47.12.61l2.03 1.58c-.04.31-.06.64-.06.94 0 .31.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-          <span>General</span>
+          <span data-i18n="settingsGeneral">General</span>
         </div>
         <div class="settings-nav-item" data-tab="notifications">
           <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
-          <span>Notifications</span>
+          <span data-i18n="settingsNotifications">Notifications</span>
         </div>
         <div class="settings-nav-item" data-tab="personalization">
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5.5-2.5l7.51-3.49L17.5 6.5 9.99 9.99 6.5 17.5zm5.5-6.6c.61 0 1.1.49 1.1 1.1s-.49 1.1-1.1 1.1-1.1-.49-1.1-1.1.49-1.1 1.1-1.1z"/></svg>
-          <span>Personalization</span>
+          <span data-i18n="settingsPersonalization">Personalization</span>
         </div>
         <div class="settings-nav-item" data-tab="data">
           <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
-          <span>Data controls</span>
+          <span data-i18n="settingsData">Data controls</span>
         </div>
         <div class="settings-nav-item" data-tab="security">
           <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-          <span>Security</span>
+          <span data-i18n="settingsSecurity">Security</span>
         </div>
         <div class="settings-nav-item" data-tab="account">
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-          <span>Account</span>
+          <span data-i18n="settingsAccount">Account</span>
         </div>
       </div>
 
@@ -2062,47 +2062,47 @@
       <div class="settings-content" id="settingsContent">
         <!-- General Tab (default) -->
         <div class="settings-tab" id="tab-general">
-          <div class="settings-section-title">General</div>
+          <div class="settings-section-title" data-i18n="settingsGeneral">General</div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Appearance</div>
+              <div class="settings-label" data-i18n="appearance">Appearance</div>
             </div>
             <select class="settings-select" id="settingAppearance">
-              <option value="dark">Dark</option>
-              <option value="light">Light</option>
-              <option value="system">System</option>
+              <option value="dark" data-i18n="dark">Dark</option>
+              <option value="light" data-i18n="light">Light</option>
+              <option value="system" data-i18n="system">System</option>
             </select>
           </div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Accent color</div>
+              <div class="settings-label" data-i18n="accentColor">Accent color</div>
             </div>
             <select class="settings-select" id="settingAccentColor">
-              <option value="default">Default (Gold)</option>
-              <option value="blue">Blue</option>
-              <option value="green">Green</option>
-              <option value="purple">Purple</option>
+              <option value="default" data-i18n="defaultGold">Default (Gold)</option>
+              <option value="blue" data-i18n="blue">Blue</option>
+              <option value="green" data-i18n="green">Green</option>
+              <option value="purple" data-i18n="purple">Purple</option>
             </select>
           </div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Language</div>
+              <div class="settings-label" data-i18n="language">Language</div>
             </div>
             <select class="settings-select" id="settingLanguage">
-              <option value="auto">Auto-detect</option>
-              <option value="en">English</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
+              <option value="auto" data-i18n="autoDetect">Auto-detect</option>
+              <option value="en" data-i18n="english">English</option>
+              <option value="es" data-i18n="spanish">Spanish</option>
+              <option value="fr" data-i18n="french">French</option>
+              <option value="de" data-i18n="german">German</option>
             </select>
           </div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Default Bible version</div>
+              <div class="settings-label" data-i18n="defaultBibleVersion">Default Bible version</div>
             </div>
             <select class="settings-select" id="settingBibleVersion">
               <option value="kjv">KJV</option>
@@ -2115,39 +2115,39 @@
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Voice</div>
+              <div class="settings-label" data-i18n="voice">Voice</div>
             </div>
             <button class="settings-btn" id="settingVoicePlay">
               <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              Play
+              <span data-i18n="play">Play</span>
             </button>
           </div>
         </div>
 
         <!-- Notifications Tab -->
         <div class="settings-tab" id="tab-notifications" style="display: none;">
-          <div class="settings-section-title">Notifications</div>
+          <div class="settings-section-title" data-i18n="settingsNotifications">Notifications</div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Push notifications</div>
-              <div class="settings-label-desc">Receive notifications for new messages and updates</div>
+              <div class="settings-label" data-i18n="pushNotifications">Push notifications</div>
+              <div class="settings-label-desc" data-i18n="pushNotificationsDesc">Receive notifications for new messages and updates</div>
             </div>
             <div class="settings-toggle active" id="settingPushNotifs"></div>
           </div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Email notifications</div>
-              <div class="settings-label-desc">Receive email summaries and updates</div>
+              <div class="settings-label" data-i18n="emailNotifications">Email notifications</div>
+              <div class="settings-label-desc" data-i18n="emailNotificationsDesc">Receive email summaries and updates</div>
             </div>
             <div class="settings-toggle" id="settingEmailNotifs"></div>
           </div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Sound effects</div>
-              <div class="settings-label-desc">Play sounds for messages and interactions</div>
+              <div class="settings-label" data-i18n="soundEffects">Sound effects</div>
+              <div class="settings-label-desc" data-i18n="soundEffectsDesc">Play sounds for messages and interactions</div>
             </div>
             <div class="settings-toggle active" id="settingSoundEffects"></div>
           </div>
@@ -2155,33 +2155,33 @@
 
         <!-- Personalization Tab -->
         <div class="settings-tab" id="tab-personalization" style="display: none;">
-          <div class="settings-section-title">Personalization</div>
+          <div class="settings-section-title" data-i18n="settingsPersonalization">Personalization</div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Response style</div>
-              <div class="settings-label-desc">How Jubilee responds to your questions</div>
+              <div class="settings-label" data-i18n="responseStyle">Response style</div>
+              <div class="settings-label-desc" data-i18n="responseStyleDesc">How Jubilee responds to your questions</div>
             </div>
             <select class="settings-select" id="settingResponseStyle">
-              <option value="balanced">Balanced</option>
-              <option value="concise">Concise</option>
-              <option value="detailed">Detailed</option>
-              <option value="pastoral">Pastoral</option>
+              <option value="balanced" data-i18n="balanced">Balanced</option>
+              <option value="concise" data-i18n="concise">Concise</option>
+              <option value="detailed" data-i18n="detailed">Detailed</option>
+              <option value="pastoral" data-i18n="pastoral">Pastoral</option>
             </select>
           </div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Include Scripture references</div>
-              <div class="settings-label-desc">Automatically include Bible verses in responses</div>
+              <div class="settings-label" data-i18n="includeScripture">Include Scripture references</div>
+              <div class="settings-label-desc" data-i18n="includeScriptureDesc">Automatically include Bible verses in responses</div>
             </div>
             <div class="settings-toggle active" id="settingScriptureRefs"></div>
           </div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Remember context</div>
-              <div class="settings-label-desc">Jubilee remembers your previous conversations</div>
+              <div class="settings-label" data-i18n="rememberContext">Remember conversation context</div>
+              <div class="settings-label-desc" data-i18n="rememberContextDesc">Keep track of your conversation history for better responses</div>
             </div>
             <div class="settings-toggle active" id="settingRememberContext"></div>
           </div>
@@ -2189,7 +2189,7 @@
 
         <!-- Data Controls Tab -->
         <div class="settings-tab" id="tab-data" style="display: none;">
-          <div class="settings-section-title">Data controls</div>
+          <div class="settings-section-title" data-i18n="settingsData">Data controls</div>
 
           <div class="settings-row">
             <div>
@@ -2209,69 +2209,69 @@
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Export data</div>
-              <div class="settings-label-desc">Download all your chat history and data</div>
+              <div class="settings-label" data-i18n="exportData">Export data</div>
+              <div class="settings-label-desc" data-i18n="exportDataDesc">Download all your chat history and data</div>
             </div>
             <button class="settings-btn" id="settingExportData">
               <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-              Export
+              <span data-i18n="exportBtn">Export</span>
             </button>
           </div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Delete all chats</div>
-              <div class="settings-label-desc">Permanently delete all your conversation history</div>
+              <div class="settings-label" data-i18n="clearHistory">Clear chat history</div>
+              <div class="settings-label-desc" data-i18n="clearHistoryDesc">Permanently delete all your conversations</div>
             </div>
             <button class="settings-btn" id="settingDeleteChats" style="color: #f87171; border-color: #f87171;">
               <svg viewBox="0 0 24 24" style="fill: #f87171;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-              Delete
+              <span data-i18n="clearBtn">Clear all</span>
             </button>
           </div>
         </div>
 
         <!-- Security Tab -->
         <div class="settings-tab" id="tab-security" style="display: none;">
-          <div class="settings-section-title">Security</div>
+          <div class="settings-section-title" data-i18n="settingsSecurity">Security</div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Private chat PIN</div>
-              <div class="settings-label-desc">Set a PIN to encrypt private conversations</div>
+              <div class="settings-label" data-i18n="privateMode">Private mode PIN</div>
+              <div class="settings-label-desc" data-i18n="privateModeDesc">Set a PIN for private conversations</div>
             </div>
             <button class="settings-btn" id="settingSetPin">
               <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
-              Set PIN
+              <span data-i18n="setPin">Set PIN</span>
             </button>
           </div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Two-factor authentication</div>
-              <div class="settings-label-desc">Add an extra layer of security to your account</div>
+              <div class="settings-label" data-i18n="twoFactorAuth">Two-factor authentication</div>
+              <div class="settings-label-desc" data-i18n="twoFactorAuthDesc">Add an extra layer of security to your account</div>
             </div>
             <div class="settings-toggle" id="setting2FA"></div>
           </div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Active sessions</div>
-              <div class="settings-label-desc">Manage devices where you're signed in</div>
+              <div class="settings-label" data-i18n="activeSessions">Active sessions</div>
+              <div class="settings-label-desc" data-i18n="activeSessionsDesc">Manage devices logged into your account</div>
             </div>
             <button class="settings-btn" id="settingActiveSessions">
               <svg viewBox="0 0 24 24"><path d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/></svg>
-              Manage
+              <span data-i18n="manageBtn">Manage</span>
             </button>
           </div>
         </div>
 
         <!-- Account Tab -->
         <div class="settings-tab" id="tab-account" style="display: none;">
-          <div class="settings-section-title">Account</div>
+          <div class="settings-section-title" data-i18n="settingsAccount">Account</div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Email</div>
+              <div class="settings-label" data-i18n="email">Email</div>
               <div class="settings-label-desc" id="settingUserEmail">Not signed in</div>
             </div>
             <button class="settings-btn" id="settingChangeEmail">
@@ -2294,7 +2294,7 @@
           <div class="settings-row">
             <div>
               <div class="settings-label">Subscription</div>
-              <div class="settings-label-desc">Free Plan</div>
+              <div class="settings-label-desc" data-i18n="free">Free Plan</div>
             </div>
             <button class="settings-btn" id="settingUpgrade" style="background-color: #ffbd59; color: #000; border-color: #ffbd59;">
               Upgrade
@@ -2303,23 +2303,23 @@
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Sign out</div>
+              <div class="settings-label" data-i18n="signOut">Sign out</div>
               <div class="settings-label-desc">Sign out of your account on this device</div>
             </div>
             <button class="settings-btn" id="settingSignOut">
               <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
-              Sign out
+              <span data-i18n="signOut">Sign out</span>
             </button>
           </div>
 
           <div class="settings-row">
             <div>
-              <div class="settings-label">Delete account</div>
-              <div class="settings-label-desc">Permanently delete your account and all data</div>
+              <div class="settings-label" data-i18n="deleteAccount">Delete account</div>
+              <div class="settings-label-desc" data-i18n="deleteAccountDesc">Permanently delete your account and all data</div>
             </div>
             <button class="settings-btn" id="settingDeleteAccount" style="color: #f87171; border-color: #f87171;">
               <svg viewBox="0 0 24 24" style="fill: #f87171;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-              Delete
+              <span data-i18n="deleteBtn">Delete</span>
             </button>
           </div>
         </div>
@@ -2333,13 +2333,13 @@
       <a href="/" class="sidebar-icon is-highlight" title="Home">
         <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
       </a>
-      <div class="sidebar-icon" id="newChatBtn" title="New Chat">
+      <div class="sidebar-icon" id="newChatBtn" title="New Chat" data-i18n-title="newChat">
         <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
       </div>
-      <div class="sidebar-icon" title="History">
+      <div class="sidebar-icon" title="History" data-i18n-title="history">
         <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
       </div>
-      <div class="sidebar-icon" id="settingsBtn" title="Settings">
+      <div class="sidebar-icon" id="settingsBtn" title="Settings" data-i18n-title="settings">
         <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22l-1.92 3.32c-.12.21-.07.47.12.61l2.03 1.58c-.04.31-.06.64-.06.94 0 .31.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
       </div>
       <div class="sidebar-spacer"></div>
@@ -2361,7 +2361,7 @@
           <div class="welcome-state" id="welcomeState">
             <img src="jubilee-profile.png" alt="Jubilee" class="welcome-avatar">
             <div class="welcome-title">Jubilee<span class="inspire">Inspire</span></div>
-            <div class="welcome-subtitle">
+            <div class="welcome-subtitle" data-i18n="welcomeSubtitle">
               Ask me anything about the Bible, faith, or life. I'm here to help you explore Scripture and grow in your relationship with God.
             </div>
           </div>
@@ -2373,7 +2373,7 @@
         <div class="input-wrapper">
           <!-- Search Box - JubileeVerse Home Page Style -->
           <div class="search-box">
-            <textarea class="search-input" id="messageInput" placeholder="Ask Jubilee Anything..." autocomplete="off" rows="1"></textarea>
+            <textarea class="search-input" id="messageInput" placeholder="Ask Jubilee Anything..." data-i18n-placeholder="inputPlaceholder" autocomplete="off" rows="1"></textarea>
             <div class="search-actions">
               <!-- Attach File Icon -->
               <div class="action-icon" id="attachIcon" title="Attach File">
@@ -2563,6 +2563,530 @@
 
       // Initialize theme on page load
       initTheme();
+
+      // ==================== LANGUAGE/LOCALIZATION MANAGEMENT ====================
+      var LANGUAGE_CACHE_KEY = 'jubileeInspireLanguage';
+
+      // Translations object for all supported languages
+      var translations = {
+        en: {
+          // Welcome state
+          welcomeSubtitle: "Ask me anything about the Bible, faith, or life. I'm here to help you explore Scripture and grow in your relationship with God.",
+          inputPlaceholder: "Ask Jubilee Anything...",
+          // Sidebar tooltips
+          newChat: "New Chat",
+          history: "History",
+          communities: "Communities",
+          settings: "Settings",
+          // History panel
+          chatHistory: "Chat History",
+          searchConversations: "Search conversations...",
+          noConversations: "No conversations yet",
+          startNewChat: "Start a new chat to see your history here",
+          // Settings modal - tabs
+          settingsGeneral: "General",
+          settingsNotifications: "Notifications",
+          settingsPersonalization: "Personalization",
+          settingsData: "Data controls",
+          settingsSecurity: "Security",
+          settingsAccount: "Account",
+          // Settings - General tab
+          appearance: "Appearance",
+          accentColor: "Accent color",
+          language: "Language",
+          defaultBibleVersion: "Default Bible version",
+          voice: "Voice",
+          play: "Play",
+          // Settings - appearance options
+          dark: "Dark",
+          light: "Light",
+          system: "System",
+          // Settings - accent color options
+          defaultGold: "Default (Gold)",
+          blue: "Blue",
+          green: "Green",
+          purple: "Purple",
+          // Settings - language options
+          autoDetect: "Auto-detect",
+          english: "English",
+          spanish: "Spanish",
+          french: "French",
+          german: "German",
+          // Settings - Notifications tab
+          pushNotifications: "Push notifications",
+          pushNotificationsDesc: "Receive notifications for new messages and updates",
+          emailNotifications: "Email notifications",
+          emailNotificationsDesc: "Receive email summaries and updates",
+          soundEffects: "Sound effects",
+          soundEffectsDesc: "Play sounds for messages and interactions",
+          // Settings - Personalization tab
+          responseStyle: "Response style",
+          responseStyleDesc: "How Jubilee responds to your questions",
+          balanced: "Balanced",
+          concise: "Concise",
+          detailed: "Detailed",
+          pastoral: "Pastoral",
+          includeScripture: "Include Scripture references",
+          includeScriptureDesc: "Automatically include Bible verses in responses",
+          rememberContext: "Remember conversation context",
+          rememberContextDesc: "Keep track of your conversation history for better responses",
+          // Settings - Data controls tab
+          exportData: "Export data",
+          exportDataDesc: "Download a copy of your conversations and settings",
+          exportBtn: "Export",
+          clearHistory: "Clear chat history",
+          clearHistoryDesc: "Permanently delete all your conversations",
+          clearBtn: "Clear all",
+          // Settings - Security tab
+          twoFactorAuth: "Two-factor authentication",
+          twoFactorAuthDesc: "Add an extra layer of security to your account",
+          enableBtn: "Enable",
+          activeSessions: "Active sessions",
+          activeSessionsDesc: "Manage devices logged into your account",
+          manageBtn: "Manage",
+          privateMode: "Private mode PIN",
+          privateModeDesc: "Set a PIN for private conversations",
+          setPin: "Set PIN",
+          // Settings - Account tab
+          accountInfo: "Account information",
+          email: "Email",
+          accountType: "Account type",
+          memberSince: "Member since",
+          free: "Free",
+          signOut: "Sign out",
+          deleteAccount: "Delete account",
+          deleteAccountDesc: "Permanently delete your account and all data",
+          deleteBtn: "Delete",
+          // PIN modal
+          privateChat: "Private Chat",
+          enterPin: "Please enter a four digit pin to encrypt your conversation for privacy.",
+          // Message actions
+          copy: "Copy",
+          regenerate: "Regenerate",
+          goodResponse: "Good response",
+          badResponse: "Bad response",
+          share: "Share",
+          more: "More",
+          // History menu
+          pin: "Pin",
+          unpin: "Unpin",
+          rename: "Rename",
+          archive: "Archive",
+          delete: "Delete"
+        },
+        es: {
+          // Welcome state
+          welcomeSubtitle: "Preguntame cualquier cosa sobre la Biblia, la fe o la vida. Estoy aqui para ayudarte a explorar las Escrituras y crecer en tu relacion con Dios.",
+          inputPlaceholder: "Pregunta a Jubilee lo que sea...",
+          // Sidebar tooltips
+          newChat: "Nueva Conversacion",
+          history: "Historial",
+          communities: "Comunidades",
+          settings: "Configuracion",
+          // History panel
+          chatHistory: "Historial de Chat",
+          searchConversations: "Buscar conversaciones...",
+          noConversations: "Sin conversaciones aun",
+          startNewChat: "Inicia una nueva conversacion para ver tu historial aqui",
+          // Settings modal - tabs
+          settingsGeneral: "General",
+          settingsNotifications: "Notificaciones",
+          settingsPersonalization: "Personalizacion",
+          settingsData: "Control de datos",
+          settingsSecurity: "Seguridad",
+          settingsAccount: "Cuenta",
+          // Settings - General tab
+          appearance: "Apariencia",
+          accentColor: "Color de acento",
+          language: "Idioma",
+          defaultBibleVersion: "Version de Biblia predeterminada",
+          voice: "Voz",
+          play: "Reproducir",
+          // Settings - appearance options
+          dark: "Oscuro",
+          light: "Claro",
+          system: "Sistema",
+          // Settings - accent color options
+          defaultGold: "Predeterminado (Dorado)",
+          blue: "Azul",
+          green: "Verde",
+          purple: "Morado",
+          // Settings - language options
+          autoDetect: "Detectar automaticamente",
+          english: "Ingles",
+          spanish: "Espanol",
+          french: "Frances",
+          german: "Aleman",
+          // Settings - Notifications tab
+          pushNotifications: "Notificaciones push",
+          pushNotificationsDesc: "Recibe notificaciones de nuevos mensajes y actualizaciones",
+          emailNotifications: "Notificaciones por email",
+          emailNotificationsDesc: "Recibe resumenes y actualizaciones por correo",
+          soundEffects: "Efectos de sonido",
+          soundEffectsDesc: "Reproducir sonidos para mensajes e interacciones",
+          // Settings - Personalization tab
+          responseStyle: "Estilo de respuesta",
+          responseStyleDesc: "Como Jubilee responde a tus preguntas",
+          balanced: "Equilibrado",
+          concise: "Conciso",
+          detailed: "Detallado",
+          pastoral: "Pastoral",
+          includeScripture: "Incluir referencias biblicas",
+          includeScriptureDesc: "Incluir automaticamente versiculos biblicos en las respuestas",
+          rememberContext: "Recordar contexto de conversacion",
+          rememberContextDesc: "Mantener un registro del historial de conversacion para mejores respuestas",
+          // Settings - Data controls tab
+          exportData: "Exportar datos",
+          exportDataDesc: "Descarga una copia de tus conversaciones y configuracion",
+          exportBtn: "Exportar",
+          clearHistory: "Borrar historial de chat",
+          clearHistoryDesc: "Eliminar permanentemente todas tus conversaciones",
+          clearBtn: "Borrar todo",
+          // Settings - Security tab
+          twoFactorAuth: "Autenticacion de dos factores",
+          twoFactorAuthDesc: "Agrega una capa extra de seguridad a tu cuenta",
+          enableBtn: "Activar",
+          activeSessions: "Sesiones activas",
+          activeSessionsDesc: "Administra los dispositivos conectados a tu cuenta",
+          manageBtn: "Administrar",
+          privateMode: "PIN de modo privado",
+          privateModeDesc: "Establece un PIN para conversaciones privadas",
+          setPin: "Establecer PIN",
+          // Settings - Account tab
+          accountInfo: "Informacion de cuenta",
+          email: "Correo electronico",
+          accountType: "Tipo de cuenta",
+          memberSince: "Miembro desde",
+          free: "Gratis",
+          signOut: "Cerrar sesion",
+          deleteAccount: "Eliminar cuenta",
+          deleteAccountDesc: "Eliminar permanentemente tu cuenta y todos los datos",
+          deleteBtn: "Eliminar",
+          // PIN modal
+          privateChat: "Chat Privado",
+          enterPin: "Por favor ingresa un PIN de cuatro digitos para encriptar tu conversacion por privacidad.",
+          // Message actions
+          copy: "Copiar",
+          regenerate: "Regenerar",
+          goodResponse: "Buena respuesta",
+          badResponse: "Mala respuesta",
+          share: "Compartir",
+          more: "Mas",
+          // History menu
+          pin: "Fijar",
+          unpin: "Desfijar",
+          rename: "Renombrar",
+          archive: "Archivar",
+          delete: "Eliminar"
+        },
+        fr: {
+          // Welcome state
+          welcomeSubtitle: "Posez-moi n'importe quelle question sur la Bible, la foi ou la vie. Je suis la pour vous aider a explorer les Ecritures et grandir dans votre relation avec Dieu.",
+          inputPlaceholder: "Demandez a Jubilee ce que vous voulez...",
+          // Sidebar tooltips
+          newChat: "Nouvelle Discussion",
+          history: "Historique",
+          communities: "Communautes",
+          settings: "Parametres",
+          // History panel
+          chatHistory: "Historique des Discussions",
+          searchConversations: "Rechercher des conversations...",
+          noConversations: "Pas encore de conversations",
+          startNewChat: "Commencez une nouvelle discussion pour voir votre historique ici",
+          // Settings modal - tabs
+          settingsGeneral: "General",
+          settingsNotifications: "Notifications",
+          settingsPersonalization: "Personnalisation",
+          settingsData: "Controle des donnees",
+          settingsSecurity: "Securite",
+          settingsAccount: "Compte",
+          // Settings - General tab
+          appearance: "Apparence",
+          accentColor: "Couleur d'accent",
+          language: "Langue",
+          defaultBibleVersion: "Version de Bible par defaut",
+          voice: "Voix",
+          play: "Lecture",
+          // Settings - appearance options
+          dark: "Sombre",
+          light: "Clair",
+          system: "Systeme",
+          // Settings - accent color options
+          defaultGold: "Par defaut (Or)",
+          blue: "Bleu",
+          green: "Vert",
+          purple: "Violet",
+          // Settings - language options
+          autoDetect: "Detection automatique",
+          english: "Anglais",
+          spanish: "Espagnol",
+          french: "Francais",
+          german: "Allemand",
+          // Settings - Notifications tab
+          pushNotifications: "Notifications push",
+          pushNotificationsDesc: "Recevoir des notifications pour les nouveaux messages et mises a jour",
+          emailNotifications: "Notifications par email",
+          emailNotificationsDesc: "Recevoir des resumes et mises a jour par email",
+          soundEffects: "Effets sonores",
+          soundEffectsDesc: "Jouer des sons pour les messages et interactions",
+          // Settings - Personalization tab
+          responseStyle: "Style de reponse",
+          responseStyleDesc: "Comment Jubilee repond a vos questions",
+          balanced: "Equilibre",
+          concise: "Concis",
+          detailed: "Detaille",
+          pastoral: "Pastoral",
+          includeScripture: "Inclure les references bibliques",
+          includeScriptureDesc: "Inclure automatiquement les versets bibliques dans les reponses",
+          rememberContext: "Retenir le contexte de conversation",
+          rememberContextDesc: "Garder une trace de l'historique de conversation pour de meilleures reponses",
+          // Settings - Data controls tab
+          exportData: "Exporter les donnees",
+          exportDataDesc: "Telecharger une copie de vos conversations et parametres",
+          exportBtn: "Exporter",
+          clearHistory: "Effacer l'historique des discussions",
+          clearHistoryDesc: "Supprimer definitivement toutes vos conversations",
+          clearBtn: "Tout effacer",
+          // Settings - Security tab
+          twoFactorAuth: "Authentification a deux facteurs",
+          twoFactorAuthDesc: "Ajouter une couche supplementaire de securite a votre compte",
+          enableBtn: "Activer",
+          activeSessions: "Sessions actives",
+          activeSessionsDesc: "Gerer les appareils connectes a votre compte",
+          manageBtn: "Gerer",
+          privateMode: "PIN du mode prive",
+          privateModeDesc: "Definir un PIN pour les conversations privees",
+          setPin: "Definir le PIN",
+          // Settings - Account tab
+          accountInfo: "Informations du compte",
+          email: "Email",
+          accountType: "Type de compte",
+          memberSince: "Membre depuis",
+          free: "Gratuit",
+          signOut: "Se deconnecter",
+          deleteAccount: "Supprimer le compte",
+          deleteAccountDesc: "Supprimer definitivement votre compte et toutes les donnees",
+          deleteBtn: "Supprimer",
+          // PIN modal
+          privateChat: "Discussion Privee",
+          enterPin: "Veuillez entrer un code PIN a quatre chiffres pour chiffrer votre conversation pour la confidentialite.",
+          // Message actions
+          copy: "Copier",
+          regenerate: "Regenerer",
+          goodResponse: "Bonne reponse",
+          badResponse: "Mauvaise reponse",
+          share: "Partager",
+          more: "Plus",
+          // History menu
+          pin: "Epingler",
+          unpin: "Desepingler",
+          rename: "Renommer",
+          archive: "Archiver",
+          delete: "Supprimer"
+        },
+        de: {
+          // Welcome state
+          welcomeSubtitle: "Frag mich alles uber die Bibel, den Glauben oder das Leben. Ich bin hier, um dir zu helfen, die Heilige Schrift zu erkunden und in deiner Beziehung zu Gott zu wachsen.",
+          inputPlaceholder: "Frag Jubilee was du willst...",
+          // Sidebar tooltips
+          newChat: "Neuer Chat",
+          history: "Verlauf",
+          communities: "Gemeinschaften",
+          settings: "Einstellungen",
+          // History panel
+          chatHistory: "Chat-Verlauf",
+          searchConversations: "Unterhaltungen suchen...",
+          noConversations: "Noch keine Unterhaltungen",
+          startNewChat: "Starte einen neuen Chat, um deinen Verlauf hier zu sehen",
+          // Settings modal - tabs
+          settingsGeneral: "Allgemein",
+          settingsNotifications: "Benachrichtigungen",
+          settingsPersonalization: "Personalisierung",
+          settingsData: "Datenkontrolle",
+          settingsSecurity: "Sicherheit",
+          settingsAccount: "Konto",
+          // Settings - General tab
+          appearance: "Erscheinungsbild",
+          accentColor: "Akzentfarbe",
+          language: "Sprache",
+          defaultBibleVersion: "Standard-Bibelversion",
+          voice: "Stimme",
+          play: "Abspielen",
+          // Settings - appearance options
+          dark: "Dunkel",
+          light: "Hell",
+          system: "System",
+          // Settings - accent color options
+          defaultGold: "Standard (Gold)",
+          blue: "Blau",
+          green: "Grun",
+          purple: "Lila",
+          // Settings - language options
+          autoDetect: "Automatisch erkennen",
+          english: "Englisch",
+          spanish: "Spanisch",
+          french: "Franzosisch",
+          german: "Deutsch",
+          // Settings - Notifications tab
+          pushNotifications: "Push-Benachrichtigungen",
+          pushNotificationsDesc: "Benachrichtigungen fur neue Nachrichten und Updates erhalten",
+          emailNotifications: "E-Mail-Benachrichtigungen",
+          emailNotificationsDesc: "E-Mail-Zusammenfassungen und Updates erhalten",
+          soundEffects: "Soundeffekte",
+          soundEffectsDesc: "Tone fur Nachrichten und Interaktionen abspielen",
+          // Settings - Personalization tab
+          responseStyle: "Antwortstil",
+          responseStyleDesc: "Wie Jubilee auf deine Fragen antwortet",
+          balanced: "Ausgewogen",
+          concise: "Kurz und bundig",
+          detailed: "Ausfuhrlich",
+          pastoral: "Seelsorgerisch",
+          includeScripture: "Bibelreferenzen einbeziehen",
+          includeScriptureDesc: "Automatisch Bibelverse in Antworten einbeziehen",
+          rememberContext: "Gesprachskontext merken",
+          rememberContextDesc: "Gesprachsverlauf fur bessere Antworten speichern",
+          // Settings - Data controls tab
+          exportData: "Daten exportieren",
+          exportDataDesc: "Eine Kopie deiner Unterhaltungen und Einstellungen herunterladen",
+          exportBtn: "Exportieren",
+          clearHistory: "Chat-Verlauf loschen",
+          clearHistoryDesc: "Alle Unterhaltungen dauerhaft loschen",
+          clearBtn: "Alles loschen",
+          // Settings - Security tab
+          twoFactorAuth: "Zwei-Faktor-Authentifizierung",
+          twoFactorAuthDesc: "Eine zusatzliche Sicherheitsebene zu deinem Konto hinzufugen",
+          enableBtn: "Aktivieren",
+          activeSessions: "Aktive Sitzungen",
+          activeSessionsDesc: "Gerate verwalten, die in dein Konto eingeloggt sind",
+          manageBtn: "Verwalten",
+          privateMode: "Privater Modus PIN",
+          privateModeDesc: "Einen PIN fur private Unterhaltungen festlegen",
+          setPin: "PIN festlegen",
+          // Settings - Account tab
+          accountInfo: "Kontoinformationen",
+          email: "E-Mail",
+          accountType: "Kontotyp",
+          memberSince: "Mitglied seit",
+          free: "Kostenlos",
+          signOut: "Abmelden",
+          deleteAccount: "Konto loschen",
+          deleteAccountDesc: "Dein Konto und alle Daten dauerhaft loschen",
+          deleteBtn: "Loschen",
+          // PIN modal
+          privateChat: "Privater Chat",
+          enterPin: "Bitte gib einen vierstelligen PIN ein, um deine Unterhaltung fur die Privatsphare zu verschlusseln.",
+          // Message actions
+          copy: "Kopieren",
+          regenerate: "Neu generieren",
+          goodResponse: "Gute Antwort",
+          badResponse: "Schlechte Antwort",
+          share: "Teilen",
+          more: "Mehr",
+          // History menu
+          pin: "Anheften",
+          unpin: "Losen",
+          rename: "Umbenennen",
+          archive: "Archivieren",
+          delete: "Loschen"
+        }
+      };
+
+      // Get browser language
+      function getBrowserLanguage() {
+        var browserLang = navigator.language || navigator.userLanguage;
+        if (browserLang) {
+          var shortLang = browserLang.split('-')[0].toLowerCase();
+          if (translations[shortLang]) {
+            return shortLang;
+          }
+        }
+        return 'en';
+      }
+
+      // Get current language
+      function getCurrentLanguage() {
+        var savedLang = localStorage.getItem(LANGUAGE_CACHE_KEY) || 'auto';
+        if (savedLang === 'auto') {
+          return getBrowserLanguage();
+        }
+        return savedLang;
+      }
+
+      // Get translation for a key
+      function t(key) {
+        var lang = getCurrentLanguage();
+        if (translations[lang] && translations[lang][key]) {
+          return translations[lang][key];
+        }
+        // Fallback to English
+        return translations.en[key] || key;
+      }
+
+      // Apply language to all elements with data-i18n attribute
+      function applyLanguage() {
+        var lang = getCurrentLanguage();
+        var elements = document.querySelectorAll('[data-i18n]');
+        elements.forEach(function(el) {
+          var key = el.getAttribute('data-i18n');
+          var translation = t(key);
+          if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+            el.placeholder = translation;
+          } else if (el.hasAttribute('title')) {
+            el.title = translation;
+            // Also update text content if it has both
+            if (el.getAttribute('data-i18n-content')) {
+              el.textContent = translation;
+            }
+          } else {
+            el.textContent = translation;
+          }
+        });
+
+        // Update elements with data-i18n-placeholder
+        var placeholderElements = document.querySelectorAll('[data-i18n-placeholder]');
+        placeholderElements.forEach(function(el) {
+          var key = el.getAttribute('data-i18n-placeholder');
+          el.placeholder = t(key);
+        });
+
+        // Update elements with data-i18n-title
+        var titleElements = document.querySelectorAll('[data-i18n-title]');
+        titleElements.forEach(function(el) {
+          var key = el.getAttribute('data-i18n-title');
+          el.title = t(key);
+        });
+
+        // Update select option text
+        var selectElements = document.querySelectorAll('select option[data-i18n]');
+        selectElements.forEach(function(option) {
+          var key = option.getAttribute('data-i18n');
+          option.textContent = t(key);
+        });
+
+        // Update HTML lang attribute
+        document.documentElement.lang = lang;
+      }
+
+      // Initialize language from localStorage
+      function initLanguage() {
+        var savedLang = localStorage.getItem(LANGUAGE_CACHE_KEY) || 'auto';
+        applyLanguage();
+
+        // Update the select dropdown if it exists
+        var langSelect = document.getElementById('settingLanguage');
+        if (langSelect) {
+          langSelect.value = savedLang;
+        }
+      }
+
+      // Save and apply language
+      function setLanguage(lang) {
+        localStorage.setItem(LANGUAGE_CACHE_KEY, lang);
+        applyLanguage();
+      }
+
+      // Initialize language on page load
+      initLanguage();
 
       // Cookie helper functions
       function setCookie(name, value, days) {
@@ -3711,8 +4235,8 @@
         newWelcome.innerHTML =
           '<img src="jubilee-profile.png" alt="Jubilee" class="welcome-avatar">' +
           '<div class="welcome-title">Jubilee<span class="inspire">Inspire</span></div>' +
-          '<div class="welcome-subtitle">' +
-            'Ask me anything about the Bible, faith, or life. I\'m here to help you explore Scripture and grow in your relationship with God.' +
+          '<div class="welcome-subtitle" data-i18n="welcomeSubtitle">' +
+            t('welcomeSubtitle') +
           '</div>';
         messagesWrapper.appendChild(newWelcome);
         welcomeState = newWelcome;
@@ -3794,6 +4318,12 @@
         if (themeSelect) {
           var currentTheme = localStorage.getItem(THEME_CACHE_KEY) || 'dark';
           themeSelect.value = currentTheme;
+        }
+        // Update language select to current value
+        var langSelect = document.getElementById('settingLanguage');
+        if (langSelect) {
+          var currentLang = localStorage.getItem(LANGUAGE_CACHE_KEY) || 'auto';
+          langSelect.value = currentLang;
         }
       }
 
@@ -3885,6 +4415,15 @@
         themeSelect.addEventListener('change', function() {
           var selectedTheme = themeSelect.value;
           setTheme(selectedTheme);
+        });
+      }
+
+      // Language selector handler
+      var langSelect = document.getElementById('settingLanguage');
+      if (langSelect) {
+        langSelect.addEventListener('change', function() {
+          var selectedLang = langSelect.value;
+          setLanguage(selectedLang);
         });
       }
 
