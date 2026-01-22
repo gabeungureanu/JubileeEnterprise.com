@@ -355,6 +355,23 @@
                         <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.SearchCommand}" ToolTip="Search" Margin="4,0">
                             <TextBlock Text="{StaticResource IconSearch}" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
                         </Button>
+
+                        <!-- Separator -->
+                        <Rectangle Width="1" Height="28" Fill="#444444" Margin="8,0"/>
+
+                        <!-- Refresh/Sync -->
+                        <Button x:Name="RefreshButton" Style="{StaticResource RibbonSmallButtonStyle}" Click="RefreshButton_Click" ToolTip="Refresh - Sync all folders (Inbox, Sent, Drafts, etc.)" Margin="4,0">
+                            <Grid>
+                                <!-- Normal Icon -->
+                                <TextBlock x:Name="RefreshIcon" Text="{StaticResource IconSync}" FontFamily="{StaticResource MaterialIcons}" FontSize="24" Foreground="#4FC3F7"/>
+                                <!-- Spinning Loader (hidden by default) -->
+                                <TextBlock x:Name="RefreshSpinner" Text="&#xe863;" FontFamily="{StaticResource MaterialIcons}" FontSize="24" Foreground="#4FC3F7" Visibility="Collapsed" RenderTransformOrigin="0.5,0.5">
+                                    <TextBlock.RenderTransform>
+                                        <RotateTransform x:Name="RefreshSpinnerRotation"/>
+                                    </TextBlock.RenderTransform>
+                                </TextBlock>
+                            </Grid>
+                        </Button>
                     </StackPanel>
 
                     <!-- SEND/RECEIVE TAB CONTENT - Compact with Large Icons -->
@@ -655,8 +672,8 @@
                                                    TextWrapping="Wrap"
                                                    Margin="0,0,0,12"/>
 
-                                        <!-- Action Buttons: Reply, Reply All, Forward (Hidden for now - TODO: fix body display) -->
-                                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,16" Visibility="Collapsed">
+                                        <!-- Action Buttons: Reply, Reply All, Forward -->
+                                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,16" Visibility="Visible">
                                             <!-- Reply Button -->
                                             <Button Command="{Binding MainViewModel.ReplyCommand}"
                                                     Style="{StaticResource RibbonSmallButtonStyle}"

@@ -1642,7 +1642,34 @@ app.post('/api/v1/outlook/folders', requireUserId, async (req, res) => {
 app.get('/api/v1/outlook/messages', requireUserId, async (req, res) => {
     try {
         const { folderId, folder_id, limit = 50, offset = 0, is_read, is_flagged } = req.query;
-        const effectiveFolderId = folderId || folder_id;
+        let effectiveFolderId = folderId || folder_id;
+
+        console.log(`[DEBUG] GET /outlook/messages - folderId: "${folderId}", folder_id: "${folder_id}", effectiveFolderId: "${effectiveFolderId}"`);
+
+        // Resolve folder type names to actual folder UUIDs
+        // This handles when the client passes "sent", "inbox", "drafts", etc. instead of UUID
+        const folderTypeMap = ['inbox', 'sent', 'drafts', 'deleted', 'junk', 'archive', 'outbox', 'trash'];
+        if (effectiveFolderId && folderTypeMap.includes(effectiveFolderId.toLowerCase())) {
+            const folderType = effectiveFolderId.toLowerCase();
+            console.log(`[DEBUG] Resolving folder type: "${folderType}" for user: ${req.userId}`);
+            const folderResult = await continuumPool.query(`
+                SELECT id FROM outlook_email_folders
+                WHERE user_id = $1 AND folder_type = $2
+            `, [req.userId, folderType]);
+
+            console.log(`[DEBUG] Folder lookup result: ${JSON.stringify(folderResult.rows)}`);
+
+            if (folderResult.rows.length > 0) {
+                effectiveFolderId = folderResult.rows[0].id;
+                console.log(`[DEBUG] Resolved to UUID: ${effectiveFolderId}`);
+            } else {
+                // Folder doesn't exist yet, return empty results
+                console.log(`[DEBUG] Folder not found, returning empty`);
+                return res.json({ messages: [] });
+            }
+        } else {
+            console.log(`[DEBUG] Not a folder type name, using as-is: "${effectiveFolderId}"`);
+        }
 
         let query = `
             SELECT m.*, f.name as folder_name

@@ -578,15 +578,10 @@ public partial class ComposeMailViewModel : ObservableObject
 
     private string BuildQuotedBody(string senderName, string senderEmail, DateTime sentDate, string subject, string originalBody, bool isHtml)
     {
-        var dateStr = sentDate.ToString("ddd, MMM d, yyyy h:mm tt");
-
         if (isHtml)
         {
             return $@"<br/><br/>
 <div style='border-left: 2px solid #ccc; padding-left: 10px; margin-left: 5px; color: #666;'>
-<p><b>From:</b> {System.Net.WebUtility.HtmlEncode(senderName)} &lt;{System.Net.WebUtility.HtmlEncode(senderEmail)}&gt;<br/>
-<b>Sent:</b> {dateStr}<br/>
-<b>Subject:</b> {System.Net.WebUtility.HtmlEncode(subject)}</p>
 {originalBody}
 </div>";
         }
@@ -596,9 +591,6 @@ public partial class ComposeMailViewModel : ObservableObject
 
 
 -------- Original Message --------
-From: {senderName} <{senderEmail}>
-Sent: {dateStr}
-Subject: {subject}
 
 {originalBody}";
         }
@@ -606,17 +598,11 @@ Subject: {subject}
 
     private string BuildForwardedBody(string senderName, string senderEmail, string originalTo, DateTime sentDate, string subject, string originalBody, bool isHtml)
     {
-        var dateStr = sentDate.ToString("ddd, MMM d, yyyy h:mm tt");
-
         if (isHtml)
         {
             return $@"<br/><br/>
 <div style='border-top: 1px solid #ccc; padding-top: 10px;'>
-<p><b>---------- Forwarded message ----------</b><br/>
-<b>From:</b> {System.Net.WebUtility.HtmlEncode(senderName)} &lt;{System.Net.WebUtility.HtmlEncode(senderEmail)}&gt;<br/>
-<b>Date:</b> {dateStr}<br/>
-<b>Subject:</b> {System.Net.WebUtility.HtmlEncode(subject)}<br/>
-<b>To:</b> {System.Net.WebUtility.HtmlEncode(originalTo)}</p>
+<p><b>---------- Forwarded message ----------</b></p>
 {originalBody}
 </div>";
         }
@@ -626,10 +612,6 @@ Subject: {subject}
 
 
 ---------- Forwarded message ----------
-From: {senderName} <{senderEmail}>
-Date: {dateStr}
-Subject: {subject}
-To: {originalTo}
 
 {originalBody}";
         }

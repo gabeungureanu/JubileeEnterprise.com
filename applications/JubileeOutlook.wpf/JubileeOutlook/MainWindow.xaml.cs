@@ -781,6 +781,24 @@ public partial class MainWindow : Window
         // Debug: Log body info
         Console.WriteLine($"[MainWindow] UpdateEmailBodyBrowser: Subject='{message.Subject}', Body length={message.Body?.Length ?? 0}, IsHtml={message.IsHtml}, NeedsBodyFetch={message.NeedsBodyFetch}");
 
+        // Prepare the body content - handle both plain text and HTML
+        var bodyContent = message.Body ?? message.Preview ?? string.Empty;
+
+        // If it's plain text (no HTML tags), convert newlines to <br> for proper display
+        if (!string.IsNullOrEmpty(bodyContent) && !bodyContent.Contains("<") && !bodyContent.Contains(">"))
+        {
+            bodyContent = System.Net.WebUtility.HtmlEncode(bodyContent).Replace("\n", "<br/>");
+        }
+        else if (!string.IsNullOrEmpty(bodyContent))
+        {
+            // Sanitize HTML - remove script tags for security
+            bodyContent = System.Text.RegularExpressions.Regex.Replace(bodyContent, @"<script[^>]*>[\s\S]*?</script>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            bodyContent = System.Text.RegularExpressions.Regex.Replace(bodyContent, @"<script[^>]*/>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Remove event handlers (onclick, onload, etc.)
+            bodyContent = System.Text.RegularExpressions.Regex.Replace(bodyContent, @"\s+on\w+\s*=\s*[""'][^""']*[""']", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        }
+
         // Wrap the email body in HTML with dark theme styling
         // Use a custom scrollable container with styled scrollbar for IE/Edge
         var htmlContent = $@"
@@ -811,6 +829,7 @@ public partial class MainWindow : Window
             line-height: 1.6;
             padding: 20px;
             box-sizing: border-box;
+            word-wrap: break-word;
             /* IE scrollbar colors */
             scrollbar-base-color: #1A1A1A;
             scrollbar-face-color: #3A3A3A;
@@ -845,7 +864,9 @@ public partial class MainWindow : Window
         .email-container h4,
         .email-container h5,
         .email-container h6,
-        .email-container font {{
+        .email-container font,
+        .email-container pre,
+        .email-container code {{
             color: #FFFFFF !important;
         }}
 
@@ -864,6 +885,7 @@ public partial class MainWindow : Window
         }}
         table {{
             border-collapse: collapse;
+            max-width: 100%;
         }}
         td, th {{
             padding: 8px;
@@ -873,18 +895,38 @@ public partial class MainWindow : Window
             max-width: 100%;
             height: auto;
         }}
+        pre, code {{
+            background-color: #1A1A1A !important;
+            padding: 8px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }}
+        blockquote {{
+            border-left: 3px solid #444444;
+            margin: 10px 0;
+            padding-left: 15px;
+            color: #CCCCCC !important;
+        }}
+        hr {{
+            border: none;
+            border-top: 1px solid #444444;
+            margin: 20px 0;
+        }}
 
         /* Override common dark text inline styles */
         [style*='color: black'], [style*='color:black'],
         [style*='color: #000'], [style*='color:#000'],
-        [style*='color: rgb(0'], [style*='color:rgb(0'] {{
+        [style*='color: rgb(0'], [style*='color:rgb(0'],
+        [style*='color: #333'], [style*='color:#333'],
+        [style*='color: #222'], [style*='color:#222'],
+        [style*='color: #111'], [style*='color:#111'] {{
             color: #FFFFFF !important;
         }}
     </style>
 </head>
 <body>
     <div class='email-container'>
-        {message.Body}
+        {bodyContent}
     </div>
 </body>
 </html>";
@@ -1878,7 +1920,7 @@ public partial class MainWindow : Window
                 SentDate = DateTime.Now,
                 ReceivedDate = DateTime.Now,
                 IsRead = true,
-                FolderId = "sent",
+                FolderId = null, // Let API auto-select Sent folder based on folder_type
                 Preview = e.Body.Length > 100 ? e.Body.Substring(0, 100) + "..." : e.Body,
                 HasAttachments = e.Attachments.Count > 0
             };
@@ -2097,6 +2139,147 @@ public partial class MainWindow : Window
         }
         // For other folders, double-click could open in a new window (future enhancement)
         // For now, just keep the reading pane visible
+    }
+
+    #endregion
+
+    #region Email Refresh/Sync
+
+    private bool _isSyncing = false;
+    private System.Windows.Media.Animation.Storyboard? _refreshSpinnerStoryboard;
+
+    private async void RefreshButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isSyncing)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainWindow] Sync already in progress, ignoring click");
+            return;
+        }
+
+        await RefreshEmailAsync();
+    }
+
+    private async Task RefreshEmailAsync()
+    {
+        _isSyncing = true;
+        System.Diagnostics.Debug.WriteLine("[MainWindow] Starting email refresh/sync");
+
+        try
+        {
+            // Show spinner, hide normal icon
+            Dispatcher.Invoke(() =>
+            {
+                RefreshIcon.Visibility = Visibility.Collapsed;
+                RefreshSpinner.Visibility = Visibility.Visible;
+                RefreshButton.IsEnabled = false;
+                StartRefreshSpinnerAnimation();
+            });
+
+            // Get the sync coordinator
+            var syncCoordinator = new EmailSyncCoordinator();
+
+            // Subscribe to progress events
+            syncCoordinator.SyncProgress += (s, args) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    // Update status bar or show progress
+                    System.Diagnostics.Debug.WriteLine($"[Sync Progress] {args.Message} ({args.PercentComplete}%)");
+                });
+            };
+
+            syncCoordinator.SyncStatusChanged += (s, args) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Sync Status] {args.Status}: {args.Message}");
+                });
+            };
+
+            // Sync all accounts
+            await syncCoordinator.SyncAllAccountsAsync();
+
+            // Reload the folder list and messages after sync
+            await Dispatcher.InvokeAsync(async () =>
+            {
+                // Reload folders
+                var displayService = new SyncedEmailDisplayService();
+                var folders = await displayService.BuildFolderTreeAsync();
+
+                if (folders.Count > 0)
+                {
+                    _mainViewModel.Folders.Clear();
+                    foreach (var folder in folders)
+                    {
+                        _mainViewModel.Folders.Add(folder);
+                    }
+
+                    // Reload messages for current folder
+                    if (_mainViewModel.SelectedFolder != null)
+                    {
+                        var currentFolderId = _mainViewModel.SelectedFolder.Id;
+
+                        var messages = await displayService.GetDisplayMessagesAsync(currentFolderId);
+                        _mainViewModel.Messages.Clear();
+                        foreach (var msg in messages)
+                        {
+                            _mainViewModel.Messages.Add(msg);
+                        }
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine("[MainWindow] Email refresh completed successfully");
+            });
+
+            syncCoordinator.Dispose();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Email refresh error: {ex.Message}");
+            Dispatcher.Invoke(() =>
+            {
+                MessageDialog.ShowError(this, $"Failed to sync emails: {ex.Message}", "Sync Error");
+            });
+        }
+        finally
+        {
+            _isSyncing = false;
+            Dispatcher.Invoke(() =>
+            {
+                StopRefreshSpinnerAnimation();
+                RefreshSpinner.Visibility = Visibility.Collapsed;
+                RefreshIcon.Visibility = Visibility.Visible;
+                RefreshButton.IsEnabled = true;
+            });
+        }
+    }
+
+    private void StartRefreshSpinnerAnimation()
+    {
+        if (_refreshSpinnerStoryboard != null) return;
+
+        var animation = new System.Windows.Media.Animation.DoubleAnimation
+        {
+            From = 0,
+            To = 360,
+            Duration = TimeSpan.FromSeconds(1),
+            RepeatBehavior = System.Windows.Media.Animation.RepeatBehavior.Forever
+        };
+
+        _refreshSpinnerStoryboard = new System.Windows.Media.Animation.Storyboard();
+        _refreshSpinnerStoryboard.Children.Add(animation);
+        System.Windows.Media.Animation.Storyboard.SetTarget(animation, RefreshSpinner);
+        System.Windows.Media.Animation.Storyboard.SetTargetProperty(animation, new PropertyPath("(UIElement.RenderTransform).(RotateTransform.Angle)"));
+        _refreshSpinnerStoryboard.Begin();
+    }
+
+    private void StopRefreshSpinnerAnimation()
+    {
+        if (_refreshSpinnerStoryboard != null)
+        {
+            _refreshSpinnerStoryboard.Stop();
+            _refreshSpinnerStoryboard = null;
+        }
     }
 
     #endregion

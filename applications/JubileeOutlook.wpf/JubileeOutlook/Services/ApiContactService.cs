@@ -70,10 +70,10 @@ public class ApiContactService : IContactService
 
         _jsonOptions = new JsonSerializerOptions
         {
-            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             PropertyNameCaseInsensitive = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower) }
+            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
         };
 
         System.Diagnostics.Debug.WriteLine($"[ApiContactService] Initialized with HttpClientFactory");
@@ -1113,13 +1113,13 @@ internal class ApiContactsListResponse
     [JsonPropertyName("contacts")]
     public List<ContactDto>? Contacts { get; set; }
 
-    [JsonPropertyName("total_count")]
+    [JsonPropertyName("totalCount")]
     public int? TotalCount { get; set; }
 
     [JsonPropertyName("page")]
     public int? Page { get; set; }
 
-    [JsonPropertyName("page_size")]
+    [JsonPropertyName("pageSize")]
     public int? PageSize { get; set; }
 }
 
@@ -1146,31 +1146,31 @@ public class ContactDto
     [JsonPropertyName("id")]
     public string? Id { get; set; }
 
-    [JsonPropertyName("user_id")]
+    [JsonPropertyName("userId")]
     public string? UserId { get; set; }
 
-    [JsonPropertyName("display_name")]
+    [JsonPropertyName("displayName")]
     public string? DisplayName { get; set; }
 
-    [JsonPropertyName("first_name")]
+    [JsonPropertyName("firstName")]
     public string? FirstName { get; set; }
 
-    [JsonPropertyName("last_name")]
+    [JsonPropertyName("lastName")]
     public string? LastName { get; set; }
 
-    [JsonPropertyName("email_addresses")]
+    [JsonPropertyName("emailAddresses")]
     public List<string>? EmailAddresses { get; set; }
 
-    [JsonPropertyName("phone_numbers")]
+    [JsonPropertyName("phoneNumbers")]
     public List<string>? PhoneNumbers { get; set; }
 
-    [JsonPropertyName("mobile_phone")]
+    [JsonPropertyName("mobilePhone")]
     public string? MobilePhone { get; set; }
 
     [JsonPropertyName("company")]
     public string? Company { get; set; }
 
-    [JsonPropertyName("job_title")]
+    [JsonPropertyName("jobTitle")]
     public string? JobTitle { get; set; }
 
     [JsonPropertyName("department")]
@@ -1185,7 +1185,7 @@ public class ContactDto
     [JsonPropertyName("state")]
     public string? State { get; set; }
 
-    [JsonPropertyName("postal_code")]
+    [JsonPropertyName("postalCode")]
     public string? PostalCode { get; set; }
 
     [JsonPropertyName("country")]
@@ -1194,7 +1194,7 @@ public class ContactDto
     [JsonPropertyName("notes")]
     public string? Notes { get; set; }
 
-    [JsonPropertyName("photo_url")]
+    [JsonPropertyName("photoUrl")]
     public string? PhotoUrl { get; set; }
 
     [JsonPropertyName("birthday")]
@@ -1209,16 +1209,16 @@ public class ContactDto
     [JsonPropertyName("website")]
     public string? Website { get; set; }
 
-    [JsonPropertyName("is_favorite")]
+    [JsonPropertyName("isFavorite")]
     public bool IsFavorite { get; set; }
 
     [JsonPropertyName("category")]
     public string? Category { get; set; }
 
-    [JsonPropertyName("created_at")]
+    [JsonPropertyName("createdAt")]
     public DateTime? CreatedAt { get; set; }
 
-    [JsonPropertyName("updated_at")]
+    [JsonPropertyName("updatedAt")]
     public DateTime? UpdatedAt { get; set; }
 }
 

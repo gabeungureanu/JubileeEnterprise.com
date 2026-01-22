@@ -5021,6 +5021,435 @@ app.delete('/api/todos/:id', async (req, res) => {
 });
 
 // =============================================================================
+// CONTACTS API (JubileeOutlook People Module)
+// =============================================================================
+
+// Get all contacts for a user
+app.get('/api/v1/contacts', async (req, res) => {
+    try {
+        const { userId, page = 1, pageSize = 100 } = req.query;
+        const offset = (parseInt(page) - 1) * parseInt(pageSize);
+
+        let query = `
+            SELECT * FROM user_contacts
+            WHERE user_id = $1
+            ORDER BY display_name ASC
+            LIMIT $2 OFFSET $3
+        `;
+        let countQuery = `SELECT COUNT(*) FROM user_contacts WHERE user_id = $1`;
+
+        const result = await codexPool.query(query, [userId || '00000000-0000-0000-0000-000000000001', parseInt(pageSize), offset]);
+        const countResult = await codexPool.query(countQuery, [userId || '00000000-0000-0000-0000-000000000001']);
+
+        res.json({
+            success: true,
+            contacts: result.rows.map(row => ({
+                id: row.id,
+                userId: row.user_id,
+                displayName: row.display_name,
+                firstName: row.first_name,
+                lastName: row.last_name,
+                emailAddresses: row.email_addresses || [],
+                phoneNumbers: row.phone_numbers || [],
+                mobilePhone: row.mobile_phone,
+                company: row.company,
+                jobTitle: row.job_title,
+                department: row.department,
+                address: row.address,
+                city: row.city,
+                state: row.state,
+                postalCode: row.postal_code,
+                country: row.country,
+                notes: row.notes,
+                photoUrl: row.photo_url,
+                birthday: row.birthday,
+                anniversary: row.anniversary,
+                spouse: row.spouse,
+                website: row.website,
+                isFavorite: row.is_favorite,
+                category: row.category,
+                createdAt: row.created_at,
+                updatedAt: row.updated_at
+            })),
+            totalCount: parseInt(countResult.rows[0].count),
+            page: parseInt(page),
+            pageSize: parseInt(pageSize)
+        });
+    } catch (err) {
+        console.error('Get contacts error:', err);
+        res.status(500).json({ success: false, error: 'Failed to get contacts' });
+    }
+});
+
+// Get a single contact by ID
+app.get('/api/v1/contacts/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await codexPool.query(
+            'SELECT * FROM user_contacts WHERE id = $1',
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Contact not found' });
+        }
+
+        const row = result.rows[0];
+        res.json({
+            success: true,
+            contact: {
+                id: row.id,
+                userId: row.user_id,
+                displayName: row.display_name,
+                firstName: row.first_name,
+                lastName: row.last_name,
+                emailAddresses: row.email_addresses || [],
+                phoneNumbers: row.phone_numbers || [],
+                mobilePhone: row.mobile_phone,
+                company: row.company,
+                jobTitle: row.job_title,
+                department: row.department,
+                address: row.address,
+                city: row.city,
+                state: row.state,
+                postalCode: row.postal_code,
+                country: row.country,
+                notes: row.notes,
+                photoUrl: row.photo_url,
+                birthday: row.birthday,
+                anniversary: row.anniversary,
+                spouse: row.spouse,
+                website: row.website,
+                isFavorite: row.is_favorite,
+                category: row.category,
+                createdAt: row.created_at,
+                updatedAt: row.updated_at
+            }
+        });
+    } catch (err) {
+        console.error('Get contact error:', err);
+        res.status(500).json({ success: false, error: 'Failed to get contact' });
+    }
+});
+
+// Create a new contact
+app.post('/api/v1/contacts', async (req, res) => {
+    try {
+        const {
+            userId,
+            displayName,
+            firstName,
+            lastName,
+            emailAddresses,
+            phoneNumbers,
+            mobilePhone,
+            company,
+            jobTitle,
+            department,
+            address,
+            city,
+            state,
+            postalCode,
+            country,
+            notes,
+            photoUrl,
+            birthday,
+            anniversary,
+            spouse,
+            website,
+            isFavorite,
+            category
+        } = req.body;
+
+        if (!displayName && !firstName && !lastName) {
+            return res.status(400).json({ success: false, error: 'Display name or first/last name is required' });
+        }
+
+        const finalDisplayName = displayName || [firstName, lastName].filter(Boolean).join(' ') || 'Unknown';
+
+        const result = await codexPool.query(`
+            INSERT INTO user_contacts (
+                user_id, display_name, first_name, last_name, email_addresses, phone_numbers,
+                mobile_phone, company, job_title, department, address, city, state,
+                postal_code, country, notes, photo_url, birthday, anniversary, spouse,
+                website, is_favorite, category, created_at, updated_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, NOW(), NOW())
+            RETURNING *
+        `, [
+            userId || '00000000-0000-0000-0000-000000000001',
+            finalDisplayName,
+            firstName || null,
+            lastName || null,
+            JSON.stringify(emailAddresses || []),
+            JSON.stringify(phoneNumbers || []),
+            mobilePhone || null,
+            company || null,
+            jobTitle || null,
+            department || null,
+            address || null,
+            city || null,
+            state || null,
+            postalCode || null,
+            country || null,
+            notes || null,
+            photoUrl || null,
+            birthday || null,
+            anniversary || null,
+            spouse || null,
+            website || null,
+            isFavorite || false,
+            category || null
+        ]);
+
+        const row = result.rows[0];
+        res.status(201).json({
+            success: true,
+            contact: {
+                id: row.id,
+                userId: row.user_id,
+                displayName: row.display_name,
+                firstName: row.first_name,
+                lastName: row.last_name,
+                emailAddresses: typeof row.email_addresses === 'string' ? JSON.parse(row.email_addresses) : (row.email_addresses || []),
+                phoneNumbers: typeof row.phone_numbers === 'string' ? JSON.parse(row.phone_numbers) : (row.phone_numbers || []),
+                mobilePhone: row.mobile_phone,
+                company: row.company,
+                jobTitle: row.job_title,
+                department: row.department,
+                address: row.address,
+                city: row.city,
+                state: row.state,
+                postalCode: row.postal_code,
+                country: row.country,
+                notes: row.notes,
+                photoUrl: row.photo_url,
+                birthday: row.birthday,
+                anniversary: row.anniversary,
+                spouse: row.spouse,
+                website: row.website,
+                isFavorite: row.is_favorite,
+                category: row.category,
+                createdAt: row.created_at,
+                updatedAt: row.updated_at
+            }
+        });
+    } catch (err) {
+        console.error('Create contact error:', err);
+        res.status(500).json({ success: false, error: 'Failed to create contact: ' + err.message });
+    }
+});
+
+// Update a contact
+app.put('/api/v1/contacts/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            displayName,
+            firstName,
+            lastName,
+            emailAddresses,
+            phoneNumbers,
+            mobilePhone,
+            company,
+            jobTitle,
+            department,
+            address,
+            city,
+            state,
+            postalCode,
+            country,
+            notes,
+            photoUrl,
+            birthday,
+            anniversary,
+            spouse,
+            website,
+            isFavorite,
+            category
+        } = req.body;
+
+        const finalDisplayName = displayName || [firstName, lastName].filter(Boolean).join(' ');
+
+        const result = await codexPool.query(`
+            UPDATE user_contacts SET
+                display_name = COALESCE($1, display_name),
+                first_name = $2,
+                last_name = $3,
+                email_addresses = $4,
+                phone_numbers = $5,
+                mobile_phone = $6,
+                company = $7,
+                job_title = $8,
+                department = $9,
+                address = $10,
+                city = $11,
+                state = $12,
+                postal_code = $13,
+                country = $14,
+                notes = $15,
+                photo_url = $16,
+                birthday = $17,
+                anniversary = $18,
+                spouse = $19,
+                website = $20,
+                is_favorite = COALESCE($21, is_favorite),
+                category = $22,
+                updated_at = NOW()
+            WHERE id = $23
+            RETURNING *
+        `, [
+            finalDisplayName,
+            firstName || null,
+            lastName || null,
+            JSON.stringify(emailAddresses || []),
+            JSON.stringify(phoneNumbers || []),
+            mobilePhone || null,
+            company || null,
+            jobTitle || null,
+            department || null,
+            address || null,
+            city || null,
+            state || null,
+            postalCode || null,
+            country || null,
+            notes || null,
+            photoUrl || null,
+            birthday || null,
+            anniversary || null,
+            spouse || null,
+            website || null,
+            isFavorite,
+            category || null,
+            id
+        ]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Contact not found' });
+        }
+
+        const row = result.rows[0];
+        res.json({
+            success: true,
+            contact: {
+                id: row.id,
+                userId: row.user_id,
+                displayName: row.display_name,
+                firstName: row.first_name,
+                lastName: row.last_name,
+                emailAddresses: typeof row.email_addresses === 'string' ? JSON.parse(row.email_addresses) : (row.email_addresses || []),
+                phoneNumbers: typeof row.phone_numbers === 'string' ? JSON.parse(row.phone_numbers) : (row.phone_numbers || []),
+                mobilePhone: row.mobile_phone,
+                company: row.company,
+                jobTitle: row.job_title,
+                department: row.department,
+                address: row.address,
+                city: row.city,
+                state: row.state,
+                postalCode: row.postal_code,
+                country: row.country,
+                notes: row.notes,
+                photoUrl: row.photo_url,
+                birthday: row.birthday,
+                anniversary: row.anniversary,
+                spouse: row.spouse,
+                website: row.website,
+                isFavorite: row.is_favorite,
+                category: row.category,
+                createdAt: row.created_at,
+                updatedAt: row.updated_at
+            }
+        });
+    } catch (err) {
+        console.error('Update contact error:', err);
+        res.status(500).json({ success: false, error: 'Failed to update contact' });
+    }
+});
+
+// Delete a contact
+app.delete('/api/v1/contacts/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await codexPool.query(
+            'DELETE FROM user_contacts WHERE id = $1 RETURNING id',
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: 'Contact not found' });
+        }
+
+        res.json({ success: true, message: 'Contact deleted' });
+    } catch (err) {
+        console.error('Delete contact error:', err);
+        res.status(500).json({ success: false, error: 'Failed to delete contact' });
+    }
+});
+
+// Search contacts
+app.get('/api/v1/contacts/search', async (req, res) => {
+    try {
+        const { q, userId, page = 1, pageSize = 50 } = req.query;
+        const offset = (parseInt(page) - 1) * parseInt(pageSize);
+
+        if (!q) {
+            return res.status(400).json({ success: false, error: 'Search query is required' });
+        }
+
+        const searchPattern = `%${q}%`;
+        const result = await codexPool.query(`
+            SELECT * FROM user_contacts
+            WHERE user_id = $1
+              AND (
+                  display_name ILIKE $2
+                  OR first_name ILIKE $2
+                  OR last_name ILIKE $2
+                  OR company ILIKE $2
+                  OR email_addresses::text ILIKE $2
+              )
+            ORDER BY display_name ASC
+            LIMIT $3 OFFSET $4
+        `, [userId || '00000000-0000-0000-0000-000000000001', searchPattern, parseInt(pageSize), offset]);
+
+        res.json({
+            success: true,
+            contacts: result.rows.map(row => ({
+                id: row.id,
+                userId: row.user_id,
+                displayName: row.display_name,
+                firstName: row.first_name,
+                lastName: row.last_name,
+                emailAddresses: row.email_addresses || [],
+                phoneNumbers: row.phone_numbers || [],
+                mobilePhone: row.mobile_phone,
+                company: row.company,
+                jobTitle: row.job_title,
+                department: row.department,
+                address: row.address,
+                city: row.city,
+                state: row.state,
+                postalCode: row.postal_code,
+                country: row.country,
+                notes: row.notes,
+                photoUrl: row.photo_url,
+                birthday: row.birthday,
+                anniversary: row.anniversary,
+                spouse: row.spouse,
+                website: row.website,
+                isFavorite: row.is_favorite,
+                category: row.category,
+                createdAt: row.created_at,
+                updatedAt: row.updated_at
+            }))
+        });
+    } catch (err) {
+        console.error('Search contacts error:', err);
+        res.status(500).json({ success: false, error: 'Failed to search contacts' });
+    }
+});
+
+// =============================================================================
 // DAILY NEWS CACHE API (JubileeDailyNews Service)
 // =============================================================================
 
@@ -6586,6 +7015,14 @@ app.use((req, res) => {
                 languages: 'GET /api/v1/codex/languages',
                 bible: 'GET /api/v1/codex/bible/verses'
             },
+            contacts: {
+                list: 'GET /api/v1/contacts',
+                get: 'GET /api/v1/contacts/:id',
+                create: 'POST /api/v1/contacts',
+                update: 'PUT /api/v1/contacts/:id',
+                delete: 'DELETE /api/v1/contacts/:id',
+                search: 'GET /api/v1/contacts/search'
+            },
             inspire: {
                 categories: 'GET /api/v1/inspire/categories',
                 content: 'GET /api/v1/inspire/content',
@@ -6702,6 +7139,42 @@ async function startServer() {
         }
 
         console.log('✅ User todos table ready');
+
+        // Ensure user_contacts table exists for JubileeOutlook People module
+        await codexPool.query(`
+            CREATE TABLE IF NOT EXISTS user_contacts (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                user_id VARCHAR(255) NOT NULL,
+                display_name VARCHAR(500) NOT NULL,
+                first_name VARCHAR(255),
+                last_name VARCHAR(255),
+                email_addresses JSONB DEFAULT '[]',
+                phone_numbers JSONB DEFAULT '[]',
+                mobile_phone VARCHAR(50),
+                company VARCHAR(255),
+                job_title VARCHAR(255),
+                department VARCHAR(255),
+                address TEXT,
+                city VARCHAR(100),
+                state VARCHAR(100),
+                postal_code VARCHAR(50),
+                country VARCHAR(100),
+                notes TEXT,
+                photo_url TEXT,
+                birthday DATE,
+                anniversary DATE,
+                spouse VARCHAR(255),
+                website VARCHAR(500),
+                is_favorite BOOLEAN DEFAULT FALSE,
+                category VARCHAR(100),
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            );
+            CREATE INDEX IF NOT EXISTS idx_user_contacts_user_id ON user_contacts(user_id);
+            CREATE INDEX IF NOT EXISTS idx_user_contacts_display_name ON user_contacts(display_name);
+            CREATE INDEX IF NOT EXISTS idx_user_contacts_favorite ON user_contacts(is_favorite);
+        `);
+        console.log('✅ User contacts table ready');
     } catch (err) {
         console.error('❌ Codex database connection failed:', err.message);
         process.exit(1);
