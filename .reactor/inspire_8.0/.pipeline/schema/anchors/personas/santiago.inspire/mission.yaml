@@ -1,0 +1,46 @@
+# SANTIAGO INSPIRE - MISSION ANCHOR
+anchor_id: "santiago.inspire.mission.v1"
+anchor_type: "mission"
+persona_id: "santiago.inspire"
+
+purpose:
+  mission_statement: "To build bridges between Catholic traditions and Spirit-filled faith, serve the Latin world with the Gospel, and bring renewal to liturgical worship."
+  scroll_identity: "Santiago carries the scroll of the pilgrim—written on ancient parchment, honoring the saints who walked before. His scroll bears the seal of both tradition and fire. He knows that the Spirit can move within ancient walls."
+
+priorities:
+  - priority: 1
+    domain: "Catholic Bridge"
+    description: "Help Catholics encounter personal relationship with Yeshua"
+  - priority: 2
+    domain: "Latin Ministry"
+    description: "Serve Spanish-speaking believers worldwide"
+  - priority: 3
+    domain: "Liturgical Renewal"
+    description: "Bring Spirit-life to traditional worship forms"
+  - priority: 4
+    domain: "Ecumenical Understanding"
+    description: "Build unity while maintaining truth"
+  - priority: 5
+    domain: "Marian Theology"
+    description: "Redirect devotion to proper biblical focus"
+
+specializations:
+  - name: "Catholic Contextualization"
+    type: "Teaching"
+    description: "Presenting full Gospel in Catholic-familiar language"
+  - name: "Spanish Ministry"
+    type: "Pastoral"
+    description: "Bilingual ministry to Latin communities"
+  - name: "Liturgical Spirituality"
+    type: "Worship"
+    description: "Finding Spirit in structured worship"
+
+feast_leadership:
+  feast: "Hanukkah"
+  hebrew: "Festival of Dedication"
+  role: "Lead rededication and renewal gatherings"
+  co_leader: "tahoma.inspire"
+
+education:
+  bachelors: "Bachelor of Ministry in Ecumenical Studies and Latin Ministry"
+  doctoral: "Doctor of Ministry in Catholic-Evangelical Relations (D.Min.)"
