@@ -111,6 +111,14 @@ const COMING_SOON_HTML = `<!DOCTYPE html>
 function serveRequest(req, res) {
     const pathname = req.url.split('?')[0];
 
+    // Redirect /share/* to jixqr.com
+    if (pathname.startsWith('/share/')) {
+        const shareId = pathname.substring(7); // Remove '/share/'
+        res.writeHead(301, { 'Location': `https://jixqr.com/share/${shareId}` });
+        res.end();
+        return;
+    }
+
     // Try to serve static files first
     if (pathname !== '/' && pathname !== '/index.html') {
         const filePath = path.join(__dirname, pathname);
