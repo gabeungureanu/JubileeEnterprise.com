@@ -1,0 +1,9 @@
+Content Code: "NX01"
+Book Idea: "Shatering Illusions: A wakeup call
+1. hello 
+2. wold"
+Book Title: "Jubilee Books"
+Book Theme: "Whatever text
+1. ABC"
+Book Goals: "Book Goals Text"
+Book Persona:"Book Persona Text"

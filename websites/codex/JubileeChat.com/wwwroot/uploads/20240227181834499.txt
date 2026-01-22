@@ -1,0 +1,5 @@
+Book Code: "NX04"
+Book Title: "Shatering Illusions: A wakeup call"
+Publisher: "Jubilee Books"
+Number Of Chapters: "40"
+Book Theme: "Whatever text"

@@ -1,0 +1,111 @@
+USE [JubileeShalom]
+GO
+/***** Object:  StoredProcedure [dbo].[system_Invoice_Save]    Script Date: 09-02-2024 19:54:07 *****/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[system_Invoice_Save]
+
+	@UserID							NVARCHAR(250),
+	@PaymentPlanID					NVARCHAR(250),
+	@PayMethodID					NVARCHAR(250),
+
+	@SubscriptionID					NVARCHAR(250),
+	@InvoiceID						NVARCHAR(250),
+	@CustomerID						NVARCHAR(250),
+	@SessionID						NVARCHAR(250),
+	@LineID							NVARCHAR(250),
+	@PaymentIntentID				NVARCHAR(250),
+	
+	@ProductID						NVARCHAR(250),	
+	@PlanCreatedDate				DATETIME,
+	@PlanInterval					NVARCHAR(250),
+		
+	@PriceID						NVARCHAR(250),
+	@PriceCreatedDate				DATETIME,
+	@PriceInterval					NVARCHAR(250),
+	@Currency						NVARCHAR(250),
+		
+	@ChargeID						NVARCHAR(250),
+	@AmountPaid						DECIMAL(10,2),
+	@AmountDue						DECIMAL(10,2),
+	@AmountRemaining				DECIMAL(10,2),
+	@Status							NVARCHAR(250),
+	@InvoiceNumber					NVARCHAR(250),
+	@AttemptCount					INT,
+	@InvoiceDate					DATETIME,
+	@EffectiveDate					DATETIME,
+	@PeriodStartDate				DATETIME,
+	@PeriodEndDate					DATETIME,
+	@InvoicePDFLink					NVARCHAR(2000),
+	@HostedInvoicePDFLink			NVARCHAR(2000),
+		
+	@CustomerName					NVARCHAR(250),
+	@CustomerEmail					NVARCHAR(250),
+	@CustomerPhone					NVARCHAR(250),
+	@CustomerAddressLine1			NVARCHAR(250),
+	@CustomerAddressLine2			NVARCHAR(250),
+	@CustomerAddressCity			NVARCHAR(250),
+	@CustomerAddressState			NVARCHAR(250),
+	@CustomerAddressCountry			NVARCHAR(250),
+	@CustomerAddressPostalCode		NVARCHAR(250),
+		
+	@CardBrand						NVARCHAR(10),
+	@CardType						NVARCHAR(50),
+	@Last4Digits					NVARCHAR(5),
+	@ExpiryMonth					INT,
+	@ExpiryYear						INT,
+	@CardCountry					NVARCHAR(5),
+	@FingerPrint					NVARCHAR(50)
+AS
+BEGIN
+	DECLARE @Msg					NVARCHAR(MAX)
+	DECLARE @UpdateStatus			INT=0
+	BEGIN TRY
+
+		IF @Status IS NOT NULL AND @Status='paid'
+		BEGIN
+			UPDATE System_Users SET PaymentPlanID=@PaymentPlanID,sessionID=@SessionID
+			WHERE UserID=@UserID
+		END
+		IF NOT EXISTS(SELECT 1 FROM Subscription WHERE userId=@UserID AND [Status]='ACTIVE')
+		BEGIN
+			--DELETE FROM Subscription WHERE userId=@UserID
+			
+			INSERT INTO Subscription(subscriptionID,userId,sessionID,productID,priceID,Status)
+			VALUES(@SubscriptionID,@UserID,@SessionID,@Productid,@Priceid
+			,CASE WHEN @Status='paid' THEN 'ACTIVE' ELSE 'PENDING' END)
+
+			INSERT INTO system_BillingInformation(BillingDetailID,UserID,CustomerID,PayMethodID,CustomerName,EmailAddress,PhoneNumber,City,State,Country,PostalCode,CreatedBy)
+			VALUES(NEWID(),@UserID,@Customerid,@PayMethodID,@CustomerName,@CustomerEmail,@CustomerPhone,@CustomerAddressCity,@CustomerAddressState,@CustomerAddressCountry,@CustomerAddressPostalCode,@UserID)
+
+			INSERT INTO system_PaymentMethods(PaymentMethodID,UserID,CustomerID,PayMethodID,Type,CardBrand,CardLastFourDigits,ExpireMonth,ExpireYear,CountryCode,FingerPrint,CreatedBy)
+			VALUES(NEWID(),@UserID,@Customerid,@PayMethodID,@CardType,@CardBrand,@Last4Digits,@ExpiryMonth,@ExpiryYear,@CardCountry,@FingerPrint,@UserID)
+			
+			IF NOT EXISTS (SELECT 1 FROM system_Invoice WHERE UserID=@UserID AND InvoiceID=@InvoiceID AND Status='paid')
+			BEGIN
+			 ---Insert invoice details into system_Invoice table---
+				INSERT INTO system_invoice(UserID,InvoiceID,SubscriptionID,Customerid,SesssionID,Amount_paid,Amount_due,Customer_email,CustomerName,InvoiceDate
+						,Lineid,Productid,Priceid,PaymentIntentID,Status,ChargeID,InvoiceNumber,InvoicePDFLink,HostedInvoicePDFLink,AttemptCount,PlanCreatedDate
+						,PlanInterval,PriceCreatedDate,PriceInterval,Currency,AmountRemaining,EffectiveDate,PeriodStartDate,PeriodEndDate,CustomerPhone
+						,CustomerAddressLine1,CustomerAddressLine2,CustomerAddressCity,CustomerAddressState,CustomerAddressCountry,CustomerAddressPostalCode
+						,CardBrand,CardType,Last4Digits,ExpiryMonth,ExpiryYear,Country,Fingerprint)
+				VALUES(@UserID,@InvoiceID,@SubscriptionID,@CustomerID,@SessionID,@AmountPaid,@AmountDue,@CustomerEmail,@CustomerName,@InvoiceDate
+						,@LineID,@ProductID,@PriceID,@PaymentIntentID,@Status,@ChargeID,@InvoiceNumber,@InvoicePDFLink,@HostedInvoicePDFLink,@AttemptCount,@PlanCreatedDate						
+						,@PlanInterval,@PriceCreatedDate,@PriceInterval,@Currency,@AmountRemaining,@EffectiveDate,@PeriodStartDate,@PeriodEndDate,@CustomerPhone
+						,@CustomerAddressLine1,@CustomerAddressLine2,@CustomerAddressCity,@CustomerAddressState,@CustomerAddressCountry,@CustomerAddressPostalCode
+						,@CardBrand,@CardType,@Last4Digits,@ExpiryMonth,@ExpiryYear,@CardCountry,@Fingerprint)
+			
+				SET @UpdateStatus=1
+				SET @Msg='Invoice saved successful.'
+			END
+		END
+	END TRY
+	BEGIN CATCH
+		SET @Msg='Error: '+ ERROR_MESSAGE()
+		INSERT INTO system_ErrorsLog(UserID,ErrorMode,ErrorCode,ErrorMessage,[Description],ErrorPage,MethodName,Active,CreatedBy,CreatedDate)
+		VALUES(@UserID,'SP',CONVERT(VARCHAR,ERROR_LINE()),ERROR_MESSAGE(),ERROR_MESSAGE(),'system_Invoice_Insert','system_Invoice_Insert',1,@UserID,GETUTCDATE())		
+	END CATCH
+	SELECT @Msg Msg,@UpdateStatus [Status]
+END

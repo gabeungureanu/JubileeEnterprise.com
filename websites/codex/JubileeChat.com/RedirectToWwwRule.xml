@@ -1,0 +1,11 @@
+﻿<rewrite>
+  <rules>
+    <rule name="Redirect to www" stopProcessing="true">
+      <match url="(.*)" />
+      <conditions>
+        <add input="{HTTP_HOST}" pattern="^jubileechat\.com$" ignoreCase="true" />
+      </conditions>
+      <action type="Redirect" url="https://www.jubileechat.com/{R:1}" redirectType="Permanent" />
+    </rule>
+  </rules>
+</rewrite>

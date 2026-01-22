@@ -1,0 +1,8 @@
+Book Code: "NX01"
+Book Title: "Shatering Illusions: A wakeup call
+1. hello 
+2. wold"
+Publisher: "Jubilee Books"
+Number Of Chapters: "40"
+Book Theme: "Whatever text
+1. ABC"
