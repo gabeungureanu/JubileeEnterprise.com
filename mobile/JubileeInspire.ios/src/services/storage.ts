@@ -2,11 +2,33 @@
  * Jubilee Inspire - Local Storage Service
  *
  * Handles persistent storage of conversations and settings.
+ * Supports user-specific storage when logged in.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Conversation, ChatMessage } from '../types';
 
+// Base storage keys prefix
+const STORAGE_PREFIX = '@jubilee_inspire';
+
+// Current user ID for user-specific storage
+let currentUserId: string | null = null;
+
+/**
+ * Get storage keys based on current user
+ * Returns user-specific keys if logged in, base keys otherwise
+ */
+const getStorageKeys = () => {
+  const suffix = currentUserId ? `_${currentUserId}` : '';
+  return {
+    CONVERSATIONS: `${STORAGE_PREFIX}_conversations${suffix}`,
+    CURRENT_CONVERSATION: `${STORAGE_PREFIX}_current${suffix}`,
+    USER_SETTINGS: `${STORAGE_PREFIX}_settings${suffix}`,
+    PENDING_CONVERSATION: `${STORAGE_PREFIX}_pending_conversation${suffix}`,
+  };
+};
+
+// Legacy keys for backward compatibility (anonymous user data)
 const STORAGE_KEYS = {
   CONVERSATIONS: '@jubilee_inspire_conversations',
   CURRENT_CONVERSATION: '@jubilee_inspire_current',
@@ -19,12 +41,36 @@ const STORAGE_KEYS = {
  */
 export const storage = {
   /**
+   * Set the current user ID for user-specific storage
+   * Call this when user logs in/out
+   */
+  setCurrentUser(userId: string | null): void {
+    console.log('[Storage] Setting current user:', userId || 'anonymous');
+    currentUserId = userId;
+  },
+
+  /**
+   * Get the current user ID
+   */
+  getCurrentUser(): string | null {
+    return currentUserId;
+  },
+
+  /**
+   * Check if a user is currently set
+   */
+  hasCurrentUser(): boolean {
+    return currentUserId !== null;
+  },
+
+  /**
    * Save all conversations
    */
   async saveConversations(conversations: Conversation[]): Promise<void> {
     try {
+      const keys = getStorageKeys();
       const data = JSON.stringify(conversations);
-      await AsyncStorage.setItem(STORAGE_KEYS.CONVERSATIONS, data);
+      await AsyncStorage.setItem(keys.CONVERSATIONS, data);
     } catch (error) {
       console.error('Failed to save conversations:', error);
     }
@@ -35,7 +81,8 @@ export const storage = {
    */
   async loadConversations(): Promise<Conversation[]> {
     try {
-      const data = await AsyncStorage.getItem(STORAGE_KEYS.CONVERSATIONS);
+      const keys = getStorageKeys();
+      const data = await AsyncStorage.getItem(keys.CONVERSATIONS);
       if (data) {
         const conversations = JSON.parse(data) as Conversation[];
         // Convert date strings back to Date objects
@@ -150,15 +197,16 @@ export const storage = {
   },
 
   /**
-   * Clear all data
+   * Clear all data for current user
    */
   async clearAll(): Promise<void> {
     try {
+      const keys = getStorageKeys();
       await AsyncStorage.multiRemove([
-        STORAGE_KEYS.CONVERSATIONS,
-        STORAGE_KEYS.CURRENT_CONVERSATION,
-        STORAGE_KEYS.USER_SETTINGS,
-        STORAGE_KEYS.PENDING_CONVERSATION,
+        keys.CONVERSATIONS,
+        keys.CURRENT_CONVERSATION,
+        keys.USER_SETTINGS,
+        keys.PENDING_CONVERSATION,
       ]);
     } catch (error) {
       console.error('Failed to clear storage:', error);
@@ -196,8 +244,9 @@ export const storage = {
    */
   async savePendingConversation(conversation: Conversation): Promise<void> {
     try {
+      const keys = getStorageKeys();
       const data = JSON.stringify(conversation);
-      await AsyncStorage.setItem(STORAGE_KEYS.PENDING_CONVERSATION, data);
+      await AsyncStorage.setItem(keys.PENDING_CONVERSATION, data);
     } catch (error) {
       console.error('Failed to save pending conversation:', error);
     }
@@ -208,7 +257,8 @@ export const storage = {
    */
   async loadPendingConversation(): Promise<Conversation | null> {
     try {
-      const data = await AsyncStorage.getItem(STORAGE_KEYS.PENDING_CONVERSATION);
+      const keys = getStorageKeys();
+      const data = await AsyncStorage.getItem(keys.PENDING_CONVERSATION);
       if (data) {
         const conversation = JSON.parse(data) as Conversation;
         return {
@@ -233,7 +283,8 @@ export const storage = {
    */
   async clearPendingConversation(): Promise<void> {
     try {
-      await AsyncStorage.removeItem(STORAGE_KEYS.PENDING_CONVERSATION);
+      const keys = getStorageKeys();
+      await AsyncStorage.removeItem(keys.PENDING_CONVERSATION);
     } catch (error) {
       console.error('Failed to clear pending conversation:', error);
     }

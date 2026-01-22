@@ -47,6 +47,11 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Focus state for password fields (to show outline on focus)
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [newPasswordFocused, setNewPasswordFocused] = useState(false);
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
+
   // Inject CSS to hide browser's native password reveal button on web
   useEffect(() => {
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
@@ -443,7 +448,7 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
             {(mode === 'signin' || mode === 'signup') && (
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Password</Text>
-                <View style={styles.passwordContainer}>
+                <View style={[styles.passwordContainer, passwordFocused && styles.passwordContainerFocused]}>
                   <TextInput
                     style={styles.passwordInput}
                     value={password}
@@ -454,6 +459,8 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
                     autoCapitalize="none"
                     autoCorrect={false}
                     editable={!loading}
+                    onFocus={() => setPasswordFocused(true)}
+                    onBlur={() => setPasswordFocused(false)}
                   />
                   <TouchableOpacity
                     onPress={() => setShowPassword(!showPassword)}
@@ -501,7 +508,7 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
 
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>New Password</Text>
-                  <View style={styles.passwordContainer}>
+                  <View style={[styles.passwordContainer, newPasswordFocused && styles.passwordContainerFocused]}>
                     <TextInput
                       style={styles.passwordInput}
                       value={newPassword}
@@ -512,6 +519,8 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
                       autoCapitalize="none"
                       autoCorrect={false}
                       editable={!loading}
+                      onFocus={() => setNewPasswordFocused(true)}
+                      onBlur={() => setNewPasswordFocused(false)}
                     />
                     <TouchableOpacity
                       onPress={() => setShowNewPassword(!showNewPassword)}
@@ -528,7 +537,7 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
 
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Confirm Password</Text>
-                  <View style={styles.passwordContainer}>
+                  <View style={[styles.passwordContainer, confirmPasswordFocused && styles.passwordContainerFocused]}>
                     <TextInput
                       style={styles.passwordInput}
                       value={confirmPassword}
@@ -539,6 +548,8 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
                       autoCapitalize="none"
                       autoCorrect={false}
                       editable={!loading}
+                      onFocus={() => setConfirmPasswordFocused(true)}
+                      onBlur={() => setConfirmPasswordFocused(false)}
                     />
                     <TouchableOpacity
                       onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -711,6 +722,21 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 12,
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+      } as any,
+      default: {},
+    }),
+  },
+  passwordContainerFocused: {
+    borderColor: colors.primary,
+    ...Platform.select({
+      web: {
+        boxShadow: `0 0 0 2px ${colors.primary}40`,
+      } as any,
+      default: {},
+    }),
   },
   passwordInput: {
     flex: 1,

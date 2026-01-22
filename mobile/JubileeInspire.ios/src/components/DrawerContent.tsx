@@ -35,7 +35,7 @@ import { storage } from '../services/storage';
 const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: drawerNavigation }) => {
   const { colors } = useTheme();
   const { isCollapsed, setIsCollapsed, toggleCollapse, isMobileView } = useDrawer();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const navigation = useNavigation();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -104,6 +104,18 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
       return () => clearTimeout(timeoutId);
     }, [loadConversations])
   );
+
+  // Reload conversations when user changes (login/logout)
+  useEffect(() => {
+    console.log('[DrawerContent] Auth state changed, user:', user?.id || 'anonymous');
+    // Reset current conversation when user changes
+    setCurrentConversationId(null);
+    // Clear pending conversation state
+    setPendingConversation(null);
+    // Load conversations for the new user context
+    loadConversations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Track current conversation from navigation state
   useEffect(() => {
@@ -551,21 +563,24 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.collapsedMenuItem}
-            onPress={handleShowArchivedChats}
-            {...(Platform.OS === 'web' ? {
-              onMouseEnter: () => setHoveredItem('archived'),
-              onMouseLeave: () => setHoveredItem(null)
-            } as any : {})}
-          >
-            <Ionicons name="archive-outline" size={20} color={colors.text} />
-            {hoveredItem === 'archived' && Platform.OS === 'web' && (
-              <View style={styles.tooltip}>
-                <Text style={styles.tooltipText}>Archived chats</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          {/* Archived chats - only show when logged in */}
+          {isAuthenticated && (
+            <TouchableOpacity
+              style={styles.collapsedMenuItem}
+              onPress={handleShowArchivedChats}
+              {...(Platform.OS === 'web' ? {
+                onMouseEnter: () => setHoveredItem('archived'),
+                onMouseLeave: () => setHoveredItem(null)
+              } as any : {})}
+            >
+              <Ionicons name="archive-outline" size={20} color={colors.text} />
+              {hoveredItem === 'archived' && Platform.OS === 'web' && (
+                <View style={styles.tooltip}>
+                  <Text style={styles.tooltipText}>Archived chats</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       ) : (
         <View style={styles.expandedMenu}>
@@ -609,10 +624,13 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
             <Text style={styles.menuText}>Images</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} onPress={handleShowArchivedChats}>
-            <Ionicons name="archive-outline" size={20} color={colors.text} />
-            <Text style={styles.menuText}>Archived chats</Text>
-          </TouchableOpacity>
+          {/* Archived chats - only show when logged in */}
+          {isAuthenticated && (
+            <TouchableOpacity style={styles.menuItem} onPress={handleShowArchivedChats}>
+              <Ionicons name="archive-outline" size={20} color={colors.text} />
+              <Text style={styles.menuText}>Archived chats</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 
@@ -785,22 +803,25 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.optionsMenuItem, hoveredMenuItem === 'archive' && styles.menuItemHovered]}
-              onPress={() => {
-                if (openMenuConversationId) {
-                  handleMenuClose();
-                  handleArchive(openMenuConversationId);
-                }
-              }}
-              {...(Platform.OS === 'web' ? {
-                onMouseEnter: () => setHoveredMenuItem('archive'),
-                onMouseLeave: () => setHoveredMenuItem(null),
-              } as any : {})}
-            >
-              <Ionicons name="archive-outline" size={20} color={colors.text} />
-              <Text style={styles.menuItemText}>Archive</Text>
-            </TouchableOpacity>
+            {/* Archive option - only show when logged in */}
+            {isAuthenticated && (
+              <TouchableOpacity
+                style={[styles.optionsMenuItem, hoveredMenuItem === 'archive' && styles.menuItemHovered]}
+                onPress={() => {
+                  if (openMenuConversationId) {
+                    handleMenuClose();
+                    handleArchive(openMenuConversationId);
+                  }
+                }}
+                {...(Platform.OS === 'web' ? {
+                  onMouseEnter: () => setHoveredMenuItem('archive'),
+                  onMouseLeave: () => setHoveredMenuItem(null),
+                } as any : {})}
+              >
+                <Ionicons name="archive-outline" size={20} color={colors.text} />
+                <Text style={styles.menuItemText}>Archive</Text>
+              </TouchableOpacity>
+            )}
 
             <View style={styles.menuDivider} />
 

@@ -792,39 +792,120 @@ public class LocalCacheService : IDisposable
 
     #region Contact Caching
 
+    private bool _contactSchemaExtended = false;
+    private bool _contactSchemaChecked = false;
+
     /// <summary>
-    /// Caches a contact
+    /// Checks if the extended contact schema columns exist
+    /// </summary>
+    private async Task<bool> CheckExtendedContactSchemaAsync(NpgsqlConnection connection)
+    {
+        if (_contactSchemaChecked) return _contactSchemaExtended;
+
+        const string sql = @"
+            SELECT COUNT(*) FROM information_schema.columns
+            WHERE table_name = 'cached_contacts' AND column_name = 'mobile_phone'";
+
+        try
+        {
+            await using var cmd = new NpgsqlCommand(sql, connection);
+            var result = await cmd.ExecuteScalarAsync();
+            _contactSchemaExtended = Convert.ToInt32(result) > 0;
+            _contactSchemaChecked = true;
+            System.Diagnostics.Debug.WriteLine($"[LocalCacheService] Extended contact schema: {_contactSchemaExtended}");
+        }
+        catch
+        {
+            _contactSchemaExtended = false;
+            _contactSchemaChecked = true;
+        }
+
+        return _contactSchemaExtended;
+    }
+
+    /// <summary>
+    /// Caches a contact (creates or updates)
     /// </summary>
     public async Task CacheContactAsync(Contact contact)
     {
-        const string sql = @"
-            INSERT INTO cached_contacts (
-                server_id, display_name, first_name, last_name,
-                email_addresses, phone_numbers, company, job_title,
-                department, notes, photo_url, sync_status
-            ) VALUES (
-                @server_id, @display_name, @first_name, @last_name,
-                @email_addresses::jsonb, @phone_numbers::jsonb, @company, @job_title,
-                @department, @notes, @photo_url, 'synced'
-            )
-            ON CONFLICT (server_id) DO UPDATE SET
-                display_name = EXCLUDED.display_name,
-                first_name = EXCLUDED.first_name,
-                last_name = EXCLUDED.last_name,
-                email_addresses = EXCLUDED.email_addresses,
-                phone_numbers = EXCLUDED.phone_numbers,
-                company = EXCLUDED.company,
-                job_title = EXCLUDED.job_title,
-                department = EXCLUDED.department,
-                notes = EXCLUDED.notes,
-                photo_url = EXCLUDED.photo_url,
-                last_modified = CURRENT_TIMESTAMP,
-                sync_status = 'synced'";
-
         try
         {
             await using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
+
+            var useExtendedSchema = await CheckExtendedContactSchemaAsync(connection);
+
+            string sql;
+            if (useExtendedSchema)
+            {
+                sql = @"
+                    INSERT INTO cached_contacts (
+                        server_id, display_name, first_name, last_name,
+                        email_addresses, phone_numbers, mobile_phone, company, job_title,
+                        department, address, city, state, postal_code, country,
+                        notes, photo_url, birthday, anniversary, spouse, website,
+                        is_favorite, category, sync_status
+                    ) VALUES (
+                        @server_id, @display_name, @first_name, @last_name,
+                        @email_addresses::jsonb, @phone_numbers::jsonb, @mobile_phone, @company, @job_title,
+                        @department, @address, @city, @state, @postal_code, @country,
+                        @notes, @photo_url, @birthday, @anniversary, @spouse, @website,
+                        @is_favorite, @category, 'synced'
+                    )
+                    ON CONFLICT (server_id) DO UPDATE SET
+                        display_name = EXCLUDED.display_name,
+                        first_name = EXCLUDED.first_name,
+                        last_name = EXCLUDED.last_name,
+                        email_addresses = EXCLUDED.email_addresses,
+                        phone_numbers = EXCLUDED.phone_numbers,
+                        mobile_phone = EXCLUDED.mobile_phone,
+                        company = EXCLUDED.company,
+                        job_title = EXCLUDED.job_title,
+                        department = EXCLUDED.department,
+                        address = EXCLUDED.address,
+                        city = EXCLUDED.city,
+                        state = EXCLUDED.state,
+                        postal_code = EXCLUDED.postal_code,
+                        country = EXCLUDED.country,
+                        notes = EXCLUDED.notes,
+                        photo_url = EXCLUDED.photo_url,
+                        birthday = EXCLUDED.birthday,
+                        anniversary = EXCLUDED.anniversary,
+                        spouse = EXCLUDED.spouse,
+                        website = EXCLUDED.website,
+                        is_favorite = EXCLUDED.is_favorite,
+                        category = EXCLUDED.category,
+                        last_modified = CURRENT_TIMESTAMP,
+                        sync_status = 'synced'";
+            }
+            else
+            {
+                // Basic schema without extended fields
+                sql = @"
+                    INSERT INTO cached_contacts (
+                        server_id, display_name, first_name, last_name,
+                        email_addresses, phone_numbers, company, job_title,
+                        department, notes, photo_url, sync_status
+                    ) VALUES (
+                        @server_id, @display_name, @first_name, @last_name,
+                        @email_addresses::jsonb, @phone_numbers::jsonb, @company, @job_title,
+                        @department, @notes, @photo_url, 'synced'
+                    )
+                    ON CONFLICT (server_id) DO UPDATE SET
+                        display_name = EXCLUDED.display_name,
+                        first_name = EXCLUDED.first_name,
+                        last_name = EXCLUDED.last_name,
+                        email_addresses = EXCLUDED.email_addresses,
+                        phone_numbers = EXCLUDED.phone_numbers,
+                        company = EXCLUDED.company,
+                        job_title = EXCLUDED.job_title,
+                        department = EXCLUDED.department,
+                        notes = EXCLUDED.notes,
+                        photo_url = EXCLUDED.photo_url,
+                        last_modified = CURRENT_TIMESTAMP,
+                        sync_status = 'synced'";
+            }
+
             await using var cmd = new NpgsqlCommand(sql, connection);
 
             cmd.Parameters.AddWithValue("server_id", contact.Id);
@@ -839,6 +920,22 @@ public class LocalCacheService : IDisposable
             cmd.Parameters.AddWithValue("notes", (object?)contact.Notes ?? DBNull.Value);
             cmd.Parameters.AddWithValue("photo_url", (object?)contact.PhotoUrl ?? DBNull.Value);
 
+            if (useExtendedSchema)
+            {
+                cmd.Parameters.AddWithValue("mobile_phone", (object?)contact.MobilePhone ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("address", (object?)contact.Address ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("city", (object?)contact.City ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("state", (object?)contact.State ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("postal_code", (object?)contact.PostalCode ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("country", (object?)contact.Country ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("birthday", (object?)contact.Birthday ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("anniversary", (object?)contact.Anniversary ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("spouse", (object?)contact.Spouse ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("website", (object?)contact.Website ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("is_favorite", contact.IsFavorite);
+                cmd.Parameters.AddWithValue("category", (object?)contact.Category ?? DBNull.Value);
+            }
+
             await cmd.ExecuteNonQueryAsync();
             System.Diagnostics.Debug.WriteLine($"[LocalCacheService] Cached contact: {contact.DisplayName}");
         }
@@ -850,30 +947,58 @@ public class LocalCacheService : IDisposable
     }
 
     /// <summary>
+    /// Gets a cached contact by ID
+    /// </summary>
+    public async Task<Contact?> GetContactByIdAsync(string contactId)
+    {
+        try
+        {
+            await using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            var useExtendedSchema = await CheckExtendedContactSchemaAsync(connection);
+            var sql = GetContactSelectSql(useExtendedSchema) + " WHERE server_id = @server_id AND is_deleted = FALSE";
+
+            await using var cmd = new NpgsqlCommand(sql, connection);
+            cmd.Parameters.AddWithValue("server_id", contactId);
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                return MapReaderToContact(reader, useExtendedSchema);
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[LocalCacheService] Contact not found: {contactId}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[LocalCacheService] Failed to get contact by ID: {ex.Message}");
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Gets all cached contacts
     /// </summary>
     public async Task<List<Contact>> GetCachedContactsAsync()
     {
-        const string sql = @"
-            SELECT server_id, display_name, first_name, last_name,
-                   email_addresses, phone_numbers, company, job_title,
-                   department, notes, photo_url
-            FROM cached_contacts
-            WHERE is_deleted = FALSE
-            ORDER BY display_name";
-
         var contacts = new List<Contact>();
 
         try
         {
             await using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
+
+            var useExtendedSchema = await CheckExtendedContactSchemaAsync(connection);
+            var sql = GetContactSelectSql(useExtendedSchema) + " WHERE is_deleted = FALSE ORDER BY display_name";
+
             await using var cmd = new NpgsqlCommand(sql, connection);
 
             await using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                contacts.Add(MapReaderToContact(reader));
+                contacts.Add(MapReaderToContact(reader, useExtendedSchema));
             }
 
             System.Diagnostics.Debug.WriteLine($"[LocalCacheService] Retrieved {contacts.Count} cached contacts");
@@ -891,33 +1016,31 @@ public class LocalCacheService : IDisposable
     /// </summary>
     public async Task<List<Contact>> SearchContactsAsync(string query)
     {
-        const string sql = @"
-            SELECT server_id, display_name, first_name, last_name,
-                   email_addresses, phone_numbers, company, job_title,
-                   department, notes, photo_url
-            FROM cached_contacts
-            WHERE is_deleted = FALSE
-              AND (display_name ILIKE @query
-                   OR first_name ILIKE @query
-                   OR last_name ILIKE @query
-                   OR company ILIKE @query
-                   OR email_addresses::text ILIKE @query)
-            ORDER BY display_name
-            LIMIT 50";
-
         var contacts = new List<Contact>();
 
         try
         {
             await using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
+
+            var useExtendedSchema = await CheckExtendedContactSchemaAsync(connection);
+            var sql = GetContactSelectSql(useExtendedSchema) + @"
+                WHERE is_deleted = FALSE
+                  AND (display_name ILIKE @query
+                       OR first_name ILIKE @query
+                       OR last_name ILIKE @query
+                       OR company ILIKE @query
+                       OR email_addresses::text ILIKE @query)
+                ORDER BY display_name
+                LIMIT 50";
+
             await using var cmd = new NpgsqlCommand(sql, connection);
             cmd.Parameters.AddWithValue("query", $"%{query}%");
 
             await using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                contacts.Add(MapReaderToContact(reader));
+                contacts.Add(MapReaderToContact(reader, useExtendedSchema));
             }
 
             System.Diagnostics.Debug.WriteLine($"[LocalCacheService] Found {contacts.Count} contacts matching '{query}'");
@@ -930,12 +1053,61 @@ public class LocalCacheService : IDisposable
         return contacts;
     }
 
-    private Contact MapReaderToContact(NpgsqlDataReader reader)
+    private string GetContactSelectSql(bool useExtendedSchema)
+    {
+        if (useExtendedSchema)
+        {
+            return @"
+                SELECT server_id, display_name, first_name, last_name,
+                       email_addresses, phone_numbers, mobile_phone, company, job_title,
+                       department, address, city, state, postal_code, country,
+                       notes, photo_url, birthday, anniversary, spouse, website,
+                       is_favorite, category
+                FROM cached_contacts";
+        }
+        else
+        {
+            return @"
+                SELECT server_id, display_name, first_name, last_name,
+                       email_addresses, phone_numbers, company, job_title,
+                       department, notes, photo_url
+                FROM cached_contacts";
+        }
+    }
+
+    /// <summary>
+    /// Marks a contact as deleted (soft delete)
+    /// </summary>
+    public async Task DeleteContactAsync(string contactId)
+    {
+        const string sql = @"
+            UPDATE cached_contacts
+            SET is_deleted = TRUE, last_modified = CURRENT_TIMESTAMP
+            WHERE server_id = @server_id";
+
+        try
+        {
+            await using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
+            await using var cmd = new NpgsqlCommand(sql, connection);
+            cmd.Parameters.AddWithValue("server_id", contactId);
+
+            var rowsAffected = await cmd.ExecuteNonQueryAsync();
+            System.Diagnostics.Debug.WriteLine($"[LocalCacheService] Deleted contact: {contactId} (rows affected: {rowsAffected})");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[LocalCacheService] Failed to delete contact: {ex.Message}");
+            throw;
+        }
+    }
+
+    private Contact MapReaderToContact(NpgsqlDataReader reader, bool useExtendedSchema = true)
     {
         var emailsJson = reader.IsDBNull(reader.GetOrdinal("email_addresses")) ? "[]" : reader.GetString(reader.GetOrdinal("email_addresses"));
         var phonesJson = reader.IsDBNull(reader.GetOrdinal("phone_numbers")) ? "[]" : reader.GetString(reader.GetOrdinal("phone_numbers"));
 
-        return new Contact
+        var contact = new Contact
         {
             Id = reader.GetString(reader.GetOrdinal("server_id")),
             DisplayName = reader.IsDBNull(reader.GetOrdinal("display_name")) ? "" : reader.GetString(reader.GetOrdinal("display_name")),
@@ -943,12 +1115,69 @@ public class LocalCacheService : IDisposable
             LastName = reader.IsDBNull(reader.GetOrdinal("last_name")) ? null : reader.GetString(reader.GetOrdinal("last_name")),
             EmailAddresses = JsonSerializer.Deserialize<List<string>>(emailsJson, _jsonOptions) ?? new List<string>(),
             PhoneNumbers = JsonSerializer.Deserialize<List<string>>(phonesJson, _jsonOptions) ?? new List<string>(),
-            Company = reader.IsDBNull(reader.GetOrdinal("company")) ? null : reader.GetString(reader.GetOrdinal("company")),
-            JobTitle = reader.IsDBNull(reader.GetOrdinal("job_title")) ? null : reader.GetString(reader.GetOrdinal("job_title")),
-            Department = reader.IsDBNull(reader.GetOrdinal("department")) ? null : reader.GetString(reader.GetOrdinal("department")),
-            Notes = reader.IsDBNull(reader.GetOrdinal("notes")) ? null : reader.GetString(reader.GetOrdinal("notes")),
-            PhotoUrl = reader.IsDBNull(reader.GetOrdinal("photo_url")) ? null : reader.GetString(reader.GetOrdinal("photo_url"))
+            Company = GetNullableString(reader, "company"),
+            JobTitle = GetNullableString(reader, "job_title"),
+            Department = GetNullableString(reader, "department"),
+            Notes = GetNullableString(reader, "notes"),
+            PhotoUrl = GetNullableString(reader, "photo_url")
         };
+
+        if (useExtendedSchema)
+        {
+            contact.MobilePhone = GetNullableString(reader, "mobile_phone");
+            contact.Address = GetNullableString(reader, "address");
+            contact.City = GetNullableString(reader, "city");
+            contact.State = GetNullableString(reader, "state");
+            contact.PostalCode = GetNullableString(reader, "postal_code");
+            contact.Country = GetNullableString(reader, "country");
+            contact.Birthday = GetNullableDateTime(reader, "birthday");
+            contact.Anniversary = GetNullableDateTime(reader, "anniversary");
+            contact.Spouse = GetNullableString(reader, "spouse");
+            contact.Website = GetNullableString(reader, "website");
+            contact.IsFavorite = GetNullableBool(reader, "is_favorite");
+            contact.Category = GetNullableString(reader, "category");
+        }
+
+        return contact;
+    }
+
+    private string? GetNullableString(NpgsqlDataReader reader, string columnName)
+    {
+        try
+        {
+            var ordinal = reader.GetOrdinal(columnName);
+            return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private DateTime? GetNullableDateTime(NpgsqlDataReader reader, string columnName)
+    {
+        try
+        {
+            var ordinal = reader.GetOrdinal(columnName);
+            return reader.IsDBNull(ordinal) ? null : reader.GetDateTime(ordinal);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private bool GetNullableBool(NpgsqlDataReader reader, string columnName)
+    {
+        try
+        {
+            var ordinal = reader.GetOrdinal(columnName);
+            return !reader.IsDBNull(ordinal) && reader.GetBoolean(ordinal);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     #endregion
