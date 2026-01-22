@@ -12,6 +12,9 @@
  *   /health        - Health check
  */
 
+// Load environment variables from .env file
+require('dotenv').config();
+
 const express = require('express');
 const { Pool } = require('pg');
 const QRCode = require('qrcode');

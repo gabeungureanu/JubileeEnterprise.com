@@ -1,0 +1,35 @@
+# Environment files (contain secrets)
+.env
+.env.*
+start.sh
+
+# Test files
+test-*.js
+
+# .NET build artifacts
+*.dll
+*.pdb
+*.exe
+*.deps.json
+*.runtimeconfig.json
+*.staticwebassets.endpoints.json
+
+# Configuration (may contain secrets)
+appsettings.json
+appsettings.*.json
+web.config
+
+# Build directories
+bin/
+obj/
+runtimes/
+Tokens/
+
+# ASP.NET
+.well-known/
+
+# Other
+*.xml
+bundleconfig.json
+sni.dll
+google*.html
