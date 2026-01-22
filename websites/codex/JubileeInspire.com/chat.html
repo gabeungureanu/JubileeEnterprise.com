@@ -910,6 +910,269 @@
       color: #aaa;
     }
 
+    /* ==================== SETTINGS MODAL ==================== */
+    .settings-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, background-color 0.3s ease, visibility 0.3s ease;
+    }
+
+    .settings-modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .settings-modal {
+      background-color: #212121;
+      border-radius: 16px;
+      max-width: 680px;
+      width: 90%;
+      max-height: 85vh;
+      display: flex;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+      overflow: hidden;
+    }
+
+    .settings-modal-overlay.open .settings-modal {
+      transform: scale(1);
+    }
+
+    .settings-sidebar {
+      width: 200px;
+      background-color: #212121;
+      padding: 16px 8px;
+      border-right: 1px solid #333;
+      flex-shrink: 0;
+    }
+
+    .settings-close-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 16px;
+      margin-left: 4px;
+      transition: background-color 0.15s;
+    }
+
+    .settings-close-btn:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .settings-close-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: #999;
+    }
+
+    .settings-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.15s;
+      color: #e0e0e0;
+      font-size: 14px;
+    }
+
+    .settings-nav-item:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .settings-nav-item.active {
+      background-color: rgba(255, 189, 89, 0.15);
+      color: #fff;
+    }
+
+    .settings-nav-item svg {
+      width: 18px;
+      height: 18px;
+      fill: #888;
+      flex-shrink: 0;
+    }
+
+    .settings-nav-item.active svg {
+      fill: #ffbd59;
+    }
+
+    .settings-content {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .settings-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .settings-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .settings-content::-webkit-scrollbar-thumb {
+      background: #444;
+      border-radius: 3px;
+    }
+
+    .settings-section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 24px;
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      border-bottom: 1px solid #333;
+    }
+
+    .settings-row:last-child {
+      border-bottom: none;
+    }
+
+    .settings-label {
+      font-size: 14px;
+      color: #e0e0e0;
+    }
+
+    .settings-label-desc {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+      max-width: 300px;
+    }
+
+    .settings-select {
+      background-color: #333;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 8px 32px 8px 12px;
+      font-size: 14px;
+      color: #e0e0e0;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23888'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+
+    .settings-select:focus {
+      outline: none;
+      border-color: #ffbd59;
+    }
+
+    .settings-toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background-color: #444;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .settings-toggle.active {
+      background-color: #ffbd59;
+    }
+
+    .settings-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background-color: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .settings-toggle.active::after {
+      transform: translateX(20px);
+    }
+
+    .settings-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background-color: #333;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: #e0e0e0;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .settings-btn:hover {
+      background-color: #3a3a3a;
+      border-color: #555;
+    }
+
+    .settings-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    /* Mobile responsive for settings modal */
+    @media (max-width: 600px) {
+      .settings-modal {
+        flex-direction: column;
+        max-height: 90vh;
+      }
+
+      .settings-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #333;
+        padding: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .settings-close-btn {
+        margin-bottom: 8px;
+      }
+
+      .settings-nav-item {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      .settings-nav-item span {
+        display: none;
+      }
+
+      .settings-content {
+        padding: 16px;
+      }
+    }
+
     /* ==================== PIN MODAL ==================== */
     .pin-modal-overlay {
       position: fixed;
@@ -1666,6 +1929,309 @@
     </div>
   </div>
 
+  <!-- SETTINGS MODAL -->
+  <div class="settings-modal-overlay" id="settingsModalOverlay">
+    <div class="settings-modal">
+      <!-- Settings Sidebar -->
+      <div class="settings-sidebar">
+        <button class="settings-close-btn" id="settingsCloseBtn" title="Close">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+        <div class="settings-nav-item active" data-tab="general">
+          <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22l-1.92 3.32c-.12.21-.07.47.12.61l2.03 1.58c-.04.31-.06.64-.06.94 0 .31.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          <span>General</span>
+        </div>
+        <div class="settings-nav-item" data-tab="notifications">
+          <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+          <span>Notifications</span>
+        </div>
+        <div class="settings-nav-item" data-tab="personalization">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5.5-2.5l7.51-3.49L17.5 6.5 9.99 9.99 6.5 17.5zm5.5-6.6c.61 0 1.1.49 1.1 1.1s-.49 1.1-1.1 1.1-1.1-.49-1.1-1.1.49-1.1 1.1-1.1z"/></svg>
+          <span>Personalization</span>
+        </div>
+        <div class="settings-nav-item" data-tab="data">
+          <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+          <span>Data controls</span>
+        </div>
+        <div class="settings-nav-item" data-tab="security">
+          <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+          <span>Security</span>
+        </div>
+        <div class="settings-nav-item" data-tab="account">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+          <span>Account</span>
+        </div>
+      </div>
+
+      <!-- Settings Content -->
+      <div class="settings-content" id="settingsContent">
+        <!-- General Tab (default) -->
+        <div class="settings-tab" id="tab-general">
+          <div class="settings-section-title">General</div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Appearance</div>
+            </div>
+            <select class="settings-select" id="settingAppearance">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="system">System</option>
+            </select>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Accent color</div>
+            </div>
+            <select class="settings-select" id="settingAccentColor">
+              <option value="default">Default (Gold)</option>
+              <option value="blue">Blue</option>
+              <option value="green">Green</option>
+              <option value="purple">Purple</option>
+            </select>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Language</div>
+            </div>
+            <select class="settings-select" id="settingLanguage">
+              <option value="auto">Auto-detect</option>
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+            </select>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Default Bible version</div>
+            </div>
+            <select class="settings-select" id="settingBibleVersion">
+              <option value="kjv">KJV</option>
+              <option value="niv">NIV</option>
+              <option value="esv">ESV</option>
+              <option value="nlt">NLT</option>
+              <option value="nasb">NASB</option>
+            </select>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Voice</div>
+            </div>
+            <button class="settings-btn" id="settingVoicePlay">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              Play
+            </button>
+          </div>
+        </div>
+
+        <!-- Notifications Tab -->
+        <div class="settings-tab" id="tab-notifications" style="display: none;">
+          <div class="settings-section-title">Notifications</div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Push notifications</div>
+              <div class="settings-label-desc">Receive notifications for new messages and updates</div>
+            </div>
+            <div class="settings-toggle active" id="settingPushNotifs"></div>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Email notifications</div>
+              <div class="settings-label-desc">Receive email summaries and updates</div>
+            </div>
+            <div class="settings-toggle" id="settingEmailNotifs"></div>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Sound effects</div>
+              <div class="settings-label-desc">Play sounds for messages and interactions</div>
+            </div>
+            <div class="settings-toggle active" id="settingSoundEffects"></div>
+          </div>
+        </div>
+
+        <!-- Personalization Tab -->
+        <div class="settings-tab" id="tab-personalization" style="display: none;">
+          <div class="settings-section-title">Personalization</div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Response style</div>
+              <div class="settings-label-desc">How Jubilee responds to your questions</div>
+            </div>
+            <select class="settings-select" id="settingResponseStyle">
+              <option value="balanced">Balanced</option>
+              <option value="concise">Concise</option>
+              <option value="detailed">Detailed</option>
+              <option value="pastoral">Pastoral</option>
+            </select>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Include Scripture references</div>
+              <div class="settings-label-desc">Automatically include Bible verses in responses</div>
+            </div>
+            <div class="settings-toggle active" id="settingScriptureRefs"></div>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Remember context</div>
+              <div class="settings-label-desc">Jubilee remembers your previous conversations</div>
+            </div>
+            <div class="settings-toggle active" id="settingRememberContext"></div>
+          </div>
+        </div>
+
+        <!-- Data Controls Tab -->
+        <div class="settings-tab" id="tab-data" style="display: none;">
+          <div class="settings-section-title">Data controls</div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Improve Jubilee for everyone</div>
+              <div class="settings-label-desc">Allow your conversations to help improve Jubilee's responses</div>
+            </div>
+            <div class="settings-toggle" id="settingImproveJubilee"></div>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Save chat history</div>
+              <div class="settings-label-desc">Save your conversations for future reference</div>
+            </div>
+            <div class="settings-toggle active" id="settingSaveHistory"></div>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Export data</div>
+              <div class="settings-label-desc">Download all your chat history and data</div>
+            </div>
+            <button class="settings-btn" id="settingExportData">
+              <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              Export
+            </button>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Delete all chats</div>
+              <div class="settings-label-desc">Permanently delete all your conversation history</div>
+            </div>
+            <button class="settings-btn" id="settingDeleteChats" style="color: #f87171; border-color: #f87171;">
+              <svg viewBox="0 0 24 24" style="fill: #f87171;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <!-- Security Tab -->
+        <div class="settings-tab" id="tab-security" style="display: none;">
+          <div class="settings-section-title">Security</div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Private chat PIN</div>
+              <div class="settings-label-desc">Set a PIN to encrypt private conversations</div>
+            </div>
+            <button class="settings-btn" id="settingSetPin">
+              <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+              Set PIN
+            </button>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Two-factor authentication</div>
+              <div class="settings-label-desc">Add an extra layer of security to your account</div>
+            </div>
+            <div class="settings-toggle" id="setting2FA"></div>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Active sessions</div>
+              <div class="settings-label-desc">Manage devices where you're signed in</div>
+            </div>
+            <button class="settings-btn" id="settingActiveSessions">
+              <svg viewBox="0 0 24 24"><path d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/></svg>
+              Manage
+            </button>
+          </div>
+        </div>
+
+        <!-- Account Tab -->
+        <div class="settings-tab" id="tab-account" style="display: none;">
+          <div class="settings-section-title">Account</div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Email</div>
+              <div class="settings-label-desc" id="settingUserEmail">Not signed in</div>
+            </div>
+            <button class="settings-btn" id="settingChangeEmail">
+              <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              Change
+            </button>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Password</div>
+              <div class="settings-label-desc">Last changed: Never</div>
+            </div>
+            <button class="settings-btn" id="settingChangePassword">
+              <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              Change
+            </button>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Subscription</div>
+              <div class="settings-label-desc">Free Plan</div>
+            </div>
+            <button class="settings-btn" id="settingUpgrade" style="background-color: #ffbd59; color: #000; border-color: #ffbd59;">
+              Upgrade
+            </button>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Sign out</div>
+              <div class="settings-label-desc">Sign out of your account on this device</div>
+            </div>
+            <button class="settings-btn" id="settingSignOut">
+              <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+              Sign out
+            </button>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Delete account</div>
+              <div class="settings-label-desc">Permanently delete your account and all data</div>
+            </div>
+            <button class="settings-btn" id="settingDeleteAccount" style="color: #f87171; border-color: #f87171;">
+              <svg viewBox="0 0 24 24" style="fill: #f87171;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="app-container">
     <!-- LEFT SIDEBAR -->
     <div class="sidebar" id="sidebar">
@@ -1677,6 +2243,9 @@
       </div>
       <div class="sidebar-icon" title="History">
         <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+      </div>
+      <div class="sidebar-icon" id="settingsBtn" title="Settings">
+        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22l-1.92 3.32c-.12.21-.07.47.12.61l2.03 1.58c-.04.31-.06.64-.06.94 0 .31.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
       </div>
       <div class="sidebar-spacer"></div>
       <div class="sidebar-brand-section">
@@ -1832,6 +2401,14 @@
       var voiceButton = document.getElementById('voiceButton');
       var attachIcon = document.getElementById('attachIcon');
       var privacyIcon = document.getElementById('privacyIcon');
+
+      // Settings Modal Elements
+      var settingsBtn = document.getElementById('settingsBtn');
+      var settingsModalOverlay = document.getElementById('settingsModalOverlay');
+      var settingsCloseBtn = document.getElementById('settingsCloseBtn');
+      var settingsContent = document.getElementById('settingsContent');
+      var settingsNavItems = document.querySelectorAll('.settings-nav-item');
+      var settingsTabs = document.querySelectorAll('.settings-tab');
 
       // Conversation cache key
       var CONVERSATION_CACHE_KEY = 'jubileeInspireConversation';
@@ -3054,6 +3631,163 @@
       function closePinModal() {
         pinModalOverlay.classList.remove('open');
       }
+
+      // ==================== SETTINGS MODAL FUNCTIONS ====================
+      function openSettingsModal() {
+        settingsModalOverlay.classList.add('open');
+        // Update user email in account tab if logged in
+        var userEmailEl = document.getElementById('settingUserEmail');
+        if (userEmailEl) {
+          userEmailEl.textContent = userData && userData.email ? userData.email : 'Not signed in';
+        }
+      }
+
+      function closeSettingsModal() {
+        settingsModalOverlay.classList.remove('open');
+      }
+
+      function switchSettingsTab(tabName) {
+        // Update nav items
+        settingsNavItems.forEach(function(item) {
+          if (item.getAttribute('data-tab') === tabName) {
+            item.classList.add('active');
+          } else {
+            item.classList.remove('active');
+          }
+        });
+
+        // Update tab content
+        settingsTabs.forEach(function(tab) {
+          if (tab.id === 'tab-' + tabName) {
+            tab.style.display = 'block';
+          } else {
+            tab.style.display = 'none';
+          }
+        });
+      }
+
+      // Settings button click handler
+      if (settingsBtn) {
+        settingsBtn.addEventListener('click', function() {
+          openSettingsModal();
+        });
+      }
+
+      // Settings close button handler
+      if (settingsCloseBtn) {
+        settingsCloseBtn.addEventListener('click', function() {
+          closeSettingsModal();
+        });
+      }
+
+      // Settings modal overlay click handler (close on click outside)
+      if (settingsModalOverlay) {
+        settingsModalOverlay.addEventListener('click', function(e) {
+          if (e.target === settingsModalOverlay) {
+            closeSettingsModal();
+          }
+        });
+      }
+
+      // Settings nav item click handlers
+      settingsNavItems.forEach(function(item) {
+        item.addEventListener('click', function() {
+          var tabName = item.getAttribute('data-tab');
+          switchSettingsTab(tabName);
+        });
+      });
+
+      // Toggle switch handlers
+      document.querySelectorAll('.settings-toggle').forEach(function(toggle) {
+        toggle.addEventListener('click', function() {
+          toggle.classList.toggle('active');
+          // Save setting to localStorage
+          var settingId = toggle.id;
+          if (settingId) {
+            localStorage.setItem(settingId, toggle.classList.contains('active'));
+          }
+        });
+      });
+
+      // Load saved toggle states
+      document.querySelectorAll('.settings-toggle').forEach(function(toggle) {
+        var settingId = toggle.id;
+        if (settingId) {
+          var savedValue = localStorage.getItem(settingId);
+          if (savedValue !== null) {
+            if (savedValue === 'true') {
+              toggle.classList.add('active');
+            } else {
+              toggle.classList.remove('active');
+            }
+          }
+        }
+      });
+
+      // Settings action handlers
+      var settingSetPin = document.getElementById('settingSetPin');
+      if (settingSetPin) {
+        settingSetPin.addEventListener('click', function() {
+          closeSettingsModal();
+          openPinModal();
+        });
+      }
+
+      var settingSignOut = document.getElementById('settingSignOut');
+      if (settingSignOut) {
+        settingSignOut.addEventListener('click', function() {
+          closeSettingsModal();
+          // Trigger the existing logout functionality
+          localStorage.removeItem('jubileeInspireAuth');
+          localStorage.removeItem('jubileeInspireUser');
+          window.location.href = '/login.html';
+        });
+      }
+
+      var settingDeleteChats = document.getElementById('settingDeleteChats');
+      if (settingDeleteChats) {
+        settingDeleteChats.addEventListener('click', function() {
+          if (confirm('Are you sure you want to delete all your chat history? This cannot be undone.')) {
+            localStorage.removeItem(CONVERSATION_CACHE_KEY);
+            if (messagesWrapper) {
+              messagesWrapper.innerHTML = '';
+              messagesWrapper.appendChild(welcomeState);
+            }
+            if (welcomeState) {
+              welcomeState.style.display = 'flex';
+            }
+            closeSettingsModal();
+          }
+        });
+      }
+
+      var settingExportData = document.getElementById('settingExportData');
+      if (settingExportData) {
+        settingExportData.addEventListener('click', function() {
+          var conversationData = localStorage.getItem(CONVERSATION_CACHE_KEY);
+          if (conversationData) {
+            var blob = new Blob([conversationData], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'jubilee-inspire-chat-export.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          } else {
+            alert('No chat history to export.');
+          }
+        });
+      }
+
+      // Keyboard shortcut to close settings modal (Escape key)
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && settingsModalOverlay.classList.contains('open')) {
+          closeSettingsModal();
+        }
+      });
+      // ==================== END SETTINGS MODAL FUNCTIONS ====================
 
       function handlePinComplete() {
         var pin = pinInputs.map(function(input) {
