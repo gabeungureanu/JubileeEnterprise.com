@@ -65,6 +65,11 @@ public class ConfigurationService
     public LocalCacheSettings LocalCache => _rootConfig.LocalCache;
 
     /// <summary>
+    /// Gets the OAuth2 configuration for email providers
+    /// </summary>
+    public OAuth2Config OAuth2 => _rootConfig.OAuth2;
+
+    /// <summary>
     /// Gets the raw IConfiguration for advanced scenarios
     /// </summary>
     public IConfiguration Configuration => _configuration;

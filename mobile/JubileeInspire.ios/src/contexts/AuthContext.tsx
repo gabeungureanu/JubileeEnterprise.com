@@ -2,11 +2,13 @@
  * Jubilee Inspire - Authentication Context
  *
  * Global authentication state management with AsyncStorage persistence.
+ * Integrates with storage service for user-specific chat history.
  */
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, AuthTokens } from '../types';
+import { storage } from '../services/storage';
 
 interface AuthContextType {
   user: User | null;
@@ -54,14 +56,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (parsedTokens.expiresAt > Date.now()) {
           setUser(parsedUser);
           setTokens(parsedTokens);
+          // Set user ID in storage service for user-specific data
+          storage.setCurrentUser(parsedUser.id);
         } else {
           // Token expired, clear storage
           await clearStorage();
+          storage.setCurrentUser(null);
         }
+      } else {
+        // No stored auth, use anonymous storage
+        storage.setCurrentUser(null);
       }
     } catch (error) {
       console.error('Error loading stored auth:', error);
       await clearStorage();
+      storage.setCurrentUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -74,6 +83,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       setUser(newUser);
       setTokens(newTokens);
+      // Set user ID in storage service for user-specific chat history
+      storage.setCurrentUser(newUser.id);
+      console.log('[AuthContext] User signed in, storage switched to user:', newUser.id);
     } catch (error) {
       console.error('Error storing auth:', error);
       throw error;
@@ -85,6 +97,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await clearStorage();
       setUser(null);
       setTokens(null);
+      // Clear user ID in storage service, switching to anonymous storage
+      storage.setCurrentUser(null);
+      console.log('[AuthContext] User signed out, storage switched to anonymous');
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;

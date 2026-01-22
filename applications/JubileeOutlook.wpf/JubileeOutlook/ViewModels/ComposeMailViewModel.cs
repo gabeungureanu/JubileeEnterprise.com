@@ -17,6 +17,7 @@ public partial class ComposeMailViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SaveDraftCommand))]
     private string _to = string.Empty;
 
     [ObservableProperty]
@@ -26,9 +27,11 @@ public partial class ComposeMailViewModel : ObservableObject
     private string _bcc = string.Empty;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveDraftCommand))]
     private string _subject = string.Empty;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveDraftCommand))]
     private string _body = string.Empty;
 
     [ObservableProperty]
@@ -38,14 +41,17 @@ public partial class ComposeMailViewModel : ObservableObject
     private bool _showBcc = false;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveDraftCommand))]
     private bool _isComposing = false;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SaveDraftCommand))]
     private bool _isSending = false;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SaveDraftCommand))]
     private bool _isSavingDraft = false;
 
     [ObservableProperty]
@@ -58,6 +64,9 @@ public partial class ComposeMailViewModel : ObservableObject
     private string _draftStatus = string.Empty;
 
     public ObservableCollection<AttachmentInfo> Attachments { get; } = new();
+
+    // List of embedded images in the email body (for CID attachments)
+    public List<EmbeddedImageData> EmbeddedImages { get; } = new();
 
     // Events for communication with MainWindow
     public event EventHandler? MailSent;
@@ -108,26 +117,40 @@ public partial class ComposeMailViewModel : ObservableObject
                 {
                     FileName = a.FileName,
                     FilePath = a.FilePath
-                }).ToList()
+                }).ToList(),
+                EmbeddedImages = EmbeddedImages.ToList()
             };
 
             // Request MainWindow to send the email via the service
+            // MainWindow will call NotifyMailSentSuccess() or set error when complete
             SendMailRequested?.Invoke(this, emailData);
-
-            // Notify that mail was sent successfully
-            MailSent?.Invoke(this, EventArgs.Empty);
-            ClearForm();
         }
         catch (Exception ex)
         {
             ValidationError = $"Failed to send email: {ex.Message}";
-        }
-        finally
-        {
             IsSending = false;
         }
 
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Called by MainWindow when send operation completes successfully
+    /// </summary>
+    public void NotifyMailSentSuccess()
+    {
+        IsSending = false;
+        MailSent?.Invoke(this, EventArgs.Empty);
+        ClearForm();
+    }
+
+    /// <summary>
+    /// Called by MainWindow when send operation fails
+    /// </summary>
+    public void NotifyMailSentFailed(string errorMessage)
+    {
+        IsSending = false;
+        ValidationError = errorMessage;
     }
 
     private bool CanSend()
@@ -198,7 +221,8 @@ public partial class ComposeMailViewModel : ObservableObject
                 {
                     FileName = a.FileName,
                     FilePath = a.FilePath
-                }).ToList()
+                }).ToList(),
+                EmbeddedImages = EmbeddedImages.ToList()
             };
 
             // Request MainWindow to save the draft via the service
@@ -400,6 +424,7 @@ public partial class ComposeMailViewModel : ObservableObject
         _lastSavedContent = string.Empty;
         _hasUnsavedChanges = false;
         Attachments.Clear();
+        EmbeddedImages.Clear();
     }
 
     public void StartComposing(string? fromEmail = null)
@@ -419,7 +444,7 @@ public partial class ComposeMailViewModel : ObservableObject
         _autoSaveTimer.Start();
     }
 
-    public void LoadDraft(string draftId, string to, string cc, string bcc, string subject, string body, string? fromEmail = null)
+    public void LoadDraft(string draftId, string to, string cc, string bcc, string subject, string body, string? fromEmail = null, List<AttachmentInfo>? attachments = null)
     {
         // Clear and start fresh
         ClearForm();
@@ -444,6 +469,15 @@ public partial class ComposeMailViewModel : ObservableObject
         ShowCc = !string.IsNullOrWhiteSpace(cc);
         ShowBcc = !string.IsNullOrWhiteSpace(bcc);
 
+        // Load attachments if provided
+        if (attachments != null && attachments.Count > 0)
+        {
+            foreach (var attachment in attachments)
+            {
+                Attachments.Add(attachment);
+            }
+        }
+
         // Store the initial content hash so we don't immediately re-save
         _lastSavedContent = GetContentHash();
         _hasUnsavedChanges = false;
@@ -458,6 +492,147 @@ public partial class ComposeMailViewModel : ObservableObject
     public void SetBodyContent(string content)
     {
         Body = content;
+    }
+
+    /// <summary>
+    /// Start composing a reply to a message
+    /// </summary>
+    public void StartReply(string fromEmail, string toEmail, string toName, string originalSubject, string originalBody, DateTime originalDate, bool isHtml = false)
+    {
+        ClearForm();
+        IsComposing = true;
+
+        From = fromEmail;
+        To = toEmail;
+        Subject = originalSubject.StartsWith("RE:", StringComparison.OrdinalIgnoreCase)
+            ? originalSubject
+            : "RE: " + originalSubject;
+
+        // Build reply body with original message quote
+        var quotedBody = BuildQuotedBody(toName, toEmail, originalDate, originalSubject, originalBody, isHtml);
+        Body = quotedBody;
+
+        _autoSaveTimer.Start();
+    }
+
+    /// <summary>
+    /// Start composing a reply-all to a message
+    /// </summary>
+    public void StartReplyAll(string fromEmail, string toEmail, string toName, string originalCc, string originalSubject, string originalBody, DateTime originalDate, bool isHtml = false)
+    {
+        ClearForm();
+        IsComposing = true;
+
+        From = fromEmail;
+        To = toEmail;
+
+        // Add CC recipients if any
+        if (!string.IsNullOrWhiteSpace(originalCc))
+        {
+            Cc = originalCc;
+            ShowCc = true;
+        }
+
+        Subject = originalSubject.StartsWith("RE:", StringComparison.OrdinalIgnoreCase)
+            ? originalSubject
+            : "RE: " + originalSubject;
+
+        // Build reply body with original message quote
+        var quotedBody = BuildQuotedBody(toName, toEmail, originalDate, originalSubject, originalBody, isHtml);
+        Body = quotedBody;
+
+        _autoSaveTimer.Start();
+    }
+
+    /// <summary>
+    /// Start composing a forwarded message
+    /// </summary>
+    public void StartForward(string fromEmail, string originalFrom, string originalFromEmail, string originalTo, string originalSubject, string originalBody, DateTime originalDate, List<AttachmentInfo>? attachments = null, bool isHtml = false)
+    {
+        ClearForm();
+        IsComposing = true;
+
+        From = fromEmail;
+        // To field is empty for forward - user needs to specify recipient
+        To = string.Empty;
+
+        Subject = originalSubject.StartsWith("FW:", StringComparison.OrdinalIgnoreCase)
+            ? originalSubject
+            : "FW: " + originalSubject;
+
+        // Build forwarded message body
+        var forwardBody = BuildForwardedBody(originalFrom, originalFromEmail, originalTo, originalDate, originalSubject, originalBody, isHtml);
+        Body = forwardBody;
+
+        // Include original attachments
+        if (attachments != null && attachments.Count > 0)
+        {
+            foreach (var attachment in attachments)
+            {
+                Attachments.Add(attachment);
+            }
+        }
+
+        _autoSaveTimer.Start();
+    }
+
+    private string BuildQuotedBody(string senderName, string senderEmail, DateTime sentDate, string subject, string originalBody, bool isHtml)
+    {
+        var dateStr = sentDate.ToString("ddd, MMM d, yyyy h:mm tt");
+
+        if (isHtml)
+        {
+            return $@"<br/><br/>
+<div style='border-left: 2px solid #ccc; padding-left: 10px; margin-left: 5px; color: #666;'>
+<p><b>From:</b> {System.Net.WebUtility.HtmlEncode(senderName)} &lt;{System.Net.WebUtility.HtmlEncode(senderEmail)}&gt;<br/>
+<b>Sent:</b> {dateStr}<br/>
+<b>Subject:</b> {System.Net.WebUtility.HtmlEncode(subject)}</p>
+{originalBody}
+</div>";
+        }
+        else
+        {
+            return $@"
+
+
+-------- Original Message --------
+From: {senderName} <{senderEmail}>
+Sent: {dateStr}
+Subject: {subject}
+
+{originalBody}";
+        }
+    }
+
+    private string BuildForwardedBody(string senderName, string senderEmail, string originalTo, DateTime sentDate, string subject, string originalBody, bool isHtml)
+    {
+        var dateStr = sentDate.ToString("ddd, MMM d, yyyy h:mm tt");
+
+        if (isHtml)
+        {
+            return $@"<br/><br/>
+<div style='border-top: 1px solid #ccc; padding-top: 10px;'>
+<p><b>---------- Forwarded message ----------</b><br/>
+<b>From:</b> {System.Net.WebUtility.HtmlEncode(senderName)} &lt;{System.Net.WebUtility.HtmlEncode(senderEmail)}&gt;<br/>
+<b>Date:</b> {dateStr}<br/>
+<b>Subject:</b> {System.Net.WebUtility.HtmlEncode(subject)}<br/>
+<b>To:</b> {System.Net.WebUtility.HtmlEncode(originalTo)}</p>
+{originalBody}
+</div>";
+        }
+        else
+        {
+            return $@"
+
+
+---------- Forwarded message ----------
+From: {senderName} <{senderEmail}>
+Date: {dateStr}
+Subject: {subject}
+To: {originalTo}
+
+{originalBody}";
+        }
     }
 }
 
@@ -483,6 +658,14 @@ public class SendMailEventArgs : EventArgs
     public string Subject { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
     public List<AttachmentData> Attachments { get; set; } = new();
+    public List<EmbeddedImageData> EmbeddedImages { get; set; } = new();
+}
+
+public class EmbeddedImageData
+{
+    public string ContentId { get; set; } = string.Empty;
+    public string FilePath { get; set; } = string.Empty;
+    public string FileName { get; set; } = string.Empty;
 }
 
 public class SaveDraftEventArgs : EventArgs
@@ -495,4 +678,5 @@ public class SaveDraftEventArgs : EventArgs
     public string Subject { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
     public List<AttachmentData> Attachments { get; set; } = new();
+    public List<EmbeddedImageData> EmbeddedImages { get; set; } = new();
 }

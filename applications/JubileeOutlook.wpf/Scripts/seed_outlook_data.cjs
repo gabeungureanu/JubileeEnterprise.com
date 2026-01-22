@@ -5,9 +5,9 @@ const { Client } = require('pg');
 
 const client = new Client({
   host: 'localhost',
-  port: 5432,
-  database: 'jubilee_continuum',
-  user: 'jubilee',
+  port: 5433,
+  database: 'continuum',
+  user: 'postgres',
   password: 'Pass@123'
 });
 

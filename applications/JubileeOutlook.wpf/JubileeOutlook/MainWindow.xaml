@@ -64,8 +64,8 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Tab Headers (JubileeVerse style with separators) -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0" WindowChrome.IsHitTestVisibleInChrome="True">
+                <!-- Tab Headers (JubileeVerse style with separators) - Mail module specific -->
+                <StackPanel x:Name="MailTabsPanel" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0" WindowChrome.IsHitTestVisibleInChrome="True">
                     <!-- Home Icon -->
                     <TextBlock Text="🏠" FontSize="14" Foreground="{StaticResource GoldBrandBrush}" VerticalAlignment="Center" Margin="0,0,4,0" Cursor="Hand"/>
                     <TextBlock Style="{StaticResource RibbonTabSeparatorStyle}"/>
@@ -76,6 +76,13 @@
                     <RadioButton x:Name="FolderTab" Content="Folder" GroupName="RibbonTabs" Style="{StaticResource RibbonTabButtonStyle}" Click="TabButton_Click"/>
                     <TextBlock Style="{StaticResource RibbonTabSeparatorStyle}"/>
                     <RadioButton x:Name="ViewTab" Content="View" GroupName="RibbonTabs" Style="{StaticResource RibbonTabButtonStyle}" Click="TabButton_Click"/>
+                </StackPanel>
+
+                <!-- Tab Headers - People module specific -->
+                <StackPanel x:Name="PeopleTabsPanel" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0" Visibility="Collapsed" WindowChrome.IsHitTestVisibleInChrome="True">
+                    <TextBlock Text="Home" FontSize="13" Foreground="{StaticResource GoldBrandBrush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,24,0" Cursor="Hand"/>
+                    <TextBlock Text="View" FontSize="13" Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,24,0" Cursor="Hand"/>
+                    <TextBlock Text="Help" FontSize="13" Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Cursor="Hand"/>
                 </StackPanel>
 
                 <!-- Profile Button and Window Control Buttons -->
@@ -106,8 +113,8 @@
                 </StackPanel>
             </Grid>
 
-            <!-- Ribbon Content Panels - Compact Icon-Only Design with Large Icons -->
-            <Border Grid.Row="1" Background="{StaticResource RibbonBackgroundBrush}" BorderBrush="{StaticResource RibbonBorderBrush}" BorderThickness="0,1,0,1" Padding="8,6">
+            <!-- Ribbon Content Panels - Compact Icon-Only Design with Large Icons - Mail module specific -->
+            <Border x:Name="MailRibbonPanel" Grid.Row="1" Background="{StaticResource RibbonBackgroundBrush}" BorderBrush="{StaticResource RibbonBorderBrush}" BorderThickness="0,1,0,1" Padding="8,6">
                 <Grid>
                     <!-- HOME TAB CONTENT - Compact Single Row with Large Icons -->
                     <StackPanel x:Name="HomeTabContent" Orientation="Horizontal" Visibility="Visible" VerticalAlignment="Center">
@@ -462,16 +469,16 @@
                                                           VerticalAlignment="Center"
                                                           Margin="0,0,8,0"/>
 
-                                            <!-- WWBW Email Address (Gold) -->
+                                            <!-- User Email Address (Gold) - Shows signed-in user email or "My Account" -->
                                             <TextBlock x:Name="WwbwEmailDisplay"
                                                        Grid.Column="1"
-                                                       Text="My Account"
+                                                       Text="{Binding MainViewModel.AccountRootFolder.Name, FallbackValue='My Account', TargetNullValue='My Account'}"
                                                        Foreground="{StaticResource GoldBrandBrush}"
                                                        FontSize="13"
                                                        FontWeight="SemiBold"
                                                        VerticalAlignment="Center"
                                                        TextTrimming="CharacterEllipsis"
-                                                       ToolTip="My Account"/>
+                                                       ToolTip="{Binding MainViewModel.AccountRootFolder.Name, FallbackValue='My Account', TargetNullValue='My Account'}"/>
                                         </Grid>
                                     </Border>
 
@@ -636,6 +643,7 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
 
                                         <!-- Subject -->
@@ -645,10 +653,41 @@
                                                    FontWeight="SemiBold"
                                                    Foreground="{StaticResource PrimaryTextBrush}"
                                                    TextWrapping="Wrap"
-                                                   Margin="0,0,0,16"/>
+                                                   Margin="0,0,0,12"/>
+
+                                        <!-- Action Buttons: Reply, Reply All, Forward (Hidden for now - TODO: fix body display) -->
+                                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,16" Visibility="Collapsed">
+                                            <!-- Reply Button -->
+                                            <Button Command="{Binding MainViewModel.ReplyCommand}"
+                                                    Style="{StaticResource RibbonSmallButtonStyle}"
+                                                    ToolTip="Reply" Margin="0,0,4,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xe15e;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Reply" FontSize="12" Margin="6,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource SecondaryTextBrush}"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <!-- Reply All Button -->
+                                            <Button Command="{Binding MainViewModel.ReplyAllCommand}"
+                                                    Style="{StaticResource RibbonSmallButtonStyle}"
+                                                    ToolTip="Reply All" Margin="4,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xe15f;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Reply All" FontSize="12" Margin="6,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource SecondaryTextBrush}"/>
+                                                </StackPanel>
+                                            </Button>
+                                            <!-- Forward Button -->
+                                            <Button Command="{Binding MainViewModel.ForwardCommand}"
+                                                    Style="{StaticResource RibbonSmallButtonStyle}"
+                                                    ToolTip="Forward" Margin="4,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xe154;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="Forward" FontSize="12" Margin="6,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource SecondaryTextBrush}"/>
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
 
                                         <!-- Sender Info with Avatar -->
-                                        <Grid Grid.Row="1" Margin="0,0,0,12">
+                                        <Grid Grid.Row="2" Margin="0,0,0,12">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="*"/>
@@ -690,7 +729,7 @@
                                         </Grid>
 
                                         <!-- To Recipients -->
-                                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="52,0,0,8">
+                                        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="52,0,0,8">
                                             <TextBlock Text="To:"
                                                        FontSize="12"
                                                        Foreground="{StaticResource SecondaryTextBrush}"
@@ -703,7 +742,7 @@
                                         </StackPanel>
 
                                         <!-- Attachments Bar (horizontal, compact) -->
-                                        <Border Grid.Row="3"
+                                        <Border Grid.Row="4"
                                                 Visibility="{Binding MainViewModel.DisplayedMessage.HasAttachments, Converter={StaticResource BoolToVisibilityConverter}}"
                                                 Background="{StaticResource TertiaryBackgroundBrush}"
                                                 CornerRadius="4"
@@ -743,14 +782,23 @@
                                                                     CornerRadius="3"
                                                                     Padding="8,4"
                                                                     Margin="0,0,8,0"
-                                                                    Cursor="Hand">
+                                                                    Cursor="Hand"
+                                                                    MouseLeftButtonDown="Attachment_MouseLeftButtonDown"
+                                                                    Tag="{Binding}">
                                                                 <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="&#xe226;"
+                                                                               FontFamily="{StaticResource MaterialIcons}"
+                                                                               FontSize="14"
+                                                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                                                               VerticalAlignment="Center"
+                                                                               Margin="0,0,6,0"/>
                                                                     <TextBlock Text="{Binding FileName}"
                                                                                FontSize="11"
                                                                                Foreground="{StaticResource AccentBrush}"
                                                                                VerticalAlignment="Center"
                                                                                MaxWidth="150"
-                                                                               TextTrimming="CharacterEllipsis"/>
+                                                                               TextTrimming="CharacterEllipsis"
+                                                                               ToolTip="{Binding FileName}"/>
                                                                     <TextBlock Text="{Binding FileSize, Converter={StaticResource FileSizeConverter}}"
                                                                                FontSize="10"
                                                                                Foreground="{StaticResource SecondaryTextBrush}"
@@ -786,13 +834,7 @@
 
                 <!-- PEOPLE MODULE VIEW -->
                 <Grid x:Name="PeopleModuleContent" Visibility="Collapsed">
-                    <Border Background="{StaticResource PrimaryBackgroundBrush}">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <TextBlock Text="&#xE77B;" FontFamily="{StaticResource MaterialIcons}" FontSize="64" Foreground="{StaticResource SecondaryTextBrush}" HorizontalAlignment="Center"/>
-                            <TextBlock Text="People" FontSize="24" Foreground="{StaticResource PrimaryTextBrush}" HorizontalAlignment="Center" Margin="0,16,0,0"/>
-                            <TextBlock Text="Contacts view coming soon" FontSize="14" Foreground="{StaticResource SecondaryTextBrush}" HorizontalAlignment="Center" Margin="0,8,0,0"/>
-                        </StackPanel>
-                    </Border>
+                    <views:PeopleView x:Name="PeopleViewControl"/>
                 </Grid>
 
                 <!-- TASKS MODULE VIEW -->

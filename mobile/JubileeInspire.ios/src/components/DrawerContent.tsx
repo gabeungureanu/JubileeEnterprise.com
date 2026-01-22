@@ -15,7 +15,10 @@ import {
   Platform,
   TextInput,
   Modal,
+  Share,
+  Alert,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -23,6 +26,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { spacing, typography } from '../config';
 import { useTheme } from '../contexts/ThemeContext';
 import { useDrawer } from '../contexts/DrawerContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Conversation } from '../types';
 import ConversationItem from './ConversationItem';
 import SettingsModal from './SettingsModal';
@@ -31,6 +35,7 @@ import { storage } from '../services/storage';
 const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: drawerNavigation }) => {
   const { colors } = useTheme();
   const { isCollapsed, setIsCollapsed, toggleCollapse, isMobileView } = useDrawer();
+  const { isAuthenticated, user } = useAuth();
 
   const navigation = useNavigation();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -52,6 +57,14 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
 
   // Settings modal state
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  // Share modal state
+  const [shareConversationId, setShareConversationId] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  // Archive view state
+  const [showArchivedView, setShowArchivedView] = useState(false);
+  const [archivedConversations, setArchivedConversations] = useState<Conversation[]>([]);
 
   const styles = createStyles(colors, isCollapsed, isMobileView);
 
@@ -91,6 +104,18 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
       return () => clearTimeout(timeoutId);
     }, [loadConversations])
   );
+
+  // Reload conversations when user changes (login/logout)
+  useEffect(() => {
+    console.log('[DrawerContent] Auth state changed, user:', user?.id || 'anonymous');
+    // Reset current conversation when user changes
+    setCurrentConversationId(null);
+    // Clear pending conversation state
+    setPendingConversation(null);
+    // Load conversations for the new user context
+    loadConversations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Track current conversation from navigation state
   useEffect(() => {
@@ -204,6 +229,41 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
     }
   };
 
+  const handleArchive = async (conversationId: string) => {
+    console.log('[DrawerContent] Archive conversation:', conversationId);
+    try {
+      await storage.archiveConversation(conversationId);
+      await loadConversations();
+      // If archived conversation was current, navigate to new chat
+      if (currentConversationId === conversationId) {
+        setCurrentConversationId(null);
+        handleNewChat();
+      }
+    } catch (error) {
+      console.error('[DrawerContent] Error archiving conversation:', error);
+    }
+  };
+
+  const handleUnarchive = async (conversationId: string) => {
+    console.log('[DrawerContent] Unarchive conversation:', conversationId);
+    try {
+      await storage.unarchiveConversation(conversationId);
+      await loadConversations();
+      // Reload archived conversations
+      const archived = await storage.loadArchivedConversations();
+      setArchivedConversations(archived);
+    } catch (error) {
+      console.error('[DrawerContent] Error unarchiving conversation:', error);
+    }
+  };
+
+  const handleShowArchivedChats = async () => {
+    console.log('[DrawerContent] Showing archived chats');
+    const archived = await storage.loadArchivedConversations();
+    setArchivedConversations(archived);
+    setShowArchivedView(true);
+  };
+
   const handleStartEditing = (conversationId: string) => {
     console.log('[DrawerContent] Start editing conversation:', conversationId);
     setEditingConversationId(conversationId);
@@ -252,14 +312,17 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
     return [...conversations, pendingConversation].find(c => c?.id === openMenuConversationId) || null;
   }, [openMenuConversationId, conversations, pendingConversation]);
 
-  // Filter conversations based on search query
+  // Filter conversations based on search query and exclude archived
   const filteredConversations = useMemo(() => {
+    // First filter out archived conversations
+    const activeConversations = conversations.filter(conv => !conv.isArchived);
+
     if (!searchQuery.trim()) {
-      return conversations;
+      return activeConversations;
     }
 
     const query = searchQuery.toLowerCase().trim();
-    return conversations.filter(conv => {
+    return activeConversations.filter(conv => {
       // Search in title
       if (conv.title.toLowerCase().includes(query)) {
         return true;
@@ -350,8 +413,73 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
   };
 
   const handleImages = () => {
-    console.log('[DrawerContent] Images');
-    // TODO: Implement images functionality
+    console.log('[DrawerContent] Navigating to Images');
+    drawerNavigation.navigate('HomeStack', {
+      screen: 'Images',
+      params: { timestamp: Date.now() }
+    } as any);
+    // Close drawer on mobile
+    if (isMobileView) {
+      drawerNavigation.closeDrawer();
+    }
+  };
+
+  // Share modal handlers
+  const shareConversation = useMemo(() => {
+    if (!shareConversationId) return null;
+    return [...conversations, pendingConversation].find(c => c?.id === shareConversationId) || null;
+  }, [shareConversationId, conversations, pendingConversation]);
+
+  const handleCloseShareModal = () => {
+    setShareConversationId(null);
+    setLinkCopied(false);
+  };
+
+  const handleCopyLink = async () => {
+    if (!shareConversationId) return;
+    const shareUrl = `https://inspire.jubileeenterprise.com/chat/${shareConversationId}`;
+    try {
+      await Clipboard.setStringAsync(shareUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+      Alert.alert('Error', 'Failed to copy link to clipboard');
+    }
+  };
+
+  const handleShare = async () => {
+    if (!shareConversation) return;
+    const shareUrl = `https://inspire.jubileeenterprise.com/chat/${shareConversationId}`;
+    try {
+      if (Platform.OS === 'web') {
+        if (navigator.share) {
+          await navigator.share({
+            title: shareConversation.title,
+            text: `Check out this conversation: ${shareConversation.title}`,
+            url: shareUrl,
+          });
+        } else {
+          await handleCopyLink();
+        }
+      } else {
+        await Share.share({
+          message: `Check out this conversation: ${shareConversation.title}\n${shareUrl}`,
+          title: shareConversation.title,
+        });
+      }
+      handleCloseShareModal();
+    } catch (error) {
+      if ((error as any).name !== 'AbortError') {
+        console.error('Failed to share:', error);
+      }
+    }
+  };
+
+  const handleShareModalKeyPress = (e: any) => {
+    if (e.key === 'Escape') {
+      handleCloseShareModal();
+    }
   };
 
   return (
@@ -434,6 +562,25 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
               </View>
             )}
           </TouchableOpacity>
+
+          {/* Archived chats - only show when logged in */}
+          {isAuthenticated && (
+            <TouchableOpacity
+              style={styles.collapsedMenuItem}
+              onPress={handleShowArchivedChats}
+              {...(Platform.OS === 'web' ? {
+                onMouseEnter: () => setHoveredItem('archived'),
+                onMouseLeave: () => setHoveredItem(null)
+              } as any : {})}
+            >
+              <Ionicons name="archive-outline" size={20} color={colors.text} />
+              {hoveredItem === 'archived' && Platform.OS === 'web' && (
+                <View style={styles.tooltip}>
+                  <Text style={styles.tooltipText}>Archived chats</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       ) : (
         <View style={styles.expandedMenu}>
@@ -458,7 +605,7 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
               ref={searchInputRef}
               style={[styles.searchInput, { color: colors.text }]}
               placeholder="Search chats"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={colors.placeholder}
               value={searchQuery}
               onChangeText={setSearchQuery}
               onFocus={handleSearchFocus}
@@ -476,6 +623,14 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
             <Ionicons name="image-outline" size={20} color={colors.text} />
             <Text style={styles.menuText}>Images</Text>
           </TouchableOpacity>
+
+          {/* Archived chats - only show when logged in */}
+          {isAuthenticated && (
+            <TouchableOpacity style={styles.menuItem} onPress={handleShowArchivedChats}>
+              <Ionicons name="archive-outline" size={20} color={colors.text} />
+              <Text style={styles.menuText}>Archived chats</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 
@@ -542,33 +697,37 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
             )}
           </ScrollView>
 
-          {/* Footer */}
-          <View style={styles.footer}>
-            <TouchableOpacity style={styles.footerItem} onPress={handleSettings}>
-              <Ionicons name="settings-outline" size={22} color={colors.text} />
-              <Text style={styles.footerText}>Settings</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Footer - Only show settings for authenticated users */}
+          {isAuthenticated && (
+            <View style={styles.footer}>
+              <TouchableOpacity style={styles.footerItem} onPress={handleSettings}>
+                <Ionicons name="settings-outline" size={22} color={colors.text} />
+                <Text style={styles.footerText}>Settings</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </>
       ) : (
-        /* Collapsed state - Show settings icon only at bottom */
-        <View style={styles.collapsedFooter}>
-          <TouchableOpacity
-            style={styles.collapsedMenuItem}
-            onPress={handleSettings}
-            {...(Platform.OS === 'web' ? {
-              onMouseEnter: () => setHoveredItem('settings'),
-              onMouseLeave: () => setHoveredItem(null)
-            } as any : {})}
-          >
-            <Ionicons name="settings-outline" size={20} color={colors.text} />
-            {hoveredItem === 'settings' && Platform.OS === 'web' && (
-              <View style={styles.tooltip}>
-                <Text style={styles.tooltipText}>Settings</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
+        /* Collapsed state - Show settings icon only at bottom for authenticated users */
+        isAuthenticated && (
+          <View style={styles.collapsedFooter}>
+            <TouchableOpacity
+              style={styles.collapsedMenuItem}
+              onPress={handleSettings}
+              {...(Platform.OS === 'web' ? {
+                onMouseEnter: () => setHoveredItem('settings'),
+                onMouseLeave: () => setHoveredItem(null)
+              } as any : {})}
+            >
+              <Ionicons name="settings-outline" size={20} color={colors.text} />
+              {hoveredItem === 'settings' && Platform.OS === 'web' && (
+                <View style={styles.tooltip}>
+                  <Text style={styles.tooltipText}>Settings</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        )
       )}
 
       {/* Centralized Options Menu Modal */}
@@ -591,7 +750,9 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
               style={[styles.optionsMenuItem, hoveredMenuItem === 'share' && styles.menuItemHovered]}
               onPress={() => {
                 handleMenuClose();
-                // Share functionality would go here
+                if (openMenuConversationId) {
+                  setShareConversationId(openMenuConversationId);
+                }
               }}
               {...(Platform.OS === 'web' ? {
                 onMouseEnter: () => setHoveredMenuItem('share'),
@@ -600,21 +761,6 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
             >
               <Ionicons name="share-outline" size={20} color={colors.text} />
               <Text style={styles.menuItemText}>Share</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.optionsMenuItem, hoveredMenuItem === 'group' && styles.menuItemHovered]}
-              onPress={() => {
-                handleMenuClose();
-                // Group chat functionality
-              }}
-              {...(Platform.OS === 'web' ? {
-                onMouseEnter: () => setHoveredMenuItem('group'),
-                onMouseLeave: () => setHoveredMenuItem(null),
-              } as any : {})}
-            >
-              <Ionicons name="people-outline" size={20} color={colors.text} />
-              <Text style={styles.menuItemText}>Start a group chat</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -657,20 +803,25 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.optionsMenuItem, hoveredMenuItem === 'archive' && styles.menuItemHovered]}
-              onPress={() => {
-                handleMenuClose();
-                // Archive functionality
-              }}
-              {...(Platform.OS === 'web' ? {
-                onMouseEnter: () => setHoveredMenuItem('archive'),
-                onMouseLeave: () => setHoveredMenuItem(null),
-              } as any : {})}
-            >
-              <Ionicons name="archive-outline" size={20} color={colors.text} />
-              <Text style={styles.menuItemText}>Archive</Text>
-            </TouchableOpacity>
+            {/* Archive option - only show when logged in */}
+            {isAuthenticated && (
+              <TouchableOpacity
+                style={[styles.optionsMenuItem, hoveredMenuItem === 'archive' && styles.menuItemHovered]}
+                onPress={() => {
+                  if (openMenuConversationId) {
+                    handleMenuClose();
+                    handleArchive(openMenuConversationId);
+                  }
+                }}
+                {...(Platform.OS === 'web' ? {
+                  onMouseEnter: () => setHoveredMenuItem('archive'),
+                  onMouseLeave: () => setHoveredMenuItem(null),
+                } as any : {})}
+              >
+                <Ionicons name="archive-outline" size={20} color={colors.text} />
+                <Text style={styles.menuItemText}>Archive</Text>
+              </TouchableOpacity>
+            )}
 
             <View style={styles.menuDivider} />
 
@@ -720,6 +871,167 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = ({ navigation: draw
           }, 500);
         }}
       />
+
+      {/* Share Conversation Modal */}
+      <Modal
+        visible={!!shareConversationId}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCloseShareModal}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={handleCloseShareModal}
+          {...(Platform.OS === 'web' ? { onKeyDown: handleShareModalKeyPress } as any : {})}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e: any) => e.stopPropagation()}
+            style={styles.shareModalContent}
+          >
+            {/* Header */}
+            <View style={styles.shareModalHeader}>
+              <View style={styles.shareModalTitleRow}>
+                <Ionicons name="share-social-outline" size={24} color={colors.primary} />
+                <Text style={styles.shareModalTitle}>Share Conversation</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.shareModalCloseButton}
+                onPress={handleCloseShareModal}
+              >
+                <Ionicons name="close" size={22} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Conversation Preview */}
+            {shareConversation && (
+              <View style={styles.shareConversationPreview}>
+                <Ionicons name="chatbubble-outline" size={18} color={colors.textSecondary} />
+                <Text style={styles.shareConversationTitle} numberOfLines={1}>
+                  {shareConversation.title}
+                </Text>
+              </View>
+            )}
+
+            {/* Share Link Section */}
+            <View style={styles.shareLinkSection}>
+              <Text style={styles.shareLinkLabel}>Share Link</Text>
+              <View style={styles.shareLinkContainer}>
+                <Text style={styles.shareLinkText} numberOfLines={1}>
+                  inspire.jubileeenterprise.com/chat/{shareConversationId?.slice(0, 12)}...
+                </Text>
+              </View>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.shareModalButtons}>
+              <TouchableOpacity
+                style={[styles.shareButton, styles.copyLinkButton]}
+                onPress={handleCopyLink}
+              >
+                <Ionicons
+                  name={linkCopied ? "checkmark-circle" : "copy-outline"}
+                  size={18}
+                  color={linkCopied ? "#22c55e" : colors.primary}
+                />
+                <Text style={[styles.copyLinkButtonText, linkCopied && styles.copiedText]}>
+                  {linkCopied ? 'Copied!' : 'Copy Link'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.shareButton, styles.shareActionButton]}
+                onPress={handleShare}
+              >
+                <Ionicons name="share-outline" size={18} color="#ffffff" />
+                <Text style={styles.shareActionButtonText}>Share</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Cancel Button */}
+            <TouchableOpacity
+              style={styles.shareCancelButton}
+              onPress={handleCloseShareModal}
+            >
+              <Text style={styles.shareCancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Archived Chats Modal */}
+      <Modal
+        visible={showArchivedView}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowArchivedView(false)}
+      >
+        <View style={styles.archivedModalContainer}>
+          <View style={styles.archivedModalContent}>
+            {/* Header */}
+            <View style={styles.archivedModalHeader}>
+              <TouchableOpacity
+                style={styles.archivedBackButton}
+                onPress={() => setShowArchivedView(false)}
+              >
+                <Ionicons name="arrow-back" size={24} color={colors.text} />
+              </TouchableOpacity>
+              <Text style={styles.archivedModalTitle}>Archived Chats</Text>
+              <View style={{ width: 40 }} />
+            </View>
+
+            {/* Archived Conversations List */}
+            <ScrollView style={styles.archivedList} showsVerticalScrollIndicator={false}>
+              {archivedConversations.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <Ionicons name="archive-outline" size={48} color={colors.border} />
+                  <Text style={styles.emptyText}>No archived chats</Text>
+                  <Text style={styles.emptySubtext}>Archived conversations will appear here</Text>
+                </View>
+              ) : (
+                archivedConversations.map(conversation => (
+                  <View key={conversation.id} style={styles.archivedItem}>
+                    <TouchableOpacity
+                      style={styles.archivedItemContent}
+                      onPress={() => {
+                        setShowArchivedView(false);
+                        setCurrentConversationId(conversation.id);
+                        drawerNavigation.navigate('HomeStack', {
+                          screen: 'Chat',
+                          params: { conversationId: conversation.id }
+                        } as any);
+                        if (!isMobileView) {
+                          drawerNavigation.closeDrawer();
+                        }
+                      }}
+                    >
+                      <Ionicons name="chatbubble-outline" size={18} color={colors.textSecondary} />
+                      <View style={styles.archivedItemText}>
+                        <Text style={styles.archivedItemTitle} numberOfLines={1}>
+                          {conversation.title}
+                        </Text>
+                        {conversation.archivedAt && (
+                          <Text style={styles.archivedItemDate}>
+                            Archived {new Date(conversation.archivedAt).toLocaleDateString()}
+                          </Text>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.unarchiveButton}
+                      onPress={() => handleUnarchive(conversation.id)}
+                    >
+                      <Ionicons name="arrow-undo-outline" size={20} color={colors.primary} />
+                      <Text style={styles.unarchiveButtonText}>Unarchive</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -972,6 +1284,201 @@ const createStyles = (colors: any, isCollapsed: boolean, isMobileView: boolean) 
   },
   deleteText: {
     color: '#ef4444',
+  },
+  // Share Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shareModalContent: {
+    backgroundColor: '#2f2f2f',
+    borderRadius: 12,
+    padding: spacing.xl,
+    width: '90%',
+    maxWidth: 420,
+    borderWidth: 1,
+    borderColor: '#2f2f2f',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+      },
+    }),
+  },
+  shareModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+  },
+  shareModalTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  shareModalTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  shareModalCloseButton: {
+    padding: spacing.xs,
+    borderRadius: 6,
+    backgroundColor: colors.surface,
+  },
+  shareConversationPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: 8,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  shareConversationTitle: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text,
+    flex: 1,
+  },
+  shareLinkSection: {
+    marginBottom: spacing.lg,
+  },
+  shareLinkLabel: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  shareLinkContainer: {
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  shareLinkText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+    fontFamily: Platform.OS === 'web' ? 'monospace' : undefined,
+  },
+  shareModalButtons: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  shareButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: 8,
+    gap: spacing.xs,
+  },
+  copyLinkButton: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  copyLinkButtonText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  copiedText: {
+    color: '#22c55e',
+  },
+  shareActionButton: {
+    backgroundColor: colors.primary,
+  },
+  shareActionButtonText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  shareCancelButton: {
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  shareCancelButtonText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  // Archived Modal Styles
+  archivedModalContainer: {
+    flex: 1,
+    backgroundColor: colors.sidebar,
+  },
+  archivedModalContent: {
+    flex: 1,
+  },
+  archivedModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  archivedBackButton: {
+    padding: spacing.xs,
+  },
+  archivedModalTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  archivedList: {
+    flex: 1,
+    paddingHorizontal: spacing.md,
+  },
+  archivedItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  archivedItemContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  archivedItemText: {
+    flex: 1,
+  },
+  archivedItemTitle: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  archivedItemDate: {
+    fontSize: typography.fontSize.xs,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  unarchiveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    gap: spacing.xs,
+    borderRadius: 6,
+    backgroundColor: `${colors.primary}15`,
+  },
+  unarchiveButtonText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: '600',
+    color: colors.primary,
   },
 });
 

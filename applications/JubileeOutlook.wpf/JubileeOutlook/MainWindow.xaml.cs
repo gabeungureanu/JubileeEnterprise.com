@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using JubileeOutlook.ViewModels;
 using JubileeOutlook.Services;
+using JubileeOutlook.Services.EmailSync;
 using JubileeOutlook.Models;
 using JubileeOutlook.Views;
 using System.ComponentModel;
@@ -145,6 +146,18 @@ public partial class MainWindow : Window
         // Subscribe to MainViewModel property changes to handle email selection while composing
         _mainViewModel.PropertyChanged += MainViewModel_PropertyChanged;
 
+        // Subscribe to email body updated event for on-demand body fetch
+        _mainViewModel.EmailBodyUpdated += (s, e) =>
+        {
+            Console.WriteLine("[MainWindow] EmailBodyUpdated event received, refreshing browser");
+            Dispatcher.Invoke(() => UpdateEmailBodyBrowser());
+        };
+
+        // Subscribe to Reply/ReplyAll/Forward events from MainViewModel
+        _mainViewModel.ReplyRequested += (s, e) => Dispatcher.Invoke(ShowComposePanelForReply);
+        _mainViewModel.ReplyAllRequested += (s, e) => Dispatcher.Invoke(ShowComposePanelForReplyAll);
+        _mainViewModel.ForwardRequested += (s, e) => Dispatcher.Invoke(ShowComposePanelForForward);
+
         // Subscribe to folder pane toggle event
         _appViewModel.ToggleFolderPaneRequested += (s, e) => HamburgerMenu_Click(s ?? this, new RoutedEventArgs());
 
@@ -211,6 +224,10 @@ public partial class MainWindow : Window
                 Console.WriteLine("[MainWindow] Loading initial data...");
                 await _mainViewModel.InitializeDataAsync();
                 Console.WriteLine("[MainWindow] Initial data loaded");
+
+                // Update profile UI for synced email accounts (if any)
+                UpdateProfileUIForSyncedAccounts();
+                Console.WriteLine("[MainWindow] Profile UI updated for synced accounts");
 
                 // Hide the loading overlay - data is ready
                 LoadingOverlay.Visibility = Visibility.Collapsed;
@@ -585,6 +602,73 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>
+    /// Updates the profile UI based on synced email accounts (IMAP/OAuth).
+    /// This is called after data loading to show user info when emails are synced
+    /// even if Jubilee SSO authentication hasn't been performed.
+    /// </summary>
+    private void UpdateProfileUIForSyncedAccounts()
+    {
+        // Skip if already authenticated via Jubilee SSO
+        if (_authManager.Session.IsAuthenticated)
+        {
+            LogDebug("UpdateProfileUIForSyncedAccounts: Already authenticated via SSO, skipping");
+            return;
+        }
+
+        // Check if we have synced email accounts
+        if (_mainViewModel.HasSyncedAccounts && _mainViewModel.AccountRootFolder != null)
+        {
+            var emailAddress = _mainViewModel.AccountRootFolder.WwbwEmailAddress
+                ?? _mainViewModel.AccountRootFolder.Name;
+
+            if (!string.IsNullOrEmpty(emailAddress) && emailAddress != "My Account")
+            {
+                LogDebug($"UpdateProfileUIForSyncedAccounts: Found synced account - {emailAddress}");
+
+                // Show signed-in state for synced account
+                ProfileDefaultAvatar.Visibility = Visibility.Collapsed;
+                ProfileDefaultIcon.Visibility = Visibility.Collapsed;
+                ProfileUserAvatar.Visibility = Visibility.Visible;
+                ProfileSyncIndicator.Visibility = Visibility.Visible;
+
+                ProfileSignedOutPanel.Visibility = Visibility.Collapsed;
+                ProfileSignedInPanel.Visibility = Visibility.Visible;
+
+                // Set user info from synced account
+                ProfilePopupName.Text = emailAddress;
+                ProfilePopupEmail.Text = emailAddress;
+                ProfileButton.ToolTip = emailAddress;
+
+                // Create a default avatar with initials
+                var initials = GetInitialsFromEmail(emailAddress);
+                // Note: For now we keep the default avatar circle, but show it as "signed in"
+            }
+        }
+        else
+        {
+            LogDebug("UpdateProfileUIForSyncedAccounts: No synced accounts found");
+        }
+    }
+
+    /// <summary>
+    /// Extracts initials from an email address for avatar display
+    /// </summary>
+    private string GetInitialsFromEmail(string email)
+    {
+        if (string.IsNullOrEmpty(email)) return "?";
+
+        var namePart = email.Split('@')[0];
+        if (namePart.Contains('.'))
+        {
+            var parts = namePart.Split('.');
+            return (parts[0].FirstOrDefault().ToString() + parts[1].FirstOrDefault().ToString()).ToUpper();
+        }
+        return namePart.Length >= 2
+            ? namePart.Substring(0, 2).ToUpper()
+            : namePart.ToUpper();
+    }
+
     private async Task FetchAndSetWwbwEmailAsync()
     {
         LogDebug("FetchAndSetWwbwEmailAsync started");
@@ -666,43 +750,111 @@ public partial class MainWindow : Window
         // When DisplayedMessage changes, update the WebBrowser with HTML content
         if (e.PropertyName == nameof(MainViewModel.DisplayedMessage))
         {
+            // Show or hide the ReadingPane based on whether there's a message to display
+            if (_mainViewModel.DisplayedMessage != null)
+            {
+                // Show the reading pane when a message is selected
+                if (ReadingPane != null) ReadingPane.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                // Hide the reading pane when no message is selected (blank view)
+                if (ReadingPane != null) ReadingPane.Visibility = Visibility.Collapsed;
+            }
+
             UpdateEmailBodyBrowser();
         }
     }
 
-    private void UpdateEmailBodyBrowser()
+    public void UpdateEmailBodyBrowser()
     {
         if (EmailBodyBrowser == null) return;
 
         var message = _mainViewModel.DisplayedMessage;
         if (message == null)
         {
-            // Clear the browser when no message is selected
-            EmailBodyBrowser.NavigateToString("<html><body style='background-color:#000000;'></body></html>");
+            // Clear the browser when no message is selected - totally blank dark page with no scrollbars
+            EmailBodyBrowser.NavigateToString("<html style='overflow:hidden;'><body style='background-color:#000000; margin:0; padding:0; overflow:hidden;'></body></html>");
             return;
         }
 
+        // Debug: Log body info
+        Console.WriteLine($"[MainWindow] UpdateEmailBodyBrowser: Subject='{message.Subject}', Body length={message.Body?.Length ?? 0}, IsHtml={message.IsHtml}, NeedsBodyFetch={message.NeedsBodyFetch}");
+
         // Wrap the email body in HTML with dark theme styling
+        // Use a custom scrollable container with styled scrollbar for IE/Edge
         var htmlContent = $@"
 <!DOCTYPE html>
-<html>
+<html style='height:100%; margin:0; padding:0; overflow:hidden;'>
 <head>
     <meta charset='UTF-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <style>
-        body {{
-            background-color: #000000;
-            color: #FFFFFF;
+        html, body {{
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000000 !important;
+            color: #FFFFFF !important;
+        }}
+
+        /* Custom scrollable container */
+        .email-container {{
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background-color: #000000 !important;
+            color: #FFFFFF !important;
             font-family: 'Segoe UI', Calibri, sans-serif;
             font-size: 14px;
             line-height: 1.6;
             padding: 20px;
-            margin: 0;
+            box-sizing: border-box;
+            /* IE scrollbar colors */
+            scrollbar-base-color: #1A1A1A;
+            scrollbar-face-color: #3A3A3A;
+            scrollbar-track-color: #1A1A1A;
+            scrollbar-arrow-color: #606060;
+            scrollbar-highlight-color: #2A2A2A;
+            scrollbar-shadow-color: #0A0A0A;
+            scrollbar-3dlight-color: #1A1A1A;
+            scrollbar-darkshadow-color: #0A0A0A;
         }}
-        a {{
-            color: #4A9EFF;
+
+        /* Force white text on all elements - override email provider styling */
+        .email-container,
+        .email-container * {{
+            color: #FFFFFF !important;
+            background-color: transparent !important;
         }}
-        strong, b {{
+        .email-container {{
+            background-color: #000000 !important;
+        }}
+
+        /* Common text elements */
+        .email-container p,
+        .email-container div,
+        .email-container span,
+        .email-container td,
+        .email-container th,
+        .email-container li,
+        .email-container h1,
+        .email-container h2,
+        .email-container h3,
+        .email-container h4,
+        .email-container h5,
+        .email-container h6,
+        .email-container font {{
+            color: #FFFFFF !important;
+        }}
+
+        a, .email-container a {{
+            color: #4A9EFF !important;
+        }}
+        strong, b, .email-container strong, .email-container b {{
             font-weight: 600;
+            color: #FFFFFF !important;
         }}
         ul, ol {{
             padding-left: 20px;
@@ -715,16 +867,25 @@ public partial class MainWindow : Window
         }}
         td, th {{
             padding: 8px;
-            border: 1px solid #333333;
+            border: 1px solid #333333 !important;
         }}
         img {{
             max-width: 100%;
             height: auto;
         }}
+
+        /* Override common dark text inline styles */
+        [style*='color: black'], [style*='color:black'],
+        [style*='color: #000'], [style*='color:#000'],
+        [style*='color: rgb(0'], [style*='color:rgb(0'] {{
+            color: #FFFFFF !important;
+        }}
     </style>
 </head>
 <body>
-{message.Body}
+    <div class='email-container'>
+        {message.Body}
+    </div>
 </body>
 </html>";
 
@@ -798,6 +959,13 @@ public partial class MainWindow : Window
         if (TasksModuleContent != null) TasksModuleContent.Visibility = Visibility.Collapsed;
         if (AppsModuleContent != null) AppsModuleContent.Visibility = Visibility.Collapsed;
 
+        // Show/hide module-specific title bar tabs and ribbon elements
+        bool isMailModule = module == AppModule.Mail;
+        bool isPeopleModule = module == AppModule.People;
+        if (MailTabsPanel != null) MailTabsPanel.Visibility = isMailModule ? Visibility.Visible : Visibility.Collapsed;
+        if (MailRibbonPanel != null) MailRibbonPanel.Visibility = isMailModule ? Visibility.Visible : Visibility.Collapsed;
+        if (PeopleTabsPanel != null) PeopleTabsPanel.Visibility = isPeopleModule ? Visibility.Visible : Visibility.Collapsed;
+
         // Show the selected module content
         switch (module)
         {
@@ -809,6 +977,16 @@ public partial class MainWindow : Window
                 break;
             case AppModule.People:
                 if (PeopleModuleContent != null) PeopleModuleContent.Visibility = Visibility.Visible;
+                // Set the user email for the People view
+                if (PeopleViewControl != null)
+                {
+                    var userEmail = _mainViewModel.AccountRootFolder?.WwbwEmailAddress
+                        ?? _mainViewModel.AccountRootFolder?.Name
+                        ?? _mainViewModel.WwbwEmailAddress
+                        ?? _authManager.Session?.Profile?.Email
+                        ?? "user@example.com";
+                    PeopleViewControl.SetUserEmail(userEmail);
+                }
                 break;
             case AppModule.Tasks:
                 if (TasksModuleContent != null) TasksModuleContent.Visibility = Visibility.Visible;
@@ -970,10 +1148,11 @@ public partial class MainWindow : Window
             _composeMailViewModel.SaveDraftRequested += OnSaveDraftRequested;
         }
 
-        // Get the WWBW email address (same as shown in sidebar) - fall back to profile email
-        var userEmail = !string.IsNullOrEmpty(_mainViewModel.WwbwEmailAddress)
-            ? _mainViewModel.WwbwEmailAddress
-            : _authManager.Session?.Profile?.Email;
+        // Get the user's email address from synced account or fallback to profile email
+        var userEmail = _mainViewModel.AccountRootFolder?.WwbwEmailAddress
+            ?? _mainViewModel.AccountRootFolder?.Name
+            ?? _mainViewModel.WwbwEmailAddress
+            ?? _authManager.Session?.Profile?.Email;
 
         // Reset the form and start composing with the user's email
         _composeMailViewModel.StartComposing(userEmail);
@@ -989,7 +1168,7 @@ public partial class MainWindow : Window
         if (ComposeMailPanel != null) ComposeMailPanel.Visibility = Visibility.Visible;
     }
 
-    private void ShowComposePanelWithDraft(Models.EmailMessage draft)
+    private async Task ShowComposePanelWithDraftAsync(Models.EmailMessage draft)
     {
         // Create a new compose view model if needed
         if (_composeMailViewModel == null)
@@ -1001,20 +1180,163 @@ public partial class MainWindow : Window
             _composeMailViewModel.SaveDraftRequested += OnSaveDraftRequested;
         }
 
-        // Get the WWBW email address (same as shown in sidebar) - fall back to profile email
-        var userEmail = !string.IsNullOrEmpty(_mainViewModel.WwbwEmailAddress)
-            ? _mainViewModel.WwbwEmailAddress
-            : _authManager.Session?.Profile?.Email;
+        // Get the user's email address from synced account or fallback to profile email
+        var userEmail = _mainViewModel.AccountRootFolder?.WwbwEmailAddress
+            ?? _mainViewModel.AccountRootFolder?.Name
+            ?? _mainViewModel.WwbwEmailAddress
+            ?? _authManager.Session?.Profile?.Email;
+
+        // For synced drafts, use RemoteMessageId as the draft ID
+        var draftId = !string.IsNullOrEmpty(draft.RemoteMessageId) ? draft.RemoteMessageId : draft.Id;
+
+        // Initialize variables for draft content
+        var bodyContent = draft.Body ?? string.Empty;
+        var cidImagePaths = new Dictionary<string, string>();
+        List<ViewModels.AttachmentInfo>? attachments = null;
+
+        // For synced drafts, fetch body, images, and attachments in a SINGLE connection to reduce latency
+        if (draft.AccountId.HasValue && !string.IsNullOrEmpty(draft.RemoteMessageId) &&
+            (string.IsNullOrEmpty(bodyContent) || draft.NeedsBodyFetch || draft.HasAttachments))
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Fetching all draft content in single connection for: {draft.Subject}");
+            try
+            {
+                Guid folderId = Guid.Empty;
+                if (Guid.TryParse(draft.FolderId, out var parsedFolderId))
+                {
+                    folderId = parsedFolderId;
+                }
+
+                var syncedEmailService = new SyncedEmailDisplayService();
+                var draftContent = await syncedEmailService.FetchDraftContentAsync(
+                    draft.AccountId.Value,
+                    folderId,
+                    draft.RemoteMessageId);
+
+                // Update body content
+                if (!string.IsNullOrEmpty(draftContent.Body))
+                {
+                    bodyContent = draftContent.Body;
+                    draft.Body = draftContent.Body;
+                    draft.NeedsBodyFetch = false;
+                    System.Diagnostics.Debug.WriteLine($"[MainWindow] Draft body fetched, length: {bodyContent.Length}");
+                }
+
+                // Get inline images
+                cidImagePaths = draftContent.InlineImages;
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] Got {cidImagePaths.Count} inline images");
+
+                // Get attachments
+                if (draftContent.Attachments.Count > 0)
+                {
+                    attachments = draftContent.Attachments.Select(a => new ViewModels.AttachmentInfo
+                    {
+                        FileName = a.FileName,
+                        FilePath = a.FilePath,
+                        FileSize = FormatFileSizeForCompose(a.FileSize)
+                    }).ToList();
+                    System.Diagnostics.Debug.WriteLine($"[MainWindow] Got {attachments.Count} attachments");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] Error fetching draft content: {ex.Message}");
+            }
+        }
+
+        // Store the original HTML body for sending (preserve images)
+        var htmlBody = bodyContent;
+        var isHtmlBody = bodyContent.Contains("<") && bodyContent.Contains(">");
+
+        // Extract plain text for display in RichTextBox
+        var plainTextBody = bodyContent;
+        if (isHtmlBody)
+        {
+            // Remove HTML tags but preserve newlines from <br>, <p>, <div>
+            plainTextBody = System.Text.RegularExpressions.Regex.Replace(bodyContent, @"<br\s*/?>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            plainTextBody = System.Text.RegularExpressions.Regex.Replace(plainTextBody, @"</p>|</div>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            plainTextBody = System.Text.RegularExpressions.Regex.Replace(plainTextBody, @"<[^>]+>", "");
+            plainTextBody = System.Net.WebUtility.HtmlDecode(plainTextBody).Trim();
+        }
+
+        // Fallback to local attachments if available (for non-synced drafts)
+        if (attachments == null && draft.Attachments != null && draft.Attachments.Count > 0)
+        {
+            attachments = draft.Attachments
+                .Where(a => !string.IsNullOrEmpty(a.FilePath))
+                .Select(a => new ViewModels.AttachmentInfo
+                {
+                    FileName = a.FileName,
+                    FilePath = a.FilePath ?? string.Empty,
+                    FileSize = FormatFileSizeForCompose(a.FileSize)
+                }).ToList();
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Loading {attachments.Count} local attachments for draft");
+        }
 
         // Load the draft into the compose form
         _composeMailViewModel.LoadDraft(
-            draftId: draft.Id,
+            draftId: draftId,
             to: string.Join("; ", draft.To ?? new List<string>()),
             cc: string.Join("; ", draft.Cc ?? new List<string>()),
             bcc: string.Join("; ", draft.Bcc ?? new List<string>()),
             subject: draft.Subject ?? string.Empty,
-            body: draft.Body ?? string.Empty,
-            fromEmail: userEmail
+            body: plainTextBody,
+            fromEmail: userEmail,
+            attachments: attachments
+        );
+
+        // Set the DataContext for the compose panel
+        if (ComposeMailPanel != null)
+        {
+            ComposeMailPanel.DataContext = _composeMailViewModel;
+        }
+
+        // Update the RichTextBox content with draft body (handles HTML/plain text and inline images)
+        UpdateComposeBodyFromDraft(plainTextBody, htmlBody, isHtmlBody, cidImagePaths);
+
+        // Update attachments section visibility
+        UpdateAttachmentsSectionVisibility();
+
+        // Hide reading pane, show compose panel
+        if (ReadingPane != null) ReadingPane.Visibility = Visibility.Collapsed;
+        if (ComposeMailPanel != null) ComposeMailPanel.Visibility = Visibility.Visible;
+    }
+
+    /// <summary>
+    /// Show compose panel in Reply mode for the selected message
+    /// </summary>
+    private void ShowComposePanelForReply()
+    {
+        if (_mainViewModel.DisplayedMessage == null) return;
+
+        var message = _mainViewModel.DisplayedMessage;
+
+        // Create a new compose view model if needed
+        if (_composeMailViewModel == null)
+        {
+            _composeMailViewModel = new ViewModels.ComposeMailViewModel();
+            _composeMailViewModel.MailSent += OnMailSent;
+            _composeMailViewModel.ComposeCancelled += OnComposeCancelled;
+            _composeMailViewModel.SendMailRequested += OnSendMailRequested;
+            _composeMailViewModel.SaveDraftRequested += OnSaveDraftRequested;
+        }
+
+        // Get the user's email address
+        var userEmail = _mainViewModel.AccountRootFolder?.WwbwEmailAddress
+            ?? _mainViewModel.AccountRootFolder?.Name
+            ?? _mainViewModel.WwbwEmailAddress
+            ?? _authManager.Session?.Profile?.Email
+            ?? string.Empty;
+
+        // Start reply mode
+        _composeMailViewModel.StartReply(
+            fromEmail: userEmail,
+            toEmail: message.FromEmail ?? message.From ?? string.Empty,
+            toName: message.From ?? string.Empty,
+            originalSubject: message.Subject ?? string.Empty,
+            originalBody: message.Body ?? message.Preview ?? string.Empty,
+            originalDate: message.ReceivedDate,
+            isHtml: message.IsHtml
         );
 
         // Set the DataContext for the compose panel
@@ -1026,6 +1348,382 @@ public partial class MainWindow : Window
         // Hide reading pane, show compose panel
         if (ReadingPane != null) ReadingPane.Visibility = Visibility.Collapsed;
         if (ComposeMailPanel != null) ComposeMailPanel.Visibility = Visibility.Visible;
+
+        // Set the body content in the RichTextBox (must be done after panel is visible)
+        if (ComposeMailPanel != null && _composeMailViewModel != null)
+        {
+            ComposeMailPanel.SetBodyContent(_composeMailViewModel.Body);
+        }
+    }
+
+    /// <summary>
+    /// Show compose panel in Reply All mode for the selected message
+    /// </summary>
+    private void ShowComposePanelForReplyAll()
+    {
+        if (_mainViewModel.DisplayedMessage == null) return;
+
+        var message = _mainViewModel.DisplayedMessage;
+
+        // Create a new compose view model if needed
+        if (_composeMailViewModel == null)
+        {
+            _composeMailViewModel = new ViewModels.ComposeMailViewModel();
+            _composeMailViewModel.MailSent += OnMailSent;
+            _composeMailViewModel.ComposeCancelled += OnComposeCancelled;
+            _composeMailViewModel.SendMailRequested += OnSendMailRequested;
+            _composeMailViewModel.SaveDraftRequested += OnSaveDraftRequested;
+        }
+
+        // Get the user's email address
+        var userEmail = _mainViewModel.AccountRootFolder?.WwbwEmailAddress
+            ?? _mainViewModel.AccountRootFolder?.Name
+            ?? _mainViewModel.WwbwEmailAddress
+            ?? _authManager.Session?.Profile?.Email
+            ?? string.Empty;
+
+        // Build CC list (original recipients minus the user)
+        var ccList = new List<string>();
+        if (message.To != null)
+        {
+            ccList.AddRange(message.To.Where(e => !e.Equals(userEmail, StringComparison.OrdinalIgnoreCase)));
+        }
+        if (message.Cc != null)
+        {
+            ccList.AddRange(message.Cc.Where(e => !e.Equals(userEmail, StringComparison.OrdinalIgnoreCase)));
+        }
+        var ccString = string.Join("; ", ccList.Distinct());
+
+        // Start reply-all mode
+        _composeMailViewModel.StartReplyAll(
+            fromEmail: userEmail,
+            toEmail: message.FromEmail ?? message.From ?? string.Empty,
+            toName: message.From ?? string.Empty,
+            originalCc: ccString,
+            originalSubject: message.Subject ?? string.Empty,
+            originalBody: message.Body ?? message.Preview ?? string.Empty,
+            originalDate: message.ReceivedDate,
+            isHtml: message.IsHtml
+        );
+
+        // Set the DataContext for the compose panel
+        if (ComposeMailPanel != null)
+        {
+            ComposeMailPanel.DataContext = _composeMailViewModel;
+        }
+
+        // Hide reading pane, show compose panel
+        if (ReadingPane != null) ReadingPane.Visibility = Visibility.Collapsed;
+        if (ComposeMailPanel != null) ComposeMailPanel.Visibility = Visibility.Visible;
+
+        // Set the body content in the RichTextBox (must be done after panel is visible)
+        if (ComposeMailPanel != null && _composeMailViewModel != null)
+        {
+            ComposeMailPanel.SetBodyContent(_composeMailViewModel.Body);
+        }
+    }
+
+    /// <summary>
+    /// Show compose panel in Forward mode for the selected message
+    /// </summary>
+    private void ShowComposePanelForForward()
+    {
+        if (_mainViewModel.DisplayedMessage == null) return;
+
+        var message = _mainViewModel.DisplayedMessage;
+
+        // Create a new compose view model if needed
+        if (_composeMailViewModel == null)
+        {
+            _composeMailViewModel = new ViewModels.ComposeMailViewModel();
+            _composeMailViewModel.MailSent += OnMailSent;
+            _composeMailViewModel.ComposeCancelled += OnComposeCancelled;
+            _composeMailViewModel.SendMailRequested += OnSendMailRequested;
+            _composeMailViewModel.SaveDraftRequested += OnSaveDraftRequested;
+        }
+
+        // Get the user's email address
+        var userEmail = _mainViewModel.AccountRootFolder?.WwbwEmailAddress
+            ?? _mainViewModel.AccountRootFolder?.Name
+            ?? _mainViewModel.WwbwEmailAddress
+            ?? _authManager.Session?.Profile?.Email
+            ?? string.Empty;
+
+        // Convert attachments to AttachmentInfo format
+        List<ViewModels.AttachmentInfo>? attachments = null;
+        if (message.Attachments != null && message.Attachments.Count > 0)
+        {
+            attachments = message.Attachments.Select(a => new ViewModels.AttachmentInfo
+            {
+                FileName = a.FileName,
+                FilePath = a.FilePath ?? string.Empty,
+                FileSize = FormatFileSizeForCompose(a.FileSize)
+            }).ToList();
+        }
+
+        // Start forward mode
+        _composeMailViewModel.StartForward(
+            fromEmail: userEmail,
+            originalFrom: message.From ?? string.Empty,
+            originalFromEmail: message.FromEmail ?? message.From ?? string.Empty,
+            originalTo: string.Join("; ", message.To ?? new List<string>()),
+            originalSubject: message.Subject ?? string.Empty,
+            originalBody: message.Body ?? message.Preview ?? string.Empty,
+            originalDate: message.ReceivedDate,
+            attachments: attachments,
+            isHtml: message.IsHtml
+        );
+
+        // Set the DataContext for the compose panel
+        if (ComposeMailPanel != null)
+        {
+            ComposeMailPanel.DataContext = _composeMailViewModel;
+        }
+
+        // Hide reading pane, show compose panel
+        if (ReadingPane != null) ReadingPane.Visibility = Visibility.Collapsed;
+        if (ComposeMailPanel != null) ComposeMailPanel.Visibility = Visibility.Visible;
+
+        // Set the body content in the RichTextBox (must be done after panel is visible)
+        if (ComposeMailPanel != null && _composeMailViewModel != null)
+        {
+            ComposeMailPanel.SetBodyContent(_composeMailViewModel.Body);
+        }
+
+        // Show attachments section if we have attachments
+        if (attachments != null && attachments.Count > 0)
+        {
+            ComposeMailPanel?.ShowAttachmentsSection();
+        }
+    }
+
+    private void UpdateComposeBodyFromViewModel()
+    {
+        if (ComposeMailPanel == null || _composeMailViewModel == null) return;
+
+        // Find the RichTextBox in ComposeMailPanel
+        var richTextBox = FindName("MessageBodyEditor") as System.Windows.Controls.RichTextBox;
+        if (richTextBox == null)
+        {
+            // Try to find it within the ComposeMailPanel
+            richTextBox = ComposeMailPanel.FindName("MessageBodyEditor") as System.Windows.Controls.RichTextBox;
+        }
+
+        if (richTextBox != null && !string.IsNullOrEmpty(_composeMailViewModel.Body))
+        {
+            richTextBox.Document.Blocks.Clear();
+            richTextBox.Document.Blocks.Add(new System.Windows.Documents.Paragraph(
+                new System.Windows.Documents.Run(_composeMailViewModel.Body)));
+        }
+    }
+
+    private void UpdateComposeBodyFromDraft(string plainText, string htmlBody, bool isHtml, Dictionary<string, string>? cidImagePaths = null)
+    {
+        if (ComposeMailPanel == null) return;
+
+        // Find the RichTextBox in ComposeMailPanel
+        var richTextBox = FindName("MessageBodyEditor") as System.Windows.Controls.RichTextBox;
+        if (richTextBox == null)
+        {
+            richTextBox = ComposeMailPanel.FindName("MessageBodyEditor") as System.Windows.Controls.RichTextBox;
+        }
+
+        if (richTextBox == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainWindow] RichTextBox 'MessageBodyEditor' not found");
+            return;
+        }
+
+        richTextBox.Document.Blocks.Clear();
+
+        if (string.IsNullOrEmpty(plainText) && string.IsNullOrEmpty(htmlBody))
+        {
+            System.Diagnostics.Debug.WriteLine("[MainWindow] No body content to display in draft");
+            return;
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[MainWindow] Loading draft body into RichTextBox, isHtml={isHtml}, plainText length={plainText?.Length ?? 0}, cidImages={cidImagePaths?.Count ?? 0}");
+
+        // If we have HTML content with CID images, parse it and insert text + images
+        if (isHtml && cidImagePaths != null && cidImagePaths.Count > 0 && !string.IsNullOrEmpty(htmlBody))
+        {
+            InsertHtmlWithImagesIntoRichTextBox(richTextBox, htmlBody, cidImagePaths);
+        }
+        else if (!string.IsNullOrEmpty(plainText))
+        {
+            // No images, just load plain text
+            // Split by newlines and add as separate paragraphs
+            var lines = plainText.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            foreach (var line in lines)
+            {
+                var paragraph = new System.Windows.Documents.Paragraph(
+                    new System.Windows.Documents.Run(line));
+                paragraph.Margin = new Thickness(0);
+                richTextBox.Document.Blocks.Add(paragraph);
+            }
+        }
+    }
+
+    private void InsertHtmlWithImagesIntoRichTextBox(System.Windows.Controls.RichTextBox richTextBox, string htmlBody, Dictionary<string, string> cidImagePaths)
+    {
+        // Parse the HTML and extract text and image positions
+        // Pattern to match <img src="cid:xxx"> tags
+        var imgPattern = new System.Text.RegularExpressions.Regex(@"<img[^>]+src=[""']cid:([^""']+)[""'][^>]*>", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        // Split the HTML by img tags to process text and images in order
+        var parts = imgPattern.Split(htmlBody);
+        var matches = imgPattern.Matches(htmlBody);
+
+        System.Diagnostics.Debug.WriteLine($"[MainWindow] Parsing HTML: {parts.Length} parts, {matches.Count} image matches");
+
+        var currentParagraph = new System.Windows.Documents.Paragraph();
+        currentParagraph.Margin = new Thickness(0);
+
+        for (int i = 0; i < parts.Length; i++)
+        {
+            var part = parts[i];
+
+            // Check if this part is a CID reference (captured group from regex)
+            if (i > 0 && i % 2 == 1)
+            {
+                // This is a captured CID - insert the image if we have it
+                var cid = part;
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] Processing CID: {cid}");
+
+                if (cidImagePaths.TryGetValue(cid, out var imagePath) && System.IO.File.Exists(imagePath))
+                {
+                    try
+                    {
+                        // Add current paragraph if it has content
+                        if (currentParagraph.Inlines.Count > 0)
+                        {
+                            richTextBox.Document.Blocks.Add(currentParagraph);
+                            currentParagraph = new System.Windows.Documents.Paragraph();
+                            currentParagraph.Margin = new Thickness(0);
+                        }
+
+                        // Create image element
+                        var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.UriSource = new Uri(imagePath);
+                        bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                        bitmap.EndInit();
+
+                        var image = new System.Windows.Controls.Image
+                        {
+                            Source = bitmap,
+                            MaxWidth = 600,
+                            Stretch = System.Windows.Media.Stretch.Uniform,
+                            Margin = new Thickness(0, 4, 0, 4),
+                            Tag = imagePath // Store file path for email sending
+                        };
+
+                        // Add image in its own paragraph
+                        var imageParagraph = new System.Windows.Documents.Paragraph();
+                        imageParagraph.Margin = new Thickness(0);
+                        var container = new System.Windows.Documents.InlineUIContainer(image);
+                        imageParagraph.Inlines.Add(container);
+                        richTextBox.Document.Blocks.Add(imageParagraph);
+
+                        // Also add to viewmodel's embedded images for re-sending
+                        if (_composeMailViewModel != null)
+                        {
+                            _composeMailViewModel.EmbeddedImages.Add(new ViewModels.EmbeddedImageData
+                            {
+                                ContentId = cid,
+                                FilePath = imagePath,
+                                FileName = System.IO.Path.GetFileName(imagePath)
+                            });
+                        }
+
+                        System.Diagnostics.Debug.WriteLine($"[MainWindow] Inserted image for CID: {cid}");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[MainWindow] Error inserting image for CID {cid}: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MainWindow] Image not found for CID: {cid}");
+                }
+            }
+            else
+            {
+                // This is text/HTML content - strip tags and add as text
+                if (!string.IsNullOrEmpty(part))
+                {
+                    // Strip HTML tags and decode entities
+                    var text = System.Text.RegularExpressions.Regex.Replace(part, @"<br\s*/?>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                    text = System.Text.RegularExpressions.Regex.Replace(text, @"</p>|</div>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                    text = System.Text.RegularExpressions.Regex.Replace(text, @"<[^>]+>", "");
+                    text = System.Net.WebUtility.HtmlDecode(text);
+
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        // Split by newlines and handle paragraphs
+                        var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                        for (int j = 0; j < lines.Length; j++)
+                        {
+                            if (j > 0)
+                            {
+                                // New line - start a new paragraph
+                                if (currentParagraph.Inlines.Count > 0 || richTextBox.Document.Blocks.Count == 0)
+                                {
+                                    richTextBox.Document.Blocks.Add(currentParagraph);
+                                }
+                                currentParagraph = new System.Windows.Documents.Paragraph();
+                                currentParagraph.Margin = new Thickness(0);
+                            }
+
+                            if (!string.IsNullOrEmpty(lines[j]))
+                            {
+                                currentParagraph.Inlines.Add(new System.Windows.Documents.Run(lines[j]));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Add the final paragraph if it has content
+        if (currentParagraph.Inlines.Count > 0)
+        {
+            richTextBox.Document.Blocks.Add(currentParagraph);
+        }
+
+        // Ensure at least one empty paragraph for editing
+        if (richTextBox.Document.Blocks.Count == 0)
+        {
+            richTextBox.Document.Blocks.Add(new System.Windows.Documents.Paragraph());
+        }
+    }
+
+    private void UpdateAttachmentsSectionVisibility()
+    {
+        if (ComposeMailPanel == null) return;
+
+        // Find the AttachmentsSection border in ComposeMailPanel
+        var attachmentsSection = ComposeMailPanel.FindName("AttachmentsSection") as System.Windows.Controls.Border;
+        if (attachmentsSection != null && _composeMailViewModel != null)
+        {
+            attachmentsSection.Visibility = _composeMailViewModel.Attachments.Count > 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+    }
+
+    private string FormatFileSizeForCompose(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len /= 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
     }
 
     private void HideComposePanel()
@@ -1037,63 +1735,154 @@ public partial class MainWindow : Window
 
     private async void OnMailSent(object? sender, EventArgs e)
     {
-        // Mail was sent successfully - first hide the compose panel
-        HideComposePanel();
+        // Mail was sent successfully - hide compose panel but show blank reading pane
+        if (ComposeMailPanel != null) ComposeMailPanel.Visibility = Visibility.Collapsed;
 
-        // Refresh the message list for the current folder BEFORE clearing selection
-        // This ensures the UI stays populated
-        if (_mainViewModel.SelectedFolder != null)
-        {
-            await _mainViewModel.RefreshMessagesAsync();
-        }
-
-        // Clear displayed message so reading pane shows blank after sending
+        // Clear the mail preview to show completely blank after sending
         _mainViewModel.DisplayedMessage = null;
         _mainViewModel.SelectedMessage = null;
 
-        // Show success notification
-        MessageDialog.ShowSuccess(this, "Mail sent successfully!", "Success");
+        // Hide the reading pane completely for a clean blank view
+        if (ReadingPane != null) ReadingPane.Visibility = Visibility.Collapsed;
+
+        // Clear the browser content
+        EmailBodyBrowser.NavigateToString("<html><body style='background-color:#000000; margin:0; padding:0;'></body></html>");
+
+        // Check if we're in the Sent folder - if so, refresh to show the new message
+        if (_mainViewModel.SelectedFolder != null &&
+            _mainViewModel.SelectedFolder.Id.ToLower().Contains("sent"))
+        {
+            await _mainViewModel.RefreshMessagesAsync();
+        }
     }
 
     private void OnComposeCancelled(object? sender, EventArgs e)
     {
+        // Hide compose panel
+        if (ComposeMailPanel != null) ComposeMailPanel.Visibility = Visibility.Collapsed;
+
         // Clear displayed message so reading pane shows blank after closing compose
         _mainViewModel.DisplayedMessage = null;
         _mainViewModel.SelectedMessage = null;
 
-        // User cancelled composition
-        HideComposePanel();
+        // Hide the reading pane completely for a clean blank view
+        if (ReadingPane != null) ReadingPane.Visibility = Visibility.Collapsed;
+
+        // Clear the browser content
+        EmailBodyBrowser.NavigateToString("<html><body style='background-color:#000000; margin:0; padding:0;'></body></html>");
     }
 
     private async void OnSendMailRequested(object? sender, ViewModels.SendMailEventArgs e)
     {
         try
         {
-            // Get sender display name from profile or use email
-            var senderName = _authManager.Session?.Profile?.DisplayName ?? "You";
-            var senderEmail = e.From;
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Sending email from: {e.From}");
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] To: {string.Join(", ", e.To)}");
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Subject: {e.Subject}");
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Attachments: {e.Attachments.Count}");
 
-            // Create the email message
+            // Use the EmailSendingService to send via SMTP
+            var emailSendingService = new EmailSendingService();
+
+            // Convert attachments to the service format
+            var attachments = e.Attachments.Select(a => new EmailAttachmentInfo
+            {
+                FileName = a.FileName,
+                FilePath = a.FilePath,
+                FileSize = System.IO.File.Exists(a.FilePath) ? new System.IO.FileInfo(a.FilePath).Length : 0
+            }).ToList();
+
+            // Convert embedded images to the service format
+            var embeddedImages = e.EmbeddedImages.Select(img => new EmbeddedImageInfo
+            {
+                ContentId = img.ContentId,
+                FilePath = img.FilePath,
+                FileName = img.FileName
+            }).ToList();
+
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Embedded images: {embeddedImages.Count}");
+
+            // Send the email via SMTP - body is HTML from RichTextBox
+            var result = await emailSendingService.SendEmailAsync(
+                fromEmail: e.From,
+                toRecipients: e.To,
+                ccRecipients: e.Cc,
+                bccRecipients: e.Bcc,
+                subject: e.Subject,
+                body: e.Body,
+                isHtml: true, // HTML formatted from RichTextBox
+                attachments: attachments,
+                embeddedImages: embeddedImages);
+
+            if (result.Success)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] Email sent successfully! MessageId: {result.MessageId}");
+
+                // Also save to Sent Items folder via API for local storage
+                await SaveToSentFolderAsync(e, result.MessageId);
+
+                // If this was a draft being edited, delete the draft from the server
+                if (_composeMailViewModel?.CurrentDraftId != null)
+                {
+                    await DeleteDraftAfterSendAsync(_composeMailViewModel.CurrentDraftId, e.From);
+                }
+
+                // Notify the compose view model that send succeeded
+                _composeMailViewModel?.NotifyMailSentSuccess();
+
+                // Show success notification
+                NotificationService.Instance.ShowSuccess("Email sent successfully!");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] Email send failed: {result.ErrorMessage}");
+
+                // Notify the compose view model of the failure
+                _composeMailViewModel?.NotifyMailSentFailed(result.ErrorMessage ?? "Failed to send email");
+
+                // Show error dialog
+                MessageDialog.ShowError(this, result.ErrorMessage ?? "Failed to send email", "Send Error");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Error sending email: {ex.Message}");
+
+            // Notify the compose view model of the failure
+            _composeMailViewModel?.NotifyMailSentFailed($"Failed to send email: {ex.Message}");
+
+            MessageDialog.ShowError(this, $"Failed to send email: {ex.Message}", "Send Error");
+        }
+    }
+
+    /// <summary>
+    /// Save the sent email to the Sent Items folder via API
+    /// </summary>
+    private async Task SaveToSentFolderAsync(ViewModels.SendMailEventArgs e, string? messageId)
+    {
+        try
+        {
+            var senderName = _mainViewModel.AccountRootFolder?.Name ?? e.From;
+
             var emailMessage = new Models.EmailMessage
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = messageId ?? Guid.NewGuid().ToString(),
                 Subject = string.IsNullOrWhiteSpace(e.Subject) ? "(No Subject)" : e.Subject,
                 From = senderName,
-                FromEmail = senderEmail,
+                FromEmail = e.From,
                 To = e.To,
                 Cc = e.Cc,
                 Bcc = e.Bcc,
                 Body = e.Body,
-                IsHtml = false, // Plain text from compose
+                IsHtml = false,
                 SentDate = DateTime.Now,
                 ReceivedDate = DateTime.Now,
                 IsRead = true,
-                FolderId = "sent", // Will be placed in Sent Items folder
+                FolderId = "sent",
                 Preview = e.Body.Length > 100 ? e.Body.Substring(0, 100) + "..." : e.Body,
                 HasAttachments = e.Attachments.Count > 0
             };
 
-            // Add attachments if any
             if (e.Attachments.Count > 0)
             {
                 emailMessage.Attachments = e.Attachments.Select(a => new Models.EmailAttachment
@@ -1106,25 +1895,52 @@ public partial class MainWindow : Window
                 }).ToList();
             }
 
-            // Get the mail service and send the message via API
+            // Save to API
             var mailService = Services.ServiceConfiguration.GetMailService();
-
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Sending email to: {string.Join(", ", e.To)}");
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Subject: {emailMessage.Subject}");
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Attachments: {emailMessage.Attachments.Count}");
-
-            // Send the message - this will save to Sent Items via API
             await mailService.SendMessageAsync(emailMessage);
 
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Email sent successfully!");
+            // Add the sent message to the collection for immediate display
+            _mainViewModel.AddSentMessageToCollection(emailMessage);
 
-            // Show success notification (optional)
-            // MessageBox.Show("Email sent successfully!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Email saved to Sent folder");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Error sending email: {ex.Message}");
-            MessageDialog.ShowError(this, $"Failed to send email: {ex.Message}", "Send Error");
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Error saving to Sent folder: {ex.Message}");
+            // Don't fail the send operation if saving to API fails
+        }
+    }
+
+    /// <summary>
+    /// Delete the draft from the server after successfully sending the email
+    /// </summary>
+    private async Task DeleteDraftAfterSendAsync(string draftId, string fromEmail)
+    {
+        try
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Deleting draft {draftId} after send");
+
+            var emailSendingService = new Services.EmailSync.EmailSendingService();
+            await emailSendingService.DeleteDraftAsync(fromEmail, draftId);
+
+            // Also remove from local cache
+            if (_mainViewModel.SelectedFolder?.Type == Models.FolderType.Drafts)
+            {
+                // Find and remove the draft from the Messages collection
+                var draftMessage = _mainViewModel.Messages.FirstOrDefault(m =>
+                    m.RemoteMessageId == draftId || m.Id == draftId);
+                if (draftMessage != null)
+                {
+                    await Dispatcher.InvokeAsync(() => _mainViewModel.Messages.Remove(draftMessage));
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Draft deleted successfully");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Error deleting draft: {ex.Message}");
+            // Don't fail the send operation if draft deletion fails
         }
     }
 
@@ -1132,54 +1948,100 @@ public partial class MainWindow : Window
     {
         try
         {
-            // Get sender display name from profile or use email
-            var senderName = _authManager.Session?.Profile?.DisplayName ?? "You";
             var senderEmail = e.From;
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Saving draft: {e.Subject}");
 
-            // Create the draft email message
-            var draftMessage = new Models.EmailMessage
+            // Check if this is a synced account - use IMAP draft saving
+            if (_mainViewModel.HasSyncedAccounts)
             {
-                Id = e.DraftId ?? Guid.NewGuid().ToString(),
-                Subject = string.IsNullOrWhiteSpace(e.Subject) ? "(No Subject)" : e.Subject,
-                From = senderName,
-                FromEmail = senderEmail,
-                To = e.To,
-                Cc = e.Cc,
-                Bcc = e.Bcc,
-                Body = e.Body,
-                IsHtml = false,
-                ReceivedDate = DateTime.Now,
-                IsRead = true,
-                FolderId = "drafts",
-                Preview = e.Body.Length > 100 ? e.Body.Substring(0, 100) + "..." : e.Body,
-                HasAttachments = e.Attachments.Count > 0
-            };
+                var emailSendingService = new Services.EmailSync.EmailSendingService();
 
-            // Add attachments if any
-            if (e.Attachments.Count > 0)
-            {
-                draftMessage.Attachments = e.Attachments.Select(a => new Models.EmailAttachment
+                // Convert attachments
+                var attachments = e.Attachments.Select(a => new Services.EmailSync.EmailAttachmentInfo
                 {
-                    Id = Guid.NewGuid().ToString(),
                     FileName = a.FileName,
                     FilePath = a.FilePath,
-                    ContentType = GetContentType(a.FileName),
                     FileSize = System.IO.File.Exists(a.FilePath) ? new System.IO.FileInfo(a.FilePath).Length : 0
                 }).ToList();
+
+                // Convert embedded images
+                var embeddedImages = e.EmbeddedImages.Select(img => new Services.EmailSync.EmbeddedImageInfo
+                {
+                    ContentId = img.ContentId,
+                    FilePath = img.FilePath,
+                    FileName = img.FileName
+                }).ToList();
+
+                // Determine if content is HTML (check for HTML tags or CID references)
+                var isHtmlContent = !string.IsNullOrEmpty(e.Body) &&
+                    (e.Body.Contains("<") && e.Body.Contains(">") || e.Body.Contains("cid:"));
+
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] Draft body is HTML: {isHtmlContent}, embedded images: {embeddedImages.Count}");
+
+                // Save draft to IMAP Drafts folder with embedded images
+                var result = await emailSendingService.SaveDraftAsync(
+                    senderEmail,
+                    e.To,
+                    e.Cc,
+                    e.Bcc,
+                    e.Subject,
+                    e.Body,
+                    isHtml: isHtmlContent,
+                    existingDraftId: e.DraftId,
+                    attachments: attachments.Count > 0 ? attachments : null,
+                    embeddedImages: embeddedImages.Count > 0 ? embeddedImages : null);
+
+                if (result.Success)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MainWindow] Draft saved to IMAP with ID: {result.DraftId}");
+                    _composeMailViewModel?.SetDraftId(result.DraftId ?? "");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MainWindow] IMAP draft save failed: {result.ErrorMessage}");
+                }
             }
+            else
+            {
+                // Fallback to API draft saving for non-synced accounts
+                var senderName = _authManager.Session?.Profile?.DisplayName ?? "You";
 
-            // Get the mail service and save the draft via API
-            var mailService = Services.ServiceConfiguration.GetMailService();
+                var draftMessage = new Models.EmailMessage
+                {
+                    Id = e.DraftId ?? Guid.NewGuid().ToString(),
+                    Subject = string.IsNullOrWhiteSpace(e.Subject) ? "(No Subject)" : e.Subject,
+                    From = senderName,
+                    FromEmail = senderEmail,
+                    To = e.To,
+                    Cc = e.Cc,
+                    Bcc = e.Bcc,
+                    Body = e.Body,
+                    IsHtml = false,
+                    ReceivedDate = DateTime.Now,
+                    IsRead = true,
+                    FolderId = "drafts",
+                    Preview = e.Body.Length > 100 ? e.Body.Substring(0, 100) + "..." : e.Body,
+                    HasAttachments = e.Attachments.Count > 0
+                };
 
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Saving draft: {draftMessage.Subject}");
+                if (e.Attachments.Count > 0)
+                {
+                    draftMessage.Attachments = e.Attachments.Select(a => new Models.EmailAttachment
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        FileName = a.FileName,
+                        FilePath = a.FilePath,
+                        ContentType = GetContentType(a.FileName),
+                        FileSize = System.IO.File.Exists(a.FilePath) ? new System.IO.FileInfo(a.FilePath).Length : 0
+                    }).ToList();
+                }
 
-            // Save the draft - this will create or update the draft
-            var savedDraft = await mailService.SaveDraftAsync(draftMessage, e.DraftId);
+                var mailService = Services.ServiceConfiguration.GetMailService();
+                var savedDraft = await mailService.SaveDraftAsync(draftMessage, e.DraftId);
 
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Draft saved with ID: {savedDraft.Id}");
-
-            // Update the compose view model with the saved draft ID
-            _composeMailViewModel?.SetDraftId(savedDraft.Id);
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] Draft saved via API with ID: {savedDraft.Id}");
+                _composeMailViewModel?.SetDraftId(savedDraft.Id);
+            }
         }
         catch (Exception ex)
         {
@@ -1222,7 +2084,7 @@ public partial class MainWindow : Window
         MessageDialog.ShowInfo(this, "New Meeting functionality coming soon!", "New Meeting");
     }
 
-    private void MessageListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    private async void MessageListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
         // Check if a message is selected
         if (_mainViewModel.SelectedMessage == null) return;
@@ -1231,10 +2093,79 @@ public partial class MainWindow : Window
         if (_mainViewModel.SelectedFolder?.Type == Models.FolderType.Drafts)
         {
             // Open the draft for editing in compose panel
-            ShowComposePanelWithDraft(_mainViewModel.SelectedMessage);
+            await ShowComposePanelWithDraftAsync(_mainViewModel.SelectedMessage);
         }
         // For other folders, double-click could open in a new window (future enhancement)
         // For now, just keep the reading pane visible
+    }
+
+    #endregion
+
+    #region Attachment Download
+
+    private async void Attachment_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not Border border || border.Tag is not Models.EmailAttachment attachment)
+            return;
+
+        // Get the current message
+        var message = _mainViewModel.DisplayedMessage;
+        if (message == null || message.AccountId == null || string.IsNullOrEmpty(message.RemoteMessageId))
+        {
+            MessageDialog.ShowError(this, "Cannot download attachment - message information is missing.", "Download Error");
+            return;
+        }
+
+        try
+        {
+            // Show downloading status
+            border.IsEnabled = false;
+            border.Opacity = 0.6;
+
+            var displayService = new Services.EmailSync.SyncedEmailDisplayService();
+            var savedPath = await displayService.DownloadAttachmentAsync(
+                message.AccountId.Value,
+                message.RemoteMessageId,
+                attachment.Id,
+                attachment.FileName);
+
+            if (!string.IsNullOrEmpty(savedPath))
+            {
+                // Ask user if they want to open the file
+                var openFile = ConfirmationDialog.Show(
+                    this,
+                    "Download Complete",
+                    $"Attachment saved to:\n{savedPath}\n\nWould you like to open the file?",
+                    "Open File",
+                    "Close",
+                    ConfirmationDialog.DialogType.Info);
+
+                if (openFile)
+                {
+                    // Open the file with default application
+                    var process = new System.Diagnostics.Process();
+                    process.StartInfo = new System.Diagnostics.ProcessStartInfo(savedPath)
+                    {
+                        UseShellExecute = true
+                    };
+                    process.Start();
+                }
+            }
+            else
+            {
+                MessageDialog.ShowError(this, "Failed to download the attachment. Please try again.", "Download Error");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Attachment download error: {ex.Message}");
+            MessageDialog.ShowError(this, $"Error downloading attachment: {ex.Message}", "Download Error");
+        }
+        finally
+        {
+            border.IsEnabled = true;
+            border.Opacity = 1.0;
+        }
     }
 
     #endregion
@@ -1967,7 +2898,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void SyncService_SyncProgressChanged(object? sender, SyncProgressEventArgs e)
+    private void SyncService_SyncProgressChanged(object? sender, Services.SyncProgressEventArgs e)
     {
         Dispatcher.Invoke(() =>
         {

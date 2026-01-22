@@ -33,7 +33,9 @@ Jubilee Inspire is a Scripture-centered mobile application that provides an inte
 - **Collapsible Sidebar**: ChatGPT-style sidebar that collapses to a thin icon bar (~56px)
 - **ChatGPT-style Input Tools**: Dropdown menu with tools (Add photos, Create image, Thinking, Deep research, etc.)
 - **Voice Mode**: Dedicated voice mode button for full voice conversation experience
-- **Conversation Options Menu**: Right-click/hover menu with Share, Rename, Pin, Archive, and Delete options
+- **Conversation Options Menu**: Right-click/hover menu with Share, Rename, Pin, Archive, and Delete options (fully functional)
+- **Share Conversations**: Share conversation content via native share sheet or copy link to clipboard
+- **Archive Conversations**: Hide conversations without deleting them, with dedicated Archived Chats view
 - **Search Chats**: Real-time search filtering with keyword highlighting in conversation titles and previews
 - **Read Aloud**: Text-to-speech playback for AI responses with play/stop toggle and "Speaking" indicator
 - **Report Message**: Modal for reporting inappropriate content with predefined reasons and optional comments
@@ -253,6 +255,9 @@ The drawer sidebar provides:
 - New chat button
 - Conversation history grouped by date (Today, Yesterday, Previous 7 Days, etc.)
 - Delete conversation functionality with confirmation dialog
+- Archive conversations functionality (hide without deleting)
+- Archived Chats view accessible from sidebar menu
+- Share conversations via native share or copy link
 - Settings navigation
 
 ### State Management
@@ -267,7 +272,7 @@ Uses multiple state management approaches:
 All API communication goes through the `services/` layer:
 - `httpClient.ts` - Base HTTP client with auth handling
 - `api.ts` - Main API service with authentication endpoints
-- `storage.ts` - AsyncStorage wrapper for data persistence
+- `storage.ts` - AsyncStorage wrapper for data persistence (includes archive/unarchive methods)
 
 ### Key Components
 
@@ -298,7 +303,7 @@ All API communication goes through the `services/` layer:
 - Sidebar conversation list item with hover effects
 - Shows conversation title and preview
 - Ellipsis menu (three dots) appears on hover
-- Options menu with: Share, Start a group chat, Rename, Pin chat, Archive, Delete
+- Options menu with: Share, Rename, Pin chat, Archive, Delete (fully functional)
 - Dynamic menu positioning 10px below ellipsis button
 - Click-outside to close menu (Modal overlay)
 - Active conversation highlighting with theme colors
@@ -324,6 +329,15 @@ All API communication goes through the `services/` layer:
   - Empty state when no matches found
   - Keyboard support with return key
   - Search icon with focus state styling
+- **Share Modal**: Full share functionality for conversations
+  - Copy Link button copies shareable link to clipboard
+  - Share button opens native share sheet
+  - Modal styling: #2f2f2f background and border
+- **Archived Chats View**: Dedicated view for archived conversations
+  - Access via "Archived chats" menu item in sidebar
+  - View all archived conversations in list
+  - Unarchive or delete archived conversations
+  - Separate from main conversation list
 
 #### ConfirmDialog (`src/components/ConfirmDialog.tsx`)
 - Custom branded confirmation modal
@@ -618,10 +632,21 @@ npx expo start --clear --verbose
   - Smooth collapse/expand animations
   - Icon-only mode when collapsed
 - ✅ **Conversation Options Menu**: Ellipsis menu on hover for each conversation
-  - Share, Start a group chat, Rename, Pin chat, Archive, Delete options
+  - Share, Rename, Pin chat, Archive, Delete options (fully functional)
   - Dynamic positioning 10px below the ellipsis button
   - Click-outside to dismiss (Modal overlay)
   - Custom icons for each option
+- ✅ **Share Conversations**: Full share functionality for conversation history
+  - Share modal with Copy Link and Share buttons
+  - Native share sheet integration via expo-sharing
+  - Copy to clipboard with visual feedback
+  - Share modal styling: #2f2f2f background and border
+- ✅ **Archive Conversations**: ChatGPT-style archive feature
+  - Archive conversations to hide without deleting
+  - Dedicated "Archived Chats" view in sidebar menu
+  - Unarchive functionality to restore conversations
+  - Archived conversations filtered from main list
+  - Archive action in conversation context menu
 - ✅ **ChatGPT-style Input Tools**: Dropdown menu with creative tools
   - Add photos, Create image, Thinking, Deep research options
   - Plus button to access tools menu

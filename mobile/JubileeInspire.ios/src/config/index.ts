@@ -11,9 +11,9 @@ export const APP_VERSION = '1.0.0';
 
 // Theme Colors - Dark Theme (ChatGPT-style)
 export const colors = {
-  primary: '#10a37f',      // ChatGPT green accent
+  primary: '#ffbd59',      // ChatGPT green accent
   secondary: '#19c37d',    // Lighter green
-  accent: '#10a37f',       // Green accent
+  accent: '#ffbd59',       // Green accent
   background: '#212121',   // Dark background
   surface: '#2f2f2f',      // Slightly lighter surface
   surfaceHover: '#3f3f3f', // Hover state
@@ -21,10 +21,10 @@ export const colors = {
   textSecondary: '#8e8e8e', // Muted text
   border: '#3f3f3f',       // Dark border
   error: '#ef4444',
-  success: '#10a37f',
+  success: '#ffbd59',
   warning: '#f59e0b',
   // Chat specific
-  userBubble: '#10a37f',   // Green for user messages
+  userBubble: '#ffbd59',   // Green for user messages
   assistantBubble: '#2f2f2f', // Dark for assistant
   inputBg: '#3f3f3f',      // Input background
   sidebar: '#171717',      // Darker sidebar

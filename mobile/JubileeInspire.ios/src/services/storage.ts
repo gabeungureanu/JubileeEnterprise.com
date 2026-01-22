@@ -2,11 +2,33 @@
  * Jubilee Inspire - Local Storage Service
  *
  * Handles persistent storage of conversations and settings.
+ * Supports user-specific storage when logged in.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Conversation, ChatMessage } from '../types';
 
+// Base storage keys prefix
+const STORAGE_PREFIX = '@jubilee_inspire';
+
+// Current user ID for user-specific storage
+let currentUserId: string | null = null;
+
+/**
+ * Get storage keys based on current user
+ * Returns user-specific keys if logged in, base keys otherwise
+ */
+const getStorageKeys = () => {
+  const suffix = currentUserId ? `_${currentUserId}` : '';
+  return {
+    CONVERSATIONS: `${STORAGE_PREFIX}_conversations${suffix}`,
+    CURRENT_CONVERSATION: `${STORAGE_PREFIX}_current${suffix}`,
+    USER_SETTINGS: `${STORAGE_PREFIX}_settings${suffix}`,
+    PENDING_CONVERSATION: `${STORAGE_PREFIX}_pending_conversation${suffix}`,
+  };
+};
+
+// Legacy keys for backward compatibility (anonymous user data)
 const STORAGE_KEYS = {
   CONVERSATIONS: '@jubilee_inspire_conversations',
   CURRENT_CONVERSATION: '@jubilee_inspire_current',
@@ -19,12 +41,36 @@ const STORAGE_KEYS = {
  */
 export const storage = {
   /**
+   * Set the current user ID for user-specific storage
+   * Call this when user logs in/out
+   */
+  setCurrentUser(userId: string | null): void {
+    console.log('[Storage] Setting current user:', userId || 'anonymous');
+    currentUserId = userId;
+  },
+
+  /**
+   * Get the current user ID
+   */
+  getCurrentUser(): string | null {
+    return currentUserId;
+  },
+
+  /**
+   * Check if a user is currently set
+   */
+  hasCurrentUser(): boolean {
+    return currentUserId !== null;
+  },
+
+  /**
    * Save all conversations
    */
   async saveConversations(conversations: Conversation[]): Promise<void> {
     try {
+      const keys = getStorageKeys();
       const data = JSON.stringify(conversations);
-      await AsyncStorage.setItem(STORAGE_KEYS.CONVERSATIONS, data);
+      await AsyncStorage.setItem(keys.CONVERSATIONS, data);
     } catch (error) {
       console.error('Failed to save conversations:', error);
     }
@@ -35,7 +81,8 @@ export const storage = {
    */
   async loadConversations(): Promise<Conversation[]> {
     try {
-      const data = await AsyncStorage.getItem(STORAGE_KEYS.CONVERSATIONS);
+      const keys = getStorageKeys();
+      const data = await AsyncStorage.getItem(keys.CONVERSATIONS);
       if (data) {
         const conversations = JSON.parse(data) as Conversation[];
         // Convert date strings back to Date objects
@@ -44,6 +91,7 @@ export const storage = {
           createdAt: new Date(conv.createdAt),
           updatedAt: new Date(conv.updatedAt),
           pinnedAt: conv.pinnedAt ? new Date(conv.pinnedAt) : undefined,
+          archivedAt: conv.archivedAt ? new Date(conv.archivedAt) : undefined,
           messages: conv.messages.map(msg => ({
             ...msg,
             timestamp: new Date(msg.timestamp),
@@ -149,15 +197,16 @@ export const storage = {
   },
 
   /**
-   * Clear all data
+   * Clear all data for current user
    */
   async clearAll(): Promise<void> {
     try {
+      const keys = getStorageKeys();
       await AsyncStorage.multiRemove([
-        STORAGE_KEYS.CONVERSATIONS,
-        STORAGE_KEYS.CURRENT_CONVERSATION,
-        STORAGE_KEYS.USER_SETTINGS,
-        STORAGE_KEYS.PENDING_CONVERSATION,
+        keys.CONVERSATIONS,
+        keys.CURRENT_CONVERSATION,
+        keys.USER_SETTINGS,
+        keys.PENDING_CONVERSATION,
       ]);
     } catch (error) {
       console.error('Failed to clear storage:', error);
@@ -195,8 +244,9 @@ export const storage = {
    */
   async savePendingConversation(conversation: Conversation): Promise<void> {
     try {
+      const keys = getStorageKeys();
       const data = JSON.stringify(conversation);
-      await AsyncStorage.setItem(STORAGE_KEYS.PENDING_CONVERSATION, data);
+      await AsyncStorage.setItem(keys.PENDING_CONVERSATION, data);
     } catch (error) {
       console.error('Failed to save pending conversation:', error);
     }
@@ -207,7 +257,8 @@ export const storage = {
    */
   async loadPendingConversation(): Promise<Conversation | null> {
     try {
-      const data = await AsyncStorage.getItem(STORAGE_KEYS.PENDING_CONVERSATION);
+      const keys = getStorageKeys();
+      const data = await AsyncStorage.getItem(keys.PENDING_CONVERSATION);
       if (data) {
         const conversation = JSON.parse(data) as Conversation;
         return {
@@ -232,7 +283,8 @@ export const storage = {
    */
   async clearPendingConversation(): Promise<void> {
     try {
-      await AsyncStorage.removeItem(STORAGE_KEYS.PENDING_CONVERSATION);
+      const keys = getStorageKeys();
+      await AsyncStorage.removeItem(keys.PENDING_CONVERSATION);
     } catch (error) {
       console.error('Failed to clear pending conversation:', error);
     }
@@ -343,6 +395,71 @@ export const storage = {
       console.error('Failed to rename conversation:', error);
       throw error;
     }
+  },
+
+  /**
+   * Archive a conversation
+   * Archived conversations are hidden from the main list but not deleted
+   */
+  async archiveConversation(conversationId: string): Promise<void> {
+    try {
+      const conversations = await this.loadConversations();
+      const index = conversations.findIndex(c => c.id === conversationId);
+
+      if (index >= 0 && !conversations[index].isArchived) {
+        conversations[index] = {
+          ...conversations[index],
+          isArchived: true,
+          archivedAt: new Date(),
+          // Unpin when archiving
+          isPinned: false,
+          pinnedAt: undefined,
+        };
+        await this.saveConversations(conversations);
+      }
+    } catch (error) {
+      console.error('Failed to archive conversation:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Unarchive a conversation
+   * Restores the conversation to the main list
+   */
+  async unarchiveConversation(conversationId: string): Promise<void> {
+    try {
+      const conversations = await this.loadConversations();
+      const index = conversations.findIndex(c => c.id === conversationId);
+
+      if (index >= 0 && conversations[index].isArchived) {
+        conversations[index] = {
+          ...conversations[index],
+          isArchived: false,
+          archivedAt: undefined,
+        };
+        await this.saveConversations(conversations);
+      }
+    } catch (error) {
+      console.error('Failed to unarchive conversation:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Load only active (non-archived) conversations
+   */
+  async loadActiveConversations(): Promise<Conversation[]> {
+    const conversations = await this.loadConversations();
+    return conversations.filter(c => !c.isArchived);
+  },
+
+  /**
+   * Load only archived conversations
+   */
+  async loadArchivedConversations(): Promise<Conversation[]> {
+    const conversations = await this.loadConversations();
+    return conversations.filter(c => c.isArchived);
   },
 };
 

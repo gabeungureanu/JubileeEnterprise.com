@@ -28,6 +28,12 @@ public partial class EmailMessage : ObservableObject
     public EmailPriority Priority { get; set; } = EmailPriority.Normal;
     public string Preview { get; set; } = string.Empty;
     public string ConversationId { get; set; } = string.Empty;
+
+    // Properties for synced email on-demand body fetching
+    public Guid? SyncedMessageId { get; set; }
+    public string? RemoteMessageId { get; set; }
+    public Guid? AccountId { get; set; }
+    public bool NeedsBodyFetch { get; set; }
 }
 
 public class EmailAttachment

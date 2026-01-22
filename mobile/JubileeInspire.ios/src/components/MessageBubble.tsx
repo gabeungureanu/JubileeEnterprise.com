@@ -524,7 +524,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           <TouchableOpacity
             activeOpacity={1}
             onPress={(e: any) => e.stopPropagation()}
-            style={[styles.shareModalContent, { backgroundColor: colors.background }]}
+            style={[styles.shareModalContent, { backgroundColor: '#2f2f2f', borderWidth: 1, borderColor: '#2f2f2f' }]}
           >
             {/* Success State */}
             {shareSuccess ? (
@@ -755,7 +755,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                     }
                   ]}
                   placeholder="Provide more details about the issue..."
-                  placeholderTextColor={colors.textSecondary}
+                  placeholderTextColor={colors.placeholder}
                   value={reportComments}
                   onChangeText={setReportComments}
                   multiline
