@@ -15,6 +15,7 @@ public class LocalCacheService : IDisposable
 
     private readonly string _connectionString;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly bool _offlineModeEnabled;
     private bool _isInitialized = false;
     private bool _disposed = false;
 
@@ -41,16 +42,23 @@ public class LocalCacheService : IDisposable
     /// </summary>
     public bool IsInitialized => _isInitialized;
 
+    /// <summary>
+    /// Gets whether offline mode is enabled
+    /// </summary>
+    public bool IsOfflineModeEnabled => _offlineModeEnabled;
+
     private LocalCacheService()
     {
-        _connectionString = ConfigurationService.Instance.GetLocalCacheConnectionString();
+        var config = ConfigurationService.Instance;
+        _offlineModeEnabled = config.IsOfflineModeEnabled();
+        _connectionString = config.GetLocalCacheConnectionString();
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = false
         };
 
-        System.Diagnostics.Debug.WriteLine($"[LocalCacheService] Created with connection to local PostgreSQL cache");
+        System.Diagnostics.Debug.WriteLine($"[LocalCacheService] Created, OfflineMode={_offlineModeEnabled}");
     }
 
     #region Initialization
@@ -572,6 +580,13 @@ public class LocalCacheService : IDisposable
     /// </summary>
     public async Task CacheEventAsync(CalendarEvent calEvent)
     {
+        // Skip caching if offline mode is disabled
+        if (!_offlineModeEnabled)
+        {
+            System.Diagnostics.Debug.WriteLine($"[LocalCacheService] Skipping event cache - offline mode disabled");
+            return;
+        }
+
         const string sql = @"
             INSERT INTO cached_events (
                 server_id, calendar_id, title, description, location,
@@ -677,6 +692,12 @@ public class LocalCacheService : IDisposable
     /// </summary>
     public async Task<List<CalendarEvent>> GetCachedEventsAsync(DateTime start, DateTime end)
     {
+        // Return empty list if offline mode is disabled
+        if (!_offlineModeEnabled)
+        {
+            return new List<CalendarEvent>();
+        }
+
         const string sql = @"
             SELECT server_id, calendar_id, title, description, location,
                    start_time, end_time, is_all_day, is_recurring, recurrence_pattern,
@@ -720,6 +741,9 @@ public class LocalCacheService : IDisposable
     /// </summary>
     public async Task MarkEventDeletedAsync(string serverId)
     {
+        // Skip if offline mode is disabled
+        if (!_offlineModeEnabled) return;
+
         const string sql = @"
             UPDATE cached_events
             SET is_deleted = TRUE, last_modified = CURRENT_TIMESTAMP
@@ -828,6 +852,13 @@ public class LocalCacheService : IDisposable
     /// </summary>
     public async Task CacheContactAsync(Contact contact)
     {
+        // Skip caching if offline mode is disabled
+        if (!_offlineModeEnabled)
+        {
+            System.Diagnostics.Debug.WriteLine($"[LocalCacheService] Skipping contact cache - offline mode disabled");
+            return;
+        }
+
         try
         {
             await using var connection = new NpgsqlConnection(_connectionString);
@@ -951,6 +982,9 @@ public class LocalCacheService : IDisposable
     /// </summary>
     public async Task<Contact?> GetContactByIdAsync(string contactId)
     {
+        // Return null if offline mode is disabled
+        if (!_offlineModeEnabled) return null;
+
         try
         {
             await using var connection = new NpgsqlConnection(_connectionString);
@@ -983,6 +1017,12 @@ public class LocalCacheService : IDisposable
     /// </summary>
     public async Task<List<Contact>> GetCachedContactsAsync()
     {
+        // Return empty list if offline mode is disabled
+        if (!_offlineModeEnabled)
+        {
+            return new List<Contact>();
+        }
+
         var contacts = new List<Contact>();
 
         try
@@ -1016,6 +1056,12 @@ public class LocalCacheService : IDisposable
     /// </summary>
     public async Task<List<Contact>> SearchContactsAsync(string query)
     {
+        // Return empty list if offline mode is disabled
+        if (!_offlineModeEnabled)
+        {
+            return new List<Contact>();
+        }
+
         var contacts = new List<Contact>();
 
         try
@@ -1080,6 +1126,9 @@ public class LocalCacheService : IDisposable
     /// </summary>
     public async Task DeleteContactAsync(string contactId)
     {
+        // Skip if offline mode is disabled
+        if (!_offlineModeEnabled) return;
+
         const string sql = @"
             UPDATE cached_contacts
             SET is_deleted = TRUE, last_modified = CURRENT_TIMESTAMP

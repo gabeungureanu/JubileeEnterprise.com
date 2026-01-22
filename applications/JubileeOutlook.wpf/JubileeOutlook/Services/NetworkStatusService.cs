@@ -79,7 +79,8 @@ public class NetworkStatusService : INetworkStatusService
         var config = ConfigurationService.Instance;
         // Health endpoint is at the root, not under /api/v1 or /api
         // Strip /api/v1, /api/v2, or /api from base URL to get the server root
-        var baseUrl = config.GetInspireContinuumBaseUrl();
+        // Use InspireCodex as the primary health check since it handles contacts and auth
+        var baseUrl = config.Api.InspireCodex.BaseUrl;
         var healthBaseUrl = baseUrl
             .Replace("/api/v1", "")
             .Replace("/api/v2", "")

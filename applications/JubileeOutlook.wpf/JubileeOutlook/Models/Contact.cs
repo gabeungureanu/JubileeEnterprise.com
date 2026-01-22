@@ -27,6 +27,8 @@ public class Contact
     public string? Spouse { get; set; }
     public string? Website { get; set; }
     public bool IsFavorite { get; set; }
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
     public string? Category { get; set; }
     public DateTime CreatedDate { get; set; } = DateTime.Now;
     public DateTime ModifiedDate { get; set; } = DateTime.Now;

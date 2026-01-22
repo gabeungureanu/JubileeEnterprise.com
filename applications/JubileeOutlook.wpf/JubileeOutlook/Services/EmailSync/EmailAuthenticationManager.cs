@@ -405,6 +405,37 @@ public class EmailAuthenticationManager
                 if (account != null)
                 {
                     accounts.Add(account);
+
+                    // Register the user with Codex to ensure ServiceConfiguration.UserId is set
+                    // This is needed when loading stored accounts (not just first-time OAuth)
+                    if (!string.IsNullOrEmpty(account.EmailAddress))
+                    {
+                        try
+                        {
+                            Debug.WriteLine($"[AuthManager] Registering stored account with Codex: {account.EmailAddress}");
+                            var oauthService = new OAuth2AuthenticationService(_secureStorage);
+                            var registrationResult = await oauthService.RegisterOAuthUserAsync(
+                                email: account.EmailAddress,
+                                displayName: account.DisplayName,
+                                provider: account.ProviderType.ToString().ToLower(),
+                                providerId: null,
+                                avatarUrl: null
+                            );
+
+                            if (registrationResult.Success)
+                            {
+                                Debug.WriteLine($"[AuthManager] User registered/confirmed in Codex: {registrationResult.UserId}");
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"[AuthManager] Codex registration failed: {registrationResult.ErrorMessage}");
+                            }
+                        }
+                        catch (Exception regEx)
+                        {
+                            Debug.WriteLine($"[AuthManager] Codex registration error: {regEx.Message}");
+                        }
+                    }
                 }
             }
             catch (Exception ex)

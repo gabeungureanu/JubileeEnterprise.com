@@ -156,20 +156,10 @@ public class ApiContactService : IContactService
         {
             System.Diagnostics.Debug.WriteLine($"[ApiContactService] GetContactsWithResultAsync called");
             System.Diagnostics.Debug.WriteLine($"[ApiContactService] NetworkStatus.IsOnline={NetworkStatus.IsOnline}, IsApiReachable={NetworkStatus.IsApiReachable}");
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] ServiceConfiguration.UserId={ServiceConfiguration.UserId ?? "(null)"}");
 
-            // If offline, return cached contacts
-            if (!IsOnline)
-            {
-                System.Diagnostics.Debug.WriteLine($"[ApiContactService] Offline - returning cached contacts");
-                var cachedContacts = await LocalCache.GetCachedContactsAsync();
-                var mappedContacts = cachedContacts.Select(MapFromDbContact).ToList();
-                return new ContactServiceResult<List<Contact>>
-                {
-                    Success = true,
-                    Data = mappedContacts
-                };
-            }
-
+            // Always try API first, fall back to cache on failure
+            // This ensures contacts load even if network status check hasn't completed
             var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
             var queryParams = new List<string>
             {
@@ -185,6 +175,7 @@ public class ApiContactService : IContactService
             var content = await response.Content.ReadAsStringAsync();
 
             System.Diagnostics.Debug.WriteLine($"[ApiContactService] Response Status: {response.StatusCode}");
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] Response Content Length: {content?.Length ?? 0}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -436,9 +427,15 @@ public class ApiContactService : IContactService
             System.Diagnostics.Debug.WriteLine($"[ApiContactService] ============ CREATE CONTACT ============");
             System.Diagnostics.Debug.WriteLine($"[ApiContactService] POST endpoint: '{endpoint}'");
             System.Diagnostics.Debug.WriteLine($"[ApiContactService] Contact: {contact.DisplayName}");
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] UserId being sent: {dto.UserId}");
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] ServiceConfiguration.UserId: {ServiceConfiguration.UserId ?? "(null)"}");
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] ServiceConfiguration.UserEmail: {ServiceConfiguration.UserEmail ?? "(null)"}");
 
             var response = await _httpClientFactory.PostAsync(ApiEndpoint.InspireCodex, endpoint, dto);
             var content = await response.Content.ReadAsStringAsync();
+
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] Response status: {response.StatusCode}");
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] Response content: {content}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -512,15 +509,23 @@ public class ApiContactService : IContactService
         }
         catch (HttpRequestException ex)
         {
-            // Network error - queue for offline sync
-            System.Diagnostics.Debug.WriteLine($"[ApiContactService] Network error, queueing contact: {ex.Message}");
-            return await QueueContactForOfflineCreation(contact);
+            // Network error - return error (offline queueing disabled)
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] Network error: {ex.Message}");
+            return new ContactServiceResult<Contact>
+            {
+                Success = false,
+                Error = $"Network error: {ex.Message}. Please check your connection."
+            };
         }
         catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
         {
-            // Timeout - queue for offline sync
-            System.Diagnostics.Debug.WriteLine($"[ApiContactService] Request timeout, queueing contact: {ex.Message}");
-            return await QueueContactForOfflineCreation(contact);
+            // Timeout - return error
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] Request timeout: {ex.Message}");
+            return new ContactServiceResult<Contact>
+            {
+                Success = false,
+                Error = "Request timed out. Please try again."
+            };
         }
         catch (Exception ex)
         {
@@ -1014,6 +1019,8 @@ public class ApiContactService : IContactService
             Spouse = dto.Spouse,
             Website = dto.Website,
             IsFavorite = dto.IsFavorite,
+            IsDeleted = dto.IsDeleted,
+            DeletedAt = dto.DeletedAt,
             Category = dto.Category,
             CreatedDate = dto.CreatedAt ?? DateTime.Now,
             ModifiedDate = dto.UpdatedAt ?? DateTime.Now
@@ -1047,6 +1054,8 @@ public class ApiContactService : IContactService
             Spouse = contact.Spouse,
             Website = contact.Website,
             IsFavorite = contact.IsFavorite,
+            IsDeleted = contact.IsDeleted,
+            DeletedAt = contact.DeletedAt,
             Category = contact.Category
         };
     }
@@ -1213,6 +1222,12 @@ public class ContactDto
 
     [JsonPropertyName("isFavorite")]
     public bool IsFavorite { get; set; }
+
+    [JsonPropertyName("isDeleted")]
+    public bool IsDeleted { get; set; }
+
+    [JsonPropertyName("deletedAt")]
+    public DateTime? DeletedAt { get; set; }
 
     [JsonPropertyName("category")]
     public string? Category { get; set; }
