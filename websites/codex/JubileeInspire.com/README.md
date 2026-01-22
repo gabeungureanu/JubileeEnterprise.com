@@ -13,6 +13,25 @@ JubileeInspire provides an interactive chat experience powered by AI with specia
 - **Login System**: User authentication support
 - **Real-time Messaging**: Instant message delivery
 - **Profile Integration**: User profile display with Jubilee branding
+- **Settings Modal**: Comprehensive settings popup with tabbed interface
+  - General, Personalization, and About tabs
+  - Appearance theme switching (System/Light/Dark)
+  - Bible Translation selector (KJV, NIV, ESV, etc.)
+  - Language selector with 12+ languages
+  - Default Persona and Response Style options
+  - Privacy Policy and Terms of Use modals
+- **Light/Dark Theme Support**: Full theming system with CSS variables
+  - System-based auto-detection
+  - Manual theme override
+  - Smooth transitions between themes
+- **Language Localization (i18n)**: Multi-language support
+  - English, Spanish, French, German translations
+  - Dynamic text updates via data-i18n attributes
+  - Language preference persistence in localStorage
+- **Mobile App-Style Homepage**: Updated welcome design
+  - Large circular avatar with cyan glow border (140px)
+  - "JubileeInspire.com" branding text (88px)
+  - Centered layout matching mobile app aesthetics
 
 ### Prompt System
 The prompt system uses a three-layer architecture:
@@ -22,7 +41,13 @@ The prompt system uses a three-layer architecture:
 3. **Developer Layer** (`model_developer.txt`): Developer suffix always included
 4. **User Declarations** (`model_userdeclarations.txt`): User identity awareness
 
-### New in v1.1.0 (2026-01-11)
+### New in v1.2.0 (2026-01-22)
+- **Settings Modal**: Full settings interface with dropdown menus
+- **Light Theme Support**: Complete light/dark theme system with CSS variables
+- **Language Localization**: Multi-language support (English, Spanish, French, German)
+- **Homepage Redesign**: Mobile app-style welcome screen with avatar and branding
+
+### v1.1.0 (2026-01-11)
 - **Qdrant RAG Integration**: Vector database for contextual responses
 - **Multi-model Support**: GospelPulse and other AI personalities
 - **Prompt API**: External access to prompt layers via `/api/prompt`
