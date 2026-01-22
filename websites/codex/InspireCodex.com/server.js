@@ -2701,6 +2701,124 @@ app.post('/api/auth/register', async (req, res) => {
     }
 });
 
+// OAuth Register endpoint - creates or finds user based on OAuth provider info
+// Used by JubileeOutlook when user signs in with Gmail or Microsoft
+app.post('/api/auth/oauth-register', async (req, res) => {
+    try {
+        const { email, displayName, provider, providerId, avatarUrl } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email is required'
+            });
+        }
+
+        if (!provider) {
+            return res.status(400).json({
+                success: false,
+                error: 'OAuth provider is required (google, microsoft)'
+            });
+        }
+
+        const normalizedEmail = email.toLowerCase();
+        const finalDisplayName = displayName || email.split('@')[0];
+
+        // Check if user already exists by email
+        const existingUser = await codexPool.query(
+            'SELECT id, email, display_name, role, avatar_url, oauth_provider, oauth_provider_id FROM users WHERE email = $1',
+            [normalizedEmail]
+        );
+
+        let user;
+        let isNewUser = false;
+
+        if (existingUser.rows.length > 0) {
+            // User exists - update OAuth info if not already set
+            user = existingUser.rows[0];
+
+            // Update OAuth provider info and avatar if they weren't set before
+            if (!user.oauth_provider || !user.oauth_provider_id) {
+                await codexPool.query(
+                    `UPDATE users SET
+                        oauth_provider = COALESCE(oauth_provider, $1),
+                        oauth_provider_id = COALESCE(oauth_provider_id, $2),
+                        avatar_url = COALESCE(avatar_url, $3),
+                        display_name = COALESCE(NULLIF(display_name, ''), $4),
+                        updated_at = NOW()
+                     WHERE id = $5`,
+                    [provider, providerId, avatarUrl, finalDisplayName, user.id]
+                );
+            }
+
+            // Refresh user data
+            const refreshedUser = await codexPool.query(
+                'SELECT id, email, display_name, role, avatar_url FROM users WHERE id = $1',
+                [user.id]
+            );
+            user = refreshedUser.rows[0];
+        } else {
+            // Create new user (no password required for OAuth users)
+            isNewUser = true;
+            const result = await codexPool.query(
+                `INSERT INTO users (id, email, display_name, role, is_active, oauth_provider, oauth_provider_id, avatar_url, created_at, updated_at)
+                 VALUES ($1, $2, $3, 'user', true, $4, $5, $6, NOW(), NOW())
+                 RETURNING id, email, display_name, role, avatar_url`,
+                [
+                    crypto.randomUUID(),
+                    normalizedEmail,
+                    finalDisplayName,
+                    provider,
+                    providerId,
+                    avatarUrl
+                ]
+            );
+            user = result.rows[0];
+
+            // Create WWBW email address for the new user
+            try {
+                const nameParts = finalDisplayName.trim().split(/\s+/);
+                const firstName = nameParts[0] || 'User';
+                const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : firstName;
+                await createWwbwEmailForUser(user.id, firstName, lastName);
+            } catch (wwbwErr) {
+                console.error('Error creating WWBW email for OAuth user:', wwbwErr);
+                // Don't fail registration if WWBW email creation fails
+            }
+        }
+
+        // Generate tokens
+        const accessToken = generateToken(user.id);
+        const refreshToken = generateToken(user.id + '-refresh');
+
+        console.log(`[OAuth Register] ${isNewUser ? 'Created' : 'Found'} user: ${user.email} (${provider})`);
+
+        res.status(isNewUser ? 201 : 200).json({
+            success: true,
+            isNewUser,
+            user: {
+                id: user.id,
+                email: user.email,
+                displayName: user.display_name,
+                role: user.role,
+                avatarUrl: user.avatar_url
+            },
+            tokens: {
+                accessToken,
+                refreshToken,
+                expiresIn: 7 * 24 * 60 * 60 // 7 days
+            }
+        });
+
+    } catch (err) {
+        console.error('OAuth registration error:', err);
+        res.status(500).json({
+            success: false,
+            error: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred during OAuth registration'
+        });
+    }
+});
+
 // Helper function to create WWBW email for a user
 // All usernames are stored in lowercase for consistency
 async function createWwbwEmailForUser(userId, firstName, lastName, domain = 'inspire.shema') {
@@ -7175,6 +7293,28 @@ async function startServer() {
             CREATE INDEX IF NOT EXISTS idx_user_contacts_favorite ON user_contacts(is_favorite);
         `);
         console.log('✅ User contacts table ready');
+
+        // Add OAuth columns to users table if they don't exist (for OAuth login support)
+        await codexPool.query(`
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='oauth_provider') THEN
+                    ALTER TABLE users ADD COLUMN oauth_provider VARCHAR(50);
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='oauth_provider_id') THEN
+                    ALTER TABLE users ADD COLUMN oauth_provider_id VARCHAR(255);
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='avatar_url') THEN
+                    ALTER TABLE users ADD COLUMN avatar_url TEXT;
+                END IF;
+            END $$;
+        `);
+        // Create index for OAuth lookups
+        await codexPool.query(`
+            CREATE INDEX IF NOT EXISTS idx_users_oauth_provider ON users(oauth_provider);
+            CREATE INDEX IF NOT EXISTS idx_users_oauth_provider_id ON users(oauth_provider, oauth_provider_id);
+        `);
+        console.log('✅ Users OAuth columns ready');
     } catch (err) {
         console.error('❌ Codex database connection failed:', err.message);
         process.exit(1);

@@ -20,6 +20,77 @@
       src: url('https://www.jubileeverse.com/fonts/AGENCYR.TTF');
     }
 
+    /* ==================== THEME CSS VARIABLES ==================== */
+    :root {
+      /* Dark Theme (Default) */
+      --primary: #ffbd59;
+      --secondary: #19c37d;
+      --accent: #ffbd59;
+      --background: #000000;
+      --surface: #2f2f2f;
+      --surface-hover: #3f3f3f;
+      --text: #ececec;
+      --text-secondary: #8e8e8e;
+      --placeholder: #8e8e8e;
+      --border: #3f3f3f;
+      --border-light: #1e1e1e;
+      --error: #ef4444;
+      --success: #ffbd59;
+      --warning: #f59e0b;
+      /* Chat specific */
+      --user-bubble: #2a2a2a;
+      --assistant-bubble: transparent;
+      --input-bg: #3f3f3f;
+      --sidebar-bg: #000000;
+      /* Settings modal */
+      --modal-bg: #212121;
+      --modal-border: #333333;
+      --modal-sidebar-border: #333;
+      --select-bg: #333;
+      --select-border: #444;
+      --toggle-bg: #444;
+      --btn-bg: #333;
+      --btn-border: #444;
+      /* Logo */
+      --logo-text: #ffffff;
+      --logo-inspire: #ffbd59;
+    }
+
+    /* Light Theme */
+    [data-theme="light"] {
+      --primary: #ffbd59;
+      --secondary: #19c37d;
+      --accent: #ffbd59;
+      --background: #ffffff;
+      --surface: #f7f7f8;
+      --surface-hover: #ececf1;
+      --text: #0d0d0d;
+      --text-secondary: #6e6e80;
+      --placeholder: #777777;
+      --border: #d9d9e3;
+      --border-light: #e5e5e5;
+      --error: #ef4444;
+      --success: #ffbd59;
+      --warning: #f59e0b;
+      /* Chat specific */
+      --user-bubble: #f0f0f0;
+      --assistant-bubble: transparent;
+      --input-bg: #f9f9f9;
+      --sidebar-bg: #f9f9f9;
+      /* Settings modal */
+      --modal-bg: #ffffff;
+      --modal-border: #d9d9e3;
+      --modal-sidebar-border: #e5e5e5;
+      --select-bg: #f7f7f8;
+      --select-border: #d9d9e3;
+      --toggle-bg: #d9d9e3;
+      --btn-bg: #f7f7f8;
+      --btn-border: #d9d9e3;
+      /* Logo */
+      --logo-text: #333333;
+      --logo-inspire: #ffbd59;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -29,9 +100,10 @@
     html, body {
       height: 100%;
       font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: #000;
-      color: #f2f2f2;
+      background-color: var(--background);
+      color: var(--text);
       overflow: hidden;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     /* APP CONTAINER */
@@ -45,15 +117,16 @@
     .sidebar {
       width: 52px;
       height: 100vh;
-      background-color: #000;
+      background-color: var(--sidebar-bg);
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 4px 0;
       flex-shrink: 0;
       position: relative;
-      border-right: 1px solid #1e1e1e;
+      border-right: 1px solid var(--border-light);
       z-index: 101;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
     .sidebar-icon {
@@ -77,15 +150,16 @@
     .sidebar-icon svg {
       width: 20px;
       height: 20px;
-      fill: #777;
+      fill: var(--text-secondary);
+      transition: fill 0.3s ease;
     }
 
     .sidebar-icon:hover svg {
-      fill: #aaa;
+      fill: var(--text);
     }
 
     .sidebar-icon.is-highlight svg {
-      fill: #ffbd59;
+      fill: var(--primary);
     }
 
     .sidebar-spacer {
@@ -104,27 +178,29 @@
       font-family: 'Agency FB', Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
       font-size: 22px;
       font-weight: bold;
-      color: #fff;
+      color: var(--logo-text);
       letter-spacing: 0.5px;
+      transition: color 0.3s ease;
     }
 
     .sidebar-brand-text .inspire {
-      color: #ffbd59;
+      color: var(--logo-inspire);
     }
 
     .sidebar-brand-text .dotcom {
-      color: #fff;
+      color: var(--logo-text);
       font-weight: normal;
     }
 
     .sidebar-brand-sub {
       font-family: 'Agency FB', Arial, sans-serif;
       font-size: 8px;
-      color: #fff;
+      color: var(--logo-text);
       letter-spacing: 1px;
       margin-top: 16px;
       margin-right: -4px;
       text-transform: uppercase;
+      transition: color 0.3s ease;
     }
 
     .sidebar-avatar {
@@ -170,12 +246,12 @@
     }
 
     .messages-container::-webkit-scrollbar-thumb {
-      background: #333;
+      background: var(--border);
       border-radius: 4px;
     }
 
     .messages-container::-webkit-scrollbar-thumb:hover {
-      background: #444;
+      background: var(--surface-hover);
     }
 
     /* Messages wrapper for centering */
@@ -197,34 +273,40 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 60px 20px;
-      min-height: 400px;
+      padding: 40px 20px 20px;
+      min-height: 300px;
     }
 
     .welcome-avatar {
-      width: 80px;
-      height: 80px;
+      width: 140px;
+      height: 140px;
       border-radius: 50%;
       object-fit: cover;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
+      border: 4px solid #00d4ff;
+      box-shadow: 0 0 30px rgba(0, 212, 255, 0.4), 0 0 60px rgba(0, 212, 255, 0.2);
     }
 
     .welcome-title {
       font-family: 'Agency FB', Cambria, Georgia, serif;
-      font-size: 36px;
-      color: #fff;
-      margin-bottom: 12px;
+      font-size: 88px;
+      color: var(--text);
+      margin-bottom: 0;
+      transition: color 0.3s ease;
+      letter-spacing: 1px;
     }
 
     .welcome-title .inspire {
-      color: #ffbd59;
+      color: var(--primary);
+    }
+
+    .welcome-title .dotcom {
+      color: var(--text);
+      font-weight: normal;
     }
 
     .welcome-subtitle {
-      font-size: 15px;
-      color: #666;
-      max-width: 400px;
-      line-height: 1.6;
+      display: none;
     }
 
     /* Message Row - Grok style */
@@ -246,19 +328,20 @@
     }
 
     .user-bubble {
-      background-color: #2a2a2a;
-      color: #fff;
+      background-color: var(--user-bubble);
+      color: var(--text);
       padding: 12px 18px;
       border-radius: 18px;
       border-bottom-right-radius: 4px;
       font-size: 15px;
       line-height: 1.5;
       max-width: 70%;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     .user-time {
       font-size: 11px;
-      color: #555;
+      color: var(--text-secondary);
       padding-right: 4px;
     }
 
@@ -290,11 +373,12 @@
     }
 
     .assistant-bubble {
-      color: #e8e8e8;
+      color: var(--text);
       font-size: 15px;
       line-height: 1.7;
       text-align: justify;
       text-justify: inter-word;
+      transition: color 0.3s ease;
     }
 
     /* Streaming text cursor */
@@ -303,7 +387,7 @@
       display: inline-block;
       width: 8px;
       height: 8px;
-      background-color: #ffbd59;
+      background-color: var(--primary);
       border-radius: 50%;
       margin-left: 4px;
       vertical-align: middle;
@@ -324,23 +408,23 @@
 
     .assistant-time {
       font-size: 11px;
-      color: #555;
+      color: var(--text-secondary);
     }
 
     /* Markdown Styling */
     .assistant-bubble strong {
       font-weight: 600;
-      color: #fff;
+      color: var(--text);
     }
 
     .assistant-bubble em {
       font-style: italic;
-      color: #f0f0f0;
+      color: var(--text);
     }
 
     .assistant-bubble .inline-code {
-      background: #2a2a2a;
-      color: #ffbd59;
+      background: var(--surface);
+      color: var(--primary);
       padding: 2px 6px;
       border-radius: 4px;
       font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
@@ -348,8 +432,8 @@
     }
 
     .assistant-bubble .code-block {
-      background: #1a1a1a;
-      border: 1px solid #333;
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 8px;
       padding: 12px 16px;
       margin: 12px 0;
@@ -359,12 +443,12 @@
     .assistant-bubble .code-block code {
       font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
       font-size: 13px;
-      color: #e0e0e0;
+      color: var(--text);
       line-height: 1.5;
     }
 
     .assistant-bubble .md-header {
-      color: #ffbd59;
+      color: var(--primary);
       margin: 16px 0 8px 0;
       font-weight: 600;
     }
@@ -404,24 +488,24 @@
     }
 
     .assistant-bubble .md-quote {
-      border-left: 3px solid #ffbd59;
+      border-left: 3px solid var(--primary);
       margin: 12px 0;
       padding: 8px 16px;
       background: rgba(255, 189, 89, 0.1);
-      color: #ccc;
+      color: var(--text-secondary);
       font-style: italic;
     }
 
     .assistant-bubble .md-hr {
       border: none;
-      border-top: 1px solid #444;
+      border-top: 1px solid var(--border);
       margin: 16px 0;
     }
 
     .assistant-bubble .md-link {
-      color: #ffbd59;
+      color: var(--primary);
       text-decoration: none;
-      border-bottom: 1px dotted #ffbd59;
+      border-bottom: 1px dotted var(--primary);
       transition: all 0.15s;
     }
 
@@ -453,17 +537,17 @@
     }
 
     .action-btn:hover {
-      background-color: rgba(255, 255, 255, 0.08);
+      background-color: var(--surface-hover);
     }
 
     .action-btn svg {
       width: 14px;
       height: 14px;
-      fill: #666;
+      fill: var(--text-secondary);
     }
 
     .action-btn:hover svg {
-      fill: #999;
+      fill: var(--text);
     }
 
     .action-btn.liked svg {
@@ -477,13 +561,13 @@
     .action-divider {
       width: 1px;
       height: 13px;
-      background-color: #333;
+      background-color: var(--border);
       margin: 0 3px;
     }
 
     .response-time {
       font-size: 9px;
-      color: #555;
+      color: var(--text-secondary);
       margin-left: 6px;
       display: flex;
       align-items: center;
@@ -491,7 +575,7 @@
     }
 
     .response-speed {
-      color: #666;
+      color: var(--text-secondary);
     }
 
     /* Custom Tooltips - appear 10px to the right */
@@ -505,8 +589,8 @@
       left: calc(100% + 10px);
       top: calc(50% + 20px);
       transform: translateY(-50%);
-      background-color: #1a1a1a;
-      color: #e0e0e0;
+      background-color: var(--surface);
+      color: var(--text);
       padding: 6px 10px;
       border-radius: 6px;
       font-size: 12px;
@@ -516,7 +600,7 @@
       transition: opacity 0.15s ease, visibility 0.15s ease;
       pointer-events: none;
       z-index: 1000;
-      border: 1px solid #333;
+      border: 1px solid var(--border);
     }
 
     .action-btn:hover::after {
@@ -601,7 +685,7 @@
     /* ==================== INPUT AREA - JubileeVerse Home Page Style ==================== */
     .input-area {
       padding: 16px 24px 12px;
-      background: linear-gradient(to top, #000 80%, transparent);
+      background: linear-gradient(to top, var(--background) 80%, transparent);
     }
 
     .input-wrapper {
@@ -614,18 +698,18 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      background-color: #5a5a5a;
+      background-color: var(--input-bg);
       border-radius: 8px;
       padding: 12px 14px;
       gap: 8px 12px;
       transition: all 0.2s;
-      border: 1px solid #6a6a6a;
+      border: 1px solid var(--border);
     }
 
     .search-box:focus-within {
-      border-color: #ffbd59;
-      box-shadow: 0 0 0 1px #ffbd59;
-      background-color: #616161;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px var(--primary);
+      background-color: var(--surface-hover);
     }
 
     .search-input {
@@ -633,7 +717,7 @@
       background: transparent;
       border: none;
       outline: none;
-      color: #f0f0f0;
+      color: var(--text);
       font-size: 15px;
       font-family: inherit;
       line-height: 22px;
@@ -646,7 +730,7 @@
     }
 
     .search-input::placeholder {
-      color: #ffffff;
+      color: var(--placeholder);
     }
 
     .search-actions {
@@ -664,28 +748,28 @@
       cursor: pointer;
       border-radius: 4px;
       transition: all 0.15s;
-      background-color: #6b6b6b;
-      border: 1px solid #7b7b7b;
+      background-color: var(--btn-bg);
+      border: 1px solid var(--btn-border);
     }
 
     .action-icon:hover {
-      background-color: rgba(255,255,255,0.1);
+      background-color: var(--surface-hover);
     }
 
     .action-icon svg {
       width: 16px;
       height: 16px;
-      fill: #9a9a9a;
+      fill: var(--text-secondary);
       transition: fill 0.15s;
     }
 
     .action-icon:hover svg {
-      fill: #cfcfcf;
+      fill: var(--text);
     }
 
     .action-icon.active svg,
     .action-icon.unlocked svg {
-      fill: #ffbd59;
+      fill: var(--primary);
     }
 
     /* ==================== INSPIRE DROPDOWN MENU ==================== */
@@ -697,25 +781,25 @@
       display: flex;
       align-items: center;
       gap: 4px;
-      background-color: #6b6b6b;
+      background-color: var(--btn-bg);
       padding: 6px 10px;
       border-radius: 4px;
       cursor: pointer;
       font-size: 12px;
-      color: #ffffff;
+      color: var(--text);
       transition: all 0.15s;
-      border: 1px solid #7b7b7b;
+      border: 1px solid var(--btn-border);
     }
 
     .inspire-dropdown:hover {
-      background-color: #757575;
-      color: #fff;
+      background-color: var(--surface-hover);
+      color: var(--text);
     }
 
     .inspire-dropdown svg {
       width: 10px;
       height: 10px;
-      fill: #f0f0f0;
+      fill: var(--text);
     }
 
     .inspire-menu {
@@ -724,10 +808,10 @@
       right: 0;
       margin-bottom: 8px;
       width: 280px;
-      background-color: #3a3a3a;
+      background-color: var(--surface);
       border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-      border: 2px solid #ffbd59;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      border: 2px solid var(--primary);
       opacity: 0;
       visibility: hidden;
       transform: translateY(10px);
@@ -891,13 +975,13 @@
     /* Footer copyright */
     .search-copyright {
       text-align: center;
-      padding: 4px 0 0;
+      padding: 0;
       color: #777;
       font-size: 11px;
       line-height: 1.4;
       width: 100%;
       max-width: 760px;
-      margin: 0 auto;
+      margin: 10px auto 0;
     }
 
     .search-copyright a {
@@ -908,6 +992,283 @@
 
     .search-copyright a:hover {
       color: #aaa;
+    }
+
+    /* ==================== SETTINGS MODAL ==================== */
+    .settings-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, background-color 0.3s ease, visibility 0.3s ease;
+    }
+
+    .settings-modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .settings-modal {
+      background-color: var(--modal-bg);
+      border: 1px solid var(--modal-border);
+      border-radius: 16px;
+      max-width: 680px;
+      width: 90%;
+      min-height: 460px;
+      max-height: 85vh;
+      display: flex;
+      transform: scale(0.9);
+      transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+      overflow: hidden;
+    }
+
+    .settings-modal-overlay.open .settings-modal {
+      transform: scale(1);
+    }
+
+    .settings-sidebar {
+      width: 200px;
+      background-color: var(--modal-bg);
+      padding: 16px 8px;
+      border-right: 1px solid var(--modal-sidebar-border);
+      flex-shrink: 0;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .settings-close-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 16px;
+      margin-left: 4px;
+      transition: background-color 0.15s;
+    }
+
+    .settings-close-btn:hover {
+      background-color: var(--surface-hover);
+    }
+
+    .settings-close-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--text-secondary);
+    }
+
+    .settings-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.15s, color 0.3s ease;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .settings-nav-item:hover {
+      background-color: var(--surface-hover);
+    }
+
+    .settings-nav-item.active {
+      background-color: rgba(255, 189, 89, 0.15);
+      color: var(--text);
+    }
+
+    .settings-nav-item svg {
+      width: 18px;
+      height: 18px;
+      fill: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .settings-nav-item.active svg {
+      fill: var(--primary);
+    }
+
+    .settings-content {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .settings-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .settings-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .settings-content::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    .settings-section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 24px;
+      transition: color 0.3s ease;
+    }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--modal-sidebar-border);
+    }
+
+    .settings-row:last-child {
+      border-bottom: none;
+    }
+
+    .settings-label {
+      font-size: 14px;
+      color: var(--text);
+      transition: color 0.3s ease;
+    }
+
+    .settings-label-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      max-width: 300px;
+      transition: color 0.3s ease;
+    }
+
+    .settings-select {
+      background-color: var(--select-bg);
+      border: 1px solid var(--select-border);
+      border-radius: 8px;
+      padding: 8px 32px 8px 12px;
+      font-size: 14px;
+      color: var(--text);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23888'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      min-width: 140px;
+      width: auto;
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+
+    .settings-select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    /* Ensure consistent dropdown widths within each tab */
+    .settings-tab .settings-row .settings-select {
+      min-width: 140px;
+    }
+
+    .settings-toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background-color: var(--toggle-bg);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .settings-toggle.active {
+      background-color: var(--primary);
+    }
+
+    .settings-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background-color: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .settings-toggle.active::after {
+      transform: translateX(20px);
+    }
+
+    .settings-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background-color: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .settings-btn:hover {
+      background-color: var(--surface-hover);
+      border-color: var(--border);
+    }
+
+    .settings-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    /* Mobile responsive for settings modal */
+    @media (max-width: 600px) {
+      .settings-modal {
+        flex-direction: column;
+        max-height: 90vh;
+      }
+
+      .settings-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--modal-sidebar-border);
+        padding: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .settings-close-btn {
+        margin-bottom: 8px;
+      }
+
+      .settings-nav-item {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      .settings-nav-item span {
+        display: none;
+      }
+
+      .settings-content {
+        padding: 16px;
+      }
     }
 
     /* ==================== PIN MODAL ==================== */
@@ -934,15 +1295,15 @@
     }
 
     .pin-modal {
-      background-color: #2b2b2b;
-      border: 2px solid #ffbd59;
+      background-color: var(--modal-bg);
+      border: 2px solid var(--primary);
       border-radius: 16px;
       padding: 32px 40px;
       text-align: center;
       max-width: 360px;
       width: 90%;
       transform: scale(0.9);
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, background-color 0.3s ease;
     }
 
     .pin-modal-overlay.open .pin-modal {
@@ -950,17 +1311,18 @@
     }
 
     .pin-modal-title {
-      color: #ffbd59;
+      color: var(--primary);
       font-size: 22px;
       font-weight: 600;
       margin-bottom: 12px;
     }
 
     .pin-modal-text {
-      color: #ffffff;
+      color: var(--text);
       font-size: 14px;
       line-height: 1.5;
       margin-bottom: 28px;
+      transition: color 0.3s ease;
     }
 
     .pin-inputs {
@@ -973,12 +1335,12 @@
     .pin-input {
       width: 56px;
       height: 64px;
-      background-color: #1a1a1a;
-      border: 2px solid #ffbd59;
+      background-color: var(--surface);
+      border: 2px solid var(--primary);
       border-radius: 12px;
       font-size: 28px;
       font-weight: 700;
-      color: #ffffff;
+      color: var(--text);
       text-align: center;
       outline: none;
       transition: all 0.15s;
@@ -1655,13 +2017,316 @@
   <!-- PIN Modal -->
   <div class="pin-modal-overlay" id="pinModalOverlay">
     <div class="pin-modal">
-      <div class="pin-modal-title" id="pinModalTitle">Private Chat</div>
-      <div class="pin-modal-text" id="pinModalText">Please enter a four digit pin to encrypt your conversation for privacy.</div>
+      <div class="pin-modal-title" id="pinModalTitle" data-i18n="privateChat">Private Chat</div>
+      <div class="pin-modal-text" id="pinModalText" data-i18n="enterPin">Please enter a four digit pin to encrypt your conversation for privacy.</div>
       <div class="pin-inputs">
         <input type="text" class="pin-input" id="pin1" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
         <input type="text" class="pin-input" id="pin2" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
         <input type="text" class="pin-input" id="pin3" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
         <input type="text" class="pin-input" id="pin4" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div class="settings-modal-overlay" id="settingsModalOverlay">
+    <div class="settings-modal">
+      <!-- Settings Sidebar -->
+      <div class="settings-sidebar">
+        <button class="settings-close-btn" id="settingsCloseBtn" title="Close">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+        <div class="settings-nav-item active" data-tab="general">
+          <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22l-1.92 3.32c-.12.21-.07.47.12.61l2.03 1.58c-.04.31-.06.64-.06.94 0 .31.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          <span data-i18n="settingsGeneral">General</span>
+        </div>
+        <div class="settings-nav-item" data-tab="notifications">
+          <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+          <span data-i18n="settingsNotifications">Notifications</span>
+        </div>
+        <div class="settings-nav-item" data-tab="personalization">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5.5-2.5l7.51-3.49L17.5 6.5 9.99 9.99 6.5 17.5zm5.5-6.6c.61 0 1.1.49 1.1 1.1s-.49 1.1-1.1 1.1-1.1-.49-1.1-1.1.49-1.1 1.1-1.1z"/></svg>
+          <span data-i18n="settingsPersonalization">Personalization</span>
+        </div>
+        <div class="settings-nav-item" data-tab="data">
+          <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+          <span data-i18n="settingsData">Data controls</span>
+        </div>
+        <div class="settings-nav-item" data-tab="security">
+          <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+          <span data-i18n="settingsSecurity">Security</span>
+        </div>
+        <div class="settings-nav-item" data-tab="account">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+          <span data-i18n="settingsAccount">Account</span>
+        </div>
+      </div>
+
+      <!-- Settings Content -->
+      <div class="settings-content" id="settingsContent">
+        <!-- General Tab (default) -->
+        <div class="settings-tab" id="tab-general">
+          <div class="settings-section-title" data-i18n="settingsGeneral">General</div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="appearance">Appearance</div>
+            </div>
+            <select class="settings-select" id="settingAppearance">
+              <option value="dark" data-i18n="dark">Dark</option>
+              <option value="light" data-i18n="light">Light</option>
+              <option value="system" data-i18n="system">System</option>
+            </select>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="accentColor">Accent color</div>
+            </div>
+            <select class="settings-select" id="settingAccentColor">
+              <option value="default" data-i18n="defaultGold">Default (Gold)</option>
+              <option value="blue" data-i18n="blue">Blue</option>
+              <option value="green" data-i18n="green">Green</option>
+              <option value="purple" data-i18n="purple">Purple</option>
+            </select>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="language">Language</div>
+            </div>
+            <select class="settings-select" id="settingLanguage">
+              <option value="auto" data-i18n="autoDetect">Auto-detect</option>
+              <option value="en" data-i18n="english">English</option>
+              <option value="es" data-i18n="spanish">Spanish</option>
+              <option value="fr" data-i18n="french">French</option>
+              <option value="de" data-i18n="german">German</option>
+            </select>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="defaultBibleVersion">Default Bible version</div>
+            </div>
+            <select class="settings-select" id="settingBibleVersion">
+              <option value="kjv">KJV</option>
+              <option value="niv">NIV</option>
+              <option value="esv">ESV</option>
+              <option value="nlt">NLT</option>
+              <option value="nasb">NASB</option>
+            </select>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="voice">Voice</div>
+            </div>
+            <button class="settings-btn" id="settingVoicePlay">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              <span data-i18n="play">Play</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Notifications Tab -->
+        <div class="settings-tab" id="tab-notifications" style="display: none;">
+          <div class="settings-section-title" data-i18n="settingsNotifications">Notifications</div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="pushNotifications">Push notifications</div>
+              <div class="settings-label-desc" data-i18n="pushNotificationsDesc">Receive notifications for new messages and updates</div>
+            </div>
+            <div class="settings-toggle active" id="settingPushNotifs"></div>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="emailNotifications">Email notifications</div>
+              <div class="settings-label-desc" data-i18n="emailNotificationsDesc">Receive email summaries and updates</div>
+            </div>
+            <div class="settings-toggle" id="settingEmailNotifs"></div>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="soundEffects">Sound effects</div>
+              <div class="settings-label-desc" data-i18n="soundEffectsDesc">Play sounds for messages and interactions</div>
+            </div>
+            <div class="settings-toggle active" id="settingSoundEffects"></div>
+          </div>
+        </div>
+
+        <!-- Personalization Tab -->
+        <div class="settings-tab" id="tab-personalization" style="display: none;">
+          <div class="settings-section-title" data-i18n="settingsPersonalization">Personalization</div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="responseStyle">Response style</div>
+              <div class="settings-label-desc" data-i18n="responseStyleDesc">How Jubilee responds to your questions</div>
+            </div>
+            <select class="settings-select" id="settingResponseStyle">
+              <option value="balanced" data-i18n="balanced">Balanced</option>
+              <option value="concise" data-i18n="concise">Concise</option>
+              <option value="detailed" data-i18n="detailed">Detailed</option>
+              <option value="pastoral" data-i18n="pastoral">Pastoral</option>
+            </select>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="includeScripture">Include Scripture references</div>
+              <div class="settings-label-desc" data-i18n="includeScriptureDesc">Automatically include Bible verses in responses</div>
+            </div>
+            <div class="settings-toggle active" id="settingScriptureRefs"></div>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="rememberContext">Remember conversation context</div>
+              <div class="settings-label-desc" data-i18n="rememberContextDesc">Keep track of your conversation history for better responses</div>
+            </div>
+            <div class="settings-toggle active" id="settingRememberContext"></div>
+          </div>
+        </div>
+
+        <!-- Data Controls Tab -->
+        <div class="settings-tab" id="tab-data" style="display: none;">
+          <div class="settings-section-title" data-i18n="settingsData">Data controls</div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Improve Jubilee for everyone</div>
+              <div class="settings-label-desc">Allow your conversations to help improve Jubilee's responses</div>
+            </div>
+            <div class="settings-toggle" id="settingImproveJubilee"></div>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Save chat history</div>
+              <div class="settings-label-desc">Save your conversations for future reference</div>
+            </div>
+            <div class="settings-toggle active" id="settingSaveHistory"></div>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="exportData">Export data</div>
+              <div class="settings-label-desc" data-i18n="exportDataDesc">Download all your chat history and data</div>
+            </div>
+            <button class="settings-btn" id="settingExportData">
+              <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+              <span data-i18n="exportBtn">Export</span>
+            </button>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="clearHistory">Clear chat history</div>
+              <div class="settings-label-desc" data-i18n="clearHistoryDesc">Permanently delete all your conversations</div>
+            </div>
+            <button class="settings-btn" id="settingDeleteChats" style="color: #f87171; border-color: #f87171;">
+              <svg viewBox="0 0 24 24" style="fill: #f87171;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              <span data-i18n="clearBtn">Clear all</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Security Tab -->
+        <div class="settings-tab" id="tab-security" style="display: none;">
+          <div class="settings-section-title" data-i18n="settingsSecurity">Security</div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="privateMode">Private mode PIN</div>
+              <div class="settings-label-desc" data-i18n="privateModeDesc">Set a PIN for private conversations</div>
+            </div>
+            <button class="settings-btn" id="settingSetPin">
+              <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+              <span data-i18n="setPin">Set PIN</span>
+            </button>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="twoFactorAuth">Two-factor authentication</div>
+              <div class="settings-label-desc" data-i18n="twoFactorAuthDesc">Add an extra layer of security to your account</div>
+            </div>
+            <div class="settings-toggle" id="setting2FA"></div>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="activeSessions">Active sessions</div>
+              <div class="settings-label-desc" data-i18n="activeSessionsDesc">Manage devices logged into your account</div>
+            </div>
+            <button class="settings-btn" id="settingActiveSessions">
+              <svg viewBox="0 0 24 24"><path d="M4 6h18V4H4c-1.1 0-2 .9-2 2v11H0v3h14v-3H4V6zm19 2h-6c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h6c.55 0 1-.45 1-1V9c0-.55-.45-1-1-1zm-1 9h-4v-7h4v7z"/></svg>
+              <span data-i18n="manageBtn">Manage</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Account Tab -->
+        <div class="settings-tab" id="tab-account" style="display: none;">
+          <div class="settings-section-title" data-i18n="settingsAccount">Account</div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="email">Email</div>
+              <div class="settings-label-desc" id="settingUserEmail">Not signed in</div>
+            </div>
+            <button class="settings-btn" id="settingChangeEmail">
+              <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              Change
+            </button>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Password</div>
+              <div class="settings-label-desc">Last changed: Never</div>
+            </div>
+            <button class="settings-btn" id="settingChangePassword">
+              <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              Change
+            </button>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Subscription</div>
+              <div class="settings-label-desc" data-i18n="free">Free Plan</div>
+            </div>
+            <button class="settings-btn" id="settingUpgrade" style="background-color: #ffbd59; color: #000; border-color: #ffbd59;">
+              Upgrade
+            </button>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="signOut">Sign out</div>
+              <div class="settings-label-desc">Sign out of your account on this device</div>
+            </div>
+            <button class="settings-btn" id="settingSignOut">
+              <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+              <span data-i18n="signOut">Sign out</span>
+            </button>
+          </div>
+
+          <div class="settings-row">
+            <div>
+              <div class="settings-label" data-i18n="deleteAccount">Delete account</div>
+              <div class="settings-label-desc" data-i18n="deleteAccountDesc">Permanently delete your account and all data</div>
+            </div>
+            <button class="settings-btn" id="settingDeleteAccount" style="color: #f87171; border-color: #f87171;">
+              <svg viewBox="0 0 24 24" style="fill: #f87171;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              <span data-i18n="deleteBtn">Delete</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1672,11 +2337,14 @@
       <a href="/" class="sidebar-icon is-highlight" title="Home">
         <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
       </a>
-      <div class="sidebar-icon" id="newChatBtn" title="New Chat">
+      <div class="sidebar-icon" id="newChatBtn" title="New Chat" data-i18n-title="newChat">
         <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
       </div>
-      <div class="sidebar-icon" title="History">
+      <div class="sidebar-icon" title="History" data-i18n-title="history">
         <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+      </div>
+      <div class="sidebar-icon" id="settingsBtn" title="Settings" data-i18n-title="settings">
+        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22l-1.92 3.32c-.12.21-.07.47.12.61l2.03 1.58c-.04.31-.06.64-.06.94 0 .31.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
       </div>
       <div class="sidebar-spacer"></div>
       <div class="sidebar-brand-section">
@@ -1696,10 +2364,7 @@
           <!-- Welcome State (shown initially) -->
           <div class="welcome-state" id="welcomeState">
             <img src="jubilee-profile.png" alt="Jubilee" class="welcome-avatar">
-            <div class="welcome-title">Jubilee<span class="inspire">Inspire</span></div>
-            <div class="welcome-subtitle">
-              Ask me anything about the Bible, faith, or life. I'm here to help you explore Scripture and grow in your relationship with God.
-            </div>
+            <div class="welcome-title">Jubilee<span class="inspire">Inspire</span><span class="dotcom">.com</span></div>
           </div>
         </div>
       </div>
@@ -1709,7 +2374,7 @@
         <div class="input-wrapper">
           <!-- Search Box - JubileeVerse Home Page Style -->
           <div class="search-box">
-            <textarea class="search-input" id="messageInput" placeholder="Ask Jubilee Anything..." autocomplete="off" rows="1"></textarea>
+            <textarea class="search-input" id="messageInput" placeholder="Ask Jubilee Anything..." data-i18n-placeholder="inputPlaceholder" autocomplete="off" rows="1"></textarea>
             <div class="search-actions">
               <!-- Attach File Icon -->
               <div class="action-icon" id="attachIcon" title="Attach File">
@@ -1787,7 +2452,7 @@
           </div>
           <!-- Copyright line -->
           <div class="search-copyright">
-            Copyright &copy; <span id="currentYear"></span> JubileeVerse.com | All Rights Reserved. JubileeVerse and AI can make mistakes. |
+            Copyright &copy; <span id="currentYear"></span> JubileeInspire.com | All Rights Reserved. JubileeVerse and AI can make mistakes. |
             <a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Use</a>
           </div>
         </div>
@@ -1833,10 +2498,596 @@
       var attachIcon = document.getElementById('attachIcon');
       var privacyIcon = document.getElementById('privacyIcon');
 
+      // Settings Modal Elements
+      var settingsBtn = document.getElementById('settingsBtn');
+      var settingsModalOverlay = document.getElementById('settingsModalOverlay');
+      var settingsCloseBtn = document.getElementById('settingsCloseBtn');
+      var settingsContent = document.getElementById('settingsContent');
+      var settingsNavItems = document.querySelectorAll('.settings-nav-item');
+      var settingsTabs = document.querySelectorAll('.settings-tab');
+
       // Conversation cache key
       var CONVERSATION_CACHE_KEY = 'jubileeInspireConversation';
       var PIN_CACHE_KEY = 'jubileeInspirePrivatePin';
       var MODEL_COOKIE_NAME = 'jubileeInspireModel';
+      var THEME_CACHE_KEY = 'jubileeInspireTheme';
+
+      // ==================== THEME MANAGEMENT ====================
+      // Get system preferred theme
+      function getSystemTheme() {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+          return 'light';
+        }
+        return 'dark';
+      }
+
+      // Apply theme to document
+      function applyTheme(theme) {
+        if (theme === 'system') {
+          theme = getSystemTheme();
+        }
+
+        if (theme === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+        }
+      }
+
+      // Initialize theme from localStorage
+      function initTheme() {
+        var savedTheme = localStorage.getItem(THEME_CACHE_KEY) || 'dark';
+        applyTheme(savedTheme);
+
+        // Update the select dropdown if it exists
+        var themeSelect = document.getElementById('settingAppearance');
+        if (themeSelect) {
+          themeSelect.value = savedTheme;
+        }
+      }
+
+      // Save and apply theme
+      function setTheme(theme) {
+        localStorage.setItem(THEME_CACHE_KEY, theme);
+        applyTheme(theme);
+      }
+
+      // Listen for system theme changes
+      if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+          var savedTheme = localStorage.getItem(THEME_CACHE_KEY) || 'dark';
+          if (savedTheme === 'system') {
+            applyTheme('system');
+          }
+        });
+      }
+
+      // Initialize theme on page load
+      initTheme();
+
+      // ==================== LANGUAGE/LOCALIZATION MANAGEMENT ====================
+      var LANGUAGE_CACHE_KEY = 'jubileeInspireLanguage';
+
+      // Translations object for all supported languages
+      var translations = {
+        en: {
+          // Welcome state
+          welcomeSubtitle: "Ask me anything about the Bible, faith, or life. I'm here to help you explore Scripture and grow in your relationship with God.",
+          inputPlaceholder: "Ask Jubilee Anything...",
+          // Sidebar tooltips
+          newChat: "New Chat",
+          history: "History",
+          communities: "Communities",
+          settings: "Settings",
+          // History panel
+          chatHistory: "Chat History",
+          searchConversations: "Search conversations...",
+          noConversations: "No conversations yet",
+          startNewChat: "Start a new chat to see your history here",
+          // Settings modal - tabs
+          settingsGeneral: "General",
+          settingsNotifications: "Notifications",
+          settingsPersonalization: "Personalization",
+          settingsData: "Data controls",
+          settingsSecurity: "Security",
+          settingsAccount: "Account",
+          // Settings - General tab
+          appearance: "Appearance",
+          accentColor: "Accent color",
+          language: "Language",
+          defaultBibleVersion: "Default Bible version",
+          voice: "Voice",
+          play: "Play",
+          // Settings - appearance options
+          dark: "Dark",
+          light: "Light",
+          system: "System",
+          // Settings - accent color options
+          defaultGold: "Default (Gold)",
+          blue: "Blue",
+          green: "Green",
+          purple: "Purple",
+          // Settings - language options
+          autoDetect: "Auto-detect",
+          english: "English",
+          spanish: "Spanish",
+          french: "French",
+          german: "German",
+          // Settings - Notifications tab
+          pushNotifications: "Push notifications",
+          pushNotificationsDesc: "Receive notifications for new messages and updates",
+          emailNotifications: "Email notifications",
+          emailNotificationsDesc: "Receive email summaries and updates",
+          soundEffects: "Sound effects",
+          soundEffectsDesc: "Play sounds for messages and interactions",
+          // Settings - Personalization tab
+          responseStyle: "Response style",
+          responseStyleDesc: "How Jubilee responds to your questions",
+          balanced: "Balanced",
+          concise: "Concise",
+          detailed: "Detailed",
+          pastoral: "Pastoral",
+          includeScripture: "Include Scripture references",
+          includeScriptureDesc: "Automatically include Bible verses in responses",
+          rememberContext: "Remember conversation context",
+          rememberContextDesc: "Keep track of your conversation history for better responses",
+          // Settings - Data controls tab
+          exportData: "Export data",
+          exportDataDesc: "Download a copy of your conversations and settings",
+          exportBtn: "Export",
+          clearHistory: "Clear chat history",
+          clearHistoryDesc: "Permanently delete all your conversations",
+          clearBtn: "Clear all",
+          // Settings - Security tab
+          twoFactorAuth: "Two-factor authentication",
+          twoFactorAuthDesc: "Add an extra layer of security to your account",
+          enableBtn: "Enable",
+          activeSessions: "Active sessions",
+          activeSessionsDesc: "Manage devices logged into your account",
+          manageBtn: "Manage",
+          privateMode: "Private mode PIN",
+          privateModeDesc: "Set a PIN for private conversations",
+          setPin: "Set PIN",
+          // Settings - Account tab
+          accountInfo: "Account information",
+          email: "Email",
+          accountType: "Account type",
+          memberSince: "Member since",
+          free: "Free",
+          signOut: "Sign out",
+          deleteAccount: "Delete account",
+          deleteAccountDesc: "Permanently delete your account and all data",
+          deleteBtn: "Delete",
+          // PIN modal
+          privateChat: "Private Chat",
+          enterPin: "Please enter a four digit pin to encrypt your conversation for privacy.",
+          // Message actions
+          copy: "Copy",
+          regenerate: "Regenerate",
+          goodResponse: "Good response",
+          badResponse: "Bad response",
+          share: "Share",
+          more: "More",
+          // History menu
+          pin: "Pin",
+          unpin: "Unpin",
+          rename: "Rename",
+          archive: "Archive",
+          delete: "Delete"
+        },
+        es: {
+          // Welcome state
+          welcomeSubtitle: "Preguntame cualquier cosa sobre la Biblia, la fe o la vida. Estoy aqui para ayudarte a explorar las Escrituras y crecer en tu relacion con Dios.",
+          inputPlaceholder: "Pregunta a Jubilee lo que sea...",
+          // Sidebar tooltips
+          newChat: "Nueva Conversacion",
+          history: "Historial",
+          communities: "Comunidades",
+          settings: "Configuracion",
+          // History panel
+          chatHistory: "Historial de Chat",
+          searchConversations: "Buscar conversaciones...",
+          noConversations: "Sin conversaciones aun",
+          startNewChat: "Inicia una nueva conversacion para ver tu historial aqui",
+          // Settings modal - tabs
+          settingsGeneral: "General",
+          settingsNotifications: "Notificaciones",
+          settingsPersonalization: "Personalizacion",
+          settingsData: "Control de datos",
+          settingsSecurity: "Seguridad",
+          settingsAccount: "Cuenta",
+          // Settings - General tab
+          appearance: "Apariencia",
+          accentColor: "Color de acento",
+          language: "Idioma",
+          defaultBibleVersion: "Version de Biblia predeterminada",
+          voice: "Voz",
+          play: "Reproducir",
+          // Settings - appearance options
+          dark: "Oscuro",
+          light: "Claro",
+          system: "Sistema",
+          // Settings - accent color options
+          defaultGold: "Predeterminado (Dorado)",
+          blue: "Azul",
+          green: "Verde",
+          purple: "Morado",
+          // Settings - language options
+          autoDetect: "Detectar automaticamente",
+          english: "Ingles",
+          spanish: "Espanol",
+          french: "Frances",
+          german: "Aleman",
+          // Settings - Notifications tab
+          pushNotifications: "Notificaciones push",
+          pushNotificationsDesc: "Recibe notificaciones de nuevos mensajes y actualizaciones",
+          emailNotifications: "Notificaciones por email",
+          emailNotificationsDesc: "Recibe resumenes y actualizaciones por correo",
+          soundEffects: "Efectos de sonido",
+          soundEffectsDesc: "Reproducir sonidos para mensajes e interacciones",
+          // Settings - Personalization tab
+          responseStyle: "Estilo de respuesta",
+          responseStyleDesc: "Como Jubilee responde a tus preguntas",
+          balanced: "Equilibrado",
+          concise: "Conciso",
+          detailed: "Detallado",
+          pastoral: "Pastoral",
+          includeScripture: "Incluir referencias biblicas",
+          includeScriptureDesc: "Incluir automaticamente versiculos biblicos en las respuestas",
+          rememberContext: "Recordar contexto de conversacion",
+          rememberContextDesc: "Mantener un registro del historial de conversacion para mejores respuestas",
+          // Settings - Data controls tab
+          exportData: "Exportar datos",
+          exportDataDesc: "Descarga una copia de tus conversaciones y configuracion",
+          exportBtn: "Exportar",
+          clearHistory: "Borrar historial de chat",
+          clearHistoryDesc: "Eliminar permanentemente todas tus conversaciones",
+          clearBtn: "Borrar todo",
+          // Settings - Security tab
+          twoFactorAuth: "Autenticacion de dos factores",
+          twoFactorAuthDesc: "Agrega una capa extra de seguridad a tu cuenta",
+          enableBtn: "Activar",
+          activeSessions: "Sesiones activas",
+          activeSessionsDesc: "Administra los dispositivos conectados a tu cuenta",
+          manageBtn: "Administrar",
+          privateMode: "PIN de modo privado",
+          privateModeDesc: "Establece un PIN para conversaciones privadas",
+          setPin: "Establecer PIN",
+          // Settings - Account tab
+          accountInfo: "Informacion de cuenta",
+          email: "Correo electronico",
+          accountType: "Tipo de cuenta",
+          memberSince: "Miembro desde",
+          free: "Gratis",
+          signOut: "Cerrar sesion",
+          deleteAccount: "Eliminar cuenta",
+          deleteAccountDesc: "Eliminar permanentemente tu cuenta y todos los datos",
+          deleteBtn: "Eliminar",
+          // PIN modal
+          privateChat: "Chat Privado",
+          enterPin: "Por favor ingresa un PIN de cuatro digitos para encriptar tu conversacion por privacidad.",
+          // Message actions
+          copy: "Copiar",
+          regenerate: "Regenerar",
+          goodResponse: "Buena respuesta",
+          badResponse: "Mala respuesta",
+          share: "Compartir",
+          more: "Mas",
+          // History menu
+          pin: "Fijar",
+          unpin: "Desfijar",
+          rename: "Renombrar",
+          archive: "Archivar",
+          delete: "Eliminar"
+        },
+        fr: {
+          // Welcome state
+          welcomeSubtitle: "Posez-moi n'importe quelle question sur la Bible, la foi ou la vie. Je suis la pour vous aider a explorer les Ecritures et grandir dans votre relation avec Dieu.",
+          inputPlaceholder: "Demandez a Jubilee ce que vous voulez...",
+          // Sidebar tooltips
+          newChat: "Nouvelle Discussion",
+          history: "Historique",
+          communities: "Communautes",
+          settings: "Parametres",
+          // History panel
+          chatHistory: "Historique des Discussions",
+          searchConversations: "Rechercher des conversations...",
+          noConversations: "Pas encore de conversations",
+          startNewChat: "Commencez une nouvelle discussion pour voir votre historique ici",
+          // Settings modal - tabs
+          settingsGeneral: "General",
+          settingsNotifications: "Notifications",
+          settingsPersonalization: "Personnalisation",
+          settingsData: "Controle des donnees",
+          settingsSecurity: "Securite",
+          settingsAccount: "Compte",
+          // Settings - General tab
+          appearance: "Apparence",
+          accentColor: "Couleur d'accent",
+          language: "Langue",
+          defaultBibleVersion: "Version de Bible par defaut",
+          voice: "Voix",
+          play: "Lecture",
+          // Settings - appearance options
+          dark: "Sombre",
+          light: "Clair",
+          system: "Systeme",
+          // Settings - accent color options
+          defaultGold: "Par defaut (Or)",
+          blue: "Bleu",
+          green: "Vert",
+          purple: "Violet",
+          // Settings - language options
+          autoDetect: "Detection automatique",
+          english: "Anglais",
+          spanish: "Espagnol",
+          french: "Francais",
+          german: "Allemand",
+          // Settings - Notifications tab
+          pushNotifications: "Notifications push",
+          pushNotificationsDesc: "Recevoir des notifications pour les nouveaux messages et mises a jour",
+          emailNotifications: "Notifications par email",
+          emailNotificationsDesc: "Recevoir des resumes et mises a jour par email",
+          soundEffects: "Effets sonores",
+          soundEffectsDesc: "Jouer des sons pour les messages et interactions",
+          // Settings - Personalization tab
+          responseStyle: "Style de reponse",
+          responseStyleDesc: "Comment Jubilee repond a vos questions",
+          balanced: "Equilibre",
+          concise: "Concis",
+          detailed: "Detaille",
+          pastoral: "Pastoral",
+          includeScripture: "Inclure les references bibliques",
+          includeScriptureDesc: "Inclure automatiquement les versets bibliques dans les reponses",
+          rememberContext: "Retenir le contexte de conversation",
+          rememberContextDesc: "Garder une trace de l'historique de conversation pour de meilleures reponses",
+          // Settings - Data controls tab
+          exportData: "Exporter les donnees",
+          exportDataDesc: "Telecharger une copie de vos conversations et parametres",
+          exportBtn: "Exporter",
+          clearHistory: "Effacer l'historique des discussions",
+          clearHistoryDesc: "Supprimer definitivement toutes vos conversations",
+          clearBtn: "Tout effacer",
+          // Settings - Security tab
+          twoFactorAuth: "Authentification a deux facteurs",
+          twoFactorAuthDesc: "Ajouter une couche supplementaire de securite a votre compte",
+          enableBtn: "Activer",
+          activeSessions: "Sessions actives",
+          activeSessionsDesc: "Gerer les appareils connectes a votre compte",
+          manageBtn: "Gerer",
+          privateMode: "PIN du mode prive",
+          privateModeDesc: "Definir un PIN pour les conversations privees",
+          setPin: "Definir le PIN",
+          // Settings - Account tab
+          accountInfo: "Informations du compte",
+          email: "Email",
+          accountType: "Type de compte",
+          memberSince: "Membre depuis",
+          free: "Gratuit",
+          signOut: "Se deconnecter",
+          deleteAccount: "Supprimer le compte",
+          deleteAccountDesc: "Supprimer definitivement votre compte et toutes les donnees",
+          deleteBtn: "Supprimer",
+          // PIN modal
+          privateChat: "Discussion Privee",
+          enterPin: "Veuillez entrer un code PIN a quatre chiffres pour chiffrer votre conversation pour la confidentialite.",
+          // Message actions
+          copy: "Copier",
+          regenerate: "Regenerer",
+          goodResponse: "Bonne reponse",
+          badResponse: "Mauvaise reponse",
+          share: "Partager",
+          more: "Plus",
+          // History menu
+          pin: "Epingler",
+          unpin: "Desepingler",
+          rename: "Renommer",
+          archive: "Archiver",
+          delete: "Supprimer"
+        },
+        de: {
+          // Welcome state
+          welcomeSubtitle: "Frag mich alles uber die Bibel, den Glauben oder das Leben. Ich bin hier, um dir zu helfen, die Heilige Schrift zu erkunden und in deiner Beziehung zu Gott zu wachsen.",
+          inputPlaceholder: "Frag Jubilee was du willst...",
+          // Sidebar tooltips
+          newChat: "Neuer Chat",
+          history: "Verlauf",
+          communities: "Gemeinschaften",
+          settings: "Einstellungen",
+          // History panel
+          chatHistory: "Chat-Verlauf",
+          searchConversations: "Unterhaltungen suchen...",
+          noConversations: "Noch keine Unterhaltungen",
+          startNewChat: "Starte einen neuen Chat, um deinen Verlauf hier zu sehen",
+          // Settings modal - tabs
+          settingsGeneral: "Allgemein",
+          settingsNotifications: "Benachrichtigungen",
+          settingsPersonalization: "Personalisierung",
+          settingsData: "Datenkontrolle",
+          settingsSecurity: "Sicherheit",
+          settingsAccount: "Konto",
+          // Settings - General tab
+          appearance: "Erscheinungsbild",
+          accentColor: "Akzentfarbe",
+          language: "Sprache",
+          defaultBibleVersion: "Standard-Bibelversion",
+          voice: "Stimme",
+          play: "Abspielen",
+          // Settings - appearance options
+          dark: "Dunkel",
+          light: "Hell",
+          system: "System",
+          // Settings - accent color options
+          defaultGold: "Standard (Gold)",
+          blue: "Blau",
+          green: "Grun",
+          purple: "Lila",
+          // Settings - language options
+          autoDetect: "Automatisch erkennen",
+          english: "Englisch",
+          spanish: "Spanisch",
+          french: "Franzosisch",
+          german: "Deutsch",
+          // Settings - Notifications tab
+          pushNotifications: "Push-Benachrichtigungen",
+          pushNotificationsDesc: "Benachrichtigungen fur neue Nachrichten und Updates erhalten",
+          emailNotifications: "E-Mail-Benachrichtigungen",
+          emailNotificationsDesc: "E-Mail-Zusammenfassungen und Updates erhalten",
+          soundEffects: "Soundeffekte",
+          soundEffectsDesc: "Tone fur Nachrichten und Interaktionen abspielen",
+          // Settings - Personalization tab
+          responseStyle: "Antwortstil",
+          responseStyleDesc: "Wie Jubilee auf deine Fragen antwortet",
+          balanced: "Ausgewogen",
+          concise: "Kurz und bundig",
+          detailed: "Ausfuhrlich",
+          pastoral: "Seelsorgerisch",
+          includeScripture: "Bibelreferenzen einbeziehen",
+          includeScriptureDesc: "Automatisch Bibelverse in Antworten einbeziehen",
+          rememberContext: "Gesprachskontext merken",
+          rememberContextDesc: "Gesprachsverlauf fur bessere Antworten speichern",
+          // Settings - Data controls tab
+          exportData: "Daten exportieren",
+          exportDataDesc: "Eine Kopie deiner Unterhaltungen und Einstellungen herunterladen",
+          exportBtn: "Exportieren",
+          clearHistory: "Chat-Verlauf loschen",
+          clearHistoryDesc: "Alle Unterhaltungen dauerhaft loschen",
+          clearBtn: "Alles loschen",
+          // Settings - Security tab
+          twoFactorAuth: "Zwei-Faktor-Authentifizierung",
+          twoFactorAuthDesc: "Eine zusatzliche Sicherheitsebene zu deinem Konto hinzufugen",
+          enableBtn: "Aktivieren",
+          activeSessions: "Aktive Sitzungen",
+          activeSessionsDesc: "Gerate verwalten, die in dein Konto eingeloggt sind",
+          manageBtn: "Verwalten",
+          privateMode: "Privater Modus PIN",
+          privateModeDesc: "Einen PIN fur private Unterhaltungen festlegen",
+          setPin: "PIN festlegen",
+          // Settings - Account tab
+          accountInfo: "Kontoinformationen",
+          email: "E-Mail",
+          accountType: "Kontotyp",
+          memberSince: "Mitglied seit",
+          free: "Kostenlos",
+          signOut: "Abmelden",
+          deleteAccount: "Konto loschen",
+          deleteAccountDesc: "Dein Konto und alle Daten dauerhaft loschen",
+          deleteBtn: "Loschen",
+          // PIN modal
+          privateChat: "Privater Chat",
+          enterPin: "Bitte gib einen vierstelligen PIN ein, um deine Unterhaltung fur die Privatsphare zu verschlusseln.",
+          // Message actions
+          copy: "Kopieren",
+          regenerate: "Neu generieren",
+          goodResponse: "Gute Antwort",
+          badResponse: "Schlechte Antwort",
+          share: "Teilen",
+          more: "Mehr",
+          // History menu
+          pin: "Anheften",
+          unpin: "Losen",
+          rename: "Umbenennen",
+          archive: "Archivieren",
+          delete: "Loschen"
+        }
+      };
+
+      // Get browser language
+      function getBrowserLanguage() {
+        var browserLang = navigator.language || navigator.userLanguage;
+        if (browserLang) {
+          var shortLang = browserLang.split('-')[0].toLowerCase();
+          if (translations[shortLang]) {
+            return shortLang;
+          }
+        }
+        return 'en';
+      }
+
+      // Get current language
+      function getCurrentLanguage() {
+        var savedLang = localStorage.getItem(LANGUAGE_CACHE_KEY) || 'auto';
+        if (savedLang === 'auto') {
+          return getBrowserLanguage();
+        }
+        return savedLang;
+      }
+
+      // Get translation for a key
+      function t(key) {
+        var lang = getCurrentLanguage();
+        if (translations[lang] && translations[lang][key]) {
+          return translations[lang][key];
+        }
+        // Fallback to English
+        return translations.en[key] || key;
+      }
+
+      // Apply language to all elements with data-i18n attribute
+      function applyLanguage() {
+        var lang = getCurrentLanguage();
+        var elements = document.querySelectorAll('[data-i18n]');
+        elements.forEach(function(el) {
+          var key = el.getAttribute('data-i18n');
+          var translation = t(key);
+          if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+            el.placeholder = translation;
+          } else if (el.hasAttribute('title')) {
+            el.title = translation;
+            // Also update text content if it has both
+            if (el.getAttribute('data-i18n-content')) {
+              el.textContent = translation;
+            }
+          } else {
+            el.textContent = translation;
+          }
+        });
+
+        // Update elements with data-i18n-placeholder
+        var placeholderElements = document.querySelectorAll('[data-i18n-placeholder]');
+        placeholderElements.forEach(function(el) {
+          var key = el.getAttribute('data-i18n-placeholder');
+          el.placeholder = t(key);
+        });
+
+        // Update elements with data-i18n-title
+        var titleElements = document.querySelectorAll('[data-i18n-title]');
+        titleElements.forEach(function(el) {
+          var key = el.getAttribute('data-i18n-title');
+          el.title = t(key);
+        });
+
+        // Update select option text
+        var selectElements = document.querySelectorAll('select option[data-i18n]');
+        selectElements.forEach(function(option) {
+          var key = option.getAttribute('data-i18n');
+          option.textContent = t(key);
+        });
+
+        // Update HTML lang attribute
+        document.documentElement.lang = lang;
+      }
+
+      // Initialize language from localStorage
+      function initLanguage() {
+        var savedLang = localStorage.getItem(LANGUAGE_CACHE_KEY) || 'auto';
+        applyLanguage();
+
+        // Update the select dropdown if it exists
+        var langSelect = document.getElementById('settingLanguage');
+        if (langSelect) {
+          langSelect.value = savedLang;
+        }
+      }
+
+      // Save and apply language
+      function setLanguage(lang) {
+        localStorage.setItem(LANGUAGE_CACHE_KEY, lang);
+        applyLanguage();
+      }
+
+      // Initialize language on page load
+      initLanguage();
 
       // Cookie helper functions
       function setCookie(name, value, days) {
@@ -2984,10 +4235,7 @@
         newWelcome.id = 'welcomeState';
         newWelcome.innerHTML =
           '<img src="jubilee-profile.png" alt="Jubilee" class="welcome-avatar">' +
-          '<div class="welcome-title">Jubilee<span class="inspire">Inspire</span></div>' +
-          '<div class="welcome-subtitle">' +
-            'Ask me anything about the Bible, faith, or life. I\'m here to help you explore Scripture and grow in your relationship with God.' +
-          '</div>';
+          '<div class="welcome-title">Jubilee<span class="inspire">Inspire</span><span class="dotcom">.com</span></div>';
         messagesWrapper.appendChild(newWelcome);
         welcomeState = newWelcome;
 
@@ -3054,6 +4302,193 @@
       function closePinModal() {
         pinModalOverlay.classList.remove('open');
       }
+
+      // ==================== SETTINGS MODAL FUNCTIONS ====================
+      function openSettingsModal() {
+        settingsModalOverlay.classList.add('open');
+        // Update user email in account tab if logged in
+        var userEmailEl = document.getElementById('settingUserEmail');
+        if (userEmailEl) {
+          userEmailEl.textContent = userData && userData.email ? userData.email : 'Not signed in';
+        }
+        // Update theme select to current value
+        var themeSelect = document.getElementById('settingAppearance');
+        if (themeSelect) {
+          var currentTheme = localStorage.getItem(THEME_CACHE_KEY) || 'dark';
+          themeSelect.value = currentTheme;
+        }
+        // Update language select to current value
+        var langSelect = document.getElementById('settingLanguage');
+        if (langSelect) {
+          var currentLang = localStorage.getItem(LANGUAGE_CACHE_KEY) || 'auto';
+          langSelect.value = currentLang;
+        }
+      }
+
+      function closeSettingsModal() {
+        settingsModalOverlay.classList.remove('open');
+      }
+
+      function switchSettingsTab(tabName) {
+        // Update nav items
+        settingsNavItems.forEach(function(item) {
+          if (item.getAttribute('data-tab') === tabName) {
+            item.classList.add('active');
+          } else {
+            item.classList.remove('active');
+          }
+        });
+
+        // Update tab content
+        settingsTabs.forEach(function(tab) {
+          if (tab.id === 'tab-' + tabName) {
+            tab.style.display = 'block';
+          } else {
+            tab.style.display = 'none';
+          }
+        });
+      }
+
+      // Settings button click handler
+      if (settingsBtn) {
+        settingsBtn.addEventListener('click', function() {
+          openSettingsModal();
+        });
+      }
+
+      // Settings close button handler
+      if (settingsCloseBtn) {
+        settingsCloseBtn.addEventListener('click', function() {
+          closeSettingsModal();
+        });
+      }
+
+      // Settings modal overlay click handler (close on click outside)
+      if (settingsModalOverlay) {
+        settingsModalOverlay.addEventListener('click', function(e) {
+          if (e.target === settingsModalOverlay) {
+            closeSettingsModal();
+          }
+        });
+      }
+
+      // Settings nav item click handlers
+      settingsNavItems.forEach(function(item) {
+        item.addEventListener('click', function() {
+          var tabName = item.getAttribute('data-tab');
+          switchSettingsTab(tabName);
+        });
+      });
+
+      // Toggle switch handlers
+      document.querySelectorAll('.settings-toggle').forEach(function(toggle) {
+        toggle.addEventListener('click', function() {
+          toggle.classList.toggle('active');
+          // Save setting to localStorage
+          var settingId = toggle.id;
+          if (settingId) {
+            localStorage.setItem(settingId, toggle.classList.contains('active'));
+          }
+        });
+      });
+
+      // Load saved toggle states
+      document.querySelectorAll('.settings-toggle').forEach(function(toggle) {
+        var settingId = toggle.id;
+        if (settingId) {
+          var savedValue = localStorage.getItem(settingId);
+          if (savedValue !== null) {
+            if (savedValue === 'true') {
+              toggle.classList.add('active');
+            } else {
+              toggle.classList.remove('active');
+            }
+          }
+        }
+      });
+
+      // Theme selector handler
+      var themeSelect = document.getElementById('settingAppearance');
+      if (themeSelect) {
+        themeSelect.addEventListener('change', function() {
+          var selectedTheme = themeSelect.value;
+          setTheme(selectedTheme);
+        });
+      }
+
+      // Language selector handler
+      var langSelect = document.getElementById('settingLanguage');
+      if (langSelect) {
+        langSelect.addEventListener('change', function() {
+          var selectedLang = langSelect.value;
+          setLanguage(selectedLang);
+        });
+      }
+
+      // Settings action handlers
+      var settingSetPin = document.getElementById('settingSetPin');
+      if (settingSetPin) {
+        settingSetPin.addEventListener('click', function() {
+          closeSettingsModal();
+          openPinModal();
+        });
+      }
+
+      var settingSignOut = document.getElementById('settingSignOut');
+      if (settingSignOut) {
+        settingSignOut.addEventListener('click', function() {
+          closeSettingsModal();
+          // Trigger the existing logout functionality
+          localStorage.removeItem('jubileeInspireAuth');
+          localStorage.removeItem('jubileeInspireUser');
+          window.location.href = '/login.html';
+        });
+      }
+
+      var settingDeleteChats = document.getElementById('settingDeleteChats');
+      if (settingDeleteChats) {
+        settingDeleteChats.addEventListener('click', function() {
+          if (confirm('Are you sure you want to delete all your chat history? This cannot be undone.')) {
+            localStorage.removeItem(CONVERSATION_CACHE_KEY);
+            if (messagesWrapper) {
+              messagesWrapper.innerHTML = '';
+              messagesWrapper.appendChild(welcomeState);
+            }
+            if (welcomeState) {
+              welcomeState.style.display = 'flex';
+            }
+            closeSettingsModal();
+          }
+        });
+      }
+
+      var settingExportData = document.getElementById('settingExportData');
+      if (settingExportData) {
+        settingExportData.addEventListener('click', function() {
+          var conversationData = localStorage.getItem(CONVERSATION_CACHE_KEY);
+          if (conversationData) {
+            var blob = new Blob([conversationData], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'jubilee-inspire-chat-export.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          } else {
+            alert('No chat history to export.');
+          }
+        });
+      }
+
+      // Keyboard shortcut to close settings modal (Escape key)
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && settingsModalOverlay.classList.contains('open')) {
+          closeSettingsModal();
+        }
+      });
+      // ==================== END SETTINGS MODAL FUNCTIONS ====================
 
       function handlePinComplete() {
         var pin = pinInputs.map(function(input) {

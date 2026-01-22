@@ -668,6 +668,20 @@ npx expo start --clear --verbose
   - Large animated microphone button with pulsing feedback
   - Modal overlay with theme-aware styling
   - Dedicated voice-first conversation experience
+- ✅ **User-Specific Chat History Storage**: Separate chat histories for logged-in vs anonymous users
+  - Storage service supports user-specific storage keys
+  - Conversations are isolated per user account
+  - Seamless switching between user contexts on login/logout
+  - Anonymous user data preserved separately from authenticated user data
+- ✅ **Auth-Gated Archive Feature**: Archive functionality only available when logged in
+  - Archive menu option hidden for anonymous users
+  - Archived Chats view only accessible when authenticated
+  - Prevents data loss for users without accounts
+- ✅ **Password Field Focus States**: Visual feedback on password input focus
+  - Primary color border on focus
+  - Box shadow glow effect for better visibility
+  - Consistent styling across sign-in, sign-up, and password reset flows
+  - Hidden browser native password reveal buttons via injected CSS
 
 #### Bug Fixes
 - Fixed "New Chat" button not creating fresh conversations
