@@ -684,12 +684,12 @@
 
     /* ==================== INPUT AREA - JubileeVerse Home Page Style ==================== */
     .input-area {
-      padding: 20px 24px 24px;
-      background: transparent;
+      padding: 16px 24px 12px;
+      background: linear-gradient(to top, var(--background) 80%, transparent);
     }
 
     .input-wrapper {
-      max-width: 680px;
+      max-width: 760px;
       margin: 0 auto;
     }
 
@@ -698,10 +698,10 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      background-color: var(--surface);
-      border-radius: 28px;
-      padding: 14px 18px;
-      gap: 10px 14px;
+      background-color: var(--input-bg);
+      border-radius: 8px;
+      padding: 12px 14px;
+      gap: 8px 12px;
       transition: all 0.2s;
       border: 1px solid var(--border);
     }
@@ -740,25 +740,25 @@
     }
 
     .action-icon {
-      width: 36px;
-      height: 36px;
+      width: 30px;
+      height: 30px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      border-radius: 50%;
+      border-radius: 4px;
       transition: all 0.15s;
-      background-color: var(--surface-hover);
-      border: none;
+      background-color: var(--btn-bg);
+      border: 1px solid var(--btn-border);
     }
 
     .action-icon:hover {
-      background-color: var(--border);
+      background-color: var(--surface-hover);
     }
 
     .action-icon svg {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       fill: var(--text-secondary);
       transition: fill 0.15s;
     }
@@ -770,23 +770,6 @@
     .action-icon.active svg,
     .action-icon.unlocked svg {
       fill: var(--primary);
-    }
-
-    /* Send button styled differently */
-    .action-icon.send-btn {
-      background-color: var(--primary);
-      width: 40px;
-      height: 40px;
-    }
-
-    .action-icon.send-btn svg {
-      fill: #000000;
-      width: 20px;
-      height: 20px;
-    }
-
-    .action-icon.send-btn:hover {
-      background-color: #ffc970;
     }
 
     /* ==================== INSPIRE DROPDOWN MENU ==================== */
@@ -2391,15 +2374,66 @@
         <div class="input-wrapper">
           <!-- Search Box - JubileeVerse Home Page Style -->
           <div class="search-box">
-            <!-- Plus/Attach Icon on the left -->
-            <div class="action-icon" id="attachIcon" title="Attach File">
-              <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-            </div>
             <textarea class="search-input" id="messageInput" placeholder="Ask Jubilee Anything..." data-i18n-placeholder="inputPlaceholder" autocomplete="off" rows="1"></textarea>
             <div class="search-actions">
-              <!-- Microphone Icon -->
-              <div class="action-icon" id="microphoneIcon" title="Voice Input">
-                <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/></svg>
+              <!-- Attach File Icon -->
+              <div class="action-icon" id="attachIcon" title="Attach File">
+                <svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
+              </div>
+              <!-- Privacy Mode Icon -->
+              <div class="action-icon" id="privacyIcon" title="Privacy Mode">
+                <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+              </div>
+              <!-- Inspire Dropdown -->
+              <div class="inspire-dropdown-wrapper">
+                <div class="inspire-dropdown" id="inspireDropdown">
+                  <span id="inspireDropdownLabel">Inspire 8.0</span>
+                  <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                </div>
+                <div class="inspire-menu" id="inspireMenu">
+                  <div class="inspire-menu-item" data-model="kingdombuilder">
+                    <div class="inspire-menu-icon">👑</div>
+                    <div class="inspire-menu-content">
+                      <div class="inspire-menu-title">Inspire 8.0: Kingdom Builder</div>
+                      <div class="inspire-menu-subtitle">Strategic Vision + Wisdom</div>
+                    </div>
+                    <div class="inspire-menu-check"></div>
+                  </div>
+                  <div class="inspire-menu-item" data-model="creativefire">
+                    <div class="inspire-menu-icon">🔥</div>
+                    <div class="inspire-menu-content">
+                      <div class="inspire-menu-title">Inspire 8.0: Creative Fire</div>
+                      <div class="inspire-menu-subtitle">Poetic + Prophetic</div>
+                    </div>
+                    <div class="inspire-menu-check"></div>
+                  </div>
+                  <div class="inspire-menu-item selected" data-model="gospelpulse">
+                    <div class="inspire-menu-icon">✨</div>
+                    <div class="inspire-menu-content">
+                      <div class="inspire-menu-title">Inspire 8.0: Gospel Pulse</div>
+                      <div class="inspire-menu-subtitle">Gospel Fire + Reach</div>
+                    </div>
+                    <div class="inspire-menu-check">
+                      <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    </div>
+                  </div>
+                  <div class="inspire-menu-item" data-model="shepherdvoice">
+                    <div class="inspire-menu-icon">🛡️</div>
+                    <div class="inspire-menu-content">
+                      <div class="inspire-menu-title">Inspire 8.0: Shepherd Voice</div>
+                      <div class="inspire-menu-subtitle">Pastoral + Healing</div>
+                    </div>
+                    <div class="inspire-menu-check"></div>
+                  </div>
+                  <div class="inspire-menu-item" data-model="hebraicroots">
+                    <div class="inspire-menu-icon">📜</div>
+                    <div class="inspire-menu-content">
+                      <div class="inspire-menu-title">Inspire 8.0: Hebraic Roots</div>
+                      <div class="inspire-menu-subtitle">Academic Depth + Doctrine</div>
+                    </div>
+                    <div class="inspire-menu-check"></div>
+                  </div>
+                </div>
               </div>
               <!-- Voice/Send Button -->
               <button class="voice-button" id="voiceButton" title="Send Message">
@@ -2414,57 +2448,6 @@
                   <rect x="6" y="6" width="12" height="12" fill="#1a1a1a"/>
                 </svg>
               </button>
-            </div>
-          </div>
-          <!-- Hidden Inspire Dropdown for model selection (accessed via settings) -->
-          <div class="inspire-dropdown-wrapper" style="display: none;">
-            <div class="inspire-dropdown" id="inspireDropdown">
-              <span id="inspireDropdownLabel">Inspire 8.0</span>
-              <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-            </div>
-            <div class="inspire-menu" id="inspireMenu">
-              <div class="inspire-menu-item" data-model="kingdombuilder">
-                <div class="inspire-menu-icon">👑</div>
-                <div class="inspire-menu-content">
-                  <div class="inspire-menu-title">Inspire 8.0: Kingdom Builder</div>
-                  <div class="inspire-menu-subtitle">Strategic Vision + Wisdom</div>
-                </div>
-                <div class="inspire-menu-check"></div>
-              </div>
-              <div class="inspire-menu-item" data-model="creativefire">
-                <div class="inspire-menu-icon">🔥</div>
-                <div class="inspire-menu-content">
-                  <div class="inspire-menu-title">Inspire 8.0: Creative Fire</div>
-                  <div class="inspire-menu-subtitle">Poetic + Prophetic</div>
-                </div>
-                <div class="inspire-menu-check"></div>
-              </div>
-              <div class="inspire-menu-item selected" data-model="gospelpulse">
-                <div class="inspire-menu-icon">✨</div>
-                <div class="inspire-menu-content">
-                  <div class="inspire-menu-title">Inspire 8.0: Gospel Pulse</div>
-                  <div class="inspire-menu-subtitle">Gospel Fire + Reach</div>
-                </div>
-                <div class="inspire-menu-check">
-                  <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                </div>
-              </div>
-              <div class="inspire-menu-item" data-model="shepherdvoice">
-                <div class="inspire-menu-icon">🛡️</div>
-                <div class="inspire-menu-content">
-                  <div class="inspire-menu-title">Inspire 8.0: Shepherd Voice</div>
-                  <div class="inspire-menu-subtitle">Pastoral + Healing</div>
-                </div>
-                <div class="inspire-menu-check"></div>
-              </div>
-              <div class="inspire-menu-item" data-model="hebraicroots">
-                <div class="inspire-menu-icon">📜</div>
-                <div class="inspire-menu-content">
-                  <div class="inspire-menu-title">Inspire 8.0: Hebraic Roots</div>
-                  <div class="inspire-menu-subtitle">Academic Depth + Doctrine</div>
-                </div>
-                <div class="inspire-menu-check"></div>
-              </div>
             </div>
           </div>
           <!-- Copyright line -->
