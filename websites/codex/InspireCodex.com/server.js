@@ -6238,6 +6238,62 @@ app.get('/api/v1/qdrant/containers', async (req, res) => {
     }
 });
 
+// Get Qdrant status - checks if Qdrant is online and returns container/collection info
+app.get('/api/v1/qdrant/status', async (req, res) => {
+    const { host = 'localhost', port = 6333 } = req.query;
+
+    try {
+        // First check if Qdrant is responding
+        const collectionsResponse = await new Promise((resolve, reject) => {
+            const request = http.request({
+                hostname: host,
+                port: parseInt(port),
+                path: '/collections',
+                method: 'GET',
+                timeout: 5000
+            }, (response) => {
+                let data = '';
+                response.on('data', chunk => data += chunk);
+                response.on('end', () => {
+                    try {
+                        resolve(JSON.parse(data));
+                    } catch (e) {
+                        reject(new Error('Invalid JSON response'));
+                    }
+                });
+            });
+
+            request.on('error', reject);
+            request.on('timeout', () => {
+                request.destroy();
+                reject(new Error('Connection timeout'));
+            });
+            request.end();
+        });
+
+        const collections = collectionsResponse.result?.collections || [];
+
+        res.json({
+            success: true,
+            status: 'online',
+            container: {
+                name: 'INSPIRE08',
+                host: host,
+                port: parseInt(port),
+                image: 'qdrant/qdrant:latest'
+            },
+            collections: collections.length
+        });
+    } catch (err) {
+        console.error('[Qdrant] Status check failed:', err);
+        res.json({
+            success: false,
+            status: 'offline',
+            error: err.message
+        });
+    }
+});
+
 // Get all collections from a Qdrant instance
 app.get('/api/v1/qdrant/collections', async (req, res) => {
     const { host = 'localhost', port = 6333 } = req.query;
@@ -6321,10 +6377,18 @@ app.get('/api/v1/qdrant/collections/:name', async (req, res) => {
             request.end();
         });
 
+        const result = response.result || response;
+
+        // Return collection details with proper structure for frontend
         res.json({
             success: true,
-            collection: name,
-            details: response.result || response
+            name: name,
+            collection: {
+                points_count: result.points_count || 0,
+                vectors_count: result.vectors_count || 0,
+                status: result.status || 'unknown',
+                config: result.config || {}
+            }
         });
     } catch (err) {
         console.error('[Qdrant] Error fetching collection details:', err);
