@@ -1,0 +1,683 @@
+<Window x:Class="JubileeOutlook.Views.NewContactDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="New contact"
+        Width="700"
+        Height="550"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize">
+
+    <Window.Resources>
+        <!-- Tab Button Style (Sidebar Navigation) -->
+        <Style x:Key="SidebarTabButtonStyle" TargetType="RadioButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Grid>
+                            <Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
+                            </Border>
+                            <Rectangle x:Name="Indicator" Width="3" HorizontalAlignment="Left" Fill="#0078D4" Visibility="Collapsed"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#2A2A2A"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#2A2A2A"/>
+                                <Setter TargetName="Indicator" Property="Visibility" Value="Visible"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- TextBox Style for Form Fields with Placeholder Support -->
+        <Style x:Key="FormTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="#0D0D0D"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#444444"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="8,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="CaretBrush" Value="White"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <Grid>
+                                <ScrollViewer x:Name="PART_ContentHost"
+                                              Focusable="False"
+                                              HorizontalScrollBarVisibility="Hidden"
+                                              VerticalScrollBarVisibility="Hidden"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                                <TextBlock x:Name="PlaceholderText"
+                                           Text="{TemplateBinding Tag}"
+                                           Foreground="#666666"
+                                           FontSize="{TemplateBinding FontSize}"
+                                           VerticalAlignment="Center"
+                                           Margin="{TemplateBinding Padding}"
+                                           IsHitTestVisible="False"
+                                           Visibility="Collapsed"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#0078D4"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="Text" Value=""/>
+                                    <Condition Property="IsFocused" Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- DatePicker Style for Dark Theme -->
+        <Style x:Key="DarkDatePickerStyle" TargetType="DatePicker">
+            <Setter Property="Background" Value="#0D0D0D"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#444444"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="8,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="CalendarStyle">
+                <Setter.Value>
+                    <Style TargetType="Calendar">
+                        <Setter Property="Background" Value="#1A1A1A"/>
+                        <Setter Property="Foreground" Value="White"/>
+                        <Setter Property="BorderBrush" Value="#333333"/>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DatePicker">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <DatePickerTextBox x:Name="PART_TextBox"
+                                                   Grid.Column="0"
+                                                   Background="Transparent"
+                                                   Foreground="White"
+                                                   BorderThickness="0"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="{TemplateBinding FontSize}">
+                                    <DatePickerTextBox.Style>
+                                        <Style TargetType="DatePickerTextBox">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="CaretBrush" Value="White"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="DatePickerTextBox">
+                                                        <Grid>
+                                                            <ScrollViewer x:Name="PART_ContentHost"
+                                                                          Background="Transparent"
+                                                                          Focusable="False"
+                                                                          HorizontalScrollBarVisibility="Hidden"
+                                                                          VerticalScrollBarVisibility="Hidden"/>
+                                                            <TextBlock x:Name="PART_Watermark"
+                                                                       Text="Select date"
+                                                                       Foreground="#666666"
+                                                                       IsHitTestVisible="False"
+                                                                       Visibility="Collapsed"/>
+                                                        </Grid>
+                                                        <ControlTemplate.Triggers>
+                                                            <MultiTrigger>
+                                                                <MultiTrigger.Conditions>
+                                                                    <Condition Property="Text" Value=""/>
+                                                                </MultiTrigger.Conditions>
+                                                                <Setter TargetName="PART_Watermark" Property="Visibility" Value="Visible"/>
+                                                            </MultiTrigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </DatePickerTextBox.Style>
+                                </DatePickerTextBox>
+                                <Button x:Name="PART_Button"
+                                        Grid.Column="1"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Cursor="Hand"
+                                        Margin="4,0,0,0"
+                                        VerticalAlignment="Center">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="4" CornerRadius="2">
+                                                <TextBlock Text="&#xE787;"
+                                                           FontFamily="Segoe MDL2 Assets"
+                                                           FontSize="18"
+                                                           Foreground="#808080"
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="#333333"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                                <Popup x:Name="PART_Popup"
+                                       AllowsTransparency="True"
+                                       Placement="Bottom"
+                                       PlacementTarget="{Binding ElementName=PART_TextBox}"
+                                       StaysOpen="False">
+                                    <Border Background="#1A1A1A"
+                                            BorderBrush="#444444"
+                                            BorderThickness="1"
+                                            CornerRadius="4">
+                                        <Calendar x:Name="PART_Calendar"
+                                                  Background="#1A1A1A"
+                                                  Foreground="White"
+                                                  BorderThickness="0">
+                                            <Calendar.CalendarDayButtonStyle>
+                                                <Style TargetType="CalendarDayButton">
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Setter Property="Margin" Value="1"/>
+                                                    <Setter Property="MinWidth" Value="32"/>
+                                                    <Setter Property="MinHeight" Value="32"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsToday" Value="True">
+                                                            <Setter Property="Background" Value="#FFD700"/>
+                                                            <Setter Property="Foreground" Value="Black"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                            <Setter Property="Background" Value="#0078D4"/>
+                                                            <Setter Property="Foreground" Value="White"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#333333"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsBlackedOut" Value="True">
+                                                            <Setter Property="Foreground" Value="#666666"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Calendar.CalendarDayButtonStyle>
+                                            <Calendar.CalendarButtonStyle>
+                                                <Style TargetType="CalendarButton">
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Setter Property="Margin" Value="1"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#333333"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Calendar.CalendarButtonStyle>
+                                        </Calendar>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter Property="BorderBrush" Value="#0078D4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Add More Link Style -->
+        <Style x:Key="AddMoreLinkStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#0078D4"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="0,4"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="#1E90FF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="#1A1A1A" CornerRadius="8" BorderBrush="#333333" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title Bar -->
+            <Border Grid.Row="0" Background="#0D0D0D" CornerRadius="8,8,0,0" MouseLeftButtonDown="TitleBar_MouseDown">
+                <Grid>
+                    <TextBlock Text="New contact"
+                               Foreground="#FFD700"
+                               FontWeight="SemiBold"
+                               FontSize="14"
+                               VerticalAlignment="Center"
+                               Margin="15,0,0,0"/>
+                    <Button x:Name="CloseButton"
+                            Content="&#xE8BB;"
+                            FontFamily="Segoe MDL2 Assets"
+                            FontSize="12"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Margin="0,0,5,0"
+                            Width="30" Height="30"
+                            Background="Transparent"
+                            Foreground="#808080"
+                            BorderThickness="0"
+                            Click="CloseButton_Click"
+                            Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#E81123"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Main Content -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Left Sidebar - Navigation Tabs -->
+                <Border Grid.Column="0" Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0,0,1,0">
+                    <StackPanel Margin="0,16,0,0">
+                        <RadioButton x:Name="ContactInfoTab" Style="{StaticResource SidebarTabButtonStyle}" IsChecked="True"
+                                     Checked="Tab_Checked" Tag="ContactInfo">
+                            <TextBlock Text="Contact information"/>
+                        </RadioButton>
+                        <RadioButton x:Name="WorkTab" Style="{StaticResource SidebarTabButtonStyle}"
+                                     Checked="Tab_Checked" Tag="Work">
+                            <TextBlock Text="Work"/>
+                        </RadioButton>
+                        <RadioButton x:Name="AddressTab" Style="{StaticResource SidebarTabButtonStyle}"
+                                     Checked="Tab_Checked" Tag="Address">
+                            <TextBlock Text="Address"/>
+                        </RadioButton>
+                        <RadioButton x:Name="OtherTab" Style="{StaticResource SidebarTabButtonStyle}"
+                                     Checked="Tab_Checked" Tag="Other">
+                            <TextBlock Text="Other"/>
+                        </RadioButton>
+                        <RadioButton x:Name="NotesTab" Style="{StaticResource SidebarTabButtonStyle}"
+                                     Checked="Tab_Checked" Tag="Notes">
+                            <TextBlock Text="Notes"/>
+                        </RadioButton>
+                    </StackPanel>
+                </Border>
+
+                <!-- Right Content Area -->
+                <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <Grid Margin="24,20">
+                        <!-- Contact Info Panel (Default) -->
+                        <StackPanel x:Name="ContactInfoPanel" Visibility="Visible">
+                            <!-- Contact Picture -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                                <Border Width="80" Height="80" CornerRadius="40" Background="#2D2D2D"
+                                        BorderBrush="#444444" BorderThickness="1" Cursor="Hand"
+                                        MouseLeftButtonUp="ContactPicture_Click">
+                                    <Grid>
+                                        <TextBlock x:Name="ContactPictureIcon" Text="&#xe3b0;"
+                                                   FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="32" Foreground="#808080"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Image x:Name="ContactPictureImage" Visibility="Collapsed"
+                                               Stretch="UniformToFill" ClipToBounds="True">
+                                            <Image.Clip>
+                                                <EllipseGeometry Center="40,40" RadiusX="40" RadiusY="40"/>
+                                            </Image.Clip>
+                                        </Image>
+                                    </Grid>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center" Margin="16,0,0,0">
+                                    <TextBlock Text="Add a photo" Foreground="#CCCCCC" FontSize="14"/>
+                                    <TextBlock Text="Click to upload" Foreground="#808080" FontSize="12" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Name Section -->
+                            <TextBlock Text="Name" Foreground="#808080" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,12"/>
+
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="First name" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="FirstNameTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="Enter first name"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Last name" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="LastNameTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="Enter last name"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Button Style="{StaticResource AddMoreLinkStyle}" Click="AddName_Click" Margin="0,4,0,16">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="+" FontSize="16" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Add name"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Additional Name Fields (Hidden by default) -->
+                            <StackPanel x:Name="AdditionalNameFields" Visibility="Collapsed" Margin="0,0,0,16">
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="80"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Title" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                        <TextBox x:Name="TitleTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="Mr./Ms."/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Middle name" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                        <TextBox x:Name="MiddleNameTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="Enter middle name"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="4">
+                                        <TextBlock Text="Suffix" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                        <TextBox x:Name="SuffixTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="Jr./Sr."/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel Margin="0,8,0,0">
+                                    <TextBlock Text="Nickname" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="NicknameTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="Enter nickname"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Email Section -->
+                            <TextBlock Text="Email" Foreground="#808080" FontSize="12" FontWeight="SemiBold" Margin="0,8,0,12"/>
+
+                            <StackPanel Margin="0,0,0,8">
+                                <TextBlock Text="Work email" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                <TextBox x:Name="WorkEmailTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="name@company.com"/>
+                            </StackPanel>
+
+                            <Button Style="{StaticResource AddMoreLinkStyle}" Click="AddEmail_Click" Margin="0,4,0,16">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="+" FontSize="16" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Add email"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Additional Email Fields (Hidden by default) -->
+                            <StackPanel x:Name="AdditionalEmailFields" Visibility="Collapsed" Margin="0,0,0,16">
+                                <StackPanel Margin="0,0,0,8">
+                                    <TextBlock Text="Personal email" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="PersonalEmailTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="name@email.com"/>
+                                </StackPanel>
+                                <StackPanel Margin="0,0,0,8">
+                                    <TextBlock Text="Other email" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="OtherEmailTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="other@email.com"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Phone Section -->
+                            <TextBlock Text="Phone" Foreground="#808080" FontSize="12" FontWeight="SemiBold" Margin="0,8,0,12"/>
+
+                            <StackPanel Margin="0,0,0,8">
+                                <TextBlock Text="Work phone" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                <TextBox x:Name="WorkPhoneTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="+1 (555) 000-0000"/>
+                            </StackPanel>
+
+                            <Button Style="{StaticResource AddMoreLinkStyle}" Click="AddPhone_Click" Margin="0,4,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="+" FontSize="16" Margin="0,0,6,0"/>
+                                    <TextBlock Text="Add phone"/>
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Additional Phone Fields (Hidden by default) -->
+                            <StackPanel x:Name="AdditionalPhoneFields" Visibility="Collapsed" Margin="0,8,0,0">
+                                <StackPanel Margin="0,0,0,8">
+                                    <TextBlock Text="Mobile phone" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="MobilePhoneTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="+1 (555) 000-0000"/>
+                                </StackPanel>
+                                <StackPanel Margin="0,0,0,8">
+                                    <TextBlock Text="Home phone" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="HomePhoneTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="+1 (555) 000-0000"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Work Panel -->
+                        <StackPanel x:Name="WorkPanel" Visibility="Collapsed">
+                            <TextBlock Text="Work" Foreground="#808080" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,12"/>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Company" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                <TextBox x:Name="CompanyTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="Enter company name"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Job title" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                <TextBox x:Name="JobTitleTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="Enter job title"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Department" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                <TextBox x:Name="DepartmentTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="Enter department"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Office" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                <TextBox x:Name="OfficeTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="Enter office location"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Address Panel -->
+                        <StackPanel x:Name="AddressPanel" Visibility="Collapsed">
+                            <TextBlock Text="Address" Foreground="#808080" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,12"/>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Street" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                <TextBox x:Name="StreetTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="Enter street address"/>
+                            </StackPanel>
+
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="100"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="City" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="CityTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="Enter city"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="State" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="StateTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="State"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="4">
+                                    <TextBlock Text="ZIP" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="ZipTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="00000"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Country/Region" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                <TextBox x:Name="CountryTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="Enter country"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Other Panel -->
+                        <StackPanel x:Name="OtherPanel" Visibility="Collapsed">
+                            <TextBlock Text="Other" Foreground="#808080" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,12"/>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Birthday" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                <DatePicker x:Name="BirthdayDatePicker" Style="{StaticResource DarkDatePickerStyle}"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Anniversary" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                <DatePicker x:Name="AnniversaryDatePicker" Style="{StaticResource DarkDatePickerStyle}"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Spouse/Partner" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                <TextBox x:Name="SpouseTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="Enter name"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Text="Website" Foreground="#808080" FontSize="11" Margin="0,0,0,4"/>
+                                <TextBox x:Name="WebsiteTextBox" Style="{StaticResource FormTextBoxStyle}" Tag="https://www.example.com"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Notes Panel -->
+                        <StackPanel x:Name="NotesPanel" Visibility="Collapsed">
+                            <TextBlock Text="Notes" Foreground="#808080" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,12"/>
+
+                            <TextBox x:Name="NotesTextBox"
+                                     Style="{StaticResource FormTextBoxStyle}"
+                                     Height="200"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     VerticalScrollBarVisibility="Auto"
+                                     VerticalContentAlignment="Top"
+                                     Tag="Add notes about this contact..."/>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- Bottom Buttons -->
+            <Border Grid.Row="2" Background="#0D0D0D" CornerRadius="0,0,8,8" Padding="20,16">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="CancelButton"
+                            Content="Cancel"
+                            Width="100" Height="35"
+                            Margin="0,0,10,0"
+                            Click="CancelButton_Click">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="#333333"/>
+                                <Setter Property="Foreground" Value="#CCCCCC"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#444444"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <Button x:Name="SaveButton"
+                            Content="Save"
+                            Width="100" Height="35"
+                            Click="SaveButton_Click">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="#FFD700"/>
+                                <Setter Property="Foreground" Value="#000000"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#E6C200"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

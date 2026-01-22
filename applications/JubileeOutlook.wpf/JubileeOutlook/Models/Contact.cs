@@ -11,11 +11,23 @@ public class Contact
     public string? LastName { get; set; }
     public List<string> EmailAddresses { get; set; } = new();
     public List<string> PhoneNumbers { get; set; } = new();
+    public string? MobilePhone { get; set; }
     public string? Company { get; set; }
     public string? JobTitle { get; set; }
     public string? Department { get; set; }
+    public string? Address { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? PostalCode { get; set; }
+    public string? Country { get; set; }
     public string? Notes { get; set; }
     public string? PhotoUrl { get; set; }
+    public DateTime? Birthday { get; set; }
+    public DateTime? Anniversary { get; set; }
+    public string? Spouse { get; set; }
+    public string? Website { get; set; }
+    public bool IsFavorite { get; set; }
+    public string? Category { get; set; }
     public DateTime CreatedDate { get; set; } = DateTime.Now;
     public DateTime ModifiedDate { get; set; } = DateTime.Now;
 

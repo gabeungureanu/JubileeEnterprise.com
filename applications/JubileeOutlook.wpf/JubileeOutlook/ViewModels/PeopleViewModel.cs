@@ -1,14 +1,19 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using JubileeOutlook.Services;
+using DbContact = JubileeOutlook.Models.Contact;
 
 namespace JubileeOutlook.ViewModels;
 
 /// <summary>
 /// ViewModel for the People/Contacts module
+/// Uses ApiContactService for API-based contact operations with offline-first support
 /// </summary>
 public partial class PeopleViewModel : ObservableObject
 {
+    private readonly ApiContactService _contactService;
+
     [ObservableProperty]
     private string _userEmail = string.Empty;
 
@@ -33,6 +38,7 @@ public partial class PeopleViewModel : ObservableObject
 
     public PeopleViewModel()
     {
+        _contactService = ApiContactService.Instance;
         InitializeFolders();
     }
 
@@ -50,6 +56,228 @@ public partial class PeopleViewModel : ObservableObject
     public void SetUserEmail(string email)
     {
         UserEmail = email;
+    }
+
+    /// <summary>
+    /// Loads contacts from the API (with offline-first support)
+    /// </summary>
+    public async Task LoadContactsFromDatabaseAsync()
+    {
+        try
+        {
+            IsLoading = true;
+            System.Diagnostics.Debug.WriteLine("[PeopleViewModel] Loading contacts from API...");
+
+            var result = await _contactService.GetContactsWithResultAsync();
+
+            if (result.Success && result.Data != null)
+            {
+                Contacts.Clear();
+                foreach (var apiContact in result.Data)
+                {
+                    var contact = MapFromApiContact(apiContact);
+                    Contacts.Add(contact);
+                }
+
+                FilterContacts();
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Loaded {Contacts.Count} contacts from API");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to load contacts: {result.Error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to load contacts: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Creates a new contact via API
+    /// </summary>
+    public async Task<Models.Contact> CreateContactViaApiAsync(Contact contact)
+    {
+        try
+        {
+            var apiContact = MapToApiContact(contact);
+            var result = await _contactService.CreateContactWithResultAsync(apiContact);
+
+            if (result.Success && result.Data != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Created contact via API: {contact.DisplayName}");
+                return result.Data;
+            }
+            else
+            {
+                throw new Exception(result.Error ?? "Failed to create contact");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to create contact: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Updates an existing contact via API
+    /// </summary>
+    public async Task<Models.Contact> UpdateContactViaApiAsync(Contact contact)
+    {
+        try
+        {
+            var apiContact = MapToApiContact(contact);
+            var result = await _contactService.UpdateContactWithResultAsync(apiContact);
+
+            if (result.Success && result.Data != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Updated contact via API: {contact.DisplayName}");
+                return result.Data;
+            }
+            else
+            {
+                throw new Exception(result.Error ?? "Failed to update contact");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to update contact: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Deletes a contact via API
+    /// </summary>
+    public async Task DeleteContactViaApiAsync(string contactId)
+    {
+        try
+        {
+            var result = await _contactService.DeleteContactWithResultAsync(contactId);
+
+            if (result.Success)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Deleted contact via API: {contactId}");
+            }
+            else
+            {
+                throw new Exception(result.Error ?? "Failed to delete contact");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to delete contact: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Searches contacts via API
+    /// </summary>
+    public async Task<List<Contact>> SearchContactsViaApiAsync(string query)
+    {
+        try
+        {
+            var result = await _contactService.SearchContactsWithResultAsync(query);
+
+            if (result.Success && result.Data != null)
+            {
+                return result.Data.Select(MapFromApiContact).ToList();
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Search failed: {result.Error}");
+                return new List<Contact>();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Search error: {ex.Message}");
+            return new List<Contact>();
+        }
+    }
+
+    /// <summary>
+    /// Maps an API Contact (Models.Contact) to a ViewModel Contact
+    /// </summary>
+    private Contact MapFromApiContact(DbContact apiContact)
+    {
+        return new Contact
+        {
+            Id = apiContact.Id,
+            DisplayName = apiContact.DisplayName,
+            FirstName = apiContact.FirstName ?? string.Empty,
+            LastName = apiContact.LastName ?? string.Empty,
+            Email = apiContact.PrimaryEmail ?? string.Empty,
+            Phone = apiContact.PrimaryPhone ?? string.Empty,
+            MobilePhone = apiContact.MobilePhone ?? string.Empty,
+            Company = apiContact.Company ?? string.Empty,
+            JobTitle = apiContact.JobTitle ?? string.Empty,
+            Department = apiContact.Department ?? string.Empty,
+            Address = apiContact.Address ?? string.Empty,
+            City = apiContact.City ?? string.Empty,
+            State = apiContact.State ?? string.Empty,
+            PostalCode = apiContact.PostalCode ?? string.Empty,
+            Country = apiContact.Country ?? string.Empty,
+            Notes = apiContact.Notes ?? string.Empty,
+            Birthday = apiContact.Birthday,
+            Anniversary = apiContact.Anniversary,
+            Spouse = apiContact.Spouse ?? string.Empty,
+            Website = apiContact.Website ?? string.Empty,
+            AvatarPath = apiContact.PhotoUrl,
+            IsFavorite = apiContact.IsFavorite,
+            Category = apiContact.Category ?? string.Empty,
+            CreatedAt = apiContact.CreatedDate,
+            ModifiedAt = apiContact.ModifiedDate
+        };
+    }
+
+    /// <summary>
+    /// Maps a ViewModel Contact to an API Contact (Models.Contact)
+    /// </summary>
+    private DbContact MapToApiContact(Contact contact)
+    {
+        var emailAddresses = new List<string>();
+        if (!string.IsNullOrWhiteSpace(contact.Email))
+            emailAddresses.Add(contact.Email);
+
+        var phoneNumbers = new List<string>();
+        if (!string.IsNullOrWhiteSpace(contact.Phone))
+            phoneNumbers.Add(contact.Phone);
+
+        return new DbContact
+        {
+            Id = contact.Id,
+            DisplayName = contact.DisplayName,
+            FirstName = string.IsNullOrEmpty(contact.FirstName) ? null : contact.FirstName,
+            LastName = string.IsNullOrEmpty(contact.LastName) ? null : contact.LastName,
+            EmailAddresses = emailAddresses,
+            PhoneNumbers = phoneNumbers,
+            MobilePhone = string.IsNullOrEmpty(contact.MobilePhone) ? null : contact.MobilePhone,
+            Company = string.IsNullOrEmpty(contact.Company) ? null : contact.Company,
+            JobTitle = string.IsNullOrEmpty(contact.JobTitle) ? null : contact.JobTitle,
+            Department = string.IsNullOrEmpty(contact.Department) ? null : contact.Department,
+            Address = string.IsNullOrEmpty(contact.Address) ? null : contact.Address,
+            City = string.IsNullOrEmpty(contact.City) ? null : contact.City,
+            State = string.IsNullOrEmpty(contact.State) ? null : contact.State,
+            PostalCode = string.IsNullOrEmpty(contact.PostalCode) ? null : contact.PostalCode,
+            Country = string.IsNullOrEmpty(contact.Country) ? null : contact.Country,
+            Notes = string.IsNullOrEmpty(contact.Notes) ? null : contact.Notes,
+            Birthday = contact.Birthday,
+            Anniversary = contact.Anniversary,
+            Spouse = string.IsNullOrEmpty(contact.Spouse) ? null : contact.Spouse,
+            Website = string.IsNullOrEmpty(contact.Website) ? null : contact.Website,
+            PhotoUrl = contact.AvatarPath,
+            IsFavorite = contact.IsFavorite,
+            Category = string.IsNullOrEmpty(contact.Category) ? null : contact.Category,
+            CreatedDate = contact.CreatedAt,
+            ModifiedDate = contact.ModifiedAt
+        };
     }
 
     partial void OnSearchTextChanged(string value)
@@ -101,27 +329,127 @@ public partial class PeopleViewModel : ObservableObject
         FilterContacts();
     }
 
+    /// <summary>
+    /// Event raised when a new contact dialog should be opened
+    /// </summary>
+    public event EventHandler? NewContactRequested;
+
+    /// <summary>
+    /// Event raised when a contact should be edited
+    /// </summary>
+    public event EventHandler<Contact>? EditContactRequested;
+
     [RelayCommand]
     private void NewContact()
     {
-        // TODO: Open new contact dialog/form
-        System.Diagnostics.Debug.WriteLine("[PeopleViewModel] New contact requested");
+        NewContactRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// Add a new contact to the collection and save via API
+    /// </summary>
+    public async Task AddContactAsync(Contact contact)
+    {
+        try
+        {
+            // Create via API first
+            var createdContact = await CreateContactViaApiAsync(contact);
+
+            // Update the contact with the server-assigned ID
+            contact.Id = createdContact.Id;
+
+            // Add to local collection
+            Contacts.Add(contact);
+            FilterContacts();
+
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Added contact: {contact.DisplayName}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to add contact: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Update an existing contact in the collection and save via API
+    /// </summary>
+    public async Task UpdateContactAsync(Contact oldContact, Contact newContact)
+    {
+        try
+        {
+            // Keep the same ID for updates
+            newContact.Id = oldContact.Id;
+
+            // Update via API first
+            await UpdateContactViaApiAsync(newContact);
+
+            // Update local collection
+            var index = Contacts.IndexOf(oldContact);
+            if (index >= 0)
+            {
+                Contacts[index] = newContact;
+                FilterContacts();
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Updated contact: {newContact.DisplayName}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to update contact: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Add a new contact to the collection (legacy sync method)
+    /// </summary>
+    public void AddContact(Contact contact)
+    {
+        _ = AddContactAsync(contact);
+    }
+
+    /// <summary>
+    /// Update an existing contact in the collection (legacy sync method)
+    /// </summary>
+    public void UpdateContact(Contact oldContact, Contact newContact)
+    {
+        _ = UpdateContactAsync(oldContact, newContact);
     }
 
     [RelayCommand]
     private void EditContact()
     {
         if (SelectedContact == null) return;
-        // TODO: Open edit contact dialog/form
-        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Edit contact: {SelectedContact.DisplayName}");
+        EditContactRequested?.Invoke(this, SelectedContact);
     }
 
     [RelayCommand]
-    private void DeleteContact()
+    private async Task DeleteContactAsync()
     {
         if (SelectedContact == null) return;
-        // TODO: Delete the selected contact
-        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Delete contact: {SelectedContact.DisplayName}");
+
+        try
+        {
+            var contactToDelete = SelectedContact;
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Deleting contact: {contactToDelete.DisplayName}");
+
+            // Delete via API
+            await DeleteContactViaApiAsync(contactToDelete.Id);
+
+            // Remove from local collection
+            Contacts.Remove(contactToDelete);
+            FilterContacts();
+
+            // Clear selection
+            SelectedContact = null;
+
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Contact deleted successfully: {contactToDelete.DisplayName}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to delete contact: {ex.Message}");
+        }
     }
 
     [RelayCommand]
@@ -264,6 +592,18 @@ public partial class Contact : ObservableObject
 
     [ObservableProperty]
     private string _notes = string.Empty;
+
+    [ObservableProperty]
+    private DateTime? _birthday = null;
+
+    [ObservableProperty]
+    private DateTime? _anniversary = null;
+
+    [ObservableProperty]
+    private string _spouse = string.Empty;
+
+    [ObservableProperty]
+    private string _website = string.Empty;
 
     [ObservableProperty]
     private string? _avatarPath = null;
