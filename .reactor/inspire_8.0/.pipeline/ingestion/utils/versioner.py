@@ -89,6 +89,8 @@ class DocumentVersioner:
         self.workspace_root = Path(workspace_root)
         self.default_strategy = default_strategy
         self._git_available = self._check_git_available()
+        self._git_info_cache: Dict[str, tuple[Optional[str], Optional[str]]] = {}
+        self._file_hash_cache: Dict[str, str] = {}
 
     def _check_git_available(self) -> bool:
         """Check if Git is available and workspace is a Git repo."""
@@ -97,10 +99,11 @@ class DocumentVersioner:
                 ["git", "rev-parse", "--git-dir"],
                 cwd=str(self.workspace_root),
                 capture_output=True,
-                text=True
+                text=True,
+                timeout=5
             )
             return result.returncode == 0
-        except (FileNotFoundError, subprocess.SubprocessError):
+        except (FileNotFoundError, subprocess.SubprocessError, subprocess.TimeoutExpired):
             return False
 
     def compute_version(
@@ -183,15 +186,26 @@ class DocumentVersioner:
         return hasher.hexdigest()
 
     def _hash_file(self, file_path: Path) -> str:
-        """Compute SHA-256 hash of file contents."""
+        """Compute SHA-256 hash of file contents (cached)."""
+        cache_key = str(file_path)
+        if cache_key in self._file_hash_cache:
+            return self._file_hash_cache[cache_key]
+
         hasher = hashlib.sha256()
         with open(file_path, 'rb') as f:
             for chunk in iter(lambda: f.read(8192), b''):
                 hasher.update(chunk)
-        return hasher.hexdigest()
+        result = hasher.hexdigest()
+        self._file_hash_cache[cache_key] = result
+        return result
 
     def _get_git_info(self, file_path: Path) -> tuple[Optional[str], Optional[str]]:
-        """Get Git commit hash and timestamp for a file."""
+        """Get Git commit hash and timestamp for a file (cached)."""
+        # Use cache to avoid repeated git calls for the same file
+        cache_key = str(file_path)
+        if cache_key in self._git_info_cache:
+            return self._git_info_cache[cache_key]
+
         try:
             # Get the last commit that modified this file
             relative_path = file_path.relative_to(self.workspace_root)
@@ -200,17 +214,23 @@ class DocumentVersioner:
                 ["git", "log", "-1", "--format=%H|%aI", "--", str(relative_path)],
                 cwd=str(self.workspace_root),
                 capture_output=True,
-                text=True
+                text=True,
+                timeout=3  # 3 second timeout to prevent hanging
             )
 
             if result.returncode == 0 and result.stdout.strip():
                 parts = result.stdout.strip().split("|")
                 if len(parts) == 2:
-                    return parts[0], parts[1]
+                    info = (parts[0], parts[1])
+                    self._git_info_cache[cache_key] = info
+                    return info
 
+            # Cache the None result too to avoid re-calling
+            self._git_info_cache[cache_key] = (None, None)
             return None, None
 
-        except (subprocess.SubprocessError, ValueError):
+        except (subprocess.SubprocessError, subprocess.TimeoutExpired, ValueError):
+            self._git_info_cache[cache_key] = (None, None)
             return None, None
 
 
@@ -443,11 +463,12 @@ def create_rebuild_manifest(
             ["git", "rev-parse", "HEAD"],
             cwd=str(workspace_root),
             capture_output=True,
-            text=True
+            text=True,
+            timeout=5
         )
         if result.returncode == 0:
             manifest["git_head"] = result.stdout.strip()
-    except (FileNotFoundError, subprocess.SubprocessError):
+    except (FileNotFoundError, subprocess.SubprocessError, subprocess.TimeoutExpired):
         pass
 
     # Write manifest

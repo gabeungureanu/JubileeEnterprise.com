@@ -224,10 +224,14 @@ class ScriptureIngester:
                 book_name = BOOK_MAPPINGS.get(book_folder, book_folder)
                 self.logger.info(f"Processing {book_name} ({len(chapter_files)} chapters)")
 
+                book_points = []
                 for chapter_file in sorted(chapter_files):
                     points = self._process_chapter(book_folder, book_name, chapter_file)
-                    all_points.extend(points)
+                    book_points.extend(points)
                     self.stats.files_processed += 1
+
+                all_points.extend(book_points)
+                self.logger.info(f"  -> {book_name}: {len(book_points)} verses (total: {len(all_points)})")
 
             self.logger.info(f"Created {len(all_points)} verse points")
             self.stats.chunks_created = len(all_points)
@@ -320,18 +324,35 @@ class ScriptureIngester:
             chapter_match = re.search(r'_(\d+)\.json$', chapter_file.name)
             chapter_num = int(chapter_match.group(1)) if chapter_match else 1
 
-            # Get verses
-            verses = chapter_data.get('verses', chapter_data.get('content', []))
+            # Get verses - handle multiple JSON formats
+            verses = chapter_data.get('verses', chapter_data.get('content', None))
+
+            # If no 'verses' or 'content' key, check if the entire dict is verses
+            # Format: {"1": "text", "2": "text", ...}
+            if verses is None:
+                # Check if this is a flat verse dictionary (keys are verse numbers)
+                if all(key.isdigit() or key == 'book' or key == 'chapter' or key == 'version'
+                       for key in chapter_data.keys()):
+                    # Extract just the verse entries (numeric keys)
+                    verses = [(int(k), v) for k, v in chapter_data.items() if k.isdigit()]
+                    verses.sort(key=lambda x: x[0])  # Sort by verse number
+                else:
+                    verses = []
+
+            # Convert dict to list of tuples if needed (for verses with verse number keys)
             if isinstance(verses, dict):
-                verses = list(verses.values())
+                verses = [(int(k) if k.isdigit() else i+1, v) for i, (k, v) in enumerate(verses.items())]
 
             for verse_data in verses:
                 # Handle different verse formats
-                if isinstance(verse_data, dict):
+                if isinstance(verse_data, tuple):
+                    # Tuple format from flat dict: (verse_num, text)
+                    verse_num, text = verse_data
+                elif isinstance(verse_data, dict):
                     verse_num = verse_data.get('verse', verse_data.get('verse_number', 1))
                     text = verse_data.get('text', verse_data.get('content', ''))
                 elif isinstance(verse_data, str):
-                    # Simple string format
+                    # Simple string format in a list
                     verse_num = verses.index(verse_data) + 1
                     text = verse_data
                 else:
