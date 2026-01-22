@@ -748,6 +748,50 @@ app.get('/api/stats', async (req, res) => {
     }
 });
 
+// Catch-all for bare UUIDs - serve share page directly
+app.get('/:uuid([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', async (req, res) => {
+    const uuid = req.params.uuid;
+
+    try {
+        // Look up file by azurefilename (UUID)
+        const fileResult = await pool.query(
+            'SELECT * FROM jc_system_share_redirector WHERE azurefilename = $1 AND is_active = true LIMIT 1',
+            [uuid]
+        );
+
+        if (fileResult.rows.length === 0) {
+            return res.status(404).send(notFoundPage(uuid));
+        }
+
+        const file = fileResult.rows[0];
+
+        // Track the hit
+        await trackRedirectHit(file.file_i_d, req);
+
+        // Check for custom redirect URL
+        const redirectResult = await pool.query(
+            'SELECT redirect_link FROM jc_system_redirect_u_r_l WHERE file_id = $1 LIMIT 1',
+            [file.file_i_d]
+        );
+
+        if (redirectResult.rows.length > 0 && redirectResult.rows[0].redirect_link) {
+            return res.redirect(redirectResult.rows[0].redirect_link);
+        }
+
+        // If there's a redirect URL in the file record
+        if (file.redirect_u_r_l) {
+            return res.redirect(file.redirect_u_r_l);
+        }
+
+        // Otherwise show file info page
+        res.send(fileInfoPage(file));
+
+    } catch (err) {
+        console.error('UUID lookup error:', err);
+        res.status(500).send(errorPage('Database error'));
+    }
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log('');
