@@ -10,6 +10,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Util.Store;
 using JubileeOutlook.Models.EmailSync;
+using System.Text.Json.Serialization;
 
 namespace JubileeOutlook.Services.EmailSync;
 
@@ -118,6 +119,142 @@ public class OAuth2AuthenticationService
         // If using password auth, just check if password exists
         return !string.IsNullOrEmpty(credentials.EncryptedPassword);
     }
+
+    /// <summary>
+    /// Register or find user in the Codex database after OAuth authentication
+    /// This ensures the user has an entry in the users table for contacts, events, etc.
+    /// </summary>
+    public async Task<OAuthUserRegistrationResult> RegisterOAuthUserAsync(string email, string? displayName, string provider, string? providerId = null, string? avatarUrl = null)
+    {
+        try
+        {
+            Debug.WriteLine($"[OAuth2] Registering OAuth user: {email} ({provider})");
+
+            var httpClientFactory = HttpClientFactory.Instance;
+            var payload = new
+            {
+                email,
+                displayName = displayName ?? email.Split('@')[0],
+                provider,
+                providerId,
+                avatarUrl
+            };
+
+            var response = await httpClientFactory.PostAsync(ApiEndpoint.Auth, "oauth-register", payload);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = JsonSerializer.Deserialize<OAuthRegisterResponse>(content, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (result?.Success == true && result.User != null)
+                {
+                    Debug.WriteLine($"[OAuth2] User registered/found: {result.User.Id} (isNew: {result.IsNewUser})");
+
+                    // Update ServiceConfiguration with the authenticated user
+                    ServiceConfiguration.SetAuthenticatedUser(result.User.Id, result.User.Email);
+
+                    return new OAuthUserRegistrationResult
+                    {
+                        Success = true,
+                        UserId = result.User.Id,
+                        Email = result.User.Email,
+                        DisplayName = result.User.DisplayName,
+                        AvatarUrl = result.User.AvatarUrl,
+                        IsNewUser = result.IsNewUser,
+                        AccessToken = result.Tokens?.AccessToken,
+                        RefreshToken = result.Tokens?.RefreshToken
+                    };
+                }
+            }
+
+            Debug.WriteLine($"[OAuth2] OAuth registration failed: {content}");
+            return new OAuthUserRegistrationResult
+            {
+                Success = false,
+                ErrorMessage = "Failed to register OAuth user"
+            };
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[OAuth2] OAuth registration error: {ex.Message}");
+            return new OAuthUserRegistrationResult
+            {
+                Success = false,
+                ErrorMessage = ex.Message
+            };
+        }
+    }
+}
+
+/// <summary>
+/// Result of OAuth user registration in the Codex database
+/// </summary>
+public class OAuthUserRegistrationResult
+{
+    public bool Success { get; set; }
+    public string? UserId { get; set; }
+    public string? Email { get; set; }
+    public string? DisplayName { get; set; }
+    public string? AvatarUrl { get; set; }
+    public bool IsNewUser { get; set; }
+    public string? AccessToken { get; set; }
+    public string? RefreshToken { get; set; }
+    public string? ErrorMessage { get; set; }
+}
+
+/// <summary>
+/// Response from the oauth-register API endpoint
+/// </summary>
+internal class OAuthRegisterResponse
+{
+    [JsonPropertyName("success")]
+    public bool Success { get; set; }
+
+    [JsonPropertyName("isNewUser")]
+    public bool IsNewUser { get; set; }
+
+    [JsonPropertyName("user")]
+    public OAuthRegisterUser? User { get; set; }
+
+    [JsonPropertyName("tokens")]
+    public OAuthRegisterTokens? Tokens { get; set; }
+
+    [JsonPropertyName("error")]
+    public string? Error { get; set; }
+}
+
+internal class OAuthRegisterUser
+{
+    [JsonPropertyName("id")]
+    public string Id { get; set; } = string.Empty;
+
+    [JsonPropertyName("email")]
+    public string Email { get; set; } = string.Empty;
+
+    [JsonPropertyName("displayName")]
+    public string? DisplayName { get; set; }
+
+    [JsonPropertyName("role")]
+    public string? Role { get; set; }
+
+    [JsonPropertyName("avatarUrl")]
+    public string? AvatarUrl { get; set; }
+}
+
+internal class OAuthRegisterTokens
+{
+    [JsonPropertyName("accessToken")]
+    public string AccessToken { get; set; } = string.Empty;
+
+    [JsonPropertyName("refreshToken")]
+    public string RefreshToken { get; set; } = string.Empty;
+
+    [JsonPropertyName("expiresIn")]
+    public int ExpiresIn { get; set; }
 }
 
 /// <summary>
@@ -243,6 +380,33 @@ public class GoogleOAuth2Service
 
             // Store credentials securely
             await _secureStorage.StoreAsync($"credentials_{credentials.AccountId}", credentials);
+
+            // Register user in Codex database for contacts/events support
+            try
+            {
+                var oauthService = new OAuth2AuthenticationService(_secureStorage);
+                var registrationResult = await oauthService.RegisterOAuthUserAsync(
+                    email: userInfo?.Email ?? emailAddress,
+                    displayName: userInfo?.Name,
+                    provider: "google",
+                    providerId: userInfo?.Id,
+                    avatarUrl: userInfo?.Picture
+                );
+
+                if (registrationResult.Success)
+                {
+                    Debug.WriteLine($"[GoogleOAuth2] User registered in Codex: {registrationResult.UserId}");
+                }
+                else
+                {
+                    Debug.WriteLine($"[GoogleOAuth2] Codex registration failed (non-blocking): {registrationResult.ErrorMessage}");
+                }
+            }
+            catch (Exception regEx)
+            {
+                // Don't fail OAuth if Codex registration fails - it's not critical for email access
+                Debug.WriteLine($"[GoogleOAuth2] Codex registration error (non-blocking): {regEx.Message}");
+            }
 
             return new OAuth2AuthResult
             {
@@ -513,6 +677,33 @@ public class MicrosoftOAuth2Service
             // Store credentials securely
             await _secureStorage.StoreAsync($"credentials_{credentials.AccountId}", credentials);
 
+            // Register user in Codex database for contacts/events support
+            try
+            {
+                var oauthService = new OAuth2AuthenticationService(_secureStorage);
+                var registrationResult = await oauthService.RegisterOAuthUserAsync(
+                    email: authResult.Account?.Username ?? emailAddress,
+                    displayName: authResult.Account?.Username?.Split('@')[0],
+                    provider: "microsoft",
+                    providerId: authResult.Account?.HomeAccountId?.Identifier,
+                    avatarUrl: null // Microsoft doesn't return avatar in MSAL directly
+                );
+
+                if (registrationResult.Success)
+                {
+                    Debug.WriteLine($"[MicrosoftOAuth2] User registered in Codex: {registrationResult.UserId}");
+                }
+                else
+                {
+                    Debug.WriteLine($"[MicrosoftOAuth2] Codex registration failed (non-blocking): {registrationResult.ErrorMessage}");
+                }
+            }
+            catch (Exception regEx)
+            {
+                // Don't fail OAuth if Codex registration fails - it's not critical for email access
+                Debug.WriteLine($"[MicrosoftOAuth2] Codex registration error (non-blocking): {regEx.Message}");
+            }
+
             return new OAuth2AuthResult
             {
                 Success = true,
@@ -775,6 +966,33 @@ public class YahooOAuth2Service
         };
 
         await _secureStorage.StoreAsync($"credentials_{credentials.AccountId}", credentials);
+
+        // Register user in Codex database for contacts/events support
+        try
+        {
+            var oauthService = new OAuth2AuthenticationService(_secureStorage);
+            var registrationResult = await oauthService.RegisterOAuthUserAsync(
+                email: emailAddress,
+                displayName: emailAddress.Split('@')[0],
+                provider: "yahoo",
+                providerId: null,
+                avatarUrl: null
+            );
+
+            if (registrationResult.Success)
+            {
+                Debug.WriteLine($"[YahooOAuth2] User registered in Codex: {registrationResult.UserId}");
+            }
+            else
+            {
+                Debug.WriteLine($"[YahooOAuth2] Codex registration failed (non-blocking): {registrationResult.ErrorMessage}");
+            }
+        }
+        catch (Exception regEx)
+        {
+            // Don't fail OAuth if Codex registration fails - it's not critical for email access
+            Debug.WriteLine($"[YahooOAuth2] Codex registration error (non-blocking): {regEx.Message}");
+        }
 
         return new OAuth2AuthResult
         {

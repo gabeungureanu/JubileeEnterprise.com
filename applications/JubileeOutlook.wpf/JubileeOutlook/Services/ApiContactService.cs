@@ -433,7 +433,9 @@ public class ApiContactService : IContactService
             var dto = MapToDto(contact);
             var endpoint = "contacts";
 
-            System.Diagnostics.Debug.WriteLine($"[ApiContactService] POST {endpoint} - {contact.DisplayName}");
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] ============ CREATE CONTACT ============");
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] POST endpoint: '{endpoint}'");
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] Contact: {contact.DisplayName}");
 
             var response = await _httpClientFactory.PostAsync(ApiEndpoint.InspireCodex, endpoint, dto);
             var content = await response.Content.ReadAsStringAsync();

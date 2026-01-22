@@ -249,8 +249,10 @@ public class HttpClientFactory
         var client = GetClient(endpoint);
 
         // Debug: Log the full URL that will be requested
-        var fullUri = client.BaseAddress != null ? new Uri(client.BaseAddress, requestUri) : new Uri(requestUri);
-        System.Diagnostics.Debug.WriteLine($"[HttpClientFactory] {method} {fullUri}");
+        var baseUrl = client.BaseAddress?.ToString().TrimEnd('/') ?? "";
+        var relativePath = requestUri.TrimStart('/');
+        var fullUrl = $"{baseUrl}/{relativePath}";
+        System.Diagnostics.Debug.WriteLine($"[HttpClientFactory] {method} {fullUrl}");
         System.Diagnostics.Debug.WriteLine($"[HttpClientFactory] BaseAddress: {client.BaseAddress}, RelativeUri: {requestUri}");
 
         try
@@ -258,7 +260,7 @@ public class HttpClientFactory
             // Execute with retry policy for transient failures
             var response = await _resilienceService.ExecuteHttpAsync(async (ct) =>
             {
-                var request = CreateRequest(method, requestUri, content);
+                var request = CreateRequest(method, requestUri, content, client);
 
                 // Attach Bearer token if available
                 await AttachAuthHeaderAsync(request);
@@ -277,7 +279,7 @@ public class HttpClientFactory
                     // Retry the request with new token (with retry policy)
                     response = await _resilienceService.ExecuteHttpAsync(async (ct) =>
                     {
-                        var request = CreateRequest(method, requestUri, content);
+                        var request = CreateRequest(method, requestUri, content, client);
                         await AttachAuthHeaderAsync(request);
                         return await client.SendAsync(request, ct);
                     });
@@ -327,12 +329,25 @@ public class HttpClientFactory
     {
         var client = GetClient(endpoint);
 
+        // Construct absolute URL to avoid .NET's relative URI resolution issues
+        Uri absoluteUri;
+        if (client.BaseAddress != null && !requestUri.StartsWith("http"))
+        {
+            var baseUrl = client.BaseAddress.ToString().TrimEnd('/');
+            var relativePath = requestUri.TrimStart('/');
+            absoluteUri = new Uri($"{baseUrl}/{relativePath}");
+        }
+        else
+        {
+            absoluteUri = new Uri(requestUri);
+        }
+
         try
         {
             // Execute with retry policy for transient failures
             var response = await _resilienceService.ExecuteHttpAsync(async (ct) =>
             {
-                var request = new HttpRequestMessage(HttpMethod.Post, requestUri)
+                var request = new HttpRequestMessage(HttpMethod.Post, absoluteUri)
                 {
                     Content = content
                 };
@@ -354,7 +369,7 @@ public class HttpClientFactory
                     // Retry with new token
                     response = await _resilienceService.ExecuteHttpAsync(async (ct) =>
                     {
-                        var request = new HttpRequestMessage(HttpMethod.Post, requestUri)
+                        var request = new HttpRequestMessage(HttpMethod.Post, absoluteUri)
                         {
                             Content = content
                         };
@@ -565,9 +580,40 @@ public class HttpClientFactory
         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
     };
 
-    private static HttpRequestMessage CreateRequest(HttpMethod method, string requestUri, object? content)
+    private HttpRequestMessage CreateRequest(HttpMethod method, string requestUri, object? content, HttpClient client)
     {
-        var request = new HttpRequestMessage(method, requestUri);
+        // Construct absolute URL to avoid .NET's relative URI resolution issues
+        // When BaseAddress is "http://host/api/v1/" and requestUri is "contacts",
+        // using relative URIs can incorrectly resolve to "http://host/api/contacts"
+        Uri absoluteUri;
+        if (client.BaseAddress != null && !requestUri.StartsWith("http"))
+        {
+            // Ensure proper path combination - always use string concatenation to avoid .NET Uri resolution bugs
+            var baseUrl = client.BaseAddress.ToString().TrimEnd('/');
+            var relativePath = requestUri.TrimStart('/');
+            var fullUrl = $"{baseUrl}/{relativePath}";
+            absoluteUri = new Uri(fullUrl);
+
+            // CRITICAL DEBUG: Write to file to verify this code runs
+            try
+            {
+                var logPath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData), "JubileeOutlook", "http_debug.log");
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(logPath)!);
+                System.IO.File.AppendAllText(logPath, $"[{DateTime.Now:HH:mm:ss}] CreateRequest: Base='{baseUrl}' + Rel='{relativePath}' = '{fullUrl}'\n");
+            }
+            catch { }
+
+            System.Diagnostics.Debug.WriteLine($"[HttpClientFactory.CreateRequest] Base: '{baseUrl}' + Relative: '{relativePath}' = '{fullUrl}'");
+        }
+        else
+        {
+            absoluteUri = new Uri(requestUri);
+            System.Diagnostics.Debug.WriteLine($"[HttpClientFactory.CreateRequest] Using absolute URI: '{requestUri}'");
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[HttpClientFactory.CreateRequest] FINAL URL: {method} {absoluteUri}");
+        System.Diagnostics.Debug.WriteLine($"[HttpClientFactory.CreateRequest] absoluteUri.IsAbsoluteUri = {absoluteUri.IsAbsoluteUri}");
+        var request = new HttpRequestMessage(method, absoluteUri);
 
         if (content != null)
         {
