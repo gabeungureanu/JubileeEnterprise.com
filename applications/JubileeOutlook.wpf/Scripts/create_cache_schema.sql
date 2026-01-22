@@ -1,7 +1,7 @@
 -- JubileeOutlook Local Cache Schema
 -- Run this script after creating the database
 -- Connect to jubilee_outlook_cache database first
--- psql -U jubilee_user -h localhost -d jubilee_outlook_cache -f create_cache_schema.sql
+-- psql -U jubilee -h localhost -d jubilee_outlook_cache -f create_cache_schema.sql
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

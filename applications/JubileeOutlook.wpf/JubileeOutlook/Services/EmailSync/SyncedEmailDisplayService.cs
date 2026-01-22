@@ -161,7 +161,7 @@ public class SyncedEmailDisplayService
         return new MailFolder
         {
             Id = syncedFolder.Id.ToString(),
-            Name = syncedFolder.FolderName,
+            Name = NormalizeFolderName(syncedFolder.FolderName, syncedFolder.FolderType),
             Type = ConvertFolderType(syncedFolder.FolderType),
             Icon = GetFolderIcon(syncedFolder.FolderType),
             UnreadCount = syncedFolder.UnreadCount,
@@ -169,6 +169,24 @@ public class SyncedEmailDisplayService
             IsExpanded = false,
             IsSelected = false,
             SubFolders = new List<MailFolder>()
+        };
+    }
+
+    /// <summary>
+    /// Normalize folder names for proper display (e.g., "INBOX" -> "Inbox")
+    /// </summary>
+    private string NormalizeFolderName(string folderName, SyncFolderType folderType)
+    {
+        // Use standard display names for known folder types
+        return folderType switch
+        {
+            SyncFolderType.Inbox => "Inbox",
+            SyncFolderType.Sent => "Sent Mail",
+            SyncFolderType.Drafts => "Drafts",
+            SyncFolderType.Trash => "Trash",
+            SyncFolderType.Junk => "Junk",
+            SyncFolderType.Archive => "Archive",
+            _ => folderName // Keep original name for custom folders
         };
     }
 

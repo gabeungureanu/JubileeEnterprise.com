@@ -244,7 +244,8 @@ public partial class ComposeMailView : UserControl
     }
 
     /// <summary>
-    /// Converts HTML content to plain text for display in RichTextBox
+    /// Converts HTML content to plain text for display in RichTextBox.
+    /// Handles complex HTML email formats including multi-part emails, inline styles, and nested elements.
     /// </summary>
     private string ConvertHtmlToPlainText(string html)
     {
@@ -252,46 +253,114 @@ public partial class ComposeMailView : UserControl
 
         var text = html;
 
-        // Remove inline images (data:image/...) - they're too long to display
-        text = System.Text.RegularExpressions.Regex.Replace(text, @"<img[^>]*src=""data:image[^""]*""[^>]*>", "[Image]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-        // Replace common HTML entities
-        text = text.Replace("&nbsp;", " ");
-        text = text.Replace("&amp;", "&");
-        text = text.Replace("&lt;", "<");
-        text = text.Replace("&gt;", ">");
-        text = text.Replace("&quot;", "\"");
-        text = text.Replace("&apos;", "'");
-
-        // Replace <br>, <br/>, <br /> with newlines
-        text = System.Text.RegularExpressions.Regex.Replace(text, @"<br\s*/?>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-        // Replace block-level elements with newlines
-        text = System.Text.RegularExpressions.Regex.Replace(text, @"</p>|</div>|</li>|</tr>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-        text = System.Text.RegularExpressions.Regex.Replace(text, @"<p[^>]*>|<div[^>]*>|<li[^>]*>|<tr[^>]*>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-        // Handle headers
-        text = System.Text.RegularExpressions.Regex.Replace(text, @"</h[1-6]>", "\n\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-        text = System.Text.RegularExpressions.Regex.Replace(text, @"<h[1-6][^>]*>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-        // Remove all remaining HTML tags
-        text = System.Text.RegularExpressions.Regex.Replace(text, @"<[^>]+>", "");
-
-        // Decode any remaining HTML entities
-        text = System.Net.WebUtility.HtmlDecode(text);
-
-        // Normalize multiple newlines to maximum of two
-        text = System.Text.RegularExpressions.Regex.Replace(text, @"\n{3,}", "\n\n");
-
-        // Trim leading/trailing whitespace from each line while preserving structure
-        var lines = text.Split('\n');
-        for (int i = 0; i < lines.Length; i++)
+        try
         {
-            lines[i] = lines[i].Trim();
-        }
-        text = string.Join("\n", lines);
+            // Remove script and style tags with their content
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<script[^>]*>[\s\S]*?</script>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<style[^>]*>[\s\S]*?</style>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-        return text.Trim();
+            // Remove HTML comments
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<!--[\s\S]*?-->", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Remove inline images (data:image/...) - they're too long to display
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<img[^>]*src\s*=\s*[""']data:image[^""']*[""'][^>]*>", "[Image]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Replace other images with placeholder
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<img[^>]*>", "[Image]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Handle horizontal rules
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<hr[^>]*>", "\n────────────────────\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Handle table structure - add newlines for rows
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"</tr>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"</td>|</th>", "\t", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Handle list items
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<li[^>]*>", "\n• ", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Handle ordered list items (basic numbering)
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<ol[^>]*>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<ul[^>]*>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Replace <br>, <br/>, <br /> with newlines
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<br\s*/?>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Handle block-level elements - add newlines before closing tags
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"</p>", "\n\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"</div>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"</li>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"</blockquote>", "\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Handle headers - add newlines around them
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<h[1-6][^>]*>", "\n\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"</h[1-6]>", "\n\n", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Handle blockquote - add quote marker
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<blockquote[^>]*>", "\n> ", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Remove opening tags for block elements
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<p[^>]*>|<div[^>]*>|<tr[^>]*>|<td[^>]*>|<th[^>]*>|<table[^>]*>|<tbody[^>]*>|<thead[^>]*>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Handle anchor tags - keep the text, optionally add URL
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<a[^>]*href\s*=\s*[""']([^""']*)[""'][^>]*>([^<]*)</a>", "$2 [$1]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<a[^>]*>([^<]*)</a>", "$1", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Handle strong/bold
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<(strong|b)[^>]*>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"</(strong|b)>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Handle em/italic
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<(em|i)[^>]*>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"</(em|i)>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Handle underline
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<u[^>]*>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"</u>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Handle span and other inline elements
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<span[^>]*>|</span>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<font[^>]*>|</font>", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Remove all remaining HTML tags
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<[^>]+>", "");
+
+            // Replace common HTML entities BEFORE HtmlDecode to handle special cases
+            text = text.Replace("&nbsp;", " ");
+            text = text.Replace("&ensp;", " ");
+            text = text.Replace("&emsp;", "  ");
+            text = text.Replace("&thinsp;", " ");
+            text = text.Replace("&zwnj;", "");
+            text = text.Replace("&zwj;", "");
+
+            // Decode any remaining HTML entities
+            text = System.Net.WebUtility.HtmlDecode(text);
+
+            // Clean up whitespace
+            // Replace multiple spaces with single space (but preserve newlines)
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"[^\S\n]+", " ");
+
+            // Normalize multiple newlines to maximum of two
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"\n\s*\n\s*\n+", "\n\n");
+
+            // Trim leading/trailing whitespace from each line while preserving structure
+            var lines = text.Split('\n');
+            for (int i = 0; i < lines.Length; i++)
+            {
+                lines[i] = lines[i].Trim();
+            }
+            text = string.Join("\n", lines);
+
+            // Remove leading empty lines
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"^\n+", "");
+
+            return text.Trim();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ComposeMailView] ConvertHtmlToPlainText error: {ex.Message}");
+            // Fallback: just strip all tags
+            return System.Text.RegularExpressions.Regex.Replace(html, @"<[^>]+>", " ").Trim();
+        }
     }
 
     /// <summary>

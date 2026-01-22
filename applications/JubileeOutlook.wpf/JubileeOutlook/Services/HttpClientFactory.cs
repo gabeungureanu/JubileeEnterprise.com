@@ -80,22 +80,28 @@ public class HttpClientFactory
         });
 
         // Create HttpClient instances for each API
-        _inspireContinuumClient = CreateHttpClient(
-            _config.Api.InspireContinuum.BaseUrl,
-            _config.Api.InspireContinuum.Timeout);
+        // Use fallback URLs if configuration binding fails
+        var continuum = !string.IsNullOrEmpty(_config.Api.InspireContinuum.BaseUrl)
+            ? _config.Api.InspireContinuum.BaseUrl
+            : "http://localhost:3101/api/v1";
+        var codex = !string.IsNullOrEmpty(_config.Api.InspireCodex.BaseUrl)
+            ? _config.Api.InspireCodex.BaseUrl
+            : "http://localhost:3100/api/v1";
+        var auth = !string.IsNullOrEmpty(_config.Api.Auth.BaseUrl)
+            ? _config.Api.Auth.BaseUrl
+            : "http://localhost:3100/api/auth";
 
-        _inspireCodexClient = CreateHttpClient(
-            _config.Api.InspireCodex.BaseUrl,
-            _config.Api.InspireCodex.Timeout);
+        System.Diagnostics.Debug.WriteLine($"[HttpClientFactory] Config InspireCodex.BaseUrl: '{_config.Api.InspireCodex.BaseUrl}'");
+        System.Diagnostics.Debug.WriteLine($"[HttpClientFactory] Using codex URL: '{codex}'");
 
-        _authClient = CreateHttpClient(
-            _config.Api.Auth.BaseUrl,
-            _config.Api.Auth.Timeout);
+        _inspireContinuumClient = CreateHttpClient(continuum, _config.Api.InspireContinuum.Timeout);
+        _inspireCodexClient = CreateHttpClient(codex, _config.Api.InspireCodex.Timeout);
+        _authClient = CreateHttpClient(auth, _config.Api.Auth.Timeout);
 
         System.Diagnostics.Debug.WriteLine("HttpClientFactory initialized with resilience policies");
-        System.Diagnostics.Debug.WriteLine($"  InspireContinuum: {_config.Api.InspireContinuum.BaseUrl}");
-        System.Diagnostics.Debug.WriteLine($"  InspireCodex: {_config.Api.InspireCodex.BaseUrl}");
-        System.Diagnostics.Debug.WriteLine($"  Auth: {_config.Api.Auth.BaseUrl}");
+        System.Diagnostics.Debug.WriteLine($"  InspireContinuum - Config: '{_config.Api.InspireContinuum.BaseUrl}' -> BaseAddress: {_inspireContinuumClient.BaseAddress}");
+        System.Diagnostics.Debug.WriteLine($"  InspireCodex - Config: '{_config.Api.InspireCodex.BaseUrl}' -> BaseAddress: {_inspireCodexClient.BaseAddress}");
+        System.Diagnostics.Debug.WriteLine($"  Auth - Config: '{_config.Api.Auth.BaseUrl}' -> BaseAddress: {_authClient.BaseAddress}");
         System.Diagnostics.Debug.WriteLine($"  RetryPolicy: MaxRetries={_config.Api.RetryPolicy.MaxRetries}, InitialDelay={_config.Api.RetryPolicy.InitialDelayMs}ms");
     }
 
@@ -241,6 +247,11 @@ public class HttpClientFactory
         object? content)
     {
         var client = GetClient(endpoint);
+
+        // Debug: Log the full URL that will be requested
+        var fullUri = client.BaseAddress != null ? new Uri(client.BaseAddress, requestUri) : new Uri(requestUri);
+        System.Diagnostics.Debug.WriteLine($"[HttpClientFactory] {method} {fullUri}");
+        System.Diagnostics.Debug.WriteLine($"[HttpClientFactory] BaseAddress: {client.BaseAddress}, RelativeUri: {requestUri}");
 
         try
         {

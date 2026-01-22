@@ -19,8 +19,9 @@
             <RowDefinition Height="Auto"/> <!-- Row 3: To Field -->
             <RowDefinition Height="Auto"/> <!-- Row 4: Cc/Bcc Fields -->
             <RowDefinition Height="Auto"/> <!-- Row 5: Subject Field -->
-            <RowDefinition Height="*"/>    <!-- Row 6: Message Body -->
-            <RowDefinition Height="Auto"/> <!-- Row 7: Attachments -->
+            <RowDefinition Height="Auto"/> <!-- Row 6: Formatting Toolbar -->
+            <RowDefinition Height="*"/>    <!-- Row 7: Message Body -->
+            <RowDefinition Height="Auto"/> <!-- Row 8: Attachments -->
         </Grid.RowDefinitions>
 
         <!-- Validation Error Banner -->
@@ -36,7 +37,7 @@
         </Border>
 
         <!-- Loading Overlay -->
-        <Border Grid.RowSpan="8" Background="#80000000" Visibility="{Binding IsSending, Converter={StaticResource BoolToVisibilityConverter}}" Panel.ZIndex="100">
+        <Border Grid.RowSpan="9" Background="#80000000" Visibility="{Binding IsSending, Converter={StaticResource BoolToVisibilityConverter}}" Panel.ZIndex="100">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <TextBlock Text="&#xe863;" FontFamily="{StaticResource MaterialIcons}" FontSize="32" Foreground="{StaticResource GoldBrandBrush}" HorizontalAlignment="Center">
                     <TextBlock.RenderTransform>
@@ -336,7 +337,7 @@
         </Border>
 
         <!-- Attachments Section -->
-        <Border Grid.Row="4" BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="16,8"
+        <Border Grid.Row="8" BorderBrush="#333333" BorderThickness="0,1,0,0" Padding="16,8"
                 x:Name="AttachmentsSection"
                 Visibility="Collapsed">
             <StackPanel>
@@ -402,7 +403,7 @@
         </Border>
 
         <!-- Message Body -->
-        <Border Grid.Row="6" Padding="16">
+        <Border Grid.Row="7" Padding="16">
             <RichTextBox x:Name="MessageBodyEditor"
                         Background="Transparent"
                         Foreground="#EEEEEE"
@@ -420,7 +421,7 @@
         </Border>
 
         <!-- Formatting Toolbar -->
-        <Border x:Name="FormattingToolbar" Grid.Row="7" Background="#252525" BorderBrush="#333333" BorderThickness="0,1,0,0" Padding="12,8" Visibility="Visible">
+        <Border x:Name="FormattingToolbar" Grid.Row="6" Background="#252525" BorderBrush="#333333" BorderThickness="0,1,0,0" Padding="12,8" Visibility="Visible">
             <StackPanel Orientation="Horizontal">
                 <!-- Text Formatting -->
                 <Button x:Name="BoldButton" ToolTip="Bold (Ctrl+B)" Click="BoldButton_Click" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">

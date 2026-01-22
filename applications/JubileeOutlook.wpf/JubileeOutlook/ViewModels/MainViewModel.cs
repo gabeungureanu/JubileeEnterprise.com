@@ -1033,21 +1033,52 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Adds a sent message to the Messages collection if user is currently viewing Sent folder
+    /// Adds a sent message to the Messages collection if user is currently viewing Sent folder.
+    /// Also triggers a refresh to ensure the message is properly loaded from the API.
     /// </summary>
     public void AddSentMessageToCollection(EmailMessage message)
     {
-        // Check if user is currently viewing Sent folder
-        if (SelectedFolder != null &&
-            (SelectedFolder.Id.Equals("sent", StringComparison.OrdinalIgnoreCase) ||
+        // Check if user is currently viewing Sent folder (by type, name, or ID)
+        var isViewingSentFolder = SelectedFolder != null &&
+            (SelectedFolder.Type == FolderType.Sent ||
+             SelectedFolder.Id.Equals("sent", StringComparison.OrdinalIgnoreCase) ||
              SelectedFolder.Name.Equals("Sent", StringComparison.OrdinalIgnoreCase) ||
-             SelectedFolder.Name.Equals("Sent Items", StringComparison.OrdinalIgnoreCase)))
+             SelectedFolder.Name.Equals("Sent Items", StringComparison.OrdinalIgnoreCase));
+
+        if (isViewingSentFolder)
         {
-            // Add to the beginning of the collection so it appears at the top
+            // Add to the beginning of the collection so it appears at the top immediately
             Dispatcher.CurrentDispatcher.Invoke(() =>
             {
                 Messages.Insert(0, message);
             });
+
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Added sent message to collection: {message.Subject}");
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Not viewing Sent folder, message will appear when folder is selected");
+        }
+    }
+
+    /// <summary>
+    /// Forces a refresh of the current folder's messages from the API
+    /// </summary>
+    public async Task ForceRefreshCurrentFolderAsync()
+    {
+        if (SelectedFolder != null)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Force refreshing folder: {SelectedFolder.Name}");
+
+            // Check if this is a synced folder (GUID-based ID) or API folder
+            if (HasSyncedAccounts && Guid.TryParse(SelectedFolder.Id, out _))
+            {
+                await LoadSyncedMessagesAsync(SelectedFolder.Id);
+            }
+            else
+            {
+                await LoadMessagesAsync(SelectedFolder.Id);
+            }
         }
     }
 }
