@@ -237,6 +237,15 @@
       flex-direction: column;
     }
 
+    /* Center content only in welcome state, start from top when chatting */
+    .main-content:not(.is-chatting) .messages-container {
+      justify-content: center;
+    }
+
+    .main-content.is-chatting .messages-container {
+      justify-content: flex-start;
+    }
+
     .messages-container::-webkit-scrollbar {
       width: 8px;
     }
@@ -273,8 +282,9 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 40px 20px 20px;
+      padding: 40px 20px 0;
       min-height: 300px;
+      transform: translateY(-80px);
     }
 
     .welcome-avatar {
@@ -282,7 +292,7 @@
       height: 140px;
       border-radius: 50%;
       object-fit: cover;
-      margin-bottom: 20px;
+      margin-bottom: 0px;
       border: 4px solid #00d4ff;
       box-shadow: 0 0 30px rgba(0, 212, 255, 0.4), 0 0 60px rgba(0, 212, 255, 0.2);
     }
@@ -290,6 +300,7 @@
     .welcome-title {
       font-family: 'Agency FB', Cambria, Georgia, serif;
       font-size: 88px;
+      font-weight: bold;
       color: var(--text);
       margin-bottom: 0;
       transition: color 0.3s ease;
@@ -302,11 +313,149 @@
 
     .welcome-title .dotcom {
       color: var(--text);
-      font-weight: normal;
+      font-weight: bold;
     }
 
     .welcome-subtitle {
       display: none;
+    }
+
+    /* Welcome Input Wrapper - input below title in welcome state */
+    .welcome-input-wrapper {
+      width: 100%;
+      max-width: 760px;
+      margin-top: 10px;
+    }
+
+    .welcome-input-wrapper .search-box {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      background-color: var(--input-bg);
+      border-radius: 8px;
+      padding: 12px 14px;
+      gap: 8px 12px;
+      transition: all 0.2s;
+      border: 1px solid var(--border);
+    }
+
+    .welcome-input-wrapper .search-box:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px var(--primary);
+      background-color: var(--surface-hover);
+    }
+
+    .welcome-input-wrapper .search-input {
+      flex: 1 1 auto;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 15px;
+      font-family: inherit;
+      line-height: 22px;
+      min-height: 22px;
+      height: auto;
+      padding: 0;
+      margin: 0;
+      min-width: 200px;
+      resize: none;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
+    .welcome-input-wrapper .search-input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .welcome-input-wrapper .search-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .welcome-input-wrapper .action-icon {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.15s;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    .welcome-input-wrapper .action-icon:hover {
+      background-color: var(--surface-hover);
+    }
+
+    .welcome-input-wrapper .action-icon svg {
+      width: 16px;
+      height: 16px;
+      fill: var(--text-secondary);
+      transition: fill 0.15s;
+    }
+
+    .welcome-input-wrapper .action-icon:hover svg {
+      fill: var(--text);
+    }
+
+    .welcome-input-wrapper .voice-button {
+      width: 32px;
+      height: 32px;
+      background-color: var(--primary);
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 0 2px 8px rgba(255, 189, 89, 0.4);
+    }
+
+    .welcome-input-wrapper .voice-button:hover {
+      background-color: #ffc970;
+      transform: scale(1.05);
+    }
+
+    .welcome-input-wrapper .voice-button svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .welcome-input-wrapper .search-copyright {
+      text-align: center;
+      padding: 4px 0 0;
+      margin-top: 0;
+      color: #777777;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .welcome-input-wrapper .search-copyright a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .welcome-input-wrapper .search-copyright a:hover {
+      color: var(--text-secondary);
+    }
+
+    /* Hide bottom input area when welcome state is visible */
+    .main-content:not(.is-chatting) .input-area {
+      display: none;
+    }
+
+    /* Show bottom input area when chatting */
+    .main-content.is-chatting .input-area {
+      display: block;
+      visibility: visible;
+      opacity: 1;
     }
 
     /* Message Row - Grok style */
@@ -558,6 +707,15 @@
       fill: #f87171;
     }
 
+    .action-btn.is-speaking {
+      background-color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .action-btn.is-speaking svg {
+      fill: #000;
+    }
+
     .action-divider {
       width: 1px;
       height: 13px;
@@ -684,8 +842,12 @@
 
     /* ==================== INPUT AREA - JubileeVerse Home Page Style ==================== */
     .input-area {
-      padding: 16px 24px 12px;
-      background: linear-gradient(to top, var(--background) 80%, transparent);
+      padding: 10px 24px 12px;
+      background: var(--background);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 10;
+      pointer-events: auto;
     }
 
     .input-wrapper {
@@ -704,6 +866,9 @@
       gap: 8px 12px;
       transition: all 0.2s;
       border: 1px solid var(--border);
+      pointer-events: auto;
+      position: relative;
+      z-index: 11;
     }
 
     .search-box:focus-within {
@@ -721,12 +886,19 @@
       font-size: 15px;
       font-family: inherit;
       line-height: 22px;
-      height: 22px;
+      min-height: 22px;
+      height: auto;
       padding: 0;
       margin: 0;
       min-width: 200px;
       resize: none;
-      overflow: hidden;
+      overflow-y: auto;
+      overflow-x: hidden;
+      pointer-events: auto;
+      cursor: text;
+      -webkit-user-select: text;
+      user-select: text;
+      touch-action: manipulation;
     }
 
     .search-input::placeholder {
@@ -976,12 +1148,13 @@
     .search-copyright {
       text-align: center;
       padding: 0;
-      color: #777;
+      margin-top: 0;
+      color: #777777;
       font-size: 11px;
       line-height: 1.4;
       width: 100%;
       max-width: 760px;
-      margin: 10px auto 0;
+      margin: 0 auto;
     }
 
     .search-copyright a {
@@ -1236,6 +1409,37 @@
       fill: currentColor;
     }
 
+    .settings-btn.is-playing {
+      background-color: var(--primary);
+      border-color: var(--primary);
+      color: #000;
+    }
+
+    .settings-btn.is-playing svg {
+      fill: #000;
+    }
+
+    .settings-input {
+      padding: 10px 14px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.15s;
+    }
+
+    .settings-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px var(--primary);
+    }
+
+    .settings-input::placeholder {
+      color: var(--text-secondary);
+    }
+
     /* Mobile responsive for settings modal */
     @media (max-width: 600px) {
       .settings-modal {
@@ -1353,6 +1557,299 @@
 
     .pin-input::placeholder {
       color: #4a4a4a;
+    }
+
+    /* ==================== PASSWORD CHANGE MODAL ==================== */
+    .password-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2100;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .password-modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    .password-modal {
+      background-color: var(--modal-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 440px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: scale(0.95);
+      transition: transform 0.3s ease;
+    }
+
+    .password-modal-overlay.open .password-modal {
+      transform: scale(1);
+    }
+
+    .password-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .password-modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .password-modal-close {
+      width: 32px;
+      height: 32px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s;
+    }
+
+    .password-modal-close:hover {
+      background-color: var(--surface-hover);
+    }
+
+    .password-modal-close svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--text-secondary);
+    }
+
+    .password-modal-body {
+      padding: 24px;
+    }
+
+    .password-field {
+      margin-bottom: 20px;
+    }
+
+    .password-field:last-of-type {
+      margin-bottom: 16px;
+    }
+
+    .password-field label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .password-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .password-input-wrapper input {
+      width: 100%;
+      padding: 12px 44px 12px 14px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.15s;
+    }
+
+    .password-input-wrapper input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px var(--primary);
+    }
+
+    .password-input-wrapper input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 8px;
+      width: 32px;
+      height: 32px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s;
+    }
+
+    .password-toggle:hover {
+      background-color: var(--surface-hover);
+    }
+
+    .password-toggle svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--text-secondary);
+    }
+
+    .password-requirements {
+      margin-top: 12px;
+      padding: 12px;
+      background-color: var(--surface);
+      border-radius: 8px;
+    }
+
+    .requirement {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .requirement:last-child {
+      margin-bottom: 0;
+    }
+
+    .requirement.met {
+      color: #10b981;
+    }
+
+    .requirement.met .req-icon {
+      color: #10b981;
+    }
+
+    .req-icon {
+      font-size: 10px;
+      width: 14px;
+      text-align: center;
+    }
+
+    .password-match-status {
+      margin-top: 8px;
+      font-size: 12px;
+      min-height: 18px;
+    }
+
+    .password-match-status.match {
+      color: #10b981;
+    }
+
+    .password-match-status.no-match {
+      color: #f87171;
+    }
+
+    .password-error {
+      padding: 12px;
+      background-color: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      border-radius: 8px;
+      color: #f87171;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .password-error.show {
+      display: block;
+    }
+
+    .password-success {
+      padding: 12px;
+      background-color: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 8px;
+      color: #10b981;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .password-success.show {
+      display: block;
+    }
+
+    .password-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .password-btn-cancel {
+      padding: 10px 20px;
+      background-color: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .password-btn-cancel:hover {
+      background-color: var(--surface-hover);
+    }
+
+    .password-btn-submit {
+      padding: 10px 20px;
+      background-color: var(--primary);
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      color: #000;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .password-btn-submit:hover:not(:disabled) {
+      background-color: #ffc970;
+    }
+
+    .password-btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .password-btn-submit.loading {
+      position: relative;
+      color: transparent;
+    }
+
+    .password-btn-submit.loading::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 50%;
+      left: 50%;
+      margin-left: -8px;
+      margin-top: -8px;
+      border: 2px solid rgba(0, 0, 0, 0.3);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
     }
 
     /* Loading Overlay */
@@ -2056,6 +2553,10 @@
           <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
           <span data-i18n="settingsSecurity">Security</span>
         </div>
+        <div class="settings-nav-item" data-tab="parental">
+          <svg viewBox="0 0 24 24"><path d="M16.5 12c1.38 0 2.49-1.12 2.49-2.5S17.88 7 16.5 7C15.12 7 14 8.12 14 9.5s1.12 2.5 2.5 2.5zM9 11c1.66 0 2.99-1.34 2.99-3S10.66 5 9 5C7.34 5 6 6.34 6 8s1.34 3 3 3zm7.5 3c-1.83 0-5.5.92-5.5 2.75V19h11v-2.25c0-1.83-3.67-2.75-5.5-2.75zM9 13c-2.33 0-7 1.17-7 3.5V19h7v-2.25c0-.85.33-2.34 2.37-3.47C10.5 13.1 9.66 13 9 13z"/></svg>
+          <span data-i18n="settingsParental">Parental Controls</span>
+        </div>
         <div class="settings-nav-item" data-tab="account">
           <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
           <span data-i18n="settingsAccount">Account</span>
@@ -2075,19 +2576,6 @@
             <select class="settings-select" id="settingAppearance">
               <option value="dark" data-i18n="dark">Dark</option>
               <option value="light" data-i18n="light">Light</option>
-              <option value="system" data-i18n="system">System</option>
-            </select>
-          </div>
-
-          <div class="settings-row">
-            <div>
-              <div class="settings-label" data-i18n="accentColor">Accent color</div>
-            </div>
-            <select class="settings-select" id="settingAccentColor">
-              <option value="default" data-i18n="defaultGold">Default (Gold)</option>
-              <option value="blue" data-i18n="blue">Blue</option>
-              <option value="green" data-i18n="green">Green</option>
-              <option value="purple" data-i18n="purple">Purple</option>
             </select>
           </div>
 
@@ -2269,6 +2757,197 @@
           </div>
         </div>
 
+        <!-- Parental Controls Tab -->
+        <div class="settings-tab" id="tab-parental" style="display: none;">
+          <div class="settings-section-title" data-i18n="settingsParental">Parental Controls</div>
+
+          <!-- Not Linked State -->
+          <div id="parentalNotLinked">
+            <div class="settings-row" style="flex-direction: column; align-items: flex-start; gap: 16px;">
+              <div>
+                <div class="settings-label">Link a teen's account</div>
+                <div class="settings-label-desc">Connect your account to your teen's JubileeInspire account to guide their experience and manage safety settings. Both accounts must agree to be linked.</div>
+              </div>
+              <div style="display: flex; gap: 12px; width: 100%;">
+                <input type="email" class="settings-input" id="parentalInviteEmail" placeholder="Enter teen's email address" style="flex: 1;">
+                <button class="settings-btn" id="parentalSendInvite" style="background-color: var(--primary); color: #000; border-color: var(--primary);">
+                  <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                  Send Invite
+                </button>
+              </div>
+            </div>
+
+            <div class="settings-divider" style="margin: 24px 0; border-top: 1px solid var(--border);"></div>
+
+            <div class="settings-row" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+              <div>
+                <div class="settings-label">Received an invite?</div>
+                <div class="settings-label-desc">If a parent or guardian sent you an invitation, you can accept it here to enable parental controls on your account.</div>
+              </div>
+              <button class="settings-btn" id="parentalAcceptInvite">
+                <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                Check for Pending Invites
+              </button>
+            </div>
+          </div>
+
+          <!-- Linked State - Parent View -->
+          <div id="parentalLinkedParent" style="display: none;">
+            <div class="settings-row" style="background: linear-gradient(135deg, rgba(58, 160, 255, 0.1), rgba(0, 212, 255, 0.1)); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+              <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                <div style="width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                  <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #000;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                </div>
+                <div>
+                  <div class="settings-label" id="parentalLinkedTeenName">Teen's Account</div>
+                  <div class="settings-label-desc" id="parentalLinkedTeenEmail">teen@example.com</div>
+                </div>
+              </div>
+              <button class="settings-btn" id="parentalUnlinkBtn" style="background: transparent; border-color: #f87171; color: #f87171;">
+                Unlink
+              </button>
+            </div>
+
+            <div class="settings-section-subtitle" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; font-weight: 600;">CONTENT & INTERACTION CONTROLS</div>
+
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">Reduce sensitive content</div>
+                <div class="settings-label-desc">Limits graphic content, harmful trends, and inappropriate role-play. Teen cannot disable this when linked.</div>
+              </div>
+              <div class="settings-toggle active" id="parentalReduceSensitive"></div>
+            </div>
+
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">Model training (data use)</div>
+                <div class="settings-label-desc">Allow teen's conversations to be used for improving AI models.</div>
+              </div>
+              <div class="settings-toggle" id="parentalModelTraining"></div>
+            </div>
+
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">Memory</div>
+                <div class="settings-label-desc">Allow Jubilee to remember details across chats to personalize responses.</div>
+              </div>
+              <div class="settings-toggle active" id="parentalMemory"></div>
+            </div>
+
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">Voice mode</div>
+                <div class="settings-label-desc">Allow teen to use voice interaction features.</div>
+              </div>
+              <div class="settings-toggle active" id="parentalVoiceMode"></div>
+            </div>
+
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">Image generation</div>
+                <div class="settings-label-desc">Allow teen to generate or edit images with Jubilee.</div>
+              </div>
+              <div class="settings-toggle active" id="parentalImageGen"></div>
+            </div>
+
+            <div class="settings-divider" style="margin: 20px 0; border-top: 1px solid var(--border);"></div>
+
+            <div class="settings-section-subtitle" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; font-weight: 600;">USAGE CONTROLS</div>
+
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">Quiet hours</div>
+                <div class="settings-label-desc">Set times when JubileeInspire cannot be used.</div>
+              </div>
+              <div class="settings-toggle" id="parentalQuietHoursToggle"></div>
+            </div>
+
+            <div class="settings-row" id="parentalQuietHoursConfig" style="display: none; padding-left: 20px; flex-direction: column; gap: 12px; align-items: flex-start;">
+              <div style="display: flex; gap: 16px; align-items: center;">
+                <div>
+                  <label class="settings-label-desc" style="display: block; margin-bottom: 4px;">Start time</label>
+                  <input type="time" class="settings-input" id="parentalQuietStart" value="22:00" style="width: 120px;">
+                </div>
+                <div>
+                  <label class="settings-label-desc" style="display: block; margin-bottom: 4px;">End time</label>
+                  <input type="time" class="settings-input" id="parentalQuietEnd" value="07:00" style="width: 120px;">
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-divider" style="margin: 20px 0; border-top: 1px solid var(--border);"></div>
+
+            <div class="settings-section-subtitle" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; font-weight: 600;">SAFETY NOTIFICATIONS</div>
+
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">Safety alerts</div>
+                <div class="settings-label-desc">Receive notifications if safety systems detect signs of serious risk. Your teen's privacy is protected - you won't see full chat history.</div>
+              </div>
+              <div class="settings-toggle active" id="parentalSafetyAlerts"></div>
+            </div>
+
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">Notification method</div>
+                <div class="settings-label-desc">How you'd like to receive safety alerts.</div>
+              </div>
+              <select class="settings-select" id="parentalNotifMethod">
+                <option value="email">Email</option>
+                <option value="sms">SMS</option>
+                <option value="push">Push notification</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Linked State - Teen View -->
+          <div id="parentalLinkedTeen" style="display: none;">
+            <div class="settings-row" style="background: linear-gradient(135deg, rgba(58, 160, 255, 0.1), rgba(0, 212, 255, 0.1)); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+              <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                <div style="width: 40px; height: 40px; background: #3aa0ff; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                  <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: #fff;"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                </div>
+                <div>
+                  <div class="settings-label">Parental controls active</div>
+                  <div class="settings-label-desc" id="parentalLinkedParentEmail">Managed by: parent@example.com</div>
+                </div>
+              </div>
+              <button class="settings-btn" id="parentalTeenUnlink" style="background: transparent; border-color: var(--text-secondary); color: var(--text-secondary);">
+                Unlink
+              </button>
+            </div>
+
+            <div class="settings-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+              <div class="settings-label-desc" style="line-height: 1.6;">
+                Your parent or guardian has enabled parental controls on your account. This helps keep your experience safe and age-appropriate. Some features may be limited based on their settings.
+              </div>
+              <div class="settings-label-desc" style="line-height: 1.6; color: var(--text-secondary);">
+                You can unlink your account at any time, but your parent will be notified when you do.
+              </div>
+            </div>
+
+            <div class="settings-divider" style="margin: 20px 0; border-top: 1px solid var(--border);"></div>
+
+            <div class="settings-section-subtitle" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; font-weight: 600;">CURRENT RESTRICTIONS</div>
+
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">Reduce sensitive content</div>
+                <div class="settings-label-desc">Extra protections are enabled to limit inappropriate content.</div>
+              </div>
+              <span style="color: var(--primary); font-size: 13px; font-weight: 500;" id="teenReduceSensitiveStatus">Enabled</span>
+            </div>
+
+            <div class="settings-row">
+              <div>
+                <div class="settings-label">Quiet hours</div>
+                <div class="settings-label-desc" id="teenQuietHoursDesc">No quiet hours set.</div>
+              </div>
+              <span style="color: var(--text-secondary); font-size: 13px;" id="teenQuietHoursStatus">Not active</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Account Tab -->
         <div class="settings-tab" id="tab-account" style="display: none;">
           <div class="settings-section-title" data-i18n="settingsAccount">Account</div>
@@ -2287,7 +2966,7 @@
           <div class="settings-row">
             <div>
               <div class="settings-label">Password</div>
-              <div class="settings-label-desc">Last changed: Never</div>
+              <div class="settings-label-desc" id="passwordLastChanged">Last changed: Never</div>
             </div>
             <button class="settings-btn" id="settingChangePassword">
               <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
@@ -2331,6 +3010,64 @@
     </div>
   </div>
 
+  <!-- Password Change Modal -->
+  <div class="password-modal-overlay" id="passwordModalOverlay">
+    <div class="password-modal">
+      <div class="password-modal-header">
+        <h3>Change Password</h3>
+        <button class="password-modal-close" id="passwordModalClose">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+      <div class="password-modal-body">
+        <div class="password-field">
+          <label for="currentPassword">Current Password</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="currentPassword" placeholder="Enter current password" autocomplete="current-password">
+            <button type="button" class="password-toggle" data-target="currentPassword">
+              <svg class="eye-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+              <svg class="eye-off-icon" viewBox="0 0 24 24" style="display: none;"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="password-field">
+          <label for="newPassword">New Password</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="newPassword" placeholder="Enter new password" autocomplete="new-password">
+            <button type="button" class="password-toggle" data-target="newPassword">
+              <svg class="eye-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+              <svg class="eye-off-icon" viewBox="0 0 24 24" style="display: none;"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
+            </button>
+          </div>
+          <div class="password-requirements">
+            <div class="requirement" id="reqLength"><span class="req-icon">○</span> At least 8 characters</div>
+            <div class="requirement" id="reqUppercase"><span class="req-icon">○</span> One uppercase letter</div>
+            <div class="requirement" id="reqLowercase"><span class="req-icon">○</span> One lowercase letter</div>
+            <div class="requirement" id="reqNumber"><span class="req-icon">○</span> One number</div>
+            <div class="requirement" id="reqSpecial"><span class="req-icon">○</span> One special character (!@#$%^&*)</div>
+          </div>
+        </div>
+        <div class="password-field">
+          <label for="confirmPassword">Confirm New Password</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="confirmPassword" placeholder="Confirm new password" autocomplete="new-password">
+            <button type="button" class="password-toggle" data-target="confirmPassword">
+              <svg class="eye-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+              <svg class="eye-off-icon" viewBox="0 0 24 24" style="display: none;"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>
+            </button>
+          </div>
+          <div class="password-match-status" id="passwordMatchStatus"></div>
+        </div>
+        <div class="password-error" id="passwordError"></div>
+        <div class="password-success" id="passwordSuccess"></div>
+      </div>
+      <div class="password-modal-footer">
+        <button class="password-btn-cancel" id="passwordCancelBtn">Cancel</button>
+        <button class="password-btn-submit" id="passwordSubmitBtn" disabled>Change Password</button>
+      </div>
+    </div>
+  </div>
+
   <div class="app-container">
     <!-- LEFT SIDEBAR -->
     <div class="sidebar" id="sidebar">
@@ -2357,7 +3094,7 @@
     </div>
 
     <!-- MAIN CONTENT -->
-    <div class="main-content">
+    <div class="main-content" id="mainContent">
       <!-- Messages Container -->
       <div class="messages-container" id="messagesContainer">
         <div class="messages-wrapper" id="messagesWrapper">
@@ -2365,6 +3102,33 @@
           <div class="welcome-state" id="welcomeState">
             <img src="jubilee-profile.png" alt="Jubilee" class="welcome-avatar">
             <div class="welcome-title">Jubilee<span class="inspire">Inspire</span><span class="dotcom">.com</span></div>
+            <!-- Welcome Input (shown in welcome state only) -->
+            <div class="welcome-input-wrapper" id="welcomeInputWrapper">
+              <div class="search-box">
+                <textarea class="search-input" id="welcomeMessageInput" placeholder="Ask Jubilee Anything..." data-i18n-placeholder="inputPlaceholder" autocomplete="off" rows="1"></textarea>
+                <div class="search-actions">
+                  <div class="action-icon" id="welcomeAttachIcon" title="Attach File">
+                    <svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
+                  </div>
+                  <div class="action-icon" id="welcomePrivacyIcon" title="Privacy Mode">
+                    <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                  </div>
+                  <button class="voice-button" id="welcomeVoiceButton" title="Send Message">
+                    <svg class="play-icon" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round">
+                      <line x1="4" y1="12" x2="4" y2="12"/>
+                      <line x1="8" y1="8" x2="8" y2="16"/>
+                      <line x1="12" y1="5" x2="12" y2="19"/>
+                      <line x1="16" y1="8" x2="16" y2="16"/>
+                      <line x1="20" y1="12" x2="20" y2="12"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="search-copyright">
+                Copyright &copy; <span class="welcome-year"></span> JubileeInspire.com | All Rights Reserved. JubileeVerse and AI can make mistakes. |
+                <a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Use</a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -2488,6 +3252,7 @@
       var messagesContainer = document.getElementById('messagesContainer');
       var messagesWrapper = document.getElementById('messagesWrapper');
       var welcomeState = document.getElementById('welcomeState');
+      var mainContent = document.getElementById('mainContent');
       var messageInput = document.getElementById('messageInput');
       var newChatBtn = document.getElementById('newChatBtn');
       var sidebarAvatar = document.getElementById('sidebarAvatar');
@@ -2497,6 +3262,19 @@
       var voiceButton = document.getElementById('voiceButton');
       var attachIcon = document.getElementById('attachIcon');
       var privacyIcon = document.getElementById('privacyIcon');
+
+      // Welcome state input elements
+      var welcomeMessageInput = document.getElementById('welcomeMessageInput');
+      var welcomeVoiceButton = document.getElementById('welcomeVoiceButton');
+      var welcomeAttachIcon = document.getElementById('welcomeAttachIcon');
+      var welcomePrivacyIcon = document.getElementById('welcomePrivacyIcon');
+      var welcomeInputWrapper = document.getElementById('welcomeInputWrapper');
+
+      // Set welcome year
+      var welcomeYearSpans = document.querySelectorAll('.welcome-year');
+      welcomeYearSpans.forEach(function(span) {
+        span.textContent = new Date().getFullYear();
+      });
 
       // Settings Modal Elements
       var settingsBtn = document.getElementById('settingsBtn');
@@ -2513,20 +3291,8 @@
       var THEME_CACHE_KEY = 'jubileeInspireTheme';
 
       // ==================== THEME MANAGEMENT ====================
-      // Get system preferred theme
-      function getSystemTheme() {
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-          return 'light';
-        }
-        return 'dark';
-      }
-
       // Apply theme to document
       function applyTheme(theme) {
-        if (theme === 'system') {
-          theme = getSystemTheme();
-        }
-
         if (theme === 'light') {
           document.documentElement.setAttribute('data-theme', 'light');
         } else {
@@ -2534,9 +3300,27 @@
         }
       }
 
-      // Initialize theme from localStorage
+      // Initialize theme from localStorage or user preference
       function initTheme() {
-        var savedTheme = localStorage.getItem(THEME_CACHE_KEY) || 'dark';
+        // Check if user is authenticated and has saved preference
+        var authData = localStorage.getItem('jubileeInspireAuth');
+        var savedTheme = 'dark'; // Default theme
+
+        if (authData) {
+          try {
+            var parsed = JSON.parse(authData);
+            if (parsed.user && parsed.user.themePreference) {
+              savedTheme = parsed.user.themePreference;
+            } else {
+              savedTheme = localStorage.getItem(THEME_CACHE_KEY) || 'dark';
+            }
+          } catch (e) {
+            savedTheme = localStorage.getItem(THEME_CACHE_KEY) || 'dark';
+          }
+        } else {
+          savedTheme = localStorage.getItem(THEME_CACHE_KEY) || 'dark';
+        }
+
         applyTheme(savedTheme);
 
         // Update the select dropdown if it exists
@@ -2550,20 +3334,122 @@
       function setTheme(theme) {
         localStorage.setItem(THEME_CACHE_KEY, theme);
         applyTheme(theme);
-      }
 
-      // Listen for system theme changes
-      if (window.matchMedia) {
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-          var savedTheme = localStorage.getItem(THEME_CACHE_KEY) || 'dark';
-          if (savedTheme === 'system') {
-            applyTheme('system');
+        // If user is authenticated, save preference to their profile
+        var authData = localStorage.getItem('jubileeInspireAuth');
+        if (authData) {
+          try {
+            var parsed = JSON.parse(authData);
+            if (parsed.authenticated && parsed.user) {
+              parsed.user.themePreference = theme;
+              localStorage.setItem('jubileeInspireAuth', JSON.stringify(parsed));
+
+              // Also save to server if we have a token
+              if (parsed.tokens && parsed.tokens.accessToken) {
+                fetch(AUTH_API + '/api/auth/preferences', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + parsed.tokens.accessToken
+                  },
+                  body: JSON.stringify({ themePreference: theme })
+                }).catch(function(e) {
+                  console.warn('Failed to save theme preference to server:', e);
+                });
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to save theme preference:', e);
           }
-        });
+        }
       }
 
       // Initialize theme on page load
       initTheme();
+
+      // ==================== SPEECH SYNTHESIS VOICE INITIALIZATION ====================
+      // Pre-load voices for speech synthesis (needed for some browsers)
+      var currentSpeakingButton = null; // Track the button currently playing speech
+
+      // Speaker icon SVG
+      var speakerIconSVG = '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+
+      // Stop icon SVG
+      var stopIconSVG = '<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" fill="currentColor"/></svg>';
+
+      // Helper function to get female voice
+      function getFemaleVoice() {
+        var voices = window.speechSynthesis.getVoices();
+        var femaleVoice = null;
+
+        // Preferred female voice names (in order of preference)
+        var femaleVoiceNames = [
+          'Microsoft Zira', 'Zira', 'Samantha', 'Victoria', 'Karen',
+          'Google US English Female', 'Google UK English Female',
+          'Female', 'woman', 'Fiona', 'Moira', 'Tessa', 'Veena'
+        ];
+
+        // Try to find a female voice by name
+        for (var i = 0; i < femaleVoiceNames.length && !femaleVoice; i++) {
+          femaleVoice = voices.find(function(v) {
+            return v.name.toLowerCase().includes(femaleVoiceNames[i].toLowerCase());
+          });
+        }
+
+        // If no named female voice found, try to find any English female voice
+        if (!femaleVoice) {
+          femaleVoice = voices.find(function(v) {
+            return v.lang.startsWith('en') &&
+              (v.name.toLowerCase().includes('female') ||
+               v.name.toLowerCase().includes('woman') ||
+               v.name.toLowerCase().includes('zira') ||
+               v.name.toLowerCase().includes('samantha'));
+          });
+        }
+
+        return femaleVoice;
+      }
+
+      // Function to stop speech and reset button
+      function stopSpeechAndResetButton() {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+        if (currentSpeakingButton) {
+          currentSpeakingButton.innerHTML = speakerIconSVG;
+          currentSpeakingButton.dataset.tooltip = 'Read aloud';
+          currentSpeakingButton.classList.remove('is-speaking');
+          currentSpeakingButton = null;
+        }
+      }
+
+      // Click anywhere to stop speech
+      document.addEventListener('click', function(e) {
+        // Stop read aloud button speech
+        if (currentSpeakingButton && !e.target.closest('[data-action="speak"]')) {
+          stopSpeechAndResetButton();
+        }
+
+        // Stop settings voice play speech
+        var settingVoicePlayBtn = document.getElementById('settingVoicePlay');
+        if (settingVoicePlayBtn && settingVoicePlayBtn.classList.contains('is-playing') && !e.target.closest('#settingVoicePlay')) {
+          window.speechSynthesis.cancel();
+          // Reset the button to original state
+          var playIcon = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+          var playText = '<span data-i18n="play">Play</span>';
+          settingVoicePlayBtn.innerHTML = playIcon + playText;
+          settingVoicePlayBtn.classList.remove('is-playing');
+        }
+      });
+
+      if ('speechSynthesis' in window) {
+        // Load voices (some browsers need this event)
+        window.speechSynthesis.onvoiceschanged = function() {
+          window.speechSynthesis.getVoices();
+        };
+        // Trigger initial load
+        window.speechSynthesis.getVoices();
+      }
 
       // ==================== LANGUAGE/LOCALIZATION MANAGEMENT ====================
       var LANGUAGE_CACHE_KEY = 'jubileeInspireLanguage';
@@ -2590,6 +3476,7 @@
           settingsPersonalization: "Personalization",
           settingsData: "Data controls",
           settingsSecurity: "Security",
+          settingsParental: "Parental Controls",
           settingsAccount: "Account",
           // Settings - General tab
           appearance: "Appearance",
@@ -2695,6 +3582,7 @@
           settingsPersonalization: "Personalizacion",
           settingsData: "Control de datos",
           settingsSecurity: "Seguridad",
+          settingsParental: "Controles Parentales",
           settingsAccount: "Cuenta",
           // Settings - General tab
           appearance: "Apariencia",
@@ -2800,6 +3688,7 @@
           settingsPersonalization: "Personnalisation",
           settingsData: "Controle des donnees",
           settingsSecurity: "Securite",
+          settingsParental: "Controles Parentaux",
           settingsAccount: "Compte",
           // Settings - General tab
           appearance: "Apparence",
@@ -2905,6 +3794,7 @@
           settingsPersonalization: "Personalisierung",
           settingsData: "Datenkontrolle",
           settingsSecurity: "Sicherheit",
+          settingsParental: "Kindersicherung",
           settingsAccount: "Konto",
           // Settings - General tab
           appearance: "Erscheinungsbild",
@@ -3557,7 +4447,12 @@
         fetchSystemPrompt(promptModel, function() {
           // If there's an initial query, send it after prompt is loaded
           if (initialQuery) {
-            messageInput.value = initialQuery;
+            // Use welcome input since we're in welcome state initially
+            if (welcomeMessageInput) {
+              welcomeMessageInput.value = initialQuery;
+            } else {
+              messageInput.value = initialQuery;
+            }
             // Clean URL
             window.history.replaceState({}, document.title, '/chat');
             // Send the message
@@ -3569,6 +4464,13 @@
         var currentYearSpan = document.getElementById('currentYear');
         if (currentYearSpan) {
           currentYearSpan.textContent = new Date().getFullYear();
+        }
+
+        // Focus on welcome input if in welcome state, otherwise focus bottom input
+        if (!mainContent.classList.contains('is-chatting') && welcomeMessageInput) {
+          welcomeMessageInput.focus();
+        } else if (messageInput) {
+          messageInput.focus();
         }
       }
 
@@ -3643,6 +4545,11 @@
             // Hide welcome state
             if (welcomeState) {
               welcomeState.style.display = 'none';
+            }
+
+            // Switch to chat mode - show bottom input
+            if (mainContent) {
+              mainContent.classList.add('is-chatting');
             }
 
             // Mark as not a new conversation since we have history
@@ -4001,12 +4908,25 @@
       }
 
       function sendMessage() {
-        var content = messageInput.value.trim();
+        // Check both inputs - welcome input takes priority if it has content
+        var content = '';
+        if (welcomeMessageInput && welcomeMessageInput.value.trim()) {
+          content = welcomeMessageInput.value.trim();
+          welcomeMessageInput.value = '';
+        } else {
+          content = messageInput.value.trim();
+          messageInput.value = '';
+        }
+
         if (!content || isProcessing) return;
 
         isProcessing = true;
-        messageInput.value = '';
         autoResizeTextarea();
+
+        // Switch to chat mode - show bottom input, hide welcome input
+        if (mainContent) {
+          mainContent.classList.add('is-chatting');
+        }
 
         // Show processing state on submit button
         if (voiceButton) {
@@ -4016,6 +4936,15 @@
         // Hide welcome state
         if (welcomeState && welcomeState.parentNode) {
           welcomeState.style.display = 'none';
+        }
+
+        // Focus the bottom input for subsequent messages
+        if (messageInput) {
+          // Use setTimeout to ensure the input is visible after CSS changes
+          setTimeout(function() {
+            messageInput.focus();
+            autoResizeTextarea();
+          }, 50);
         }
 
         // Add user message
@@ -4190,6 +5119,10 @@
           if (voiceButton) {
             voiceButton.classList.remove('is-processing');
           }
+          // Focus the input for the next message
+          if (messageInput) {
+            messageInput.focus();
+          }
         });
       }
 
@@ -4209,7 +5142,8 @@
 
       function autoResizeTextarea() {
         messageInput.style.height = 'auto';
-        messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+        var newHeight = Math.max(22, Math.min(messageInput.scrollHeight, 120));
+        messageInput.style.height = newHeight + 'px';
       }
 
       function startNewChat() {
@@ -4229,17 +5163,86 @@
         // Fetch fresh system prompt for the selected model
         fetchSystemPrompt(selectedModel);
 
-        // Re-add welcome state
+        // Switch back to welcome mode - hide bottom input, show welcome input
+        if (mainContent) {
+          mainContent.classList.remove('is-chatting');
+        }
+
+        // Re-add welcome state with input wrapper
         var newWelcome = document.createElement('div');
         newWelcome.className = 'welcome-state';
         newWelcome.id = 'welcomeState';
         newWelcome.innerHTML =
           '<img src="jubilee-profile.png" alt="Jubilee" class="welcome-avatar">' +
-          '<div class="welcome-title">Jubilee<span class="inspire">Inspire</span><span class="dotcom">.com</span></div>';
+          '<div class="welcome-title">Jubilee<span class="inspire">Inspire</span><span class="dotcom">.com</span></div>' +
+          '<div class="welcome-input-wrapper" id="welcomeInputWrapper">' +
+            '<div class="search-box">' +
+              '<textarea class="search-input" id="welcomeMessageInput" placeholder="Ask Jubilee Anything..." autocomplete="off" rows="1"></textarea>' +
+              '<div class="search-actions">' +
+                '<div class="action-icon" id="welcomeAttachIcon" title="Attach File">' +
+                  '<svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>' +
+                '</div>' +
+                '<div class="action-icon" id="welcomePrivacyIcon" title="Privacy Mode">' +
+                  '<svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>' +
+                '</div>' +
+                '<button class="voice-button" id="welcomeVoiceButton" title="Send Message">' +
+                  '<svg class="play-icon" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round">' +
+                    '<line x1="4" y1="12" x2="4" y2="12"/>' +
+                    '<line x1="8" y1="8" x2="8" y2="16"/>' +
+                    '<line x1="12" y1="5" x2="12" y2="19"/>' +
+                    '<line x1="16" y1="8" x2="16" y2="16"/>' +
+                    '<line x1="20" y1="12" x2="20" y2="12"/>' +
+                  '</svg>' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+            '<div class="search-copyright">' +
+              'Copyright &copy; ' + new Date().getFullYear() + ' JubileeInspire.com | All Rights Reserved. JubileeVerse and AI can make mistakes. | ' +
+              '<a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Use</a>' +
+            '</div>' +
+          '</div>';
         messagesWrapper.appendChild(newWelcome);
         welcomeState = newWelcome;
 
-        messageInput.focus();
+        // Re-bind welcome input elements
+        welcomeMessageInput = document.getElementById('welcomeMessageInput');
+        welcomeVoiceButton = document.getElementById('welcomeVoiceButton');
+        welcomeAttachIcon = document.getElementById('welcomeAttachIcon');
+        welcomePrivacyIcon = document.getElementById('welcomePrivacyIcon');
+        welcomeInputWrapper = document.getElementById('welcomeInputWrapper');
+
+        // Re-add event listeners for welcome input
+        if (welcomeMessageInput) {
+          welcomeMessageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              sendMessage();
+            }
+          });
+
+          welcomeMessageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+          });
+
+          welcomeMessageInput.focus();
+        }
+
+        if (welcomeVoiceButton) {
+          welcomeVoiceButton.addEventListener('click', sendMessage);
+        }
+
+        if (welcomeAttachIcon) {
+          welcomeAttachIcon.addEventListener('click', function() {
+            console.log('Welcome attach file clicked');
+          });
+        }
+
+        if (welcomePrivacyIcon) {
+          welcomePrivacyIcon.addEventListener('click', function() {
+            openPinModal();
+          });
+        }
       }
 
       // Event Listeners
@@ -4270,6 +5273,37 @@
       // Privacy icon click - show PIN modal
       if (privacyIcon) {
         privacyIcon.addEventListener('click', function() {
+          openPinModal();
+        });
+      }
+
+      // Welcome input event listeners
+      if (welcomeMessageInput) {
+        welcomeMessageInput.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+          }
+        });
+
+        welcomeMessageInput.addEventListener('input', function() {
+          this.style.height = 'auto';
+          this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+      }
+
+      if (welcomeVoiceButton) {
+        welcomeVoiceButton.addEventListener('click', sendMessage);
+      }
+
+      if (welcomeAttachIcon) {
+        welcomeAttachIcon.addEventListener('click', function() {
+          console.log('Welcome attach file clicked');
+        });
+      }
+
+      if (welcomePrivacyIcon) {
+        welcomePrivacyIcon.addEventListener('click', function() {
           openPinModal();
         });
       }
@@ -4416,6 +5450,75 @@
         });
       }
 
+      // Voice Play button handler
+      var settingVoicePlay = document.getElementById('settingVoicePlay');
+      var voicePlayOriginalHTML = settingVoicePlay ? settingVoicePlay.innerHTML : '';
+      var voicePlayStopHTML = '<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" fill="currentColor"/></svg><span>Stop</span>';
+
+      if (settingVoicePlay) {
+        settingVoicePlay.addEventListener('click', function(e) {
+          e.stopPropagation();
+
+          // If currently playing, stop it
+          if (settingVoicePlay.classList.contains('is-playing')) {
+            window.speechSynthesis.cancel();
+            settingVoicePlay.innerHTML = voicePlayOriginalHTML;
+            settingVoicePlay.classList.remove('is-playing');
+            return;
+          }
+
+          // Stop any other speech first
+          stopSpeechAndResetButton();
+
+          // Get user name from auth
+          var userName = 'friend';
+          var authData = localStorage.getItem('jubileeInspireAuth');
+          if (authData) {
+            try {
+              var parsed = JSON.parse(authData);
+              if (parsed.user && parsed.user.name) {
+                userName = parsed.user.name.split(' ')[0]; // First name only
+              } else if (parsed.user && parsed.user.displayName) {
+                userName = parsed.user.displayName.split(' ')[0];
+              } else if (parsed.user && parsed.user.email) {
+                userName = parsed.user.email.split('@')[0];
+              }
+            } catch (e) {}
+          }
+
+          var greetingText = "Hello, " + userName + "! It's wonderful to connect with you. How can I assist you today as we explore the Word of God together?";
+
+          if ('speechSynthesis' in window) {
+            var utterance = new SpeechSynthesisUtterance(greetingText);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+
+            // Use female voice
+            var femaleVoice = getFemaleVoice();
+            if (femaleVoice) {
+              utterance.voice = femaleVoice;
+            }
+
+            // Change to stop icon
+            settingVoicePlay.innerHTML = voicePlayStopHTML;
+            settingVoicePlay.classList.add('is-playing');
+
+            // Reset when done
+            utterance.onend = function() {
+              settingVoicePlay.innerHTML = voicePlayOriginalHTML;
+              settingVoicePlay.classList.remove('is-playing');
+            };
+
+            utterance.onerror = function() {
+              settingVoicePlay.innerHTML = voicePlayOriginalHTML;
+              settingVoicePlay.classList.remove('is-playing');
+            };
+
+            window.speechSynthesis.speak(utterance);
+          }
+        });
+      }
+
       // Language selector handler
       var langSelect = document.getElementById('settingLanguage');
       if (langSelect) {
@@ -4449,14 +5552,8 @@
       if (settingDeleteChats) {
         settingDeleteChats.addEventListener('click', function() {
           if (confirm('Are you sure you want to delete all your chat history? This cannot be undone.')) {
-            localStorage.removeItem(CONVERSATION_CACHE_KEY);
-            if (messagesWrapper) {
-              messagesWrapper.innerHTML = '';
-              messagesWrapper.appendChild(welcomeState);
-            }
-            if (welcomeState) {
-              welcomeState.style.display = 'flex';
-            }
+            // Use startNewChat which handles all the state properly
+            startNewChat();
             closeSettingsModal();
           }
         });
@@ -4733,12 +5830,56 @@
             break;
 
           case 'speak':
+            // Stop event propagation to prevent document click handler from interfering
+            // (innerHTML change detaches original target, causing closest() to fail)
+            e.stopPropagation();
+
             if (content && 'speechSynthesis' in window) {
-              // Stop any current speech
-              window.speechSynthesis.cancel();
+              // If this button is currently speaking, stop it
+              if (currentSpeakingButton === btn) {
+                stopSpeechAndResetButton();
+                break;
+              }
+
+              // Stop any current speech from another button
+              stopSpeechAndResetButton();
+
+              // Change icon to stop
+              btn.innerHTML = stopIconSVG;
+              btn.dataset.tooltip = 'Stop';
+              btn.classList.add('is-speaking');
+              currentSpeakingButton = btn;
+
               var utterance = new SpeechSynthesisUtterance(content);
               utterance.rate = 1.0;
               utterance.pitch = 1.0;
+
+              // Select a female voice
+              var femaleVoice = getFemaleVoice();
+              if (femaleVoice) {
+                utterance.voice = femaleVoice;
+              }
+
+              // Reset button when speech ends
+              utterance.onend = function() {
+                if (currentSpeakingButton === btn) {
+                  btn.innerHTML = speakerIconSVG;
+                  btn.dataset.tooltip = 'Read aloud';
+                  btn.classList.remove('is-speaking');
+                  currentSpeakingButton = null;
+                }
+              };
+
+              // Also handle errors
+              utterance.onerror = function() {
+                if (currentSpeakingButton === btn) {
+                  btn.innerHTML = speakerIconSVG;
+                  btn.dataset.tooltip = 'Read aloud';
+                  btn.classList.remove('is-speaking');
+                  currentSpeakingButton = null;
+                }
+              };
+
               window.speechSynthesis.speak(utterance);
             }
             break;
@@ -4782,6 +5923,571 @@
               }
             }
             break;
+        }
+      });
+
+      // ==================== PARENTAL CONTROLS ====================
+      var PARENTAL_CACHE_KEY = 'jubileeInspireParental';
+
+      // DOM elements for parental controls
+      var parentalNotLinked = document.getElementById('parentalNotLinked');
+      var parentalLinkedParent = document.getElementById('parentalLinkedParent');
+      var parentalLinkedTeen = document.getElementById('parentalLinkedTeen');
+      var parentalInviteEmail = document.getElementById('parentalInviteEmail');
+      var parentalSendInvite = document.getElementById('parentalSendInvite');
+      var parentalAcceptInvite = document.getElementById('parentalAcceptInvite');
+      var parentalUnlinkBtn = document.getElementById('parentalUnlinkBtn');
+      var parentalTeenUnlink = document.getElementById('parentalTeenUnlink');
+      var parentalQuietHoursToggle = document.getElementById('parentalQuietHoursToggle');
+      var parentalQuietHoursConfig = document.getElementById('parentalQuietHoursConfig');
+
+      // Initialize parental controls state
+      function initParentalControls() {
+        var parentalData = localStorage.getItem(PARENTAL_CACHE_KEY);
+        if (parentalData) {
+          try {
+            var data = JSON.parse(parentalData);
+            if (data.linked) {
+              if (data.role === 'parent') {
+                showParentView(data);
+              } else if (data.role === 'teen') {
+                showTeenView(data);
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to parse parental controls data:', e);
+          }
+        }
+      }
+
+      function showParentView(data) {
+        if (parentalNotLinked) parentalNotLinked.style.display = 'none';
+        if (parentalLinkedParent) parentalLinkedParent.style.display = 'block';
+        if (parentalLinkedTeen) parentalLinkedTeen.style.display = 'none';
+
+        // Update linked teen info
+        var teenName = document.getElementById('parentalLinkedTeenName');
+        var teenEmail = document.getElementById('parentalLinkedTeenEmail');
+        if (teenName && data.linkedUser) teenName.textContent = data.linkedUser.name || "Teen's Account";
+        if (teenEmail && data.linkedUser) teenEmail.textContent = data.linkedUser.email || '';
+
+        // Restore toggle states
+        restoreParentalToggles(data.settings || {});
+      }
+
+      function showTeenView(data) {
+        if (parentalNotLinked) parentalNotLinked.style.display = 'none';
+        if (parentalLinkedParent) parentalLinkedParent.style.display = 'none';
+        if (parentalLinkedTeen) parentalLinkedTeen.style.display = 'block';
+
+        // Update parent info
+        var parentEmail = document.getElementById('parentalLinkedParentEmail');
+        if (parentEmail && data.linkedUser) {
+          parentEmail.textContent = 'Managed by: ' + (data.linkedUser.email || 'Parent/Guardian');
+        }
+
+        // Update restriction status
+        updateTeenRestrictions(data.settings || {});
+      }
+
+      function restoreParentalToggles(settings) {
+        var toggleMappings = {
+          'parentalReduceSensitive': settings.reduceSensitive !== false,
+          'parentalModelTraining': settings.modelTraining === true,
+          'parentalMemory': settings.memory !== false,
+          'parentalVoiceMode': settings.voiceMode !== false,
+          'parentalImageGen': settings.imageGen !== false,
+          'parentalQuietHoursToggle': settings.quietHoursEnabled === true,
+          'parentalSafetyAlerts': settings.safetyAlerts !== false
+        };
+
+        Object.keys(toggleMappings).forEach(function(id) {
+          var toggle = document.getElementById(id);
+          if (toggle) {
+            if (toggleMappings[id]) {
+              toggle.classList.add('active');
+            } else {
+              toggle.classList.remove('active');
+            }
+          }
+        });
+
+        // Show/hide quiet hours config
+        if (parentalQuietHoursConfig && settings.quietHoursEnabled) {
+          parentalQuietHoursConfig.style.display = 'flex';
+          var startTime = document.getElementById('parentalQuietStart');
+          var endTime = document.getElementById('parentalQuietEnd');
+          if (startTime && settings.quietStart) startTime.value = settings.quietStart;
+          if (endTime && settings.quietEnd) endTime.value = settings.quietEnd;
+        }
+
+        // Notification method
+        var notifMethod = document.getElementById('parentalNotifMethod');
+        if (notifMethod && settings.notifMethod) {
+          notifMethod.value = settings.notifMethod;
+        }
+      }
+
+      function updateTeenRestrictions(settings) {
+        var reduceSensitiveStatus = document.getElementById('teenReduceSensitiveStatus');
+        if (reduceSensitiveStatus) {
+          reduceSensitiveStatus.textContent = settings.reduceSensitive !== false ? 'Enabled' : 'Disabled';
+          reduceSensitiveStatus.style.color = settings.reduceSensitive !== false ? 'var(--primary)' : 'var(--text-secondary)';
+        }
+
+        var quietHoursDesc = document.getElementById('teenQuietHoursDesc');
+        var quietHoursStatus = document.getElementById('teenQuietHoursStatus');
+        if (settings.quietHoursEnabled && settings.quietStart && settings.quietEnd) {
+          if (quietHoursDesc) quietHoursDesc.textContent = 'Active from ' + settings.quietStart + ' to ' + settings.quietEnd;
+          if (quietHoursStatus) {
+            quietHoursStatus.textContent = 'Active';
+            quietHoursStatus.style.color = '#f87171';
+          }
+        } else {
+          if (quietHoursDesc) quietHoursDesc.textContent = 'No quiet hours set.';
+          if (quietHoursStatus) {
+            quietHoursStatus.textContent = 'Not active';
+            quietHoursStatus.style.color = 'var(--text-secondary)';
+          }
+        }
+      }
+
+      function saveParentalSettings() {
+        var parentalData = localStorage.getItem(PARENTAL_CACHE_KEY);
+        if (!parentalData) return;
+
+        try {
+          var data = JSON.parse(parentalData);
+          if (data.role !== 'parent') return;
+
+          data.settings = {
+            reduceSensitive: document.getElementById('parentalReduceSensitive')?.classList.contains('active'),
+            modelTraining: document.getElementById('parentalModelTraining')?.classList.contains('active'),
+            memory: document.getElementById('parentalMemory')?.classList.contains('active'),
+            voiceMode: document.getElementById('parentalVoiceMode')?.classList.contains('active'),
+            imageGen: document.getElementById('parentalImageGen')?.classList.contains('active'),
+            quietHoursEnabled: document.getElementById('parentalQuietHoursToggle')?.classList.contains('active'),
+            quietStart: document.getElementById('parentalQuietStart')?.value || '22:00',
+            quietEnd: document.getElementById('parentalQuietEnd')?.value || '07:00',
+            safetyAlerts: document.getElementById('parentalSafetyAlerts')?.classList.contains('active'),
+            notifMethod: document.getElementById('parentalNotifMethod')?.value || 'email'
+          };
+
+          localStorage.setItem(PARENTAL_CACHE_KEY, JSON.stringify(data));
+        } catch (e) {
+          console.warn('Failed to save parental settings:', e);
+        }
+      }
+
+      // Send invite handler
+      if (parentalSendInvite) {
+        parentalSendInvite.addEventListener('click', function() {
+          var email = parentalInviteEmail ? parentalInviteEmail.value.trim() : '';
+          if (!email || !email.includes('@')) {
+            alert('Please enter a valid email address.');
+            return;
+          }
+
+          // Simulate sending invite (in real implementation, this would call an API)
+          parentalSendInvite.disabled = true;
+          parentalSendInvite.innerHTML = '<svg class="loading-spinner" viewBox="0 0 24 24" style="width: 16px; height: 16px; animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-dashoffset="10"/></svg> Sending...';
+
+          setTimeout(function() {
+            // Simulate successful invite
+            alert('Invitation sent to ' + email + '! They will receive an email with instructions to link their account.');
+            parentalSendInvite.disabled = false;
+            parentalSendInvite.innerHTML = '<svg viewBox="0 0 24 24" style="width: 16px; height: 16px;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg> Send Invite';
+            parentalInviteEmail.value = '';
+          }, 1500);
+        });
+      }
+
+      // Accept invite handler
+      if (parentalAcceptInvite) {
+        parentalAcceptInvite.addEventListener('click', function() {
+          // Simulate checking for pending invites
+          parentalAcceptInvite.disabled = true;
+          parentalAcceptInvite.innerHTML = '<svg class="loading-spinner" viewBox="0 0 24 24" style="width: 16px; height: 16px; animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4" stroke-dashoffset="10"/></svg> Checking...';
+
+          setTimeout(function() {
+            // For demo purposes, simulate no pending invites
+            alert('No pending invitations found. Ask your parent or guardian to send you an invite.');
+            parentalAcceptInvite.disabled = false;
+            parentalAcceptInvite.innerHTML = '<svg viewBox="0 0 24 24" style="width: 16px; height: 16px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Check for Pending Invites';
+          }, 1500);
+        });
+      }
+
+      // Unlink handler (parent)
+      if (parentalUnlinkBtn) {
+        parentalUnlinkBtn.addEventListener('click', function() {
+          if (confirm('Are you sure you want to unlink this account? Parental controls will be removed from the teen\'s account.')) {
+            localStorage.removeItem(PARENTAL_CACHE_KEY);
+            if (parentalNotLinked) parentalNotLinked.style.display = 'block';
+            if (parentalLinkedParent) parentalLinkedParent.style.display = 'none';
+            alert('Account unlinked successfully.');
+          }
+        });
+      }
+
+      // Unlink handler (teen)
+      if (parentalTeenUnlink) {
+        parentalTeenUnlink.addEventListener('click', function() {
+          if (confirm('Are you sure you want to unlink from parental controls? Your parent/guardian will be notified.')) {
+            localStorage.removeItem(PARENTAL_CACHE_KEY);
+            if (parentalNotLinked) parentalNotLinked.style.display = 'block';
+            if (parentalLinkedTeen) parentalLinkedTeen.style.display = 'none';
+            alert('Account unlinked. Your parent/guardian has been notified.');
+          }
+        });
+      }
+
+      // Quiet hours toggle handler
+      if (parentalQuietHoursToggle) {
+        parentalQuietHoursToggle.addEventListener('click', function() {
+          var isActive = parentalQuietHoursToggle.classList.contains('active');
+          if (parentalQuietHoursConfig) {
+            parentalQuietHoursConfig.style.display = isActive ? 'none' : 'flex';
+          }
+        });
+      }
+
+      // Save settings when parental toggles change
+      document.querySelectorAll('#parentalLinkedParent .settings-toggle').forEach(function(toggle) {
+        toggle.addEventListener('click', function() {
+          setTimeout(saveParentalSettings, 100);
+        });
+      });
+
+      // Save settings when dropdowns/inputs change
+      var parentalNotifMethod = document.getElementById('parentalNotifMethod');
+      var parentalQuietStart = document.getElementById('parentalQuietStart');
+      var parentalQuietEnd = document.getElementById('parentalQuietEnd');
+
+      if (parentalNotifMethod) {
+        parentalNotifMethod.addEventListener('change', saveParentalSettings);
+      }
+      if (parentalQuietStart) {
+        parentalQuietStart.addEventListener('change', saveParentalSettings);
+      }
+      if (parentalQuietEnd) {
+        parentalQuietEnd.addEventListener('change', saveParentalSettings);
+      }
+
+      // Initialize parental controls on page load
+      initParentalControls();
+
+      // ==================== PASSWORD CHANGE FUNCTIONALITY ====================
+      var passwordModalOverlay = document.getElementById('passwordModalOverlay');
+      var passwordModalClose = document.getElementById('passwordModalClose');
+      var passwordCancelBtn = document.getElementById('passwordCancelBtn');
+      var passwordSubmitBtn = document.getElementById('passwordSubmitBtn');
+      var currentPasswordInput = document.getElementById('currentPassword');
+      var newPasswordInput = document.getElementById('newPassword');
+      var confirmPasswordInput = document.getElementById('confirmPassword');
+      var passwordError = document.getElementById('passwordError');
+      var passwordSuccess = document.getElementById('passwordSuccess');
+      var passwordMatchStatus = document.getElementById('passwordMatchStatus');
+      var settingChangePassword = document.getElementById('settingChangePassword');
+
+      // Password requirements elements
+      var reqLength = document.getElementById('reqLength');
+      var reqUppercase = document.getElementById('reqUppercase');
+      var reqLowercase = document.getElementById('reqLowercase');
+      var reqNumber = document.getElementById('reqNumber');
+      var reqSpecial = document.getElementById('reqSpecial');
+      var passwordLastChangedEl = document.getElementById('passwordLastChanged');
+
+      // Initialize password last changed from localStorage
+      function initPasswordLastChanged() {
+        var lastChanged = localStorage.getItem('jubileePasswordLastChanged');
+        if (lastChanged && passwordLastChangedEl) {
+          var date = new Date(lastChanged);
+          var dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+          passwordLastChangedEl.textContent = 'Last changed: ' + dateStr;
+        }
+      }
+      initPasswordLastChanged();
+
+      // Open password modal
+      if (settingChangePassword) {
+        settingChangePassword.addEventListener('click', function() {
+          openPasswordModal();
+        });
+      }
+
+      function openPasswordModal() {
+        if (passwordModalOverlay) {
+          passwordModalOverlay.classList.add('open');
+          resetPasswordForm();
+          if (currentPasswordInput) {
+            setTimeout(function() {
+              currentPasswordInput.focus();
+            }, 100);
+          }
+        }
+      }
+
+      function closePasswordModal() {
+        if (passwordModalOverlay) {
+          passwordModalOverlay.classList.remove('open');
+          resetPasswordForm();
+        }
+      }
+
+      function resetPasswordForm() {
+        if (currentPasswordInput) currentPasswordInput.value = '';
+        if (newPasswordInput) newPasswordInput.value = '';
+        if (confirmPasswordInput) confirmPasswordInput.value = '';
+        if (passwordError) {
+          passwordError.textContent = '';
+          passwordError.classList.remove('show');
+        }
+        if (passwordSuccess) {
+          passwordSuccess.textContent = '';
+          passwordSuccess.classList.remove('show');
+        }
+        if (passwordMatchStatus) {
+          passwordMatchStatus.textContent = '';
+          passwordMatchStatus.className = 'password-match-status';
+        }
+        if (passwordSubmitBtn) passwordSubmitBtn.disabled = true;
+        resetRequirements();
+        // Reset all password visibility
+        document.querySelectorAll('.password-toggle').forEach(function(btn) {
+          var targetId = btn.getAttribute('data-target');
+          var input = document.getElementById(targetId);
+          if (input) input.type = 'password';
+          btn.querySelector('.eye-icon').style.display = 'block';
+          btn.querySelector('.eye-off-icon').style.display = 'none';
+        });
+      }
+
+      function resetRequirements() {
+        [reqLength, reqUppercase, reqLowercase, reqNumber, reqSpecial].forEach(function(req) {
+          if (req) {
+            req.classList.remove('met');
+            req.querySelector('.req-icon').textContent = '○';
+          }
+        });
+      }
+
+      // Close modal handlers
+      if (passwordModalClose) {
+        passwordModalClose.addEventListener('click', closePasswordModal);
+      }
+      if (passwordCancelBtn) {
+        passwordCancelBtn.addEventListener('click', closePasswordModal);
+      }
+      if (passwordModalOverlay) {
+        passwordModalOverlay.addEventListener('click', function(e) {
+          if (e.target === passwordModalOverlay) {
+            closePasswordModal();
+          }
+        });
+      }
+
+      // Password visibility toggle
+      document.querySelectorAll('.password-toggle').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var targetId = btn.getAttribute('data-target');
+          var input = document.getElementById(targetId);
+          var eyeIcon = btn.querySelector('.eye-icon');
+          var eyeOffIcon = btn.querySelector('.eye-off-icon');
+
+          if (input && eyeIcon && eyeOffIcon) {
+            if (input.type === 'password') {
+              input.type = 'text';
+              eyeIcon.style.display = 'none';
+              eyeOffIcon.style.display = 'block';
+            } else {
+              input.type = 'password';
+              eyeIcon.style.display = 'block';
+              eyeOffIcon.style.display = 'none';
+            }
+          }
+        });
+      });
+
+      // Password validation
+      function validatePassword(password) {
+        var requirements = {
+          length: password.length >= 8,
+          uppercase: /[A-Z]/.test(password),
+          lowercase: /[a-z]/.test(password),
+          number: /[0-9]/.test(password),
+          special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+        };
+
+        // Update requirement indicators
+        updateRequirement(reqLength, requirements.length);
+        updateRequirement(reqUppercase, requirements.uppercase);
+        updateRequirement(reqLowercase, requirements.lowercase);
+        updateRequirement(reqNumber, requirements.number);
+        updateRequirement(reqSpecial, requirements.special);
+
+        return requirements.length && requirements.uppercase && requirements.lowercase && requirements.number && requirements.special;
+      }
+
+      function updateRequirement(element, met) {
+        if (!element) return;
+        if (met) {
+          element.classList.add('met');
+          element.querySelector('.req-icon').textContent = '✓';
+        } else {
+          element.classList.remove('met');
+          element.querySelector('.req-icon').textContent = '○';
+        }
+      }
+
+      function checkPasswordMatch() {
+        var newPass = newPasswordInput ? newPasswordInput.value : '';
+        var confirmPass = confirmPasswordInput ? confirmPasswordInput.value : '';
+
+        if (!confirmPass) {
+          if (passwordMatchStatus) {
+            passwordMatchStatus.textContent = '';
+            passwordMatchStatus.className = 'password-match-status';
+          }
+          return false;
+        }
+
+        if (newPass === confirmPass) {
+          if (passwordMatchStatus) {
+            passwordMatchStatus.textContent = '✓ Passwords match';
+            passwordMatchStatus.className = 'password-match-status match';
+          }
+          return true;
+        } else {
+          if (passwordMatchStatus) {
+            passwordMatchStatus.textContent = '✗ Passwords do not match';
+            passwordMatchStatus.className = 'password-match-status no-match';
+          }
+          return false;
+        }
+      }
+
+      function validateForm() {
+        var currentPass = currentPasswordInput ? currentPasswordInput.value : '';
+        var newPass = newPasswordInput ? newPasswordInput.value : '';
+        var isValidPassword = validatePassword(newPass);
+        var passwordsMatch = checkPasswordMatch();
+
+        var isValid = currentPass.length > 0 && isValidPassword && passwordsMatch;
+        if (passwordSubmitBtn) {
+          passwordSubmitBtn.disabled = !isValid;
+        }
+        return isValid;
+      }
+
+      // Input event listeners
+      if (currentPasswordInput) {
+        currentPasswordInput.addEventListener('input', validateForm);
+      }
+      if (newPasswordInput) {
+        newPasswordInput.addEventListener('input', validateForm);
+      }
+      if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('input', validateForm);
+      }
+
+      // Submit password change
+      if (passwordSubmitBtn) {
+        passwordSubmitBtn.addEventListener('click', function() {
+          if (!validateForm()) return;
+
+          var currentPass = currentPasswordInput.value;
+          var newPass = newPasswordInput.value;
+
+          // Show loading state
+          passwordSubmitBtn.classList.add('loading');
+          passwordSubmitBtn.disabled = true;
+          if (passwordError) {
+            passwordError.classList.remove('show');
+          }
+          if (passwordSuccess) {
+            passwordSuccess.classList.remove('show');
+          }
+
+          // Get auth token
+          var authData = localStorage.getItem('jubileeInspireAuth');
+          var token = '';
+          if (authData) {
+            try {
+              var auth = JSON.parse(authData);
+              token = auth.token || '';
+            } catch (e) {}
+          }
+
+          // Send password change request to server
+          fetch('/api/user/change-password', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({
+              currentPassword: currentPass,
+              newPassword: newPass
+            })
+          })
+          .then(function(response) {
+            return response.json().then(function(data) {
+              return { ok: response.ok, data: data };
+            });
+          })
+          .then(function(result) {
+            passwordSubmitBtn.classList.remove('loading');
+
+            if (result.ok && result.data.success) {
+              // Success
+              if (passwordSuccess) {
+                passwordSuccess.textContent = 'Password changed successfully!';
+                passwordSuccess.classList.add('show');
+              }
+
+              // Update the "Last changed" text in settings and save to localStorage
+              var now = new Date();
+              var dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+              localStorage.setItem('jubileePasswordLastChanged', now.toISOString());
+              var passwordLastChangedEl = document.getElementById('passwordLastChanged');
+              if (passwordLastChangedEl) {
+                passwordLastChangedEl.textContent = 'Last changed: ' + dateStr;
+              }
+
+              // Close modal after delay
+              setTimeout(function() {
+                closePasswordModal();
+              }, 1500);
+            } else {
+              // Error
+              passwordSubmitBtn.disabled = false;
+              if (passwordError) {
+                passwordError.textContent = result.data.message || 'Failed to change password. Please try again.';
+                passwordError.classList.add('show');
+              }
+            }
+          })
+          .catch(function(err) {
+            console.error('Password change error:', err);
+            passwordSubmitBtn.classList.remove('loading');
+            passwordSubmitBtn.disabled = false;
+            if (passwordError) {
+              passwordError.textContent = 'Connection error. Please check your internet and try again.';
+              passwordError.classList.add('show');
+            }
+          });
+        });
+      }
+
+      // Handle Enter key in password fields
+      [currentPasswordInput, newPasswordInput, confirmPasswordInput].forEach(function(input) {
+        if (input) {
+          input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !passwordSubmitBtn.disabled) {
+              passwordSubmitBtn.click();
+            }
+          });
         }
       });
 
