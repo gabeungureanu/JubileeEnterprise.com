@@ -1,0 +1,1023 @@
+/* ImpossibleHarvest.com - Outlook-style Email Client CSS */
+
+:root {
+    --primary-color: #0078d4;
+    --primary-hover: #106ebe;
+    --primary-dark: #005a9e;
+    --secondary-color: #6c757d;
+    --success-color: #107c10;
+    --danger-color: #d13438;
+    --warning-color: #ffb900;
+
+    --bg-primary: #ffffff;
+    --bg-secondary: #f3f2f1;
+    --bg-tertiary: #edebe9;
+    --bg-hover: #e1dfdd;
+    --bg-selected: #e1dfdd;
+
+    --text-primary: #323130;
+    --text-secondary: #605e5c;
+    --text-tertiary: #8a8886;
+
+    --border-color: #e1dfdd;
+    --border-light: #f3f2f1;
+
+    --header-height: 48px;
+    --sidebar-width: 200px;
+    --email-list-width: 360px;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.2);
+
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+    overflow: hidden;
+    height: 100vh;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* ============== Header Bar ============== */
+.header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--header-height);
+    background: var(--primary-color);
+    color: white;
+    padding: 0 16px;
+    z-index: 100;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.hamburger-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.hamburger-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.logo i {
+    font-size: 20px;
+}
+
+.header-center {
+    flex: 1;
+    max-width: 500px;
+    margin: 0 24px;
+}
+
+.search-container {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    padding: 0 12px;
+    transition: var(--transition-fast);
+}
+
+.search-container:focus-within {
+    background: white;
+    box-shadow: var(--shadow-md);
+}
+
+.search-container i {
+    color: var(--text-secondary);
+    margin-right: 8px;
+}
+
+.search-container input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 8px 0;
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+}
+
+.search-container input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: var(--transition-fast);
+}
+
+.header-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background: var(--primary-dark);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* ============== Main Container ============== */
+.main-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ============== Sidebar ============== */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-primary);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: var(--transition-normal);
+}
+
+.sidebar.collapsed {
+    width: 0;
+    border-right: none;
+}
+
+.compose-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 16px;
+    padding: 10px 16px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.compose-btn:hover {
+    background: var(--primary-hover);
+}
+
+.compose-btn i {
+    font-size: 16px;
+}
+
+.folder-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px;
+}
+
+.folder-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    margin-bottom: 2px;
+}
+
+.folder-item:hover {
+    background: var(--bg-hover);
+}
+
+.folder-item.active {
+    background: var(--bg-selected);
+    font-weight: 600;
+}
+
+.folder-item i {
+    font-size: 16px;
+    margin-right: 12px;
+    color: var(--text-secondary);
+}
+
+.folder-item.active i {
+    color: var(--primary-color);
+}
+
+.folder-name {
+    flex: 1;
+    font-size: 14px;
+}
+
+.folder-count {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    background: var(--bg-tertiary);
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.folder-item.active .folder-count {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* ============== Email List Panel ============== */
+.email-list-panel {
+    width: var(--email-list-width);
+    background: var(--bg-primary);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.list-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.toolbar-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 14px;
+    transition: var(--transition-fast);
+}
+
+.toolbar-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.toolbar-btn span {
+    font-size: 13px;
+}
+
+.toolbar-separator {
+    width: 1px;
+    height: 24px;
+    background: var(--border-color);
+    margin: 0 4px;
+}
+
+.email-count {
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.checkbox-container input {
+    display: none;
+}
+
+.checkmark {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--text-tertiary);
+    border-radius: 3px;
+    position: relative;
+    transition: var(--transition-fast);
+}
+
+.checkbox-container:hover .checkmark {
+    border-color: var(--primary-color);
+}
+
+.checkbox-container input:checked + .checkmark {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.checkbox-container input:checked + .checkmark::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.filter-dropdown {
+    display: none;
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    gap: 8px;
+}
+
+.filter-dropdown.show {
+    display: flex;
+}
+
+.filter-option {
+    padding: 4px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.filter-option:hover {
+    background: var(--bg-hover);
+}
+
+.filter-option.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.email-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.email-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    position: relative;
+}
+
+.email-item:hover {
+    background: var(--bg-hover);
+}
+
+.email-item.selected {
+    background: var(--bg-selected);
+}
+
+.email-item.unread {
+    background: #f0f7ff;
+}
+
+.email-item.unread:hover {
+    background: #e5f0fc;
+}
+
+.email-item.unread .email-sender,
+.email-item.unread .email-subject {
+    font-weight: 600;
+}
+
+.email-item-checkbox {
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.email-item-content {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.email-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.email-sender {
+    font-size: 14px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.email-date {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.email-subject {
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+}
+
+.email-preview {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.email-item-actions {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none;
+    gap: 4px;
+}
+
+.email-item:hover .email-item-actions {
+    display: flex;
+}
+
+.email-action-btn {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: var(--transition-fast);
+}
+
+.email-action-btn:hover {
+    background: var(--bg-hover);
+    color: var(--primary-color);
+}
+
+.email-indicators {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.indicator {
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+
+.indicator.starred {
+    color: var(--warning-color);
+}
+
+.indicator.important {
+    color: var(--danger-color);
+}
+
+/* ============== Reading Pane ============== */
+.reading-pane {
+    flex: 1;
+    background: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.reading-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-tertiary);
+}
+
+.reading-placeholder i {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.reading-placeholder p {
+    font-size: 16px;
+}
+
+.email-view-toolbar {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    gap: 4px;
+}
+
+.email-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+.email-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.email-header .email-subject {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    white-space: normal;
+    overflow: visible;
+}
+
+.email-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.sender-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sender-avatar {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.sender-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.sender-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.sender-email {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.email-header .email-date {
+    font-size: 13px;
+}
+
+.email-recipients {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.recipient-label {
+    font-weight: 600;
+}
+
+.email-body {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.email-body p {
+    margin-bottom: 1em;
+}
+
+.email-body ul, .email-body ol {
+    margin-left: 24px;
+    margin-bottom: 1em;
+}
+
+/* ============== Compose Modal ============== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 24px;
+    z-index: 1000;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.compose-window {
+    width: 600px;
+    max-height: 80vh;
+    background: var(--bg-primary);
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.compose-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--primary-color);
+    color: white;
+    font-weight: 600;
+}
+
+.compose-header-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.compose-action-btn {
+    background: none;
+    border: none;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.compose-action-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.compose-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.compose-field {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.compose-field label {
+    width: 60px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.compose-field input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.compose-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.compose-toolbar {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border-light);
+    gap: 4px;
+}
+
+.format-btn {
+    background: none;
+    border: none;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 14px;
+    transition: var(--transition-fast);
+}
+
+.format-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.toolbar-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-color);
+    margin: 0 4px;
+}
+
+.compose-editor {
+    flex: 1;
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+    outline: none;
+    overflow-y: auto;
+    min-height: 200px;
+}
+
+.compose-editor:empty::before {
+    content: attr(placeholder);
+    color: var(--text-tertiary);
+}
+
+.compose-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+.compose-actions-left,
+.compose-actions-right {
+    display: flex;
+    gap: 8px;
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    border: none;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+.btn-secondary {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-hover);
+}
+
+.btn-icon {
+    background: none;
+    padding: 8px;
+    color: var(--text-secondary);
+}
+
+.btn-icon:hover {
+    background: var(--bg-hover);
+    color: var(--danger-color);
+}
+
+/* ============== Toast Notifications ============== */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.toast {
+    background: var(--text-primary);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideUp 0.3s ease;
+}
+
+.toast.success {
+    background: var(--success-color);
+}
+
+.toast.error {
+    background: var(--danger-color);
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============== Responsive ============== */
+@media (max-width: 1024px) {
+    .reading-pane {
+        display: none;
+    }
+
+    .reading-pane.active {
+        display: flex;
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 50;
+    }
+
+    .email-list-panel {
+        flex: 1;
+        width: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .hamburger-btn {
+        display: block;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        bottom: 0;
+        z-index: 60;
+        transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .header-center {
+        display: none;
+    }
+
+    .compose-window {
+        width: 100%;
+        max-height: 100%;
+        border-radius: 0;
+    }
+
+    .modal-overlay {
+        padding: 0;
+    }
+}
+
+/* ============== Scrollbar Styles ============== */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-tertiary);
+}
+
+/* ============== Empty State ============== */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    color: var(--text-tertiary);
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+}
+
+.empty-state p {
+    font-size: 14px;
+}

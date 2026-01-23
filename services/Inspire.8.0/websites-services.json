@@ -391,6 +391,15 @@
       "port": 3138,
       "workers": 1,
       "enabled": true
+    },
+    {
+      "name": "impossibleharvest",
+      "description": "ImpossibleHarvest.com - Enterprise Email Client",
+      "script": "server.js",
+      "cwd": "/mnt/c/data/JubileeEnterprise.com Bibleweb/websites/codex/ImpossibleHarvest.com",
+      "port": 3139,
+      "workers": 2,
+      "enabled": true
     }
   ]
 }

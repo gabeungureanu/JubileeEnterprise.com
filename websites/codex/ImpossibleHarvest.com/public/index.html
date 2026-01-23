@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impossible Harvest - Email</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Top Header Bar -->
+        <header class="header-bar">
+            <div class="header-left">
+                <button class="hamburger-btn" id="toggleSidebar">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="logo">
+                    <i class="bi bi-envelope-fill"></i>
+                    <span>Impossible Harvest</span>
+                </div>
+            </div>
+            <div class="header-center">
+                <div class="search-container">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="globalSearch" placeholder="Search mail">
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="header-btn" title="Settings">
+                    <i class="bi bi-gear"></i>
+                </button>
+                <button class="header-btn" title="Help">
+                    <i class="bi bi-question-circle"></i>
+                </button>
+                <div class="user-avatar">
+                    <span>U</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="main-container">
+            <!-- Left Sidebar - Folders -->
+            <aside class="sidebar" id="sidebar">
+                <button class="compose-btn" id="composeBtn">
+                    <i class="bi bi-pencil-square"></i>
+                    <span>New mail</span>
+                </button>
+                <nav class="folder-list" id="folderList">
+                    <!-- Folders will be rendered here -->
+                </nav>
+            </aside>
+
+            <!-- Email List Panel -->
+            <section class="email-list-panel" id="emailListPanel">
+                <!-- Toolbar -->
+                <div class="list-toolbar">
+                    <div class="toolbar-left">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="selectAll">
+                            <span class="checkmark"></span>
+                        </label>
+                        <div class="toolbar-actions" id="bulkActions" style="display: none;">
+                            <button class="toolbar-btn" data-action="read" title="Mark as read">
+                                <i class="bi bi-envelope-open"></i>
+                            </button>
+                            <button class="toolbar-btn" data-action="unread" title="Mark as unread">
+                                <i class="bi bi-envelope"></i>
+                            </button>
+                            <button class="toolbar-btn" data-action="delete" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            <button class="toolbar-btn" data-action="archive" title="Archive">
+                                <i class="bi bi-archive"></i>
+                            </button>
+                            <button class="toolbar-btn" data-action="spam" title="Mark as spam">
+                                <i class="bi bi-slash-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="toolbar-right">
+                        <span class="email-count" id="emailCount">0 messages</span>
+                        <button class="toolbar-btn" id="filterBtn" title="Filter">
+                            <i class="bi bi-funnel"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Dropdown -->
+                <div class="filter-dropdown" id="filterDropdown">
+                    <button class="filter-option active" data-filter="all">All</button>
+                    <button class="filter-option" data-filter="unread">Unread</button>
+                    <button class="filter-option" data-filter="starred">Starred</button>
+                    <button class="filter-option" data-filter="attachments">Has attachments</button>
+                </div>
+
+                <!-- Email List -->
+                <div class="email-list" id="emailList">
+                    <!-- Emails will be rendered here -->
+                </div>
+            </section>
+
+            <!-- Reading Pane -->
+            <section class="reading-pane" id="readingPane">
+                <div class="reading-placeholder">
+                    <i class="bi bi-envelope-open"></i>
+                    <p>Select an email to read</p>
+                </div>
+                <div class="email-view" id="emailView" style="display: none;">
+                    <div class="email-view-toolbar">
+                        <button class="toolbar-btn" id="replyBtn" title="Reply">
+                            <i class="bi bi-reply"></i>
+                            <span>Reply</span>
+                        </button>
+                        <button class="toolbar-btn" id="replyAllBtn" title="Reply all">
+                            <i class="bi bi-reply-all"></i>
+                            <span>Reply all</span>
+                        </button>
+                        <button class="toolbar-btn" id="forwardBtn" title="Forward">
+                            <i class="bi bi-forward"></i>
+                            <span>Forward</span>
+                        </button>
+                        <div class="toolbar-separator"></div>
+                        <button class="toolbar-btn" id="deleteEmailBtn" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <button class="toolbar-btn" id="archiveEmailBtn" title="Archive">
+                            <i class="bi bi-archive"></i>
+                        </button>
+                        <button class="toolbar-btn" id="spamEmailBtn" title="Mark as spam">
+                            <i class="bi bi-slash-circle"></i>
+                        </button>
+                        <button class="toolbar-btn" id="moreActionsBtn" title="More actions">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                    </div>
+                    <div class="email-content">
+                        <div class="email-header">
+                            <h2 class="email-subject" id="viewSubject"></h2>
+                            <div class="email-meta">
+                                <div class="sender-info">
+                                    <div class="sender-avatar" id="senderAvatar">J</div>
+                                    <div class="sender-details">
+                                        <span class="sender-name" id="viewSenderName"></span>
+                                        <span class="sender-email" id="viewSenderEmail"></span>
+                                    </div>
+                                </div>
+                                <div class="email-date" id="viewDate"></div>
+                            </div>
+                            <div class="email-recipients">
+                                <span class="recipient-label">To:</span>
+                                <span class="recipient-list" id="viewRecipients"></span>
+                            </div>
+                        </div>
+                        <div class="email-body" id="viewBody"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Compose Modal -->
+        <div class="modal-overlay" id="composeModal">
+            <div class="compose-window">
+                <div class="compose-header">
+                    <span>New Message</span>
+                    <div class="compose-header-actions">
+                        <button class="compose-action-btn" id="minimizeCompose" title="Minimize">
+                            <i class="bi bi-dash"></i>
+                        </button>
+                        <button class="compose-action-btn" id="maximizeCompose" title="Maximize">
+                            <i class="bi bi-square"></i>
+                        </button>
+                        <button class="compose-action-btn" id="closeCompose" title="Close">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="compose-form">
+                    <div class="compose-field">
+                        <label>To</label>
+                        <input type="text" id="composeTo" placeholder="Recipients">
+                    </div>
+                    <div class="compose-field">
+                        <label>Cc</label>
+                        <input type="text" id="composeCc" placeholder="">
+                    </div>
+                    <div class="compose-field">
+                        <label>Subject</label>
+                        <input type="text" id="composeSubject" placeholder="Subject">
+                    </div>
+                    <div class="compose-body">
+                        <div class="compose-toolbar">
+                            <button class="format-btn" data-format="bold" title="Bold">
+                                <i class="bi bi-type-bold"></i>
+                            </button>
+                            <button class="format-btn" data-format="italic" title="Italic">
+                                <i class="bi bi-type-italic"></i>
+                            </button>
+                            <button class="format-btn" data-format="underline" title="Underline">
+                                <i class="bi bi-type-underline"></i>
+                            </button>
+                            <span class="toolbar-divider"></span>
+                            <button class="format-btn" data-format="list-ul" title="Bullet list">
+                                <i class="bi bi-list-ul"></i>
+                            </button>
+                            <button class="format-btn" data-format="list-ol" title="Numbered list">
+                                <i class="bi bi-list-ol"></i>
+                            </button>
+                            <span class="toolbar-divider"></span>
+                            <button class="format-btn" data-format="link" title="Insert link">
+                                <i class="bi bi-link-45deg"></i>
+                            </button>
+                            <button class="format-btn" data-format="image" title="Insert image">
+                                <i class="bi bi-image"></i>
+                            </button>
+                            <button class="format-btn" id="attachBtn" title="Attach file">
+                                <i class="bi bi-paperclip"></i>
+                            </button>
+                        </div>
+                        <div id="composeEditor" contenteditable="true" class="compose-editor" placeholder="Write your message..."></div>
+                    </div>
+                </div>
+                <div class="compose-footer">
+                    <div class="compose-actions-left">
+                        <button class="btn btn-primary" id="sendBtn">
+                            <i class="bi bi-send"></i>
+                            Send
+                        </button>
+                        <button class="btn btn-secondary" id="saveDraftBtn">
+                            <i class="bi bi-file-earmark"></i>
+                            Save draft
+                        </button>
+                    </div>
+                    <div class="compose-actions-right">
+                        <button class="btn btn-icon" id="discardBtn" title="Discard">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
