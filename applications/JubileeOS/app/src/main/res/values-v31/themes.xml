@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Main JubileeOS Theme for Android 12+ -->
+    <style name="Theme.JubileeOS" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:colorPrimary">#00D4FF</item>
+        <item name="android:colorAccent">#FFD700</item>
+        <item name="android:colorBackground">@android:color/black</item>
+
+        <!-- Android 12+ Native Splash Screen - Complete Override -->
+        <item name="android:windowSplashScreenBackground">@android:color/black</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_jubilee_splash</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@android:color/black</item>
+        <item name="android:windowSplashScreenBrandingImage">@null</item>
+    </style>
+
+    <!--
+    CRITICAL: Splash Theme that COMPLETELY replaces Google/Pixel branding
+    Uses android:Theme.Material.NoActionBar as parent (NOT Theme.SplashScreen)
+    This gives us full control over the splash appearance
+    -->
+    <style name="Theme.JubileeOS.Splash" parent="android:Theme.Material.NoActionBar">
+        <!-- Window must be completely black from the first pixel -->
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:colorBackground">@android:color/black</item>
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+        <!-- No title bar or action bar -->
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+
+        <!-- CRITICAL: Android 12+ Splash Screen Configuration -->
+        <!-- These override ANY system defaults including Google/Pixel branding -->
+        <item name="android:windowSplashScreenBackground">@android:color/black</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_jubilee_splash</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@android:color/black</item>
+
+        <!-- DISABLE ALL BRANDING - No "Pixel is starting", no Google logo -->
+        <item name="android:windowSplashScreenBrandingImage">@null</item>
+
+        <!-- Make splash screen transition as fast as possible -->
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
+    </style>
+</resources>

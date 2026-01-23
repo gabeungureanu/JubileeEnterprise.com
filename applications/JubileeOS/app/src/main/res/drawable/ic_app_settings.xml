@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Background circle -->
+    <path
+        android:fillColor="#9E9E9E"
+        android:pathData="M24,24m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"/>
+    <!-- Gear outer -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,10l2,4l4,-1l1,4l4,1l-1,4l4,2l-4,2l1,4l-4,1l-1,4l-4,-1l-2,4l-2,-4l-4,1l-1,-4l-4,-1l1,-4l-4,-2l4,-2l-1,-4l4,-1l1,-4l4,1z"/>
+    <!-- Gear center hole -->
+    <path
+        android:fillColor="#9E9E9E"
+        android:pathData="M24,24m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0"/>
+    <!-- Inner gear detail -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,24m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"/>
+</vector>

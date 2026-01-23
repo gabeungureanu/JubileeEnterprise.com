@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Background circle -->
+    <path
+        android:fillColor="#311B92"
+        android:pathData="M24,24m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"/>
+    <!-- Infinity/paradox symbol -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M16,24c0,-4.4 3.6,-8 8,-8c2.2,0 4.2,0.9 5.7,2.3L24,24l5.7,5.7c-1.5,1.4 -3.5,2.3 -5.7,2.3c-4.4,0 -8,-3.6 -8,-8z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,24c0,4.4 -3.6,8 -8,8c-2.2,0 -4.2,-0.9 -5.7,-2.3L24,24l-5.7,-5.7c1.5,-1.4 3.5,-2.3 5.7,-2.3c4.4,0 8,3.6 8,8z"/>
+    <!-- Center mystical eye -->
+    <path
+        android:fillColor="#311B92"
+        android:pathData="M24,24m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M24,24m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"/>
+    <!-- Sparkle accents -->
+    <path
+        android:fillColor="#00D4FF"
+        android:pathData="M10,14l2,2l-2,2l-2,-2z"/>
+    <path
+        android:fillColor="#00D4FF"
+        android:pathData="M38,30l2,2l-2,2l-2,-2z"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M36,12l1.5,1.5l-1.5,1.5l-1.5,-1.5z"/>
+</vector>

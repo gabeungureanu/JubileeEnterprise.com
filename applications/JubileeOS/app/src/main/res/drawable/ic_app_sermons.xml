@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Background circle -->
+    <path
+        android:fillColor="#5C6BC0"
+        android:pathData="M24,24m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"/>
+    <!-- Pulpit/podium -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M16,28h16v10H16z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M14,26h20v4H14z"/>
+    <!-- Microphone stand -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M23,18h2v10h-2z"/>
+    <!-- Microphone head -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M21,14h6v6h-6z"
+        android:strokeWidth="0"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M24,12m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"/>
+    <!-- Sound waves -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,14 Q33,17 30,20"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FFFFFF"
+        android:fillAlpha="0"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M33,12 Q38,17 33,22"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FFFFFF"
+        android:fillAlpha="0"/>
+</vector>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- JubileeTablet.com Splash Screen Icon -->
+<!-- Simple vector icon for Android 12+ splash screen compatibility -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Background circle - dark blue -->
+    <path
+        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0"
+        android:fillColor="#1A3040"/>
+
+    <!-- Cyan ring border -->
+    <path
+        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0"
+        android:strokeWidth="4"
+        android:strokeColor="#00D4FF"
+        android:fillColor="#00000000"/>
+
+    <!-- Stylized J with decorative elements representing Jubilee -->
+    <!-- Main J body -->
+    <path
+        android:pathData="M62,30 L62,65 Q62,78 50,78 L38,78"
+        android:strokeWidth="7"
+        android:strokeColor="#00D4FF"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+
+    <!-- J top serif -->
+    <path
+        android:pathData="M50,30 L74,30"
+        android:strokeWidth="7"
+        android:strokeColor="#00D4FF"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"/>
+
+    <!-- Decorative cross element inside J curve - represents faith -->
+    <path
+        android:pathData="M44,68 L44,74 M41,71 L47,71"
+        android:strokeWidth="3"
+        android:strokeColor="#FFD700"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"/>
+
+</vector>

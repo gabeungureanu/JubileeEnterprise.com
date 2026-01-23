@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Background circle -->
+    <path
+        android:fillColor="#673AB7"
+        android:pathData="M24,24m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"/>
+    <!-- Table circle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,24m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0"/>
+    <!-- Inner table -->
+    <path
+        android:fillColor="#673AB7"
+        android:pathData="M24,24m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0"/>
+    <!-- People around table (dots) -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M24,10m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M24,38m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M10,24m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M38,24m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M14,14m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M34,14m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M14,34m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M34,34m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"/>
+</vector>

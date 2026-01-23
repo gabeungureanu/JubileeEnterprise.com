@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="120dp"
+    android:viewportWidth="300"
+    android:viewportHeight="120">
+
+    <!-- Cyan ring circle (simplified logo representation) -->
+    <path
+        android:pathData="M150,35 m-25,0 a25,25 0 1,0 50,0 a25,25 0 1,0 -50,0"
+        android:strokeWidth="3"
+        android:strokeColor="#00D4FF"
+        android:fillColor="#00000000"/>
+
+    <!-- Inner circle fill -->
+    <path
+        android:pathData="M150,35 m-20,0 a20,20 0 1,0 40,0 a20,20 0 1,0 -40,0"
+        android:fillColor="#1A3040"/>
+
+    <!-- "J" icon in center -->
+    <path
+        android:pathData="M155,28 L155,42 Q155,45 152,45 L148,45"
+        android:strokeWidth="3"
+        android:strokeColor="#00D4FF"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"/>
+
+</vector>

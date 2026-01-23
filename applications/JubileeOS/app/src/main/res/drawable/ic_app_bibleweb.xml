@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Background circle -->
+    <path
+        android:fillColor="#1E88E5"
+        android:pathData="M24,24m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"/>
+    <!-- Globe/web -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,24m-12,0a12,12 0,1 1,24 0a12,12 0,1 1,-24 0"/>
+    <!-- Globe lines -->
+    <path
+        android:fillColor="#1E88E5"
+        android:pathData="M24,12v24"
+        android:strokeWidth="1.5"
+        android:strokeColor="#1E88E5"/>
+    <path
+        android:fillColor="#1E88E5"
+        android:pathData="M12,24h24"
+        android:strokeWidth="1.5"
+        android:strokeColor="#1E88E5"/>
+    <path
+        android:fillColor="#1E88E5"
+        android:pathData="M24,12 Q16,24 24,36"
+        android:strokeWidth="1.5"
+        android:strokeColor="#1E88E5"/>
+    <path
+        android:fillColor="#1E88E5"
+        android:pathData="M24,12 Q32,24 24,36"
+        android:strokeWidth="1.5"
+        android:strokeColor="#1E88E5"/>
+    <!-- Cross overlay -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M23,16h2v16h-2z"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M18,22h12v2H18z"/>
+</vector>

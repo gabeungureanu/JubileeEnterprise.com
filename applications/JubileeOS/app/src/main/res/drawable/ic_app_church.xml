@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Background circle -->
+    <path
+        android:fillColor="#795548"
+        android:pathData="M24,24m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"/>
+    <!-- Church building -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,38V24l12,-10l12,10v14H12z"/>
+    <!-- Steeple -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,24V18l4,-6l4,6v6H20z"/>
+    <!-- Cross on top -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M23,8h2v6h-2z"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M21,10h6v2h-6z"/>
+    <!-- Door -->
+    <path
+        android:fillColor="#795548"
+        android:pathData="M20,38V30a4,4 0,0 1,8 0v8H20z"/>
+    <!-- Windows -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M14,28h4v4h-4z"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M30,28h4v4h-4z"/>
+</vector>

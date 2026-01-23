@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Background circle -->
+    <path
+        android:fillColor="#FF5722"
+        android:pathData="M24,24m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"/>
+    <!-- Clock face -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,24m-14,0a14,14 0,1 1,28 0a14,14 0,1 1,-28 0"/>
+    <!-- Hour marks -->
+    <path
+        android:fillColor="#FF5722"
+        android:pathData="M23,12h2v3h-2z"/>
+    <path
+        android:fillColor="#FF5722"
+        android:pathData="M23,33h2v3h-2z"/>
+    <path
+        android:fillColor="#FF5722"
+        android:pathData="M33,23h3v2h-3z"/>
+    <path
+        android:fillColor="#FF5722"
+        android:pathData="M12,23h3v2h-3z"/>
+    <!-- Hour hand -->
+    <path
+        android:fillColor="#FF5722"
+        android:pathData="M23,24h2v-8h-2z"/>
+    <!-- Minute hand -->
+    <path
+        android:fillColor="#FF5722"
+        android:pathData="M24,23v2h8v-2z"/>
+    <!-- Center dot -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M24,24m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"/>
+</vector>

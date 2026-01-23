@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">JubileeTablet</string>
+    <string name="app_description">Faith-focused launcher for believers</string>
+    <string name="loading_message">Jubilee Bible is starting...</string>
+    <string name="brand_name">JubileeTablet.com</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_bible">Jubilee Bible</string>
+    <string name="nav_prayer">Prayer</string>
+    <string name="nav_worship">Jubilee Vibes</string>
+    <string name="nav_ministry">Ministry</string>
+    <string name="nav_family">Family</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Home Screen -->
+    <string name="daily_verse">Daily Verse</string>
+    <string name="daily_verse_default">"For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life."</string>
+    <string name="daily_verse_reference">John 3:16</string>
+    <string name="read_more">Read More</string>
+    <string name="share">Share</string>
+
+    <!-- Prayer -->
+    <string name="prayer_focus">Today\'s Prayer Focus</string>
+    <string name="add_prayer_request">Add Prayer Request</string>
+    <string name="prayer_categories_personal">Personal</string>
+    <string name="prayer_categories_family">Family</string>
+    <string name="prayer_categories_church">Church</string>
+    <string name="prayer_categories_world">World</string>
+
+    <!-- App Drawer -->
+    <string name="app_drawer">All Apps</string>
+    <string name="search_apps">Search apps…</string>
+
+    <!-- Settings -->
+    <string name="parental_controls">Parental Controls</string>
+    <string name="screen_time">Screen Time</string>
+    <string name="content_filter">Content Filter</string>
+    <string name="app_permissions">App Permissions</string>
+
+    <!-- Content Descriptions -->
+    <string name="cd_app_icon">App icon</string>
+    <string name="cd_menu">Menu</string>
+    <string name="cd_back">Go back</string>
+    <string name="cd_close">Close</string>
+    <string name="cd_logo">JubileeTablet logo</string>
+</resources>

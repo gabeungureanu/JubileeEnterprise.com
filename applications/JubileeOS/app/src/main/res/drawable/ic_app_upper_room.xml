@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Background circle -->
+    <path
+        android:fillColor="#3F51B5"
+        android:pathData="M24,24m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"/>
+    <!-- Room/building outline -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,36V20l12,-8l12,8v16H12z"/>
+    <!-- Inner room -->
+    <path
+        android:fillColor="#3F51B5"
+        android:pathData="M14,34V22l10,-6l10,6v12H14z"/>
+    <!-- Window/door arch -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M20,34V26a4,4 0,0 1,8 0v8H20z"/>
+    <!-- Dove/flame symbol -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,18 C22,18 21,19 21,20 C21,21 22,22 24,22 C26,22 27,21 27,20 C27,19 26,18 24,18 Z"/>
+</vector>

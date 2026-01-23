@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Background circle - gradient purple/pink -->
+    <path
+        android:fillColor="#E91E63"
+        android:pathData="M24,24m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"/>
+    <!-- Music wave bars -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,28v-8h3v8h-3z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M17,32v-16h3v16h-3z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M22,26v-4h3v4h-3z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M27,34v-20h3v20h-3z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,30v-12h3v12h-3z"/>
+    <!-- Heart accent -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M24,38 C24,36 22,35 21,36 C20,37 20,38 24,41 C28,38 28,37 27,36 C26,35 24,36 24,38 Z"/>
+</vector>
