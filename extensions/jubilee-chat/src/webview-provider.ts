@@ -38,7 +38,18 @@ export class JubileeChatViewProvider implements vscode.WebviewViewProvider {
         // Set the base path
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (workspaceFolders && workspaceFolders.length > 0) {
-            this._basePath = workspaceFolders[0].uri.fsPath;
+            let basePath = workspaceFolders[0].uri.fsPath;
+
+            // Check if we need to append JubileeEnterprise.com subdirectory
+            // This handles the case when workspace is opened at parent folder
+            const logixPath = path.join(basePath, 'logix');
+            const subfolderLogixPath = path.join(basePath, 'JubileeEnterprise.com', 'logix');
+
+            if (!fs.existsSync(logixPath) && fs.existsSync(subfolderLogixPath)) {
+                basePath = path.join(basePath, 'JubileeEnterprise.com');
+            }
+
+            this._basePath = basePath;
         } else {
             this._basePath = 'c:/data/JubileeEnterprise.com';
         }
@@ -301,9 +312,10 @@ export class JubileeChatViewProvider implements vscode.WebviewViewProvider {
         await this._insertFileContentAtCursor(prodEndPath, 'PROD END');
     }
 
-    private async _insertFileContentAtCursor(filePath: string, _buttonName: string) {
+    private async _insertFileContentAtCursor(filePath: string, buttonName: string) {
         try {
             if (!fs.existsSync(filePath)) {
+                vscode.window.showErrorMessage(`JubileeChat: ${buttonName} file not found at ${filePath}`);
                 return;
             }
 

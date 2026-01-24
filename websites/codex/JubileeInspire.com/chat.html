@@ -2340,6 +2340,8 @@
       margin-left: 8px;
     }
   </style>
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <!-- Loading Overlay -->
@@ -4476,6 +4478,12 @@
 
       // Save conversation to localStorage
       function saveConversation() {
+        // Check if save history is enabled
+        var saveHistorySetting = localStorage.getItem('settingSaveHistory');
+        if (saveHistorySetting === 'false') {
+          return; // Don't save if history saving is disabled
+        }
+
         try {
           var cacheData = {
             conversationId: conversationId,
@@ -4953,6 +4961,9 @@
         messagesWrapper.appendChild(userMsg);
         scrollToBottom();
 
+        // Play send sound
+        playNotificationSound();
+
         // Add to history
         conversationHistory.push({ role: 'user', content: content });
 
@@ -5100,6 +5111,13 @@
 
               // Save conversation after streaming is complete
               saveConversation();
+
+              // Play notification sound when response is complete
+              playMessageSound();
+
+              // Show push notification if page is not focused
+              var previewText = data.response.substring(0, 100) + (data.response.length > 100 ? '...' : '');
+              showPushNotification('Jubilee Inspire', previewText);
             });
           } else {
             showError('Sorry, I could not process your request. Please try again.');
@@ -5441,6 +5459,251 @@
         }
       });
 
+      // ==================== NOTIFICATION SETTINGS ====================
+      var settingPushNotifs = document.getElementById('settingPushNotifs');
+      var settingEmailNotifs = document.getElementById('settingEmailNotifs');
+      var settingSoundEffects = document.getElementById('settingSoundEffects');
+
+      // Web Audio API for notification sounds
+      var audioContext = null;
+
+      // Initialize audio context on first user interaction
+      function getAudioContext() {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        // Resume if suspended (browser autoplay policy)
+        if (audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
+        return audioContext;
+      }
+
+      // Function to check if sound effects are enabled
+      function isSoundEnabled() {
+        var savedValue = localStorage.getItem('settingSoundEffects');
+        // Default to true if not set
+        return savedValue === null || savedValue === 'true';
+      }
+
+      // Function to play a tone using Web Audio API
+      function playTone(frequency, duration, volume, type) {
+        if (!isSoundEnabled()) return;
+
+        try {
+          var ctx = getAudioContext();
+          var oscillator = ctx.createOscillator();
+          var gainNode = ctx.createGain();
+
+          oscillator.connect(gainNode);
+          gainNode.connect(ctx.destination);
+
+          oscillator.frequency.value = frequency;
+          oscillator.type = type || 'sine';
+
+          // Envelope for smooth sound
+          var now = ctx.currentTime;
+          gainNode.gain.setValueAtTime(0, now);
+          gainNode.gain.linearRampToValueAtTime(volume, now + 0.01);
+          gainNode.gain.linearRampToValueAtTime(volume * 0.7, now + duration * 0.5);
+          gainNode.gain.linearRampToValueAtTime(0, now + duration);
+
+          oscillator.start(now);
+          oscillator.stop(now + duration);
+        } catch (e) {
+          console.log('Could not play sound:', e);
+        }
+      }
+
+      // Function to play notification sound (send message - higher pitch)
+      function playNotificationSound() {
+        if (!isSoundEnabled()) return;
+
+        try {
+          var ctx = getAudioContext();
+
+          // Play a pleasant two-tone chime
+          var now = ctx.currentTime;
+
+          // First tone
+          var osc1 = ctx.createOscillator();
+          var gain1 = ctx.createGain();
+          osc1.connect(gain1);
+          gain1.connect(ctx.destination);
+          osc1.frequency.value = 880; // A5
+          osc1.type = 'sine';
+          gain1.gain.setValueAtTime(0, now);
+          gain1.gain.linearRampToValueAtTime(0.3, now + 0.02);
+          gain1.gain.linearRampToValueAtTime(0, now + 0.15);
+          osc1.start(now);
+          osc1.stop(now + 0.15);
+
+          // Second tone (higher)
+          var osc2 = ctx.createOscillator();
+          var gain2 = ctx.createGain();
+          osc2.connect(gain2);
+          gain2.connect(ctx.destination);
+          osc2.frequency.value = 1320; // E6
+          osc2.type = 'sine';
+          gain2.gain.setValueAtTime(0, now + 0.08);
+          gain2.gain.linearRampToValueAtTime(0.25, now + 0.1);
+          gain2.gain.linearRampToValueAtTime(0, now + 0.25);
+          osc2.start(now + 0.08);
+          osc2.stop(now + 0.25);
+        } catch (e) {
+          console.log('Could not play notification sound:', e);
+        }
+      }
+
+      // Function to play message sound (receive message - pleasant chime)
+      function playMessageSound() {
+        if (!isSoundEnabled()) return;
+
+        try {
+          var ctx = getAudioContext();
+          var now = ctx.currentTime;
+
+          // Three-tone pleasant chime for received message
+          var frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5 (C major chord)
+          var delays = [0, 0.1, 0.2];
+
+          frequencies.forEach(function(freq, i) {
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = freq;
+            osc.type = 'sine';
+
+            var startTime = now + delays[i];
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(0.2, startTime + 0.02);
+            gain.gain.linearRampToValueAtTime(0.15, startTime + 0.1);
+            gain.gain.linearRampToValueAtTime(0, startTime + 0.4);
+
+            osc.start(startTime);
+            osc.stop(startTime + 0.4);
+          });
+        } catch (e) {
+          console.log('Could not play message sound:', e);
+        }
+      }
+
+      // Initialize audio context on first click (required by browsers)
+      document.addEventListener('click', function initAudio() {
+        getAudioContext();
+        document.removeEventListener('click', initAudio);
+      }, { once: true });
+
+      // Function to check if push notifications are enabled
+      function isPushNotificationsEnabled() {
+        var savedValue = localStorage.getItem('settingPushNotifs');
+        return savedValue === null || savedValue === 'true';
+      }
+
+      // Function to request push notification permission
+      function requestNotificationPermission() {
+        if ('Notification' in window) {
+          if (Notification.permission === 'default') {
+            Notification.requestPermission().then(function(permission) {
+              if (permission !== 'granted') {
+                // If permission denied, turn off the toggle
+                if (settingPushNotifs) {
+                  settingPushNotifs.classList.remove('active');
+                  localStorage.setItem('settingPushNotifs', 'false');
+                }
+              }
+            });
+          } else if (Notification.permission === 'denied') {
+            alert('Push notifications are blocked by your browser. Please enable them in your browser settings.');
+            if (settingPushNotifs) {
+              settingPushNotifs.classList.remove('active');
+              localStorage.setItem('settingPushNotifs', 'false');
+            }
+          }
+        } else {
+          alert('Push notifications are not supported in this browser.');
+          if (settingPushNotifs) {
+            settingPushNotifs.classList.remove('active');
+            localStorage.setItem('settingPushNotifs', 'false');
+          }
+        }
+      }
+
+      // Function to show push notification
+      function showPushNotification(title, body, icon) {
+        if (!isPushNotificationsEnabled()) return;
+        if (!('Notification' in window)) return;
+        if (Notification.permission !== 'granted') return;
+        if (document.hasFocus()) return; // Don't show if page is focused
+
+        var notification = new Notification(title, {
+          body: body,
+          icon: icon || 'jubilee-profile.png',
+          badge: 'jubilee-profile.png',
+          tag: 'jubilee-message',
+          renotify: true
+        });
+
+        notification.onclick = function() {
+          window.focus();
+          notification.close();
+        };
+
+        // Auto close after 5 seconds
+        setTimeout(function() {
+          notification.close();
+        }, 5000);
+      }
+
+      // Push notifications toggle handler
+      if (settingPushNotifs) {
+        settingPushNotifs.addEventListener('click', function() {
+          var isEnabled = settingPushNotifs.classList.contains('active');
+          if (isEnabled) {
+            requestNotificationPermission();
+          }
+        });
+
+        // Check permission on load and sync toggle state
+        if ('Notification' in window && Notification.permission === 'denied') {
+          var savedPush = localStorage.getItem('settingPushNotifs');
+          if (savedPush === 'true' || savedPush === null) {
+            settingPushNotifs.classList.remove('active');
+            localStorage.setItem('settingPushNotifs', 'false');
+          }
+        }
+      }
+
+      // Email notifications toggle handler (saves to localStorage for API use)
+      if (settingEmailNotifs) {
+        settingEmailNotifs.addEventListener('click', function() {
+          var isEnabled = settingEmailNotifs.classList.contains('active');
+          // Save email notification preference for API
+          var authData = localStorage.getItem('jubileeInspireAuth');
+          if (authData) {
+            try {
+              var auth = JSON.parse(authData);
+              // Could send to server here in future
+              console.log('Email notifications ' + (isEnabled ? 'enabled' : 'disabled') + ' for user:', auth.user?.email);
+            } catch (e) {}
+          }
+        });
+      }
+
+      // Sound effects toggle handler
+      if (settingSoundEffects) {
+        settingSoundEffects.addEventListener('click', function() {
+          var isEnabled = settingSoundEffects.classList.contains('active');
+          // Play a test sound when enabling
+          if (isEnabled) {
+            setTimeout(function() {
+              playNotificationSound();
+            }, 100);
+          }
+        });
+      }
+
       // Theme selector handler
       var themeSelect = document.getElementById('settingAppearance');
       if (themeSelect) {
@@ -5548,12 +5811,79 @@
         });
       }
 
+      // Data Controls - Improve Jubilee toggle
+      var settingImproveJubilee = document.getElementById('settingImproveJubilee');
+      if (settingImproveJubilee) {
+        // Initialize from localStorage
+        var savedImproveJubilee = localStorage.getItem('settingImproveJubilee');
+        if (savedImproveJubilee === 'true') {
+          settingImproveJubilee.classList.add('active');
+        } else if (savedImproveJubilee === 'false') {
+          settingImproveJubilee.classList.remove('active');
+        }
+
+        settingImproveJubilee.addEventListener('click', function() {
+          var isEnabled = settingImproveJubilee.classList.toggle('active');
+          localStorage.setItem('settingImproveJubilee', isEnabled ? 'true' : 'false');
+        });
+      }
+
+      // Data Controls - Save chat history toggle
+      var settingSaveHistory = document.getElementById('settingSaveHistory');
+      if (settingSaveHistory) {
+        // Initialize from localStorage (default is active)
+        var savedSaveHistory = localStorage.getItem('settingSaveHistory');
+        if (savedSaveHistory === 'false') {
+          settingSaveHistory.classList.remove('active');
+        } else {
+          settingSaveHistory.classList.add('active');
+          if (savedSaveHistory === null) {
+            localStorage.setItem('settingSaveHistory', 'true');
+          }
+        }
+
+        settingSaveHistory.addEventListener('click', function() {
+          var isEnabled = settingSaveHistory.classList.toggle('active');
+          localStorage.setItem('settingSaveHistory', isEnabled ? 'true' : 'false');
+
+          if (!isEnabled) {
+            // If saving is disabled, clear existing saved conversation
+            localStorage.removeItem(CONVERSATION_CACHE_KEY);
+          }
+        });
+      }
+
+      // Helper function to check if save history is enabled
+      function isSaveHistoryEnabled() {
+        var setting = localStorage.getItem('settingSaveHistory');
+        return setting !== 'false'; // Default to true
+      }
+
       var settingDeleteChats = document.getElementById('settingDeleteChats');
       if (settingDeleteChats) {
         settingDeleteChats.addEventListener('click', function() {
           if (confirm('Are you sure you want to delete all your chat history? This cannot be undone.')) {
-            // Use startNewChat which handles all the state properly
-            startNewChat();
+            // Clear all conversation data from localStorage
+            localStorage.removeItem(CONVERSATION_CACHE_KEY);
+
+            // Reset conversation state
+            conversationId = null;
+            conversationHistory = [];
+            isNewConversation = true;
+
+            // Clear the messages from DOM
+            if (messagesWrapper) {
+              messagesWrapper.innerHTML = '';
+            }
+
+            // Reset to welcome state
+            if (welcomeState) {
+              welcomeState.style.display = '';
+            }
+            if (mainContent) {
+              mainContent.classList.remove('is-chatting');
+            }
+
             closeSettingsModal();
           }
         });
@@ -5564,15 +5894,71 @@
         settingExportData.addEventListener('click', function() {
           var conversationData = localStorage.getItem(CONVERSATION_CACHE_KEY);
           if (conversationData) {
-            var blob = new Blob([conversationData], { type: 'application/json' });
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = 'jubilee-inspire-chat-export.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            try {
+              var cacheData = JSON.parse(conversationData);
+              var messages = cacheData.messages || [];
+
+              if (messages.length === 0) {
+                alert('No chat history to export.');
+                return;
+              }
+
+              // Prepare data for Excel
+              var excelData = [];
+
+              // Add header row
+              excelData.push(['#', 'Type', 'Message', 'Time', 'Response Time (ms)']);
+
+              // Add message rows
+              messages.forEach(function(msg, index) {
+                excelData.push([
+                  index + 1,
+                  msg.type === 'user' ? 'You' : 'Jubilee',
+                  msg.content || '',
+                  msg.time || '',
+                  msg.type === 'assistant' ? (msg.responseMs || '') : ''
+                ]);
+              });
+
+              // Create workbook and worksheet
+              var ws = XLSX.utils.aoa_to_sheet(excelData);
+
+              // Set column widths
+              ws['!cols'] = [
+                { wch: 5 },   // #
+                { wch: 10 },  // Type
+                { wch: 80 },  // Message
+                { wch: 15 },  // Time
+                { wch: 18 }   // Response Time
+              ];
+
+              var wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, 'Chat History');
+
+              // Add metadata sheet
+              var metaData = [
+                ['JubileeInspire Chat Export'],
+                [''],
+                ['Export Date', new Date().toLocaleString()],
+                ['Conversation ID', cacheData.conversationId || 'N/A'],
+                ['Model', cacheData.selectedModel || 'N/A'],
+                ['Total Messages', messages.length]
+              ];
+              var wsMeta = XLSX.utils.aoa_to_sheet(metaData);
+              wsMeta['!cols'] = [{ wch: 20 }, { wch: 40 }];
+              XLSX.utils.book_append_sheet(wb, wsMeta, 'Export Info');
+
+              // Generate filename with date
+              var dateStr = new Date().toISOString().slice(0, 10);
+              var filename = 'JubileeInspire-Chat-' + dateStr + '.xlsx';
+
+              // Download the file
+              XLSX.writeFile(wb, filename);
+
+            } catch (e) {
+              console.error('Export error:', e);
+              alert('Error exporting chat history. Please try again.');
+            }
           } else {
             alert('No chat history to export.');
           }
