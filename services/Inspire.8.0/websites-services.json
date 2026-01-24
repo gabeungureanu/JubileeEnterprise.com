@@ -1,7 +1,7 @@
 {
   "name": "Inspire 8.0: Website Services",
   "version": "1.0.0",
-  "description": "Manages 43 Jubilee Enterprise frontend websites - Running on WSL INSPIRESERVER01",
+  "description": "Manages 45 Jubilee Enterprise frontend websites - Running on WSL INSPIRESERVER01",
   "healthPort": 3900,
   "runtime": "WSL Ubuntu-24.04",
   "services": [
@@ -398,6 +398,15 @@
       "script": "server.js",
       "cwd": "/mnt/c/data/JubileeEnterprise.com Bibleweb/websites/codex/ImpossibleHarvest.com",
       "port": 3139,
+      "workers": 2,
+      "enabled": true
+    },
+    {
+      "name": "jubileeintelligence",
+      "description": "JubileeIntelligence.com - AI Platform with Jubilee SSO",
+      "script": "server.js",
+      "cwd": "/mnt/c/data/JubileeEnterprise.com Bibleweb/websites/codex/JubileeIntelligence.com",
+      "port": 3133,
       "workers": 2,
       "enabled": true
     }
