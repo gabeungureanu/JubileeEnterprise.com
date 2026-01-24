@@ -2828,7 +2828,7 @@
                 continuumAvailable = false;
 
                 try {
-                    const continuumResponse = await fetch('http://localhost:3200/api/v1/admin/dashboard', {
+                    const continuumResponse = await fetch('http://localhost:3101/api/v1/admin/dashboard', {
                         signal: AbortSignal.timeout(3000) // 3 second timeout
                     });
                     if (continuumResponse.ok) {
