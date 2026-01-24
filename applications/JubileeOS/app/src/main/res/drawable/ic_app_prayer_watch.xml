@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Background circle -->
+    <path
+        android:fillColor="#5C6BC0"
+        android:pathData="M24,24m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"/>
+    <!-- Watch face -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,24m-12,0a12,12 0,1 1,24 0a12,12 0,1 1,-24 0"/>
+    <!-- Watch band top -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M20,8h8v6h-8z"/>
+    <!-- Watch band bottom -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M20,34h8v6h-8z"/>
+    <!-- Clock marks -->
+    <path
+        android:fillColor="#5C6BC0"
+        android:pathData="M23,14h2v2h-2z"/>
+    <path
+        android:fillColor="#5C6BC0"
+        android:pathData="M23,32h2v2h-2z"/>
+    <path
+        android:fillColor="#5C6BC0"
+        android:pathData="M32,23h2v2h-2z"/>
+    <path
+        android:fillColor="#5C6BC0"
+        android:pathData="M14,23h2v2h-2z"/>
+    <!-- Praying hands in center -->
+    <path
+        android:fillColor="#5C6BC0"
+        android:pathData="M22,20v8l2,2l2,-2v-8l-2,-2z"/>
+    <!-- Clock hands -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M24,24v-6"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FFD700"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M24,24h4"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FFD700"/>
+</vector>

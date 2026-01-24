@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Background circle -->
+    <path
+        android:fillColor="#66BB6A"
+        android:pathData="M24,24m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"/>
+    <!-- Checklist background -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,10h24c1.1,0 2,0.9 2,2v24c0,1.1 -0.9,2 -2,2H12c-1.1,0 -2,-0.9 -2,-2V12c0,-1.1 0.9,-2 2,-2z"/>
+    <!-- Checkbox 1 - checked -->
+    <path
+        android:fillColor="#66BB6A"
+        android:pathData="M14,16h4v4h-4z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M15,18l1,1l2,-2"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FFFFFF"
+        android:fillAlpha="0"/>
+    <path
+        android:fillColor="#66BB6A"
+        android:pathData="M20,17h12v2H20z"/>
+    <!-- Checkbox 2 - checked -->
+    <path
+        android:fillColor="#66BB6A"
+        android:pathData="M14,24h4v4h-4z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M15,26l1,1l2,-2"
+        android:strokeWidth="1.5"
+        android:strokeColor="#FFFFFF"
+        android:fillAlpha="0"/>
+    <path
+        android:fillColor="#66BB6A"
+        android:pathData="M20,25h10v2H20z"/>
+    <!-- Checkbox 3 - unchecked -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M14,32h4v4h-4z"
+        android:strokeWidth="1.5"
+        android:strokeColor="#66BB6A"/>
+    <path
+        android:fillColor="#BDBDBD"
+        android:pathData="M20,33h8v2H20z"/>
+    <!-- Star accent -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M32,12l1,2l2,0.5l-1.5,1.5l0.5,2l-2,-1l-2,1l0.5,-2l-1.5,-1.5l2,-0.5z"/>
+</vector>

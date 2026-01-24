@@ -215,7 +215,7 @@ fun JubileeSearchBox(
                     Box {
                         if (query.isEmpty()) {
                             Text(
-                                text = "What do you want to know?",
+                                text = "What do you want to do today?",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = Color.White.copy(alpha = 0.5f)
                             )

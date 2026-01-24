@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Background circle -->
+    <path
+        android:fillColor="#8D6E63"
+        android:pathData="M24,24m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"/>
+    <!-- Bread loaf -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10,28c0,-6 6,-10 14,-10s14,4 14,10c0,4 -6,8 -14,8s-14,-4 -14,-8z"/>
+    <!-- Bread top crust detail -->
+    <path
+        android:fillColor="#FFF8E1"
+        android:pathData="M12,26c0,-4 5,-8 12,-8s12,4 12,8c0,2 -5,4 -12,4s-12,-2 -12,-4z"/>
+    <!-- Bread slice lines -->
+    <path
+        android:fillColor="#8D6E63"
+        android:pathData="M18,22v10"
+        android:strokeWidth="1"
+        android:strokeColor="#8D6E63"/>
+    <path
+        android:fillColor="#8D6E63"
+        android:pathData="M24,20v12"
+        android:strokeWidth="1"
+        android:strokeColor="#8D6E63"/>
+    <path
+        android:fillColor="#8D6E63"
+        android:pathData="M30,22v10"
+        android:strokeWidth="1"
+        android:strokeColor="#8D6E63"/>
+    <!-- Wheat grain accent -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M24,10l-2,4h4l-2,-4z"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M20,12l-1,3h2l-1,-3z"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M28,12l-1,3h2l-1,-3z"/>
+</vector>

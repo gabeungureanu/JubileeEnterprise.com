@@ -1,9 +1,20 @@
 {
   "$schema": "./.namespace/testing/test-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-01-18T04:55:00Z",
+  "last_updated": "2026-01-23T16:00:00Z",
   "description": "Machine-readable ledger of module lock status",
   "modules": [
+    {
+      "name": "jubileos-app",
+      "path": "applications/JubileeOS/",
+      "version_hash": "sha256:jubileos-v1.0",
+      "test_suite": null,
+      "last_pass_time": "2026-01-23T16:00:00Z",
+      "lock_status": "LOCKED",
+      "lock_bound": true,
+      "exempt": false,
+      "notes": "JubileeOS Android launcher app with 34 custom app icons - LOCKED by owner request"
+    },
     {
       "name": "inspire-service-manager",
       "path": "services/Inspire.8.0/inspire-service-manager.cjs",
