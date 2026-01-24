@@ -845,6 +845,113 @@ app.put('/api/v1/codex/users/:id/role', async (req, res) => {
     }
 });
 
+// =============================================================================
+// EMAIL API ROUTES - Mail Server Accounts (hMailServer/Mailcow)
+// =============================================================================
+
+// Get all email accounts configured on the mail server
+app.get('/api/v1/email/accounts', async (req, res) => {
+    try {
+        // Email accounts configured in hMailServer (WSL production server)
+        // These are the actual mailboxes from the infrastructure configuration
+        const emailAccounts = [
+            // worldwidebibleweb.com domain (5 accounts)
+            {
+                email: 'noreply@worldwidebibleweb.com',
+                domain: 'worldwidebibleweb.com',
+                description: 'No Reply - System notifications',
+                quotaMB: 100,
+                active: true
+            },
+            {
+                email: 'support@worldwidebibleweb.com',
+                domain: 'worldwidebibleweb.com',
+                description: 'Support Team',
+                quotaMB: 500,
+                active: true
+            },
+            {
+                email: 'admin@worldwidebibleweb.com',
+                domain: 'worldwidebibleweb.com',
+                description: 'Administrator',
+                quotaMB: 1024,
+                active: true
+            },
+            {
+                email: 'ai01@worldwidebibleweb.com',
+                domain: 'worldwidebibleweb.com',
+                description: 'AI Agent 01',
+                quotaMB: 100,
+                active: true
+            },
+            {
+                email: 'ai02@worldwidebibleweb.com',
+                domain: 'worldwidebibleweb.com',
+                description: 'AI Agent 02',
+                quotaMB: 100,
+                active: true
+            },
+            // jubileebrowser.com domain (3 accounts)
+            {
+                email: 'noreply@jubileebrowser.com',
+                domain: 'jubileebrowser.com',
+                description: 'No Reply - System notifications',
+                quotaMB: 100,
+                active: true
+            },
+            {
+                email: 'support@jubileebrowser.com',
+                domain: 'jubileebrowser.com',
+                description: 'Support Team',
+                quotaMB: 500,
+                active: true
+            },
+            {
+                email: 'feedback@jubileebrowser.com',
+                domain: 'jubileebrowser.com',
+                description: 'Feedback',
+                quotaMB: 500,
+                active: true
+            },
+            // jubileeverse.com domain (2 accounts)
+            {
+                email: 'noreply@jubileeverse.com',
+                domain: 'jubileeverse.com',
+                description: 'No Reply - System notifications',
+                quotaMB: 100,
+                active: true
+            },
+            {
+                email: 'hello@jubileeverse.com',
+                domain: 'jubileeverse.com',
+                description: 'Hello - General inquiries',
+                quotaMB: 500,
+                active: true
+            }
+        ];
+
+        // Get unique domains
+        const domains = [...new Set(emailAccounts.map(a => a.domain))];
+
+        res.json({
+            success: true,
+            accounts: emailAccounts,
+            total: emailAccounts.length,
+            domains: domains,
+            domainCount: domains.length,
+            mailServer: 'hMailServer',
+            relayHost: 'Amazon SES (email-smtp.us-east-1.amazonaws.com)'
+        });
+    } catch (err) {
+        console.error('Get email accounts error:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch email accounts',
+            message: err.message
+        });
+    }
+});
+
 // Personas
 app.get('/api/v1/codex/personas', async (req, res) => {
     try {

@@ -799,6 +799,28 @@
             font-size: 0.75rem;
             font-weight: 500;
         }
+
+        /* Email tab styles */
+        .email-avatar {
+            background-color: #238636;
+        }
+
+        .domain-badge {
+            background-color: rgba(240, 192, 64, 0.15);
+            color: var(--inspire-yellow);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-family: monospace;
+        }
+
+        .quota-badge {
+            background-color: rgba(88, 166, 255, 0.15);
+            color: #58a6ff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -832,6 +854,9 @@
         </button>
         <button class="tab" data-tab="users" onclick="switchTab('users')">
             <span class="tab-text">Users</span> <span class="tab-count" id="users-count">0</span>
+        </button>
+        <button class="tab" data-tab="email" onclick="switchTab('email')">
+            <span class="tab-text">Email</span> <span class="tab-count" id="email-count">0</span>
         </button>
     </div>
 
@@ -956,6 +981,49 @@
                 <tbody id="users-table-body">
                     <tr>
                         <td colspan="6" class="loading">
+                            <div class="spinner"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Email Summary Bar -->
+    <div class="summary-bar" id="email-summary" style="display: none;">
+        <div class="summary-item">
+            <span class="summary-count" id="total-email-count" style="color: var(--inspire-yellow);">0</span>
+            <span class="summary-label">Total Accounts</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-count" id="email-domains-count" style="color: #3fb950;">0</span>
+            <span class="summary-label">Domains</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-count" id="email-quota-total" style="color: #58a6ff;">0 GB</span>
+            <span class="summary-label">Total Quota</span>
+        </div>
+        <div class="bulk-actions">
+            <button class="btn btn-sm btn-primary" onclick="refreshEmails()">Refresh</button>
+        </div>
+    </div>
+
+    <!-- Email Content -->
+    <div class="tab-content" id="email-content">
+        <div class="table-container">
+            <table>
+                <thead id="email-table-header">
+                    <tr>
+                        <th>Email Account</th>
+                        <th>Domain</th>
+                        <th>Description</th>
+                        <th class="center">Quota</th>
+                        <th class="center">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="email-table-body">
+                    <tr>
+                        <td colspan="5" class="loading">
                             <div class="spinner"></div>
                         </td>
                     </tr>
@@ -1458,20 +1526,24 @@
             const servicesContent = document.getElementById('services-content');
             const qdrantContent = document.getElementById('qdrant-content');
             const usersContent = document.getElementById('users-content');
+            const emailContent = document.getElementById('email-content');
             const infraContent = document.getElementById('infra-content');
             const servicesSummary = document.getElementById('services-summary');
             const qdrantSummary = document.getElementById('qdrant-summary');
             const usersSummary = document.getElementById('users-summary');
+            const emailSummary = document.getElementById('email-summary');
             const infraSummary = document.getElementById('infra-summary');
 
             // Hide all content sections
             servicesContent.classList.remove('active');
             qdrantContent.classList.remove('active');
             usersContent.classList.remove('active');
+            emailContent.classList.remove('active');
             infraContent.classList.remove('active');
             servicesSummary.style.display = 'none';
             qdrantSummary.style.display = 'none';
             usersSummary.style.display = 'none';
+            emailSummary.style.display = 'none';
             infraSummary.style.display = 'none';
 
             if (tab === 'qdrant') {
@@ -1484,6 +1556,11 @@
                 usersSummary.style.display = 'flex';
                 stopHealthCheckInterval(); // Stop health checks for Users tab
                 loadUsers();
+            } else if (tab === 'email') {
+                emailContent.classList.add('active');
+                emailSummary.style.display = 'flex';
+                stopHealthCheckInterval(); // Stop health checks for Email tab
+                loadEmails();
             } else if (tab === 'infra') {
                 infraContent.classList.add('active');
                 infraSummary.style.display = 'flex';
@@ -3032,6 +3109,135 @@
         }
 
         // =====================================================================
+        // EMAIL LOADING (Mailcow/hMailServer accounts)
+        // =====================================================================
+        let emailData = [];
+
+        async function loadEmails() {
+            const tableBody = document.getElementById('email-table-body');
+            tableBody.innerHTML = '<tr><td colspan="5" class="loading"><div class="spinner"></div></td></tr>';
+
+            try {
+                const response = await fetch('/api/v1/email/accounts');
+
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}`);
+                }
+
+                const result = await response.json();
+                emailData = result.accounts || [];
+
+                // Update summary counts
+                const domains = [...new Set(emailData.map(e => e.domain))];
+                const totalQuotaMB = emailData.reduce((sum, e) => sum + (e.quotaMB || 0), 0);
+                const totalQuotaGB = (totalQuotaMB / 1024).toFixed(1);
+
+                document.getElementById('total-email-count').textContent = emailData.length;
+                document.getElementById('email-domains-count').textContent = domains.length;
+                document.getElementById('email-quota-total').textContent = `${totalQuotaGB} GB`;
+                document.getElementById('email-count').textContent = emailData.length;
+
+                // Render emails table
+                renderEmailsTable(emailData);
+                updateLastUpdated();
+
+            } catch (error) {
+                console.error('Error loading emails:', error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 24px; color: #f85149;">
+                            <div style="margin-bottom: 10px;">Failed to load email accounts</div>
+                            <div style="font-size: 0.8rem; color: #8b949e;">${error.message}</div>
+                            <button class="btn btn-sm btn-primary" style="margin-top: 10px;" onclick="loadEmails()">Retry</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function renderEmailsTable(emails) {
+            const tableBody = document.getElementById('email-table-body');
+
+            if (emails.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 24px; color: #ffffff;">No email accounts found</td></tr>';
+                return;
+            }
+
+            // Sort by domain, then by email
+            emails.sort((a, b) => {
+                if (a.domain !== b.domain) return a.domain.localeCompare(b.domain);
+                return a.email.localeCompare(b.email);
+            });
+
+            let html = '';
+            for (const account of emails) {
+                const isActive = account.active !== false;
+
+                // Get initials for avatar from email local part
+                const localPart = account.email.split('@')[0];
+                const initials = getEmailInitials(localPart);
+
+                // Determine status
+                let statusClass = isActive ? 'online' : 'offline';
+                let statusText = isActive ? 'Active' : 'Inactive';
+
+                // Format quota
+                const quotaText = account.quotaMB >= 1024
+                    ? `${(account.quotaMB / 1024).toFixed(1)} GB`
+                    : `${account.quotaMB} MB`;
+
+                html += `
+                    <tr data-email="${account.email}">
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar email-avatar">
+                                    ${initials}
+                                </div>
+                                <div class="user-details">
+                                    <span class="user-name">${account.email}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="domain-badge">${account.domain}</span></td>
+                        <td><span class="service-desc">${account.description || ''}</span></td>
+                        <td class="center"><span class="quota-badge">${quotaText}</span></td>
+                        <td class="center">
+                            <span class="status-badge ${statusClass}">
+                                <span class="online-indicator ${statusClass}"></span>
+                                ${statusText}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            tableBody.innerHTML = html;
+        }
+
+        function getEmailInitials(localPart) {
+            if (!localPart) return '?';
+            // Handle common patterns like noreply, support, admin
+            const specialAccounts = {
+                'noreply': 'NR',
+                'support': 'SP',
+                'admin': 'AD',
+                'hello': 'HI',
+                'feedback': 'FB',
+                'ai01': 'A1',
+                'ai02': 'A2'
+            };
+            if (specialAccounts[localPart.toLowerCase()]) {
+                return specialAccounts[localPart.toLowerCase()];
+            }
+            // Otherwise use first two characters
+            return localPart.substring(0, 2).toUpperCase();
+        }
+
+        function refreshEmails() {
+            loadEmails();
+        }
+
+        // =====================================================================
         // INITIALIZATION
         // =====================================================================
         async function init() {
@@ -3054,6 +3260,12 @@
                 document.getElementById('services-summary').style.display = 'none';
                 document.getElementById('users-summary').style.display = 'flex';
                 await loadUsers();
+            } else if (currentTab === 'email') {
+                document.getElementById('services-content').classList.remove('active');
+                document.getElementById('email-content').classList.add('active');
+                document.getElementById('services-summary').style.display = 'none';
+                document.getElementById('email-summary').style.display = 'flex';
+                await loadEmails();
             } else if (currentTab === 'infra') {
                 document.getElementById('services-content').classList.remove('active');
                 document.getElementById('infra-content').classList.add('active');
