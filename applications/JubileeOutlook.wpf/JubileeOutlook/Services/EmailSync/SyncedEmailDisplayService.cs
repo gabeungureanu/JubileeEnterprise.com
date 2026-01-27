@@ -146,6 +146,11 @@ public class SyncedEmailDisplayService
             {
                 accountFolder.SubFolders = CreateDefaultFolders();
             }
+            else
+            {
+                // Ensure Archive folder is always present (add after Sent Mail if missing)
+                EnsureArchiveFolderExists(accountFolder.SubFolders);
+            }
 
             rootFolders.Add(accountFolder);
         }
@@ -466,6 +471,49 @@ public class SyncedEmailDisplayService
             new MailFolder { Id = "archive", Name = "Archive", Type = UIFolderType.Archive, Icon = "\uE149" },
             new MailFolder { Id = "trash", Name = "Trash", Type = UIFolderType.Deleted, Icon = "\uE872" }
         };
+    }
+
+    /// <summary>
+    /// Ensures Archive folder exists in the folder list, adding it if missing.
+    /// Archive is inserted after Sent Mail folder for proper ordering.
+    /// </summary>
+    private void EnsureArchiveFolderExists(List<MailFolder> folders)
+    {
+        // Check if Archive folder already exists
+        var archiveExists = folders.Any(f => f.Type == UIFolderType.Archive);
+        if (archiveExists)
+        {
+            Debug.WriteLine("[SyncedEmailDisplayService] Archive folder already exists");
+            return;
+        }
+
+        // Find Sent Mail folder index to insert Archive after it
+        var sentIndex = folders.FindIndex(f => f.Type == UIFolderType.Sent);
+        var insertIndex = sentIndex >= 0 ? sentIndex + 1 : folders.Count;
+
+        // Find Trash folder index - Archive should be before Trash
+        var trashIndex = folders.FindIndex(f => f.Type == UIFolderType.Deleted);
+        if (trashIndex >= 0 && insertIndex > trashIndex)
+        {
+            insertIndex = trashIndex;
+        }
+
+        // Create and insert Archive folder
+        var archiveFolder = new MailFolder
+        {
+            Id = "archive",
+            Name = "Archive",
+            Type = UIFolderType.Archive,
+            Icon = "\uE149",
+            UnreadCount = 0,
+            TotalCount = 0,
+            IsExpanded = false,
+            IsSelected = false,
+            SubFolders = new List<MailFolder>()
+        };
+
+        folders.Insert(insertIndex, archiveFolder);
+        Debug.WriteLine($"[SyncedEmailDisplayService] Archive folder added at index {insertIndex}");
     }
 
     /// <summary>
