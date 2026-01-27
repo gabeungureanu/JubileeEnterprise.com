@@ -842,6 +842,12 @@ public partial class MainWindow : Window
 
     public void UpdateEmailBodyBrowser()
     {
+        // Call the async version without blocking
+        _ = UpdateEmailBodyBrowserAsync();
+    }
+
+    private async Task UpdateEmailBodyBrowserAsync()
+    {
         if (EmailBodyBrowser == null) return;
 
         var message = _mainViewModel.DisplayedMessage;
@@ -871,6 +877,12 @@ public partial class MainWindow : Window
 
             // Remove event handlers (onclick, onload, etc.)
             bodyContent = System.Text.RegularExpressions.Regex.Replace(bodyContent, @"\s+on\w+\s*=\s*[""'][^""']*[""']", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Check for CID references and convert them to data URIs
+            if (bodyContent.Contains("cid:") && message.AccountId.HasValue && !string.IsNullOrEmpty(message.RemoteMessageId))
+            {
+                bodyContent = await ConvertCidToDataUriAsync(bodyContent, message);
+            }
         }
 
         // Wrap the email body in HTML with dark theme styling
@@ -1006,6 +1018,89 @@ public partial class MainWindow : Window
 </html>";
 
         EmailBodyBrowser.NavigateToString(htmlContent);
+    }
+
+    /// <summary>
+    /// Converts CID references in email body to data URIs by downloading inline images
+    /// </summary>
+    private async Task<string> ConvertCidToDataUriAsync(string bodyContent, Models.EmailMessage message)
+    {
+        try
+        {
+            if (message.AccountId == null || string.IsNullOrEmpty(message.RemoteMessageId))
+                return bodyContent;
+
+            // Get the folder ID from the message
+            var folderId = Guid.TryParse(message.FolderId, out var folderGuid) ? folderGuid : Guid.Empty;
+            if (folderId == Guid.Empty)
+            {
+                System.Diagnostics.Debug.WriteLine("[MainWindow] Cannot convert CID: Invalid folder ID");
+                return bodyContent;
+            }
+
+            // Get the synced email display service
+            var syncedEmailService = new Services.EmailSync.SyncedEmailDisplayService();
+
+            // Download inline images
+            var cidToPath = await syncedEmailService.DownloadInlineImagesAsync(
+                message.AccountId.Value,
+                folderId,
+                message.RemoteMessageId);
+
+            if (cidToPath.Count == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("[MainWindow] No inline images found to convert");
+                return bodyContent;
+            }
+
+            // Convert CID references to data URIs
+            var result = bodyContent;
+            foreach (var kvp in cidToPath)
+            {
+                var contentId = kvp.Key;
+                var filePath = kvp.Value;
+
+                if (!IOFile.Exists(filePath))
+                    continue;
+
+                try
+                {
+                    // Read file and convert to base64
+                    var fileBytes = await System.Threading.Tasks.Task.Run(() => IOFile.ReadAllBytes(filePath));
+                    var base64 = Convert.ToBase64String(fileBytes);
+
+                    // Determine MIME type from extension
+                    var extension = IOPath.GetExtension(filePath).ToLowerInvariant();
+                    var mimeType = extension switch
+                    {
+                        ".jpg" or ".jpeg" => "image/jpeg",
+                        ".png" => "image/png",
+                        ".gif" => "image/gif",
+                        ".bmp" => "image/bmp",
+                        ".webp" => "image/webp",
+                        _ => "image/png"
+                    };
+
+                    // Create data URI
+                    var dataUri = $"data:{mimeType};base64,{base64}";
+
+                    // Replace CID reference with data URI
+                    result = result.Replace($"cid:{contentId}", dataUri);
+                    System.Diagnostics.Debug.WriteLine($"[MainWindow] Converted CID:{contentId} to data URI");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MainWindow] Error converting CID {contentId}: {ex.Message}");
+                }
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Error in ConvertCidToDataUriAsync: {ex.Message}");
+            return bodyContent;
+        }
     }
 
     private void MinimizeButton_Click(object sender, RoutedEventArgs e)
