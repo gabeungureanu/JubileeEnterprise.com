@@ -622,6 +622,26 @@ public partial class ComposeMailViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Gets the body content with CID references replaced by data URIs for display in WebBrowser
+    /// </summary>
+    public string GetBodyForDisplay()
+    {
+        if (string.IsNullOrEmpty(Body) || EmbeddedImages.Count == 0)
+            return Body;
+
+        var displayBody = Body;
+        foreach (var image in EmbeddedImages)
+        {
+            if (!string.IsNullOrEmpty(image.DataUri))
+            {
+                // Replace CID reference with data URI
+                displayBody = displayBody.Replace($"cid:{image.ContentId}", image.DataUri);
+            }
+        }
+        return displayBody;
+    }
+
+    /// <summary>
     /// Start composing a reply to a message
     /// </summary>
     public async void StartReply(string fromEmail, string toEmail, string toName, string originalSubject, string originalBody, DateTime originalDate, bool isHtml = false)
@@ -784,6 +804,15 @@ public class EmbeddedImageData
     public string ContentId { get; set; } = string.Empty;
     public string FilePath { get; set; } = string.Empty;
     public string FileName { get; set; } = string.Empty;
+    public string? Base64Data { get; set; }
+    public string MimeType { get; set; } = "image/png";
+
+    /// <summary>
+    /// Gets the data URI for this embedded image (for WebBrowser display)
+    /// </summary>
+    public string? DataUri => !string.IsNullOrEmpty(Base64Data)
+        ? $"data:{MimeType};base64,{Base64Data}"
+        : null;
 }
 
 public class SaveDraftEventArgs : EventArgs

@@ -130,7 +130,7 @@ public partial class ComposeMailView : UserControl
             }
             else if (inline is InlineUIContainer container)
             {
-                // Handle embedded images using CID references
+                // Handle embedded images
                 if (container.Child is Image image)
                 {
                     // Get file path from Tag property
@@ -141,16 +141,51 @@ public partial class ComposeMailView : UserControl
                         var contentId = $"img_{Guid.NewGuid():N}";
                         var fileName = Path.GetFileName(filePath);
 
-                        // Add to embedded images list
+                        // Determine MIME type from extension
+                        var extension = Path.GetExtension(filePath).ToLowerInvariant();
+                        var mimeType = extension switch
+                        {
+                            ".jpg" or ".jpeg" => "image/jpeg",
+                            ".png" => "image/png",
+                            ".gif" => "image/gif",
+                            ".bmp" => "image/bmp",
+                            ".webp" => "image/webp",
+                            _ => "image/png"
+                        };
+
+                        // Read file and convert to base64
+                        string? base64Data = null;
+                        try
+                        {
+                            var fileBytes = File.ReadAllBytes(filePath);
+                            base64Data = Convert.ToBase64String(fileBytes);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[ComposeMailView] Error reading image file: {ex.Message}");
+                        }
+
+                        // Add to embedded images list (for SMTP sending with CID)
                         embeddedImages.Add(new EmbeddedImageData
                         {
                             ContentId = contentId,
                             FilePath = filePath,
-                            FileName = fileName
+                            FileName = fileName,
+                            Base64Data = base64Data,
+                            MimeType = mimeType
                         });
 
-                        // Use CID reference in HTML
-                        html.Append($"<img src=\"cid:{contentId}\" style=\"max-width:600px;\" />");
+                        // Use data URI in HTML for proper display in WebBrowser
+                        // This displays correctly locally and will be converted to CID for SMTP sending
+                        if (!string.IsNullOrEmpty(base64Data))
+                        {
+                            html.Append($"<img src=\"data:{mimeType};base64,{base64Data}\" data-cid=\"{contentId}\" style=\"max-width:600px;\" />");
+                        }
+                        else
+                        {
+                            // Fallback to CID if base64 conversion failed
+                            html.Append($"<img src=\"cid:{contentId}\" style=\"max-width:600px;\" />");
+                        }
                     }
                 }
             }
