@@ -1002,6 +1002,239 @@ public class EmailSyncService
         }
     }
 
+    #region Folder Operations
+
+    /// <summary>
+    /// Create a new folder on the email server
+    /// </summary>
+    /// <param name="account">The synced email account</param>
+    /// <param name="folderName">The name for the new folder</param>
+    /// <param name="connection">The active connection</param>
+    /// <returns>The created folder if successful, null otherwise</returns>
+    public async Task<SyncedEmailFolder?> CreateFolderAsync(
+        SyncedEmailAccount account,
+        string folderName,
+        ConnectionResult connection,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            Debug.WriteLine($"[EmailSync] Creating folder '{folderName}'");
+
+            SyncedEmailFolder? newFolder = null;
+
+            if (connection.ConnectionType == ConnectionType.MicrosoftGraph && connection.GraphClient != null)
+            {
+                // Create folder using Microsoft Graph API
+                var mailFolder = new Microsoft.Graph.Models.MailFolder
+                {
+                    DisplayName = folderName
+                };
+
+                var createdFolder = await connection.GraphClient.Me.MailFolders
+                    .PostAsync(mailFolder, cancellationToken: cancellationToken);
+
+                if (createdFolder != null)
+                {
+                    newFolder = new SyncedEmailFolder
+                    {
+                        Id = Guid.NewGuid(),
+                        AccountId = account.Id,
+                        RemoteFolderId = createdFolder.Id ?? "",
+                        FolderName = createdFolder.DisplayName ?? folderName,
+                        FolderType = FolderType.Custom,
+                        MessageCount = 0,
+                        UnreadCount = 0,
+                        IsSubscribed = true
+                    };
+
+                    Debug.WriteLine($"[EmailSync] Folder created via Graph API: {createdFolder.Id}");
+                }
+            }
+            else if (connection.ConnectionType == ConnectionType.IMAP && connection.ImapClient != null)
+            {
+                // Create folder using IMAP
+                var rootFolder = connection.ImapClient.GetFolder(connection.ImapClient.PersonalNamespaces[0]);
+                var createdFolder = await rootFolder.CreateAsync(folderName, true, cancellationToken);
+
+                if (createdFolder != null)
+                {
+                    newFolder = new SyncedEmailFolder
+                    {
+                        Id = Guid.NewGuid(),
+                        AccountId = account.Id,
+                        RemoteFolderId = createdFolder.FullName,
+                        FolderName = folderName,
+                        FolderType = FolderType.Custom,
+                        MessageCount = 0,
+                        UnreadCount = 0,
+                        IsSubscribed = true
+                    };
+
+                    Debug.WriteLine($"[EmailSync] Folder created via IMAP: {createdFolder.FullName}");
+                }
+            }
+
+            if (newFolder != null)
+            {
+                // Add to local storage
+                var folders = await _secureStorage.RetrieveAsync<List<SyncedEmailFolder>>($"folders_{account.Id}") ?? new List<SyncedEmailFolder>();
+                folders.Add(newFolder);
+                await _secureStorage.StoreAsync($"folders_{account.Id}", folders);
+                Debug.WriteLine("[EmailSync] Folder added to local storage");
+            }
+
+            return newFolder;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[EmailSync] Error creating folder: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Rename a folder on the email server
+    /// </summary>
+    /// <param name="account">The synced email account</param>
+    /// <param name="folder">The folder to rename</param>
+    /// <param name="newName">The new name for the folder</param>
+    /// <param name="connection">The active connection</param>
+    /// <returns>True if successful, false otherwise</returns>
+    public async Task<bool> RenameFolderAsync(
+        SyncedEmailAccount account,
+        SyncedEmailFolder folder,
+        string newName,
+        ConnectionResult connection,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            Debug.WriteLine($"[EmailSync] Renaming folder '{folder.FolderName}' to '{newName}'");
+
+            bool renamedOnServer = false;
+            string? newRemoteFolderId = null;
+
+            if (connection.ConnectionType == ConnectionType.MicrosoftGraph && connection.GraphClient != null)
+            {
+                // Rename folder using Microsoft Graph API
+                var updateFolder = new Microsoft.Graph.Models.MailFolder
+                {
+                    DisplayName = newName
+                };
+
+                var updatedFolder = await connection.GraphClient.Me.MailFolders[folder.RemoteFolderId]
+                    .PatchAsync(updateFolder, cancellationToken: cancellationToken);
+
+                if (updatedFolder != null)
+                {
+                    renamedOnServer = true;
+                    newRemoteFolderId = updatedFolder.Id;
+                    Debug.WriteLine("[EmailSync] Folder renamed via Graph API");
+                }
+            }
+            else if (connection.ConnectionType == ConnectionType.IMAP && connection.ImapClient != null)
+            {
+                // Rename folder using IMAP
+                var imapFolder = await connection.ImapClient.GetFolderAsync(folder.RemoteFolderId, cancellationToken);
+                await imapFolder.RenameAsync(imapFolder.ParentFolder, newName, cancellationToken);
+
+                renamedOnServer = true;
+                newRemoteFolderId = imapFolder.FullName;
+                Debug.WriteLine($"[EmailSync] Folder renamed via IMAP to: {newRemoteFolderId}");
+            }
+
+            if (renamedOnServer)
+            {
+                // Update local storage
+                var folders = await _secureStorage.RetrieveAsync<List<SyncedEmailFolder>>($"folders_{account.Id}") ?? new List<SyncedEmailFolder>();
+                var localFolder = folders.FirstOrDefault(f => f.Id == folder.Id);
+                if (localFolder != null)
+                {
+                    localFolder.FolderName = newName;
+                    if (!string.IsNullOrEmpty(newRemoteFolderId))
+                    {
+                        localFolder.RemoteFolderId = newRemoteFolderId;
+                    }
+                    await _secureStorage.StoreAsync($"folders_{account.Id}", folders);
+                    Debug.WriteLine("[EmailSync] Folder renamed in local storage");
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[EmailSync] Error renaming folder: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Delete a folder from the email server
+    /// </summary>
+    /// <param name="account">The synced email account</param>
+    /// <param name="folder">The folder to delete</param>
+    /// <param name="connection">The active connection</param>
+    /// <returns>True if successful, false otherwise</returns>
+    public async Task<bool> DeleteFolderAsync(
+        SyncedEmailAccount account,
+        SyncedEmailFolder folder,
+        ConnectionResult connection,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            Debug.WriteLine($"[EmailSync] Deleting folder '{folder.FolderName}'");
+
+            bool deletedOnServer = false;
+
+            if (connection.ConnectionType == ConnectionType.MicrosoftGraph && connection.GraphClient != null)
+            {
+                // Delete folder using Microsoft Graph API
+                await connection.GraphClient.Me.MailFolders[folder.RemoteFolderId]
+                    .DeleteAsync(cancellationToken: cancellationToken);
+
+                deletedOnServer = true;
+                Debug.WriteLine("[EmailSync] Folder deleted via Graph API");
+            }
+            else if (connection.ConnectionType == ConnectionType.IMAP && connection.ImapClient != null)
+            {
+                // Delete folder using IMAP
+                var imapFolder = await connection.ImapClient.GetFolderAsync(folder.RemoteFolderId, cancellationToken);
+                await imapFolder.DeleteAsync(cancellationToken);
+
+                deletedOnServer = true;
+                Debug.WriteLine("[EmailSync] Folder deleted via IMAP");
+            }
+
+            if (deletedOnServer)
+            {
+                // Remove from local storage
+                var folders = await _secureStorage.RetrieveAsync<List<SyncedEmailFolder>>($"folders_{account.Id}") ?? new List<SyncedEmailFolder>();
+                folders.RemoveAll(f => f.Id == folder.Id);
+                await _secureStorage.StoreAsync($"folders_{account.Id}", folders);
+
+                // Also remove any cached messages for this folder
+                await _secureStorage.DeleteAsync($"messages_{account.Id}_{folder.Id}");
+
+                Debug.WriteLine("[EmailSync] Folder removed from local storage");
+                return true;
+            }
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[EmailSync] Error deleting folder: {ex.Message}");
+            return false;
+        }
+    }
+
+    #endregion
+
     private void RaiseProgress(string message, int current, int total)
     {
         SyncProgress?.Invoke(this, new SyncProgressEventArgs

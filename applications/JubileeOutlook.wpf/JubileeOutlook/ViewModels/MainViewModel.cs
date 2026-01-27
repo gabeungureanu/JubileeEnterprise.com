@@ -1260,75 +1260,179 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Creates a new custom folder with the given name
+    /// Creates a new custom folder with the given name (syncs to server)
     /// </summary>
-    public void CreateFolder(string folderName)
+    public async Task<bool> CreateFolderAsync(string folderName)
     {
         if (string.IsNullOrWhiteSpace(folderName))
         {
             System.Diagnostics.Debug.WriteLine("[MainViewModel] CreateFolder: Empty folder name");
-            return;
+            return false;
         }
 
         if (AccountRootFolder?.SubFolders == null)
         {
             System.Diagnostics.Debug.WriteLine("[MainViewModel] CreateFolder: No account root folder");
-            return;
+            return false;
         }
 
         // Check if folder already exists
         if (AccountRootFolder.SubFolders.Any(f => f.Name.Equals(folderName, StringComparison.OrdinalIgnoreCase)))
         {
             System.Diagnostics.Debug.WriteLine($"[MainViewModel] CreateFolder: Folder '{folderName}' already exists");
-            return;
+            return false;
         }
 
-        var newFolder = new MailFolder
+        // For synced accounts, create folder on server
+        if (HasSyncedAccounts && Guid.TryParse(AccountRootFolder.Id, out var accountId))
         {
-            Id = Guid.NewGuid().ToString(),
-            Name = folderName,
-            Type = FolderType.Custom,
-            Icon = "\ue2c7", // folder icon
-            UnreadCount = 0,
-            TotalCount = 0
-        };
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Creating folder '{folderName}' on server...");
+            var createdFolder = await _syncedEmailService.CreateFolderAsync(accountId, folderName);
 
-        AccountRootFolder.SubFolders.Add(newFolder);
-        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Created new folder: {folderName}");
+            if (createdFolder != null)
+            {
+                // Add to UI
+                var uiFolder = new MailFolder
+                {
+                    Id = createdFolder.Id.ToString(),
+                    Name = createdFolder.FolderName,
+                    Type = FolderType.Custom,
+                    Icon = "\ue2c7", // folder icon
+                    UnreadCount = 0,
+                    TotalCount = 0
+                };
+                AccountRootFolder.SubFolders.Add(uiFolder);
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Created folder on server: {folderName}");
+                return true;
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Failed to create folder on server");
+                return false;
+            }
+        }
+        else
+        {
+            // Local-only folder for non-synced accounts
+            var newFolder = new MailFolder
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = folderName,
+                Type = FolderType.Custom,
+                Icon = "\ue2c7", // folder icon
+                UnreadCount = 0,
+                TotalCount = 0
+            };
+
+            AccountRootFolder.SubFolders.Add(newFolder);
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Created local folder: {folderName}");
+            return true;
+        }
     }
 
     /// <summary>
-    /// Renames a folder
+    /// Renames a folder (syncs to server)
     /// </summary>
-    public void RenameFolderTo(MailFolder folder, string newName)
+    public async Task<bool> RenameFolderAsync(MailFolder folder, string newName)
     {
         if (folder == null || string.IsNullOrWhiteSpace(newName))
         {
             System.Diagnostics.Debug.WriteLine("[MainViewModel] RenameFolderTo: Invalid parameters");
-            return;
+            return false;
         }
 
         var oldName = folder.Name;
-        folder.Name = newName;
-        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Renamed folder from '{oldName}' to '{newName}'");
+
+        // For synced accounts, rename folder on server
+        if (HasSyncedAccounts && AccountRootFolder != null && Guid.TryParse(AccountRootFolder.Id, out var accountId) && Guid.TryParse(folder.Id, out var folderId))
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Renaming folder '{oldName}' to '{newName}' on server...");
+            var success = await _syncedEmailService.RenameFolderAsync(accountId, folderId, newName);
+
+            if (success)
+            {
+                folder.Name = newName;
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Renamed folder on server from '{oldName}' to '{newName}'");
+                return true;
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Failed to rename folder on server");
+                return false;
+            }
+        }
+        else
+        {
+            // Local-only rename for non-synced accounts
+            folder.Name = newName;
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Renamed local folder from '{oldName}' to '{newName}'");
+            return true;
+        }
     }
 
     /// <summary>
-    /// Deletes a folder
+    /// Deletes a folder (syncs to server)
     /// </summary>
-    public void RemoveFolder(MailFolder folder)
+    public async Task<bool> DeleteFolderAsync(MailFolder folder)
     {
         if (folder == null || AccountRootFolder?.SubFolders == null)
         {
             System.Diagnostics.Debug.WriteLine("[MainViewModel] RemoveFolder: Invalid parameters");
-            return;
+            return false;
         }
 
-        AccountRootFolder.SubFolders.Remove(folder);
+        // For synced accounts, delete folder on server
+        if (HasSyncedAccounts && Guid.TryParse(AccountRootFolder.Id, out var accountId) && Guid.TryParse(folder.Id, out var folderId))
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Deleting folder '{folder.Name}' from server...");
+            var success = await _syncedEmailService.DeleteFolderAsync(accountId, folderId);
 
-        // Select Inbox after deletion
-        SelectedFolder = AccountRootFolder.SubFolders.FirstOrDefault(f => f.Type == FolderType.Inbox);
-        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Removed folder: {folder.Name}");
+            if (success)
+            {
+                AccountRootFolder.SubFolders.Remove(folder);
+                SelectedFolder = AccountRootFolder.SubFolders.FirstOrDefault(f => f.Type == FolderType.Inbox);
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Deleted folder from server: {folder.Name}");
+                return true;
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Failed to delete folder from server");
+                return false;
+            }
+        }
+        else
+        {
+            // Local-only delete for non-synced accounts
+            AccountRootFolder.SubFolders.Remove(folder);
+            SelectedFolder = AccountRootFolder.SubFolders.FirstOrDefault(f => f.Type == FolderType.Inbox);
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Removed local folder: {folder.Name}");
+            return true;
+        }
+    }
+
+    // Keep synchronous versions for backward compatibility with existing callers
+    /// <summary>
+    /// Creates a new custom folder with the given name (legacy sync wrapper)
+    /// </summary>
+    public void CreateFolder(string folderName)
+    {
+        _ = CreateFolderAsync(folderName);
+    }
+
+    /// <summary>
+    /// Renames a folder (legacy sync wrapper)
+    /// </summary>
+    public void RenameFolderTo(MailFolder folder, string newName)
+    {
+        _ = RenameFolderAsync(folder, newName);
+    }
+
+    /// <summary>
+    /// Deletes a folder (legacy sync wrapper)
+    /// </summary>
+    public void RemoveFolder(MailFolder folder)
+    {
+        _ = DeleteFolderAsync(folder);
     }
 
     [RelayCommand]

@@ -1803,6 +1803,154 @@ public class SyncedEmailDisplayService
             return null;
         }
     }
+
+    #region Folder Operations
+
+    /// <summary>
+    /// Create a new folder on the email server
+    /// </summary>
+    /// <param name="accountId">The account ID</param>
+    /// <param name="folderName">The name for the new folder</param>
+    /// <returns>The created folder if successful, null otherwise</returns>
+    public async Task<SyncedEmailFolder?> CreateFolderAsync(Guid accountId, string folderName)
+    {
+        try
+        {
+            Debug.WriteLine($"[SyncedEmailDisplayService] Creating folder: accountId={accountId}, folderName={folderName}");
+
+            // Get the account
+            var account = await _secureStorage.RetrieveAsync<SyncedEmailAccount>($"account_{accountId}");
+            if (account == null)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Account not found for key: account_{accountId}");
+                return null;
+            }
+
+            // Connect to the server
+            var connectionService = new EmailConnectionService(_secureStorage, new MicrosoftOAuth2Service(_secureStorage));
+            var connectionResult = await connectionService.ConnectAsync(account);
+
+            if (!connectionResult.Success)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Connection failed: {connectionResult.ErrorMessage}");
+                return null;
+            }
+
+            // Create the folder via EmailSyncService
+            var syncService = new EmailSyncService(_secureStorage, connectionService, new FolderDiscoveryService());
+            var newFolder = await syncService.CreateFolderAsync(account, folderName, connectionResult);
+
+            return newFolder;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[SyncedEmailDisplayService] Error creating folder: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Rename a folder on the email server
+    /// </summary>
+    /// <param name="accountId">The account ID</param>
+    /// <param name="folderId">The folder ID to rename</param>
+    /// <param name="newName">The new name for the folder</param>
+    /// <returns>True if successful, false otherwise</returns>
+    public async Task<bool> RenameFolderAsync(Guid accountId, Guid folderId, string newName)
+    {
+        try
+        {
+            Debug.WriteLine($"[SyncedEmailDisplayService] Renaming folder: accountId={accountId}, folderId={folderId}, newName={newName}");
+
+            // Get the account
+            var account = await _secureStorage.RetrieveAsync<SyncedEmailAccount>($"account_{accountId}");
+            if (account == null)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Account not found for key: account_{accountId}");
+                return false;
+            }
+
+            // Get the folder
+            var folders = await GetFoldersAsync(accountId);
+            var folder = folders.FirstOrDefault(f => f.Id == folderId);
+            if (folder == null)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Folder not found: {folderId}");
+                return false;
+            }
+
+            // Connect to the server
+            var connectionService = new EmailConnectionService(_secureStorage, new MicrosoftOAuth2Service(_secureStorage));
+            var connectionResult = await connectionService.ConnectAsync(account);
+
+            if (!connectionResult.Success)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Connection failed: {connectionResult.ErrorMessage}");
+                return false;
+            }
+
+            // Rename the folder via EmailSyncService
+            var syncService = new EmailSyncService(_secureStorage, connectionService, new FolderDiscoveryService());
+            return await syncService.RenameFolderAsync(account, folder, newName, connectionResult);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[SyncedEmailDisplayService] Error renaming folder: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Delete a folder from the email server
+    /// </summary>
+    /// <param name="accountId">The account ID</param>
+    /// <param name="folderId">The folder ID to delete</param>
+    /// <returns>True if successful, false otherwise</returns>
+    public async Task<bool> DeleteFolderAsync(Guid accountId, Guid folderId)
+    {
+        try
+        {
+            Debug.WriteLine($"[SyncedEmailDisplayService] Deleting folder: accountId={accountId}, folderId={folderId}");
+
+            // Get the account
+            var account = await _secureStorage.RetrieveAsync<SyncedEmailAccount>($"account_{accountId}");
+            if (account == null)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Account not found for key: account_{accountId}");
+                return false;
+            }
+
+            // Get the folder
+            var folders = await GetFoldersAsync(accountId);
+            var folder = folders.FirstOrDefault(f => f.Id == folderId);
+            if (folder == null)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Folder not found: {folderId}");
+                return false;
+            }
+
+            // Connect to the server
+            var connectionService = new EmailConnectionService(_secureStorage, new MicrosoftOAuth2Service(_secureStorage));
+            var connectionResult = await connectionService.ConnectAsync(account);
+
+            if (!connectionResult.Success)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Connection failed: {connectionResult.ErrorMessage}");
+                return false;
+            }
+
+            // Delete the folder via EmailSyncService
+            var syncService = new EmailSyncService(_secureStorage, connectionService, new FolderDiscoveryService());
+            return await syncService.DeleteFolderAsync(account, folder, connectionResult);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[SyncedEmailDisplayService] Error deleting folder: {ex.Message}");
+            return false;
+        }
+    }
+
+    #endregion
 }
 
 /// <summary>
