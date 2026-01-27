@@ -7,6 +7,19 @@ using DbContact = JubileeOutlook.Models.Contact;
 namespace JubileeOutlook.ViewModels;
 
 /// <summary>
+/// Sort options for contacts list
+/// </summary>
+public enum ContactSortOption
+{
+    NameAscending,
+    NameDescending,
+    CompanyAscending,
+    CompanyDescending,
+    DateAddedNewest,
+    DateAddedOldest
+}
+
+/// <summary>
 /// ViewModel for the People/Contacts module
 /// Uses ApiContactService for API-based contact operations with offline-first support
 /// </summary>
@@ -37,6 +50,23 @@ public partial class PeopleViewModel : ObservableObject
 
     [ObservableProperty]
     private string _contentHeader = "Your contacts";
+
+    [ObservableProperty]
+    private ContactSortOption _selectedSortOption = ContactSortOption.NameAscending;
+
+    /// <summary>
+    /// Gets the display text for the current sort option
+    /// </summary>
+    public string SortOptionDisplayText => SelectedSortOption switch
+    {
+        ContactSortOption.NameAscending => "Name (A-Z)",
+        ContactSortOption.NameDescending => "Name (Z-A)",
+        ContactSortOption.CompanyAscending => "Company (A-Z)",
+        ContactSortOption.CompanyDescending => "Company (Z-A)",
+        ContactSortOption.DateAddedNewest => "Date Added (Newest)",
+        ContactSortOption.DateAddedOldest => "Date Added (Oldest)",
+        _ => "Name (A-Z)"
+    };
 
     public ObservableCollection<ContactFolder> Folders { get; } = new();
     public ObservableCollection<Contact> Contacts { get; } = new();
@@ -376,6 +406,12 @@ public partial class PeopleViewModel : ObservableObject
         FilterContacts();
     }
 
+    partial void OnSelectedSortOptionChanged(ContactSortOption value)
+    {
+        OnPropertyChanged(nameof(SortOptionDisplayText));
+        FilterContacts();
+    }
+
     partial void OnSelectedFolderChanged(ContactFolder? value)
     {
         // Update selection state
@@ -453,6 +489,9 @@ public partial class PeopleViewModel : ObservableObject
         var query = SearchText?.Trim().ToLowerInvariant() ?? string.Empty;
         var folderName = SelectedFolder?.Name ?? "Your contacts";
 
+        // Collect filtered contacts first
+        var filteredList = new List<Contact>();
+
         foreach (var contact in Contacts)
         {
             // If a category is selected, filter by category
@@ -482,8 +521,17 @@ public partial class PeopleViewModel : ObservableObject
                 contact.Email.ToLowerInvariant().Contains(query) ||
                 (contact.Company?.ToLowerInvariant().Contains(query) ?? false))
             {
-                FilteredContacts.Add(contact);
+                filteredList.Add(contact);
             }
+        }
+
+        // Apply sorting
+        var sortedList = ApplySorting(filteredList);
+
+        // Add to observable collection
+        foreach (var contact in sortedList)
+        {
+            FilteredContacts.Add(contact);
         }
 
         HasContacts = FilteredContacts.Count > 0;
@@ -495,6 +543,25 @@ public partial class PeopleViewModel : ObservableObject
         UpdateCategories();
 
         System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] FilterContacts - Folder: {folderName}, Category: {SelectedCategory ?? "(none)"}, Total: {Contacts.Count}, Filtered: {FilteredContacts.Count}, Categories: {Categories.Count}");
+    }
+
+    /// <summary>
+    /// Applies sorting to the contact list based on the selected sort option
+    /// </summary>
+    private IEnumerable<Contact> ApplySorting(List<Contact> contacts)
+    {
+        return SelectedSortOption switch
+        {
+            ContactSortOption.NameAscending => contacts.OrderBy(c => c.DisplayName, StringComparer.OrdinalIgnoreCase),
+            ContactSortOption.NameDescending => contacts.OrderByDescending(c => c.DisplayName, StringComparer.OrdinalIgnoreCase),
+            ContactSortOption.CompanyAscending => contacts.OrderBy(c => string.IsNullOrEmpty(c.Company) ? "zzz" : c.Company, StringComparer.OrdinalIgnoreCase)
+                                                         .ThenBy(c => c.DisplayName, StringComparer.OrdinalIgnoreCase),
+            ContactSortOption.CompanyDescending => contacts.OrderByDescending(c => string.IsNullOrEmpty(c.Company) ? "" : c.Company, StringComparer.OrdinalIgnoreCase)
+                                                          .ThenBy(c => c.DisplayName, StringComparer.OrdinalIgnoreCase),
+            ContactSortOption.DateAddedNewest => contacts.OrderByDescending(c => c.CreatedAt),
+            ContactSortOption.DateAddedOldest => contacts.OrderBy(c => c.CreatedAt),
+            _ => contacts.OrderBy(c => c.DisplayName, StringComparer.OrdinalIgnoreCase)
+        };
     }
 
     /// <summary>
@@ -1431,6 +1498,16 @@ public partial class PeopleViewModel : ObservableObject
     private void SelectFolder(ContactFolder folder)
     {
         SelectedFolder = folder;
+    }
+
+    /// <summary>
+    /// Command to set the sort option
+    /// </summary>
+    [RelayCommand]
+    private void SetSortOption(ContactSortOption option)
+    {
+        SelectedSortOption = option;
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Sort option changed to: {option}");
     }
 
     #region Bulk Operations

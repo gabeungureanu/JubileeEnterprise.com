@@ -577,10 +577,195 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Content Header -->
+                    <!-- Content Header with Sort -->
                     <Border Grid.Row="0" Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="16,12">
-                        <TextBlock Text="{Binding ContentHeader, FallbackValue='Your contacts'}"
-                                   FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource PrimaryTextBrush}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding ContentHeader, FallbackValue='Your contacts'}"
+                                       FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource PrimaryTextBrush}"
+                                       VerticalAlignment="Center"/>
+
+                            <!-- Sort Dropdown -->
+                            <Grid Grid.Column="1">
+                                <ToggleButton x:Name="SortDropdownButton"
+                                              Background="Transparent" BorderThickness="0" Padding="8,4" Cursor="Hand">
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                                    Padding="{TemplateBinding Padding}" CornerRadius="4">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xe164;" FontFamily="{StaticResource MaterialIcons}"
+                                                               FontSize="16" Foreground="{StaticResource SecondaryTextBrush}"
+                                                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                    <TextBlock Text="{Binding SortOptionDisplayText}" FontSize="12"
+                                                               Foreground="{StaticResource SecondaryTextBrush}"
+                                                               VerticalAlignment="Center"/>
+                                                    <TextBlock Text="&#xe5cf;" FontFamily="{StaticResource MaterialIcons}"
+                                                               FontSize="14" Foreground="{StaticResource SecondaryTextBrush}"
+                                                               VerticalAlignment="Center" Margin="4,0,0,0"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="#2A2A2A"/>
+                                                </Trigger>
+                                                <Trigger Property="IsChecked" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="#333333"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
+                                </ToggleButton>
+
+                                <!-- Sort Dropdown Popup -->
+                                <Popup IsOpen="{Binding IsChecked, ElementName=SortDropdownButton}"
+                                       PlacementTarget="{Binding ElementName=SortDropdownButton}"
+                                       Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
+                                    <Border Background="{StaticResource TertiaryBackgroundBrush}"
+                                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                            CornerRadius="4" Padding="4" Margin="0,4,0,0">
+                                        <Border.Effect>
+                                            <DropShadowEffect Color="Black" Opacity="0.3" BlurRadius="8" ShadowDepth="2"/>
+                                        </Border.Effect>
+                                        <StackPanel MinWidth="160">
+                                            <!-- Name A-Z -->
+                                            <Button Command="{Binding SetSortOptionCommand}" CommandParameter="{x:Static viewmodels:ContactSortOption.NameAscending}"
+                                                    Click="SortMenuItem_Click" Background="Transparent" BorderThickness="0"
+                                                    Padding="12,8" Cursor="Hand" HorizontalContentAlignment="Left">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="&#xe5d8;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                                                           Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                                <TextBlock Text="Name (A-Z)" FontSize="13" Foreground="{StaticResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                            <!-- Name Z-A -->
+                                            <Button Command="{Binding SetSortOptionCommand}" CommandParameter="{x:Static viewmodels:ContactSortOption.NameDescending}"
+                                                    Click="SortMenuItem_Click" Background="Transparent" BorderThickness="0"
+                                                    Padding="12,8" Cursor="Hand" HorizontalContentAlignment="Left">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="&#xe5db;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                                                           Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                                <TextBlock Text="Name (Z-A)" FontSize="13" Foreground="{StaticResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                            <!-- Separator -->
+                                            <Rectangle Height="1" Fill="{StaticResource BorderBrush}" Margin="8,4"/>
+                                            <!-- Company A-Z -->
+                                            <Button Command="{Binding SetSortOptionCommand}" CommandParameter="{x:Static viewmodels:ContactSortOption.CompanyAscending}"
+                                                    Click="SortMenuItem_Click" Background="Transparent" BorderThickness="0"
+                                                    Padding="12,8" Cursor="Hand" HorizontalContentAlignment="Left">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="&#xe0af;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                                                           Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                                <TextBlock Text="Company (A-Z)" FontSize="13" Foreground="{StaticResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                            <!-- Company Z-A -->
+                                            <Button Command="{Binding SetSortOptionCommand}" CommandParameter="{x:Static viewmodels:ContactSortOption.CompanyDescending}"
+                                                    Click="SortMenuItem_Click" Background="Transparent" BorderThickness="0"
+                                                    Padding="12,8" Cursor="Hand" HorizontalContentAlignment="Left">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="&#xe0af;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                                                           Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                                <TextBlock Text="Company (Z-A)" FontSize="13" Foreground="{StaticResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                            <!-- Separator -->
+                                            <Rectangle Height="1" Fill="{StaticResource BorderBrush}" Margin="8,4"/>
+                                            <!-- Date Added (Newest) -->
+                                            <Button Command="{Binding SetSortOptionCommand}" CommandParameter="{x:Static viewmodels:ContactSortOption.DateAddedNewest}"
+                                                    Click="SortMenuItem_Click" Background="Transparent" BorderThickness="0"
+                                                    Padding="12,8" Cursor="Hand" HorizontalContentAlignment="Left">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="&#xe8df;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                                                           Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                                <TextBlock Text="Date Added (Newest)" FontSize="13" Foreground="{StaticResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                            <!-- Date Added (Oldest) -->
+                                            <Button Command="{Binding SetSortOptionCommand}" CommandParameter="{x:Static viewmodels:ContactSortOption.DateAddedOldest}"
+                                                    Click="SortMenuItem_Click" Background="Transparent" BorderThickness="0"
+                                                    Padding="12,8" Cursor="Hand" HorizontalContentAlignment="Left">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="&#xe8df;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                                                           Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                                <TextBlock Text="Date Added (Oldest)" FontSize="13" Foreground="{StaticResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                        </Grid>
                     </Border>
 
                     <!-- Contacts Content -->
