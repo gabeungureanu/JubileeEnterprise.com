@@ -167,6 +167,8 @@ public partial class ComposeMailView : UserControl
             oldViewModel.AttachmentRequested -= OnAttachmentRequested;
             oldViewModel.Attachments.CollectionChanged -= OnAttachmentsCollectionChanged;
             oldViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            oldViewModel.InsertSignatureRequested -= OnInsertSignatureRequested;
+            oldViewModel.ManageSignaturesRequested -= OnManageSignaturesRequested;
         }
 
         // Subscribe to new view model
@@ -175,6 +177,8 @@ public partial class ComposeMailView : UserControl
             newViewModel.AttachmentRequested += OnAttachmentRequested;
             newViewModel.Attachments.CollectionChanged += OnAttachmentsCollectionChanged;
             newViewModel.PropertyChanged += OnViewModelPropertyChanged;
+            newViewModel.InsertSignatureRequested += OnInsertSignatureRequested;
+            newViewModel.ManageSignaturesRequested += OnManageSignaturesRequested;
         }
     }
 
@@ -768,6 +772,115 @@ public partial class ComposeMailView : UserControl
             {
                 MessageDialog.ShowError(Window.GetWindow(this), $"Error inserting image: {ex.Message}", "Error");
             }
+        }
+    }
+
+    /// <summary>
+    /// Handle request to insert signature at the end of the email body
+    /// </summary>
+    private void OnInsertSignatureRequested(object? sender, string signatureHtml)
+    {
+        if (string.IsNullOrEmpty(signatureHtml)) return;
+
+        try
+        {
+            // Convert HTML signature to plain text for RichTextBox display
+            var plainTextSignature = ConvertHtmlToPlainText(signatureHtml);
+
+            // Move to end of document
+            var endPosition = MessageBodyEditor.Document.ContentEnd;
+
+            // Add some newlines before signature
+            var signatureLines = plainTextSignature.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+
+            foreach (var line in signatureLines)
+            {
+                var paragraph = new Paragraph(new Run(line));
+                MessageBodyEditor.Document.Blocks.Add(paragraph);
+            }
+
+            // Focus and move cursor to the beginning (before signature)
+            MessageBodyEditor.CaretPosition = MessageBodyEditor.Document.ContentStart;
+            MessageBodyEditor.Focus();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ComposeMailView] Error inserting signature: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Handle request to open signature management dialog
+    /// </summary>
+    private void OnManageSignaturesRequested(object? sender, EventArgs e)
+    {
+        try
+        {
+            var dialog = new SignatureManagementDialog
+            {
+                Owner = Window.GetWindow(this)
+            };
+            dialog.ShowDialog();
+
+            // Refresh signatures in ViewModel after dialog closes
+            if (DataContext is ComposeMailViewModel viewModel)
+            {
+                viewModel.RefreshSignatures();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ComposeMailView] Error opening signature dialog: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Handle signature dropdown button click
+    /// </summary>
+    private void SignatureDropdownButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (SignatureDropdownButton != null)
+        {
+            SignatureDropdownButton.IsChecked = !(SignatureDropdownButton.IsChecked ?? false);
+        }
+    }
+
+    /// <summary>
+    /// Handle signature menu item selection
+    /// </summary>
+    private void SignatureMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        // Close the dropdown
+        if (SignatureDropdownButton != null)
+        {
+            SignatureDropdownButton.IsChecked = false;
+        }
+    }
+
+    /// <summary>
+    /// Handle manage signatures menu item click
+    /// </summary>
+    private void ManageSignaturesMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        // Close the dropdown
+        if (SignatureDropdownButton != null)
+        {
+            SignatureDropdownButton.IsChecked = false;
+        }
+
+        // Open the signature management dialog
+        OnManageSignaturesRequested(sender, e);
+    }
+
+    /// <summary>
+    /// Inserts the currently selected signature into the email body
+    /// </summary>
+    public void InsertCurrentSignature()
+    {
+        if (DataContext is ComposeMailViewModel viewModel && viewModel.SelectedSignature != null && viewModel.IncludeSignature)
+        {
+            var signatureHtml = viewModel.GetFormattedSignature(asHtml: true);
+            OnInsertSignatureRequested(viewModel, signatureHtml);
         }
     }
 }

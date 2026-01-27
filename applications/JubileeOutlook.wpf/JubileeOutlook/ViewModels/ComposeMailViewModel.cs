@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using System.Windows.Threading;
+using JubileeOutlook.Services;
 
 namespace JubileeOutlook.ViewModels;
 
@@ -67,6 +68,24 @@ public partial class ComposeMailViewModel : ObservableObject
 
     // List of embedded images in the email body (for CID attachments)
     public List<EmbeddedImageData> EmbeddedImages { get; } = new();
+
+    // Signature support
+    private readonly EmailSignatureService _signatureService = EmailSignatureService.Instance;
+
+    [ObservableProperty]
+    private ObservableCollection<EmailSignature> _availableSignatures = new();
+
+    [ObservableProperty]
+    private EmailSignature? _selectedSignature;
+
+    [ObservableProperty]
+    private bool _includeSignature = true;
+
+    // Event to request signature insertion in the view
+    public event EventHandler<string>? InsertSignatureRequested;
+
+    // Event to request opening signature management dialog
+    public event EventHandler? ManageSignaturesRequested;
 
     // Events for communication with MainWindow
     public event EventHandler? MailSent;
@@ -378,6 +397,79 @@ public partial class ComposeMailViewModel : ObservableObject
         // TODO: Implement text formatting logic
     }
 
+    [RelayCommand]
+    private void ManageSignatures()
+    {
+        ManageSignaturesRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private void InsertSignature()
+    {
+        if (SelectedSignature != null && IncludeSignature)
+        {
+            var formattedSignature = _signatureService.FormatSignatureForEmail(SelectedSignature, asHtml: true);
+            InsertSignatureRequested?.Invoke(this, formattedSignature);
+        }
+    }
+
+    [RelayCommand]
+    private void ChangeSignature(EmailSignature? signature)
+    {
+        SelectedSignature = signature;
+    }
+
+    /// <summary>
+    /// Load available signatures from the service
+    /// </summary>
+    public async Task LoadSignaturesAsync()
+    {
+        await _signatureService.LoadAsync();
+        var signatures = _signatureService.GetSignatures();
+
+        AvailableSignatures.Clear();
+        foreach (var sig in signatures)
+        {
+            AvailableSignatures.Add(sig);
+        }
+
+        // Select default signature if available
+        SelectedSignature = _signatureService.GetDefaultSignature();
+    }
+
+    /// <summary>
+    /// Get the formatted signature content for the current selection
+    /// </summary>
+    public string GetFormattedSignature(bool asHtml = true)
+    {
+        if (SelectedSignature != null && IncludeSignature)
+        {
+            return _signatureService.FormatSignatureForEmail(SelectedSignature, asHtml);
+        }
+        return string.Empty;
+    }
+
+    /// <summary>
+    /// Refresh the signature list (call after managing signatures)
+    /// </summary>
+    public void RefreshSignatures()
+    {
+        var signatures = _signatureService.GetSignatures();
+
+        AvailableSignatures.Clear();
+        foreach (var sig in signatures)
+        {
+            AvailableSignatures.Add(sig);
+        }
+
+        // Re-select the current signature if it still exists
+        if (SelectedSignature != null)
+        {
+            SelectedSignature = AvailableSignatures.FirstOrDefault(s => s.Id == SelectedSignature.Id)
+                               ?? _signatureService.GetDefaultSignature();
+        }
+    }
+
     public void AddAttachment(string filePath)
     {
         var fileInfo = new System.IO.FileInfo(filePath);
@@ -427,7 +519,7 @@ public partial class ComposeMailViewModel : ObservableObject
         EmbeddedImages.Clear();
     }
 
-    public void StartComposing(string? fromEmail = null)
+    public async void StartComposing(string? fromEmail = null)
     {
         // Always clear the form first to ensure a fresh compose state
         ClearForm();
@@ -440,11 +532,43 @@ public partial class ComposeMailViewModel : ObservableObject
             From = fromEmail;
         }
 
+        // Load signatures
+        await LoadSignaturesAsync();
+
         // Start auto-save timer
         _autoSaveTimer.Start();
     }
 
-    public void LoadDraft(string draftId, string to, string cc, string bcc, string subject, string body, string? fromEmail = null, List<AttachmentInfo>? attachments = null)
+    /// <summary>
+    /// Start composing a new email with pre-filled recipient
+    /// </summary>
+    public async void StartComposingTo(string? fromEmail, string toEmail)
+    {
+        // Always clear the form first to ensure a fresh compose state
+        ClearForm();
+
+        IsComposing = true;
+
+        // Set the From field to the provided email, or keep default if not provided
+        if (!string.IsNullOrEmpty(fromEmail))
+        {
+            From = fromEmail;
+        }
+
+        // Set the To field with the recipient
+        if (!string.IsNullOrEmpty(toEmail))
+        {
+            To = toEmail;
+        }
+
+        // Load signatures
+        await LoadSignaturesAsync();
+
+        // Start auto-save timer
+        _autoSaveTimer.Start();
+    }
+
+    public async void LoadDraft(string draftId, string to, string cc, string bcc, string subject, string body, string? fromEmail = null, List<AttachmentInfo>? attachments = null)
     {
         // Clear and start fresh
         ClearForm();
@@ -482,6 +606,9 @@ public partial class ComposeMailViewModel : ObservableObject
         _lastSavedContent = GetContentHash();
         _hasUnsavedChanges = false;
 
+        // Load signatures (but don't auto-insert for drafts)
+        await LoadSignaturesAsync();
+
         // Start auto-save timer
         _autoSaveTimer.Start();
     }
@@ -497,7 +624,7 @@ public partial class ComposeMailViewModel : ObservableObject
     /// <summary>
     /// Start composing a reply to a message
     /// </summary>
-    public void StartReply(string fromEmail, string toEmail, string toName, string originalSubject, string originalBody, DateTime originalDate, bool isHtml = false)
+    public async void StartReply(string fromEmail, string toEmail, string toName, string originalSubject, string originalBody, DateTime originalDate, bool isHtml = false)
     {
         ClearForm();
         IsComposing = true;
@@ -512,13 +639,16 @@ public partial class ComposeMailViewModel : ObservableObject
         var quotedBody = BuildQuotedBody(toName, toEmail, originalDate, originalSubject, originalBody, isHtml);
         Body = quotedBody;
 
+        // Load signatures
+        await LoadSignaturesAsync();
+
         _autoSaveTimer.Start();
     }
 
     /// <summary>
     /// Start composing a reply-all to a message
     /// </summary>
-    public void StartReplyAll(string fromEmail, string toEmail, string toName, string originalCc, string originalSubject, string originalBody, DateTime originalDate, bool isHtml = false)
+    public async void StartReplyAll(string fromEmail, string toEmail, string toName, string originalCc, string originalSubject, string originalBody, DateTime originalDate, bool isHtml = false)
     {
         ClearForm();
         IsComposing = true;
@@ -541,13 +671,16 @@ public partial class ComposeMailViewModel : ObservableObject
         var quotedBody = BuildQuotedBody(toName, toEmail, originalDate, originalSubject, originalBody, isHtml);
         Body = quotedBody;
 
+        // Load signatures
+        await LoadSignaturesAsync();
+
         _autoSaveTimer.Start();
     }
 
     /// <summary>
     /// Start composing a forwarded message
     /// </summary>
-    public void StartForward(string fromEmail, string originalFrom, string originalFromEmail, string originalTo, string originalSubject, string originalBody, DateTime originalDate, List<AttachmentInfo>? attachments = null, bool isHtml = false)
+    public async void StartForward(string fromEmail, string originalFrom, string originalFromEmail, string originalTo, string originalSubject, string originalBody, DateTime originalDate, List<AttachmentInfo>? attachments = null, bool isHtml = false)
     {
         ClearForm();
         IsComposing = true;
@@ -572,6 +705,9 @@ public partial class ComposeMailViewModel : ObservableObject
                 Attachments.Add(attachment);
             }
         }
+
+        // Load signatures
+        await LoadSignaturesAsync();
 
         _autoSaveTimer.Start();
     }

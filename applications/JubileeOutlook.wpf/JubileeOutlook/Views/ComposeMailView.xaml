@@ -466,6 +466,162 @@
                 <Button x:Name="InsertImageButton" ToolTip="Insert image" Click="InsertImageButton_Click" Style="{StaticResource IconButtonStyle}" Margin="0,0,4,0">
                     <TextBlock Text="&#xe3f4;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE"/>
                 </Button>
+
+                <Rectangle Width="1" Height="20" Fill="#444444" Margin="8,0"/>
+
+                <!-- Signature Dropdown -->
+                <ToggleButton x:Name="SignatureDropdownButton" ToolTip="Insert Signature" Margin="0,0,4,0">
+                    <ToggleButton.Style>
+                        <Style TargetType="ToggleButton">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Padding" Value="6"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Border" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="&#xe22b;" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="#EEEEEE" VerticalAlignment="Center"/>
+                                                <TextBlock Text="&#xe5cf;" FontFamily="{StaticResource MaterialIcons}" FontSize="12" Foreground="#888888" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Border" Property="Background" Value="#333333"/>
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Border" Property="Background" Value="#333333"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ToggleButton.Style>
+                </ToggleButton>
+
+                <!-- Signature Dropdown Popup -->
+                <Popup IsOpen="{Binding IsChecked, ElementName=SignatureDropdownButton, Mode=TwoWay}"
+                       PlacementTarget="{Binding ElementName=SignatureDropdownButton}"
+                       Placement="Bottom"
+                       StaysOpen="False"
+                       AllowsTransparency="True"
+                       PopupAnimation="Fade">
+                    <Border Background="#252525" CornerRadius="4" BorderBrush="#444444" BorderThickness="1" Padding="4" MinWidth="180">
+                        <StackPanel>
+                            <!-- Available Signatures -->
+                            <ItemsControl ItemsSource="{Binding AvailableSignatures}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Click="SignatureMenuItem_Click"
+                                                Command="{Binding DataContext.ChangeSignatureCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                HorizontalContentAlignment="Left"
+                                                Padding="12,8"
+                                                Cursor="Hand">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border x:Name="Border" Background="{TemplateBinding Background}" CornerRadius="2" Padding="{TemplateBinding Padding}">
+                                                                    <Grid>
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="Auto"/>
+                                                                            <ColumnDefinition Width="*"/>
+                                                                            <ColumnDefinition Width="Auto"/>
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <TextBlock Grid.Column="0" Text="&#xe73e;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#FFD700" VerticalAlignment="Center" Margin="0,0,8,0"
+                                                                                   Visibility="{Binding IsDefault, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="#EEEEEE" FontSize="12" VerticalAlignment="Center"/>
+                                                                        <TextBlock Grid.Column="2" Text="Default" FontSize="10" Foreground="#888888" VerticalAlignment="Center" Margin="8,0,0,0"
+                                                                                   Visibility="{Binding IsDefault, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                                    </Grid>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="Border" Property="Background" Value="#333333"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Separator -->
+                            <Rectangle Height="1" Fill="#444444" Margin="8,4"/>
+
+                            <!-- Insert Signature Button -->
+                            <Button Click="SignatureMenuItem_Click"
+                                    Command="{Binding InsertSignatureCommand}"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    HorizontalContentAlignment="Left"
+                                    Padding="12,8"
+                                    Cursor="Hand">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="Border" Background="{TemplateBinding Background}" CornerRadius="2" Padding="{TemplateBinding Padding}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="&#xe145;" FontFamily="{StaticResource MaterialIcons}" FontSize="14" Foreground="#0078D4" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                            <TextBlock Text="Insert Signature" Foreground="#0078D4" FontSize="12" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Border" Property="Background" Value="#333333"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+
+                            <!-- Manage Signatures Button -->
+                            <Button Click="ManageSignaturesMenuItem_Click"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    HorizontalContentAlignment="Left"
+                                    Padding="12,8"
+                                    Cursor="Hand">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="Border" Background="{TemplateBinding Background}" CornerRadius="2" Padding="{TemplateBinding Padding}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="&#xe8b8;" FontFamily="{StaticResource MaterialIcons}" FontSize="14" Foreground="#888888" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                            <TextBlock Text="Manage Signatures..." Foreground="#CCCCCC" FontSize="12" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Border" Property="Background" Value="#333333"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Popup>
             </StackPanel>
         </Border>
     </Grid>
