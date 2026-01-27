@@ -396,6 +396,66 @@ public class SyncedEmailDisplayService
     }
 
     /// <summary>
+    /// Update the read state of a synced message in local storage.
+    /// This ensures the read state persists when messages are reloaded.
+    /// </summary>
+    /// <param name="messageId">The synced message ID (GUID)</param>
+    /// <param name="folderId">The folder ID (GUID)</param>
+    /// <param name="isRead">The new read state</param>
+    /// <returns>True if the update was successful</returns>
+    public async Task<bool> UpdateMessageReadStateAsync(Guid messageId, Guid folderId, bool isRead)
+    {
+        try
+        {
+            // Find which account this folder belongs to
+            var accounts = await GetSyncedAccountsAsync();
+            foreach (var account in accounts)
+            {
+                var folders = await GetFoldersAsync(account.Id);
+                var folder = folders.FirstOrDefault(f => f.Id == folderId);
+                if (folder != null)
+                {
+                    var messages = await GetMessagesAsync(account.Id, folderId);
+                    var message = messages.FirstOrDefault(m => m.Id == messageId);
+                    if (message != null)
+                    {
+                        message.IsRead = isRead;
+                        await _secureStorage.StoreAsync($"messages_{account.Id}_{folderId}", messages);
+                        Debug.WriteLine($"[SyncedEmailDisplayService] Updated message {messageId} IsRead to {isRead}");
+                        return true;
+                    }
+                }
+            }
+            Debug.WriteLine($"[SyncedEmailDisplayService] Message {messageId} not found in folder {folderId}");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[SyncedEmailDisplayService] Error updating message read state: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Update the read state of a synced message by its string IDs.
+    /// Convenience method that parses the GUID strings.
+    /// </summary>
+    public async Task<bool> UpdateMessageReadStateAsync(string? syncedMessageId, string? folderId, bool isRead)
+    {
+        if (string.IsNullOrEmpty(syncedMessageId) || string.IsNullOrEmpty(folderId))
+        {
+            return false;
+        }
+
+        if (Guid.TryParse(syncedMessageId, out var messageGuid) && Guid.TryParse(folderId, out var folderGuid))
+        {
+            return await UpdateMessageReadStateAsync(messageGuid, folderGuid, isRead);
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Get messages for display in a folder
     /// </summary>
     public async Task<List<EmailMessage>> GetDisplayMessagesAsync(string folderId)

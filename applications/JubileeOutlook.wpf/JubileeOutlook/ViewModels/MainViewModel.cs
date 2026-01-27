@@ -522,6 +522,16 @@ public partial class MainViewModel : ObservableObject
                 _ = _mailService.MarkAsReadAsync(value.Id, true);
                 value.IsRead = true;
 
+                // Also update local synced storage if this is a synced message
+                // This ensures the read state persists when messages are reloaded
+                if (value.SyncedMessageId.HasValue && !string.IsNullOrEmpty(value.FolderId))
+                {
+                    _ = _syncedEmailService.UpdateMessageReadStateAsync(
+                        value.SyncedMessageId.Value.ToString(),
+                        value.FolderId,
+                        true);
+                }
+
                 // Update unread count for the current folder by counting unread messages
                 // Only update for folder types that should show unread counts
                 if (SelectedFolder != null && ShouldShowUnreadCount(SelectedFolder.Type))
