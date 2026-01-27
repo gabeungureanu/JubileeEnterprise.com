@@ -461,10 +461,10 @@ public class SyncedEmailDisplayService
         return new List<MailFolder>
         {
             new MailFolder { Id = "inbox", Name = "Inbox", Type = UIFolderType.Inbox, Icon = "\uE156" },
-            new MailFolder { Id = "sent", Name = "Sent", Type = UIFolderType.Sent, Icon = "\uE163" },
             new MailFolder { Id = "drafts", Name = "Drafts", Type = UIFolderType.Drafts, Icon = "\uE151" },
-            new MailFolder { Id = "trash", Name = "Trash", Type = UIFolderType.Deleted, Icon = "\uE872" },
-            new MailFolder { Id = "spam", Name = "Spam", Type = UIFolderType.Junk, Icon = "\uE14C" }
+            new MailFolder { Id = "sent", Name = "Sent Mail", Type = UIFolderType.Sent, Icon = "\uE163" },
+            new MailFolder { Id = "archive", Name = "Archive", Type = UIFolderType.Archive, Icon = "\uE149" },
+            new MailFolder { Id = "trash", Name = "Trash", Type = UIFolderType.Deleted, Icon = "\uE872" }
         };
     }
 
@@ -571,6 +571,124 @@ public class SyncedEmailDisplayService
         catch (Exception ex)
         {
             Debug.WriteLine($"[SyncedEmailDisplayService] Error moving message to trash: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Move a message to the Archive folder
+    /// </summary>
+    /// <param name="accountId">The account ID</param>
+    /// <param name="folderId">The source folder ID</param>
+    /// <param name="remoteMessageId">The remote message ID</param>
+    /// <returns>True if successful, false otherwise</returns>
+    public async Task<bool> MoveMessageToArchiveAsync(Guid accountId, Guid folderId, string remoteMessageId)
+    {
+        try
+        {
+            Debug.WriteLine($"[SyncedEmailDisplayService] Moving message to archive: accountId={accountId}, folderId={folderId}, remoteMessageId={remoteMessageId}");
+
+            // Get the account
+            var account = await _secureStorage.RetrieveAsync<SyncedEmailAccount>($"account_{accountId}");
+            if (account == null)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Account not found for key: account_{accountId}");
+                return false;
+            }
+
+            // Get folders to find archive folder
+            var folders = await _secureStorage.RetrieveAsync<List<SyncedEmailFolder>>($"folders_{accountId}");
+            var archiveFolder = folders?.FirstOrDefault(f => f.FolderType == SyncFolderType.Archive);
+
+            // If no archive folder exists, try to create one or use a fallback
+            if (archiveFolder == null)
+            {
+                Debug.WriteLine("[SyncedEmailDisplayService] Archive folder not found, attempting to find or create one");
+                // Look for folder named "Archive" regardless of type
+                archiveFolder = folders?.FirstOrDefault(f =>
+                    f.FolderName.Equals("Archive", StringComparison.OrdinalIgnoreCase) ||
+                    f.FolderName.Equals("All Mail", StringComparison.OrdinalIgnoreCase));
+
+                if (archiveFolder == null)
+                {
+                    Debug.WriteLine("[SyncedEmailDisplayService] No Archive folder available");
+                    return false;
+                }
+            }
+
+            // Get the message from local storage
+            var messagesKey = $"messages_{accountId}_{folderId}";
+            var messages = await _secureStorage.RetrieveAsync<List<SyncedMessage>>(messagesKey);
+            var message = messages?.FirstOrDefault(m => m.RemoteMessageId == remoteMessageId);
+
+            if (message == null)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Message not found in local storage");
+                return false;
+            }
+
+            // OPTIMISTIC LOCAL UPDATE: Update local cache FIRST for instant feedback
+            // 1. Remove from source folder cache
+            messages!.RemoveAll(m => m.RemoteMessageId == remoteMessageId);
+            await _secureStorage.StoreAsync(messagesKey, messages);
+
+            // 2. Add to archive folder cache
+            var archiveKey = $"messages_{accountId}_{archiveFolder.Id}";
+            var archiveMessages = await _secureStorage.RetrieveAsync<List<SyncedMessage>>(archiveKey) ?? new List<SyncedMessage>();
+            message.FolderId = archiveFolder.Id;
+            archiveMessages.Insert(0, message);
+            await _secureStorage.StoreAsync(archiveKey, archiveMessages);
+            Debug.WriteLine("[SyncedEmailDisplayService] Local cache updated for archive (optimistic)");
+
+            // Now do the server-side move in background
+            try
+            {
+                var connectionService = new EmailConnectionService(_secureStorage, new MicrosoftOAuth2Service(_secureStorage));
+                var connectionResult = await connectionService.ConnectAsync(account);
+
+                if (!connectionResult.Success)
+                {
+                    Debug.WriteLine($"[SyncedEmailDisplayService] Connection failed: {connectionResult.ErrorMessage}");
+                    // Local cache already updated, server sync will fix on next sync
+                    return true;
+                }
+
+                // Move on server
+                if (connectionResult.ConnectionType == ConnectionType.MicrosoftGraph && connectionResult.GraphClient != null)
+                {
+                    var moveRequest = new Microsoft.Graph.Me.Messages.Item.Move.MovePostRequestBody
+                    {
+                        DestinationId = archiveFolder.RemoteFolderId
+                    };
+                    await connectionResult.GraphClient.Me.Messages[remoteMessageId]
+                        .Move.PostAsync(moveRequest);
+                    Debug.WriteLine("[SyncedEmailDisplayService] Message moved to archive on server via Graph API");
+                }
+                else if (connectionResult.ConnectionType == ConnectionType.IMAP && connectionResult.ImapClient != null)
+                {
+                    var sourceFolder = folders?.FirstOrDefault(f => f.Id == folderId);
+                    if (sourceFolder != null && uint.TryParse(remoteMessageId, out var uid))
+                    {
+                        var imapSourceFolder = await connectionResult.ImapClient.GetFolderAsync(sourceFolder.RemoteFolderId);
+                        var imapArchiveFolder = await connectionResult.ImapClient.GetFolderAsync(archiveFolder.RemoteFolderId);
+                        await imapSourceFolder.OpenAsync(MailKit.FolderAccess.ReadWrite);
+                        await imapSourceFolder.MoveToAsync(new MailKit.UniqueId(uid), imapArchiveFolder);
+                        await imapSourceFolder.CloseAsync();
+                        Debug.WriteLine("[SyncedEmailDisplayService] Message moved to archive on server via IMAP");
+                    }
+                }
+            }
+            catch (Exception serverEx)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Server move to archive failed (local cache already updated): {serverEx.Message}");
+                // Local cache is already updated, so return true - next sync will reconcile
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[SyncedEmailDisplayService] Error moving message to archive: {ex.Message}");
             return false;
         }
     }

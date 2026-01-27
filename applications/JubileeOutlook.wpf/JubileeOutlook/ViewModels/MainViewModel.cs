@@ -685,9 +685,160 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task ArchiveMessage()
     {
-        if (SelectedMessage == null) return;
-        await _mailService.MoveMessageAsync(SelectedMessage.Id, "archive");
-        Messages.Remove(SelectedMessage);
+        if (SelectedMessage == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] ArchiveMessage: No message selected");
+            return;
+        }
+
+        var messageToArchive = SelectedMessage;
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Archive requested for message: {messageToArchive.Subject}");
+
+        // Store the original unread state for folder count updates
+        var wasUnread = !messageToArchive.IsRead;
+
+        // Check if this is a synced message (has AccountId and RemoteMessageId)
+        if (messageToArchive.AccountId.HasValue && !string.IsNullOrEmpty(messageToArchive.RemoteMessageId))
+        {
+            if (Guid.TryParse(messageToArchive.FolderId, out var folderId))
+            {
+                // OPTIMISTIC UPDATE: Remove from UI immediately for instant feedback
+                Messages.Remove(messageToArchive);
+
+                // Update source folder counts
+                if (SelectedFolder != null)
+                {
+                    SelectedFolder.TotalCount = Math.Max(0, SelectedFolder.TotalCount - 1);
+                    if (wasUnread)
+                    {
+                        SelectedFolder.UnreadCount = Math.Max(0, SelectedFolder.UnreadCount - 1);
+                    }
+                }
+
+                // Find and update Archive folder counts
+                UpdateArchiveFolderCount(1, wasUnread ? 1 : 0);
+
+                // Select next message
+                SelectedMessage = Messages.FirstOrDefault();
+                System.Diagnostics.Debug.WriteLine("[MainViewModel] Message removed from UI (optimistic update for archive)");
+
+                // Move to archive in background - don't await
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var success = await _syncedEmailService.MoveMessageToArchiveAsync(
+                            messageToArchive.AccountId.Value,
+                            folderId,
+                            messageToArchive.RemoteMessageId);
+
+                        if (success)
+                        {
+                            System.Diagnostics.Debug.WriteLine("[MainViewModel] Message moved to archive on server successfully");
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine("[MainViewModel] Failed to move message to archive on server");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Exception in background Archive: {ex.Message}");
+                    }
+                });
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Failed to parse FolderId: {messageToArchive.FolderId}");
+            }
+        }
+        else
+        {
+            // Non-synced messages - also do optimistic update
+            Messages.Remove(messageToArchive);
+
+            // Update source folder counts
+            if (SelectedFolder != null)
+            {
+                SelectedFolder.TotalCount = Math.Max(0, SelectedFolder.TotalCount - 1);
+                if (wasUnread)
+                {
+                    SelectedFolder.UnreadCount = Math.Max(0, SelectedFolder.UnreadCount - 1);
+                }
+            }
+
+            // Find and update Archive folder counts
+            UpdateArchiveFolderCount(1, wasUnread ? 1 : 0);
+
+            SelectedMessage = Messages.FirstOrDefault();
+
+            // Archive in background via API
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _mailService.MoveMessageAsync(messageToArchive.Id, "archive");
+                    System.Diagnostics.Debug.WriteLine("[MainViewModel] Non-synced message archived via API");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MainViewModel] Exception archiving non-synced message: {ex.Message}");
+                }
+            });
+        }
+    }
+
+    /// <summary>
+    /// Updates the Archive folder's counts in the folder tree
+    /// </summary>
+    private void UpdateArchiveFolderCount(int totalDelta, int unreadDelta)
+    {
+        // Find Archive folder in the folder tree
+        var archiveFolder = FindFolderByType(FolderType.Archive);
+        if (archiveFolder != null)
+        {
+            archiveFolder.TotalCount += totalDelta;
+            archiveFolder.UnreadCount += unreadDelta;
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Archive folder counts updated: Total={archiveFolder.TotalCount}, Unread={archiveFolder.UnreadCount}");
+        }
+    }
+
+    /// <summary>
+    /// Finds a folder by type in the folder tree (searches all account roots and subfolders)
+    /// </summary>
+    private MailFolder? FindFolderByType(FolderType folderType)
+    {
+        foreach (var rootFolder in Folders)
+        {
+            // Check if root folder matches
+            if (rootFolder.Type == folderType)
+                return rootFolder;
+
+            // Search subfolders
+            var found = FindFolderByTypeRecursive(rootFolder.SubFolders, folderType);
+            if (found != null)
+                return found;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Recursively searches for a folder by type
+    /// </summary>
+    private MailFolder? FindFolderByTypeRecursive(List<MailFolder>? folders, FolderType folderType)
+    {
+        if (folders == null) return null;
+
+        foreach (var folder in folders)
+        {
+            if (folder.Type == folderType)
+                return folder;
+
+            var found = FindFolderByTypeRecursive(folder.SubFolders, folderType);
+            if (found != null)
+                return found;
+        }
+        return null;
     }
 
     [RelayCommand]
