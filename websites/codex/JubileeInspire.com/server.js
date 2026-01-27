@@ -2,15 +2,30 @@
  * JubileeInspire.com Static Server
  *
  * A simple Node.js server for serving the JubileeInspire.com static website.
- * Supports clean URLs and SPA-style routing.
+ * Supports clean URLs, SPA-style routing, and local chat API for development.
  *
- * Port: 3003 (or process.env.PORT for iisnode/production)
+ * Port: 3001 (or process.env.PORT for iisnode/production)
  */
 
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
+
+// Load environment variables from root .env file
+const envPath = path.join(__dirname, '..', '..', '..', '.env');
+if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    envContent.split('\n').forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith('#')) {
+            const [key, ...valueParts] = trimmed.split('=');
+            if (key && valueParts.length > 0) {
+                process.env[key.trim()] = valueParts.join('=').trim();
+            }
+        }
+    });
+}
 
 const PORT = process.env.PORT || 3001;
 const BASE_DIR = __dirname;
@@ -126,6 +141,150 @@ function handlePromptAPI(req, res, query) {
     }));
 }
 
+/**
+ * Parse JSON body from request
+ */
+function parseJsonBody(req) {
+    return new Promise((resolve, reject) => {
+        let body = '';
+        req.on('data', chunk => { body += chunk.toString(); });
+        req.on('end', () => {
+            try {
+                resolve(body ? JSON.parse(body) : {});
+            } catch (e) {
+                reject(new Error('Invalid JSON'));
+            }
+        });
+        req.on('error', reject);
+    });
+}
+
+/**
+ * Handle Chat API - POST /Home/ChatWithJubilee
+ * Local development endpoint that mirrors InspireCodex.com API
+ */
+async function handleChatAPI(req, res) {
+    try {
+        const body = await parseJsonBody(req);
+        const {
+            message,
+            conversationHistory = [],
+            personaName = 'Jubilee Inspire',
+            conversationId = null,
+            inspireModel = 'gospelpulse',
+            systemPrompt = '',
+            developerPrompt = ''
+        } = body;
+
+        if (!message || !message.trim()) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: 'Message is required' }));
+            return;
+        }
+
+        const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+        if (!OPENAI_API_KEY || OPENAI_API_KEY === 'sk-your-openai-key') {
+            console.error('OPENAI_API_KEY not configured in .env file');
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                success: false,
+                error: 'Chat service not configured. Please set OPENAI_API_KEY in .env file.'
+            }));
+            return;
+        }
+
+        // Build messages array for OpenAI
+        const messages = [];
+
+        // Add system prompt if provided
+        if (systemPrompt) {
+            messages.push({ role: 'system', content: systemPrompt });
+        }
+
+        // Add developer prompt if provided
+        if (developerPrompt) {
+            messages.push({ role: 'system', content: developerPrompt });
+        }
+
+        // Add conversation history
+        conversationHistory.forEach(msg => {
+            if (msg.role && msg.content) {
+                messages.push({ role: msg.role, content: msg.content });
+            }
+        });
+
+        // Add current user message
+        messages.push({ role: 'user', content: message.trim() });
+
+        console.log(`Chat request: model=${inspireModel}, historyLength=${conversationHistory.length}, messageLength=${message.length}`);
+
+        // Call OpenAI API
+        const startTime = Date.now();
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: messages,
+                max_tokens: 1024,
+                temperature: 0.7
+            })
+        });
+
+        const processingTime = Date.now() - startTime;
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('OpenAI API error:', response.status, errorData);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                success: false,
+                error: 'Failed to generate response',
+                details: errorData.error?.message || 'Unknown error'
+            }));
+            return;
+        }
+
+        const data = await response.json();
+        const assistantResponse = data.choices?.[0]?.message?.content || 'I apologize, but I was unable to generate a response.';
+
+        // Generate conversation ID if not provided
+        const finalConversationId = conversationId || `inspire-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+
+        console.log(`Chat response: processingTime=${processingTime}ms, responseLength=${assistantResponse.length}`);
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            success: true,
+            response: assistantResponse,
+            model: 'gpt-4o-mini',
+            personaName,
+            conversation: {
+                id: finalConversationId,
+                title: message.length > 50 ? message.substring(0, 47) + '...' : message,
+                isNew: !conversationId,
+                personaName,
+                lastMessage: assistantResponse.substring(0, 100) + (assistantResponse.length > 100 ? '...' : ''),
+                timestamp: new Date().toISOString()
+            },
+            usage: data.usage || null,
+            processingTimeMs: processingTime
+        }));
+
+    } catch (error) {
+        console.error('Chat error:', error);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            success: false,
+            error: 'Failed to process chat request',
+            details: error.message
+        }));
+    }
+}
+
 // Create the HTTP server
 const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url, true);
@@ -140,6 +299,12 @@ const server = http.createServer((req, res) => {
     if (req.method === 'OPTIONS') {
         res.writeHead(204);
         res.end();
+        return;
+    }
+
+    // Chat API endpoint (mirrors InspireCodex.com for local development)
+    if (pathname === '/Home/ChatWithJubilee' && req.method === 'POST') {
+        handleChatAPI(req, res);
         return;
     }
 

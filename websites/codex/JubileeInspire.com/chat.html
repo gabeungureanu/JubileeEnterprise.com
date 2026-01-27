@@ -3230,10 +3230,16 @@
     (function() {
       'use strict';
 
-      // API Configuration - All APIs use InspireCodex.com (independent from JubileeVerse.com)
+      // API Configuration - Detect localhost for local development
+      var isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       var AUTH_API = 'https://inspirecodex.com';
-      var CHAT_API = 'https://inspirecodex.com';
+      // Use local server for chat in development, production API otherwise
+      var CHAT_API = isLocalDev ? '' : 'https://inspirecodex.com';
       var PROMPT_API = '/api/prompt';
+
+      if (isLocalDev) {
+          console.log('Running in local development mode - using local chat API');
+      }
 
       // State
       var accessToken = null;
