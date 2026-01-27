@@ -227,9 +227,111 @@
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
-                    <ToggleButton Grid.Column="1" Style="{StaticResource DropdownButtonStyle}">
+                    <ToggleButton x:Name="NewContactDropdownButton" Grid.Column="1" Style="{StaticResource DropdownButtonStyle}">
                         <TextBlock Text="&#xe5cf;" FontFamily="{StaticResource MaterialIcons}" FontSize="14" Foreground="#000000"/>
                     </ToggleButton>
+                    <!-- Dropdown Popup -->
+                    <Popup x:Name="NewContactDropdownPopup"
+                           IsOpen="{Binding IsChecked, ElementName=NewContactDropdownButton}"
+                           PlacementTarget="{Binding ElementName=NewContactDropdownButton}"
+                           Placement="Bottom"
+                           StaysOpen="False"
+                           AllowsTransparency="True">
+                        <Border Background="{StaticResource TertiaryBackgroundBrush}"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="4">
+                            <StackPanel MinWidth="180">
+                                <!-- New Contact -->
+                                <Button Command="{Binding NewContactCommand}"
+                                        Click="DropdownMenuItem_Click"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="12,8"
+                                        Cursor="Hand"
+                                        HorizontalContentAlignment="Left">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xe7fe;" FontFamily="{StaticResource MaterialIcons}"
+                                                               FontSize="16" Foreground="{StaticResource SecondaryTextBrush}"
+                                                               VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                    <TextBlock Text="New contact" FontSize="13" Foreground="{StaticResource PrimaryTextBrush}"
+                                                               VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+
+                                <!-- Separator -->
+                                <Rectangle Height="1" Fill="{StaticResource BorderBrush}" Margin="8,4"/>
+
+                                <!-- Import Contacts -->
+                                <Button Command="{Binding ImportContactsCommand}"
+                                        Click="DropdownMenuItem_Click"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="12,8"
+                                        Cursor="Hand"
+                                        HorizontalContentAlignment="Left">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xe2c4;" FontFamily="{StaticResource MaterialIcons}"
+                                                               FontSize="16" Foreground="{StaticResource SecondaryTextBrush}"
+                                                               VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                    <TextBlock Text="Import contacts" FontSize="13" Foreground="{StaticResource PrimaryTextBrush}"
+                                                               VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+
+                                <!-- Export Contacts -->
+                                <Button Command="{Binding ExportContactsCommand}"
+                                        Click="DropdownMenuItem_Click"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="12,8"
+                                        Cursor="Hand"
+                                        HorizontalContentAlignment="Left">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="&#xe2c6;" FontFamily="{StaticResource MaterialIcons}"
+                                                               FontSize="16" Foreground="{StaticResource SecondaryTextBrush}"
+                                                               VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                    <TextBlock Text="Export contacts" FontSize="13" Foreground="{StaticResource PrimaryTextBrush}"
+                                                               VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Popup>
                 </Grid>
 
                 <!-- Separator -->
@@ -317,6 +419,68 @@
                         ToolTip="Export" Margin="4,0">
                     <TextBlock Text="&#xe2c6;" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
                 </Button>
+
+                <!-- Separator (only visible in Deleted folder) -->
+                <Rectangle Width="1" Height="28" Fill="#444444" Margin="8,0"
+                           Visibility="{Binding IsInDeletedFolder, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                <!-- Empty Deleted Folder Button (only visible in Deleted folder) -->
+                <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding EmptyDeletedFolderCommand}"
+                        ToolTip="Empty deleted folder" Margin="4,0"
+                        Visibility="{Binding IsInDeletedFolder, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xe92b;" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Restore Button (only visible in Deleted folder with selection) -->
+                <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding RestoreContactCommand}"
+                        ToolTip="Restore contact" Margin="4,0"
+                        Visibility="{Binding IsInDeletedFolder, Converter={StaticResource BoolToVisibilityConverter}}"
+                        IsEnabled="{Binding SelectedContact, Converter={StaticResource NullToBoolConverter}}">
+                    <TextBlock Text="&#xe929;" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
+                </Button>
+
+                <!-- Bulk Actions Section (only visible when multiple contacts are selected) -->
+                <Rectangle Width="1" Height="28" Fill="#444444" Margin="8,0"
+                           Visibility="{Binding HasMultipleSelection, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                <!-- Selection Count Indicator -->
+                <Border Background="#3D3D5C" CornerRadius="4" Padding="8,4" Margin="4,0"
+                        Visibility="{Binding HasMultipleSelection, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock FontSize="12" Foreground="{StaticResource GoldBrandBrush}">
+                        <Run Text="{Binding SelectedCount, Mode=OneWay}"/>
+                        <Run Text=" selected"/>
+                    </TextBlock>
+                </Border>
+
+                <!-- Bulk Delete Button -->
+                <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding BulkDeleteCommand}"
+                        ToolTip="Delete selected contacts" Margin="4,0"
+                        Visibility="{Binding HasMultipleSelection, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock Text="&#xe872;" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
+                </Button>
+
+                <!-- Bulk Add to Favorites Button -->
+                <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding BulkAddToFavoritesCommand}"
+                        ToolTip="Add selected to favorites" Margin="4,0"
+                        Visibility="{Binding HasMultipleSelection, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock Text="&#xe838;" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
+                </Button>
+
+                <!-- Bulk Add Category Button -->
+                <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding BulkAddCategoryCommand}"
+                        ToolTip="Set category for selected" Margin="4,0"
+                        Visibility="{Binding HasMultipleSelection, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock Text="&#xe892;" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
+                </Button>
+
+                <!-- Bulk Export Button -->
+                <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding BulkExportCommand}"
+                        ToolTip="Export selected contacts" Margin="4,0"
+                        Visibility="{Binding HasMultipleSelection, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock Text="&#xe2c6;" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
+                </Button>
             </StackPanel>
         </Border>
 
@@ -325,8 +489,10 @@
             <Grid.ColumnDefinitions>
                 <!-- Left Sidebar - Folders -->
                 <ColumnDefinition Width="280"/>
-                <!-- Main Content - Contacts -->
-                <ColumnDefinition Width="*"/>
+                <!-- Main Content - Contacts List -->
+                <ColumnDefinition Width="*" MinWidth="300"/>
+                <!-- Contact Details Panel -->
+                <ColumnDefinition Width="380"/>
             </Grid.ColumnDefinitions>
 
             <!-- Left Sidebar -->
@@ -365,15 +531,37 @@
                     </Expander>
 
                     <!-- Categories Section -->
-                    <Expander Grid.Row="1" IsExpanded="False" Style="{StaticResource CategoryExpanderStyle}"
+                    <Expander Grid.Row="1" IsExpanded="True" Style="{StaticResource CategoryExpanderStyle}"
                               VerticalAlignment="Top" Margin="0,8,0,0">
                         <Expander.Header>
                             <TextBlock Text="Categories" FontSize="13" Foreground="{StaticResource PrimaryTextBrush}"/>
                         </Expander.Header>
                         <StackPanel Margin="0,8,0,0">
+                            <!-- Empty state placeholder -->
                             <TextBlock Text="When you create categories, they will appear here."
                                        FontSize="12" Foreground="{StaticResource SecondaryTextBrush}"
-                                       TextWrapping="Wrap" Padding="12,4"/>
+                                       TextWrapping="Wrap" Padding="12,4"
+                                       Visibility="{Binding Categories.Count, Converter={StaticResource ZeroToVisibilityConverter}}"/>
+                            <!-- Categories list -->
+                            <ListBox ItemsSource="{Binding Categories}"
+                                     SelectedItem="{Binding SelectedCategory}"
+                                     Background="Transparent" BorderThickness="0"
+                                     ItemContainerStyle="{StaticResource FolderItemStyle}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border Background="#3D3D5C" CornerRadius="3" Padding="6,2" Margin="0,0,8,0">
+                                                <TextBlock Text="{Binding}" FontSize="10"
+                                                           Foreground="{StaticResource GoldBrandBrush}"
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+                                            <TextBlock Text="{Binding}" FontSize="13"
+                                                       Foreground="{StaticResource PrimaryTextBrush}"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
                         </StackPanel>
                     </Expander>
                 </Grid>
@@ -391,7 +579,7 @@
 
                     <!-- Content Header -->
                     <Border Grid.Row="0" Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="16,12">
-                        <TextBlock Text="{Binding SelectedFolder.Name, FallbackValue='Your contacts'}"
+                        <TextBlock Text="{Binding ContentHeader, FallbackValue='Your contacts'}"
                                    FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource PrimaryTextBrush}"/>
                     </Border>
 
@@ -458,6 +646,8 @@
                                  Visibility="{Binding HasContacts, Converter={StaticResource BoolToVisibilityConverter}}"
                                  ItemsSource="{Binding FilteredContacts}"
                                  SelectedItem="{Binding SelectedContact}"
+                                 SelectionMode="Extended"
+                                 SelectionChanged="ContactsListBox_SelectionChanged"
                                  Background="Transparent" BorderThickness="0"
                                  MouseDoubleClick="ContactsListBox_MouseDoubleClick">
                             <ListBox.ItemTemplate>
@@ -468,18 +658,38 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <!-- Avatar (Gold theme) -->
+                                        <!-- Avatar (Shows profile picture if available, otherwise gold initials) -->
                                         <Grid Grid.Column="0" Width="40" Height="40" Margin="0,0,12,0">
-                                            <Ellipse Fill="{StaticResource GoldBrandBrush}"/>
+                                            <!-- Default Avatar with Initials (shown when no photo) -->
+                                            <Ellipse Fill="{StaticResource GoldBrandBrush}"
+                                                     Visibility="{Binding AvatarPath, Converter={StaticResource InverseStringToVisibilityConverter}}"/>
                                             <TextBlock Text="{Binding Initials}"
                                                        FontSize="14" FontWeight="SemiBold" Foreground="#1E1E1E"
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       Visibility="{Binding AvatarPath, Converter={StaticResource InverseStringToVisibilityConverter}}"/>
+
+                                            <!-- Profile Picture (shown when photo is uploaded) -->
+                                            <Ellipse Visibility="{Binding AvatarPath, Converter={StaticResource StringToVisibilityConverter}}">
+                                                <Ellipse.Fill>
+                                                    <ImageBrush ImageSource="{Binding AvatarPath}" Stretch="UniformToFill"/>
+                                                </Ellipse.Fill>
+                                            </Ellipse>
                                         </Grid>
 
                                         <!-- Contact Info -->
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding DisplayName}" FontSize="14"
-                                                       Foreground="{StaticResource PrimaryTextBrush}"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding DisplayName}" FontSize="14"
+                                                           Foreground="{StaticResource PrimaryTextBrush}"
+                                                           VerticalAlignment="Center"/>
+                                                <!-- Category Badge -->
+                                                <Border Background="#3D3D5C" CornerRadius="3" Padding="6,2" Margin="8,0,0,0"
+                                                        Visibility="{Binding Category, Converter={StaticResource StringToVisibilityConverter}}">
+                                                    <TextBlock Text="{Binding Category}" FontSize="10"
+                                                               Foreground="{StaticResource GoldBrandBrush}"
+                                                               VerticalAlignment="Center"/>
+                                                </Border>
+                                            </StackPanel>
                                             <TextBlock Text="{Binding Email}" FontSize="12"
                                                        Foreground="{StaticResource SecondaryTextBrush}"/>
                                         </StackPanel>
@@ -489,6 +699,277 @@
                         </ListBox>
                     </Grid>
                 </Grid>
+            </Border>
+
+            <!-- Contact Details Panel (Right Side) -->
+            <Border Grid.Column="2" Background="#1A1A1A" BorderBrush="#333333" BorderThickness="1,0,0,0"
+                    Visibility="{Binding SelectedContact, Converter={StaticResource NullToVisibilityConverter}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="24">
+                        <!-- Contact Header with Avatar -->
+                        <StackPanel HorizontalAlignment="Center" Margin="0,16,0,24">
+                            <!-- Large Avatar -->
+                            <Grid Width="100" Height="100" HorizontalAlignment="Center" Margin="0,0,0,16">
+                                <!-- Default Avatar with Initials -->
+                                <Ellipse Fill="{StaticResource GoldBrandBrush}"
+                                         Visibility="{Binding SelectedContact.AvatarPath, Converter={StaticResource InverseStringToVisibilityConverter}}"/>
+                                <TextBlock Text="{Binding SelectedContact.Initials}"
+                                           FontSize="36" FontWeight="SemiBold" Foreground="#1E1E1E"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Visibility="{Binding SelectedContact.AvatarPath, Converter={StaticResource InverseStringToVisibilityConverter}}"/>
+                                <!-- Profile Picture -->
+                                <Ellipse Visibility="{Binding SelectedContact.AvatarPath, Converter={StaticResource StringToVisibilityConverter}}">
+                                    <Ellipse.Fill>
+                                        <ImageBrush ImageSource="{Binding SelectedContact.AvatarPath}" Stretch="UniformToFill"/>
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                            </Grid>
+
+                            <!-- Display Name -->
+                            <TextBlock Text="{Binding SelectedContact.DisplayName}"
+                                       FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource PrimaryTextBrush}"
+                                       HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+
+                            <!-- Job Title and Company -->
+                            <TextBlock Foreground="{StaticResource SecondaryTextBrush}"
+                                       FontSize="14" HorizontalAlignment="Center" TextAlignment="Center"
+                                       Margin="0,4,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text">
+                                            <Setter.Value>
+                                                <MultiBinding StringFormat="{}{0}{1}{2}">
+                                                    <Binding Path="SelectedContact.JobTitle"/>
+                                                    <Binding Path="SelectedContact.Company" Converter="{StaticResource StringToPrefixConverter}" ConverterParameter=" at "/>
+                                                    <Binding Path="SelectedContact.Company"/>
+                                                </MultiBinding>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <!-- Category Badge -->
+                            <Border Background="#3D3D5C" CornerRadius="4" Padding="12,4" Margin="0,12,0,0"
+                                    HorizontalAlignment="Center"
+                                    Visibility="{Binding SelectedContact.Category, Converter={StaticResource StringToVisibilityConverter}}">
+                                <TextBlock Text="{Binding SelectedContact.Category}" FontSize="12"
+                                           Foreground="{StaticResource GoldBrandBrush}"/>
+                            </Border>
+
+                            <!-- Favorite Star -->
+                            <TextBlock Text="&#xe838;" FontFamily="{StaticResource MaterialIcons}"
+                                       FontSize="20" Foreground="{StaticResource GoldBrandBrush}"
+                                       HorizontalAlignment="Center" Margin="0,8,0,0"
+                                       Visibility="{Binding SelectedContact.IsFavorite, Converter={StaticResource BoolToVisibilityConverter}}"
+                                       ToolTip="Favorite contact"/>
+                        </StackPanel>
+
+                        <!-- Quick Actions -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,24">
+                            <Button Style="{StaticResource PeopleToolbarButtonStyle}" Command="{Binding EmailContactCommand}"
+                                    ToolTip="Send email" Margin="4,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xe158;" FontFamily="{StaticResource MaterialIcons}" FontSize="18"
+                                               Foreground="{StaticResource GoldBrandBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Email" Margin="6,0,0,0" Foreground="{StaticResource PrimaryTextBrush}"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource PeopleToolbarButtonStyle}" Command="{Binding EditContactCommand}"
+                                    ToolTip="Edit contact" Margin="4,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xe254;" FontFamily="{StaticResource MaterialIcons}" FontSize="18"
+                                               Foreground="{StaticResource GoldBrandBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Edit" Margin="6,0,0,0" Foreground="{StaticResource PrimaryTextBrush}"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Contact Information Sections -->
+                        <StackPanel>
+                            <!-- Email Section -->
+                            <StackPanel Visibility="{Binding SelectedContact.Email, Converter={StaticResource StringToVisibilityConverter}}"
+                                        Margin="0,0,0,16">
+                                <TextBlock Text="EMAIL" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="&#xe158;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                               Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SelectedContact.Email}" FontSize="14"
+                                                   Foreground="{StaticResource GoldBrandBrush}" Cursor="Hand"/>
+                                        <TextBlock Text="Work" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <!-- Personal Email -->
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
+                                            Visibility="{Binding SelectedContact.PersonalEmail, Converter={StaticResource StringToVisibilityConverter}}">
+                                    <TextBlock Text="&#xe158;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                               Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SelectedContact.PersonalEmail}" FontSize="14"
+                                                   Foreground="{StaticResource GoldBrandBrush}" Cursor="Hand"/>
+                                        <TextBlock Text="Personal" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Phone Section -->
+                            <StackPanel Visibility="{Binding SelectedContact.Phone, Converter={StaticResource StringToVisibilityConverter}}"
+                                        Margin="0,0,0,16">
+                                <TextBlock Text="PHONE" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="&#xe0cd;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                               Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SelectedContact.Phone}" FontSize="14"
+                                                   Foreground="{StaticResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Work" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <!-- Mobile Phone -->
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
+                                            Visibility="{Binding SelectedContact.MobilePhone, Converter={StaticResource StringToVisibilityConverter}}">
+                                    <TextBlock Text="&#xe325;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                               Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SelectedContact.MobilePhone}" FontSize="14"
+                                                   Foreground="{StaticResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Mobile" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <!-- Home Phone -->
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
+                                            Visibility="{Binding SelectedContact.HomePhone, Converter={StaticResource StringToVisibilityConverter}}">
+                                    <TextBlock Text="&#xe88a;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                               Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SelectedContact.HomePhone}" FontSize="14"
+                                                   Foreground="{StaticResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Home" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Work Section -->
+                            <StackPanel Margin="0,0,0,16">
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedContact.Company, Converter={StaticResource StringToBoolConverter}}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding SelectedContact.Department, Converter={StaticResource StringToBoolConverter}}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding SelectedContact.Office, Converter={StaticResource StringToBoolConverter}}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <TextBlock Text="WORK" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0"
+                                            Visibility="{Binding SelectedContact.Company, Converter={StaticResource StringToVisibilityConverter}}">
+                                    <TextBlock Text="&#xe0af;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                               Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SelectedContact.Company}" FontSize="14"
+                                                   Foreground="{StaticResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Company" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
+                                            Visibility="{Binding SelectedContact.Department, Converter={StaticResource StringToVisibilityConverter}}">
+                                    <TextBlock Text="&#xe7ef;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                               Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SelectedContact.Department}" FontSize="14"
+                                                   Foreground="{StaticResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Department" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
+                                            Visibility="{Binding SelectedContact.Office, Converter={StaticResource StringToVisibilityConverter}}">
+                                    <TextBlock Text="&#xe8b0;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                               Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SelectedContact.Office}" FontSize="14"
+                                                   Foreground="{StaticResource PrimaryTextBrush}"/>
+                                        <TextBlock Text="Office" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Address Section -->
+                            <StackPanel Visibility="{Binding SelectedContact.Address, Converter={StaticResource StringToVisibilityConverter}}"
+                                        Margin="0,0,0,16">
+                                <TextBlock Text="ADDRESS" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="&#xe55f;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                               Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Top" Margin="0,2,12,0"/>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SelectedContact.Address}" FontSize="14"
+                                                   Foreground="{StaticResource PrimaryTextBrush}" TextWrapping="Wrap"/>
+                                        <TextBlock FontSize="14" Foreground="{StaticResource PrimaryTextBrush}">
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="{}{0}, {1} {2}">
+                                                    <Binding Path="SelectedContact.City"/>
+                                                    <Binding Path="SelectedContact.State"/>
+                                                    <Binding Path="SelectedContact.PostalCode"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding SelectedContact.Country}" FontSize="14"
+                                                   Foreground="{StaticResource PrimaryTextBrush}"
+                                                   Visibility="{Binding SelectedContact.Country, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Website Section -->
+                            <StackPanel Visibility="{Binding SelectedContact.Website, Converter={StaticResource StringToVisibilityConverter}}"
+                                        Margin="0,0,0,16">
+                                <TextBlock Text="WEBSITE" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="&#xe894;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                               Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <TextBlock Text="{Binding SelectedContact.Website}" FontSize="14"
+                                               Foreground="{StaticResource GoldBrandBrush}" Cursor="Hand"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Birthday Section -->
+                            <StackPanel Visibility="{Binding SelectedContact.Birthday, Converter={StaticResource NullToVisibilityConverter}}"
+                                        Margin="0,0,0,16">
+                                <TextBlock Text="BIRTHDAY" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="&#xe7e9;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                               Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <TextBlock Text="{Binding SelectedContact.Birthday, StringFormat='{}{0:MMMM d, yyyy}'}" FontSize="14"
+                                               Foreground="{StaticResource PrimaryTextBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Notes Section -->
+                            <StackPanel Visibility="{Binding SelectedContact.Notes, Converter={StaticResource StringToVisibilityConverter}}"
+                                        Margin="0,0,0,16">
+                                <TextBlock Text="NOTES" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}" Margin="0,0,0,8"/>
+                                <Border Background="#252525" CornerRadius="4" Padding="12">
+                                    <TextBlock Text="{Binding SelectedContact.Notes}" FontSize="13"
+                                               Foreground="{StaticResource PrimaryTextBrush}" TextWrapping="Wrap"/>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
             </Border>
         </Grid>
     </Grid>
