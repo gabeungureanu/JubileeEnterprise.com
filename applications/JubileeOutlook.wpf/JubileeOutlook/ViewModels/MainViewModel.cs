@@ -160,6 +160,26 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Determines if a folder type should display unread counts.
+    /// Only Inbox and Custom folders show unread counts; Sent, Drafts, Deleted, Junk, and Archive do not.
+    /// </summary>
+    private static bool ShouldShowUnreadCount(FolderType folderType)
+    {
+        return folderType switch
+        {
+            FolderType.Inbox => true,
+            FolderType.Custom => true,
+            FolderType.AccountRoot => false,
+            FolderType.Sent => false,
+            FolderType.Drafts => false,
+            FolderType.Deleted => false,
+            FolderType.Junk => false,
+            FolderType.Archive => false,
+            _ => false
+        };
+    }
+
+    /// <summary>
     /// Sets the WWBW email address and rebuilds the folder structure
     /// </summary>
     public void SetWwbwEmail(string? wwbwEmail)
@@ -447,10 +467,13 @@ public partial class MainViewModel : ObservableObject
 
             Messages = new ObservableCollection<EmailMessage>(filteredMessages);
 
-            // Update folder counts
+            // Update folder counts (only show unread for certain folder types)
             if (SelectedFolder != null)
             {
-                SelectedFolder.UnreadCount = Messages.Count(m => !m.IsRead);
+                if (ShouldShowUnreadCount(SelectedFolder.Type))
+                {
+                    SelectedFolder.UnreadCount = Messages.Count(m => !m.IsRead);
+                }
                 SelectedFolder.TotalCount = Messages.Count;
             }
 
@@ -500,7 +523,8 @@ public partial class MainViewModel : ObservableObject
                 value.IsRead = true;
 
                 // Update unread count for the current folder by counting unread messages
-                if (SelectedFolder != null)
+                // Only update for folder types that should show unread counts
+                if (SelectedFolder != null && ShouldShowUnreadCount(SelectedFolder.Type))
                 {
                     var unreadCount = Messages.Count(m => !m.IsRead);
                     System.Diagnostics.Debug.WriteLine($"[MainViewModel] Updating unread count to {unreadCount}");
@@ -605,9 +629,13 @@ public partial class MainViewModel : ObservableObject
         Messages = new ObservableCollection<EmailMessage>(filteredMessages);
 
         // Update folder counts by counting the actual messages
+        // Only update unread count for folder types that should show it
         if (SelectedFolder != null)
         {
-            SelectedFolder.UnreadCount = Messages.Count(m => !m.IsRead);
+            if (ShouldShowUnreadCount(SelectedFolder.Type))
+            {
+                SelectedFolder.UnreadCount = Messages.Count(m => !m.IsRead);
+            }
             SelectedFolder.TotalCount = Messages.Count;
         }
     }
@@ -936,14 +964,14 @@ public partial class MainViewModel : ObservableObject
                 if (SelectedFolder != null)
                 {
                     SelectedFolder.TotalCount = Math.Max(0, SelectedFolder.TotalCount - 1);
-                    if (wasUnread)
+                    if (wasUnread && ShouldShowUnreadCount(SelectedFolder.Type))
                     {
                         SelectedFolder.UnreadCount = Math.Max(0, SelectedFolder.UnreadCount - 1);
                     }
                 }
 
-                // Find and update Archive folder counts
-                UpdateArchiveFolderCount(1, wasUnread ? 1 : 0);
+                // Find and update Archive folder counts (Archive doesn't show unread, so pass 0)
+                UpdateArchiveFolderCount(1, 0);
 
                 // Select next message
                 SelectedMessage = Messages.FirstOrDefault();
@@ -988,14 +1016,14 @@ public partial class MainViewModel : ObservableObject
             if (SelectedFolder != null)
             {
                 SelectedFolder.TotalCount = Math.Max(0, SelectedFolder.TotalCount - 1);
-                if (wasUnread)
+                if (wasUnread && ShouldShowUnreadCount(SelectedFolder.Type))
                 {
                     SelectedFolder.UnreadCount = Math.Max(0, SelectedFolder.UnreadCount - 1);
                 }
             }
 
-            // Find and update Archive folder counts
-            UpdateArchiveFolderCount(1, wasUnread ? 1 : 0);
+            // Find and update Archive folder counts (Archive doesn't show unread, so pass 0)
+            UpdateArchiveFolderCount(1, 0);
 
             SelectedMessage = Messages.FirstOrDefault();
 
@@ -1605,9 +1633,12 @@ public partial class MainViewModel : ObservableObject
         // Update folder counts
         if (SelectedFolder != null && conversationMessages.Count > 0)
         {
-            var unreadCount = conversationMessages.Count(m => !m.IsRead);
             SelectedFolder.TotalCount = Math.Max(0, SelectedFolder.TotalCount - conversationMessages.Count);
-            SelectedFolder.UnreadCount = Math.Max(0, SelectedFolder.UnreadCount - unreadCount);
+            if (ShouldShowUnreadCount(SelectedFolder.Type))
+            {
+                var unreadCount = conversationMessages.Count(m => !m.IsRead);
+                SelectedFolder.UnreadCount = Math.Max(0, SelectedFolder.UnreadCount - unreadCount);
+            }
         }
 
         // Select next message
@@ -1717,9 +1748,12 @@ public partial class MainViewModel : ObservableObject
         // Update folder counts
         if (SelectedFolder != null && senderMessages.Count > 0)
         {
-            var unreadCount = senderMessages.Count(m => !m.IsRead);
             SelectedFolder.TotalCount = Math.Max(0, SelectedFolder.TotalCount - senderMessages.Count);
-            SelectedFolder.UnreadCount = Math.Max(0, SelectedFolder.UnreadCount - unreadCount);
+            if (ShouldShowUnreadCount(SelectedFolder.Type))
+            {
+                var unreadCount = senderMessages.Count(m => !m.IsRead);
+                SelectedFolder.UnreadCount = Math.Max(0, SelectedFolder.UnreadCount - unreadCount);
+            }
         }
 
         // Select next message

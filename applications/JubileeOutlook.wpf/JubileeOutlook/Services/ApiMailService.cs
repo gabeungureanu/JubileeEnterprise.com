@@ -1417,12 +1417,28 @@ public class ApiMailService : IMailService
     private static MailFolder MapToMailFolder(MailFolderDto dto)
     {
         var folderType = ParseFolderType(dto.Type);
+
+        // Only show unread counts for folder types where it makes sense
+        // Sent, Drafts, Deleted, Junk, and Archive folders should not show unread counts
+        var shouldShowUnreadCount = folderType switch
+        {
+            FolderType.Inbox => true,
+            FolderType.Custom => true,
+            FolderType.AccountRoot => false,
+            FolderType.Sent => false,
+            FolderType.Drafts => false,
+            FolderType.Deleted => false,
+            FolderType.Junk => false,
+            FolderType.Archive => false,
+            _ => false
+        };
+
         var folder = new MailFolder
         {
             Id = dto.Id ?? Guid.NewGuid().ToString(),
             Name = dto.Name ?? string.Empty,
             Type = folderType,
-            UnreadCount = dto.UnreadCount,
+            UnreadCount = shouldShowUnreadCount ? dto.UnreadCount : 0,
             TotalCount = dto.TotalCount,
             Icon = ConvertIconNameToMaterialIcon(dto.Icon, folderType),
             ParentFolderId = dto.ParentFolderId,
@@ -1434,7 +1450,7 @@ public class ApiMailService : IMailService
         // Map subfolders recursively
         if (dto.SubFolders != null && dto.SubFolders.Count > 0)
         {
-            folder.SubFolders = dto.SubFolders.Select(MapToMailFolder).ToList();
+            folder.SubFolders = new System.Collections.ObjectModel.ObservableCollection<MailFolder>(dto.SubFolders.Select(MapToMailFolder));
         }
 
         return folder;

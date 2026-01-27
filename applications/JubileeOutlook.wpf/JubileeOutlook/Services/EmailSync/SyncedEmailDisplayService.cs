@@ -26,6 +26,20 @@ public class SyncedEmailDisplayService
     }
 
     /// <summary>
+    /// Determines if a folder type should display unread counts.
+    /// Only Inbox and Custom folders show unread counts.
+    /// </summary>
+    private static bool ShouldShowUnreadCount(UIFolderType folderType)
+    {
+        return folderType switch
+        {
+            UIFolderType.Inbox => true,
+            UIFolderType.Custom => true,
+            _ => false
+        };
+    }
+
+    /// <summary>
     /// Get all synced email accounts
     /// </summary>
     public async Task<List<SyncedEmailAccount>> GetSyncedAccountsAsync()
@@ -131,7 +145,7 @@ public class SyncedEmailDisplayService
                 WwbwEmailAddress = account.EmailAddress,
                 IsExpanded = true,
                 Icon = GetProviderIcon(account.ProviderType),
-                SubFolders = new List<UIMailFolder>()
+                SubFolders = new System.Collections.ObjectModel.ObservableCollection<UIMailFolder>()
             };
 
             // Load folders for this account
@@ -170,17 +184,18 @@ public class SyncedEmailDisplayService
     /// </summary>
     private UIMailFolder ConvertToMailFolder(SyncedEmailFolder syncedFolder)
     {
+        var uiFolderType = ConvertFolderType(syncedFolder.FolderType);
         return new UIMailFolder
         {
             Id = syncedFolder.Id.ToString(),
             Name = NormalizeFolderName(syncedFolder.FolderName, syncedFolder.FolderType),
-            Type = ConvertFolderType(syncedFolder.FolderType),
+            Type = uiFolderType,
             Icon = GetFolderIcon(syncedFolder.FolderType),
-            UnreadCount = syncedFolder.UnreadCount,
+            UnreadCount = ShouldShowUnreadCount(uiFolderType) ? syncedFolder.UnreadCount : 0,
             TotalCount = syncedFolder.MessageCount,
             IsExpanded = false,
             IsSelected = false,
-            SubFolders = new List<UIMailFolder>()
+            SubFolders = new System.Collections.ObjectModel.ObservableCollection<UIMailFolder>()
         };
     }
 
@@ -468,9 +483,9 @@ public class SyncedEmailDisplayService
     /// <summary>
     /// Create default folder structure when no folders found
     /// </summary>
-    private List<UIMailFolder> CreateDefaultFolders()
+    private System.Collections.ObjectModel.ObservableCollection<UIMailFolder> CreateDefaultFolders()
     {
-        return new List<UIMailFolder>
+        return new System.Collections.ObjectModel.ObservableCollection<UIMailFolder>
         {
             new UIMailFolder { Id = "inbox", Name = "Inbox", Type = UIFolderType.Inbox, Icon = "\uE156" },
             new UIMailFolder { Id = "drafts", Name = "Drafts", Type = UIFolderType.Drafts, Icon = "\uE151" },
@@ -486,7 +501,7 @@ public class SyncedEmailDisplayService
     /// Archive is inserted after Sent Mail folder for proper ordering.
     /// Uses the actual synced archive folder ID if available for proper message loading.
     /// </summary>
-    private void EnsureArchiveFolderExists(List<UIMailFolder> folders, List<SyncedEmailFolder> syncedFolders)
+    private void EnsureArchiveFolderExists(System.Collections.ObjectModel.ObservableCollection<UIMailFolder> folders, List<SyncedEmailFolder> syncedFolders)
     {
         // Check if Archive folder already exists in UI folders
         var archiveExists = folders.Any(f => f.Type == UIFolderType.Archive);
@@ -497,11 +512,12 @@ public class SyncedEmailDisplayService
         }
 
         // Find Sent Mail folder index to insert Archive after it
-        var sentIndex = folders.FindIndex(f => f.Type == UIFolderType.Sent);
+        var foldersList = folders.ToList();
+        var sentIndex = foldersList.FindIndex(f => f.Type == UIFolderType.Sent);
         var insertIndex = sentIndex >= 0 ? sentIndex + 1 : folders.Count;
 
         // Find Trash folder index - Archive should be before Trash
-        var trashIndex = folders.FindIndex(f => f.Type == UIFolderType.Deleted);
+        var trashIndex = foldersList.FindIndex(f => f.Type == UIFolderType.Deleted);
         if (trashIndex >= 0 && insertIndex > trashIndex)
         {
             insertIndex = trashIndex;
@@ -521,23 +537,22 @@ public class SyncedEmailDisplayService
 
         // Use synced folder ID if found, otherwise generate a new GUID for local-only archive
         var archiveFolderId = syncedArchiveFolder?.Id.ToString() ?? Guid.NewGuid().ToString();
-        var unreadCount = syncedArchiveFolder?.UnreadCount ?? 0;
         var totalCount = syncedArchiveFolder?.MessageCount ?? 0;
 
         Debug.WriteLine($"[SyncedEmailDisplayService] Archive folder ID: {archiveFolderId} (synced: {syncedArchiveFolder != null})");
 
-        // Create and insert Archive folder
+        // Create and insert Archive folder (Archive does not show unread count)
         UIMailFolder archiveFolder = new UIMailFolder
         {
             Id = archiveFolderId,
             Name = "Archive",
             Type = UIFolderType.Archive,
             Icon = "\uE149",
-            UnreadCount = unreadCount,
+            UnreadCount = 0,
             TotalCount = totalCount,
             IsExpanded = false,
             IsSelected = false,
-            SubFolders = new List<UIMailFolder>()
+            SubFolders = new System.Collections.ObjectModel.ObservableCollection<UIMailFolder>()
         };
 
         folders.Insert(insertIndex, archiveFolder);
@@ -549,7 +564,7 @@ public class SyncedEmailDisplayService
     /// Junk is inserted before Trash folder for proper ordering.
     /// Uses the actual synced junk folder ID if available for proper message loading.
     /// </summary>
-    private void EnsureJunkFolderExists(List<UIMailFolder> folders, List<SyncedEmailFolder> syncedFolders)
+    private void EnsureJunkFolderExists(System.Collections.ObjectModel.ObservableCollection<UIMailFolder> folders, List<SyncedEmailFolder> syncedFolders)
     {
         // Check if Junk folder already exists in UI folders
         var junkExists = folders.Any(f => f.Type == UIFolderType.Junk);
@@ -560,7 +575,8 @@ public class SyncedEmailDisplayService
         }
 
         // Find Trash folder index - Junk should be before Trash
-        var trashIndex = folders.FindIndex(f => f.Type == UIFolderType.Deleted);
+        var foldersList = folders.ToList();
+        var trashIndex = foldersList.FindIndex(f => f.Type == UIFolderType.Deleted);
         var insertIndex = trashIndex >= 0 ? trashIndex : folders.Count;
 
         // Try to find the actual synced junk folder to use its ID
@@ -577,23 +593,22 @@ public class SyncedEmailDisplayService
 
         // Use synced folder ID if found, otherwise generate a new GUID for local-only junk
         var junkFolderId = syncedJunkFolder?.Id.ToString() ?? Guid.NewGuid().ToString();
-        var unreadCount = syncedJunkFolder?.UnreadCount ?? 0;
         var totalCount = syncedJunkFolder?.MessageCount ?? 0;
 
         Debug.WriteLine($"[SyncedEmailDisplayService] Junk folder ID: {junkFolderId} (synced: {syncedJunkFolder != null})");
 
-        // Create and insert Junk folder
+        // Create and insert Junk folder (Junk does not show unread count)
         UIMailFolder junkFolder = new UIMailFolder
         {
             Id = junkFolderId,
             Name = "Junk",
             Type = UIFolderType.Junk,
             Icon = "\uE14D",
-            UnreadCount = unreadCount,
+            UnreadCount = 0,
             TotalCount = totalCount,
             IsExpanded = false,
             IsSelected = false,
-            SubFolders = new List<UIMailFolder>()
+            SubFolders = new System.Collections.ObjectModel.ObservableCollection<UIMailFolder>()
         };
 
         folders.Insert(insertIndex, junkFolder);
