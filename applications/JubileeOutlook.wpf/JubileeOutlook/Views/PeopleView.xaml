@@ -491,8 +491,8 @@
                 <ColumnDefinition Width="280"/>
                 <!-- Main Content - Contacts List -->
                 <ColumnDefinition Width="*" MinWidth="300"/>
-                <!-- Contact Details Panel -->
-                <ColumnDefinition Width="380"/>
+                <!-- Contact Details Panel - Auto width so it collapses when hidden -->
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
             <!-- Left Sidebar -->
@@ -888,6 +888,7 @@
 
             <!-- Contact Details Panel (Right Side) -->
             <Border Grid.Column="2" Background="#1A1A1A" BorderBrush="#333333" BorderThickness="1,0,0,0"
+                    Width="380"
                     Visibility="{Binding SelectedContact, Converter={StaticResource NullToVisibilityConverter}}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="24">
