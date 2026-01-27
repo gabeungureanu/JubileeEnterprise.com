@@ -4,6 +4,8 @@ using JubileeOutlook.Models;
 using JubileeOutlook.Services;
 using JubileeOutlook.Services.EmailSync;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Windows.Data;
 using System.Windows.Threading;
 
 namespace JubileeOutlook.ViewModels;
@@ -22,6 +24,36 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private ObservableCollection<EmailMessage> _messages = new();
+
+    [ObservableProperty]
+    private ObservableCollection<ConversationGroup> _conversationGroups = new();
+
+    // Available categories for email organization
+    [ObservableProperty]
+    private ObservableCollection<string> _availableCategories = new()
+    {
+        "Personal",
+        "Work",
+        "Important",
+        "Follow Up",
+        "Family",
+        "Finance",
+        "Travel",
+        "Shopping"
+    };
+
+    // Current filter settings
+    [ObservableProperty]
+    private string _currentFilter = "All";
+
+    [ObservableProperty]
+    private string _currentSortCriteria = "Date";
+
+    [ObservableProperty]
+    private bool _sortDescending = true;
+
+    [ObservableProperty]
+    private string? _selectedCategory;
 
     [ObservableProperty]
     private ObservableCollection<CalendarEvent> _events = new();
@@ -62,6 +94,14 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _syncStatusMessage = string.Empty;
 
+    [ObservableProperty]
+    private bool _isOfflineMode = false;
+
+    /// <summary>
+    /// Event raised when offline mode changes
+    /// </summary>
+    public event EventHandler<bool>? OfflineModeChanged;
+
     /// <summary>
     /// Event raised when email body content is updated and UI needs to refresh
     /// </summary>
@@ -81,6 +121,21 @@ public partial class MainViewModel : ObservableObject
     /// Event raised when Forward button is clicked
     /// </summary>
     public event EventHandler? ForwardRequested;
+
+    /// <summary>
+    /// Event raised when New Folder is requested
+    /// </summary>
+    public event EventHandler? NewFolderRequested;
+
+    /// <summary>
+    /// Event raised when Rename Folder is requested
+    /// </summary>
+    public event EventHandler<MailFolder>? RenameFolderRequested;
+
+    /// <summary>
+    /// Event raised when Delete Folder is requested
+    /// </summary>
+    public event EventHandler<MailFolder>? DeleteFolderRequested;
 
     public MainViewModel(IMailService mailService, ICalendarService calendarService)
     {
@@ -169,7 +224,7 @@ public partial class MainViewModel : ObservableObject
             WwbwEmailAddress = WwbwEmailAddress,
             IsExpanded = true,
             Icon = "📧",
-            SubFolders = baseFolders
+            SubFolders = new System.Collections.ObjectModel.ObservableCollection<MailFolder>(baseFolders)
         };
 
         // Update parent folder references
@@ -511,7 +566,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private async Task LoadMessagesAsync(string folderId)
+    public async Task LoadMessagesAsync(string folderId)
     {
         var messages = await _mailService.GetMessagesAsync(folderId);
 
@@ -997,7 +1052,7 @@ public partial class MainViewModel : ObservableObject
     /// <summary>
     /// Recursively searches for a folder by type
     /// </summary>
-    private MailFolder? FindFolderByTypeRecursive(List<MailFolder>? folders, FolderType folderType)
+    private MailFolder? FindFolderByTypeRecursive(IEnumerable<MailFolder>? folders, FolderType folderType)
     {
         if (folders == null) return null;
 
@@ -1021,10 +1076,60 @@ public partial class MainViewModel : ObservableObject
         SelectedMessage.IsRead = false;
     }
 
+    /// <summary>
+    /// Event raised when category dialog is requested
+    /// </summary>
+    public event EventHandler<EmailMessage>? ApplyCategoryRequested;
+
     [RelayCommand]
     private void ApplyCategory()
     {
-        // Category application logic
+        if (SelectedMessage == null) return;
+        ApplyCategoryRequested?.Invoke(this, SelectedMessage);
+    }
+
+    /// <summary>
+    /// Applies a category to the selected message
+    /// </summary>
+    public void SetMessageCategory(EmailMessage message, string category)
+    {
+        if (message == null) return;
+
+        if (!message.Categories.Contains(category))
+        {
+            message.Categories.Add(category);
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Added category '{category}' to message '{message.Subject}'");
+            NotificationService.Instance.ShowSuccess($"Category '{category}' applied");
+        }
+    }
+
+    /// <summary>
+    /// Removes a category from the selected message
+    /// </summary>
+    public void RemoveMessageCategory(EmailMessage message, string category)
+    {
+        if (message == null) return;
+
+        if (message.Categories.Remove(category))
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Removed category '{category}' from message '{message.Subject}'");
+            NotificationService.Instance.ShowSuccess($"Category '{category}' removed");
+        }
+    }
+
+    /// <summary>
+    /// Adds a new category to the available categories
+    /// </summary>
+    [RelayCommand]
+    private void AddCategory(string category)
+    {
+        if (string.IsNullOrWhiteSpace(category)) return;
+
+        if (!AvailableCategories.Contains(category))
+        {
+            AvailableCategories.Add(category);
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Added new category: {category}");
+        }
     }
 
     [RelayCommand]
@@ -1062,7 +1167,14 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void WorkOffline()
     {
-        // Toggle offline mode
+        IsOfflineMode = !IsOfflineMode;
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Work Offline mode toggled: {IsOfflineMode}");
+
+        // Raise event to notify UI
+        OfflineModeChanged?.Invoke(this, IsOfflineMode);
+
+        // Update sync status message
+        SyncStatusMessage = IsOfflineMode ? "Working Offline" : "Connected";
     }
 
     [RelayCommand]
@@ -1075,19 +1187,120 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void NewFolder()
     {
-        // Create new folder logic
+        System.Diagnostics.Debug.WriteLine("[MainViewModel] New Folder requested");
+        NewFolderRequested?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
     private void RenameFolder()
     {
-        // Rename folder logic
+        if (SelectedFolder == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] RenameFolder: No folder selected");
+            return;
+        }
+
+        // Don't allow renaming system folders
+        if (SelectedFolder.Type != FolderType.Custom && SelectedFolder.Type != FolderType.AccountRoot)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Cannot rename system folder: {SelectedFolder.Name}");
+            return;
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Rename Folder requested for: {SelectedFolder.Name}");
+        RenameFolderRequested?.Invoke(this, SelectedFolder);
     }
 
     [RelayCommand]
     private void DeleteFolder()
     {
-        // Delete folder logic
+        if (SelectedFolder == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] DeleteFolder: No folder selected");
+            return;
+        }
+
+        // Don't allow deleting system folders
+        if (SelectedFolder.Type != FolderType.Custom)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Cannot delete system folder: {SelectedFolder.Name}");
+            return;
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Delete Folder requested for: {SelectedFolder.Name}");
+        DeleteFolderRequested?.Invoke(this, SelectedFolder);
+    }
+
+    /// <summary>
+    /// Creates a new custom folder with the given name
+    /// </summary>
+    public void CreateFolder(string folderName)
+    {
+        if (string.IsNullOrWhiteSpace(folderName))
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] CreateFolder: Empty folder name");
+            return;
+        }
+
+        if (AccountRootFolder?.SubFolders == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] CreateFolder: No account root folder");
+            return;
+        }
+
+        // Check if folder already exists
+        if (AccountRootFolder.SubFolders.Any(f => f.Name.Equals(folderName, StringComparison.OrdinalIgnoreCase)))
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] CreateFolder: Folder '{folderName}' already exists");
+            return;
+        }
+
+        var newFolder = new MailFolder
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = folderName,
+            Type = FolderType.Custom,
+            Icon = "\ue2c7", // folder icon
+            UnreadCount = 0,
+            TotalCount = 0
+        };
+
+        AccountRootFolder.SubFolders.Add(newFolder);
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Created new folder: {folderName}");
+    }
+
+    /// <summary>
+    /// Renames a folder
+    /// </summary>
+    public void RenameFolderTo(MailFolder folder, string newName)
+    {
+        if (folder == null || string.IsNullOrWhiteSpace(newName))
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] RenameFolderTo: Invalid parameters");
+            return;
+        }
+
+        var oldName = folder.Name;
+        folder.Name = newName;
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Renamed folder from '{oldName}' to '{newName}'");
+    }
+
+    /// <summary>
+    /// Deletes a folder
+    /// </summary>
+    public void RemoveFolder(MailFolder folder)
+    {
+        if (folder == null || AccountRootFolder?.SubFolders == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] RemoveFolder: Invalid parameters");
+            return;
+        }
+
+        AccountRootFolder.SubFolders.Remove(folder);
+
+        // Select Inbox after deletion
+        SelectedFolder = AccountRootFolder.SubFolders.FirstOrDefault(f => f.Type == FolderType.Inbox);
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Removed folder: {folder.Name}");
     }
 
     [RelayCommand]
@@ -1128,18 +1341,118 @@ public partial class MainViewModel : ObservableObject
     private void ToggleConversationView()
     {
         ShowConversationView = !ShowConversationView;
+        if (ShowConversationView)
+        {
+            BuildConversationGroups();
+        }
+    }
+
+    /// <summary>
+    /// Builds conversation groups from the current messages
+    /// </summary>
+    private void BuildConversationGroups()
+    {
+        ConversationGroups.Clear();
+
+        // Group messages by ConversationId
+        var groupedMessages = Messages
+            .Where(m => !string.IsNullOrEmpty(m.ConversationId))
+            .GroupBy(m => m.ConversationId)
+            .OrderByDescending(g => g.Max(m => m.ReceivedDate));
+
+        foreach (var group in groupedMessages)
+        {
+            var conversationGroup = ConversationGroup.FromMessages(group.Key, group);
+            ConversationGroups.Add(conversationGroup);
+        }
+
+        // Add messages without a ConversationId as single-message groups
+        var singleMessages = Messages.Where(m => string.IsNullOrEmpty(m.ConversationId));
+        foreach (var message in singleMessages.OrderByDescending(m => m.ReceivedDate))
+        {
+            var singleGroup = new ConversationGroup
+            {
+                ConversationId = message.Id,
+                Subject = message.Subject,
+                Participants = new List<string> { message.From },
+                Messages = new ObservableCollection<EmailMessage> { message }
+            };
+            ConversationGroups.Add(singleGroup);
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Built {ConversationGroups.Count} conversation groups");
     }
 
     [RelayCommand]
     private void SortMessages(string criteria)
     {
-        // Sort messages by date, sender, subject, etc.
+        CurrentSortCriteria = criteria;
+        ApplySorting();
+    }
+
+    private void ApplySorting()
+    {
+        var sortedMessages = CurrentSortCriteria switch
+        {
+            "Date" => SortDescending
+                ? Messages.OrderByDescending(m => m.ReceivedDate)
+                : Messages.OrderBy(m => m.ReceivedDate),
+            "From" => SortDescending
+                ? Messages.OrderByDescending(m => m.From)
+                : Messages.OrderBy(m => m.From),
+            "Subject" => SortDescending
+                ? Messages.OrderByDescending(m => m.Subject)
+                : Messages.OrderBy(m => m.Subject),
+            "Size" => SortDescending
+                ? Messages.OrderByDescending(m => m.Body?.Length ?? 0)
+                : Messages.OrderBy(m => m.Body?.Length ?? 0),
+            _ => Messages.OrderByDescending(m => m.ReceivedDate)
+        };
+
+        var messageList = sortedMessages.ToList();
+        Messages.Clear();
+        foreach (var message in messageList)
+        {
+            Messages.Add(message);
+        }
+
+        if (ShowConversationView)
+        {
+            BuildConversationGroups();
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Sorted messages by {CurrentSortCriteria} (descending: {SortDescending})");
+    }
+
+    [RelayCommand]
+    private void ToggleSortDirection()
+    {
+        SortDescending = !SortDescending;
+        ApplySorting();
     }
 
     [RelayCommand]
     private void FilterMessages(string filter)
     {
-        // Filter messages (unread, flagged, etc.)
+        CurrentFilter = filter;
+        ApplyMessageFilter();
+    }
+
+    private void ApplyMessageFilter()
+    {
+        // Refresh message list based on filter
+        // This is called after messages are loaded to apply additional filtering
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Applying filter: {CurrentFilter}");
+    }
+
+    /// <summary>
+    /// Filters messages by category
+    /// </summary>
+    [RelayCommand]
+    private void FilterByCategory(string? category)
+    {
+        SelectedCategory = category;
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Filtering by category: {category ?? "All"}");
     }
 
     [RelayCommand]

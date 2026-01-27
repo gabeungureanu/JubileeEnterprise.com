@@ -325,14 +325,6 @@
                         <!-- Separator -->
                         <Rectangle Width="1" Height="28" Fill="#444444" Margin="8,0"/>
 
-                        <!-- Move -->
-                        <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.MoveToFolderCommand}" ToolTip="Move to Folder" Margin="4,0">
-                            <TextBlock Text="{StaticResource IconMove}" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
-                        </Button>
-
-                        <!-- Separator -->
-                        <Rectangle Width="1" Height="28" Fill="#444444" Margin="8,0"/>
-
                         <!-- Read/Unread -->
                         <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.ToggleReadCommand}" ToolTip="Mark Read/Unread" Margin="4,0">
                             <TextBlock Text="{StaticResource IconMail}" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
@@ -372,21 +364,47 @@
                     <!-- SEND/RECEIVE TAB CONTENT - Compact with Large Icons -->
                     <StackPanel x:Name="SendReceiveTabContent" Orientation="Horizontal" Visibility="Collapsed" VerticalAlignment="Center">
                         <!-- Send/Receive All -->
-                        <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.SendReceiveAllCommand}" ToolTip="Send/Receive All" Margin="4,0">
-                            <TextBlock Text="{StaticResource IconSync}" FontFamily="{StaticResource MaterialIcons}" FontSize="24" Foreground="#4FC3F7"/>
+                        <Button x:Name="SendReceiveAllButton" Style="{StaticResource RibbonSmallButtonStyle}" Click="SendReceiveAllButton_Click" ToolTip="Send/Receive All" Margin="4,0">
+                            <Grid>
+                                <!-- Normal Icon -->
+                                <TextBlock x:Name="SendReceiveIcon" Text="{StaticResource IconSync}" FontFamily="{StaticResource MaterialIcons}" FontSize="24" Foreground="#FF9800"/>
+                                <!-- Spinning Loader (hidden by default) -->
+                                <TextBlock x:Name="SendReceiveSpinner" Text="&#xe863;" FontFamily="{StaticResource MaterialIcons}" FontSize="24" Foreground="#FF9800" Visibility="Collapsed" RenderTransformOrigin="0.5,0.5">
+                                    <TextBlock.RenderTransform>
+                                        <RotateTransform x:Name="SendReceiveSpinnerRotation"/>
+                                    </TextBlock.RenderTransform>
+                                </TextBlock>
+                            </Grid>
                         </Button>
 
                         <!-- Update Folder -->
-                        <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.UpdateFolderCommand}" ToolTip="Update Folder" Margin="4,0">
-                            <TextBlock Text="{StaticResource IconRefresh}" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
+                        <Button x:Name="UpdateFolderButton" Style="{StaticResource RibbonSmallButtonStyle}" Click="UpdateFolderButton_Click" ToolTip="Update Folder" Margin="4,0">
+                            <Grid>
+                                <!-- Normal Icon -->
+                                <TextBlock x:Name="UpdateFolderIcon" Text="{StaticResource IconRefresh}" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
+                                <!-- Spinning Loader (hidden by default) -->
+                                <TextBlock x:Name="UpdateFolderSpinner" Text="&#xe863;" FontFamily="{StaticResource MaterialIcons}" FontSize="24" Visibility="Collapsed" RenderTransformOrigin="0.5,0.5">
+                                    <TextBlock.RenderTransform>
+                                        <RotateTransform x:Name="UpdateFolderSpinnerRotation"/>
+                                    </TextBlock.RenderTransform>
+                                </TextBlock>
+                            </Grid>
                         </Button>
 
                         <!-- Separator -->
                         <Rectangle Width="1" Height="28" Fill="#444444" Margin="8,0"/>
 
                         <!-- Work Offline -->
-                        <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.WorkOfflineCommand}" ToolTip="Work Offline" Margin="4,0">
-                            <TextBlock Text="&#xe1da;" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
+                        <Button x:Name="WorkOfflineButton" Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.WorkOfflineCommand}" ToolTip="Work Offline" Margin="4,0">
+                            <Grid>
+                                <TextBlock x:Name="WorkOfflineIcon" Text="&#xe1da;" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
+                                <!-- Active indicator dot when offline mode is on -->
+                                <Ellipse x:Name="OfflineModeIndicator" Width="8" Height="8"
+                                         Fill="#FF5722"
+                                         HorizontalAlignment="Right" VerticalAlignment="Top"
+                                         Margin="0,-2,-2,0"
+                                         Visibility="{Binding MainViewModel.IsOfflineMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                            </Grid>
                         </Button>
                     </StackPanel>
 
@@ -455,7 +473,7 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- LEFT PANE: Folder Navigation -->
-                    <Border Grid.Column="0" Background="{StaticResource SecondaryBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+                    <Border x:Name="FolderPaneBorder" Grid.Column="0" Background="{StaticResource SecondaryBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*"/>
@@ -586,7 +604,7 @@
                         </Grid>
                     </Border>
 
-                    <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="{StaticResource BorderBrush}"/>
+                    <GridSplitter x:Name="FolderPaneSplitter" Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="{StaticResource BorderBrush}"/>
 
                     <!-- MIDDLE PANE: Message List -->
                     <Border Grid.Column="2" Background="{StaticResource PrimaryBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
@@ -629,7 +647,25 @@
                                                     <TextBlock Text="{Binding ReceivedDate, StringFormat='{}{0:MMM dd}'}" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource SmallFontSize}"/>
                                                 </StackPanel>
                                                 <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Subject}" FontSize="{StaticResource BodyFontSize}" FontWeight="{Binding IsRead, Converter={StaticResource ReadToWeightConverter}}" TextTrimming="CharacterEllipsis" Margin="0,4,0,0"/>
-                                                <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Preview}" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource SmallFontSize}" TextTrimming="CharacterEllipsis" Margin="0,4,0,0"/>
+                                                <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,4,0,0">
+                                                    <!-- Categories Tags -->
+                                                    <ItemsControl ItemsSource="{Binding Categories}" Visibility="{Binding Categories.Count, Converter={StaticResource CountToVisibilityConverter}}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <StackPanel Orientation="Horizontal"/>
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Border Background="#2A4A6A" CornerRadius="2" Padding="4,1" Margin="0,0,4,0">
+                                                                    <TextBlock Text="{Binding}" FontSize="9" Foreground="#AACCEE"/>
+                                                                </Border>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                    <!-- Preview -->
+                                                    <TextBlock Text="{Binding Preview}" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource SmallFontSize}" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -897,7 +933,7 @@
                         <!-- Offline Status (Red) -->
                         <StackPanel x:Name="OfflineStatusPanel" Orientation="Horizontal" Visibility="Collapsed">
                             <Ellipse Width="8" Height="8" Fill="#ef4444" Margin="0,0,6,0"/>
-                            <TextBlock Text="Offline" Foreground="#ef4444" FontSize="{StaticResource SmallFontSize}" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="OfflineStatusText" Text="Offline" Foreground="#ef4444" FontSize="{StaticResource SmallFontSize}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </StackPanel>
 

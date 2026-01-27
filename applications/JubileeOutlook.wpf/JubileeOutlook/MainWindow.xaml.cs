@@ -158,6 +158,15 @@ public partial class MainWindow : Window
         _mainViewModel.ReplyAllRequested += (s, e) => Dispatcher.Invoke(ShowComposePanelForReplyAll);
         _mainViewModel.ForwardRequested += (s, e) => Dispatcher.Invoke(ShowComposePanelForForward);
 
+        // Subscribe to folder management events
+        _mainViewModel.NewFolderRequested += (s, e) => Dispatcher.Invoke(ShowNewFolderDialog);
+        _mainViewModel.RenameFolderRequested += (s, folder) => Dispatcher.Invoke(() => ShowRenameFolderDialog(folder));
+        _mainViewModel.DeleteFolderRequested += (s, folder) => Dispatcher.Invoke(() => ShowDeleteFolderConfirmation(folder));
+        _mainViewModel.OfflineModeChanged += (s, isOffline) => Dispatcher.Invoke(() => UpdateOfflineModeUI(isOffline));
+
+        // Subscribe to category management events
+        _mainViewModel.ApplyCategoryRequested += (s, message) => Dispatcher.Invoke(() => ShowCategoryDialog(message));
+
         // Subscribe to folder pane toggle event
         _appViewModel.ToggleFolderPaneRequested += (s, e) => HamburgerMenu_Click(s ?? this, new RoutedEventArgs());
 
@@ -228,6 +237,10 @@ public partial class MainWindow : Window
                 // Update profile UI for synced email accounts (if any)
                 UpdateProfileUIForSyncedAccounts();
                 Console.WriteLine("[MainWindow] Profile UI updated for synced accounts");
+
+                // Subscribe to PeopleView events for email compose integration
+                SubscribeToPeopleViewEvents();
+                Console.WriteLine("[MainWindow] PeopleView events subscribed");
 
                 // Hide the loading overlay - data is ready
                 LoadingOverlay.Visibility = Visibility.Collapsed;
@@ -764,6 +777,67 @@ public partial class MainWindow : Window
 
             UpdateEmailBodyBrowser();
         }
+
+        // Handle folder pane visibility toggle
+        if (e.PropertyName == nameof(MainViewModel.ShowFolderPane))
+        {
+            ToggleFolderPaneVisibility(_mainViewModel.ShowFolderPane);
+        }
+
+        // Handle conversation view toggle
+        if (e.PropertyName == nameof(MainViewModel.ShowConversationView))
+        {
+            ToggleConversationViewMode(_mainViewModel.ShowConversationView);
+        }
+    }
+
+    /// <summary>
+    /// Toggles the folder pane visibility
+    /// </summary>
+    private void ToggleFolderPaneVisibility(bool showFolderPane)
+    {
+        System.Diagnostics.Debug.WriteLine($"[MainWindow] ToggleFolderPaneVisibility: {showFolderPane}");
+
+        if (showFolderPane)
+        {
+            // Show folder pane
+            FolderPaneColumn.Width = new GridLength(250);
+            FolderPaneColumn.MinWidth = 150;
+            FolderPaneBorder.Visibility = Visibility.Visible;
+            FolderPaneSplitter.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            // Hide folder pane
+            FolderPaneColumn.Width = new GridLength(0);
+            FolderPaneColumn.MinWidth = 0;
+            FolderPaneBorder.Visibility = Visibility.Collapsed;
+            FolderPaneSplitter.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    /// <summary>
+    /// Toggles the conversation view mode
+    /// </summary>
+    private void ToggleConversationViewMode(bool showConversationView)
+    {
+        System.Diagnostics.Debug.WriteLine($"[MainWindow] ToggleConversationViewMode: {showConversationView}");
+
+        // For now, conversation view groups emails by conversation ID
+        // This is a visual mode that affects how emails are displayed in the message list
+        // Full implementation would require grouping/sorting by ConversationId
+
+        if (showConversationView)
+        {
+            // TODO: Group messages by ConversationId
+            // For now, just log the state change
+            System.Diagnostics.Debug.WriteLine("[MainWindow] Conversation view enabled - messages should be grouped by conversation");
+        }
+        else
+        {
+            // Show flat list of messages
+            System.Diagnostics.Debug.WriteLine("[MainWindow] Conversation view disabled - showing flat message list");
+        }
     }
 
     public void UpdateEmailBodyBrowser()
@@ -1215,6 +1289,68 @@ public partial class MainWindow : Window
         // Hide reading pane, show compose panel
         if (ReadingPane != null) ReadingPane.Visibility = Visibility.Collapsed;
         if (ComposeMailPanel != null) ComposeMailPanel.Visibility = Visibility.Visible;
+    }
+
+    /// <summary>
+    /// Shows the compose panel with a pre-filled recipient email (from People module)
+    /// </summary>
+    private void ShowComposePanelWithRecipient(string recipientEmail)
+    {
+        // Create a new compose view model if needed
+        if (_composeMailViewModel == null)
+        {
+            _composeMailViewModel = new ViewModels.ComposeMailViewModel();
+            _composeMailViewModel.MailSent += OnMailSent;
+            _composeMailViewModel.ComposeCancelled += OnComposeCancelled;
+            _composeMailViewModel.SendMailRequested += OnSendMailRequested;
+            _composeMailViewModel.SaveDraftRequested += OnSaveDraftRequested;
+        }
+
+        // Get the user's email address from synced account or fallback to profile email
+        var userEmail = _mainViewModel.AccountRootFolder?.WwbwEmailAddress
+            ?? _mainViewModel.AccountRootFolder?.Name
+            ?? _mainViewModel.WwbwEmailAddress
+            ?? _authManager.Session?.Profile?.Email;
+
+        // Start composing with the recipient pre-filled
+        _composeMailViewModel.StartComposingTo(userEmail, recipientEmail);
+
+        // Set the DataContext for the compose panel
+        if (ComposeMailPanel != null)
+        {
+            ComposeMailPanel.DataContext = _composeMailViewModel;
+        }
+
+        // Switch to Mail module to show the compose panel
+        _appViewModel.ActiveModule = AppModule.Mail;
+
+        // Hide reading pane, show compose panel
+        if (ReadingPane != null) ReadingPane.Visibility = Visibility.Collapsed;
+        if (ComposeMailPanel != null) ComposeMailPanel.Visibility = Visibility.Visible;
+    }
+
+    /// <summary>
+    /// Subscribes to PeopleView events for integration with other modules
+    /// </summary>
+    private void SubscribeToPeopleViewEvents()
+    {
+        if (PeopleViewControl?.DataContext is ViewModels.PeopleViewModel peopleViewModel)
+        {
+            peopleViewModel.EmailContactRequested += (s, email) =>
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] EmailContactRequested - Opening compose for: {email}");
+                Dispatcher.Invoke(() => ShowComposePanelWithRecipient(email));
+            };
+
+            peopleViewModel.ChatFeatureRequested += (s, contactName) =>
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainWindow] ChatFeatureRequested for: {contactName}");
+                Dispatcher.Invoke(() =>
+                {
+                    NotificationService.Instance.ShowInfo($"Chat feature coming soon. Cannot chat with {contactName} yet.");
+                });
+            };
+        }
     }
 
     private async Task ShowComposePanelWithDraftAsync(Models.EmailMessage draft)
@@ -2289,6 +2425,176 @@ public partial class MainWindow : Window
         }
     }
 
+    // Send/Receive Tab Button Handlers
+    private bool _isSendReceiving = false;
+    private System.Windows.Media.Animation.Storyboard? _sendReceiveSpinnerStoryboard;
+    private System.Windows.Media.Animation.Storyboard? _updateFolderSpinnerStoryboard;
+
+    private async void SendReceiveAllButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isSendReceiving || _isSyncing)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainWindow] Send/Receive already in progress, ignoring click");
+            return;
+        }
+
+        _isSendReceiving = true;
+        System.Diagnostics.Debug.WriteLine("[MainWindow] Starting Send/Receive All");
+
+        try
+        {
+            // Show spinner, hide normal icon
+            SendReceiveIcon.Visibility = Visibility.Collapsed;
+            SendReceiveSpinner.Visibility = Visibility.Visible;
+            SendReceiveAllButton.IsEnabled = false;
+            StartSendReceiveSpinnerAnimation();
+
+            // Store current folder ID before refresh
+            var currentFolderId = _mainViewModel.SelectedFolder?.Id;
+            var currentFolderType = _mainViewModel.SelectedFolder?.Type;
+
+            // Refresh folders (rebuilds the folder structure)
+            await _mainViewModel.RefreshFolders();
+
+            // Re-select the folder after refresh
+            if (currentFolderId != null && _mainViewModel.AccountRootFolder?.SubFolders != null)
+            {
+                // Try to find the same folder by ID
+                var restoredFolder = _mainViewModel.AccountRootFolder.SubFolders
+                    .FirstOrDefault(f => f.Id == currentFolderId);
+
+                // If not found by ID, try by type (e.g., Inbox)
+                if (restoredFolder == null && currentFolderType.HasValue)
+                {
+                    restoredFolder = _mainViewModel.AccountRootFolder.SubFolders
+                        .FirstOrDefault(f => f.Type == currentFolderType);
+                }
+
+                // Default to Inbox if nothing found
+                if (restoredFolder == null)
+                {
+                    restoredFolder = _mainViewModel.AccountRootFolder.SubFolders
+                        .FirstOrDefault(f => f.Type == Models.FolderType.Inbox);
+                }
+
+                if (restoredFolder != null)
+                {
+                    _mainViewModel.SelectedFolder = restoredFolder;
+                    await _mainViewModel.LoadMessagesAsync(restoredFolder.Id);
+                    System.Diagnostics.Debug.WriteLine($"[MainWindow] Restored folder selection: {restoredFolder.Name}");
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine("[MainWindow] Send/Receive All completed successfully");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Send/Receive All error: {ex.Message}");
+            MessageDialog.ShowError(this, $"Failed to send/receive: {ex.Message}", "Sync Error");
+        }
+        finally
+        {
+            _isSendReceiving = false;
+            StopSendReceiveSpinnerAnimation();
+            SendReceiveSpinner.Visibility = Visibility.Collapsed;
+            SendReceiveIcon.Visibility = Visibility.Visible;
+            SendReceiveAllButton.IsEnabled = true;
+        }
+    }
+
+    private async void UpdateFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_mainViewModel.SelectedFolder == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainWindow] No folder selected for update");
+            return;
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[MainWindow] Updating folder: {_mainViewModel.SelectedFolder.Name}");
+
+        try
+        {
+            // Show spinner, hide normal icon
+            UpdateFolderIcon.Visibility = Visibility.Collapsed;
+            UpdateFolderSpinner.Visibility = Visibility.Visible;
+            UpdateFolderButton.IsEnabled = false;
+            StartUpdateFolderSpinnerAnimation();
+
+            // Reload messages for current folder
+            await _mainViewModel.LoadMessagesAsync(_mainViewModel.SelectedFolder.Id);
+
+            System.Diagnostics.Debug.WriteLine("[MainWindow] Update Folder completed successfully");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Update Folder error: {ex.Message}");
+            MessageDialog.ShowError(this, $"Failed to update folder: {ex.Message}", "Update Error");
+        }
+        finally
+        {
+            StopUpdateFolderSpinnerAnimation();
+            UpdateFolderSpinner.Visibility = Visibility.Collapsed;
+            UpdateFolderIcon.Visibility = Visibility.Visible;
+            UpdateFolderButton.IsEnabled = true;
+        }
+    }
+
+    private void StartSendReceiveSpinnerAnimation()
+    {
+        if (_sendReceiveSpinnerStoryboard != null) return;
+
+        var animation = new System.Windows.Media.Animation.DoubleAnimation
+        {
+            From = 0,
+            To = 360,
+            Duration = TimeSpan.FromSeconds(1),
+            RepeatBehavior = System.Windows.Media.Animation.RepeatBehavior.Forever
+        };
+
+        _sendReceiveSpinnerStoryboard = new System.Windows.Media.Animation.Storyboard();
+        _sendReceiveSpinnerStoryboard.Children.Add(animation);
+        System.Windows.Media.Animation.Storyboard.SetTarget(animation, SendReceiveSpinner);
+        System.Windows.Media.Animation.Storyboard.SetTargetProperty(animation, new PropertyPath("(UIElement.RenderTransform).(RotateTransform.Angle)"));
+        _sendReceiveSpinnerStoryboard.Begin();
+    }
+
+    private void StopSendReceiveSpinnerAnimation()
+    {
+        if (_sendReceiveSpinnerStoryboard != null)
+        {
+            _sendReceiveSpinnerStoryboard.Stop();
+            _sendReceiveSpinnerStoryboard = null;
+        }
+    }
+
+    private void StartUpdateFolderSpinnerAnimation()
+    {
+        if (_updateFolderSpinnerStoryboard != null) return;
+
+        var animation = new System.Windows.Media.Animation.DoubleAnimation
+        {
+            From = 0,
+            To = 360,
+            Duration = TimeSpan.FromSeconds(1),
+            RepeatBehavior = System.Windows.Media.Animation.RepeatBehavior.Forever
+        };
+
+        _updateFolderSpinnerStoryboard = new System.Windows.Media.Animation.Storyboard();
+        _updateFolderSpinnerStoryboard.Children.Add(animation);
+        System.Windows.Media.Animation.Storyboard.SetTarget(animation, UpdateFolderSpinner);
+        System.Windows.Media.Animation.Storyboard.SetTargetProperty(animation, new PropertyPath("(UIElement.RenderTransform).(RotateTransform.Angle)"));
+        _updateFolderSpinnerStoryboard.Begin();
+    }
+
+    private void StopUpdateFolderSpinnerAnimation()
+    {
+        if (_updateFolderSpinnerStoryboard != null)
+        {
+            _updateFolderSpinnerStoryboard.Stop();
+            _updateFolderSpinnerStoryboard = null;
+        }
+    }
+
     #endregion
 
     #region Attachment Download
@@ -3110,6 +3416,175 @@ public partial class MainWindow : Window
                 LastSyncText.Text = $"Last sync: {DateTime.Now:HH:mm}";
             }
         });
+    }
+
+    #endregion
+
+    #region Category Management Dialog
+
+    /// <summary>
+    /// Shows dialog to apply categories to an email
+    /// </summary>
+    private void ShowCategoryDialog(EmailMessage message)
+    {
+        if (message == null) return;
+
+        var dialog = new Views.CategoryDialog(message, _mainViewModel.AvailableCategories)
+        {
+            Owner = this
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            // Update the message's categories
+            message.Categories.Clear();
+            foreach (var category in dialog.SelectedCategories)
+            {
+                message.Categories.Add(category);
+            }
+
+            // Add any new categories to the available list
+            foreach (var newCategory in dialog.NewCategories)
+            {
+                if (!_mainViewModel.AvailableCategories.Contains(newCategory))
+                {
+                    _mainViewModel.AvailableCategories.Add(newCategory);
+                }
+            }
+
+            // Show notification
+            if (dialog.SelectedCategories.Count > 0)
+            {
+                NotificationService.Instance.ShowSuccess($"Applied {dialog.SelectedCategories.Count} category(ies)");
+            }
+            else
+            {
+                NotificationService.Instance.ShowInfo("All categories removed");
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Categories updated for message: {message.Subject}");
+        }
+    }
+
+    #endregion
+
+    #region Folder Management Dialogs
+
+    /// <summary>
+    /// Shows dialog to create a new folder
+    /// </summary>
+    private void ShowNewFolderDialog()
+    {
+        var dialog = new Views.InputDialog("New Folder", "Enter folder name:", "New Folder")
+        {
+            Owner = this
+        };
+
+        if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.InputValue))
+        {
+            _mainViewModel.CreateFolder(dialog.InputValue);
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Created new folder: {dialog.InputValue}");
+        }
+    }
+
+    /// <summary>
+    /// Shows dialog to rename a folder
+    /// </summary>
+    private void ShowRenameFolderDialog(Models.MailFolder? folder)
+    {
+        if (folder == null) return;
+
+        // Don't allow renaming system folders
+        if (folder.Type != Models.FolderType.Custom)
+        {
+            Views.ConfirmationDialog.Show(
+                this,
+                "Cannot Rename Folder",
+                $"Cannot rename the '{folder.Name}' folder.\n\nSystem folders cannot be renamed.",
+                "OK",
+                "Cancel",
+                Views.ConfirmationDialog.DialogType.Info);
+            return;
+        }
+
+        var dialog = new Views.InputDialog("Rename Folder", "Enter new folder name:", folder.Name)
+        {
+            Owner = this
+        };
+
+        if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.InputValue))
+        {
+            _mainViewModel.RenameFolderTo(folder, dialog.InputValue);
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Renamed folder to: {dialog.InputValue}");
+        }
+    }
+
+    /// <summary>
+    /// Shows confirmation to delete a folder
+    /// </summary>
+    private void ShowDeleteFolderConfirmation(Models.MailFolder? folder)
+    {
+        if (folder == null) return;
+
+        // Don't allow deleting system folders
+        if (folder.Type != Models.FolderType.Custom)
+        {
+            Views.ConfirmationDialog.Show(
+                this,
+                "Cannot Delete Folder",
+                $"Cannot delete the '{folder.Name}' folder.\n\nSystem folders cannot be deleted.",
+                "OK",
+                "Cancel",
+                Views.ConfirmationDialog.DialogType.Info);
+            return;
+        }
+
+        var confirmed = Views.ConfirmationDialog.Show(
+            this,
+            "Delete Folder",
+            $"Are you sure you want to delete the folder '{folder.Name}'?\n\nAll messages in this folder will be moved to Trash.",
+            "Delete",
+            "Cancel",
+            Views.ConfirmationDialog.DialogType.Warning);
+
+        if (confirmed)
+        {
+            _mainViewModel.RemoveFolder(folder);
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Deleted folder: {folder.Name}");
+        }
+    }
+
+    /// <summary>
+    /// Updates UI when offline mode changes
+    /// </summary>
+    private void UpdateOfflineModeUI(bool isOffline)
+    {
+        System.Diagnostics.Debug.WriteLine($"[MainWindow] UpdateOfflineModeUI: isOffline={isOffline}");
+
+        // Update the Work Offline button visual state
+        if (FindName("WorkOfflineButton") is System.Windows.Controls.Button workOfflineButton)
+        {
+            // Change icon color to indicate active state
+            if (workOfflineButton.Content is System.Windows.Controls.TextBlock iconText)
+            {
+                iconText.Foreground = isOffline
+                    ? new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 87, 34)) // Orange-red for offline
+                    : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(200, 200, 200)); // Default gray
+            }
+        }
+
+        // Show visual indicator in status bar
+        if (isOffline)
+        {
+            OnlineStatusPanel.Visibility = Visibility.Collapsed;
+            OfflineStatusPanel.Visibility = Visibility.Visible;
+            OfflineStatusText.Text = "Working Offline (Manual)";
+        }
+        else
+        {
+            // Let the network status service determine the actual status
+            UpdateNetworkStatus();
+        }
     }
 
     #endregion
