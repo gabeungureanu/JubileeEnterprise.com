@@ -150,7 +150,9 @@ public class SyncedEmailDisplayService
 
             foreach (var folder in syncedFolders.Where(f => f.IsSubscribed))
             {
-                var mailFolder = ConvertToMailFolder(folder);
+                // Calculate actual unread count from stored messages
+                var actualUnreadCount = await CalculateUnreadCountAsync(account.Id, folder.Id);
+                var mailFolder = ConvertToMailFolder(folder, actualUnreadCount);
                 accountFolder.SubFolders.Add(mailFolder);
             }
 
@@ -163,10 +165,10 @@ public class SyncedEmailDisplayService
             {
                 // Ensure Archive folder is always present (add after Sent Mail if missing)
                 // Pass synced folders so we can use the actual archive folder ID
-                EnsureArchiveFolderExists(accountFolder.SubFolders, syncedFolders);
+                await EnsureArchiveFolderExistsAsync(account.Id, accountFolder.SubFolders, syncedFolders);
 
                 // Ensure Junk folder is always present (add before Trash if missing)
-                EnsureJunkFolderExists(accountFolder.SubFolders, syncedFolders);
+                await EnsureJunkFolderExistsAsync(account.Id, accountFolder.SubFolders, syncedFolders);
             }
 
             rootFolders.Add(accountFolder);
@@ -176,18 +178,40 @@ public class SyncedEmailDisplayService
     }
 
     /// <summary>
+    /// Calculate the actual unread count from stored messages for a folder
+    /// </summary>
+    private async Task<int> CalculateUnreadCountAsync(Guid accountId, Guid folderId)
+    {
+        try
+        {
+            var messages = await GetMessagesAsync(accountId, folderId);
+            var unreadCount = messages.Count(m => !m.IsRead);
+            Debug.WriteLine($"[SyncedEmailDisplayService] Folder {folderId}: {unreadCount} unread out of {messages.Count} messages");
+            return unreadCount;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[SyncedEmailDisplayService] Error calculating unread count for folder {folderId}: {ex.Message}");
+            return 0;
+        }
+    }
+
+    /// <summary>
     /// Convert SyncedEmailFolder to MailFolder for UI
     /// </summary>
-    private UIMailFolder ConvertToMailFolder(SyncedEmailFolder syncedFolder)
+    /// <param name="syncedFolder">The synced folder from storage</param>
+    /// <param name="calculatedUnreadCount">Optional: unread count calculated from actual messages. If null, uses stored count.</param>
+    private UIMailFolder ConvertToMailFolder(SyncedEmailFolder syncedFolder, int? calculatedUnreadCount = null)
     {
         var uiFolderType = ConvertFolderType(syncedFolder.FolderType);
+        var unreadCount = calculatedUnreadCount ?? syncedFolder.UnreadCount;
         return new UIMailFolder
         {
             Id = syncedFolder.Id.ToString(),
             Name = NormalizeFolderName(syncedFolder.FolderName, syncedFolder.FolderType),
             Type = uiFolderType,
             Icon = GetFolderIcon(syncedFolder.FolderType),
-            UnreadCount = ShouldShowUnreadCount(uiFolderType) ? syncedFolder.UnreadCount : 0,
+            UnreadCount = ShouldShowUnreadCount(uiFolderType) ? unreadCount : 0,
             TotalCount = syncedFolder.MessageCount,
             IsExpanded = false,
             IsSelected = false,
@@ -557,7 +581,7 @@ public class SyncedEmailDisplayService
     /// Archive is inserted after Sent Mail folder for proper ordering.
     /// Uses the actual synced archive folder ID if available for proper message loading.
     /// </summary>
-    private void EnsureArchiveFolderExists(System.Collections.ObjectModel.ObservableCollection<UIMailFolder> folders, List<SyncedEmailFolder> syncedFolders)
+    private async Task EnsureArchiveFolderExistsAsync(Guid accountId, System.Collections.ObjectModel.ObservableCollection<UIMailFolder> folders, List<SyncedEmailFolder> syncedFolders)
     {
         // Check if Archive folder already exists in UI folders
         var archiveExists = folders.Any(f => f.Type == UIFolderType.Archive);
@@ -593,8 +617,14 @@ public class SyncedEmailDisplayService
 
         // Use synced folder ID if found, otherwise generate a new GUID for local-only archive
         var archiveFolderId = syncedArchiveFolder?.Id.ToString() ?? Guid.NewGuid().ToString();
-        var unreadCount = syncedArchiveFolder?.UnreadCount ?? 0;
         var totalCount = syncedArchiveFolder?.MessageCount ?? 0;
+
+        // Calculate actual unread count from messages if we have a synced folder
+        var unreadCount = 0;
+        if (syncedArchiveFolder != null)
+        {
+            unreadCount = await CalculateUnreadCountAsync(accountId, syncedArchiveFolder.Id);
+        }
 
         Debug.WriteLine($"[SyncedEmailDisplayService] Archive folder ID: {archiveFolderId} (synced: {syncedArchiveFolder != null})");
 
@@ -621,7 +651,7 @@ public class SyncedEmailDisplayService
     /// Junk is inserted before Trash folder for proper ordering.
     /// Uses the actual synced junk folder ID if available for proper message loading.
     /// </summary>
-    private void EnsureJunkFolderExists(System.Collections.ObjectModel.ObservableCollection<UIMailFolder> folders, List<SyncedEmailFolder> syncedFolders)
+    private async Task EnsureJunkFolderExistsAsync(Guid accountId, System.Collections.ObjectModel.ObservableCollection<UIMailFolder> folders, List<SyncedEmailFolder> syncedFolders)
     {
         // Check if Junk folder already exists in UI folders
         var junkExists = folders.Any(f => f.Type == UIFolderType.Junk);
@@ -650,8 +680,14 @@ public class SyncedEmailDisplayService
 
         // Use synced folder ID if found, otherwise generate a new GUID for local-only junk
         var junkFolderId = syncedJunkFolder?.Id.ToString() ?? Guid.NewGuid().ToString();
-        var unreadCount = syncedJunkFolder?.UnreadCount ?? 0;
         var totalCount = syncedJunkFolder?.MessageCount ?? 0;
+
+        // Calculate actual unread count from messages if we have a synced folder
+        var unreadCount = 0;
+        if (syncedJunkFolder != null)
+        {
+            unreadCount = await CalculateUnreadCountAsync(accountId, syncedJunkFolder.Id);
+        }
 
         Debug.WriteLine($"[SyncedEmailDisplayService] Junk folder ID: {junkFolderId} (synced: {syncedJunkFolder != null})");
 
