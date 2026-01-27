@@ -1,11 +1,14 @@
 using System.Diagnostics;
 using System.IO;
+using MailKit;
+using MailKit.Net.Imap;
 using JubileeOutlook.Models;
 using JubileeOutlook.Models.EmailSync;
 
-// Use aliases to avoid ambiguity between Models.FolderType and Models.EmailSync.FolderType
+// Use aliases to avoid ambiguity between Models and MailKit types
 using UIFolderType = JubileeOutlook.Models.FolderType;
 using SyncFolderType = JubileeOutlook.Models.EmailSync.FolderType;
+using UIMailFolder = JubileeOutlook.Models.MailFolder;
 
 namespace JubileeOutlook.Services.EmailSync;
 
@@ -109,9 +112,9 @@ public class SyncedEmailDisplayService
     /// <summary>
     /// Convert synced accounts and folders to UI MailFolder structure
     /// </summary>
-    public async Task<List<MailFolder>> BuildFolderTreeAsync()
+    public async Task<List<UIMailFolder>> BuildFolderTreeAsync()
     {
-        var rootFolders = new List<MailFolder>();
+        var rootFolders = new List<UIMailFolder>();
         var accounts = await GetSyncedAccountsAsync();
 
         Debug.WriteLine($"[SyncedEmailDisplayService] Building folder tree for {accounts.Count} accounts");
@@ -119,7 +122,7 @@ public class SyncedEmailDisplayService
         foreach (var account in accounts)
         {
             // Create account root folder
-            var accountFolder = new MailFolder
+            var accountFolder = new UIMailFolder
             {
                 Id = account.Id.ToString(),
                 Name = account.EmailAddress,
@@ -128,7 +131,7 @@ public class SyncedEmailDisplayService
                 WwbwEmailAddress = account.EmailAddress,
                 IsExpanded = true,
                 Icon = GetProviderIcon(account.ProviderType),
-                SubFolders = new List<MailFolder>()
+                SubFolders = new List<UIMailFolder>()
             };
 
             // Load folders for this account
@@ -151,6 +154,9 @@ public class SyncedEmailDisplayService
                 // Ensure Archive folder is always present (add after Sent Mail if missing)
                 // Pass synced folders so we can use the actual archive folder ID
                 EnsureArchiveFolderExists(accountFolder.SubFolders, syncedFolders);
+
+                // Ensure Junk folder is always present (add before Trash if missing)
+                EnsureJunkFolderExists(accountFolder.SubFolders, syncedFolders);
             }
 
             rootFolders.Add(accountFolder);
@@ -162,9 +168,9 @@ public class SyncedEmailDisplayService
     /// <summary>
     /// Convert SyncedEmailFolder to MailFolder for UI
     /// </summary>
-    private MailFolder ConvertToMailFolder(SyncedEmailFolder syncedFolder)
+    private UIMailFolder ConvertToMailFolder(SyncedEmailFolder syncedFolder)
     {
-        return new MailFolder
+        return new UIMailFolder
         {
             Id = syncedFolder.Id.ToString(),
             Name = NormalizeFolderName(syncedFolder.FolderName, syncedFolder.FolderType),
@@ -174,7 +180,7 @@ public class SyncedEmailDisplayService
             TotalCount = syncedFolder.MessageCount,
             IsExpanded = false,
             IsSelected = false,
-            SubFolders = new List<MailFolder>()
+            SubFolders = new List<UIMailFolder>()
         };
     }
 
@@ -462,15 +468,16 @@ public class SyncedEmailDisplayService
     /// <summary>
     /// Create default folder structure when no folders found
     /// </summary>
-    private List<MailFolder> CreateDefaultFolders()
+    private List<UIMailFolder> CreateDefaultFolders()
     {
-        return new List<MailFolder>
+        return new List<UIMailFolder>
         {
-            new MailFolder { Id = "inbox", Name = "Inbox", Type = UIFolderType.Inbox, Icon = "\uE156" },
-            new MailFolder { Id = "drafts", Name = "Drafts", Type = UIFolderType.Drafts, Icon = "\uE151" },
-            new MailFolder { Id = "sent", Name = "Sent Mail", Type = UIFolderType.Sent, Icon = "\uE163" },
-            new MailFolder { Id = "archive", Name = "Archive", Type = UIFolderType.Archive, Icon = "\uE149" },
-            new MailFolder { Id = "trash", Name = "Trash", Type = UIFolderType.Deleted, Icon = "\uE872" }
+            new UIMailFolder { Id = "inbox", Name = "Inbox", Type = UIFolderType.Inbox, Icon = "\uE156" },
+            new UIMailFolder { Id = "drafts", Name = "Drafts", Type = UIFolderType.Drafts, Icon = "\uE151" },
+            new UIMailFolder { Id = "sent", Name = "Sent Mail", Type = UIFolderType.Sent, Icon = "\uE163" },
+            new UIMailFolder { Id = "archive", Name = "Archive", Type = UIFolderType.Archive, Icon = "\uE149" },
+            new UIMailFolder { Id = "junk", Name = "Junk", Type = UIFolderType.Junk, Icon = "\uE14D" },
+            new UIMailFolder { Id = "trash", Name = "Trash", Type = UIFolderType.Deleted, Icon = "\uE872" }
         };
     }
 
@@ -479,7 +486,7 @@ public class SyncedEmailDisplayService
     /// Archive is inserted after Sent Mail folder for proper ordering.
     /// Uses the actual synced archive folder ID if available for proper message loading.
     /// </summary>
-    private void EnsureArchiveFolderExists(List<MailFolder> folders, List<SyncedEmailFolder> syncedFolders)
+    private void EnsureArchiveFolderExists(List<UIMailFolder> folders, List<SyncedEmailFolder> syncedFolders)
     {
         // Check if Archive folder already exists in UI folders
         var archiveExists = folders.Any(f => f.Type == UIFolderType.Archive);
@@ -520,7 +527,7 @@ public class SyncedEmailDisplayService
         Debug.WriteLine($"[SyncedEmailDisplayService] Archive folder ID: {archiveFolderId} (synced: {syncedArchiveFolder != null})");
 
         // Create and insert Archive folder
-        var archiveFolder = new MailFolder
+        UIMailFolder archiveFolder = new UIMailFolder
         {
             Id = archiveFolderId,
             Name = "Archive",
@@ -530,11 +537,67 @@ public class SyncedEmailDisplayService
             TotalCount = totalCount,
             IsExpanded = false,
             IsSelected = false,
-            SubFolders = new List<MailFolder>()
+            SubFolders = new List<UIMailFolder>()
         };
 
         folders.Insert(insertIndex, archiveFolder);
         Debug.WriteLine($"[SyncedEmailDisplayService] Archive folder added at index {insertIndex}");
+    }
+
+    /// <summary>
+    /// Ensures Junk folder exists in the folder list, adding it if missing.
+    /// Junk is inserted before Trash folder for proper ordering.
+    /// Uses the actual synced junk folder ID if available for proper message loading.
+    /// </summary>
+    private void EnsureJunkFolderExists(List<UIMailFolder> folders, List<SyncedEmailFolder> syncedFolders)
+    {
+        // Check if Junk folder already exists in UI folders
+        var junkExists = folders.Any(f => f.Type == UIFolderType.Junk);
+        if (junkExists)
+        {
+            Debug.WriteLine("[SyncedEmailDisplayService] Junk folder already exists");
+            return;
+        }
+
+        // Find Trash folder index - Junk should be before Trash
+        var trashIndex = folders.FindIndex(f => f.Type == UIFolderType.Deleted);
+        var insertIndex = trashIndex >= 0 ? trashIndex : folders.Count;
+
+        // Try to find the actual synced junk folder to use its ID
+        var syncedJunkFolder = syncedFolders.FirstOrDefault(f => f.FolderType == SyncFolderType.Junk);
+        if (syncedJunkFolder == null)
+        {
+            // Fallback: look for folder named "Junk", "Spam", or Gmail's spam folder
+            syncedJunkFolder = syncedFolders.FirstOrDefault(f =>
+                f.FolderName.Equals("Junk", StringComparison.OrdinalIgnoreCase) ||
+                f.FolderName.Equals("Spam", StringComparison.OrdinalIgnoreCase) ||
+                f.FolderName.Equals("Junk E-mail", StringComparison.OrdinalIgnoreCase) ||
+                f.FolderName.Equals("[Gmail]/Spam", StringComparison.OrdinalIgnoreCase));
+        }
+
+        // Use synced folder ID if found, otherwise generate a new GUID for local-only junk
+        var junkFolderId = syncedJunkFolder?.Id.ToString() ?? Guid.NewGuid().ToString();
+        var unreadCount = syncedJunkFolder?.UnreadCount ?? 0;
+        var totalCount = syncedJunkFolder?.MessageCount ?? 0;
+
+        Debug.WriteLine($"[SyncedEmailDisplayService] Junk folder ID: {junkFolderId} (synced: {syncedJunkFolder != null})");
+
+        // Create and insert Junk folder
+        UIMailFolder junkFolder = new UIMailFolder
+        {
+            Id = junkFolderId,
+            Name = "Junk",
+            Type = UIFolderType.Junk,
+            Icon = "\uE14D",
+            UnreadCount = unreadCount,
+            TotalCount = totalCount,
+            IsExpanded = false,
+            IsSelected = false,
+            SubFolders = new List<UIMailFolder>()
+        };
+
+        folders.Insert(insertIndex, junkFolder);
+        Debug.WriteLine($"[SyncedEmailDisplayService] Junk folder added at index {insertIndex}");
     }
 
     /// <summary>
@@ -640,6 +703,142 @@ public class SyncedEmailDisplayService
         catch (Exception ex)
         {
             Debug.WriteLine($"[SyncedEmailDisplayService] Error moving message to trash: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Move a message to the Junk/Spam folder
+    /// </summary>
+    /// <param name="accountId">The account ID</param>
+    /// <param name="folderId">The source folder ID</param>
+    /// <param name="remoteMessageId">The remote message ID</param>
+    /// <returns>True if successful, false otherwise</returns>
+    public async Task<bool> MoveMessageToJunkAsync(Guid accountId, Guid folderId, string remoteMessageId)
+    {
+        try
+        {
+            Debug.WriteLine($"[SyncedEmailDisplayService] Moving message to junk: accountId={accountId}, folderId={folderId}, remoteMessageId={remoteMessageId}");
+
+            // Get the account
+            var account = await _secureStorage.RetrieveAsync<SyncedEmailAccount>($"account_{accountId}");
+            if (account == null)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Account not found for key: account_{accountId}");
+                return false;
+            }
+
+            // Get folders to find junk folder
+            var folders = await _secureStorage.RetrieveAsync<List<SyncedEmailFolder>>($"folders_{accountId}");
+            var junkFolder = folders?.FirstOrDefault(f => f.FolderType == SyncFolderType.Junk);
+
+            // If no junk folder found by type, try to find by name
+            if (junkFolder == null)
+            {
+                junkFolder = folders?.FirstOrDefault(f =>
+                    f.FolderName.Equals("Junk", StringComparison.OrdinalIgnoreCase) ||
+                    f.FolderName.Equals("Spam", StringComparison.OrdinalIgnoreCase) ||
+                    f.FolderName.Equals("Junk E-mail", StringComparison.OrdinalIgnoreCase) ||
+                    f.FolderName.Equals("[Gmail]/Spam", StringComparison.OrdinalIgnoreCase));
+            }
+
+            // FALLBACK: If no Junk folder exists, use Trash folder instead
+            var usingTrashFallback = false;
+            if (junkFolder == null)
+            {
+                Debug.WriteLine("[SyncedEmailDisplayService] Junk folder not found, falling back to Trash folder");
+                junkFolder = folders?.FirstOrDefault(f => f.FolderType == SyncFolderType.Trash);
+
+                // If no trash folder by type, try by name
+                if (junkFolder == null)
+                {
+                    junkFolder = folders?.FirstOrDefault(f =>
+                        f.FolderName.Equals("Trash", StringComparison.OrdinalIgnoreCase) ||
+                        f.FolderName.Equals("Deleted Items", StringComparison.OrdinalIgnoreCase) ||
+                        f.FolderName.Equals("[Gmail]/Trash", StringComparison.OrdinalIgnoreCase));
+                }
+
+                if (junkFolder == null)
+                {
+                    Debug.WriteLine("[SyncedEmailDisplayService] Neither Junk nor Trash folder found");
+                    return false;
+                }
+                usingTrashFallback = true;
+            }
+
+            // Get the message from local storage
+            var messagesKey = $"messages_{accountId}_{folderId}";
+            var messages = await _secureStorage.RetrieveAsync<List<SyncedMessage>>(messagesKey);
+            var message = messages?.FirstOrDefault(m => m.RemoteMessageId == remoteMessageId);
+
+            if (message == null)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Message not found in local storage");
+                return false;
+            }
+
+            // OPTIMISTIC LOCAL UPDATE: Update local cache FIRST for instant feedback
+            // 1. Remove from source folder cache
+            messages!.RemoveAll(m => m.RemoteMessageId == remoteMessageId);
+            await _secureStorage.StoreAsync(messagesKey, messages);
+
+            // 2. Add to destination folder cache (junk or trash fallback)
+            var destKey = $"messages_{accountId}_{junkFolder.Id}";
+            var destMessages = await _secureStorage.RetrieveAsync<List<SyncedMessage>>(destKey) ?? new List<SyncedMessage>();
+            message.FolderId = junkFolder.Id;
+            destMessages.Insert(0, message);
+            await _secureStorage.StoreAsync(destKey, destMessages);
+            Debug.WriteLine($"[SyncedEmailDisplayService] Local cache updated for {(usingTrashFallback ? "trash (junk fallback)" : "junk")} (optimistic)");
+
+            // Now do the server-side move in background
+            try
+            {
+                var connectionService = new EmailConnectionService(_secureStorage, new MicrosoftOAuth2Service(_secureStorage));
+                var connectionResult = await connectionService.ConnectAsync(account);
+
+                if (!connectionResult.Success)
+                {
+                    Debug.WriteLine($"[SyncedEmailDisplayService] Connection failed: {connectionResult.ErrorMessage}");
+                    // Local cache already updated, server sync will fix on next sync
+                    return true;
+                }
+
+                // Move on server
+                if (connectionResult.ConnectionType == ConnectionType.MicrosoftGraph && connectionResult.GraphClient != null)
+                {
+                    var moveRequest = new Microsoft.Graph.Me.Messages.Item.Move.MovePostRequestBody
+                    {
+                        DestinationId = junkFolder.RemoteFolderId
+                    };
+                    await connectionResult.GraphClient.Me.Messages[remoteMessageId]
+                        .Move.PostAsync(moveRequest);
+                    Debug.WriteLine($"[SyncedEmailDisplayService] Message moved to {(usingTrashFallback ? "trash (junk fallback)" : "junk")} on server via Graph API");
+                }
+                else if (connectionResult.ConnectionType == ConnectionType.IMAP && connectionResult.ImapClient != null)
+                {
+                    var sourceFolder = folders?.FirstOrDefault(f => f.Id == folderId);
+                    if (sourceFolder != null && uint.TryParse(remoteMessageId, out var uid))
+                    {
+                        var imapSourceFolder = await connectionResult.ImapClient.GetFolderAsync(sourceFolder.RemoteFolderId);
+                        var imapDestFolder = await connectionResult.ImapClient.GetFolderAsync(junkFolder.RemoteFolderId);
+                        await imapSourceFolder.OpenAsync(MailKit.FolderAccess.ReadWrite);
+                        await imapSourceFolder.MoveToAsync(new MailKit.UniqueId(uid), imapDestFolder);
+                        await imapSourceFolder.CloseAsync();
+                        Debug.WriteLine($"[SyncedEmailDisplayService] Message moved to {(usingTrashFallback ? "trash (junk fallback)" : "junk")} on server via IMAP");
+                    }
+                }
+            }
+            catch (Exception serverEx)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Server move to {(usingTrashFallback ? "trash" : "junk")} failed (local cache already updated): {serverEx.Message}");
+                // Local cache is already updated, so return true - next sync will reconcile
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[SyncedEmailDisplayService] Error moving message to junk: {ex.Message}");
             return false;
         }
     }
@@ -760,6 +959,190 @@ public class SyncedEmailDisplayService
             Debug.WriteLine($"[SyncedEmailDisplayService] Error moving message to archive: {ex.Message}");
             return false;
         }
+    }
+
+    /// <summary>
+    /// Toggle the flag status of a message
+    /// </summary>
+    /// <param name="accountId">The account ID</param>
+    /// <param name="folderId">The folder ID</param>
+    /// <param name="remoteMessageId">The remote message ID</param>
+    /// <param name="isFlagged">The new flag state</param>
+    /// <returns>True if successful, false otherwise</returns>
+    public async Task<bool> ToggleFlagAsync(Guid accountId, Guid folderId, string remoteMessageId, bool isFlagged)
+    {
+        try
+        {
+            Debug.WriteLine($"[SyncedEmailDisplayService] Toggling flag: accountId={accountId}, folderId={folderId}, remoteMessageId={remoteMessageId}, isFlagged={isFlagged}");
+
+            // Get the account
+            var account = await _secureStorage.RetrieveAsync<SyncedEmailAccount>($"account_{accountId}");
+            if (account == null)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Account not found for key: account_{accountId}");
+                return false;
+            }
+
+            // Update local cache first (optimistic update)
+            var messagesKey = $"messages_{accountId}_{folderId}";
+            var messages = await _secureStorage.RetrieveAsync<List<SyncedMessage>>(messagesKey);
+            var message = messages?.FirstOrDefault(m => m.RemoteMessageId == remoteMessageId);
+
+            if (message != null)
+            {
+                message.IsFlagged = isFlagged;
+                await _secureStorage.StoreAsync(messagesKey, messages);
+                Debug.WriteLine("[SyncedEmailDisplayService] Local cache updated for flag toggle");
+            }
+
+            // Sync to server
+            try
+            {
+                var connectionService = new EmailConnectionService(_secureStorage, new MicrosoftOAuth2Service(_secureStorage));
+                var connectionResult = await connectionService.ConnectAsync(account);
+
+                if (!connectionResult.Success)
+                {
+                    Debug.WriteLine($"[SyncedEmailDisplayService] Connection failed: {connectionResult.ErrorMessage}");
+                    return true; // Local cache updated, server sync will reconcile later
+                }
+
+                if (connectionResult.ConnectionType == ConnectionType.MicrosoftGraph && connectionResult.GraphClient != null)
+                {
+                    // Update flag via Microsoft Graph API
+                    var flagStatus = isFlagged
+                        ? new Microsoft.Graph.Models.FollowupFlag { FlagStatus = Microsoft.Graph.Models.FollowupFlagStatus.Flagged }
+                        : new Microsoft.Graph.Models.FollowupFlag { FlagStatus = Microsoft.Graph.Models.FollowupFlagStatus.NotFlagged };
+
+                    var messageUpdate = new Microsoft.Graph.Models.Message
+                    {
+                        Flag = flagStatus
+                    };
+
+                    await connectionResult.GraphClient.Me.Messages[remoteMessageId]
+                        .PatchAsync(messageUpdate);
+                    Debug.WriteLine("[SyncedEmailDisplayService] Flag toggled on server via Graph API");
+                }
+                else if (connectionResult.ConnectionType == ConnectionType.IMAP && connectionResult.ImapClient != null)
+                {
+                    // Get folders to find the source folder
+                    var folders = await _secureStorage.RetrieveAsync<List<SyncedEmailFolder>>($"folders_{accountId}");
+                    var sourceFolder = folders?.FirstOrDefault(f => f.Id == folderId);
+
+                    if (sourceFolder != null && uint.TryParse(remoteMessageId, out var uid))
+                    {
+                        var imapFolder = await connectionResult.ImapClient.GetFolderAsync(sourceFolder.RemoteFolderId);
+                        await imapFolder.OpenAsync(FolderAccess.ReadWrite);
+
+                        var uniqueId = new UniqueId(uid);
+                        if (isFlagged)
+                        {
+                            await imapFolder.AddFlagsAsync(uniqueId, MessageFlags.Flagged, true);
+                        }
+                        else
+                        {
+                            await imapFolder.RemoveFlagsAsync(uniqueId, MessageFlags.Flagged, true);
+                        }
+
+                        await imapFolder.CloseAsync();
+                        Debug.WriteLine("[SyncedEmailDisplayService] Flag toggled on server via IMAP");
+                    }
+                }
+            }
+            catch (Exception serverEx)
+            {
+                Debug.WriteLine($"[SyncedEmailDisplayService] Server flag toggle failed (local cache already updated): {serverEx.Message}");
+                // Local cache is already updated, so return true - next sync will reconcile
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[SyncedEmailDisplayService] Error toggling flag: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Search through all locally cached synced messages across all accounts and folders
+    /// </summary>
+    /// <param name="query">The search query string</param>
+    /// <returns>List of matching EmailMessage objects</returns>
+    public async Task<List<EmailMessage>> SearchMessagesAsync(string query)
+    {
+        var results = new List<EmailMessage>();
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                Debug.WriteLine("[SyncedEmailDisplayService] Search: Empty query");
+                return results;
+            }
+
+            var searchTerms = query.ToLowerInvariant().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            Debug.WriteLine($"[SyncedEmailDisplayService] Searching for: {query} ({searchTerms.Length} terms)");
+
+            // Get all synced accounts
+            var accounts = await GetSyncedAccountsAsync();
+
+            foreach (var account in accounts)
+            {
+                // Get folders for this account
+                var folders = await GetFoldersAsync(account.Id);
+
+                foreach (var folder in folders)
+                {
+                    // Get messages for this folder from local cache
+                    var messagesKey = $"messages_{account.Id}_{folder.Id}";
+                    var messages = await _secureStorage.RetrieveAsync<List<SyncedMessage>>(messagesKey);
+
+                    if (messages == null || messages.Count == 0)
+                        continue;
+
+                    // Search through messages
+                    foreach (var message in messages)
+                    {
+                        if (MatchesSearch(message, searchTerms))
+                        {
+                            results.Add(ConvertToEmailMessage(message));
+                        }
+                    }
+                }
+            }
+
+            Debug.WriteLine($"[SyncedEmailDisplayService] Search found {results.Count} matching messages");
+
+            // Sort by received date descending (most recent first)
+            results = results.OrderByDescending(m => m.ReceivedDate).ToList();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[SyncedEmailDisplayService] Error searching messages: {ex.Message}");
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// Check if a message matches all search terms
+    /// </summary>
+    private bool MatchesSearch(SyncedMessage message, string[] searchTerms)
+    {
+        // Build searchable text from message fields
+        var searchableText = string.Join(" ",
+            message.Subject ?? "",
+            message.SenderName ?? "",
+            message.SenderEmail ?? "",
+            message.BodyPreview ?? "",
+            message.BodyText ?? "",
+            string.Join(" ", message.ToRecipients ?? new List<string>()),
+            string.Join(" ", message.CcRecipients ?? new List<string>())
+        ).ToLowerInvariant();
+
+        // All search terms must match
+        return searchTerms.All(term => searchableText.Contains(term));
     }
 
     /// <summary>

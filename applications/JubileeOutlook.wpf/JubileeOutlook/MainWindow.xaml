@@ -338,13 +338,8 @@
                             <TextBlock Text="{StaticResource IconMail}" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
                         </Button>
 
-                        <!-- Categorize -->
-                        <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.ApplyCategoryCommand}" ToolTip="Categorize" Margin="4,0">
-                            <TextBlock Text="{StaticResource IconLabel}" FontFamily="{StaticResource MaterialIcons}" FontSize="24" Foreground="#CE93D8"/>
-                        </Button>
-
                         <!-- Flag -->
-                        <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.SetFollowUpCommand}" ToolTip="Flag" Margin="4,0">
+                        <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.ToggleFlagCommand}" ToolTip="Flag" Margin="4,0">
                             <TextBlock Text="{StaticResource IconFlag}" FontFamily="{StaticResource MaterialIcons}" FontSize="24" Foreground="#F44336"/>
                         </Button>
 
@@ -628,7 +623,11 @@
                                                 <Ellipse Grid.Row="0" Grid.Column="0" Width="8" Height="8" Fill="{StaticResource UnreadIndicatorBrush}" Margin="0,4,8,0" VerticalAlignment="Top" Visibility="{Binding IsRead, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
 
                                                 <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding From}" FontSize="{StaticResource BodyFontSize}" FontWeight="{Binding IsRead, Converter={StaticResource ReadToWeightConverter}}" TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding ReceivedDate, StringFormat='{}{0:MMM dd}'}" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource SmallFontSize}" Margin="8,0,0,0"/>
+                                                <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
+                                                    <!-- Flag Indicator -->
+                                                    <TextBlock Text="{StaticResource IconFlag}" FontFamily="{StaticResource MaterialIcons}" FontSize="14" Foreground="{StaticResource FlaggedBrush}" Margin="0,0,6,0" VerticalAlignment="Center" Visibility="{Binding IsFlagged, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                                    <TextBlock Text="{Binding ReceivedDate, StringFormat='{}{0:MMM dd}'}" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource SmallFontSize}"/>
+                                                </StackPanel>
                                                 <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Subject}" FontSize="{StaticResource BodyFontSize}" FontWeight="{Binding IsRead, Converter={StaticResource ReadToWeightConverter}}" TextTrimming="CharacterEllipsis" Margin="0,4,0,0"/>
                                                 <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Preview}" Foreground="{StaticResource SecondaryTextBrush}" FontSize="{StaticResource SmallFontSize}" TextTrimming="CharacterEllipsis" Margin="0,4,0,0"/>
                                             </Grid>
