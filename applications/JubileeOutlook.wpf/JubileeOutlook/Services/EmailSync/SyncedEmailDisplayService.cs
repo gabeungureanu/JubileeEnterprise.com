@@ -149,7 +149,8 @@ public class SyncedEmailDisplayService
             else
             {
                 // Ensure Archive folder is always present (add after Sent Mail if missing)
-                EnsureArchiveFolderExists(accountFolder.SubFolders);
+                // Pass synced folders so we can use the actual archive folder ID
+                EnsureArchiveFolderExists(accountFolder.SubFolders, syncedFolders);
             }
 
             rootFolders.Add(accountFolder);
@@ -476,10 +477,11 @@ public class SyncedEmailDisplayService
     /// <summary>
     /// Ensures Archive folder exists in the folder list, adding it if missing.
     /// Archive is inserted after Sent Mail folder for proper ordering.
+    /// Uses the actual synced archive folder ID if available for proper message loading.
     /// </summary>
-    private void EnsureArchiveFolderExists(List<MailFolder> folders)
+    private void EnsureArchiveFolderExists(List<MailFolder> folders, List<SyncedEmailFolder> syncedFolders)
     {
-        // Check if Archive folder already exists
+        // Check if Archive folder already exists in UI folders
         var archiveExists = folders.Any(f => f.Type == UIFolderType.Archive);
         if (archiveExists)
         {
@@ -498,15 +500,34 @@ public class SyncedEmailDisplayService
             insertIndex = trashIndex;
         }
 
+        // Try to find the actual synced archive folder to use its ID
+        // This ensures messages load correctly when clicking the Archive folder
+        var syncedArchiveFolder = syncedFolders.FirstOrDefault(f => f.FolderType == SyncFolderType.Archive);
+        if (syncedArchiveFolder == null)
+        {
+            // Fallback: look for folder named "Archive" or "All Mail" (Gmail's archive)
+            syncedArchiveFolder = syncedFolders.FirstOrDefault(f =>
+                f.FolderName.Equals("Archive", StringComparison.OrdinalIgnoreCase) ||
+                f.FolderName.Equals("All Mail", StringComparison.OrdinalIgnoreCase) ||
+                f.FolderName.Equals("[Gmail]/All Mail", StringComparison.OrdinalIgnoreCase));
+        }
+
+        // Use synced folder ID if found, otherwise generate a new GUID for local-only archive
+        var archiveFolderId = syncedArchiveFolder?.Id.ToString() ?? Guid.NewGuid().ToString();
+        var unreadCount = syncedArchiveFolder?.UnreadCount ?? 0;
+        var totalCount = syncedArchiveFolder?.MessageCount ?? 0;
+
+        Debug.WriteLine($"[SyncedEmailDisplayService] Archive folder ID: {archiveFolderId} (synced: {syncedArchiveFolder != null})");
+
         // Create and insert Archive folder
         var archiveFolder = new MailFolder
         {
-            Id = "archive",
+            Id = archiveFolderId,
             Name = "Archive",
             Type = UIFolderType.Archive,
             Icon = "\uE149",
-            UnreadCount = 0,
-            TotalCount = 0,
+            UnreadCount = unreadCount,
+            TotalCount = totalCount,
             IsExpanded = false,
             IsSelected = false,
             SubFolders = new List<MailFolder>()
