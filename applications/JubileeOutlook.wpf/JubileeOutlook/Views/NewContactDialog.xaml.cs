@@ -66,18 +66,56 @@ public partial class NewContactDialog : Window
         // Populate fields with existing contact data
         FirstNameTextBox.Text = contact.FirstName;
         LastNameTextBox.Text = contact.LastName;
+
+        // Additional name fields
+        TitleTextBox.Text = contact.Title;
+        MiddleNameTextBox.Text = contact.MiddleName;
+        SuffixTextBox.Text = contact.Suffix;
+        NicknameTextBox.Text = contact.Nickname;
+
+        // Show additional name fields panel if any have data
+        if (!string.IsNullOrEmpty(contact.Title) || !string.IsNullOrEmpty(contact.MiddleName) ||
+            !string.IsNullOrEmpty(contact.Suffix) || !string.IsNullOrEmpty(contact.Nickname))
+        {
+            AdditionalNameFields.Visibility = Visibility.Visible;
+        }
+
+        // Email fields
         WorkEmailTextBox.Text = contact.Email;
+        PersonalEmailTextBox.Text = contact.PersonalEmail;
+        OtherEmailTextBox.Text = contact.OtherEmail;
+
+        // Show additional email fields panel if any have data
+        if (!string.IsNullOrEmpty(contact.PersonalEmail) || !string.IsNullOrEmpty(contact.OtherEmail))
+        {
+            AdditionalEmailFields.Visibility = Visibility.Visible;
+        }
+
+        // Phone fields
         WorkPhoneTextBox.Text = contact.Phone;
         MobilePhoneTextBox.Text = contact.MobilePhone;
+        HomePhoneTextBox.Text = contact.HomePhone;
+
+        // Show additional phone fields panel if any have data
+        if (!string.IsNullOrEmpty(contact.MobilePhone) || !string.IsNullOrEmpty(contact.HomePhone))
+        {
+            AdditionalPhoneFields.Visibility = Visibility.Visible;
+        }
+
+        // Work fields
         CompanyTextBox.Text = contact.Company;
         JobTitleTextBox.Text = contact.JobTitle;
         DepartmentTextBox.Text = contact.Department;
         OfficeTextBox.Text = contact.Office;
+
+        // Address fields
         StreetTextBox.Text = contact.Address;
         CityTextBox.Text = contact.City;
         StateTextBox.Text = contact.State;
         ZipTextBox.Text = contact.PostalCode;
         CountryTextBox.Text = contact.Country;
+
+        // Other fields
         NotesTextBox.Text = contact.Notes;
         BirthdayDatePicker.SelectedDate = contact.Birthday;
         AnniversaryDatePicker.SelectedDate = contact.Anniversary;
@@ -179,18 +217,31 @@ public partial class NewContactDialog : Window
             FirstName = FirstNameTextBox.Text.Trim(),
             LastName = LastNameTextBox.Text.Trim(),
             DisplayName = BuildDisplayName(),
+            // Additional name fields
+            Title = TitleTextBox.Text.Trim(),
+            MiddleName = MiddleNameTextBox.Text.Trim(),
+            Suffix = SuffixTextBox.Text.Trim(),
+            Nickname = NicknameTextBox.Text.Trim(),
+            // Email fields
             Email = WorkEmailTextBox.Text.Trim(),
+            PersonalEmail = PersonalEmailTextBox.Text.Trim(),
+            OtherEmail = OtherEmailTextBox.Text.Trim(),
+            // Phone fields
             Phone = WorkPhoneTextBox.Text.Trim(),
             MobilePhone = MobilePhoneTextBox.Text.Trim(),
+            HomePhone = HomePhoneTextBox.Text.Trim(),
+            // Work fields
             Company = CompanyTextBox.Text.Trim(),
             JobTitle = JobTitleTextBox.Text.Trim(),
             Department = DepartmentTextBox.Text.Trim(),
             Office = OfficeTextBox.Text.Trim(),
+            // Address fields
             Address = StreetTextBox.Text.Trim(),
             City = CityTextBox.Text.Trim(),
             State = StateTextBox.Text.Trim(),
             PostalCode = ZipTextBox.Text.Trim(),
             Country = CountryTextBox.Text.Trim(),
+            // Other fields
             Notes = NotesTextBox.Text.Trim(),
             Birthday = BirthdayDatePicker.SelectedDate,
             Anniversary = AnniversaryDatePicker.SelectedDate,

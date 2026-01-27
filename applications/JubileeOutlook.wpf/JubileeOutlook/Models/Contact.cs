@@ -9,12 +9,17 @@ public class Contact
     public string DisplayName { get; set; } = string.Empty;
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
+    public string? Title { get; set; }
+    public string? MiddleName { get; set; }
+    public string? Suffix { get; set; }
+    public string? Nickname { get; set; }
     public List<string> EmailAddresses { get; set; } = new();
     public List<string> PhoneNumbers { get; set; } = new();
     public string? MobilePhone { get; set; }
     public string? Company { get; set; }
     public string? JobTitle { get; set; }
     public string? Department { get; set; }
+    public string? Office { get; set; }
     public string? Address { get; set; }
     public string? City { get; set; }
     public string? State { get; set; }

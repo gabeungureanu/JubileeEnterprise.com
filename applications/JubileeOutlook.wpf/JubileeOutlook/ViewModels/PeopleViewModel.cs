@@ -32,9 +32,48 @@ public partial class PeopleViewModel : ObservableObject
     [ObservableProperty]
     private bool _hasContacts = false;
 
+    [ObservableProperty]
+    private string? _selectedCategory;
+
+    [ObservableProperty]
+    private string _contentHeader = "Your contacts";
+
     public ObservableCollection<ContactFolder> Folders { get; } = new();
     public ObservableCollection<Contact> Contacts { get; } = new();
     public ObservableCollection<Contact> FilteredContacts { get; } = new();
+    public ObservableCollection<string> Categories { get; } = new();
+
+    /// <summary>
+    /// Collection of selected contacts for multi-select operations
+    /// </summary>
+    public ObservableCollection<Contact> SelectedContacts { get; } = new();
+
+    /// <summary>
+    /// Indicates if multiple contacts are selected
+    /// </summary>
+    public bool HasMultipleSelection => SelectedContacts.Count > 1;
+
+    /// <summary>
+    /// Gets the count of selected contacts
+    /// </summary>
+    public int SelectedCount => SelectedContacts.Count;
+
+    /// <summary>
+    /// Updates the selected contacts collection and notifies property changes
+    /// </summary>
+    public void UpdateSelectedContacts(System.Collections.IList selectedItems)
+    {
+        SelectedContacts.Clear();
+        foreach (var item in selectedItems)
+        {
+            if (item is Contact contact)
+            {
+                SelectedContacts.Add(contact);
+            }
+        }
+        OnPropertyChanged(nameof(HasMultipleSelection));
+        OnPropertyChanged(nameof(SelectedCount));
+    }
 
     public PeopleViewModel()
     {
@@ -223,18 +262,37 @@ public partial class PeopleViewModel : ObservableObject
         System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] MapFromApiContact - EmailAddresses: [{string.Join(", ", apiContact.EmailAddresses)}], PrimaryEmail: '{apiContact.PrimaryEmail}'");
         System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] MapFromApiContact - PhoneNumbers: [{string.Join(", ", apiContact.PhoneNumbers)}], PrimaryPhone: '{apiContact.PrimaryPhone}'");
 
+        // Extract emails from list: [0]=Work, [1]=Personal, [2]=Other
+        var emails = apiContact.EmailAddresses ?? new List<string>();
+        var workEmail = emails.Count > 0 ? emails[0] : string.Empty;
+        var personalEmail = emails.Count > 1 ? emails[1] : string.Empty;
+        var otherEmail = emails.Count > 2 ? emails[2] : string.Empty;
+
+        // Extract phones from list: [0]=Work, [1]=Home
+        var phones = apiContact.PhoneNumbers ?? new List<string>();
+        var workPhone = phones.Count > 0 ? phones[0] : string.Empty;
+        var homePhone = phones.Count > 1 ? phones[1] : string.Empty;
+
         return new Contact
         {
             Id = apiContact.Id,
             DisplayName = apiContact.DisplayName,
             FirstName = apiContact.FirstName ?? string.Empty,
             LastName = apiContact.LastName ?? string.Empty,
-            Email = apiContact.PrimaryEmail ?? string.Empty,
-            Phone = apiContact.PrimaryPhone ?? string.Empty,
+            Email = workEmail,
+            PersonalEmail = personalEmail,
+            OtherEmail = otherEmail,
+            Phone = workPhone,
+            HomePhone = homePhone,
             MobilePhone = apiContact.MobilePhone ?? string.Empty,
+            Title = apiContact.Title ?? string.Empty,
+            MiddleName = apiContact.MiddleName ?? string.Empty,
+            Suffix = apiContact.Suffix ?? string.Empty,
+            Nickname = apiContact.Nickname ?? string.Empty,
             Company = apiContact.Company ?? string.Empty,
             JobTitle = apiContact.JobTitle ?? string.Empty,
             Department = apiContact.Department ?? string.Empty,
+            Office = apiContact.Office ?? string.Empty,
             Address = apiContact.Address ?? string.Empty,
             City = apiContact.City ?? string.Empty,
             State = apiContact.State ?? string.Empty,
@@ -260,13 +318,21 @@ public partial class PeopleViewModel : ObservableObject
     /// </summary>
     private DbContact MapToApiContact(Contact contact)
     {
+        // Build email list: Work, Personal, Other
         var emailAddresses = new List<string>();
         if (!string.IsNullOrWhiteSpace(contact.Email))
             emailAddresses.Add(contact.Email);
+        if (!string.IsNullOrWhiteSpace(contact.PersonalEmail))
+            emailAddresses.Add(contact.PersonalEmail);
+        if (!string.IsNullOrWhiteSpace(contact.OtherEmail))
+            emailAddresses.Add(contact.OtherEmail);
 
+        // Build phone list: Work, Home
         var phoneNumbers = new List<string>();
         if (!string.IsNullOrWhiteSpace(contact.Phone))
             phoneNumbers.Add(contact.Phone);
+        if (!string.IsNullOrWhiteSpace(contact.HomePhone))
+            phoneNumbers.Add(contact.HomePhone);
 
         return new DbContact
         {
@@ -274,12 +340,17 @@ public partial class PeopleViewModel : ObservableObject
             DisplayName = contact.DisplayName,
             FirstName = string.IsNullOrEmpty(contact.FirstName) ? null : contact.FirstName,
             LastName = string.IsNullOrEmpty(contact.LastName) ? null : contact.LastName,
+            Title = string.IsNullOrEmpty(contact.Title) ? null : contact.Title,
+            MiddleName = string.IsNullOrEmpty(contact.MiddleName) ? null : contact.MiddleName,
+            Suffix = string.IsNullOrEmpty(contact.Suffix) ? null : contact.Suffix,
+            Nickname = string.IsNullOrEmpty(contact.Nickname) ? null : contact.Nickname,
             EmailAddresses = emailAddresses,
             PhoneNumbers = phoneNumbers,
             MobilePhone = string.IsNullOrEmpty(contact.MobilePhone) ? null : contact.MobilePhone,
             Company = string.IsNullOrEmpty(contact.Company) ? null : contact.Company,
             JobTitle = string.IsNullOrEmpty(contact.JobTitle) ? null : contact.JobTitle,
             Department = string.IsNullOrEmpty(contact.Department) ? null : contact.Department,
+            Office = string.IsNullOrEmpty(contact.Office) ? null : contact.Office,
             Address = string.IsNullOrEmpty(contact.Address) ? null : contact.Address,
             City = string.IsNullOrEmpty(contact.City) ? null : contact.City,
             State = string.IsNullOrEmpty(contact.State) ? null : contact.State,
@@ -313,8 +384,66 @@ public partial class PeopleViewModel : ObservableObject
             folder.IsSelected = folder == value;
         }
 
+        // Clear category selection when a folder is selected
+        SelectedCategory = null;
+
+        // Notify IsInDeletedFolder changed for UI binding
+        OnPropertyChanged(nameof(IsInDeletedFolder));
+        OnPropertyChanged(nameof(DeletedContactsCount));
+
         // Reload contacts for the selected folder
         LoadContactsForFolder();
+    }
+
+    /// <summary>
+    /// Command to select a category for filtering
+    /// </summary>
+    [RelayCommand]
+    private void SelectCategory(string? category)
+    {
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] SelectCategory: {category ?? "(null)"}");
+
+        // If the same category is clicked, deselect it
+        if (SelectedCategory == category)
+        {
+            SelectedCategory = null;
+        }
+        else
+        {
+            SelectedCategory = category;
+        }
+
+        // Re-filter contacts
+        FilterContacts();
+    }
+
+    /// <summary>
+    /// Clears the category filter and returns to folder view
+    /// </summary>
+    [RelayCommand]
+    private void ClearCategoryFilter()
+    {
+        SelectedCategory = null;
+        FilterContacts();
+    }
+
+    /// <summary>
+    /// Called when SelectedCategory changes (e.g., from ListBox selection)
+    /// </summary>
+    partial void OnSelectedCategoryChanged(string? value)
+    {
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] OnSelectedCategoryChanged: {value ?? "(null)"}");
+
+        // Clear folder selection visual when a category is selected
+        if (!string.IsNullOrEmpty(value))
+        {
+            foreach (var folder in Folders)
+            {
+                folder.IsSelected = false;
+            }
+        }
+
+        FilterContacts();
     }
 
     private void FilterContacts()
@@ -326,16 +455,26 @@ public partial class PeopleViewModel : ObservableObject
 
         foreach (var contact in Contacts)
         {
-            // Apply folder filter first
-            bool matchesFolder = folderName switch
+            // If a category is selected, filter by category
+            if (!string.IsNullOrEmpty(SelectedCategory))
             {
-                "Your contacts" => !contact.IsDeleted,
-                "Favorites" => contact.IsFavorite && !contact.IsDeleted,
-                "Deleted" => contact.IsDeleted,
-                _ => !contact.IsDeleted
-            };
+                // Only show contacts with the selected category (and not deleted)
+                if (contact.IsDeleted) continue;
+                if (!string.Equals(contact.Category, SelectedCategory, StringComparison.OrdinalIgnoreCase)) continue;
+            }
+            else
+            {
+                // Apply folder filter when no category is selected
+                bool matchesFolder = folderName switch
+                {
+                    "Your contacts" => !contact.IsDeleted,
+                    "Favorites" => contact.IsFavorite && !contact.IsDeleted,
+                    "Deleted" => contact.IsDeleted,
+                    _ => !contact.IsDeleted
+                };
 
-            if (!matchesFolder) continue;
+                if (!matchesFolder) continue;
+            }
 
             // Then apply search filter
             if (string.IsNullOrEmpty(query) ||
@@ -348,7 +487,56 @@ public partial class PeopleViewModel : ObservableObject
         }
 
         HasContacts = FilteredContacts.Count > 0;
-        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] FilterContacts - Folder: {folderName}, Total: {Contacts.Count}, Filtered: {FilteredContacts.Count}");
+
+        // Update the content header based on what's being viewed
+        UpdateContentHeader();
+
+        // Update Categories collection with unique non-empty categories from all non-deleted contacts
+        UpdateCategories();
+
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] FilterContacts - Folder: {folderName}, Category: {SelectedCategory ?? "(none)"}, Total: {Contacts.Count}, Filtered: {FilteredContacts.Count}, Categories: {Categories.Count}");
+    }
+
+    /// <summary>
+    /// Updates the content header based on current filter state
+    /// </summary>
+    private void UpdateContentHeader()
+    {
+        if (!string.IsNullOrEmpty(SelectedCategory))
+        {
+            // Show category name with count (like Outlook: "office (1)")
+            ContentHeader = $"{SelectedCategory} ({FilteredContacts.Count})";
+        }
+        else
+        {
+            // Show folder name
+            ContentHeader = SelectedFolder?.Name ?? "Your contacts";
+        }
+    }
+
+    /// <summary>
+    /// Updates the Categories collection with unique category values from all contacts
+    /// </summary>
+    private void UpdateCategories()
+    {
+        var uniqueCategories = Contacts
+            .Where(c => !c.IsDeleted && !string.IsNullOrWhiteSpace(c.Category))
+            .Select(c => c.Category!)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToList();
+
+        // Only update if categories changed
+        var currentCategories = Categories.ToList();
+        if (!uniqueCategories.SequenceEqual(currentCategories))
+        {
+            Categories.Clear();
+            foreach (var category in uniqueCategories)
+            {
+                Categories.Add(category);
+            }
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Categories updated: {string.Join(", ", uniqueCategories)}");
+        }
     }
 
     private void LoadContactsForFolder()
@@ -366,6 +554,11 @@ public partial class PeopleViewModel : ObservableObject
     /// Event raised when a contact should be edited
     /// </summary>
     public event EventHandler<Contact>? EditContactRequested;
+
+    /// <summary>
+    /// Event raised when composing an email to a contact
+    /// </summary>
+    public event EventHandler<string>? EmailContactRequested;
 
     [RelayCommand]
     private void NewContact()
@@ -412,12 +605,16 @@ public partial class PeopleViewModel : ObservableObject
             // Update via API first
             await UpdateContactViaApiAsync(newContact);
 
-            // Update local collection
-            var index = Contacts.IndexOf(oldContact);
-            if (index >= 0)
+            // Update local collection - find by ID since oldContact may be a different object instance
+            var existingContact = Contacts.FirstOrDefault(c => c.Id == oldContact.Id);
+            if (existingContact != null)
             {
-                Contacts[index] = newContact;
-                FilterContacts();
+                var index = Contacts.IndexOf(existingContact);
+                if (index >= 0)
+                {
+                    Contacts[index] = newContact;
+                    FilterContacts();
+                }
             }
 
             System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Updated contact: {newContact.DisplayName}");
@@ -571,36 +768,193 @@ public partial class PeopleViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Event raised when empty deleted folder is requested (needs confirmation)
+    /// </summary>
+    public event EventHandler<int>? EmptyDeletedFolderRequested;
+
+    /// <summary>
+    /// Checks if currently viewing the Deleted folder
+    /// </summary>
+    public bool IsInDeletedFolder => SelectedFolder?.Name == "Deleted";
+
+    /// <summary>
+    /// Gets the count of deleted contacts
+    /// </summary>
+    public int DeletedContactsCount => Contacts.Count(c => c.IsDeleted);
+
+    [RelayCommand]
+    private void EmptyDeletedFolder()
+    {
+        var deletedCount = DeletedContactsCount;
+        if (deletedCount == 0) return;
+
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Empty deleted folder requested, {deletedCount} contacts");
+        EmptyDeletedFolderRequested?.Invoke(this, deletedCount);
+    }
+
+    /// <summary>
+    /// Permanently deletes all contacts in the Deleted folder
+    /// </summary>
+    public async Task<int> EmptyDeletedFolderConfirmedAsync()
+    {
+        var deletedContacts = Contacts.Where(c => c.IsDeleted).ToList();
+        int deletedCount = 0;
+
+        foreach (var contact in deletedContacts)
+        {
+            try
+            {
+                // Hard delete via API
+                await DeleteContactViaApiAsync(contact.Id);
+                Contacts.Remove(contact);
+                deletedCount++;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to delete {contact.DisplayName}: {ex.Message}");
+            }
+        }
+
+        // Refresh the filtered view
+        FilterContacts();
+
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Emptied deleted folder: {deletedCount} contacts removed");
+        return deletedCount;
+    }
+
     [RelayCommand]
     private void EmailContact()
     {
         if (SelectedContact == null || string.IsNullOrEmpty(SelectedContact.Email)) return;
-        // TODO: Open compose mail with this contact's email
         System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Email contact: {SelectedContact.Email}");
+        EmailContactRequested?.Invoke(this, SelectedContact.Email);
     }
 
     [RelayCommand]
     private void CallContact()
     {
-        if (SelectedContact == null || string.IsNullOrEmpty(SelectedContact.Phone)) return;
-        // TODO: Initiate call
-        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Call contact: {SelectedContact.Phone}");
+        if (SelectedContact == null) return;
+
+        // Prefer mobile phone, fallback to regular phone
+        var phoneNumber = !string.IsNullOrEmpty(SelectedContact.MobilePhone)
+            ? SelectedContact.MobilePhone
+            : SelectedContact.Phone;
+
+        if (string.IsNullOrEmpty(phoneNumber)) return;
+
+        try
+        {
+            // Clean the phone number (remove spaces, dashes, etc. but keep +)
+            var cleanNumber = new string(phoneNumber.Where(c => char.IsDigit(c) || c == '+').ToArray());
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Call contact: {cleanNumber}");
+
+            // Open tel: protocol which will launch the default calling app
+            var psi = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = $"tel:{cleanNumber}",
+                UseShellExecute = true
+            };
+            System.Diagnostics.Process.Start(psi);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to initiate call: {ex.Message}");
+        }
     }
+
+    /// <summary>
+    /// Event raised when chat feature is requested (not yet implemented)
+    /// </summary>
+    public event EventHandler<string>? ChatFeatureRequested;
 
     [RelayCommand]
     private void ChatContact()
     {
         if (SelectedContact == null) return;
-        // TODO: Open chat
         System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Chat with: {SelectedContact.DisplayName}");
+
+        // Chat module is not yet implemented - notify the user
+        ChatFeatureRequested?.Invoke(this, SelectedContact.DisplayName);
     }
+
+    /// <summary>
+    /// Event raised when vCard export is requested
+    /// </summary>
+    public event EventHandler<(Contact Contact, string VCardContent)>? ShareAsVCardRequested;
 
     [RelayCommand]
     private void ShareAsVCard()
     {
         if (SelectedContact == null) return;
-        // TODO: Export as vCard
         System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Share as vCard: {SelectedContact.DisplayName}");
+
+        // Generate vCard content
+        var vCardContent = GenerateVCard(SelectedContact);
+        ShareAsVCardRequested?.Invoke(this, (SelectedContact, vCardContent));
+    }
+
+    /// <summary>
+    /// Generates vCard 3.0 format content for a contact
+    /// </summary>
+    private string GenerateVCard(Contact contact)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("BEGIN:VCARD");
+        sb.AppendLine("VERSION:3.0");
+
+        // Full name
+        sb.AppendLine($"FN:{contact.DisplayName}");
+
+        // Structured name (Last;First;Middle;Prefix;Suffix)
+        sb.AppendLine($"N:{contact.LastName};{contact.FirstName};;;");
+
+        // Organization and title
+        if (!string.IsNullOrEmpty(contact.Company))
+        {
+            var org = contact.Company;
+            if (!string.IsNullOrEmpty(contact.Department))
+                org += ";" + contact.Department;
+            sb.AppendLine($"ORG:{org}");
+        }
+
+        if (!string.IsNullOrEmpty(contact.JobTitle))
+            sb.AppendLine($"TITLE:{contact.JobTitle}");
+
+        // Email
+        if (!string.IsNullOrEmpty(contact.Email))
+            sb.AppendLine($"EMAIL;TYPE=INTERNET:{contact.Email}");
+
+        // Phone numbers
+        if (!string.IsNullOrEmpty(contact.Phone))
+            sb.AppendLine($"TEL;TYPE=WORK,VOICE:{contact.Phone}");
+
+        if (!string.IsNullOrEmpty(contact.MobilePhone))
+            sb.AppendLine($"TEL;TYPE=CELL:{contact.MobilePhone}");
+
+        // Address
+        if (!string.IsNullOrEmpty(contact.Address) || !string.IsNullOrEmpty(contact.City) ||
+            !string.IsNullOrEmpty(contact.State) || !string.IsNullOrEmpty(contact.PostalCode) ||
+            !string.IsNullOrEmpty(contact.Country))
+        {
+            // ADR: PO Box;Extended;Street;City;Region;PostalCode;Country
+            sb.AppendLine($"ADR;TYPE=WORK:;;{contact.Address};{contact.City};{contact.State};{contact.PostalCode};{contact.Country}");
+        }
+
+        // Website
+        if (!string.IsNullOrEmpty(contact.Website))
+            sb.AppendLine($"URL:{contact.Website}");
+
+        // Birthday
+        if (contact.Birthday.HasValue)
+            sb.AppendLine($"BDAY:{contact.Birthday.Value:yyyy-MM-dd}");
+
+        // Notes
+        if (!string.IsNullOrEmpty(contact.Notes))
+            sb.AppendLine($"NOTE:{contact.Notes.Replace("\n", "\\n")}");
+
+        sb.AppendLine("END:VCARD");
+        return sb.ToString();
     }
 
     [RelayCommand]
@@ -630,25 +984,447 @@ public partial class PeopleViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Event raised when category assignment is requested
+    /// </summary>
+    public event EventHandler<Contact>? AddCategoryRequested;
+
     [RelayCommand]
     private void AddCategory()
     {
-        // TODO: Open category picker
+        if (SelectedContact == null) return;
         System.Diagnostics.Debug.WriteLine("[PeopleViewModel] Add category requested");
+        AddCategoryRequested?.Invoke(this, SelectedContact);
     }
+
+    /// <summary>
+    /// Updates the category of a contact
+    /// </summary>
+    public async Task UpdateContactCategoryAsync(Contact contact, string category)
+    {
+        try
+        {
+            contact.Category = category;
+            await UpdateContactViaApiAsync(contact);
+            FilterContacts();
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Category updated for {contact.DisplayName}: {category}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to update category: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Event raised when import contacts is requested
+    /// </summary>
+    public event EventHandler? ImportContactsRequested;
+
+    /// <summary>
+    /// Event raised when export contacts is requested
+    /// </summary>
+    public event EventHandler<List<Contact>>? ExportContactsRequested;
 
     [RelayCommand]
     private void ImportContacts()
     {
-        // TODO: Open import dialog
         System.Diagnostics.Debug.WriteLine("[PeopleViewModel] Import contacts requested");
+        ImportContactsRequested?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
     private void ExportContacts()
     {
-        // TODO: Open export dialog
         System.Diagnostics.Debug.WriteLine("[PeopleViewModel] Export contacts requested");
+        // Export all non-deleted contacts
+        var contactsToExport = Contacts.Where(c => !c.IsDeleted).ToList();
+        ExportContactsRequested?.Invoke(this, contactsToExport);
+    }
+
+    /// <summary>
+    /// Imports contacts from vCard content
+    /// </summary>
+    public async Task ImportContactsFromVCardAsync(string vCardContent)
+    {
+        var contacts = ParseVCardContent(vCardContent);
+        foreach (var contact in contacts)
+        {
+            try
+            {
+                await AddContactAsync(contact);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to import contact {contact.DisplayName}: {ex.Message}");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Imports contacts from CSV content
+    /// </summary>
+    /// <returns>Number of contacts imported</returns>
+    public async Task<int> ImportContactsFromCsvAsync(string csvContent)
+    {
+        var contacts = ParseCsvContent(csvContent);
+        int importedCount = 0;
+
+        foreach (var contact in contacts)
+        {
+            try
+            {
+                await AddContactAsync(contact);
+                importedCount++;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to import CSV contact {contact.DisplayName}: {ex.Message}");
+            }
+        }
+
+        return importedCount;
+    }
+
+    /// <summary>
+    /// Parses CSV content and returns a list of contacts
+    /// Supports common CSV formats from Outlook, Google Contacts, and generic formats
+    /// </summary>
+    private List<Contact> ParseCsvContent(string csvContent)
+    {
+        var contacts = new List<Contact>();
+        var lines = csvContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (lines.Length < 2)
+        {
+            System.Diagnostics.Debug.WriteLine("[PeopleViewModel] CSV file has no data rows");
+            return contacts;
+        }
+
+        // Parse header row to determine column mapping
+        var headers = ParseCsvLine(lines[0]);
+        var columnMap = MapCsvColumns(headers);
+
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] CSV headers: {string.Join(", ", headers)}");
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Mapped columns: {columnMap.Count}");
+
+        // Parse data rows
+        for (int i = 1; i < lines.Length; i++)
+        {
+            try
+            {
+                var values = ParseCsvLine(lines[i]);
+                var contact = CreateContactFromCsvRow(values, columnMap);
+
+                if (contact != null && !string.IsNullOrEmpty(contact.DisplayName))
+                {
+                    contacts.Add(contact);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to parse CSV row {i}: {ex.Message}");
+            }
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Parsed {contacts.Count} contacts from CSV");
+        return contacts;
+    }
+
+    /// <summary>
+    /// Parses a single CSV line handling quoted fields with commas
+    /// </summary>
+    private static List<string> ParseCsvLine(string line)
+    {
+        var values = new List<string>();
+        var currentValue = new System.Text.StringBuilder();
+        bool inQuotes = false;
+
+        for (int i = 0; i < line.Length; i++)
+        {
+            char c = line[i];
+
+            if (c == '"')
+            {
+                // Handle escaped quotes ("")
+                if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+                {
+                    currentValue.Append('"');
+                    i++; // Skip next quote
+                }
+                else
+                {
+                    inQuotes = !inQuotes;
+                }
+            }
+            else if (c == ',' && !inQuotes)
+            {
+                values.Add(currentValue.ToString().Trim());
+                currentValue.Clear();
+            }
+            else
+            {
+                currentValue.Append(c);
+            }
+        }
+
+        values.Add(currentValue.ToString().Trim());
+        return values;
+    }
+
+    /// <summary>
+    /// Maps CSV column headers to Contact fields
+    /// Supports various naming conventions from different export sources
+    /// </summary>
+    private static Dictionary<string, int> MapCsvColumns(List<string> headers)
+    {
+        var columnMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        for (int i = 0; i < headers.Count; i++)
+        {
+            var header = headers[i].Trim().ToLowerInvariant();
+
+            // First Name variations
+            if (header.Contains("first") && header.Contains("name") || header == "firstname" || header == "given name" || header == "givenname")
+                columnMap["FirstName"] = i;
+
+            // Last Name variations
+            else if (header.Contains("last") && header.Contains("name") || header == "lastname" || header == "surname" || header == "family name" || header == "familyname")
+                columnMap["LastName"] = i;
+
+            // Display Name / Full Name
+            else if (header == "name" || header == "full name" || header == "fullname" || header == "display name" || header == "displayname")
+                columnMap["DisplayName"] = i;
+
+            // Email variations
+            else if (header.Contains("email") || header.Contains("e-mail"))
+            {
+                if (!columnMap.ContainsKey("Email"))
+                    columnMap["Email"] = i;
+            }
+
+            // Phone variations
+            else if (header.Contains("phone") || header.Contains("telephone"))
+            {
+                if (header.Contains("mobile") || header.Contains("cell"))
+                    columnMap["MobilePhone"] = i;
+                else if (header.Contains("work") || header.Contains("business"))
+                    columnMap["Phone"] = i;
+                else if (!columnMap.ContainsKey("Phone"))
+                    columnMap["Phone"] = i;
+            }
+
+            // Company / Organization
+            else if (header == "company" || header == "organization" || header == "organisation" || header == "company name")
+                columnMap["Company"] = i;
+
+            // Job Title
+            else if (header.Contains("title") || header.Contains("job") || header == "position")
+                columnMap["JobTitle"] = i;
+
+            // Department
+            else if (header == "department" || header == "dept")
+                columnMap["Department"] = i;
+
+            // Address components
+            else if (header.Contains("street") || header == "address" || header == "address 1")
+                columnMap["Address"] = i;
+            else if (header == "city" || header == "town")
+                columnMap["City"] = i;
+            else if (header == "state" || header == "province" || header == "region")
+                columnMap["State"] = i;
+            else if (header.Contains("zip") || header.Contains("postal") || header == "postcode")
+                columnMap["PostalCode"] = i;
+            else if (header == "country" || header == "country/region")
+                columnMap["Country"] = i;
+
+            // Website
+            else if (header == "website" || header == "web page" || header == "url" || header == "homepage")
+                columnMap["Website"] = i;
+
+            // Notes
+            else if (header == "notes" || header == "note" || header == "comments")
+                columnMap["Notes"] = i;
+
+            // Birthday
+            else if (header == "birthday" || header == "birth date" || header == "birthdate" || header == "date of birth")
+                columnMap["Birthday"] = i;
+        }
+
+        return columnMap;
+    }
+
+    /// <summary>
+    /// Creates a Contact from a CSV row using the column mapping
+    /// </summary>
+    private static Contact? CreateContactFromCsvRow(List<string> values, Dictionary<string, int> columnMap)
+    {
+        var contact = new Contact
+        {
+            Id = Guid.NewGuid().ToString(),
+            CreatedAt = DateTime.UtcNow,
+            ModifiedAt = DateTime.UtcNow
+        };
+
+        string GetValue(string key) =>
+            columnMap.TryGetValue(key, out int index) && index < values.Count
+                ? values[index].Trim()
+                : string.Empty;
+
+        contact.FirstName = GetValue("FirstName");
+        contact.LastName = GetValue("LastName");
+        contact.Email = GetValue("Email");
+        contact.Phone = GetValue("Phone");
+        contact.MobilePhone = GetValue("MobilePhone");
+        contact.Company = GetValue("Company");
+        contact.JobTitle = GetValue("JobTitle");
+        contact.Department = GetValue("Department");
+        contact.Address = GetValue("Address");
+        contact.City = GetValue("City");
+        contact.State = GetValue("State");
+        contact.PostalCode = GetValue("PostalCode");
+        contact.Country = GetValue("Country");
+        contact.Website = GetValue("Website");
+        contact.Notes = GetValue("Notes");
+
+        // Try to parse birthday
+        var birthdayStr = GetValue("Birthday");
+        if (!string.IsNullOrEmpty(birthdayStr) && DateTime.TryParse(birthdayStr, out var birthday))
+        {
+            contact.Birthday = birthday;
+        }
+
+        // Build display name
+        var displayName = GetValue("DisplayName");
+        if (!string.IsNullOrEmpty(displayName))
+        {
+            contact.DisplayName = displayName;
+        }
+        else if (!string.IsNullOrEmpty(contact.FirstName) || !string.IsNullOrEmpty(contact.LastName))
+        {
+            contact.DisplayName = $"{contact.FirstName} {contact.LastName}".Trim();
+        }
+        else if (!string.IsNullOrEmpty(contact.Email))
+        {
+            contact.DisplayName = contact.Email;
+        }
+        else
+        {
+            return null; // No valid name or email
+        }
+
+        return contact;
+    }
+
+    /// <summary>
+    /// Parses vCard content and returns a list of contacts
+    /// </summary>
+    private List<Contact> ParseVCardContent(string vCardContent)
+    {
+        var contacts = new List<Contact>();
+        var lines = vCardContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
+        Contact? currentContact = null;
+
+        foreach (var line in lines)
+        {
+            var trimmedLine = line.Trim();
+
+            if (trimmedLine.Equals("BEGIN:VCARD", StringComparison.OrdinalIgnoreCase))
+            {
+                currentContact = new Contact { Id = Guid.NewGuid().ToString() };
+            }
+            else if (trimmedLine.Equals("END:VCARD", StringComparison.OrdinalIgnoreCase))
+            {
+                if (currentContact != null && !string.IsNullOrEmpty(currentContact.DisplayName))
+                {
+                    contacts.Add(currentContact);
+                }
+                currentContact = null;
+            }
+            else if (currentContact != null)
+            {
+                var colonIndex = trimmedLine.IndexOf(':');
+                if (colonIndex > 0)
+                {
+                    var property = trimmedLine.Substring(0, colonIndex).ToUpperInvariant();
+                    var value = trimmedLine.Substring(colonIndex + 1);
+
+                    // Handle property with parameters (e.g., TEL;TYPE=CELL:123456)
+                    var propertyBase = property.Split(';')[0];
+
+                    switch (propertyBase)
+                    {
+                        case "FN":
+                            currentContact.DisplayName = value;
+                            break;
+                        case "N":
+                            var nameParts = value.Split(';');
+                            if (nameParts.Length >= 2)
+                            {
+                                currentContact.LastName = nameParts[0];
+                                currentContact.FirstName = nameParts[1];
+                            }
+                            break;
+                        case "EMAIL":
+                            currentContact.Email = value;
+                            break;
+                        case "TEL":
+                            if (property.Contains("CELL"))
+                                currentContact.MobilePhone = value;
+                            else
+                                currentContact.Phone = value;
+                            break;
+                        case "ORG":
+                            var orgParts = value.Split(';');
+                            currentContact.Company = orgParts[0];
+                            if (orgParts.Length > 1)
+                                currentContact.Department = orgParts[1];
+                            break;
+                        case "TITLE":
+                            currentContact.JobTitle = value;
+                            break;
+                        case "ADR":
+                            var adrParts = value.Split(';');
+                            if (adrParts.Length >= 7)
+                            {
+                                currentContact.Address = adrParts[2];
+                                currentContact.City = adrParts[3];
+                                currentContact.State = adrParts[4];
+                                currentContact.PostalCode = adrParts[5];
+                                currentContact.Country = adrParts[6];
+                            }
+                            break;
+                        case "URL":
+                            currentContact.Website = value;
+                            break;
+                        case "BDAY":
+                            if (DateTime.TryParse(value, out var birthday))
+                                currentContact.Birthday = birthday;
+                            break;
+                        case "NOTE":
+                            currentContact.Notes = value.Replace("\\n", "\n");
+                            break;
+                    }
+                }
+            }
+        }
+
+        return contacts;
+    }
+
+    /// <summary>
+    /// Generates vCard content for multiple contacts
+    /// </summary>
+    public string GenerateMultipleVCards(List<Contact> contacts)
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (var contact in contacts)
+        {
+            sb.Append(GenerateVCard(contact));
+            sb.AppendLine();
+        }
+        return sb.ToString();
     }
 
     [RelayCommand]
@@ -656,6 +1432,143 @@ public partial class PeopleViewModel : ObservableObject
     {
         SelectedFolder = folder;
     }
+
+    #region Bulk Operations
+
+    /// <summary>
+    /// Event raised when bulk delete is requested (needs confirmation)
+    /// </summary>
+    public event EventHandler<int>? BulkDeleteRequested;
+
+    /// <summary>
+    /// Event raised when bulk category assignment is requested
+    /// </summary>
+    public event EventHandler<List<Contact>>? BulkAddCategoryRequested;
+
+    [RelayCommand]
+    private void BulkDelete()
+    {
+        if (SelectedContacts.Count == 0) return;
+
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Bulk delete requested for {SelectedContacts.Count} contacts");
+        BulkDeleteRequested?.Invoke(this, SelectedContacts.Count);
+    }
+
+    /// <summary>
+    /// Performs bulk delete of selected contacts (soft delete or hard delete based on current folder)
+    /// </summary>
+    public async Task<int> BulkDeleteConfirmedAsync()
+    {
+        var contactsToDelete = SelectedContacts.ToList();
+        int deletedCount = 0;
+        var folderName = SelectedFolder?.Name ?? "Your contacts";
+
+        foreach (var contact in contactsToDelete)
+        {
+            try
+            {
+                if (folderName == "Deleted")
+                {
+                    // Hard delete
+                    await DeleteContactViaApiAsync(contact.Id);
+                    Contacts.Remove(contact);
+                }
+                else
+                {
+                    // Soft delete
+                    contact.IsDeleted = true;
+                    contact.DeletedAt = DateTime.UtcNow;
+                    await UpdateContactViaApiAsync(contact);
+                }
+                deletedCount++;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to delete {contact.DisplayName}: {ex.Message}");
+            }
+        }
+
+        SelectedContacts.Clear();
+        SelectedContact = null;
+        FilterContacts();
+        OnPropertyChanged(nameof(HasMultipleSelection));
+        OnPropertyChanged(nameof(SelectedCount));
+
+        return deletedCount;
+    }
+
+    [RelayCommand]
+    private async Task BulkAddToFavoritesAsync()
+    {
+        if (SelectedContacts.Count == 0) return;
+
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Bulk add to favorites: {SelectedContacts.Count} contacts");
+
+        int updatedCount = 0;
+        foreach (var contact in SelectedContacts.ToList())
+        {
+            try
+            {
+                if (!contact.IsFavorite)
+                {
+                    contact.IsFavorite = true;
+                    await UpdateContactViaApiAsync(contact);
+                    updatedCount++;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to add {contact.DisplayName} to favorites: {ex.Message}");
+            }
+        }
+
+        FilterContacts();
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Bulk favorites: {updatedCount} contacts updated");
+    }
+
+    [RelayCommand]
+    private void BulkAddCategory()
+    {
+        if (SelectedContacts.Count == 0) return;
+
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Bulk add category requested for {SelectedContacts.Count} contacts");
+        BulkAddCategoryRequested?.Invoke(this, SelectedContacts.ToList());
+    }
+
+    /// <summary>
+    /// Updates category for multiple contacts
+    /// </summary>
+    public async Task<int> BulkUpdateCategoryAsync(string category)
+    {
+        int updatedCount = 0;
+        foreach (var contact in SelectedContacts.ToList())
+        {
+            try
+            {
+                contact.Category = category;
+                await UpdateContactViaApiAsync(contact);
+                updatedCount++;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to update category for {contact.DisplayName}: {ex.Message}");
+            }
+        }
+
+        FilterContacts();
+        return updatedCount;
+    }
+
+    [RelayCommand]
+    private void BulkExport()
+    {
+        if (SelectedContacts.Count == 0) return;
+
+        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Bulk export requested for {SelectedContacts.Count} contacts");
+        ExportContactsRequested?.Invoke(this, SelectedContacts.ToList());
+    }
+
+    #endregion
 }
 
 /// <summary>
@@ -705,6 +1618,27 @@ public partial class Contact : ObservableObject
     private string _mobilePhone = string.Empty;
 
     [ObservableProperty]
+    private string _homePhone = string.Empty;
+
+    [ObservableProperty]
+    private string _personalEmail = string.Empty;
+
+    [ObservableProperty]
+    private string _otherEmail = string.Empty;
+
+    [ObservableProperty]
+    private string _title = string.Empty;
+
+    [ObservableProperty]
+    private string _middleName = string.Empty;
+
+    [ObservableProperty]
+    private string _suffix = string.Empty;
+
+    [ObservableProperty]
+    private string _nickname = string.Empty;
+
+    [ObservableProperty]
     private string _company = string.Empty;
 
     [ObservableProperty]
@@ -712,6 +1646,9 @@ public partial class Contact : ObservableObject
 
     [ObservableProperty]
     private string _department = string.Empty;
+
+    [ObservableProperty]
+    private string _office = string.Empty;
 
     [ObservableProperty]
     private string _address = string.Empty;
