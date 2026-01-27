@@ -161,22 +161,12 @@ public partial class MainViewModel : ObservableObject
 
     /// <summary>
     /// Determines if a folder type should display unread counts.
-    /// Only Inbox and Custom folders show unread counts; Sent, Drafts, Deleted, Junk, and Archive do not.
+    /// All folders except AccountRoot show unread counts when they have unread emails.
     /// </summary>
     private static bool ShouldShowUnreadCount(FolderType folderType)
     {
-        return folderType switch
-        {
-            FolderType.Inbox => true,
-            FolderType.Custom => true,
-            FolderType.AccountRoot => false,
-            FolderType.Sent => false,
-            FolderType.Drafts => false,
-            FolderType.Deleted => false,
-            FolderType.Junk => false,
-            FolderType.Archive => false,
-            _ => false
-        };
+        // Only AccountRoot should not show unread counts
+        return folderType != FolderType.AccountRoot;
     }
 
     /// <summary>
@@ -980,8 +970,8 @@ public partial class MainViewModel : ObservableObject
                     }
                 }
 
-                // Find and update Archive folder counts (Archive doesn't show unread, so pass 0)
-                UpdateArchiveFolderCount(1, 0);
+                // Find and update Archive folder counts
+                UpdateArchiveFolderCount(1, wasUnread ? 1 : 0);
 
                 // Select next message
                 SelectedMessage = Messages.FirstOrDefault();
@@ -1032,8 +1022,8 @@ public partial class MainViewModel : ObservableObject
                 }
             }
 
-            // Find and update Archive folder counts (Archive doesn't show unread, so pass 0)
-            UpdateArchiveFolderCount(1, 0);
+            // Find and update Archive folder counts
+            UpdateArchiveFolderCount(1, wasUnread ? 1 : 0);
 
             SelectedMessage = Messages.FirstOrDefault();
 

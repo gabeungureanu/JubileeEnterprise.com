@@ -27,16 +27,12 @@ public class SyncedEmailDisplayService
 
     /// <summary>
     /// Determines if a folder type should display unread counts.
-    /// Only Inbox and Custom folders show unread counts.
+    /// All folders except AccountRoot show unread counts when they have unread emails.
     /// </summary>
     private static bool ShouldShowUnreadCount(UIFolderType folderType)
     {
-        return folderType switch
-        {
-            UIFolderType.Inbox => true,
-            UIFolderType.Custom => true,
-            _ => false
-        };
+        // Only AccountRoot should not show unread counts
+        return folderType != UIFolderType.AccountRoot;
     }
 
     /// <summary>
@@ -597,18 +593,19 @@ public class SyncedEmailDisplayService
 
         // Use synced folder ID if found, otherwise generate a new GUID for local-only archive
         var archiveFolderId = syncedArchiveFolder?.Id.ToString() ?? Guid.NewGuid().ToString();
+        var unreadCount = syncedArchiveFolder?.UnreadCount ?? 0;
         var totalCount = syncedArchiveFolder?.MessageCount ?? 0;
 
         Debug.WriteLine($"[SyncedEmailDisplayService] Archive folder ID: {archiveFolderId} (synced: {syncedArchiveFolder != null})");
 
-        // Create and insert Archive folder (Archive does not show unread count)
+        // Create and insert Archive folder
         UIMailFolder archiveFolder = new UIMailFolder
         {
             Id = archiveFolderId,
             Name = "Archive",
             Type = UIFolderType.Archive,
             Icon = "\uE149",
-            UnreadCount = 0,
+            UnreadCount = unreadCount,
             TotalCount = totalCount,
             IsExpanded = false,
             IsSelected = false,
@@ -653,18 +650,19 @@ public class SyncedEmailDisplayService
 
         // Use synced folder ID if found, otherwise generate a new GUID for local-only junk
         var junkFolderId = syncedJunkFolder?.Id.ToString() ?? Guid.NewGuid().ToString();
+        var unreadCount = syncedJunkFolder?.UnreadCount ?? 0;
         var totalCount = syncedJunkFolder?.MessageCount ?? 0;
 
         Debug.WriteLine($"[SyncedEmailDisplayService] Junk folder ID: {junkFolderId} (synced: {syncedJunkFolder != null})");
 
-        // Create and insert Junk folder (Junk does not show unread count)
+        // Create and insert Junk folder
         UIMailFolder junkFolder = new UIMailFolder
         {
             Id = junkFolderId,
             Name = "Junk",
             Type = UIFolderType.Junk,
             Icon = "\uE14D",
-            UnreadCount = 0,
+            UnreadCount = unreadCount,
             TotalCount = totalCount,
             IsExpanded = false,
             IsSelected = false,

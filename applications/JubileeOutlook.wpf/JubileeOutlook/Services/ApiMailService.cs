@@ -1418,27 +1418,12 @@ public class ApiMailService : IMailService
     {
         var folderType = ParseFolderType(dto.Type);
 
-        // Only show unread counts for folder types where it makes sense
-        // Sent, Drafts, Deleted, Junk, and Archive folders should not show unread counts
-        var shouldShowUnreadCount = folderType switch
-        {
-            FolderType.Inbox => true,
-            FolderType.Custom => true,
-            FolderType.AccountRoot => false,
-            FolderType.Sent => false,
-            FolderType.Drafts => false,
-            FolderType.Deleted => false,
-            FolderType.Junk => false,
-            FolderType.Archive => false,
-            _ => false
-        };
-
         var folder = new MailFolder
         {
             Id = dto.Id ?? Guid.NewGuid().ToString(),
             Name = dto.Name ?? string.Empty,
             Type = folderType,
-            UnreadCount = shouldShowUnreadCount ? dto.UnreadCount : 0,
+            UnreadCount = dto.UnreadCount,
             TotalCount = dto.TotalCount,
             Icon = ConvertIconNameToMaterialIcon(dto.Icon, folderType),
             ParentFolderId = dto.ParentFolderId,
