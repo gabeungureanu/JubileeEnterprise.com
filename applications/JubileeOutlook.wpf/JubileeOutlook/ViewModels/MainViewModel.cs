@@ -4,6 +4,8 @@ using JubileeOutlook.Models;
 using JubileeOutlook.Services;
 using JubileeOutlook.Services.EmailSync;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Windows.Data;
 using System.Windows.Threading;
 
 namespace JubileeOutlook.ViewModels;
@@ -14,12 +16,44 @@ public partial class MainViewModel : ObservableObject
     private readonly ICalendarService _calendarService;
     private readonly SyncedEmailDisplayService _syncedEmailService;
     private readonly EmailSyncCoordinator _syncCoordinator;
+    private readonly IgnoredConversationsService _ignoredConversationsService;
+    private readonly BlockedSendersService _blockedSendersService;
 
     [ObservableProperty]
     private ObservableCollection<MailFolder> _folders = new();
 
     [ObservableProperty]
     private ObservableCollection<EmailMessage> _messages = new();
+
+    [ObservableProperty]
+    private ObservableCollection<ConversationGroup> _conversationGroups = new();
+
+    // Available categories for email organization
+    [ObservableProperty]
+    private ObservableCollection<string> _availableCategories = new()
+    {
+        "Personal",
+        "Work",
+        "Important",
+        "Follow Up",
+        "Family",
+        "Finance",
+        "Travel",
+        "Shopping"
+    };
+
+    // Current filter settings
+    [ObservableProperty]
+    private string _currentFilter = "All";
+
+    [ObservableProperty]
+    private string _currentSortCriteria = "Date";
+
+    [ObservableProperty]
+    private bool _sortDescending = true;
+
+    [ObservableProperty]
+    private string? _selectedCategory;
 
     [ObservableProperty]
     private ObservableCollection<CalendarEvent> _events = new();
@@ -60,6 +94,14 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _syncStatusMessage = string.Empty;
 
+    [ObservableProperty]
+    private bool _isOfflineMode = false;
+
+    /// <summary>
+    /// Event raised when offline mode changes
+    /// </summary>
+    public event EventHandler<bool>? OfflineModeChanged;
+
     /// <summary>
     /// Event raised when email body content is updated and UI needs to refresh
     /// </summary>
@@ -80,12 +122,29 @@ public partial class MainViewModel : ObservableObject
     /// </summary>
     public event EventHandler? ForwardRequested;
 
+    /// <summary>
+    /// Event raised when New Folder is requested
+    /// </summary>
+    public event EventHandler? NewFolderRequested;
+
+    /// <summary>
+    /// Event raised when Rename Folder is requested
+    /// </summary>
+    public event EventHandler<MailFolder>? RenameFolderRequested;
+
+    /// <summary>
+    /// Event raised when Delete Folder is requested
+    /// </summary>
+    public event EventHandler<MailFolder>? DeleteFolderRequested;
+
     public MainViewModel(IMailService mailService, ICalendarService calendarService)
     {
         _mailService = mailService;
         _calendarService = calendarService;
         _syncedEmailService = new SyncedEmailDisplayService();
         _syncCoordinator = new EmailSyncCoordinator();
+        _ignoredConversationsService = new IgnoredConversationsService();
+        _blockedSendersService = new BlockedSendersService();
 
         // Note: InitializeData is NOT called here anymore
         // It should be called after network status is confirmed in MainWindow.Loaded event
@@ -98,6 +157,16 @@ public partial class MainViewModel : ObservableObject
     public async Task InitializeDataAsync()
     {
         await InitializeDataCoreAsync();
+    }
+
+    /// <summary>
+    /// Determines if a folder type should display unread counts.
+    /// All folders except AccountRoot show unread counts when they have unread emails.
+    /// </summary>
+    private static bool ShouldShowUnreadCount(FolderType folderType)
+    {
+        // Only AccountRoot should not show unread counts
+        return folderType != FolderType.AccountRoot;
     }
 
     /// <summary>
@@ -165,7 +234,7 @@ public partial class MainViewModel : ObservableObject
             WwbwEmailAddress = WwbwEmailAddress,
             IsExpanded = true,
             Icon = "📧",
-            SubFolders = baseFolders
+            SubFolders = new System.Collections.ObjectModel.ObservableCollection<MailFolder>(baseFolders)
         };
 
         // Update parent folder references
@@ -353,16 +422,52 @@ public partial class MainViewModel : ObservableObject
         try
         {
             var messages = await _syncedEmailService.GetDisplayMessagesAsync(folderId);
-            Messages = new ObservableCollection<EmailMessage>(messages);
 
-            // Update folder counts
+            // Determine folder type for filtering rules
+            var isTrashFolder = SelectedFolder?.Type == FolderType.Deleted;
+            var isJunkFolder = SelectedFolder?.Type == FolderType.Junk;
+            List<EmailMessage> filteredMessages;
+
+            if (isTrashFolder || isJunkFolder)
+            {
+                // Don't filter in Trash or Junk - show all messages including ignored/blocked
+                filteredMessages = messages;
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] {(isTrashFolder ? "Trash" : "Junk")} folder - showing all messages");
+            }
+            else
+            {
+                // Load filter services
+                await _ignoredConversationsService.LoadAsync();
+                await _blockedSendersService.LoadAsync();
+
+                // Filter out messages from ignored conversations and blocked senders
+                filteredMessages = messages
+                    .Where(m => (string.IsNullOrEmpty(m.ConversationId) ||
+                                !_ignoredConversationsService.IsConversationIgnored(m.ConversationId)) &&
+                               (string.IsNullOrEmpty(m.FromEmail) ||
+                                !_blockedSendersService.IsSenderBlocked(m.FromEmail)))
+                    .ToList();
+
+                var ignoredCount = messages.Count - filteredMessages.Count;
+                if (ignoredCount > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MainViewModel] Filtered out {ignoredCount} messages (ignored conversations or blocked senders)");
+                }
+            }
+
+            Messages = new ObservableCollection<EmailMessage>(filteredMessages);
+
+            // Update folder counts (only show unread for certain folder types)
             if (SelectedFolder != null)
             {
-                SelectedFolder.UnreadCount = Messages.Count(m => !m.IsRead);
+                if (ShouldShowUnreadCount(SelectedFolder.Type))
+                {
+                    SelectedFolder.UnreadCount = Messages.Count(m => !m.IsRead);
+                }
                 SelectedFolder.TotalCount = Messages.Count;
             }
 
-            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Loaded {messages.Count} synced messages for folder {folderId}");
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Loaded {filteredMessages.Count} synced messages for folder {folderId}");
         }
         catch (Exception ex)
         {
@@ -407,8 +512,19 @@ public partial class MainViewModel : ObservableObject
                 _ = _mailService.MarkAsReadAsync(value.Id, true);
                 value.IsRead = true;
 
+                // Also update local synced storage if this is a synced message
+                // This ensures the read state persists when messages are reloaded
+                if (value.SyncedMessageId.HasValue && !string.IsNullOrEmpty(value.FolderId))
+                {
+                    _ = _syncedEmailService.UpdateMessageReadStateAsync(
+                        value.SyncedMessageId.Value.ToString(),
+                        value.FolderId,
+                        true);
+                }
+
                 // Update unread count for the current folder by counting unread messages
-                if (SelectedFolder != null)
+                // Only update for folder types that should show unread counts
+                if (SelectedFolder != null && ShouldShowUnreadCount(SelectedFolder.Type))
                 {
                     var unreadCount = Messages.Count(m => !m.IsRead);
                     System.Diagnostics.Debug.WriteLine($"[MainViewModel] Updating unread count to {unreadCount}");
@@ -474,15 +590,52 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private async Task LoadMessagesAsync(string folderId)
+    public async Task LoadMessagesAsync(string folderId)
     {
         var messages = await _mailService.GetMessagesAsync(folderId);
-        Messages = new ObservableCollection<EmailMessage>(messages);
+
+        // Determine folder type for filtering rules
+        var isTrashFolder = SelectedFolder?.Type == FolderType.Deleted;
+        var isJunkFolder = SelectedFolder?.Type == FolderType.Junk;
+        List<EmailMessage> filteredMessages;
+
+        if (isTrashFolder || isJunkFolder)
+        {
+            // Don't filter in Trash or Junk - show all messages including ignored/blocked
+            filteredMessages = messages;
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] {(isTrashFolder ? "Trash" : "Junk")} folder - showing all messages");
+        }
+        else
+        {
+            // Load filter services
+            await _ignoredConversationsService.LoadAsync();
+            await _blockedSendersService.LoadAsync();
+
+            // Filter out messages from ignored conversations and blocked senders
+            filteredMessages = messages
+                .Where(m => (string.IsNullOrEmpty(m.ConversationId) ||
+                            !_ignoredConversationsService.IsConversationIgnored(m.ConversationId)) &&
+                           (string.IsNullOrEmpty(m.FromEmail) ||
+                            !_blockedSendersService.IsSenderBlocked(m.FromEmail)))
+                .ToList();
+
+            var ignoredCount = messages.Count - filteredMessages.Count;
+            if (ignoredCount > 0)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Filtered out {ignoredCount} messages (ignored conversations or blocked senders)");
+            }
+        }
+
+        Messages = new ObservableCollection<EmailMessage>(filteredMessages);
 
         // Update folder counts by counting the actual messages
+        // Only update unread count for folder types that should show it
         if (SelectedFolder != null)
         {
-            SelectedFolder.UnreadCount = Messages.Count(m => !m.IsRead);
+            if (ShouldShowUnreadCount(SelectedFolder.Type))
+            {
+                SelectedFolder.UnreadCount = Messages.Count(m => !m.IsRead);
+            }
             SelectedFolder.TotalCount = Messages.Count;
         }
     }
@@ -614,11 +767,67 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task ToggleFlag()
     {
-        if (SelectedMessage == null) return;
+        if (SelectedMessage == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] ToggleFlag: No message selected");
+            return;
+        }
 
-        var newFlagState = !SelectedMessage.IsFlagged;
-        await _mailService.ToggleFlagAsync(SelectedMessage.Id, newFlagState);
-        SelectedMessage.IsFlagged = newFlagState;
+        var messageToFlag = SelectedMessage;
+        var newFlagState = !messageToFlag.IsFlagged;
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] ToggleFlag requested for message: {messageToFlag.Subject}, new state: {newFlagState}");
+
+        // OPTIMISTIC UPDATE: Update UI immediately
+        messageToFlag.IsFlagged = newFlagState;
+
+        // Check if this is a synced message (has AccountId and RemoteMessageId)
+        if (messageToFlag.AccountId.HasValue && !string.IsNullOrEmpty(messageToFlag.RemoteMessageId))
+        {
+            if (Guid.TryParse(messageToFlag.FolderId, out var folderId))
+            {
+                // Toggle flag in background for synced messages
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var success = await _syncedEmailService.ToggleFlagAsync(
+                            messageToFlag.AccountId.Value,
+                            folderId,
+                            messageToFlag.RemoteMessageId,
+                            newFlagState);
+
+                        if (success)
+                        {
+                            System.Diagnostics.Debug.WriteLine("[MainViewModel] Flag toggled on server successfully");
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine("[MainViewModel] Failed to toggle flag on server");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Exception in background ToggleFlag: {ex.Message}");
+                    }
+                });
+            }
+        }
+        else
+        {
+            // Non-synced messages - use API
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _mailService.ToggleFlagAsync(messageToFlag.Id, newFlagState);
+                    System.Diagnostics.Debug.WriteLine("[MainViewModel] Non-synced message flag toggled via API");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MainViewModel] Exception toggling flag for non-synced message: {ex.Message}");
+                }
+            });
+        }
     }
 
     [RelayCommand]
@@ -626,8 +835,54 @@ public partial class MainViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(SearchQuery)) return;
 
-        var results = await _mailService.SearchMessagesAsync(SearchQuery);
-        Messages = new ObservableCollection<EmailMessage>(results);
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Searching for: {SearchQuery}");
+
+        var allResults = new List<EmailMessage>();
+
+        // Search synced emails locally first (instant results)
+        if (HasSyncedAccounts)
+        {
+            var syncedResults = await _syncedEmailService.SearchMessagesAsync(SearchQuery);
+            allResults.AddRange(syncedResults);
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Found {syncedResults.Count} synced email matches");
+        }
+
+        // Also search API messages if available
+        try
+        {
+            var apiResults = await _mailService.SearchMessagesAsync(SearchQuery);
+            // Avoid duplicates by checking message IDs
+            var existingIds = new HashSet<string>(allResults.Select(m => m.Id));
+            var uniqueApiResults = apiResults.Where(m => !existingIds.Contains(m.Id));
+            allResults.AddRange(uniqueApiResults);
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Found {apiResults.Count} API message matches");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] API search failed (continuing with local results): {ex.Message}");
+        }
+
+        // Filter out messages from ignored conversations and blocked senders
+        await _ignoredConversationsService.LoadAsync();
+        await _blockedSendersService.LoadAsync();
+        var filteredResults = allResults
+            .Where(m => (string.IsNullOrEmpty(m.ConversationId) ||
+                        !_ignoredConversationsService.IsConversationIgnored(m.ConversationId)) &&
+                       (string.IsNullOrEmpty(m.FromEmail) ||
+                        !_blockedSendersService.IsSenderBlocked(m.FromEmail)))
+            .ToList();
+
+        var filteredCount = allResults.Count - filteredResults.Count;
+        if (filteredCount > 0)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Filtered out {filteredCount} messages (ignored conversations or blocked senders) in search");
+        }
+
+        // Sort by date descending and update UI
+        var sortedResults = filteredResults.OrderByDescending(m => m.ReceivedDate).ToList();
+        Messages = new ObservableCollection<EmailMessage>(sortedResults);
+
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Total search results: {Messages.Count}");
     }
 
     [RelayCommand]
@@ -709,7 +964,7 @@ public partial class MainViewModel : ObservableObject
                 if (SelectedFolder != null)
                 {
                     SelectedFolder.TotalCount = Math.Max(0, SelectedFolder.TotalCount - 1);
-                    if (wasUnread)
+                    if (wasUnread && ShouldShowUnreadCount(SelectedFolder.Type))
                     {
                         SelectedFolder.UnreadCount = Math.Max(0, SelectedFolder.UnreadCount - 1);
                     }
@@ -761,7 +1016,7 @@ public partial class MainViewModel : ObservableObject
             if (SelectedFolder != null)
             {
                 SelectedFolder.TotalCount = Math.Max(0, SelectedFolder.TotalCount - 1);
-                if (wasUnread)
+                if (wasUnread && ShouldShowUnreadCount(SelectedFolder.Type))
                 {
                     SelectedFolder.UnreadCount = Math.Max(0, SelectedFolder.UnreadCount - 1);
                 }
@@ -825,7 +1080,7 @@ public partial class MainViewModel : ObservableObject
     /// <summary>
     /// Recursively searches for a folder by type
     /// </summary>
-    private MailFolder? FindFolderByTypeRecursive(List<MailFolder>? folders, FolderType folderType)
+    private MailFolder? FindFolderByTypeRecursive(IEnumerable<MailFolder>? folders, FolderType folderType)
     {
         if (folders == null) return null;
 
@@ -849,10 +1104,60 @@ public partial class MainViewModel : ObservableObject
         SelectedMessage.IsRead = false;
     }
 
+    /// <summary>
+    /// Event raised when category dialog is requested
+    /// </summary>
+    public event EventHandler<EmailMessage>? ApplyCategoryRequested;
+
     [RelayCommand]
     private void ApplyCategory()
     {
-        // Category application logic
+        if (SelectedMessage == null) return;
+        ApplyCategoryRequested?.Invoke(this, SelectedMessage);
+    }
+
+    /// <summary>
+    /// Applies a category to the selected message
+    /// </summary>
+    public void SetMessageCategory(EmailMessage message, string category)
+    {
+        if (message == null) return;
+
+        if (!message.Categories.Contains(category))
+        {
+            message.Categories.Add(category);
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Added category '{category}' to message '{message.Subject}'");
+            NotificationService.Instance.ShowSuccess($"Category '{category}' applied");
+        }
+    }
+
+    /// <summary>
+    /// Removes a category from the selected message
+    /// </summary>
+    public void RemoveMessageCategory(EmailMessage message, string category)
+    {
+        if (message == null) return;
+
+        if (message.Categories.Remove(category))
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Removed category '{category}' from message '{message.Subject}'");
+            NotificationService.Instance.ShowSuccess($"Category '{category}' removed");
+        }
+    }
+
+    /// <summary>
+    /// Adds a new category to the available categories
+    /// </summary>
+    [RelayCommand]
+    private void AddCategory(string category)
+    {
+        if (string.IsNullOrWhiteSpace(category)) return;
+
+        if (!AvailableCategories.Contains(category))
+        {
+            AvailableCategories.Add(category);
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Added new category: {category}");
+        }
     }
 
     [RelayCommand]
@@ -890,7 +1195,14 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void WorkOffline()
     {
-        // Toggle offline mode
+        IsOfflineMode = !IsOfflineMode;
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Work Offline mode toggled: {IsOfflineMode}");
+
+        // Raise event to notify UI
+        OfflineModeChanged?.Invoke(this, IsOfflineMode);
+
+        // Update sync status message
+        SyncStatusMessage = IsOfflineMode ? "Working Offline" : "Connected";
     }
 
     [RelayCommand]
@@ -903,19 +1215,224 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void NewFolder()
     {
-        // Create new folder logic
+        System.Diagnostics.Debug.WriteLine("[MainViewModel] New Folder requested");
+        NewFolderRequested?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]
     private void RenameFolder()
     {
-        // Rename folder logic
+        if (SelectedFolder == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] RenameFolder: No folder selected");
+            return;
+        }
+
+        // Don't allow renaming system folders
+        if (SelectedFolder.Type != FolderType.Custom && SelectedFolder.Type != FolderType.AccountRoot)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Cannot rename system folder: {SelectedFolder.Name}");
+            return;
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Rename Folder requested for: {SelectedFolder.Name}");
+        RenameFolderRequested?.Invoke(this, SelectedFolder);
     }
 
     [RelayCommand]
     private void DeleteFolder()
     {
-        // Delete folder logic
+        if (SelectedFolder == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] DeleteFolder: No folder selected");
+            return;
+        }
+
+        // Don't allow deleting system folders
+        if (SelectedFolder.Type != FolderType.Custom)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Cannot delete system folder: {SelectedFolder.Name}");
+            return;
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Delete Folder requested for: {SelectedFolder.Name}");
+        DeleteFolderRequested?.Invoke(this, SelectedFolder);
+    }
+
+    /// <summary>
+    /// Creates a new custom folder with the given name (syncs to server)
+    /// </summary>
+    public async Task<bool> CreateFolderAsync(string folderName)
+    {
+        if (string.IsNullOrWhiteSpace(folderName))
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] CreateFolder: Empty folder name");
+            return false;
+        }
+
+        if (AccountRootFolder?.SubFolders == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] CreateFolder: No account root folder");
+            return false;
+        }
+
+        // Check if folder already exists
+        if (AccountRootFolder.SubFolders.Any(f => f.Name.Equals(folderName, StringComparison.OrdinalIgnoreCase)))
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] CreateFolder: Folder '{folderName}' already exists");
+            return false;
+        }
+
+        // For synced accounts, create folder on server
+        if (HasSyncedAccounts && Guid.TryParse(AccountRootFolder.Id, out var accountId))
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Creating folder '{folderName}' on server...");
+            var createdFolder = await _syncedEmailService.CreateFolderAsync(accountId, folderName);
+
+            if (createdFolder != null)
+            {
+                // Add to UI
+                var uiFolder = new MailFolder
+                {
+                    Id = createdFolder.Id.ToString(),
+                    Name = createdFolder.FolderName,
+                    Type = FolderType.Custom,
+                    Icon = "\ue2c7", // folder icon
+                    UnreadCount = 0,
+                    TotalCount = 0
+                };
+                AccountRootFolder.SubFolders.Add(uiFolder);
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Created folder on server: {folderName}");
+                return true;
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Failed to create folder on server");
+                return false;
+            }
+        }
+        else
+        {
+            // Local-only folder for non-synced accounts
+            var newFolder = new MailFolder
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = folderName,
+                Type = FolderType.Custom,
+                Icon = "\ue2c7", // folder icon
+                UnreadCount = 0,
+                TotalCount = 0
+            };
+
+            AccountRootFolder.SubFolders.Add(newFolder);
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Created local folder: {folderName}");
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Renames a folder (syncs to server)
+    /// </summary>
+    public async Task<bool> RenameFolderAsync(MailFolder folder, string newName)
+    {
+        if (folder == null || string.IsNullOrWhiteSpace(newName))
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] RenameFolderTo: Invalid parameters");
+            return false;
+        }
+
+        var oldName = folder.Name;
+
+        // For synced accounts, rename folder on server
+        if (HasSyncedAccounts && AccountRootFolder != null && Guid.TryParse(AccountRootFolder.Id, out var accountId) && Guid.TryParse(folder.Id, out var folderId))
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Renaming folder '{oldName}' to '{newName}' on server...");
+            var success = await _syncedEmailService.RenameFolderAsync(accountId, folderId, newName);
+
+            if (success)
+            {
+                folder.Name = newName;
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Renamed folder on server from '{oldName}' to '{newName}'");
+                return true;
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Failed to rename folder on server");
+                return false;
+            }
+        }
+        else
+        {
+            // Local-only rename for non-synced accounts
+            folder.Name = newName;
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Renamed local folder from '{oldName}' to '{newName}'");
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Deletes a folder (syncs to server)
+    /// </summary>
+    public async Task<bool> DeleteFolderAsync(MailFolder folder)
+    {
+        if (folder == null || AccountRootFolder?.SubFolders == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] RemoveFolder: Invalid parameters");
+            return false;
+        }
+
+        // For synced accounts, delete folder on server
+        if (HasSyncedAccounts && Guid.TryParse(AccountRootFolder.Id, out var accountId) && Guid.TryParse(folder.Id, out var folderId))
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Deleting folder '{folder.Name}' from server...");
+            var success = await _syncedEmailService.DeleteFolderAsync(accountId, folderId);
+
+            if (success)
+            {
+                AccountRootFolder.SubFolders.Remove(folder);
+                SelectedFolder = AccountRootFolder.SubFolders.FirstOrDefault(f => f.Type == FolderType.Inbox);
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Deleted folder from server: {folder.Name}");
+                return true;
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[MainViewModel] Failed to delete folder from server");
+                return false;
+            }
+        }
+        else
+        {
+            // Local-only delete for non-synced accounts
+            AccountRootFolder.SubFolders.Remove(folder);
+            SelectedFolder = AccountRootFolder.SubFolders.FirstOrDefault(f => f.Type == FolderType.Inbox);
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Removed local folder: {folder.Name}");
+            return true;
+        }
+    }
+
+    // Keep synchronous versions for backward compatibility with existing callers
+    /// <summary>
+    /// Creates a new custom folder with the given name (legacy sync wrapper)
+    /// </summary>
+    public void CreateFolder(string folderName)
+    {
+        _ = CreateFolderAsync(folderName);
+    }
+
+    /// <summary>
+    /// Renames a folder (legacy sync wrapper)
+    /// </summary>
+    public void RenameFolderTo(MailFolder folder, string newName)
+    {
+        _ = RenameFolderAsync(folder, newName);
+    }
+
+    /// <summary>
+    /// Deletes a folder (legacy sync wrapper)
+    /// </summary>
+    public void RemoveFolder(MailFolder folder)
+    {
+        _ = DeleteFolderAsync(folder);
     }
 
     [RelayCommand]
@@ -956,18 +1473,118 @@ public partial class MainViewModel : ObservableObject
     private void ToggleConversationView()
     {
         ShowConversationView = !ShowConversationView;
+        if (ShowConversationView)
+        {
+            BuildConversationGroups();
+        }
+    }
+
+    /// <summary>
+    /// Builds conversation groups from the current messages
+    /// </summary>
+    private void BuildConversationGroups()
+    {
+        ConversationGroups.Clear();
+
+        // Group messages by ConversationId
+        var groupedMessages = Messages
+            .Where(m => !string.IsNullOrEmpty(m.ConversationId))
+            .GroupBy(m => m.ConversationId)
+            .OrderByDescending(g => g.Max(m => m.ReceivedDate));
+
+        foreach (var group in groupedMessages)
+        {
+            var conversationGroup = ConversationGroup.FromMessages(group.Key, group);
+            ConversationGroups.Add(conversationGroup);
+        }
+
+        // Add messages without a ConversationId as single-message groups
+        var singleMessages = Messages.Where(m => string.IsNullOrEmpty(m.ConversationId));
+        foreach (var message in singleMessages.OrderByDescending(m => m.ReceivedDate))
+        {
+            var singleGroup = new ConversationGroup
+            {
+                ConversationId = message.Id,
+                Subject = message.Subject,
+                Participants = new List<string> { message.From },
+                Messages = new ObservableCollection<EmailMessage> { message }
+            };
+            ConversationGroups.Add(singleGroup);
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Built {ConversationGroups.Count} conversation groups");
     }
 
     [RelayCommand]
     private void SortMessages(string criteria)
     {
-        // Sort messages by date, sender, subject, etc.
+        CurrentSortCriteria = criteria;
+        ApplySorting();
+    }
+
+    private void ApplySorting()
+    {
+        var sortedMessages = CurrentSortCriteria switch
+        {
+            "Date" => SortDescending
+                ? Messages.OrderByDescending(m => m.ReceivedDate)
+                : Messages.OrderBy(m => m.ReceivedDate),
+            "From" => SortDescending
+                ? Messages.OrderByDescending(m => m.From)
+                : Messages.OrderBy(m => m.From),
+            "Subject" => SortDescending
+                ? Messages.OrderByDescending(m => m.Subject)
+                : Messages.OrderBy(m => m.Subject),
+            "Size" => SortDescending
+                ? Messages.OrderByDescending(m => m.Body?.Length ?? 0)
+                : Messages.OrderBy(m => m.Body?.Length ?? 0),
+            _ => Messages.OrderByDescending(m => m.ReceivedDate)
+        };
+
+        var messageList = sortedMessages.ToList();
+        Messages.Clear();
+        foreach (var message in messageList)
+        {
+            Messages.Add(message);
+        }
+
+        if (ShowConversationView)
+        {
+            BuildConversationGroups();
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Sorted messages by {CurrentSortCriteria} (descending: {SortDescending})");
+    }
+
+    [RelayCommand]
+    private void ToggleSortDirection()
+    {
+        SortDescending = !SortDescending;
+        ApplySorting();
     }
 
     [RelayCommand]
     private void FilterMessages(string filter)
     {
-        // Filter messages (unread, flagged, etc.)
+        CurrentFilter = filter;
+        ApplyMessageFilter();
+    }
+
+    private void ApplyMessageFilter()
+    {
+        // Refresh message list based on filter
+        // This is called after messages are loaded to apply additional filtering
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Applying filter: {CurrentFilter}");
+    }
+
+    /// <summary>
+    /// Filters messages by category
+    /// </summary>
+    [RelayCommand]
+    private void FilterByCategory(string? category)
+    {
+        SelectedCategory = category;
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Filtering by category: {category ?? "All"}");
     }
 
     [RelayCommand]
@@ -1046,19 +1663,247 @@ public partial class MainViewModel : ObservableObject
     private async Task IgnoreMessage()
     {
         if (SelectedMessage == null) return;
-        // Mark conversation as ignored
-        await _mailService.MarkAsReadAsync(SelectedMessage.Id, true);
-        await _mailService.MoveMessageAsync(SelectedMessage.Id, "deleted");
-        Messages.Remove(SelectedMessage);
+
+        var messageToIgnore = SelectedMessage;
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] IgnoreMessage: Subject='{messageToIgnore.Subject}', ConversationId='{messageToIgnore.ConversationId}'");
+
+        // Store the conversation ID to ignore future messages in this thread
+        if (!string.IsNullOrEmpty(messageToIgnore.ConversationId))
+        {
+            await _ignoredConversationsService.IgnoreConversationAsync(messageToIgnore.ConversationId);
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Conversation '{messageToIgnore.ConversationId}' added to ignore list");
+        }
+
+        // Find and remove all messages from the same conversation in the current view
+        var conversationMessages = Messages
+            .Where(m => !string.IsNullOrEmpty(m.ConversationId) &&
+                        m.ConversationId.Equals(messageToIgnore.ConversationId, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Found {conversationMessages.Count} messages in this conversation");
+
+        // Remove all conversation messages from UI
+        foreach (var message in conversationMessages)
+        {
+            Messages.Remove(message);
+
+            // Move each message to deleted folder in background
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    // Check if synced message
+                    if (message.AccountId.HasValue && !string.IsNullOrEmpty(message.RemoteMessageId))
+                    {
+                        if (Guid.TryParse(message.FolderId, out var folderId))
+                        {
+                            await _syncedEmailService.MoveMessageToTrashAsync(
+                                message.AccountId.Value,
+                                folderId,
+                                message.RemoteMessageId);
+                        }
+                    }
+                    else
+                    {
+                        await _mailService.MarkAsReadAsync(message.Id, true);
+                        await _mailService.MoveMessageAsync(message.Id, "deleted");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MainViewModel] Error moving ignored message: {ex.Message}");
+                }
+            });
+        }
+
+        // If no conversation ID, just delete the single message
+        if (string.IsNullOrEmpty(messageToIgnore.ConversationId) && !conversationMessages.Contains(messageToIgnore))
+        {
+            Messages.Remove(messageToIgnore);
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _mailService.MarkAsReadAsync(messageToIgnore.Id, true);
+                    await _mailService.MoveMessageAsync(messageToIgnore.Id, "deleted");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MainViewModel] Error moving ignored message: {ex.Message}");
+                }
+            });
+        }
+
+        // Update folder counts
+        if (SelectedFolder != null && conversationMessages.Count > 0)
+        {
+            SelectedFolder.TotalCount = Math.Max(0, SelectedFolder.TotalCount - conversationMessages.Count);
+            if (ShouldShowUnreadCount(SelectedFolder.Type))
+            {
+                var unreadCount = conversationMessages.Count(m => !m.IsRead);
+                SelectedFolder.UnreadCount = Math.Max(0, SelectedFolder.UnreadCount - unreadCount);
+            }
+        }
+
+        // Select next message
+        SelectedMessage = Messages.FirstOrDefault();
+
+        System.Diagnostics.Debug.WriteLine("[MainViewModel] Conversation ignored successfully");
+    }
+
+    /// <summary>
+    /// Stop ignoring a conversation - messages will appear again in the folder list
+    /// </summary>
+    [RelayCommand]
+    private async Task UnignoreConversation()
+    {
+        if (SelectedMessage == null) return;
+
+        if (string.IsNullOrEmpty(SelectedMessage.ConversationId))
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] Cannot unignore: Message has no ConversationId");
+            return;
+        }
+
+        var conversationId = SelectedMessage.ConversationId;
+        var wasIgnored = await _ignoredConversationsService.UnignoreConversationAsync(conversationId);
+
+        if (wasIgnored)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Conversation '{conversationId}' removed from ignore list");
+
+            // Reload the current folder to show any previously hidden messages
+            if (SelectedFolder != null)
+            {
+                if (HasSyncedAccounts && Guid.TryParse(SelectedFolder.Id, out _))
+                {
+                    await LoadSyncedMessagesAsync(SelectedFolder.Id);
+                }
+                else
+                {
+                    await LoadMessagesAsync(SelectedFolder.Id);
+                }
+            }
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Conversation '{conversationId}' was not in ignore list");
+        }
     }
 
     [RelayCommand]
     private async Task BlockSender()
     {
         if (SelectedMessage == null) return;
-        // Block the sender and move all messages to junk
-        await _mailService.MoveMessageAsync(SelectedMessage.Id, "junk");
-        Messages.Remove(SelectedMessage);
+
+        var senderEmail = SelectedMessage.FromEmail;
+        if (string.IsNullOrEmpty(senderEmail))
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] BlockSender: No sender email found");
+            return;
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] BlockSender: Blocking sender '{senderEmail}'");
+
+        // Add sender to blocked list persistently
+        await _blockedSendersService.BlockSenderAsync(senderEmail);
+
+        // Find ALL messages from this sender in the current view
+        var senderMessages = Messages
+            .Where(m => !string.IsNullOrEmpty(m.FromEmail) &&
+                        m.FromEmail.Equals(senderEmail, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Found {senderMessages.Count} messages from blocked sender");
+
+        // Remove all messages from UI and move to Junk
+        foreach (var message in senderMessages)
+        {
+            Messages.Remove(message);
+
+            // Move each message to Junk folder in background
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    // Check if synced message
+                    if (message.AccountId.HasValue && !string.IsNullOrEmpty(message.RemoteMessageId))
+                    {
+                        if (Guid.TryParse(message.FolderId, out var folderId))
+                        {
+                            await _syncedEmailService.MoveMessageToJunkAsync(
+                                message.AccountId.Value,
+                                folderId,
+                                message.RemoteMessageId);
+                        }
+                    }
+                    else
+                    {
+                        await _mailService.MoveMessageAsync(message.Id, "junk");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MainViewModel] Error moving blocked message to junk: {ex.Message}");
+                }
+            });
+        }
+
+        // Update folder counts
+        if (SelectedFolder != null && senderMessages.Count > 0)
+        {
+            SelectedFolder.TotalCount = Math.Max(0, SelectedFolder.TotalCount - senderMessages.Count);
+            if (ShouldShowUnreadCount(SelectedFolder.Type))
+            {
+                var unreadCount = senderMessages.Count(m => !m.IsRead);
+                SelectedFolder.UnreadCount = Math.Max(0, SelectedFolder.UnreadCount - unreadCount);
+            }
+        }
+
+        // Select next message
+        SelectedMessage = Messages.FirstOrDefault();
+
+        System.Diagnostics.Debug.WriteLine($"[MainViewModel] Sender '{senderEmail}' blocked successfully");
+    }
+
+    /// <summary>
+    /// Unblock a sender - future messages will appear in folders again
+    /// </summary>
+    [RelayCommand]
+    private async Task UnblockSender()
+    {
+        if (SelectedMessage == null) return;
+
+        var senderEmail = SelectedMessage.FromEmail;
+        if (string.IsNullOrEmpty(senderEmail))
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] UnblockSender: No sender email found");
+            return;
+        }
+
+        var wasBlocked = await _blockedSendersService.UnblockSenderAsync(senderEmail);
+
+        if (wasBlocked)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Sender '{senderEmail}' unblocked");
+
+            // Reload the current folder to show any previously hidden messages
+            if (SelectedFolder != null)
+            {
+                if (HasSyncedAccounts && Guid.TryParse(SelectedFolder.Id, out _))
+                {
+                    await LoadSyncedMessagesAsync(SelectedFolder.Id);
+                }
+                else
+                {
+                    await LoadMessagesAsync(SelectedFolder.Id);
+                }
+            }
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Sender '{senderEmail}' was not in blocked list");
+        }
     }
 
     [RelayCommand]

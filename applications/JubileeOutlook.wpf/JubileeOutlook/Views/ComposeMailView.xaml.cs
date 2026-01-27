@@ -130,7 +130,7 @@ public partial class ComposeMailView : UserControl
             }
             else if (inline is InlineUIContainer container)
             {
-                // Handle embedded images using CID references
+                // Handle embedded images
                 if (container.Child is Image image)
                 {
                     // Get file path from Tag property
@@ -141,16 +141,51 @@ public partial class ComposeMailView : UserControl
                         var contentId = $"img_{Guid.NewGuid():N}";
                         var fileName = Path.GetFileName(filePath);
 
-                        // Add to embedded images list
+                        // Determine MIME type from extension
+                        var extension = Path.GetExtension(filePath).ToLowerInvariant();
+                        var mimeType = extension switch
+                        {
+                            ".jpg" or ".jpeg" => "image/jpeg",
+                            ".png" => "image/png",
+                            ".gif" => "image/gif",
+                            ".bmp" => "image/bmp",
+                            ".webp" => "image/webp",
+                            _ => "image/png"
+                        };
+
+                        // Read file and convert to base64
+                        string? base64Data = null;
+                        try
+                        {
+                            var fileBytes = File.ReadAllBytes(filePath);
+                            base64Data = Convert.ToBase64String(fileBytes);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[ComposeMailView] Error reading image file: {ex.Message}");
+                        }
+
+                        // Add to embedded images list (for SMTP sending with CID)
                         embeddedImages.Add(new EmbeddedImageData
                         {
                             ContentId = contentId,
                             FilePath = filePath,
-                            FileName = fileName
+                            FileName = fileName,
+                            Base64Data = base64Data,
+                            MimeType = mimeType
                         });
 
-                        // Use CID reference in HTML
-                        html.Append($"<img src=\"cid:{contentId}\" style=\"max-width:600px;\" />");
+                        // Use data URI in HTML for proper display in WebBrowser
+                        // This displays correctly locally and will be converted to CID for SMTP sending
+                        if (!string.IsNullOrEmpty(base64Data))
+                        {
+                            html.Append($"<img src=\"data:{mimeType};base64,{base64Data}\" data-cid=\"{contentId}\" style=\"max-width:600px;\" />");
+                        }
+                        else
+                        {
+                            // Fallback to CID if base64 conversion failed
+                            html.Append($"<img src=\"cid:{contentId}\" style=\"max-width:600px;\" />");
+                        }
                     }
                 }
             }
@@ -167,6 +202,8 @@ public partial class ComposeMailView : UserControl
             oldViewModel.AttachmentRequested -= OnAttachmentRequested;
             oldViewModel.Attachments.CollectionChanged -= OnAttachmentsCollectionChanged;
             oldViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            oldViewModel.InsertSignatureRequested -= OnInsertSignatureRequested;
+            oldViewModel.ManageSignaturesRequested -= OnManageSignaturesRequested;
         }
 
         // Subscribe to new view model
@@ -175,6 +212,8 @@ public partial class ComposeMailView : UserControl
             newViewModel.AttachmentRequested += OnAttachmentRequested;
             newViewModel.Attachments.CollectionChanged += OnAttachmentsCollectionChanged;
             newViewModel.PropertyChanged += OnViewModelPropertyChanged;
+            newViewModel.InsertSignatureRequested += OnInsertSignatureRequested;
+            newViewModel.ManageSignaturesRequested += OnManageSignaturesRequested;
         }
     }
 
@@ -768,6 +807,115 @@ public partial class ComposeMailView : UserControl
             {
                 MessageDialog.ShowError(Window.GetWindow(this), $"Error inserting image: {ex.Message}", "Error");
             }
+        }
+    }
+
+    /// <summary>
+    /// Handle request to insert signature at the end of the email body
+    /// </summary>
+    private void OnInsertSignatureRequested(object? sender, string signatureHtml)
+    {
+        if (string.IsNullOrEmpty(signatureHtml)) return;
+
+        try
+        {
+            // Convert HTML signature to plain text for RichTextBox display
+            var plainTextSignature = ConvertHtmlToPlainText(signatureHtml);
+
+            // Move to end of document
+            var endPosition = MessageBodyEditor.Document.ContentEnd;
+
+            // Add some newlines before signature
+            var signatureLines = plainTextSignature.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+
+            foreach (var line in signatureLines)
+            {
+                var paragraph = new Paragraph(new Run(line));
+                MessageBodyEditor.Document.Blocks.Add(paragraph);
+            }
+
+            // Focus and move cursor to the beginning (before signature)
+            MessageBodyEditor.CaretPosition = MessageBodyEditor.Document.ContentStart;
+            MessageBodyEditor.Focus();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ComposeMailView] Error inserting signature: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Handle request to open signature management dialog
+    /// </summary>
+    private void OnManageSignaturesRequested(object? sender, EventArgs e)
+    {
+        try
+        {
+            var dialog = new SignatureManagementDialog
+            {
+                Owner = Window.GetWindow(this)
+            };
+            dialog.ShowDialog();
+
+            // Refresh signatures in ViewModel after dialog closes
+            if (DataContext is ComposeMailViewModel viewModel)
+            {
+                viewModel.RefreshSignatures();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ComposeMailView] Error opening signature dialog: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Handle signature dropdown button click
+    /// </summary>
+    private void SignatureDropdownButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (SignatureDropdownButton != null)
+        {
+            SignatureDropdownButton.IsChecked = !(SignatureDropdownButton.IsChecked ?? false);
+        }
+    }
+
+    /// <summary>
+    /// Handle signature menu item selection
+    /// </summary>
+    private void SignatureMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        // Close the dropdown
+        if (SignatureDropdownButton != null)
+        {
+            SignatureDropdownButton.IsChecked = false;
+        }
+    }
+
+    /// <summary>
+    /// Handle manage signatures menu item click
+    /// </summary>
+    private void ManageSignaturesMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        // Close the dropdown
+        if (SignatureDropdownButton != null)
+        {
+            SignatureDropdownButton.IsChecked = false;
+        }
+
+        // Open the signature management dialog
+        OnManageSignaturesRequested(sender, e);
+    }
+
+    /// <summary>
+    /// Inserts the currently selected signature into the email body
+    /// </summary>
+    public void InsertCurrentSignature()
+    {
+        if (DataContext is ComposeMailViewModel viewModel && viewModel.SelectedSignature != null && viewModel.IncludeSignature)
+        {
+            var signatureHtml = viewModel.GetFormattedSignature(asHtml: true);
+            OnInsertSignatureRequested(viewModel, signatureHtml);
         }
     }
 }

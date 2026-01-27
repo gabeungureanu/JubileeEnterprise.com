@@ -42,6 +42,115 @@ public class ImageService
     }
 
     /// <summary>
+    /// Uploads a contact photo to the server and returns the URL
+    /// </summary>
+    /// <param name="localFilePath">Path to the local image file</param>
+    /// <returns>The URL of the uploaded photo, or null if upload failed</returns>
+    public async Task<string?> UploadContactPhotoAsync(string localFilePath)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(localFilePath) || !File.Exists(localFilePath))
+            {
+                System.Diagnostics.Debug.WriteLine($"[ImageService] Contact photo file not found: {localFilePath}");
+                return null;
+            }
+
+            var imageData = await File.ReadAllBytesAsync(localFilePath);
+            var fileName = Path.GetFileName(localFilePath);
+            var contentType = GetContentType(fileName);
+
+            using var content = new MultipartFormDataContent();
+            using var fileContent = new ByteArrayContent(imageData);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+            content.Add(fileContent, "photo", fileName);
+
+            var response = await _httpClientFactory.PostAsync(
+                ApiEndpoint.InspireCodex,
+                "contacts/upload-photo",
+                content,
+                isFormData: true);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var uploadResult = JsonSerializer.Deserialize<ContactPhotoUploadResponse>(responseContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (uploadResult != null && uploadResult.Success && !string.IsNullOrEmpty(uploadResult.PhotoUrl))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ImageService] Contact photo uploaded successfully: {uploadResult.PhotoUrl}");
+                    return uploadResult.PhotoUrl;
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine($"[ImageService] Failed to upload contact photo: {response.StatusCode} - {errorContent}");
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ImageService] Error uploading contact photo: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Deletes a contact photo from the server
+    /// </summary>
+    /// <param name="photoUrl">The URL of the photo to delete</param>
+    /// <returns>True if deletion was successful</returns>
+    public async Task<bool> DeleteContactPhotoAsync(string photoUrl)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(photoUrl))
+            {
+                return false;
+            }
+
+            // Extract filename from URL
+            // URLs are in format: https://inspirecodex.com/api/v1/contacts/photos/filename.jpg
+            // or relative: /api/v1/contacts/photos/filename.jpg
+            var filename = Path.GetFileName(new Uri(photoUrl, UriKind.RelativeOrAbsolute).LocalPath);
+
+            if (string.IsNullOrEmpty(filename))
+            {
+                System.Diagnostics.Debug.WriteLine($"[ImageService] Could not extract filename from URL: {photoUrl}");
+                return false;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[ImageService] Deleting contact photo: {filename}");
+
+            var response = await _httpClientFactory.DeleteAsync(
+                ApiEndpoint.InspireCodex,
+                $"contacts/photo/{filename}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ImageService] Contact photo deleted successfully: {filename}");
+                return true;
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine($"[ImageService] Failed to delete contact photo: {response.StatusCode} - {errorContent}");
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ImageService] Error deleting contact photo: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Uploads an image to the server
     /// </summary>
     public async Task<EventImage?> UploadImageAsync(EventImage image)
@@ -412,5 +521,17 @@ internal class UploadResponse
     public long FileSize { get; set; }
     public string? ContentType { get; set; }
     public bool Success { get; set; }
+    public string? Error { get; set; }
+}
+
+/// <summary>
+/// Response model for contact photo upload
+/// </summary>
+internal class ContactPhotoUploadResponse
+{
+    public bool Success { get; set; }
+    public string? PhotoUrl { get; set; }
+    public string? Filename { get; set; }
+    public long Size { get; set; }
     public string? Error { get; set; }
 }

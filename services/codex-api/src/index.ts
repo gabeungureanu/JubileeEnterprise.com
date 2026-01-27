@@ -315,6 +315,153 @@ app.get('/api/audit-logs', async (c) => {
 });
 
 // ============================================================================
+// USER EMAIL PREFERENCES (JubileeOutlook)
+// Blocked senders and ignored conversations for email filtering
+// ============================================================================
+
+// --- BLOCKED SENDERS ---
+
+// Get all blocked senders for a user
+app.get('/api/user-preferences/:userId/blocked-senders', async (c) => {
+  const userId = c.req.param('userId');
+
+  try {
+    const blockedSenders = await codex.getBlockedSenders(userId);
+    return c.json({ data: blockedSenders });
+  } catch (error) {
+    console.error('Error fetching blocked senders:', error);
+    return c.json({ error: 'Failed to fetch blocked senders' }, 500);
+  }
+});
+
+// Add a blocked sender
+app.post('/api/user-preferences/:userId/blocked-senders', async (c) => {
+  const userId = c.req.param('userId');
+  const body = await c.req.json();
+
+  if (!body.emailAddress) {
+    return c.json({ error: 'emailAddress is required' }, 400);
+  }
+
+  try {
+    const result = await codex.addBlockedSender(userId, body.emailAddress.toLowerCase().trim());
+
+    await codex.createAuditLog({
+      eventType: 'email.sender_blocked',
+      eventCategory: 'preferences',
+      userId,
+      outcome: 'success',
+      metadata: { emailAddress: body.emailAddress },
+    });
+
+    return c.json({ data: result }, 201);
+  } catch (error: any) {
+    // Handle unique constraint violation (already blocked)
+    if (error.code === '23505') {
+      return c.json({ data: { alreadyBlocked: true } });
+    }
+    console.error('Error adding blocked sender:', error);
+    return c.json({ error: 'Failed to add blocked sender' }, 500);
+  }
+});
+
+// Remove a blocked sender
+app.delete('/api/user-preferences/:userId/blocked-senders/:email', async (c) => {
+  const userId = c.req.param('userId');
+  const email = decodeURIComponent(c.req.param('email'));
+
+  try {
+    const removed = await codex.removeBlockedSender(userId, email.toLowerCase().trim());
+
+    if (removed) {
+      await codex.createAuditLog({
+        eventType: 'email.sender_unblocked',
+        eventCategory: 'preferences',
+        userId,
+        outcome: 'success',
+        metadata: { emailAddress: email },
+      });
+    }
+
+    return c.json({ data: { removed } });
+  } catch (error) {
+    console.error('Error removing blocked sender:', error);
+    return c.json({ error: 'Failed to remove blocked sender' }, 500);
+  }
+});
+
+// --- IGNORED CONVERSATIONS ---
+
+// Get all ignored conversations for a user
+app.get('/api/user-preferences/:userId/ignored-conversations', async (c) => {
+  const userId = c.req.param('userId');
+
+  try {
+    const ignoredConversations = await codex.getIgnoredConversations(userId);
+    return c.json({ data: ignoredConversations });
+  } catch (error) {
+    console.error('Error fetching ignored conversations:', error);
+    return c.json({ error: 'Failed to fetch ignored conversations' }, 500);
+  }
+});
+
+// Add an ignored conversation
+app.post('/api/user-preferences/:userId/ignored-conversations', async (c) => {
+  const userId = c.req.param('userId');
+  const body = await c.req.json();
+
+  if (!body.conversationId) {
+    return c.json({ error: 'conversationId is required' }, 400);
+  }
+
+  try {
+    const result = await codex.addIgnoredConversation(userId, body.conversationId);
+
+    await codex.createAuditLog({
+      eventType: 'email.conversation_ignored',
+      eventCategory: 'preferences',
+      userId,
+      outcome: 'success',
+      metadata: { conversationId: body.conversationId },
+    });
+
+    return c.json({ data: result }, 201);
+  } catch (error: any) {
+    // Handle unique constraint violation (already ignored)
+    if (error.code === '23505') {
+      return c.json({ data: { alreadyIgnored: true } });
+    }
+    console.error('Error adding ignored conversation:', error);
+    return c.json({ error: 'Failed to add ignored conversation' }, 500);
+  }
+});
+
+// Remove an ignored conversation
+app.delete('/api/user-preferences/:userId/ignored-conversations/:conversationId', async (c) => {
+  const userId = c.req.param('userId');
+  const conversationId = decodeURIComponent(c.req.param('conversationId'));
+
+  try {
+    const removed = await codex.removeIgnoredConversation(userId, conversationId);
+
+    if (removed) {
+      await codex.createAuditLog({
+        eventType: 'email.conversation_unignored',
+        eventCategory: 'preferences',
+        userId,
+        outcome: 'success',
+        metadata: { conversationId },
+      });
+    }
+
+    return c.json({ data: { removed } });
+  } catch (error) {
+    console.error('Error removing ignored conversation:', error);
+    return c.json({ error: 'Failed to remove ignored conversation' }, 500);
+  }
+});
+
+// ============================================================================
 // SERVER STARTUP
 // ============================================================================
 

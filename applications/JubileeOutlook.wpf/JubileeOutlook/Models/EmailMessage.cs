@@ -29,6 +29,10 @@ public partial class EmailMessage : ObservableObject
     public string Preview { get; set; } = string.Empty;
     public string ConversationId { get; set; } = string.Empty;
 
+    // Categories/Labels for email organization
+    [ObservableProperty]
+    private List<string> _categories = new();
+
     // Properties for synced email on-demand body fetching
     public Guid? SyncedMessageId { get; set; }
     public string? RemoteMessageId { get; set; }

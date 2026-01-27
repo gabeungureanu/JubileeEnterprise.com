@@ -1,8 +1,10 @@
 using Microsoft.Win32;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using JubileeOutlook.Services;
 using JubileeOutlook.ViewModels;
 
 namespace JubileeOutlook.Views;
@@ -19,6 +21,7 @@ public partial class NewContactDialog : Window
     private bool _isDeleted;
     private DateTime? _deletedAt;
     private DateTime _createdAt;
+    private string _category = string.Empty;
 
     /// <summary>
     /// The contact created by this dialog (set when Save is clicked)
@@ -45,12 +48,14 @@ public partial class NewContactDialog : Window
         _isDeleted = contact.IsDeleted;
         _deletedAt = contact.DeletedAt;
         _createdAt = contact.CreatedAt;
+        _category = contact.Category ?? string.Empty;
 
         System.Diagnostics.Debug.WriteLine($"[NewContactDialog] Edit mode - Id: {contact.Id}");
         System.Diagnostics.Debug.WriteLine($"[NewContactDialog] DisplayName: '{contact.DisplayName}'");
         System.Diagnostics.Debug.WriteLine($"[NewContactDialog] FirstName: '{contact.FirstName}', LastName: '{contact.LastName}'");
         System.Diagnostics.Debug.WriteLine($"[NewContactDialog] Email: '{contact.Email}', Phone: '{contact.Phone}'");
         System.Diagnostics.Debug.WriteLine($"[NewContactDialog] Company: '{contact.Company}', JobTitle: '{contact.JobTitle}'");
+        System.Diagnostics.Debug.WriteLine($"[NewContactDialog] Category: '{contact.Category}'");
 
         // Update the title text in the dialog
         if (DialogTitleText != null)
@@ -61,17 +66,56 @@ public partial class NewContactDialog : Window
         // Populate fields with existing contact data
         FirstNameTextBox.Text = contact.FirstName;
         LastNameTextBox.Text = contact.LastName;
+
+        // Additional name fields
+        TitleTextBox.Text = contact.Title;
+        MiddleNameTextBox.Text = contact.MiddleName;
+        SuffixTextBox.Text = contact.Suffix;
+        NicknameTextBox.Text = contact.Nickname;
+
+        // Show additional name fields panel if any have data
+        if (!string.IsNullOrEmpty(contact.Title) || !string.IsNullOrEmpty(contact.MiddleName) ||
+            !string.IsNullOrEmpty(contact.Suffix) || !string.IsNullOrEmpty(contact.Nickname))
+        {
+            AdditionalNameFields.Visibility = Visibility.Visible;
+        }
+
+        // Email fields
         WorkEmailTextBox.Text = contact.Email;
+        PersonalEmailTextBox.Text = contact.PersonalEmail;
+        OtherEmailTextBox.Text = contact.OtherEmail;
+
+        // Show additional email fields panel if any have data
+        if (!string.IsNullOrEmpty(contact.PersonalEmail) || !string.IsNullOrEmpty(contact.OtherEmail))
+        {
+            AdditionalEmailFields.Visibility = Visibility.Visible;
+        }
+
+        // Phone fields
         WorkPhoneTextBox.Text = contact.Phone;
         MobilePhoneTextBox.Text = contact.MobilePhone;
+        HomePhoneTextBox.Text = contact.HomePhone;
+
+        // Show additional phone fields panel if any have data
+        if (!string.IsNullOrEmpty(contact.MobilePhone) || !string.IsNullOrEmpty(contact.HomePhone))
+        {
+            AdditionalPhoneFields.Visibility = Visibility.Visible;
+        }
+
+        // Work fields
         CompanyTextBox.Text = contact.Company;
         JobTitleTextBox.Text = contact.JobTitle;
         DepartmentTextBox.Text = contact.Department;
+        OfficeTextBox.Text = contact.Office;
+
+        // Address fields
         StreetTextBox.Text = contact.Address;
         CityTextBox.Text = contact.City;
         StateTextBox.Text = contact.State;
         ZipTextBox.Text = contact.PostalCode;
         CountryTextBox.Text = contact.Country;
+
+        // Other fields
         NotesTextBox.Text = contact.Notes;
         BirthdayDatePicker.SelectedDate = contact.Birthday;
         AnniversaryDatePicker.SelectedDate = contact.Anniversary;
@@ -88,6 +132,11 @@ public partial class NewContactDialog : Window
                 ContactPictureImage.Visibility = Visibility.Visible;
                 ContactPictureIcon.Visibility = Visibility.Collapsed;
                 _selectedImagePath = contact.AvatarPath;
+
+                // Show remove link for existing photo
+                RemovePhotoLink.Visibility = Visibility.Visible;
+                AddPhotoText.Text = "Change photo";
+                ClickToUploadText.Visibility = Visibility.Collapsed;
             }
             catch
             {
@@ -116,7 +165,7 @@ public partial class NewContactDialog : Window
         Close();
     }
 
-    private void SaveButton_Click(object sender, RoutedEventArgs e)
+    private async void SaveButton_Click(object sender, RoutedEventArgs e)
     {
         // Validate required fields
         if (string.IsNullOrWhiteSpace(FirstNameTextBox.Text) && string.IsNullOrWhiteSpace(LastNameTextBox.Text))
@@ -124,6 +173,38 @@ public partial class NewContactDialog : Window
             ThemedMessageBox.Show(this, "Please enter at least a first or last name.", "Name Required", MessageBoxButton.OK, MessageBoxImage.Warning);
             FirstNameTextBox.Focus();
             return;
+        }
+
+        // Upload photo if a local file is selected
+        string? avatarUrl = _selectedImagePath;
+        if (!string.IsNullOrEmpty(_selectedImagePath) && IsLocalFilePath(_selectedImagePath))
+        {
+            try
+            {
+                // Show saving indicator
+                SaveButton.IsEnabled = false;
+                SaveButton.Content = "Uploading...";
+
+                var uploadedUrl = await ImageService.Instance.UploadContactPhotoAsync(_selectedImagePath);
+                if (!string.IsNullOrEmpty(uploadedUrl))
+                {
+                    avatarUrl = uploadedUrl;
+                    System.Diagnostics.Debug.WriteLine($"[NewContactDialog] Photo uploaded: {uploadedUrl}");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[NewContactDialog] Photo upload failed, keeping local path");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[NewContactDialog] Photo upload error: {ex.Message}");
+            }
+            finally
+            {
+                SaveButton.IsEnabled = true;
+                SaveButton.Content = "Save";
+            }
         }
 
         // Create the contact object
@@ -136,33 +217,65 @@ public partial class NewContactDialog : Window
             FirstName = FirstNameTextBox.Text.Trim(),
             LastName = LastNameTextBox.Text.Trim(),
             DisplayName = BuildDisplayName(),
+            // Additional name fields
+            Title = TitleTextBox.Text.Trim(),
+            MiddleName = MiddleNameTextBox.Text.Trim(),
+            Suffix = SuffixTextBox.Text.Trim(),
+            Nickname = NicknameTextBox.Text.Trim(),
+            // Email fields
             Email = WorkEmailTextBox.Text.Trim(),
+            PersonalEmail = PersonalEmailTextBox.Text.Trim(),
+            OtherEmail = OtherEmailTextBox.Text.Trim(),
+            // Phone fields
             Phone = WorkPhoneTextBox.Text.Trim(),
             MobilePhone = MobilePhoneTextBox.Text.Trim(),
+            HomePhone = HomePhoneTextBox.Text.Trim(),
+            // Work fields
             Company = CompanyTextBox.Text.Trim(),
             JobTitle = JobTitleTextBox.Text.Trim(),
             Department = DepartmentTextBox.Text.Trim(),
+            Office = OfficeTextBox.Text.Trim(),
+            // Address fields
             Address = StreetTextBox.Text.Trim(),
             City = CityTextBox.Text.Trim(),
             State = StateTextBox.Text.Trim(),
             PostalCode = ZipTextBox.Text.Trim(),
             Country = CountryTextBox.Text.Trim(),
+            // Other fields
             Notes = NotesTextBox.Text.Trim(),
             Birthday = BirthdayDatePicker.SelectedDate,
             Anniversary = AnniversaryDatePicker.SelectedDate,
             Spouse = SpouseTextBox.Text.Trim(),
             Website = WebsiteTextBox.Text.Trim(),
-            AvatarPath = _selectedImagePath,
-            // Preserve IsFavorite, IsDeleted, and timestamps when editing
+            AvatarPath = avatarUrl,
+            // Preserve IsFavorite, IsDeleted, Category, and timestamps when editing
             IsFavorite = _isEditMode ? _isFavorite : false,
             IsDeleted = _isEditMode ? _isDeleted : false,
             DeletedAt = _isEditMode ? _deletedAt : null,
+            Category = _isEditMode ? _category : string.Empty,
             CreatedAt = _isEditMode ? _createdAt : DateTime.UtcNow,
             ModifiedAt = DateTime.UtcNow
         };
 
         DialogResult = true;
         Close();
+    }
+
+    /// <summary>
+    /// Checks if the path is a local file path (not a URL)
+    /// </summary>
+    private static bool IsLocalFilePath(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return false;
+
+        // If it starts with http:// or https://, it's a URL
+        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        // Check if the file exists locally
+        return File.Exists(path);
     }
 
     private string BuildDisplayName()
@@ -236,12 +349,53 @@ public partial class NewContactDialog : Window
                 ContactPictureImage.Visibility = Visibility.Visible;
                 ContactPictureIcon.Visibility = Visibility.Collapsed;
                 _selectedImagePath = openFileDialog.FileName;
+
+                // Show remove link, hide upload text
+                RemovePhotoLink.Visibility = Visibility.Visible;
+                AddPhotoText.Text = "Change photo";
+                ClickToUploadText.Visibility = Visibility.Collapsed;
             }
             catch (Exception ex)
             {
                 ThemedMessageBox.Show(this, $"Failed to load image: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+    }
+
+    private async void RemovePhoto_Click(object sender, MouseButtonEventArgs e)
+    {
+        // If the current image is a server URL, delete it from the server
+        if (!string.IsNullOrEmpty(_selectedImagePath) && !IsLocalFilePath(_selectedImagePath))
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"[NewContactDialog] Deleting photo from server: {_selectedImagePath}");
+                var deleted = await ImageService.Instance.DeleteContactPhotoAsync(_selectedImagePath);
+                if (deleted)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[NewContactDialog] Photo deleted from server successfully");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[NewContactDialog] Failed to delete photo from server (may not exist)");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[NewContactDialog] Error deleting photo from server: {ex.Message}");
+            }
+        }
+
+        // Clear the image
+        ContactPictureImage.Source = null;
+        ContactPictureImage.Visibility = Visibility.Collapsed;
+        ContactPictureIcon.Visibility = Visibility.Visible;
+        _selectedImagePath = null;
+
+        // Reset UI text
+        RemovePhotoLink.Visibility = Visibility.Collapsed;
+        AddPhotoText.Text = "Add a photo";
+        ClickToUploadText.Visibility = Visibility.Visible;
     }
 
     private void AddName_Click(object sender, RoutedEventArgs e)

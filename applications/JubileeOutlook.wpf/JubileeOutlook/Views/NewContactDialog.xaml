@@ -389,8 +389,21 @@
                                     </Grid>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center" Margin="16,0,0,0">
-                                    <TextBlock Text="Add a photo" Foreground="#CCCCCC" FontSize="14"/>
-                                    <TextBlock Text="Click to upload" Foreground="#808080" FontSize="12" Margin="0,4,0,0"/>
+                                    <TextBlock x:Name="AddPhotoText" Text="Add a photo" Foreground="#CCCCCC" FontSize="14"/>
+                                    <TextBlock x:Name="ClickToUploadText" Text="Click to upload" Foreground="#808080" FontSize="12" Margin="0,4,0,0"/>
+                                    <TextBlock x:Name="RemovePhotoLink" Text="Remove photo" Foreground="#E57373" FontSize="12"
+                                               Margin="0,4,0,0" Cursor="Hand" Visibility="Collapsed"
+                                               MouseLeftButtonUp="RemovePhoto_Click">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="TextDecorations" Value="Underline"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
                                 </StackPanel>
                             </StackPanel>
 

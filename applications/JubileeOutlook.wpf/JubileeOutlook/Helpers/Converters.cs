@@ -87,6 +87,26 @@ public class CountToVisibilityConverter : IValueConverter
     }
 }
 
+/// <summary>
+/// Converts a count of 0 to Visible, any other count to Collapsed (inverse of CountToVisibilityConverter)
+/// </summary>
+public class ZeroToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is int count)
+        {
+            return count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+        return Visibility.Visible;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public class ReadToWeightConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -178,6 +198,26 @@ public class StringToVisibilityConverter : IValueConverter
             return Visibility.Visible;
         }
         return Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Inverse of StringToVisibilityConverter - shows Visible when string is null/empty
+/// </summary>
+public class InverseStringToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is string str && !string.IsNullOrWhiteSpace(str))
+        {
+            return Visibility.Collapsed;
+        }
+        return Visibility.Visible;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -651,6 +691,48 @@ public class SubtractConverter : IValueConverter
             }
         }
         return value;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Converts a non-empty string to true, empty/null to false
+/// Used for DataTrigger bindings to check if a string has value
+/// </summary>
+public class StringToBoolConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is string str)
+        {
+            return !string.IsNullOrWhiteSpace(str);
+        }
+        return false;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// Returns a prefix string (from parameter) if the input string has value, empty string otherwise.
+/// Used for conditional text prefixes like "at Company" where "at " only shows if Company has value.
+/// </summary>
+public class StringToPrefixConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is string str && !string.IsNullOrWhiteSpace(str))
+        {
+            return parameter?.ToString() ?? string.Empty;
+        }
+        return string.Empty;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

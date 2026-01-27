@@ -17,6 +17,50 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const { Pool } = require('pg');
 const http = require('http');
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
+
+// =============================================================================
+// FILE UPLOAD CONFIGURATION (Contact Photos)
+// =============================================================================
+
+const UPLOADS_DIR = path.join(__dirname, 'uploads', 'contact-photos');
+
+// Ensure uploads directory exists
+if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+// Configure multer storage
+const contactPhotoStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, UPLOADS_DIR);
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        const filename = `${uuidv4()}${ext}`;
+        cb(null, filename);
+    }
+});
+
+// File filter for images only
+const imageFileFilter = (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Only image files (JPEG, PNG, GIF, WebP) are allowed'), false);
+    }
+};
+
+// Multer upload middleware for contact photos (max 5MB)
+const uploadContactPhoto = multer({
+    storage: contactPhotoStorage,
+    fileFilter: imageFileFilter,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB max
+    }
+});
 
 // Qdrant RAG Service for semantic search
 const qdrantService = require('./services/qdrant-service');
@@ -119,6 +163,9 @@ app.use(cors({
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded contact photos as static files
+app.use('/uploads/contact-photos', express.static(UPLOADS_DIR));
 
 // Logging
 if (NODE_ENV !== 'test') {
@@ -5167,12 +5214,17 @@ app.get('/api/v1/contacts', async (req, res) => {
                 displayName: row.display_name,
                 firstName: row.first_name,
                 lastName: row.last_name,
+                title: row.title,
+                middleName: row.middle_name,
+                suffix: row.suffix,
+                nickname: row.nickname,
                 emailAddresses: row.email_addresses || [],
                 phoneNumbers: row.phone_numbers || [],
                 mobilePhone: row.mobile_phone,
                 company: row.company,
                 jobTitle: row.job_title,
                 department: row.department,
+                office: row.office,
                 address: row.address,
                 city: row.city,
                 state: row.state,
@@ -5224,12 +5276,17 @@ app.get('/api/v1/contacts/:id', async (req, res) => {
                 displayName: row.display_name,
                 firstName: row.first_name,
                 lastName: row.last_name,
+                title: row.title,
+                middleName: row.middle_name,
+                suffix: row.suffix,
+                nickname: row.nickname,
                 emailAddresses: row.email_addresses || [],
                 phoneNumbers: row.phone_numbers || [],
                 mobilePhone: row.mobile_phone,
                 company: row.company,
                 jobTitle: row.job_title,
                 department: row.department,
+                office: row.office,
                 address: row.address,
                 city: row.city,
                 state: row.state,
@@ -5263,12 +5320,17 @@ app.post('/api/v1/contacts', async (req, res) => {
             displayName,
             firstName,
             lastName,
+            title,
+            middleName,
+            suffix,
+            nickname,
             emailAddresses,
             phoneNumbers,
             mobilePhone,
             company,
             jobTitle,
             department,
+            office,
             address,
             city,
             state,
@@ -5294,23 +5356,28 @@ app.post('/api/v1/contacts', async (req, res) => {
 
         const result = await codexPool.query(`
             INSERT INTO user_contacts (
-                user_id, display_name, first_name, last_name, email_addresses, phone_numbers,
-                mobile_phone, company, job_title, department, address, city, state,
-                postal_code, country, notes, photo_url, birthday, anniversary, spouse,
-                website, is_favorite, is_deleted, deleted_at, category, created_at, updated_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, NOW(), NOW())
+                user_id, display_name, first_name, last_name, title, middle_name, suffix, nickname,
+                email_addresses, phone_numbers, mobile_phone, company, job_title, department, office,
+                address, city, state, postal_code, country, notes, photo_url, birthday, anniversary,
+                spouse, website, is_favorite, is_deleted, deleted_at, category, created_at, updated_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, NOW(), NOW())
             RETURNING *
         `, [
             userId || '00000000-0000-0000-0000-000000000001',
             finalDisplayName,
             firstName || null,
             lastName || null,
+            title || null,
+            middleName || null,
+            suffix || null,
+            nickname || null,
             JSON.stringify(emailAddresses || []),
             JSON.stringify(phoneNumbers || []),
             mobilePhone || null,
             company || null,
             jobTitle || null,
             department || null,
+            office || null,
             address || null,
             city || null,
             state || null,
@@ -5337,12 +5404,17 @@ app.post('/api/v1/contacts', async (req, res) => {
                 displayName: row.display_name,
                 firstName: row.first_name,
                 lastName: row.last_name,
+                title: row.title,
+                middleName: row.middle_name,
+                suffix: row.suffix,
+                nickname: row.nickname,
                 emailAddresses: typeof row.email_addresses === 'string' ? JSON.parse(row.email_addresses) : (row.email_addresses || []),
                 phoneNumbers: typeof row.phone_numbers === 'string' ? JSON.parse(row.phone_numbers) : (row.phone_numbers || []),
                 mobilePhone: row.mobile_phone,
                 company: row.company,
                 jobTitle: row.job_title,
                 department: row.department,
+                office: row.office,
                 address: row.address,
                 city: row.city,
                 state: row.state,
@@ -5376,12 +5448,17 @@ app.put('/api/v1/contacts/:id', async (req, res) => {
             displayName,
             firstName,
             lastName,
+            title,
+            middleName,
+            suffix,
+            nickname,
             emailAddresses,
             phoneNumbers,
             mobilePhone,
             company,
             jobTitle,
             department,
+            office,
             address,
             city,
             state,
@@ -5406,40 +5483,50 @@ app.put('/api/v1/contacts/:id', async (req, res) => {
                 display_name = COALESCE($1, display_name),
                 first_name = $2,
                 last_name = $3,
-                email_addresses = $4,
-                phone_numbers = $5,
-                mobile_phone = $6,
-                company = $7,
-                job_title = $8,
-                department = $9,
-                address = $10,
-                city = $11,
-                state = $12,
-                postal_code = $13,
-                country = $14,
-                notes = $15,
-                photo_url = $16,
-                birthday = $17,
-                anniversary = $18,
-                spouse = $19,
-                website = $20,
-                is_favorite = COALESCE($21, is_favorite),
-                is_deleted = COALESCE($22, is_deleted),
-                deleted_at = $23,
-                category = $24,
+                title = $4,
+                middle_name = $5,
+                suffix = $6,
+                nickname = $7,
+                email_addresses = $8,
+                phone_numbers = $9,
+                mobile_phone = $10,
+                company = $11,
+                job_title = $12,
+                department = $13,
+                office = $14,
+                address = $15,
+                city = $16,
+                state = $17,
+                postal_code = $18,
+                country = $19,
+                notes = $20,
+                photo_url = $21,
+                birthday = $22,
+                anniversary = $23,
+                spouse = $24,
+                website = $25,
+                is_favorite = COALESCE($26, is_favorite),
+                is_deleted = COALESCE($27, is_deleted),
+                deleted_at = $28,
+                category = $29,
                 updated_at = NOW()
-            WHERE id = $25
+            WHERE id = $30
             RETURNING *
         `, [
             finalDisplayName,
             firstName || null,
             lastName || null,
+            title || null,
+            middleName || null,
+            suffix || null,
+            nickname || null,
             JSON.stringify(emailAddresses || []),
             JSON.stringify(phoneNumbers || []),
             mobilePhone || null,
             company || null,
             jobTitle || null,
             department || null,
+            office || null,
             address || null,
             city || null,
             state || null,
@@ -5471,12 +5558,17 @@ app.put('/api/v1/contacts/:id', async (req, res) => {
                 displayName: row.display_name,
                 firstName: row.first_name,
                 lastName: row.last_name,
+                title: row.title,
+                middleName: row.middle_name,
+                suffix: row.suffix,
+                nickname: row.nickname,
                 emailAddresses: typeof row.email_addresses === 'string' ? JSON.parse(row.email_addresses) : (row.email_addresses || []),
                 phoneNumbers: typeof row.phone_numbers === 'string' ? JSON.parse(row.phone_numbers) : (row.phone_numbers || []),
                 mobilePhone: row.mobile_phone,
                 company: row.company,
                 jobTitle: row.job_title,
                 department: row.department,
+                office: row.office,
                 address: row.address,
                 city: row.city,
                 state: row.state,
@@ -5523,6 +5615,54 @@ app.delete('/api/v1/contacts/:id', async (req, res) => {
     }
 });
 
+// Upload contact photo
+app.post('/api/v1/contacts/upload-photo', uploadContactPhoto.single('photo'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, error: 'No photo file provided' });
+        }
+
+        // Build the URL for the uploaded photo
+        const protocol = req.protocol;
+        const host = req.get('host');
+        const photoUrl = `${protocol}://${host}/uploads/contact-photos/${req.file.filename}`;
+
+        console.log(`[ContactPhoto] Uploaded: ${req.file.filename} (${req.file.size} bytes)`);
+
+        res.json({
+            success: true,
+            photoUrl: photoUrl,
+            filename: req.file.filename,
+            size: req.file.size
+        });
+    } catch (err) {
+        console.error('Upload contact photo error:', err);
+        res.status(500).json({ success: false, error: 'Failed to upload photo' });
+    }
+});
+
+// Delete contact photo
+app.delete('/api/v1/contacts/photo/:filename', async (req, res) => {
+    try {
+        const { filename } = req.params;
+
+        // Sanitize filename to prevent directory traversal
+        const safeFilename = path.basename(filename);
+        const filePath = path.join(UPLOADS_DIR, safeFilename);
+
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`[ContactPhoto] Deleted: ${safeFilename}`);
+            res.json({ success: true, message: 'Photo deleted' });
+        } else {
+            res.status(404).json({ success: false, error: 'Photo not found' });
+        }
+    } catch (err) {
+        console.error('Delete contact photo error:', err);
+        res.status(500).json({ success: false, error: 'Failed to delete photo' });
+    }
+});
+
 // Search contacts
 app.get('/api/v1/contacts/search', async (req, res) => {
     try {
@@ -5556,12 +5696,17 @@ app.get('/api/v1/contacts/search', async (req, res) => {
                 displayName: row.display_name,
                 firstName: row.first_name,
                 lastName: row.last_name,
+                title: row.title,
+                middleName: row.middle_name,
+                suffix: row.suffix,
+                nickname: row.nickname,
                 emailAddresses: row.email_addresses || [],
                 phoneNumbers: row.phone_numbers || [],
                 mobilePhone: row.mobile_phone,
                 company: row.company,
                 jobTitle: row.job_title,
                 department: row.department,
+                office: row.office,
                 address: row.address,
                 city: row.city,
                 state: row.state,

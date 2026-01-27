@@ -429,6 +429,7 @@
                                          Background="Transparent"
                                          Foreground="#FFFFFF"
                                          CaretBrush="#FFFFFF"
+                                         BorderThickness="0"
                                          FontFamily="{StaticResource RobotoRegular}"
                                          FontSize="14"
                                          Visibility="Hidden"

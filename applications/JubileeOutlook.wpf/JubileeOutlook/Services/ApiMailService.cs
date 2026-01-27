@@ -1417,6 +1417,7 @@ public class ApiMailService : IMailService
     private static MailFolder MapToMailFolder(MailFolderDto dto)
     {
         var folderType = ParseFolderType(dto.Type);
+
         var folder = new MailFolder
         {
             Id = dto.Id ?? Guid.NewGuid().ToString(),
@@ -1434,7 +1435,7 @@ public class ApiMailService : IMailService
         // Map subfolders recursively
         if (dto.SubFolders != null && dto.SubFolders.Count > 0)
         {
-            folder.SubFolders = dto.SubFolders.Select(MapToMailFolder).ToList();
+            folder.SubFolders = new System.Collections.ObjectModel.ObservableCollection<MailFolder>(dto.SubFolders.Select(MapToMailFolder));
         }
 
         return folder;

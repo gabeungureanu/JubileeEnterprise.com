@@ -572,6 +572,7 @@ public class ApiContactService : IContactService
             company = contact.Company,
             jobTitle = contact.JobTitle,
             department = contact.Department,
+            office = contact.Office,
             address = contact.Address,
             city = contact.City,
             state = contact.State,
@@ -654,6 +655,7 @@ public class ApiContactService : IContactService
                     company = contact.Company,
                     jobTitle = contact.JobTitle,
                     department = contact.Department,
+                    office = contact.Office,
                     address = contact.Address,
                     city = contact.City,
                     state = contact.State,
@@ -1001,12 +1003,17 @@ public class ApiContactService : IContactService
             DisplayName = dto.DisplayName ?? string.Empty,
             FirstName = dto.FirstName,
             LastName = dto.LastName,
+            Title = dto.Title,
+            MiddleName = dto.MiddleName,
+            Suffix = dto.Suffix,
+            Nickname = dto.Nickname,
             EmailAddresses = dto.EmailAddresses ?? new List<string>(),
             PhoneNumbers = dto.PhoneNumbers ?? new List<string>(),
             MobilePhone = dto.MobilePhone,
             Company = dto.Company,
             JobTitle = dto.JobTitle,
             Department = dto.Department,
+            Office = dto.Office,
             Address = dto.Address,
             City = dto.City,
             State = dto.State,
@@ -1036,12 +1043,17 @@ public class ApiContactService : IContactService
             DisplayName = contact.DisplayName,
             FirstName = contact.FirstName,
             LastName = contact.LastName,
+            Title = contact.Title,
+            MiddleName = contact.MiddleName,
+            Suffix = contact.Suffix,
+            Nickname = contact.Nickname,
             EmailAddresses = contact.EmailAddresses,
             PhoneNumbers = contact.PhoneNumbers,
             MobilePhone = contact.MobilePhone,
             Company = contact.Company,
             JobTitle = contact.JobTitle,
             Department = contact.Department,
+            Office = contact.Office,
             Address = contact.Address,
             City = contact.City,
             State = contact.State,
@@ -1169,6 +1181,18 @@ public class ContactDto
     [JsonPropertyName("lastName")]
     public string? LastName { get; set; }
 
+    [JsonPropertyName("title")]
+    public string? Title { get; set; }
+
+    [JsonPropertyName("middleName")]
+    public string? MiddleName { get; set; }
+
+    [JsonPropertyName("suffix")]
+    public string? Suffix { get; set; }
+
+    [JsonPropertyName("nickname")]
+    public string? Nickname { get; set; }
+
     [JsonPropertyName("emailAddresses")]
     public List<string>? EmailAddresses { get; set; }
 
@@ -1186,6 +1210,9 @@ public class ContactDto
 
     [JsonPropertyName("department")]
     public string? Department { get; set; }
+
+    [JsonPropertyName("office")]
+    public string? Office { get; set; }
 
     [JsonPropertyName("address")]
     public string? Address { get; set; }

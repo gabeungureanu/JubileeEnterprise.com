@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -53,7 +54,7 @@ public class MailFolder : INotifyPropertyChanged
         }
     }
     public string Icon { get; set; } = string.Empty;
-    public List<MailFolder> SubFolders { get; set; } = new();
+    public ObservableCollection<MailFolder> SubFolders { get; set; } = new();
     public string? ParentFolderId { get; set; }
 
     /// <summary>

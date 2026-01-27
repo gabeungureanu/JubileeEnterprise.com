@@ -18,12 +18,14 @@
             <helpers:NullToBoolConverter x:Key="NullToBoolConverter"/>
             <helpers:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
             <helpers:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+            <helpers:ZeroToVisibilityConverter x:Key="ZeroToVisibilityConverter"/>
             <helpers:ReadToWeightConverter x:Key="ReadToWeightConverter"/>
             <helpers:ListToStringConverter x:Key="ListToStringConverter"/>
             <helpers:FileSizeConverter x:Key="FileSizeConverter"/>
             <helpers:AppModuleToBoolConverter x:Key="AppModuleToBoolConverter"/>
             <helpers:EnumToVisibilityConverter x:Key="EnumToVisibilityConverter"/>
             <helpers:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+            <helpers:InverseStringToVisibilityConverter x:Key="InverseStringToVisibilityConverter"/>
             <helpers:EventTopPositionConverter x:Key="EventTopPositionConverter"/>
             <helpers:EventHeightConverter x:Key="EventHeightConverter"/>
             <helpers:EventsForDayColumnConverter x:Key="EventsForDayColumnConverter"/>
@@ -42,6 +44,8 @@
             <helpers:EventColorConverter x:Key="EventColorConverter"/>
             <helpers:EnumToBoolConverter x:Key="EnumToBoolConverter"/>
             <helpers:SubtractConverter x:Key="SubtractConverter"/>
+            <helpers:StringToBoolConverter x:Key="StringToBoolConverter"/>
+            <helpers:StringToPrefixConverter x:Key="StringToPrefixConverter"/>
 
         </ResourceDictionary>
     </Application.Resources>

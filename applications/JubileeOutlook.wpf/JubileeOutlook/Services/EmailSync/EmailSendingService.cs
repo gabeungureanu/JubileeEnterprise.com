@@ -146,7 +146,13 @@ public class EmailSendingService
 
         if (isHtml)
         {
-            builder.HtmlBody = body;
+            // Convert data URIs back to CID references for SMTP compatibility
+            var htmlBody = body;
+            if (embeddedImages != null && embeddedImages.Count > 0)
+            {
+                htmlBody = ConvertDataUrisToCidReferences(htmlBody, embeddedImages);
+            }
+            builder.HtmlBody = htmlBody;
         }
         else
         {
@@ -899,6 +905,38 @@ public class EmailSendingService
             Debug.WriteLine($"[EmailSendingService] Token refresh failed: {ex.Message}");
             return false;
         }
+    }
+
+    /// <summary>
+    /// Converts data URI images back to CID references for SMTP sending
+    /// Images stored with data-cid attribute will be converted to cid: references
+    /// </summary>
+    private string ConvertDataUrisToCidReferences(string htmlBody, List<EmbeddedImageInfo> embeddedImages)
+    {
+        if (string.IsNullOrEmpty(htmlBody) || embeddedImages == null || embeddedImages.Count == 0)
+            return htmlBody;
+
+        var result = htmlBody;
+
+        foreach (var image in embeddedImages)
+        {
+            if (string.IsNullOrEmpty(image.ContentId))
+                continue;
+
+            // Find img tags with data-cid attribute matching this image's content ID
+            // Pattern: <img src="data:..." data-cid="contentId" ...>
+            var pattern = $@"<img\s+([^>]*?)src=""data:[^""]+""([^>]*?)data-cid=""{image.ContentId}""([^>]*?)>";
+            var replacement = $@"<img $1src=""cid:{image.ContentId}""$2$3>";
+            result = System.Text.RegularExpressions.Regex.Replace(result, pattern, replacement, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // Also handle the reverse order (data-cid before src)
+            pattern = $@"<img\s+([^>]*?)data-cid=""{image.ContentId}""([^>]*?)src=""data:[^""]+""([^>]*?)>";
+            replacement = $@"<img $1$2src=""cid:{image.ContentId}""$3>";
+            result = System.Text.RegularExpressions.Regex.Replace(result, pattern, replacement, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        }
+
+        Debug.WriteLine($"[EmailSendingService] Converted data URIs to CID references in HTML body");
+        return result;
     }
 }
 
