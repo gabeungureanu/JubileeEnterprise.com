@@ -223,6 +223,10 @@ public partial class MainViewModel : ObservableObject
     {
         var folderName = !string.IsNullOrEmpty(WwbwEmailAddress) ? WwbwEmailAddress : "My Account";
         System.Diagnostics.Debug.WriteLine($"[MainViewModel] BuildFolderStructure - {baseFolders.Count} subfolders");
+        foreach (var folder in baseFolders)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel]   - Folder: {folder.Name} (Type: {folder.Type}, Id: {folder.Id})");
+        }
 
         // Create the account root folder with WWBW email
         var rootFolder = new MailFolder
@@ -925,6 +929,37 @@ public partial class MainViewModel : ObservableObject
     public async Task RefreshFolders()
     {
         await RebuildFolderStructureAsync();
+    }
+
+    /// <summary>
+    /// Performs a complete Send/Receive All operation:
+    /// 1. Syncs external email accounts (Gmail, Outlook.com, Yahoo)
+    /// 2. Refreshes folders from InspireContinuum API
+    /// 3. Reloads messages for the current folder
+    /// </summary>
+    public async Task SendReceiveAllAsync()
+    {
+        System.Diagnostics.Debug.WriteLine("[MainViewModel] SendReceiveAllAsync starting...");
+
+        // Step 1: Sync external email accounts if any are configured
+        if (HasSyncedAccounts)
+        {
+            System.Diagnostics.Debug.WriteLine("[MainViewModel] Syncing external email accounts...");
+            await TriggerEmailSyncAsync();
+        }
+
+        // Step 2: Refresh folders from API
+        System.Diagnostics.Debug.WriteLine("[MainViewModel] Refreshing folders from API...");
+        await RebuildFolderStructureAsync();
+
+        // Step 3: Reload messages for current folder
+        if (SelectedFolder != null)
+        {
+            System.Diagnostics.Debug.WriteLine($"[MainViewModel] Reloading messages for folder: {SelectedFolder.Name}");
+            await LoadMessagesAsync(SelectedFolder.Id);
+        }
+
+        System.Diagnostics.Debug.WriteLine("[MainViewModel] SendReceiveAllAsync completed");
     }
 
     // Home Tab - Move & Organize

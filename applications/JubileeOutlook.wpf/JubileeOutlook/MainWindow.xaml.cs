@@ -1139,7 +1139,6 @@ public partial class MainWindow : Window
     {
         // Hide all tab content panels
         if (HomeTabContent != null) HomeTabContent.Visibility = Visibility.Collapsed;
-        if (SendReceiveTabContent != null) SendReceiveTabContent.Visibility = Visibility.Collapsed;
         if (FolderTabContent != null) FolderTabContent.Visibility = Visibility.Collapsed;
         if (ViewTabContent != null) ViewTabContent.Visibility = Visibility.Collapsed;
 
@@ -1148,9 +1147,6 @@ public partial class MainWindow : Window
         {
             case "HomeTab":
                 if (HomeTabContent != null) HomeTabContent.Visibility = Visibility.Visible;
-                break;
-            case "SendReceiveTab":
-                if (SendReceiveTabContent != null) SendReceiveTabContent.Visibility = Visibility.Visible;
                 break;
             case "FolderTab":
                 if (FolderTabContent != null) FolderTabContent.Visibility = Visibility.Visible;
@@ -2520,82 +2516,8 @@ public partial class MainWindow : Window
         }
     }
 
-    // Send/Receive Tab Button Handlers
-    private bool _isSendReceiving = false;
-    private System.Windows.Media.Animation.Storyboard? _sendReceiveSpinnerStoryboard;
+    // Folder Tab Button Handlers
     private System.Windows.Media.Animation.Storyboard? _updateFolderSpinnerStoryboard;
-
-    private async void SendReceiveAllButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_isSendReceiving || _isSyncing)
-        {
-            System.Diagnostics.Debug.WriteLine("[MainWindow] Send/Receive already in progress, ignoring click");
-            return;
-        }
-
-        _isSendReceiving = true;
-        System.Diagnostics.Debug.WriteLine("[MainWindow] Starting Send/Receive All");
-
-        try
-        {
-            // Show spinner, hide normal icon
-            SendReceiveIcon.Visibility = Visibility.Collapsed;
-            SendReceiveSpinner.Visibility = Visibility.Visible;
-            SendReceiveAllButton.IsEnabled = false;
-            StartSendReceiveSpinnerAnimation();
-
-            // Store current folder ID before refresh
-            var currentFolderId = _mainViewModel.SelectedFolder?.Id;
-            var currentFolderType = _mainViewModel.SelectedFolder?.Type;
-
-            // Refresh folders (rebuilds the folder structure)
-            await _mainViewModel.RefreshFolders();
-
-            // Re-select the folder after refresh
-            if (currentFolderId != null && _mainViewModel.AccountRootFolder?.SubFolders != null)
-            {
-                // Try to find the same folder by ID
-                var restoredFolder = _mainViewModel.AccountRootFolder.SubFolders
-                    .FirstOrDefault(f => f.Id == currentFolderId);
-
-                // If not found by ID, try by type (e.g., Inbox)
-                if (restoredFolder == null && currentFolderType.HasValue)
-                {
-                    restoredFolder = _mainViewModel.AccountRootFolder.SubFolders
-                        .FirstOrDefault(f => f.Type == currentFolderType);
-                }
-
-                // Default to Inbox if nothing found
-                if (restoredFolder == null)
-                {
-                    restoredFolder = _mainViewModel.AccountRootFolder.SubFolders
-                        .FirstOrDefault(f => f.Type == Models.FolderType.Inbox);
-                }
-
-                if (restoredFolder != null)
-                {
-                    _mainViewModel.SelectedFolder = restoredFolder;
-                    await _mainViewModel.LoadMessagesAsync(restoredFolder.Id);
-                    System.Diagnostics.Debug.WriteLine($"[MainWindow] Restored folder selection: {restoredFolder.Name}");
-                }
-            }
-
-            System.Diagnostics.Debug.WriteLine("[MainWindow] Send/Receive All completed successfully");
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"[MainWindow] Send/Receive All error: {ex.Message}");
-            MessageDialog.ShowError(this, $"Failed to send/receive: {ex.Message}", "Sync Error");
-        }
-        finally
-        {
-            _isSendReceiving = false;
-            StopSendReceiveSpinnerAnimation();
-            SendReceiveSpinner.Visibility = Visibility.Collapsed;
-            SendReceiveIcon.Visibility = Visibility.Visible;
-            SendReceiveAllButton.IsEnabled = true;
-        }
-    }
 
     private async void UpdateFolderButton_Click(object sender, RoutedEventArgs e)
     {
@@ -2631,34 +2553,6 @@ public partial class MainWindow : Window
             UpdateFolderSpinner.Visibility = Visibility.Collapsed;
             UpdateFolderIcon.Visibility = Visibility.Visible;
             UpdateFolderButton.IsEnabled = true;
-        }
-    }
-
-    private void StartSendReceiveSpinnerAnimation()
-    {
-        if (_sendReceiveSpinnerStoryboard != null) return;
-
-        var animation = new System.Windows.Media.Animation.DoubleAnimation
-        {
-            From = 0,
-            To = 360,
-            Duration = TimeSpan.FromSeconds(1),
-            RepeatBehavior = System.Windows.Media.Animation.RepeatBehavior.Forever
-        };
-
-        _sendReceiveSpinnerStoryboard = new System.Windows.Media.Animation.Storyboard();
-        _sendReceiveSpinnerStoryboard.Children.Add(animation);
-        System.Windows.Media.Animation.Storyboard.SetTarget(animation, SendReceiveSpinner);
-        System.Windows.Media.Animation.Storyboard.SetTargetProperty(animation, new PropertyPath("(UIElement.RenderTransform).(RotateTransform.Angle)"));
-        _sendReceiveSpinnerStoryboard.Begin();
-    }
-
-    private void StopSendReceiveSpinnerAnimation()
-    {
-        if (_sendReceiveSpinnerStoryboard != null)
-        {
-            _sendReceiveSpinnerStoryboard.Stop();
-            _sendReceiveSpinnerStoryboard = null;
         }
     }
 

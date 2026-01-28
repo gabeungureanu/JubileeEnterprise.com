@@ -71,18 +71,13 @@
                     <TextBlock Style="{StaticResource RibbonTabSeparatorStyle}"/>
                     <RadioButton x:Name="HomeTab" Content="Home" GroupName="RibbonTabs" Style="{StaticResource RibbonTabButtonStyle}" IsChecked="True" Click="TabButton_Click"/>
                     <TextBlock Style="{StaticResource RibbonTabSeparatorStyle}"/>
-                    <RadioButton x:Name="SendReceiveTab" Content="Send/Receive" GroupName="RibbonTabs" Style="{StaticResource RibbonTabButtonStyle}" Click="TabButton_Click"/>
-                    <TextBlock Style="{StaticResource RibbonTabSeparatorStyle}"/>
                     <RadioButton x:Name="FolderTab" Content="Folder" GroupName="RibbonTabs" Style="{StaticResource RibbonTabButtonStyle}" Click="TabButton_Click"/>
                     <TextBlock Style="{StaticResource RibbonTabSeparatorStyle}"/>
                     <RadioButton x:Name="ViewTab" Content="View" GroupName="RibbonTabs" Style="{StaticResource RibbonTabButtonStyle}" Click="TabButton_Click"/>
                 </StackPanel>
 
-                <!-- Tab Headers - People module specific -->
+                <!-- Tab Headers - People module specific (empty - no tabs needed) -->
                 <StackPanel x:Name="PeopleTabsPanel" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0,0,0" Visibility="Collapsed" WindowChrome.IsHitTestVisibleInChrome="True">
-                    <TextBlock Text="Home" FontSize="13" Foreground="{StaticResource GoldBrandBrush}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,24,0" Cursor="Hand"/>
-                    <TextBlock Text="View" FontSize="13" Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,24,0" Cursor="Hand"/>
-                    <TextBlock Text="Help" FontSize="13" Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Cursor="Hand"/>
                 </StackPanel>
 
                 <!-- Profile Button and Window Control Buttons -->
@@ -361,53 +356,6 @@
                         </Button>
                     </StackPanel>
 
-                    <!-- SEND/RECEIVE TAB CONTENT - Compact with Large Icons -->
-                    <StackPanel x:Name="SendReceiveTabContent" Orientation="Horizontal" Visibility="Collapsed" VerticalAlignment="Center">
-                        <!-- Send/Receive All -->
-                        <Button x:Name="SendReceiveAllButton" Style="{StaticResource RibbonSmallButtonStyle}" Click="SendReceiveAllButton_Click" ToolTip="Send/Receive All" Margin="4,0">
-                            <Grid>
-                                <!-- Normal Icon -->
-                                <TextBlock x:Name="SendReceiveIcon" Text="{StaticResource IconSync}" FontFamily="{StaticResource MaterialIcons}" FontSize="24" Foreground="#FF9800"/>
-                                <!-- Spinning Loader (hidden by default) -->
-                                <TextBlock x:Name="SendReceiveSpinner" Text="&#xe863;" FontFamily="{StaticResource MaterialIcons}" FontSize="24" Foreground="#FF9800" Visibility="Collapsed" RenderTransformOrigin="0.5,0.5">
-                                    <TextBlock.RenderTransform>
-                                        <RotateTransform x:Name="SendReceiveSpinnerRotation"/>
-                                    </TextBlock.RenderTransform>
-                                </TextBlock>
-                            </Grid>
-                        </Button>
-
-                        <!-- Update Folder -->
-                        <Button x:Name="UpdateFolderButton" Style="{StaticResource RibbonSmallButtonStyle}" Click="UpdateFolderButton_Click" ToolTip="Update Folder" Margin="4,0">
-                            <Grid>
-                                <!-- Normal Icon -->
-                                <TextBlock x:Name="UpdateFolderIcon" Text="{StaticResource IconRefresh}" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
-                                <!-- Spinning Loader (hidden by default) -->
-                                <TextBlock x:Name="UpdateFolderSpinner" Text="&#xe863;" FontFamily="{StaticResource MaterialIcons}" FontSize="24" Visibility="Collapsed" RenderTransformOrigin="0.5,0.5">
-                                    <TextBlock.RenderTransform>
-                                        <RotateTransform x:Name="UpdateFolderSpinnerRotation"/>
-                                    </TextBlock.RenderTransform>
-                                </TextBlock>
-                            </Grid>
-                        </Button>
-
-                        <!-- Separator -->
-                        <Rectangle Width="1" Height="28" Fill="#444444" Margin="8,0"/>
-
-                        <!-- Work Offline -->
-                        <Button x:Name="WorkOfflineButton" Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.WorkOfflineCommand}" ToolTip="Work Offline" Margin="4,0">
-                            <Grid>
-                                <TextBlock x:Name="WorkOfflineIcon" Text="&#xe1da;" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
-                                <!-- Active indicator dot when offline mode is on -->
-                                <Ellipse x:Name="OfflineModeIndicator" Width="8" Height="8"
-                                         Fill="#FF5722"
-                                         HorizontalAlignment="Right" VerticalAlignment="Top"
-                                         Margin="0,-2,-2,0"
-                                         Visibility="{Binding MainViewModel.IsOfflineMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                            </Grid>
-                        </Button>
-                    </StackPanel>
-
                     <!-- FOLDER TAB CONTENT - Compact with Large Icons -->
                     <StackPanel x:Name="FolderTabContent" Orientation="Horizontal" Visibility="Collapsed" VerticalAlignment="Center">
                         <!-- New Folder -->
@@ -427,31 +375,30 @@
                         <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.DeleteFolderCommand}" ToolTip="Delete Folder" Margin="4,0">
                             <TextBlock Text="{StaticResource IconTrash}" FontFamily="{StaticResource MaterialIcons}" FontSize="24" Foreground="#E57373"/>
                         </Button>
-                    </StackPanel>
-
-                    <!-- VIEW TAB CONTENT - Compact with Large Icons -->
-                    <StackPanel x:Name="ViewTabContent" Orientation="Horizontal" Visibility="Collapsed" VerticalAlignment="Center">
-                        <!-- Mail View -->
-                        <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.SwitchToMailViewCommand}" ToolTip="Mail View" Margin="4,0">
-                            <TextBlock Text="{StaticResource IconMail}" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
-                        </Button>
-
-                        <!-- Calendar View -->
-                        <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.SwitchToCalendarViewCommand}" ToolTip="Calendar View" Margin="4,0">
-                            <TextBlock Text="{StaticResource IconCalendar}" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
-                        </Button>
 
                         <!-- Separator -->
                         <Rectangle Width="1" Height="28" Fill="#444444" Margin="8,0"/>
 
+                        <!-- Update Folder -->
+                        <Button x:Name="UpdateFolderButton" Style="{StaticResource RibbonSmallButtonStyle}" Click="UpdateFolderButton_Click" ToolTip="Update Folder" Margin="4,0">
+                            <Grid>
+                                <!-- Normal Icon -->
+                                <TextBlock x:Name="UpdateFolderIcon" Text="{StaticResource IconRefresh}" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
+                                <!-- Spinning Loader (hidden by default) -->
+                                <TextBlock x:Name="UpdateFolderSpinner" Text="&#xe863;" FontFamily="{StaticResource MaterialIcons}" FontSize="24" Visibility="Collapsed" RenderTransformOrigin="0.5,0.5">
+                                    <TextBlock.RenderTransform>
+                                        <RotateTransform x:Name="UpdateFolderSpinnerRotation"/>
+                                    </TextBlock.RenderTransform>
+                                </TextBlock>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- VIEW TAB CONTENT - Compact with Large Icons -->
+                    <StackPanel x:Name="ViewTabContent" Orientation="Horizontal" Visibility="Collapsed" VerticalAlignment="Center">
                         <!-- Toggle Folder Pane -->
                         <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.ToggleFolderPaneCommand}" ToolTip="Toggle Folder Pane" Margin="4,0">
                             <TextBlock Text="{StaticResource IconFolder}" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
-                        </Button>
-
-                        <!-- Toggle Conversations -->
-                        <Button Style="{StaticResource RibbonSmallButtonStyle}" Command="{Binding MainViewModel.ToggleConversationViewCommand}" ToolTip="Conversation View" Margin="4,0">
-                            <TextBlock Text="&#xe0b7;" FontFamily="{StaticResource MaterialIcons}" FontSize="24"/>
                         </Button>
                     </StackPanel>
                 </Grid>

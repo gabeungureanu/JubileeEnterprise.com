@@ -53,14 +53,6 @@
 
                 <RadioButton GroupName="AppModules"
                              Style="{StaticResource AppRailButtonStyle}"
-                             IsChecked="{Binding ActiveModule, Converter={StaticResource AppModuleToBoolConverter}, ConverterParameter=Tasks}"
-                             Command="{Binding SwitchToTasksCommand}"
-                             ToolTip="Tasks">
-                    <TextBlock Text="{StaticResource IconTasks}" FontFamily="{StaticResource MaterialIcons}" FontSize="20" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
-                </RadioButton>
-
-                <RadioButton GroupName="AppModules"
-                             Style="{StaticResource AppRailButtonStyle}"
                              IsChecked="{Binding ActiveModule, Converter={StaticResource AppModuleToBoolConverter}, ConverterParameter=Apps}"
                              Command="{Binding SwitchToAppsCommand}"
                              ToolTip="More Apps">
