@@ -77,7 +77,23 @@ public partial class ApplicationViewModel : ObservableObject
     [RelayCommand]
     private void OpenSettings()
     {
+        // TODO: Open settings dialog when implemented
+        System.Diagnostics.Debug.WriteLine("[ApplicationViewModel] OpenSettings called");
+    }
+
+    [RelayCommand]
+    private void ToggleFolderPane()
+    {
+        System.Diagnostics.Debug.WriteLine("[ApplicationViewModel] ToggleFolderPane command called");
         // Trigger folder pane toggle
-        ToggleFolderPaneRequested?.Invoke(this, EventArgs.Empty);
+        if (ToggleFolderPaneRequested != null)
+        {
+            System.Diagnostics.Debug.WriteLine("[ApplicationViewModel] Invoking ToggleFolderPaneRequested event");
+            ToggleFolderPaneRequested.Invoke(this, EventArgs.Empty);
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine("[ApplicationViewModel] WARNING: ToggleFolderPaneRequested has no subscribers!");
+        }
     }
 }

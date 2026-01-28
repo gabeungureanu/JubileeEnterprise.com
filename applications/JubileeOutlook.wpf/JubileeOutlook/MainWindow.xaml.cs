@@ -170,6 +170,9 @@ public partial class MainWindow : Window
         // Subscribe to folder pane toggle event
         _appViewModel.ToggleFolderPaneRequested += (s, e) => HamburgerMenu_Click(s ?? this, new RoutedEventArgs());
 
+        // Subscribe to AppRail hamburger menu click event (backup for command binding)
+        AppRail.HamburgerMenuClicked += (s, e) => HamburgerMenu_Click(s ?? this, new RoutedEventArgs());
+
         // Set the DataContext to a composite object containing both view models
         DataContext = new WindowDataContext
         {
@@ -1251,9 +1254,11 @@ public partial class MainWindow : Window
 
     private void HamburgerMenu_Click(object sender, RoutedEventArgs e)
     {
+        System.Diagnostics.Debug.WriteLine("[MainWindow] HamburgerMenu_Click called");
         try
         {
             _isFolderPaneCollapsed = !_isFolderPaneCollapsed;
+            System.Diagnostics.Debug.WriteLine($"[MainWindow] Folder pane collapsed: {_isFolderPaneCollapsed}");
 
             // Animate the folder pane column width
             var widthAnimation = new DoubleAnimation

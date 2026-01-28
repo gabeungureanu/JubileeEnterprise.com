@@ -42,7 +42,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- LEFT APP RAIL: Full height from top to bottom -->
-        <controls:AppRailControl Grid.Row="0" Grid.Column="0" DataContext="{Binding AppViewModel}"/>
+        <controls:AppRailControl x:Name="AppRail" Grid.Row="0" Grid.Column="0" DataContext="{Binding AppViewModel}"/>
 
         <!-- Right side: Title bar, Ribbon, Content, Status Bar -->
         <Grid Grid.Row="0" Grid.Column="1">
@@ -239,36 +239,6 @@
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{StaticResource IconMail}" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="{StaticResource GoldBrandBrush}" VerticalAlignment="Center"/>
                                                 <TextBlock Text="New Mail" Foreground="#FFFFFF" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                                            </StackPanel>
-                                        </Button>
-                                        <Button x:Name="NewMeetingMenuItem" Click="NewMeetingMenuItem_Click" Padding="12,8" MinWidth="150" Cursor="Hand">
-                                            <Button.Style>
-                                                <Style TargetType="Button">
-                                                    <Setter Property="Background" Value="Transparent"/>
-                                                    <Setter Property="BorderThickness" Value="0"/>
-                                                    <Setter Property="HorizontalContentAlignment" Value="Left"/>
-                                                    <Setter Property="Template">
-                                                        <Setter.Value>
-                                                            <ControlTemplate TargetType="Button">
-                                                                <Border x:Name="border" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="4">
-                                                                    <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                                                </Border>
-                                                                <ControlTemplate.Triggers>
-                                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                                        <Setter TargetName="border" Property="Background" Value="{StaticResource GoldHighlightHoverBrush}"/>
-                                                                    </Trigger>
-                                                                    <Trigger Property="IsPressed" Value="True">
-                                                                        <Setter TargetName="border" Property="Background" Value="{StaticResource GoldHighlightBrush}"/>
-                                                                    </Trigger>
-                                                                </ControlTemplate.Triggers>
-                                                            </ControlTemplate>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                </Style>
-                                            </Button.Style>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{StaticResource IconMeeting}" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="{StaticResource GoldBrandBrush}" VerticalAlignment="Center"/>
-                                                <TextBlock Text="New Meeting" Foreground="#FFFFFF" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                             </StackPanel>
                                         </Button>
                                     </StackPanel>
