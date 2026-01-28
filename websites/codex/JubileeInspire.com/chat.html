@@ -2828,6 +2828,167 @@
         visibility: visible;
       }
     }
+
+    /* ==================== USER PROFILE DROPDOWN ==================== */
+    .user-profile-container {
+      position: fixed;
+      top: 12px;
+      right: 56px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 1000;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 20px;
+      transition: background-color 0.15s ease;
+    }
+
+    .user-profile-container:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .user-profile-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .user-profile-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffbd59, #ff9500);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #000;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .user-profile-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0;
+      min-width: 280px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      z-index: 1001;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.2s ease;
+      overflow: hidden;
+    }
+
+    .user-profile-dropdown.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .user-profile-dropdown-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .user-profile-dropdown-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffbd59, #ff9500);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #000;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .user-profile-dropdown-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .user-profile-dropdown-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-profile-dropdown-email {
+      font-size: 13px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    .user-profile-dropdown-menu {
+      padding: 8px 0;
+    }
+
+    .user-profile-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .user-profile-dropdown-item:hover {
+      background-color: var(--surface-hover);
+    }
+
+    .user-profile-dropdown-item svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--text-secondary);
+    }
+
+    .user-profile-dropdown-item:hover svg {
+      fill: var(--text);
+    }
+
+    .user-profile-dropdown-item.logout {
+      color: #ef4444;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
+      padding-top: 12px;
+    }
+
+    .user-profile-dropdown-item.logout svg {
+      fill: #ef4444;
+    }
+
+    /* Hide user profile when not logged in */
+    .user-profile-container.hidden {
+      display: none;
+    }
+
+    /* Adjust debug button position when user profile is visible */
+    .debug-button {
+      right: 12px;
+    }
   </style>
   <!-- SheetJS for Excel export -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -2836,6 +2997,27 @@
   <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-spinner"></div>
+  </div>
+
+  <!-- User Profile Dropdown -->
+  <div class="user-profile-container hidden" id="userProfileContainer">
+    <span class="user-profile-name" id="userProfileName"></span>
+    <div class="user-profile-avatar" id="userProfileAvatar"></div>
+    <div class="user-profile-dropdown" id="userProfileDropdown">
+      <div class="user-profile-dropdown-header">
+        <div class="user-profile-dropdown-avatar" id="userProfileDropdownAvatar"></div>
+        <div class="user-profile-dropdown-info">
+          <div class="user-profile-dropdown-name" id="userProfileDropdownName"></div>
+          <div class="user-profile-dropdown-email" id="userProfileDropdownEmail"></div>
+        </div>
+      </div>
+      <div class="user-profile-dropdown-menu">
+        <div class="user-profile-dropdown-item logout" id="userProfileLogout">
+          <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+          <span data-i18n="logout">Log out</span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Debug Button -->
@@ -4033,6 +4215,7 @@
           renameConversation: "Rename Conversation",
           cancel: "Cancel",
           save: "Save",
+          logout: "Log out",
           // Settings modal - tabs
           settingsGeneral: "General",
           settingsNotifications: "Notifications",
@@ -4147,6 +4330,7 @@
           renameConversation: "Renombrar Conversacion",
           cancel: "Cancelar",
           save: "Guardar",
+          logout: "Cerrar sesion",
           // Settings modal - tabs
           settingsGeneral: "General",
           settingsNotifications: "Notificaciones",
@@ -4261,6 +4445,7 @@
           renameConversation: "Renommer la Conversation",
           cancel: "Annuler",
           save: "Enregistrer",
+          logout: "Deconnexion",
           // Settings modal - tabs
           settingsGeneral: "General",
           settingsNotifications: "Notifications",
@@ -4375,6 +4560,7 @@
           renameConversation: "Unterhaltung umbenennen",
           cancel: "Abbrechen",
           save: "Speichern",
+          logout: "Abmelden",
           // Settings modal - tabs
           settingsGeneral: "Allgemein",
           settingsNotifications: "Benachrichtigungen",
@@ -8028,6 +8214,146 @@
 
       // Initialize drawer after page load
       setTimeout(initDrawer, 100);
+
+      // ==================== USER PROFILE DROPDOWN ====================
+      var userProfileContainer = document.getElementById('userProfileContainer');
+      var userProfileName = document.getElementById('userProfileName');
+      var userProfileAvatar = document.getElementById('userProfileAvatar');
+      var userProfileDropdown = document.getElementById('userProfileDropdown');
+      var userProfileDropdownAvatar = document.getElementById('userProfileDropdownAvatar');
+      var userProfileDropdownName = document.getElementById('userProfileDropdownName');
+      var userProfileDropdownEmail = document.getElementById('userProfileDropdownEmail');
+      var userProfileLogout = document.getElementById('userProfileLogout');
+
+      // Get user initials from name
+      function getUserInitials(name) {
+        if (!name) return '?';
+        var parts = name.trim().split(/\s+/);
+        if (parts.length === 1) {
+          return parts[0].substring(0, 2).toUpperCase();
+        }
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      }
+
+      // Get user first name
+      function getUserFirstName(name) {
+        if (!name) return 'User';
+        var parts = name.trim().split(/\s+/);
+        return parts[0];
+      }
+
+      // Update user profile UI
+      function updateUserProfileUI() {
+        if (!userData || !userProfileContainer) return;
+
+        var name = userData.name || userData.displayName || userData.email || 'User';
+        var email = userData.email || '';
+        var initials = getUserInitials(name);
+        var firstName = getUserFirstName(name);
+
+        // Update header profile
+        if (userProfileName) userProfileName.textContent = firstName;
+        if (userProfileAvatar) userProfileAvatar.textContent = initials;
+
+        // Update dropdown
+        if (userProfileDropdownAvatar) userProfileDropdownAvatar.textContent = initials;
+        if (userProfileDropdownName) userProfileDropdownName.textContent = name;
+        if (userProfileDropdownEmail) userProfileDropdownEmail.textContent = email;
+
+        // Show the profile container
+        userProfileContainer.classList.remove('hidden');
+      }
+
+      // Toggle user profile dropdown
+      function toggleUserProfileDropdown(e) {
+        if (e) e.stopPropagation();
+        var isOpen = userProfileDropdown.classList.contains('open');
+        if (isOpen) {
+          closeUserProfileDropdown();
+        } else {
+          openUserProfileDropdown();
+        }
+      }
+
+      function openUserProfileDropdown() {
+        userProfileDropdown.classList.add('open');
+        // Add click outside listener
+        setTimeout(function() {
+          document.addEventListener('click', handleUserProfileClickOutside);
+        }, 10);
+      }
+
+      function closeUserProfileDropdown() {
+        userProfileDropdown.classList.remove('open');
+        document.removeEventListener('click', handleUserProfileClickOutside);
+      }
+
+      function handleUserProfileClickOutside(e) {
+        if (!userProfileContainer.contains(e.target)) {
+          closeUserProfileDropdown();
+        }
+      }
+
+      // Handle logout
+      function handleProfileLogout() {
+        closeUserProfileDropdown();
+        localStorage.removeItem('jubileeInspireAuth');
+        localStorage.removeItem('jubileeInspireUser');
+        localStorage.removeItem(CONVERSATION_CACHE_KEY);
+        localStorage.removeItem(CONVERSATIONS_STORAGE_KEY);
+        window.location.href = '/login.html';
+      }
+
+      // Event listeners for user profile
+      if (userProfileContainer) {
+        userProfileContainer.addEventListener('click', toggleUserProfileDropdown);
+      }
+
+      if (userProfileLogout) {
+        userProfileLogout.addEventListener('click', function(e) {
+          e.stopPropagation();
+          handleProfileLogout();
+        });
+      }
+
+      // Call updateUserProfileUI after auth verification
+      var originalVerifyToken = verifyToken;
+      verifyToken = function() {
+        fetch(AUTH_API + '/api/auth/me', {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + accessToken
+          }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.success && d.user) {
+            userData = d.user;
+            // Update stored user data
+            var storedAuth = JSON.parse(localStorage.getItem('jubileeInspireAuth') || '{}');
+            storedAuth.user = d.user;
+            localStorage.setItem('jubileeInspireAuth', JSON.stringify(storedAuth));
+
+            // Update avatar
+            if (d.user.avatarUrl) {
+              sidebarAvatar.src = d.user.avatarUrl;
+            }
+
+            // Update user profile dropdown
+            updateUserProfileUI();
+
+            // Initialize chat
+            initChat();
+          } else {
+            redirectToLogin();
+          }
+        })
+        .catch(function() {
+          // Network error - proceed with local auth
+          updateUserProfileUI();
+          initChat();
+        });
+      };
 
       // Initialize
       checkAuth();
