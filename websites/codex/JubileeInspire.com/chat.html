@@ -3961,8 +3961,8 @@
 
       // API Configuration - Detect localhost for local development
       var isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      var AUTH_API = 'https://inspirecodex.com';
-      // Use local server for chat in development, production API otherwise
+      // Use local server for auth and chat in development to avoid CORS issues
+      var AUTH_API = isLocalDev ? '' : 'https://inspirecodex.com';
       var CHAT_API = isLocalDev ? '' : 'https://inspirecodex.com';
       var PROMPT_API = '/api/prompt';
 

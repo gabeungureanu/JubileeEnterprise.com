@@ -897,7 +897,13 @@
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // Use InspireCodex.com API for authentication (independent from JubileeVerse.com)
-      var API = 'https://inspirecodex.com';
+      // In local development, proxy through local server to avoid CORS issues
+      var isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      var API = isLocalDev ? '' : 'https://inspirecodex.com';
+
+      if (isLocalDev) {
+          console.log('Running in local development mode - using local auth proxy');
+      }
 
       // Set current year
       document.getElementById('currentYear').textContent = new Date().getFullYear();
@@ -1060,7 +1066,8 @@
           }
         } catch (error) {
           // Show error in popup modal
-          validationMessage.textContent = 'An error occurred. Please try again.';
+          console.error('Login error:', error);
+          validationMessage.textContent = 'Connection error. Please check your internet and try again.';
           validationModal.style.display = 'flex';
           submitBtn.disabled = false;
           submitBtn.textContent = 'Sign In';

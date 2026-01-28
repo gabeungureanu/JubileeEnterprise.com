@@ -285,6 +285,66 @@ async function handleChatAPI(req, res) {
     }
 }
 
+/**
+ * Auth API Proxy - forwards auth requests to InspireCodex.com
+ * Solves CORS issues when running locally
+ */
+const AUTH_API_HOST = 'inspirecodex.com';
+
+async function handleAuthProxy(req, res, pathname) {
+    try {
+        const body = req.method === 'POST' ? await parseJsonBody(req) : null;
+        const targetUrl = `https://${AUTH_API_HOST}${pathname}`;
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        };
+
+        // Forward Authorization header if present
+        if (req.headers.authorization) {
+            headers['Authorization'] = req.headers.authorization;
+        }
+
+        const fetchOptions = {
+            method: req.method,
+            headers: headers
+        };
+
+        if (body && req.method === 'POST') {
+            fetchOptions.body = JSON.stringify(body);
+        }
+
+        console.log(`Auth proxy: ${req.method} ${targetUrl}`);
+
+        const response = await fetch(targetUrl, fetchOptions);
+        const contentType = response.headers.get('content-type') || '';
+
+        // Check if the response is JSON
+        if (!contentType.includes('application/json')) {
+            console.error(`Auth proxy: API returned non-JSON response (${contentType})`);
+            res.writeHead(503, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                success: false,
+                error: 'Authentication service is temporarily unavailable. Please try again later.'
+            }));
+            return;
+        }
+
+        const data = await response.json();
+
+        res.writeHead(response.status, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(data));
+    } catch (error) {
+        console.error('Auth proxy error:', error.message);
+        res.writeHead(502, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            success: false,
+            error: 'Failed to reach authentication server. Please check your connection and try again.'
+        }));
+    }
+}
+
 // Create the HTTP server
 const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url, true);
@@ -299,6 +359,12 @@ const server = http.createServer((req, res) => {
     if (req.method === 'OPTIONS') {
         res.writeHead(204);
         res.end();
+        return;
+    }
+
+    // Auth API proxy (local development - avoids CORS issues)
+    if (pathname.startsWith('/api/auth/')) {
+        handleAuthProxy(req, res, pathname);
         return;
     }
 
