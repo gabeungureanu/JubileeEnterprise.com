@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-01-28
+
+### Added
+- **Calendar Reminder Notifications**: Full reminder system for calendar events
+  - New `CalendarReminderService` that monitors upcoming events every 30 seconds
+  - `ReminderPopup` window with dark theme styling
+  - Shows event subject, time, location, and time until event starts
+  - Snooze options: 5, 10, 15, 30 minutes, 1 hour, 2 hours
+  - Dismiss functionality to permanently silence reminders
+  - Notification sound plays when reminder appears
+  - Popup appears in bottom-right corner of screen
+
+- **Hamburger Menu Toggle**: Toggle folder pane visibility
+  - New `ToggleFolderPaneCommand` in ApplicationViewModel
+  - Click handler in AppRailControl for folder pane toggle
+  - Animated collapse/expand of folder pane
+
+### Changed
+- **AppRail Cleanup**: Removed unused icons from left sidebar
+  - Removed Tasks icon from AppRail
+  - Removed "More Apps" (three dots) icon from AppRail
+  - Hamburger menu now toggles folder pane instead of opening settings
+
+- **Ribbon Bar Cleanup**: Streamlined ribbon interface
+  - Removed "New Meeting" option from New Mail dropdown
+  - Settings button at bottom of AppRail now available for future settings dialog
+
+### Fixed
+- **Snooze Dropdown Styling**: Fixed ComboBox dropdown to use dark theme
+  - Dark background (#2A2A2A) for dropdown items
+  - White text for visibility
+  - Gold highlight on hover/selection
+
+### Technical Details
+- CalendarReminderService uses DispatcherTimer for UI-thread safe reminders
+- Reminder triggers based on event's ReminderTime enum (None, 5min, 15min, etc.)
+- Snooze creates temporary timer for delayed re-notification
+- ReminderPopup is a borderless, topmost window with transparency
+
 ## [1.1.0] - 2026-01-19
 
 ### Added

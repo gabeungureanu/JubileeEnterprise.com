@@ -1,17 +1,57 @@
 using System.Windows;
 using System.Windows.Controls;
+using JubileeOutlook.Services;
 using JubileeOutlook.ViewModels;
 
 namespace JubileeOutlook.Views;
 
 public partial class CalendarView : UserControl
 {
+    private bool _reminderServiceInitialized;
+
     public CalendarView()
     {
         InitializeComponent();
 
         // Subscribe to visibility changes to load events when view becomes visible
         IsVisibleChanged += CalendarView_IsVisibleChanged;
+
+        // Initialize reminder service when loaded
+        Loaded += CalendarView_Loaded;
+    }
+
+    private void CalendarView_Loaded(object sender, RoutedEventArgs e)
+    {
+        InitializeReminderService();
+    }
+
+    private void InitializeReminderService()
+    {
+        if (_reminderServiceInitialized) return;
+
+        if (DataContext is CalendarViewModel viewModel)
+        {
+            // Initialize and start the reminder service
+            var reminderService = CalendarReminderService.Instance;
+            reminderService.Initialize(viewModel);
+            reminderService.ReminderTriggered += ReminderService_ReminderTriggered;
+            reminderService.Start();
+
+            _reminderServiceInitialized = true;
+            System.Diagnostics.Debug.WriteLine("[CalendarView] Reminder service initialized and started");
+        }
+    }
+
+    private void ReminderService_ReminderTriggered(object? sender, ReminderEventArgs e)
+    {
+        // Show the reminder popup on the UI thread
+        Dispatcher.Invoke(() =>
+        {
+            var popup = new ReminderPopup(e.Event);
+            popup.Show();
+
+            System.Diagnostics.Debug.WriteLine($"[CalendarView] Showing reminder popup for: {e.Event.Subject}");
+        });
     }
 
     private async void CalendarView_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)

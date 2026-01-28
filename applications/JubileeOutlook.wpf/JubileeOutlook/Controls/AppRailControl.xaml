@@ -19,9 +19,9 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Menu/Hamburger Button at Top -->
-            <Button Grid.Row="0" Style="{StaticResource AppRailMenuButtonStyle}"
-                    Command="{Binding OpenSettingsCommand}" ToolTip="Menu">
+            <!-- Menu/Hamburger Button at Top - Toggles Folder Pane -->
+            <Button x:Name="HamburgerButton" Grid.Row="0" Style="{StaticResource AppRailMenuButtonStyle}"
+                    Command="{Binding ToggleFolderPaneCommand}" Click="HamburgerButton_Click" ToolTip="Toggle Folder Pane">
                 <TextBlock Text="{StaticResource IconMenu}" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
             </Button>
 
@@ -49,14 +49,6 @@
                              Command="{Binding SwitchToPeopleCommand}"
                              ToolTip="People">
                     <TextBlock Text="{StaticResource IconContacts}" FontFamily="{StaticResource MaterialIcons}" FontSize="20" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
-                </RadioButton>
-
-                <RadioButton GroupName="AppModules"
-                             Style="{StaticResource AppRailButtonStyle}"
-                             IsChecked="{Binding ActiveModule, Converter={StaticResource AppModuleToBoolConverter}, ConverterParameter=Apps}"
-                             Command="{Binding SwitchToAppsCommand}"
-                             ToolTip="More Apps">
-                    <TextBlock Text="{StaticResource IconMoreVert}" FontFamily="{StaticResource MaterialIcons}" FontSize="20" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"/>
                 </RadioButton>
             </StackPanel>
 
