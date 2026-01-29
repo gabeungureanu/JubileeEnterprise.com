@@ -52,7 +52,8 @@ const MIME_TYPES = {
 // Route rewrites (from serve.json)
 const REWRITES = {
     '/login': '/login.html',
-    '/chat': '/chat.html'
+    '/chat': '/chat.html',
+    '/forgot-password': '/forgot-password.html'
 };
 
 // Prompts directory

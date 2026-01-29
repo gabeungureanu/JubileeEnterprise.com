@@ -2,7 +2,9 @@
   "public": ".",
   "rewrites": [
     { "source": "/login", "destination": "/login.html" },
-    { "source": "/login.html", "destination": "/login.html" }
+    { "source": "/login.html", "destination": "/login.html" },
+    { "source": "/forgot-password", "destination": "/forgot-password.html" },
+    { "source": "/forgot-password.html", "destination": "/forgot-password.html" }
   ],
   "trailingSlash": false,
   "cleanUrls": true
