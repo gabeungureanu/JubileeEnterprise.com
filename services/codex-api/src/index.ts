@@ -18,6 +18,7 @@
 
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
+import { serveStatic } from '@hono/node-server/serve-static';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { initializePools, closePools, checkAllHealth } from '@jubilee/database';
@@ -34,6 +35,9 @@ app.use('*', cors({
   origin: process.env.CORS_ORIGINS?.split(',') ?? ['http://localhost:3000'],
   credentials: true,
 }));
+
+// Serve uploaded files (contact photos, etc.)
+app.use('/uploads/*', serveStatic({ root: './' }));
 
 // Health check
 app.get('/health', async (c) => {
@@ -793,6 +797,154 @@ app.patch('/api/v1/contacts/:id/restore', async (c) => {
   } catch (error) {
     console.error('Error restoring contact:', error);
     return c.json({ success: false, error: 'Failed to restore contact' }, 500);
+  }
+});
+
+// Batch soft-delete contacts
+app.post('/api/v1/contacts/batch/soft-delete', async (c) => {
+  const body = await c.req.json();
+  const { ids } = body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return c.json({ success: false, error: 'ids array is required' }, 400);
+  }
+
+  if (ids.length > 100) {
+    return c.json({ success: false, error: 'Maximum 100 contacts per batch operation' }, 400);
+  }
+
+  try {
+    const results = await Promise.all(ids.map((id: string) => codex.softDeleteContact(id)));
+    const succeeded = results.filter(Boolean);
+
+    if (succeeded.length > 0) {
+      await codex.createAuditLog({
+        eventType: 'contact.batch_soft_deleted',
+        eventCategory: 'contacts',
+        userId: succeeded[0].user_id,
+        outcome: 'success',
+        metadata: { count: succeeded.length, ids },
+      });
+    }
+
+    return c.json({ success: true, deleted: succeeded.length, total: ids.length });
+  } catch (error) {
+    console.error('Error batch soft-deleting contacts:', error);
+    return c.json({ success: false, error: 'Failed to batch soft-delete contacts' }, 500);
+  }
+});
+
+// Batch restore contacts
+app.post('/api/v1/contacts/batch/restore', async (c) => {
+  const body = await c.req.json();
+  const { ids } = body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return c.json({ success: false, error: 'ids array is required' }, 400);
+  }
+
+  if (ids.length > 100) {
+    return c.json({ success: false, error: 'Maximum 100 contacts per batch operation' }, 400);
+  }
+
+  try {
+    const results = await Promise.all(ids.map((id: string) => codex.restoreContact(id)));
+    const succeeded = results.filter(Boolean);
+
+    if (succeeded.length > 0) {
+      await codex.createAuditLog({
+        eventType: 'contact.batch_restored',
+        eventCategory: 'contacts',
+        userId: succeeded[0].user_id,
+        outcome: 'success',
+        metadata: { count: succeeded.length, ids },
+      });
+    }
+
+    return c.json({ success: true, restored: succeeded.length, total: ids.length });
+  } catch (error) {
+    console.error('Error batch restoring contacts:', error);
+    return c.json({ success: false, error: 'Failed to batch restore contacts' }, 500);
+  }
+});
+
+// Batch update category
+app.post('/api/v1/contacts/batch/category', async (c) => {
+  const body = await c.req.json();
+  const { ids, category } = body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return c.json({ success: false, error: 'ids array is required' }, 400);
+  }
+
+  if (ids.length > 100) {
+    return c.json({ success: false, error: 'Maximum 100 contacts per batch operation' }, 400);
+  }
+
+  if (category === undefined) {
+    return c.json({ success: false, error: 'category is required (use null to clear)' }, 400);
+  }
+
+  try {
+    const results = await Promise.all(
+      ids.map((id: string) => codex.updateContact(id, { category: category || '' }))
+    );
+    const succeeded = results.filter(Boolean);
+
+    if (succeeded.length > 0) {
+      await codex.createAuditLog({
+        eventType: 'contact.batch_category_updated',
+        eventCategory: 'contacts',
+        userId: succeeded[0].user_id,
+        outcome: 'success',
+        metadata: { count: succeeded.length, category, ids },
+      });
+    }
+
+    return c.json({ success: true, updated: succeeded.length, total: ids.length });
+  } catch (error) {
+    console.error('Error batch updating category:', error);
+    return c.json({ success: false, error: 'Failed to batch update category' }, 500);
+  }
+});
+
+// Batch hard delete contacts
+app.post('/api/v1/contacts/batch/delete', async (c) => {
+  const body = await c.req.json();
+  const { ids } = body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return c.json({ success: false, error: 'ids array is required' }, 400);
+  }
+
+  if (ids.length > 100) {
+    return c.json({ success: false, error: 'Maximum 100 contacts per batch operation' }, 400);
+  }
+
+  try {
+    let userId: string | undefined;
+    for (const id of ids) {
+      const existing = await codex.getContactById(id, true);
+      if (existing && !userId) userId = existing.user_id;
+    }
+
+    const results = await Promise.all(ids.map((id: string) => codex.deleteContact(id)));
+    const succeeded = results.filter(Boolean).length;
+
+    if (succeeded > 0 && userId) {
+      await codex.createAuditLog({
+        eventType: 'contact.batch_deleted',
+        eventCategory: 'contacts',
+        userId,
+        outcome: 'success',
+        metadata: { count: succeeded, ids },
+      });
+    }
+
+    return c.json({ success: true, deleted: succeeded, total: ids.length });
+  } catch (error) {
+    console.error('Error batch deleting contacts:', error);
+    return c.json({ success: false, error: 'Failed to batch delete contacts' }, 500);
   }
 });
 

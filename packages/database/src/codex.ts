@@ -583,10 +583,10 @@ export async function searchContacts(userId: string, query: string, page: number
        OR company ILIKE $2
        OR job_title ILIKE $2
        OR notes ILIKE $2
-       OR $3 = ANY(email_addresses)
-       OR EXISTS (SELECT 1 FROM unnest(email_addresses) e WHERE e ILIKE $2)
+       OR email_addresses::text ILIKE $2
+       OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(email_addresses) e WHERE e ILIKE $2)
      )`,
-    [userId, searchPattern, query.toLowerCase()]
+    [userId, searchPattern]
   );
   const totalCount = parseInt(countResult.rows[0].count, 10);
 
@@ -600,12 +600,12 @@ export async function searchContacts(userId: string, query: string, page: number
        OR company ILIKE $2
        OR job_title ILIKE $2
        OR notes ILIKE $2
-       OR $3 = ANY(email_addresses)
-       OR EXISTS (SELECT 1 FROM unnest(email_addresses) e WHERE e ILIKE $2)
+       OR email_addresses::text ILIKE $2
+       OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(email_addresses) e WHERE e ILIKE $2)
      )
      ORDER BY is_favorite DESC, display_name ASC
-     LIMIT $4 OFFSET $5`,
-    [userId, searchPattern, query.toLowerCase(), pageSize, offset]
+     LIMIT $3 OFFSET $4`,
+    [userId, searchPattern, pageSize, offset]
   );
 
   return { contacts: result.rows, totalCount, page, pageSize };

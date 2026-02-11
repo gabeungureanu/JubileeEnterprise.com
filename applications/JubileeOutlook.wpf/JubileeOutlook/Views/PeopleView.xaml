@@ -1169,6 +1169,17 @@
                                 </StackPanel>
                             </StackPanel>
 
+                            <!-- View on Map Link -->
+                            <StackPanel Orientation="Horizontal" Margin="28,4,0,16"
+                                        Visibility="{Binding SelectedContact.Address, Converter={StaticResource StringToVisibilityConverter}}">
+                                <TextBlock Text="&#xe55e;" FontFamily="{StaticResource MaterialIcons}" FontSize="14"
+                                           Foreground="{StaticResource GoldBrandBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="View on Map" FontSize="12"
+                                           Foreground="{StaticResource GoldBrandBrush}" Cursor="Hand"
+                                           MouseLeftButtonUp="ViewOnMap_Click"
+                                           TextDecorations="Underline" VerticalAlignment="Center"/>
+                            </StackPanel>
+
                             <!-- Website Section -->
                             <StackPanel Visibility="{Binding SelectedContact.Website, Converter={StaticResource StringToVisibilityConverter}}"
                                         Margin="0,0,0,16">
@@ -1191,6 +1202,32 @@
                                     <TextBlock Text="&#xe7e9;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
                                                Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                     <TextBlock Text="{Binding SelectedContact.Birthday, StringFormat='{}{0:MMMM d, yyyy}'}" FontSize="14"
+                                               Foreground="{StaticResource PrimaryTextBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Anniversary Section -->
+                            <StackPanel Visibility="{Binding SelectedContact.Anniversary, Converter={StaticResource NullToVisibilityConverter}}"
+                                        Margin="0,0,0,16">
+                                <TextBlock Text="ANNIVERSARY" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="&#xe7e9;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                               Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <TextBlock Text="{Binding SelectedContact.Anniversary, StringFormat='{}{0:MMMM d, yyyy}'}" FontSize="14"
+                                               Foreground="{StaticResource PrimaryTextBrush}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Spouse Section -->
+                            <StackPanel Visibility="{Binding SelectedContact.Spouse, Converter={StaticResource StringToVisibilityConverter}}"
+                                        Margin="0,0,0,16">
+                                <TextBlock Text="SPOUSE / PARTNER" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource SecondaryTextBrush}" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="&#xe7fb;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
+                                               Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                    <TextBlock Text="{Binding SelectedContact.Spouse}" FontSize="14"
                                                Foreground="{StaticResource PrimaryTextBrush}"/>
                                 </StackPanel>
                             </StackPanel>

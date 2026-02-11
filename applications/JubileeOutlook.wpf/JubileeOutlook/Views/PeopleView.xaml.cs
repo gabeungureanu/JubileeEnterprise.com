@@ -480,4 +480,23 @@ public partial class PeopleView : UserControl
             SearchTextBox.Focus();
         }
     }
+
+    private void ViewOnMap_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (DataContext is ViewModels.PeopleViewModel vm && vm.SelectedContact != null)
+        {
+            var contact = vm.SelectedContact;
+            var parts = new[] { contact.Address, contact.City, contact.State, contact.PostalCode, contact.Country }
+                .Where(p => !string.IsNullOrWhiteSpace(p));
+            var query = Uri.EscapeDataString(string.Join(", ", parts));
+            if (!string.IsNullOrEmpty(query))
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = $"https://www.google.com/maps/search/?api=1&query={query}",
+                    UseShellExecute = true
+                });
+            }
+        }
+    }
 }
