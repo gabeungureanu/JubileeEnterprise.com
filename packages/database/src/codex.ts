@@ -621,9 +621,12 @@ export async function searchContacts(userId: string, query: string, page: number
 export async function getContactGroups(userId: string) {
   const pool = getCodexPool();
   const result = await pool.query(
-    `SELECT g.*, COUNT(m.contact_id) AS member_count
+    `SELECT g.*, COUNT(m.contact_id) FILTER (
+       WHERE c.id IS NOT NULL AND c.is_deleted = FALSE
+     ) AS member_count
      FROM contact_groups g
      LEFT JOIN contact_group_members m ON m.group_id = g.id
+     LEFT JOIN user_contacts c ON c.id = m.contact_id
      WHERE g.user_id = $1
      GROUP BY g.id
      ORDER BY g.name ASC`,

@@ -507,6 +507,23 @@ function validateContactInput(body: any): string[] {
 }
 
 /**
+ * Extracts the requesting user ID from query params or X-User-Id header
+ */
+function getRequestUserId(c: any): string | undefined {
+  return c.req.query('userId') || c.req.header('X-User-Id');
+}
+
+/**
+ * Verifies the requesting user owns the contact. Returns the contact if valid, or null.
+ */
+async function verifyContactOwnership(contactId: string, requestingUserId: string, includeDeleted = false): Promise<any | null> {
+  const contact = await codex.getContactById(contactId, includeDeleted);
+  if (!contact) return null;
+  if (contact.user_id !== requestingUserId) return null;
+  return contact;
+}
+
+/**
  * Converts a snake_case database row to camelCase for API response
  */
 function toCamelCase(row: any): any {
@@ -579,9 +596,14 @@ app.get('/api/v1/contacts/search', async (c) => {
 // Get a single contact by ID
 app.get('/api/v1/contacts/:id', async (c) => {
   const id = c.req.param('id');
+  const userId = getRequestUserId(c);
+
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
 
   try {
-    const contact = await codex.getContactById(id);
+    const contact = await verifyContactOwnership(id, userId);
     if (!contact) {
       return c.json({ success: false, error: 'Contact not found' }, 404);
     }
@@ -662,7 +684,12 @@ app.post('/api/v1/contacts', async (c) => {
 // Update a contact
 app.put('/api/v1/contacts/:id', async (c) => {
   const id = c.req.param('id');
+  const userId = getRequestUserId(c);
   const body = await c.req.json();
+
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
 
   const validationErrors = validateContactInput(body);
   if (validationErrors.length > 0) {
@@ -670,6 +697,12 @@ app.put('/api/v1/contacts/:id', async (c) => {
   }
 
   try {
+    // Verify ownership before update
+    const existing = await verifyContactOwnership(id, userId);
+    if (!existing) {
+      return c.json({ success: false, error: 'Contact not found' }, 404);
+    }
+
     const contact = await codex.updateContact(id, {
       displayName: body.displayName,
       firstName: body.firstName,
@@ -723,19 +756,24 @@ app.put('/api/v1/contacts/:id', async (c) => {
 // Delete a contact (hard delete)
 app.delete('/api/v1/contacts/:id', async (c) => {
   const id = c.req.param('id');
+  const userId = getRequestUserId(c);
+
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
 
   try {
-    const existing = await codex.getContactById(id, true);
-    const deleted = await codex.deleteContact(id);
-
-    if (!deleted) {
+    const existing = await verifyContactOwnership(id, userId, true);
+    if (!existing) {
       return c.json({ success: false, error: 'Contact not found' }, 404);
     }
+
+    await codex.deleteContact(id);
 
     await codex.createAuditLog({
       eventType: 'contact.deleted',
       eventCategory: 'contacts',
-      userId: existing?.user_id,
+      userId: existing.user_id,
       resourceType: 'contact',
       resourceId: id,
       outcome: 'success',
@@ -751,9 +789,20 @@ app.delete('/api/v1/contacts/:id', async (c) => {
 // Toggle favorite status
 app.patch('/api/v1/contacts/:id/favorite', async (c) => {
   const id = c.req.param('id');
+  const userId = getRequestUserId(c);
   const body = await c.req.json();
 
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
+
   try {
+    // Verify ownership before toggling
+    const existing = await verifyContactOwnership(id, userId);
+    if (!existing) {
+      return c.json({ success: false, error: 'Contact not found' }, 404);
+    }
+
     const contact = await codex.toggleContactFavorite(id, body.isFavorite ?? false);
     if (!contact) {
       return c.json({ success: false, error: 'Contact not found' }, 404);
@@ -779,8 +828,19 @@ app.patch('/api/v1/contacts/:id/favorite', async (c) => {
 // Soft delete a contact
 app.patch('/api/v1/contacts/:id/soft-delete', async (c) => {
   const id = c.req.param('id');
+  const userId = getRequestUserId(c);
+
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
 
   try {
+    // Verify ownership before soft-deleting
+    const existing = await verifyContactOwnership(id, userId);
+    if (!existing) {
+      return c.json({ success: false, error: 'Contact not found' }, 404);
+    }
+
     const contact = await codex.softDeleteContact(id);
     if (!contact) {
       return c.json({ success: false, error: 'Contact not found' }, 404);
@@ -806,8 +866,19 @@ app.patch('/api/v1/contacts/:id/soft-delete', async (c) => {
 // Restore a soft-deleted contact
 app.patch('/api/v1/contacts/:id/restore', async (c) => {
   const id = c.req.param('id');
+  const userId = getRequestUserId(c);
+
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
 
   try {
+    // Verify ownership before restoring (include deleted contacts)
+    const existing = await verifyContactOwnership(id, userId, true);
+    if (!existing) {
+      return c.json({ success: false, error: 'Contact not found' }, 404);
+    }
+
     const contact = await codex.restoreContact(id);
     if (!contact) {
       return c.json({ success: false, error: 'Contact not found' }, 404);
@@ -981,9 +1052,14 @@ app.post('/api/v1/contacts/batch/delete', async (c) => {
 // Upload contact photo
 app.post('/api/v1/contacts/:id/photo', async (c) => {
   const id = c.req.param('id');
+  const userId = getRequestUserId(c);
+
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
 
   try {
-    const contact = await codex.getContactById(id);
+    const contact = await verifyContactOwnership(id, userId);
     if (!contact) {
       return c.json({ success: false, error: 'Contact not found' }, 404);
     }
@@ -1421,10 +1497,15 @@ app.get('/api/v1/contact-groups', async (c) => {
 // Get a single contact group with its members
 app.get('/api/v1/contact-groups/:id', async (c) => {
   const id = c.req.param('id');
+  const userId = getRequestUserId(c);
+
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
 
   try {
     const group = await codex.getContactGroupById(id);
-    if (!group) {
+    if (!group || group.user_id !== userId) {
       return c.json({ success: false, error: 'Group not found' }, 404);
     }
 
@@ -1441,7 +1522,7 @@ app.get('/api/v1/contact-groups/:id', async (c) => {
 
 // Create a new contact group
 app.post('/api/v1/contact-groups', async (c) => {
-  const userId = c.req.query('userId') || c.req.header('X-User-Id');
+  const userId = getRequestUserId(c);
   if (!userId) {
     return c.json({ success: false, error: 'userId is required' }, 400);
   }
@@ -1478,8 +1559,19 @@ app.post('/api/v1/contact-groups', async (c) => {
 // Update a contact group
 app.put('/api/v1/contact-groups/:id', async (c) => {
   const id = c.req.param('id');
+  const userId = getRequestUserId(c);
+
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
 
   try {
+    // Verify ownership before update
+    const existing = await codex.getContactGroupById(id);
+    if (!existing || existing.user_id !== userId) {
+      return c.json({ success: false, error: 'Group not found' }, 404);
+    }
+
     const body = await c.req.json();
     if (!body.name || typeof body.name !== 'string' || !body.name.trim()) {
       return c.json({ success: false, error: 'Group name is required' }, 400);
@@ -1500,12 +1592,30 @@ app.put('/api/v1/contact-groups/:id', async (c) => {
 // Delete a contact group
 app.delete('/api/v1/contact-groups/:id', async (c) => {
   const id = c.req.param('id');
+  const userId = getRequestUserId(c);
+
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
 
   try {
-    const deleted = await codex.deleteContactGroup(id);
-    if (!deleted) {
+    // Verify ownership before delete
+    const existing = await codex.getContactGroupById(id);
+    if (!existing || existing.user_id !== userId) {
       return c.json({ success: false, error: 'Group not found' }, 404);
     }
+
+    await codex.deleteContactGroup(id);
+
+    await codex.createAuditLog({
+      eventType: 'contact_group.deleted',
+      eventCategory: 'contacts',
+      userId,
+      resourceType: 'contact_group',
+      resourceId: id,
+      outcome: 'success',
+      metadata: { name: existing.name },
+    });
 
     return c.json({ success: true });
   } catch (error) {
@@ -1517,8 +1627,19 @@ app.delete('/api/v1/contact-groups/:id', async (c) => {
 // Add contacts to a group
 app.post('/api/v1/contact-groups/:id/members', async (c) => {
   const groupId = c.req.param('id');
+  const userId = getRequestUserId(c);
+
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
 
   try {
+    // Verify group ownership
+    const group = await codex.getContactGroupById(groupId);
+    if (!group || group.user_id !== userId) {
+      return c.json({ success: false, error: 'Group not found' }, 404);
+    }
+
     const body = await c.req.json();
     const contactIds = body.contactIds;
 
@@ -1530,7 +1651,18 @@ app.post('/api/v1/contact-groups/:id/members', async (c) => {
       return c.json({ success: false, error: 'Maximum 100 contacts per operation' }, 400);
     }
 
-    const added = await codex.addContactsToGroup(groupId, contactIds);
+    // Verify all contacts belong to the same user
+    const validContactIds: string[] = [];
+    for (const contactId of contactIds) {
+      const contact = await verifyContactOwnership(contactId, userId);
+      if (contact) validContactIds.push(contactId);
+    }
+
+    if (validContactIds.length === 0) {
+      return c.json({ success: false, error: 'No valid contacts found' }, 400);
+    }
+
+    const added = await codex.addContactsToGroup(groupId, validContactIds);
     return c.json({ success: true, added });
   } catch (error) {
     console.error('Error adding contacts to group:', error);
@@ -1542,8 +1674,19 @@ app.post('/api/v1/contact-groups/:id/members', async (c) => {
 app.delete('/api/v1/contact-groups/:id/members/:contactId', async (c) => {
   const groupId = c.req.param('id');
   const contactId = c.req.param('contactId');
+  const userId = getRequestUserId(c);
+
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
 
   try {
+    // Verify group ownership
+    const group = await codex.getContactGroupById(groupId);
+    if (!group || group.user_id !== userId) {
+      return c.json({ success: false, error: 'Group not found' }, 404);
+    }
+
     const removed = await codex.removeContactFromGroup(groupId, contactId);
     if (!removed) {
       return c.json({ success: false, error: 'Contact not found in group' }, 404);

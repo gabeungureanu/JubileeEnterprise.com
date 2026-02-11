@@ -822,9 +822,79 @@
 
                     <!-- Contacts Content -->
                     <Grid Grid.Row="2">
-                        <!-- Empty State (when no contacts) -->
-                        <StackPanel Visibility="{Binding HasContacts, Converter={StaticResource InverseBoolToVisibilityConverter}}"
-                                    VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <!-- Loading Overlay -->
+                        <Border Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"
+                                Background="{StaticResource SurfaceBrush}" Panel.ZIndex="10"
+                                VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock Text="&#xe863;" FontFamily="{StaticResource MaterialIcons}" FontSize="32"
+                                           Foreground="{StaticResource GoldBrandBrush}" HorizontalAlignment="Center"
+                                           Margin="0,0,0,12">
+                                    <TextBlock.RenderTransform>
+                                        <RotateTransform Angle="0" CenterX="16" CenterY="16"/>
+                                    </TextBlock.RenderTransform>
+                                    <TextBlock.Triggers>
+                                        <EventTrigger RoutedEvent="Loaded">
+                                            <BeginStoryboard>
+                                                <Storyboard RepeatBehavior="Forever">
+                                                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                     From="0" To="360" Duration="0:0:1"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </EventTrigger>
+                                    </TextBlock.Triggers>
+                                </TextBlock>
+                                <TextBlock Text="Loading contacts..." FontSize="14"
+                                           Foreground="{StaticResource SecondaryTextBrush}" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Empty Search Results State -->
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding HasContacts}" Value="False"/>
+                                                <Condition Binding="{Binding SearchText, Converter={StaticResource StringToBoolConverter}}" Value="True"/>
+                                                <Condition Binding="{Binding IsLoading}" Value="False"/>
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </MultiDataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="&#xe8b6;" FontFamily="{StaticResource MaterialIcons}" FontSize="48"
+                                       Foreground="{StaticResource SecondaryTextBrush}" HorizontalAlignment="Center"
+                                       Margin="0,0,0,12"/>
+                            <TextBlock Text="No contacts found" FontSize="16"
+                                       Foreground="{StaticResource SecondaryTextBrush}" HorizontalAlignment="Center"
+                                       Margin="0,0,0,8"/>
+                            <TextBlock FontSize="13" Foreground="{StaticResource TertiaryTextBrush}"
+                                       HorizontalAlignment="Center">
+                                <Run Text="No results for &quot;"/><Run Text="{Binding SearchText, Mode=OneWay}"/><Run Text="&quot;"/>
+                            </TextBlock>
+                        </StackPanel>
+
+                        <!-- Empty State (when no contacts and not searching) -->
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding HasContacts}" Value="False"/>
+                                                <Condition Binding="{Binding SearchText, Converter={StaticResource StringToBoolConverter}}" Value="False"/>
+                                                <Condition Binding="{Binding IsLoading}" Value="False"/>
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </MultiDataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
                             <!-- Contact Book Illustration -->
                             <Border Width="120" Height="120" Margin="0,0,0,24">
                                 <Grid>
