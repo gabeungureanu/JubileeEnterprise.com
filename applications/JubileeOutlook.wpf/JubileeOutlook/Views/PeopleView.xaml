@@ -1035,7 +1035,8 @@
                                                Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                     <StackPanel>
                                         <TextBlock Text="{Binding SelectedContact.Email}" FontSize="14"
-                                                   Foreground="{StaticResource GoldBrandBrush}" Cursor="Hand"/>
+                                                   Foreground="{StaticResource GoldBrandBrush}" Cursor="Hand"
+                                                   MouseLeftButtonUp="Email_Click" TextDecorations="Underline"/>
                                         <TextBlock Text="Work" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -1046,7 +1047,8 @@
                                                Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                     <StackPanel>
                                         <TextBlock Text="{Binding SelectedContact.PersonalEmail}" FontSize="14"
-                                                   Foreground="{StaticResource GoldBrandBrush}" Cursor="Hand"/>
+                                                   Foreground="{StaticResource GoldBrandBrush}" Cursor="Hand"
+                                                   MouseLeftButtonUp="Email_Click" TextDecorations="Underline"/>
                                         <TextBlock Text="Personal" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -1062,7 +1064,8 @@
                                                Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                     <StackPanel>
                                         <TextBlock Text="{Binding SelectedContact.Phone}" FontSize="14"
-                                                   Foreground="{StaticResource PrimaryTextBrush}"/>
+                                                   Foreground="{StaticResource GoldBrandBrush}" Cursor="Hand"
+                                                   MouseLeftButtonUp="Phone_Click"/>
                                         <TextBlock Text="Work" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -1073,7 +1076,8 @@
                                                Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                     <StackPanel>
                                         <TextBlock Text="{Binding SelectedContact.MobilePhone}" FontSize="14"
-                                                   Foreground="{StaticResource PrimaryTextBrush}"/>
+                                                   Foreground="{StaticResource GoldBrandBrush}" Cursor="Hand"
+                                                   MouseLeftButtonUp="Phone_Click"/>
                                         <TextBlock Text="Mobile" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -1084,7 +1088,8 @@
                                                Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                     <StackPanel>
                                         <TextBlock Text="{Binding SelectedContact.HomePhone}" FontSize="14"
-                                                   Foreground="{StaticResource PrimaryTextBrush}"/>
+                                                   Foreground="{StaticResource GoldBrandBrush}" Cursor="Hand"
+                                                   MouseLeftButtonUp="Phone_Click"/>
                                         <TextBlock Text="Home" FontSize="11" Foreground="{StaticResource SecondaryTextBrush}"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -1189,7 +1194,8 @@
                                     <TextBlock Text="&#xe894;" FontFamily="{StaticResource MaterialIcons}" FontSize="16"
                                                Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                     <TextBlock Text="{Binding SelectedContact.Website}" FontSize="14"
-                                               Foreground="{StaticResource GoldBrandBrush}" Cursor="Hand"/>
+                                               Foreground="{StaticResource GoldBrandBrush}" Cursor="Hand"
+                                               MouseLeftButtonUp="Website_Click" TextDecorations="Underline"/>
                                 </StackPanel>
                             </StackPanel>
 

@@ -499,4 +499,46 @@ public partial class PeopleView : UserControl
             }
         }
     }
+
+    private void Email_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is System.Windows.Controls.TextBlock tb && !string.IsNullOrWhiteSpace(tb.Text))
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = $"mailto:{tb.Text}",
+                UseShellExecute = true
+            });
+        }
+    }
+
+    private void Phone_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is System.Windows.Controls.TextBlock tb && !string.IsNullOrWhiteSpace(tb.Text))
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = $"tel:{tb.Text}",
+                UseShellExecute = true
+            });
+        }
+    }
+
+    private void Website_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is System.Windows.Controls.TextBlock tb && !string.IsNullOrWhiteSpace(tb.Text))
+        {
+            var url = tb.Text;
+            if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                url = "https://" + url;
+            }
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
+        }
+    }
 }

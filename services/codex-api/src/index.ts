@@ -36,6 +36,36 @@ app.use('*', cors({
   credentials: true,
 }));
 
+// Simple in-memory rate limiter
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute window
+const RATE_LIMIT_MAX = 120; // 120 requests per minute per IP
+
+app.use('/api/*', async (c, next) => {
+  const ip = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown';
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+  } else {
+    entry.count++;
+    if (entry.count > RATE_LIMIT_MAX) {
+      c.header('Retry-After', String(Math.ceil((entry.resetAt - now) / 1000)));
+      return c.json({ success: false, error: 'Rate limit exceeded. Please try again later.' }, 429);
+    }
+  }
+
+  // Periodically clean up stale entries (every ~100 requests)
+  if (Math.random() < 0.01) {
+    for (const [key, val] of rateLimitMap) {
+      if (now > val.resetAt) rateLimitMap.delete(key);
+    }
+  }
+
+  await next();
+});
+
 // Serve uploaded files (contact photos, etc.)
 app.use('/uploads/*', serveStatic({ root: './' }));
 
@@ -1028,6 +1058,501 @@ app.post('/api/v1/contacts/:id/photo', async (c) => {
   } catch (error) {
     console.error('Error uploading contact photo:', error);
     return c.json({ success: false, error: 'Failed to upload photo' }, 500);
+  }
+});
+
+// ============================================================================
+// CONTACT IMPORT / EXPORT ENDPOINTS
+// ============================================================================
+
+/**
+ * Parse a vCard string into contact objects
+ */
+function parseVCard(vcardContent: string): any[] {
+  const contacts: any[] = [];
+  const vcards = vcardContent.split('END:VCARD')
+    .map(v => v.trim())
+    .filter(v => v.includes('BEGIN:VCARD'));
+
+  for (const vcard of vcards) {
+    const lines = vcard.split(/\r?\n/);
+    const contact: any = {
+      emailAddresses: [],
+      phoneNumbers: [],
+    };
+
+    for (const line of lines) {
+      if (line.startsWith('FN:') || line.startsWith('FN;')) {
+        contact.displayName = line.split(':').slice(1).join(':').trim();
+      } else if (line.startsWith('N:') || line.startsWith('N;')) {
+        const parts = line.split(':').slice(1).join(':').split(';');
+        contact.lastName = parts[0]?.trim() || '';
+        contact.firstName = parts[1]?.trim() || '';
+        contact.middleName = parts[2]?.trim() || '';
+        contact.title = parts[3]?.trim() || '';
+        contact.suffix = parts[4]?.trim() || '';
+      } else if (line.startsWith('EMAIL')) {
+        const email = line.split(':').slice(1).join(':').trim();
+        if (email) contact.emailAddresses.push(email);
+      } else if (line.startsWith('TEL')) {
+        const phone = line.split(':').slice(1).join(':').trim();
+        if (phone) contact.phoneNumbers.push(phone);
+      } else if (line.startsWith('ORG:') || line.startsWith('ORG;')) {
+        contact.company = line.split(':').slice(1).join(':').split(';')[0]?.trim();
+        contact.department = line.split(':').slice(1).join(':').split(';')[1]?.trim();
+      } else if (line.startsWith('TITLE:') || line.startsWith('TITLE;')) {
+        contact.jobTitle = line.split(':').slice(1).join(':').trim();
+      } else if (line.startsWith('NOTE:') || line.startsWith('NOTE;')) {
+        contact.notes = line.split(':').slice(1).join(':').trim();
+      } else if (line.startsWith('URL:') || line.startsWith('URL;')) {
+        contact.website = line.split(':').slice(1).join(':').trim();
+      } else if (line.startsWith('BDAY:')) {
+        contact.birthday = line.split(':')[1]?.trim();
+      } else if (line.startsWith('ANNIVERSARY:') || line.startsWith('X-ANNIVERSARY:')) {
+        contact.anniversary = line.split(':').slice(1).join(':').trim();
+      } else if (line.startsWith('X-SPOUSE:') || line.startsWith('X-MS-SPOUSE:')) {
+        contact.spouse = line.split(':').slice(1).join(':').trim();
+      } else if (line.startsWith('NICKNAME:')) {
+        contact.nickname = line.split(':')[1]?.trim();
+      } else if (line.startsWith('ADR')) {
+        const parts = line.split(':').slice(1).join(':').split(';');
+        contact.address = parts[2]?.trim() || '';
+        contact.city = parts[3]?.trim() || '';
+        contact.state = parts[4]?.trim() || '';
+        contact.postalCode = parts[5]?.trim() || '';
+        contact.country = parts[6]?.trim() || '';
+      } else if (line.startsWith('CATEGORIES:')) {
+        contact.category = line.split(':')[1]?.trim();
+      }
+    }
+
+    if (!contact.displayName) {
+      contact.displayName = [contact.firstName, contact.lastName].filter(Boolean).join(' ') || 'Unnamed Contact';
+    }
+
+    contacts.push(contact);
+  }
+
+  return contacts;
+}
+
+/**
+ * Generate a vCard string from a database contact row
+ */
+function contactToVCard(contact: any): string {
+  const lines: string[] = ['BEGIN:VCARD', 'VERSION:3.0'];
+
+  if (contact.display_name) lines.push(`FN:${contact.display_name}`);
+  lines.push(`N:${contact.last_name || ''};${contact.first_name || ''};${contact.middle_name || ''};${contact.title || ''};${contact.suffix || ''}`);
+
+  const emails = Array.isArray(contact.email_addresses) ? contact.email_addresses : [];
+  for (const email of emails) {
+    lines.push(`EMAIL:${email}`);
+  }
+
+  const phones = Array.isArray(contact.phone_numbers) ? contact.phone_numbers : [];
+  for (const phone of phones) {
+    lines.push(`TEL:${phone}`);
+  }
+
+  if (contact.mobile_phone) lines.push(`TEL;TYPE=CELL:${contact.mobile_phone}`);
+  if (contact.company || contact.department) {
+    lines.push(`ORG:${contact.company || ''};${contact.department || ''}`);
+  }
+  if (contact.job_title) lines.push(`TITLE:${contact.job_title}`);
+  if (contact.nickname) lines.push(`NICKNAME:${contact.nickname}`);
+  if (contact.notes) lines.push(`NOTE:${contact.notes}`);
+  if (contact.website) lines.push(`URL:${contact.website}`);
+  if (contact.birthday) lines.push(`BDAY:${contact.birthday}`);
+  if (contact.anniversary) lines.push(`ANNIVERSARY:${contact.anniversary}`);
+  if (contact.spouse) lines.push(`X-SPOUSE:${contact.spouse}`);
+  if (contact.category) lines.push(`CATEGORIES:${contact.category}`);
+
+  if (contact.address || contact.city || contact.state || contact.postal_code || contact.country) {
+    lines.push(`ADR:;;${contact.address || ''};${contact.city || ''};${contact.state || ''};${contact.postal_code || ''};${contact.country || ''}`);
+  }
+
+  lines.push('END:VCARD');
+  return lines.join('\r\n');
+}
+
+/**
+ * Parse CSV content into contact objects
+ */
+function parseCsvContacts(csvContent: string): any[] {
+  const lines = csvContent.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return [];
+
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/['"]/g, ''));
+  const contacts: any[] = [];
+
+  const headerMap: Record<string, string> = {
+    'first name': 'firstName', 'firstname': 'firstName',
+    'last name': 'lastName', 'lastname': 'lastName',
+    'display name': 'displayName', 'displayname': 'displayName', 'name': 'displayName',
+    'email': 'email', 'e-mail': 'email', 'email address': 'email',
+    'phone': 'phone', 'telephone': 'phone', 'phone number': 'phone',
+    'mobile': 'mobilePhone', 'mobile phone': 'mobilePhone', 'cell': 'mobilePhone',
+    'company': 'company', 'organization': 'company', 'org': 'company',
+    'job title': 'jobTitle', 'jobtitle': 'jobTitle', 'title': 'jobTitle',
+    'department': 'department',
+    'address': 'address', 'street': 'address',
+    'city': 'city',
+    'state': 'state', 'province': 'state',
+    'zip': 'postalCode', 'postal code': 'postalCode', 'zipcode': 'postalCode',
+    'country': 'country',
+    'notes': 'notes',
+    'website': 'website', 'url': 'website',
+    'nickname': 'nickname',
+    'category': 'category',
+  };
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
+    const contact: any = { emailAddresses: [], phoneNumbers: [] };
+
+    for (let j = 0; j < headers.length && j < values.length; j++) {
+      const mapped = headerMap[headers[j]];
+      if (!mapped || !values[j]) continue;
+
+      if (mapped === 'email') {
+        contact.emailAddresses.push(values[j]);
+      } else if (mapped === 'phone') {
+        contact.phoneNumbers.push(values[j]);
+      } else {
+        contact[mapped] = values[j];
+      }
+    }
+
+    if (!contact.displayName) {
+      contact.displayName = [contact.firstName, contact.lastName].filter(Boolean).join(' ') || 'Unnamed Contact';
+    }
+
+    contacts.push(contact);
+  }
+
+  return contacts;
+}
+
+// Import contacts from vCard
+app.post('/api/v1/contacts/import/vcard', async (c) => {
+  const userId = c.req.query('userId') || c.req.header('X-User-Id');
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
+
+  try {
+    const body = await c.req.json();
+    if (!body.vcardContent || typeof body.vcardContent !== 'string') {
+      return c.json({ success: false, error: 'vcardContent is required' }, 400);
+    }
+
+    const parsed = parseVCard(body.vcardContent);
+    if (parsed.length === 0) {
+      return c.json({ success: false, error: 'No valid contacts found in vCard data' }, 400);
+    }
+
+    if (parsed.length > 500) {
+      return c.json({ success: false, error: 'Maximum 500 contacts per import' }, 400);
+    }
+
+    const imported: any[] = [];
+    for (const contact of parsed) {
+      const created = await codex.createContact({ userId, ...contact });
+      imported.push(toCamelCase(created));
+    }
+
+    await codex.createAuditLog({
+      eventType: 'contact.import_vcard',
+      eventCategory: 'contacts',
+      userId,
+      resourceType: 'contact',
+      outcome: 'success',
+      metadata: { count: imported.length, format: 'vcard' },
+    });
+
+    return c.json({ success: true, imported: imported.length, contacts: imported });
+  } catch (error) {
+    console.error('Error importing vCard contacts:', error);
+    return c.json({ success: false, error: 'Failed to import contacts' }, 500);
+  }
+});
+
+// Import contacts from CSV
+app.post('/api/v1/contacts/import/csv', async (c) => {
+  const userId = c.req.query('userId') || c.req.header('X-User-Id');
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
+
+  try {
+    const body = await c.req.json();
+    if (!body.csvContent || typeof body.csvContent !== 'string') {
+      return c.json({ success: false, error: 'csvContent is required' }, 400);
+    }
+
+    const parsed = parseCsvContacts(body.csvContent);
+    if (parsed.length === 0) {
+      return c.json({ success: false, error: 'No valid contacts found in CSV data' }, 400);
+    }
+
+    if (parsed.length > 500) {
+      return c.json({ success: false, error: 'Maximum 500 contacts per import' }, 400);
+    }
+
+    const imported: any[] = [];
+    for (const contact of parsed) {
+      const created = await codex.createContact({ userId, ...contact });
+      imported.push(toCamelCase(created));
+    }
+
+    await codex.createAuditLog({
+      eventType: 'contact.import_csv',
+      eventCategory: 'contacts',
+      userId,
+      resourceType: 'contact',
+      outcome: 'success',
+      metadata: { count: imported.length, format: 'csv' },
+    });
+
+    return c.json({ success: true, imported: imported.length, contacts: imported });
+  } catch (error) {
+    console.error('Error importing CSV contacts:', error);
+    return c.json({ success: false, error: 'Failed to import contacts' }, 500);
+  }
+});
+
+// Export contacts as vCard
+app.get('/api/v1/contacts/export/vcard', async (c) => {
+  const userId = c.req.query('userId') || c.req.header('X-User-Id');
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
+
+  try {
+    const { contacts } = await codex.getContacts(userId, 1, 10000);
+    const vcardContent = contacts.map(contactToVCard).join('\r\n');
+
+    await codex.createAuditLog({
+      eventType: 'contact.export_vcard',
+      eventCategory: 'contacts',
+      userId,
+      resourceType: 'contact',
+      outcome: 'success',
+      metadata: { count: contacts.length, format: 'vcard' },
+    });
+
+    c.header('Content-Type', 'text/vcard; charset=utf-8');
+    c.header('Content-Disposition', 'attachment; filename="contacts.vcf"');
+    return c.body(vcardContent);
+  } catch (error) {
+    console.error('Error exporting vCard contacts:', error);
+    return c.json({ success: false, error: 'Failed to export contacts' }, 500);
+  }
+});
+
+// Export contacts as CSV
+app.get('/api/v1/contacts/export/csv', async (c) => {
+  const userId = c.req.query('userId') || c.req.header('X-User-Id');
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
+
+  try {
+    const { contacts } = await codex.getContacts(userId, 1, 10000);
+
+    const csvHeaders = ['First Name', 'Last Name', 'Display Name', 'Email', 'Phone', 'Mobile Phone',
+      'Company', 'Job Title', 'Department', 'Address', 'City', 'State', 'Postal Code', 'Country',
+      'Website', 'Birthday', 'Anniversary', 'Spouse', 'Nickname', 'Category', 'Notes'];
+    const csvLines = [csvHeaders.join(',')];
+
+    for (const c of contacts) {
+      const emails = Array.isArray(c.email_addresses) ? c.email_addresses : [];
+      const phones = Array.isArray(c.phone_numbers) ? c.phone_numbers : [];
+      const row = [
+        c.first_name, c.last_name, c.display_name,
+        emails[0] || '', phones[0] || '', c.mobile_phone || '',
+        c.company, c.job_title, c.department,
+        c.address, c.city, c.state, c.postal_code, c.country,
+        c.website, c.birthday, c.anniversary, c.spouse, c.nickname, c.category,
+        c.notes,
+      ].map(v => `"${String(v || '').replace(/"/g, '""')}"`);
+      csvLines.push(row.join(','));
+    }
+
+    await codex.createAuditLog({
+      eventType: 'contact.export_csv',
+      eventCategory: 'contacts',
+      userId,
+      resourceType: 'contact',
+      outcome: 'success',
+      metadata: { count: contacts.length, format: 'csv' },
+    });
+
+    c.header('Content-Type', 'text/csv; charset=utf-8');
+    c.header('Content-Disposition', 'attachment; filename="contacts.csv"');
+    return c.body(csvLines.join('\r\n'));
+  } catch (error) {
+    console.error('Error exporting CSV contacts:', error);
+    return c.json({ success: false, error: 'Failed to export contacts' }, 500);
+  }
+});
+
+// ============================================================================
+// CONTACT GROUPS MANAGEMENT
+// ============================================================================
+
+// Get all contact groups for a user
+app.get('/api/v1/contact-groups', async (c) => {
+  const userId = c.req.query('userId') || c.req.header('X-User-Id');
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
+
+  try {
+    const result = await codex.getContactGroups(userId);
+    return c.json({ success: true, data: result.map(toCamelCase) });
+  } catch (error) {
+    console.error('Error fetching contact groups:', error);
+    return c.json({ success: false, error: 'Failed to fetch contact groups' }, 500);
+  }
+});
+
+// Get a single contact group with its members
+app.get('/api/v1/contact-groups/:id', async (c) => {
+  const id = c.req.param('id');
+
+  try {
+    const group = await codex.getContactGroupById(id);
+    if (!group) {
+      return c.json({ success: false, error: 'Group not found' }, 404);
+    }
+
+    const members = await codex.getContactGroupMembers(id);
+    return c.json({
+      success: true,
+      data: { ...toCamelCase(group), members: members.map(toCamelCase) },
+    });
+  } catch (error) {
+    console.error('Error fetching contact group:', error);
+    return c.json({ success: false, error: 'Failed to fetch contact group' }, 500);
+  }
+});
+
+// Create a new contact group
+app.post('/api/v1/contact-groups', async (c) => {
+  const userId = c.req.query('userId') || c.req.header('X-User-Id');
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
+
+  try {
+    const body = await c.req.json();
+    if (!body.name || typeof body.name !== 'string' || !body.name.trim()) {
+      return c.json({ success: false, error: 'Group name is required' }, 400);
+    }
+
+    if (body.name.length > 200) {
+      return c.json({ success: false, error: 'Group name must be 200 characters or less' }, 400);
+    }
+
+    const group = await codex.createContactGroup(userId, body.name.trim(), body.description?.trim());
+
+    await codex.createAuditLog({
+      eventType: 'contact_group.created',
+      eventCategory: 'contacts',
+      userId,
+      resourceType: 'contact_group',
+      resourceId: group.id,
+      outcome: 'success',
+      metadata: { name: body.name.trim() },
+    });
+
+    return c.json({ success: true, data: toCamelCase(group) }, 201);
+  } catch (error) {
+    console.error('Error creating contact group:', error);
+    return c.json({ success: false, error: 'Failed to create contact group' }, 500);
+  }
+});
+
+// Update a contact group
+app.put('/api/v1/contact-groups/:id', async (c) => {
+  const id = c.req.param('id');
+
+  try {
+    const body = await c.req.json();
+    if (!body.name || typeof body.name !== 'string' || !body.name.trim()) {
+      return c.json({ success: false, error: 'Group name is required' }, 400);
+    }
+
+    const group = await codex.updateContactGroup(id, body.name.trim(), body.description?.trim());
+    if (!group) {
+      return c.json({ success: false, error: 'Group not found' }, 404);
+    }
+
+    return c.json({ success: true, data: toCamelCase(group) });
+  } catch (error) {
+    console.error('Error updating contact group:', error);
+    return c.json({ success: false, error: 'Failed to update contact group' }, 500);
+  }
+});
+
+// Delete a contact group
+app.delete('/api/v1/contact-groups/:id', async (c) => {
+  const id = c.req.param('id');
+
+  try {
+    const deleted = await codex.deleteContactGroup(id);
+    if (!deleted) {
+      return c.json({ success: false, error: 'Group not found' }, 404);
+    }
+
+    return c.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting contact group:', error);
+    return c.json({ success: false, error: 'Failed to delete contact group' }, 500);
+  }
+});
+
+// Add contacts to a group
+app.post('/api/v1/contact-groups/:id/members', async (c) => {
+  const groupId = c.req.param('id');
+
+  try {
+    const body = await c.req.json();
+    const contactIds = body.contactIds;
+
+    if (!Array.isArray(contactIds) || contactIds.length === 0) {
+      return c.json({ success: false, error: 'contactIds array is required' }, 400);
+    }
+
+    if (contactIds.length > 100) {
+      return c.json({ success: false, error: 'Maximum 100 contacts per operation' }, 400);
+    }
+
+    const added = await codex.addContactsToGroup(groupId, contactIds);
+    return c.json({ success: true, added });
+  } catch (error) {
+    console.error('Error adding contacts to group:', error);
+    return c.json({ success: false, error: 'Failed to add contacts to group' }, 500);
+  }
+});
+
+// Remove a contact from a group
+app.delete('/api/v1/contact-groups/:id/members/:contactId', async (c) => {
+  const groupId = c.req.param('id');
+  const contactId = c.req.param('contactId');
+
+  try {
+    const removed = await codex.removeContactFromGroup(groupId, contactId);
+    if (!removed) {
+      return c.json({ success: false, error: 'Contact not found in group' }, 404);
+    }
+
+    return c.json({ success: true });
+  } catch (error) {
+    console.error('Error removing contact from group:', error);
+    return c.json({ success: false, error: 'Failed to remove contact from group' }, 500);
   }
 });
 

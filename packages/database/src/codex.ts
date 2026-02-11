@@ -612,6 +612,129 @@ export async function searchContacts(userId: string, query: string, page: number
 }
 
 // ============================================================================
+// CONTACT GROUPS (JubileeOutlook People Module)
+// ============================================================================
+
+/**
+ * Get all contact groups for a user
+ */
+export async function getContactGroups(userId: string) {
+  const pool = getCodexPool();
+  const result = await pool.query(
+    `SELECT g.*, COUNT(m.contact_id) AS member_count
+     FROM contact_groups g
+     LEFT JOIN contact_group_members m ON m.group_id = g.id
+     WHERE g.user_id = $1
+     GROUP BY g.id
+     ORDER BY g.name ASC`,
+    [userId]
+  );
+  return result.rows;
+}
+
+/**
+ * Get a single contact group by ID
+ */
+export async function getContactGroupById(groupId: string) {
+  const pool = getCodexPool();
+  const result = await pool.query(
+    'SELECT * FROM contact_groups WHERE id = $1',
+    [groupId]
+  );
+  return result.rows[0] || null;
+}
+
+/**
+ * Get members of a contact group (returns full contact rows)
+ */
+export async function getContactGroupMembers(groupId: string) {
+  const pool = getCodexPool();
+  const result = await pool.query(
+    `SELECT c.* FROM user_contacts c
+     INNER JOIN contact_group_members m ON m.contact_id = c.id
+     WHERE m.group_id = $1 AND c.is_deleted = FALSE
+     ORDER BY c.display_name ASC`,
+    [groupId]
+  );
+  return result.rows;
+}
+
+/**
+ * Create a new contact group
+ */
+export async function createContactGroup(userId: string, name: string, description?: string) {
+  const pool = getCodexPool();
+  const result = await pool.query(
+    `INSERT INTO contact_groups (user_id, name, description)
+     VALUES ($1, $2, $3)
+     RETURNING *`,
+    [userId, name, description || null]
+  );
+  return result.rows[0];
+}
+
+/**
+ * Update a contact group
+ */
+export async function updateContactGroup(groupId: string, name: string, description?: string) {
+  const pool = getCodexPool();
+  const result = await pool.query(
+    `UPDATE contact_groups SET name = $1, description = $2, updated_at = NOW()
+     WHERE id = $3
+     RETURNING *`,
+    [name, description || null, groupId]
+  );
+  return result.rows[0] || null;
+}
+
+/**
+ * Delete a contact group (cascades to members)
+ */
+export async function deleteContactGroup(groupId: string): Promise<boolean> {
+  const pool = getCodexPool();
+  const result = await pool.query(
+    'DELETE FROM contact_groups WHERE id = $1',
+    [groupId]
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
+/**
+ * Add contacts to a group (returns number added)
+ */
+export async function addContactsToGroup(groupId: string, contactIds: string[]): Promise<number> {
+  const pool = getCodexPool();
+  let added = 0;
+
+  for (const contactId of contactIds) {
+    try {
+      await pool.query(
+        `INSERT INTO contact_group_members (group_id, contact_id)
+         VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+        [groupId, contactId]
+      );
+      added++;
+    } catch {
+      // Skip contacts that can't be added (e.g., FK violation)
+    }
+  }
+
+  return added;
+}
+
+/**
+ * Remove a contact from a group
+ */
+export async function removeContactFromGroup(groupId: string, contactId: string): Promise<boolean> {
+  const pool = getCodexPool();
+  const result = await pool.query(
+    'DELETE FROM contact_group_members WHERE group_id = $1 AND contact_id = $2',
+    [groupId, contactId]
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
+// ============================================================================
 // USER EMAIL PREFERENCES (JubileeOutlook)
 // ============================================================================
 
