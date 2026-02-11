@@ -22,6 +22,9 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { initializePools, closePools, checkAllHealth } from '@jubilee/database';
 import * as codex from '@jubilee/database/codex';
+import { writeFile, mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 const app = new Hono();
 
@@ -418,6 +421,58 @@ app.get('/api/auth/me', async (c) => {
 // ============================================================================
 
 /**
+ * Validates an email address format
+ */
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+/**
+ * Validates a URL format
+ */
+function isValidUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validates contact input fields, returns array of error messages (empty if valid)
+ */
+function validateContactInput(body: any): string[] {
+  const errors: string[] = [];
+
+  if (body.emailAddresses && Array.isArray(body.emailAddresses)) {
+    for (const email of body.emailAddresses) {
+      if (typeof email === 'string' && email.trim() && !isValidEmail(email.trim())) {
+        errors.push(`Invalid email format: ${email}`);
+      }
+    }
+  }
+
+  if (body.website && typeof body.website === 'string' && body.website.trim()) {
+    if (!isValidUrl(body.website.trim())) {
+      errors.push(`Invalid website URL: ${body.website}`);
+    }
+  }
+
+  if (body.photoUrl && typeof body.photoUrl === 'string' && body.photoUrl.trim()) {
+    if (!isValidUrl(body.photoUrl.trim())) {
+      errors.push(`Invalid photo URL: ${body.photoUrl}`);
+    }
+  }
+
+  if (body.displayName && typeof body.displayName === 'string' && body.displayName.length > 500) {
+    errors.push('Display name must be 500 characters or less');
+  }
+
+  return errors;
+}
+
+/**
  * Converts a snake_case database row to camelCase for API response
  */
 function toCamelCase(row: any): any {
@@ -516,6 +571,11 @@ app.post('/api/v1/contacts', async (c) => {
     return c.json({ success: false, error: 'displayName is required' }, 400);
   }
 
+  const validationErrors = validateContactInput(body);
+  if (validationErrors.length > 0) {
+    return c.json({ success: false, error: 'Validation failed', details: validationErrors }, 400);
+  }
+
   try {
     const contact = await codex.createContact({
       userId,
@@ -569,6 +629,11 @@ app.post('/api/v1/contacts', async (c) => {
 app.put('/api/v1/contacts/:id', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
+
+  const validationErrors = validateContactInput(body);
+  if (validationErrors.length > 0) {
+    return c.json({ success: false, error: 'Validation failed', details: validationErrors }, 400);
+  }
 
   try {
     const contact = await codex.updateContact(id, {
@@ -626,7 +691,7 @@ app.delete('/api/v1/contacts/:id', async (c) => {
   const id = c.req.param('id');
 
   try {
-    const existing = await codex.getContactById(id);
+    const existing = await codex.getContactById(id, true);
     const deleted = await codex.deleteContact(id);
 
     if (!deleted) {
@@ -659,6 +724,17 @@ app.patch('/api/v1/contacts/:id/favorite', async (c) => {
     if (!contact) {
       return c.json({ success: false, error: 'Contact not found' }, 404);
     }
+
+    await codex.createAuditLog({
+      eventType: body.isFavorite ? 'contact.favorited' : 'contact.unfavorited',
+      eventCategory: 'contacts',
+      userId: contact.user_id,
+      resourceType: 'contact',
+      resourceId: id,
+      outcome: 'success',
+      metadata: { displayName: contact.display_name, isFavorite: body.isFavorite },
+    });
+
     return c.json({ success: true, contact: toCamelCase(contact) });
   } catch (error) {
     console.error('Error toggling favorite:', error);
@@ -675,6 +751,17 @@ app.patch('/api/v1/contacts/:id/soft-delete', async (c) => {
     if (!contact) {
       return c.json({ success: false, error: 'Contact not found' }, 404);
     }
+
+    await codex.createAuditLog({
+      eventType: 'contact.soft_deleted',
+      eventCategory: 'contacts',
+      userId: contact.user_id,
+      resourceType: 'contact',
+      resourceId: id,
+      outcome: 'success',
+      metadata: { displayName: contact.display_name },
+    });
+
     return c.json({ success: true, contact: toCamelCase(contact) });
   } catch (error) {
     console.error('Error soft-deleting contact:', error);
@@ -691,10 +778,104 @@ app.patch('/api/v1/contacts/:id/restore', async (c) => {
     if (!contact) {
       return c.json({ success: false, error: 'Contact not found' }, 404);
     }
+
+    await codex.createAuditLog({
+      eventType: 'contact.restored',
+      eventCategory: 'contacts',
+      userId: contact.user_id,
+      resourceType: 'contact',
+      resourceId: id,
+      outcome: 'success',
+      metadata: { displayName: contact.display_name },
+    });
+
     return c.json({ success: true, contact: toCamelCase(contact) });
   } catch (error) {
     console.error('Error restoring contact:', error);
     return c.json({ success: false, error: 'Failed to restore contact' }, 500);
+  }
+});
+
+// Upload contact photo
+app.post('/api/v1/contacts/:id/photo', async (c) => {
+  const id = c.req.param('id');
+
+  try {
+    const contact = await codex.getContactById(id);
+    if (!contact) {
+      return c.json({ success: false, error: 'Contact not found' }, 404);
+    }
+
+    const contentType = c.req.header('Content-Type') || '';
+    let photoBuffer: Buffer;
+    let extension: string;
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await c.req.formData();
+      const file = formData.get('photo') as File | null;
+      if (!file) {
+        return c.json({ success: false, error: 'No photo file provided' }, 400);
+      }
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        return c.json({ success: false, error: `Invalid file type: ${file.type}. Allowed: ${allowedTypes.join(', ')}` }, 400);
+      }
+
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        return c.json({ success: false, error: 'File too large. Maximum size is 5MB' }, 400);
+      }
+
+      photoBuffer = Buffer.from(await file.arrayBuffer());
+      extension = file.type.split('/')[1] === 'jpeg' ? 'jpg' : file.type.split('/')[1];
+    } else if (contentType.includes('application/json')) {
+      const body = await c.req.json();
+      if (!body.photoBase64) {
+        return c.json({ success: false, error: 'photoBase64 is required' }, 400);
+      }
+
+      const match = body.photoBase64.match(/^data:image\/(jpeg|png|gif|webp);base64,(.+)$/);
+      if (match) {
+        extension = match[1] === 'jpeg' ? 'jpg' : match[1];
+        photoBuffer = Buffer.from(match[2], 'base64');
+      } else {
+        extension = 'jpg';
+        photoBuffer = Buffer.from(body.photoBase64, 'base64');
+      }
+
+      const maxSize = 5 * 1024 * 1024;
+      if (photoBuffer.length > maxSize) {
+        return c.json({ success: false, error: 'File too large. Maximum size is 5MB' }, 400);
+      }
+    } else {
+      return c.json({ success: false, error: 'Content-Type must be multipart/form-data or application/json' }, 400);
+    }
+
+    const uploadDir = join(process.cwd(), 'uploads', 'photos');
+    await mkdir(uploadDir, { recursive: true });
+
+    const filename = `${id}_${randomUUID()}.${extension}`;
+    const filepath = join(uploadDir, filename);
+    await writeFile(filepath, photoBuffer);
+
+    const photoUrl = `/uploads/photos/${filename}`;
+    await codex.updateContact(id, { photoUrl });
+
+    await codex.createAuditLog({
+      eventType: 'contact.photo_uploaded',
+      eventCategory: 'contacts',
+      userId: contact.user_id,
+      resourceType: 'contact',
+      resourceId: id,
+      outcome: 'success',
+      metadata: { filename, size: photoBuffer.length },
+    });
+
+    return c.json({ success: true, photoUrl });
+  } catch (error) {
+    console.error('Error uploading contact photo:', error);
+    return c.json({ success: false, error: 'Failed to upload photo' }, 500);
   }
 });
 

@@ -346,12 +346,12 @@ export async function getContacts(userId: string, page: number = 1, pageSize: nu
 /**
  * Get a single contact by ID
  */
-export async function getContactById(contactId: string) {
+export async function getContactById(contactId: string, includeDeleted: boolean = false) {
   const pool = getCodexPool();
-  const result = await pool.query(
-    'SELECT * FROM user_contacts WHERE id = $1',
-    [contactId]
-  );
+  const query = includeDeleted
+    ? 'SELECT * FROM user_contacts WHERE id = $1'
+    : 'SELECT * FROM user_contacts WHERE id = $1 AND is_deleted = FALSE';
+  const result = await pool.query(query, [contactId]);
   return result.rows[0] || null;
 }
 

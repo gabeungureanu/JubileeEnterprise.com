@@ -573,6 +573,8 @@
                     <Grid.RowDefinitions>
                         <!-- Header -->
                         <RowDefinition Height="Auto"/>
+                        <!-- Search Bar -->
+                        <RowDefinition Height="Auto"/>
                         <!-- Content -->
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
@@ -768,8 +770,58 @@
                         </Grid>
                     </Border>
 
+                    <!-- Search Bar -->
+                    <Border Grid.Row="1" Background="#1A1A1A" BorderBrush="#333333" BorderThickness="0,0,0,1" Padding="12,8">
+                        <Border Background="#252525" CornerRadius="6" Padding="8,6">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <!-- Search Icon -->
+                                <TextBlock Grid.Column="0" Text="&#xe8b6;" FontFamily="{StaticResource MaterialIcons}"
+                                           FontSize="18" Foreground="{StaticResource SecondaryTextBrush}"
+                                           VerticalAlignment="Center" Margin="4,0,8,0"/>
+                                <!-- Search TextBox -->
+                                <Grid Grid.Column="1">
+                                    <TextBlock Text="Search contacts..." FontSize="13"
+                                               Foreground="#666666" VerticalAlignment="Center"
+                                               Visibility="{Binding SearchText, Converter={StaticResource InverseStringToVisibilityConverter}}"
+                                               IsHitTestVisible="False"/>
+                                    <TextBox x:Name="SearchTextBox"
+                                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                             Background="Transparent" BorderThickness="0"
+                                             Foreground="{StaticResource PrimaryTextBrush}"
+                                             FontSize="13" VerticalAlignment="Center"
+                                             CaretBrush="{StaticResource AccentBrush}"/>
+                                </Grid>
+                                <!-- Clear Button -->
+                                <Button Grid.Column="2" x:Name="ClearSearchButton"
+                                        Visibility="{Binding SearchText, Converter={StaticResource StringToVisibilityConverter}}"
+                                        Background="Transparent" BorderThickness="0" Padding="4" Cursor="Hand"
+                                        Click="ClearSearchButton_Click">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4">
+                                                <TextBlock Text="&#xe5cd;" FontFamily="{StaticResource MaterialIcons}"
+                                                           FontSize="16" Foreground="{StaticResource SecondaryTextBrush}"
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Bd" Property="Background" Value="#333333"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Border>
+
                     <!-- Contacts Content -->
-                    <Grid Grid.Row="1">
+                    <Grid Grid.Row="2">
                         <!-- Empty State (when no contacts) -->
                         <StackPanel Visibility="{Binding HasContacts, Converter={StaticResource InverseBoolToVisibilityConverter}}"
                                     VerticalAlignment="Center" HorizontalAlignment="Center">

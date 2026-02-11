@@ -471,4 +471,13 @@ public partial class PeopleView : UserControl
                 MessageBoxImage.Error);
         }
     }
+
+    private void ClearSearchButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is ViewModels.PeopleViewModel vm)
+        {
+            vm.SearchText = string.Empty;
+            SearchTextBox.Focus();
+        }
+    }
 }
