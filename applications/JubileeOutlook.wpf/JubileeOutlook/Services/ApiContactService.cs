@@ -1258,6 +1258,55 @@ public class ApiContactService : IContactService
     }
 
     /// <summary>
+    /// Renames/updates a contact group
+    /// PUT /api/v1/contact-groups/{id}
+    /// </summary>
+    public async Task<ContactServiceResult<ContactGroupDto>> UpdateContactGroupAsync(string groupId, string name, string? description = null)
+    {
+        try
+        {
+            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var endpoint = $"contact-groups/{Uri.EscapeDataString(groupId)}?userId={Uri.EscapeDataString(userId)}";
+            var payload = new { name, description };
+            var json = JsonSerializer.Serialize(payload, _jsonOptions);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] PUT {endpoint}");
+
+            var response = await _httpClientFactory.PutAsync(ApiEndpoint.InspireCodex, endpoint, content);
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var apiResponse = JsonSerializer.Deserialize<ApiContactGroupSingleResponse>(responseContent, _jsonOptions);
+
+                if (apiResponse?.Success == true && apiResponse.Data != null)
+                {
+                    return new ContactServiceResult<ContactGroupDto>
+                    {
+                        Success = true,
+                        Data = apiResponse.Data
+                    };
+                }
+            }
+
+            return new ContactServiceResult<ContactGroupDto>
+            {
+                Success = false,
+                Error = $"Failed to update contact group: {response.StatusCode}"
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] UpdateContactGroup error: {ex.Message}");
+            return new ContactServiceResult<ContactGroupDto>
+            {
+                Success = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    /// <summary>
     /// Deletes a contact group
     /// DELETE /api/v1/contact-groups/{id}
     /// </summary>

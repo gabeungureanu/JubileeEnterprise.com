@@ -1035,9 +1035,58 @@ public partial class PeopleViewModel : ObservableObject
     public event EventHandler? CreateContactListRequested;
 
     /// <summary>
-    /// Event raised when contacts should be picked for adding to a group
+    /// Event raised when a contact list should be renamed (needs input dialog)
+    /// Returns new name or null if cancelled. Args: (currentName, groupId) -> newName?
     /// </summary>
-    public event EventHandler<string>? AddToContactListRequested;
+    public event Func<string, string, Task<string?>>? RenameContactListRequested;
+
+    /// <summary>
+    /// Event raised when a contact should be added to a list (needs list picker dialog)
+    /// Args: (contact, availableGroups) -> selectedGroupId?
+    /// </summary>
+    public event Func<Contact, List<ContactGroup>, Task<string?>>? AddContactToListRequested;
+
+    /// <summary>
+    /// Event raised when a contact list delete is requested (needs confirmation)
+    /// Args: (listName) -> confirmed?
+    /// </summary>
+    public event Func<string, Task<bool>>? DeleteContactListConfirmRequested;
+
+    /// <summary>
+    /// Renames a contact group/list
+    /// </summary>
+    public async Task<bool> RenameContactListAsync(string groupId, string newName)
+    {
+        try
+        {
+            var result = await _contactService.UpdateContactGroupAsync(groupId, newName);
+            if (result.Success)
+            {
+                var group = ContactGroups.FirstOrDefault(g => g.Id == groupId);
+                if (group != null) group.Name = newName;
+
+                var listsFolder = Folders.FirstOrDefault(f => f.Name == "Your contact lists");
+                var subFolder = listsFolder?.SubFolders.FirstOrDefault(sf => sf.GroupId == groupId);
+                if (subFolder != null) subFolder.Name = newName;
+
+                if (SelectedFolder?.GroupId == groupId)
+                {
+                    UpdateContentHeader();
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Renamed contact list {groupId} to: {newName}");
+                Services.NotificationService.Instance.ShowSuccess($"List renamed to '{newName}'.", "Contacts");
+                return true;
+            }
+            return false;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to rename contact list: {ex.Message}");
+            Services.NotificationService.Instance.ShowError("Failed to rename list. Please try again.", "Contacts");
+            return false;
+        }
+    }
 
     /// <summary>
     /// Creates a new contact group/list

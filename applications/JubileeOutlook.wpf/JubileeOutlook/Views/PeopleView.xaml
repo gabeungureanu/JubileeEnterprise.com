@@ -6,7 +6,9 @@
              xmlns:viewmodels="clr-namespace:JubileeOutlook.ViewModels"
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="1200"
-             Background="{StaticResource PrimaryBackgroundBrush}">
+             Background="{StaticResource PrimaryBackgroundBrush}"
+             Focusable="True"
+             KeyDown="PeopleView_KeyDown">
 
     <UserControl.DataContext>
         <viewmodels:PeopleViewModel/>
@@ -533,6 +535,14 @@
                                                         <Border x:Name="SubFolderBd" Background="Transparent"
                                                                 Padding="8,6" CornerRadius="4" Margin="0,1" Cursor="Hand"
                                                                 MouseLeftButtonUp="SubFolder_Click">
+                                                            <Border.ContextMenu>
+                                                                <ContextMenu Background="{StaticResource TertiaryBackgroundBrush}"
+                                                                             BorderBrush="{StaticResource BorderBrush}" Foreground="{StaticResource PrimaryTextBrush}">
+                                                                    <MenuItem Header="Rename list" Click="RenameList_Click" Tag="{Binding}"/>
+                                                                    <Separator/>
+                                                                    <MenuItem Header="Delete list" Click="DeleteList_Click" Tag="{Binding}"/>
+                                                                </ContextMenu>
+                                                            </Border.ContextMenu>
                                                             <StackPanel Orientation="Horizontal">
                                                                 <TextBlock Text="&#xe7ef;" FontFamily="{StaticResource MaterialIcons}"
                                                                            FontSize="14" Foreground="{StaticResource SecondaryTextBrush}"
@@ -1010,6 +1020,23 @@
                                  SelectionChanged="ContactsListBox_SelectionChanged"
                                  Background="Transparent" BorderThickness="0"
                                  MouseDoubleClick="ContactsListBox_MouseDoubleClick">
+                            <ListBox.ContextMenu>
+                                <ContextMenu x:Name="ContactContextMenu"
+                                             Background="{StaticResource TertiaryBackgroundBrush}"
+                                             BorderBrush="{StaticResource BorderBrush}" Foreground="{StaticResource PrimaryTextBrush}"
+                                             Opened="ContactContextMenu_Opened">
+                                    <MenuItem Header="Edit" Click="ContextMenu_EditContact_Click"/>
+                                    <MenuItem Header="Add to favorites" Click="ContextMenu_AddToFavorites_Click"/>
+                                    <MenuItem Header="Set category" Click="ContextMenu_SetCategory_Click"/>
+                                    <Separator/>
+                                    <MenuItem x:Name="AddToListMenuItem" Header="Add to list">
+                                        <!-- Dynamically populated with contact groups -->
+                                    </MenuItem>
+                                    <MenuItem x:Name="RemoveFromListMenuItem" Header="Remove from this list" Click="ContextMenu_RemoveFromList_Click"/>
+                                    <Separator/>
+                                    <MenuItem Header="Delete" Click="ContextMenu_DeleteContact_Click"/>
+                                </ContextMenu>
+                            </ListBox.ContextMenu>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Margin="16,8">

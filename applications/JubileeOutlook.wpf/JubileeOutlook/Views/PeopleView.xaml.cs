@@ -33,6 +33,8 @@ public partial class PeopleView : UserControl
             viewModel.BulkAddCategoryRequested += ViewModel_BulkAddCategoryRequested;
             viewModel.CreateContactListRequested += ViewModel_CreateContactListRequested;
             viewModel.DuplicateContactDetected += ViewModel_DuplicateContactDetected;
+            viewModel.RenameContactListRequested += ViewModel_RenameContactListRequested;
+            viewModel.DeleteContactListConfirmRequested += ViewModel_DeleteContactListConfirmRequested;
         }
 
         // Load contacts when the view is loaded
@@ -47,6 +49,10 @@ public partial class PeopleView : UserControl
             await viewModel.LoadContactsFromDatabaseAsync();
             await viewModel.LoadContactGroupsAsync();
         }
+
+        // Ensure we can receive keyboard events
+        Focusable = true;
+        Focus();
     }
 
     private void PeopleView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -64,6 +70,8 @@ public partial class PeopleView : UserControl
             oldViewModel.BulkAddCategoryRequested -= ViewModel_BulkAddCategoryRequested;
             oldViewModel.CreateContactListRequested -= ViewModel_CreateContactListRequested;
             oldViewModel.DuplicateContactDetected -= ViewModel_DuplicateContactDetected;
+            oldViewModel.RenameContactListRequested -= ViewModel_RenameContactListRequested;
+            oldViewModel.DeleteContactListConfirmRequested -= ViewModel_DeleteContactListConfirmRequested;
         }
 
         if (e.NewValue is PeopleViewModel newViewModel)
@@ -79,6 +87,8 @@ public partial class PeopleView : UserControl
             newViewModel.BulkAddCategoryRequested += ViewModel_BulkAddCategoryRequested;
             newViewModel.CreateContactListRequested += ViewModel_CreateContactListRequested;
             newViewModel.DuplicateContactDetected += ViewModel_DuplicateContactDetected;
+            newViewModel.RenameContactListRequested += ViewModel_RenameContactListRequested;
+            newViewModel.DeleteContactListConfirmRequested += ViewModel_DeleteContactListConfirmRequested;
 
             // Load contacts and groups when DataContext changes
             _ = newViewModel.LoadContactsFromDatabaseAsync();
@@ -600,5 +610,289 @@ public partial class PeopleView : UserControl
         });
 
         return await tcs.Task;
+    }
+
+    /// <summary>
+    /// Handle rename contact list event from ViewModel - show input dialog
+    /// </summary>
+    private async Task<string?> ViewModel_RenameContactListRequested(string currentName, string groupId)
+    {
+        var tcs = new TaskCompletionSource<string?>();
+
+        Dispatcher.Invoke(() =>
+        {
+            var dialog = new InputDialog("Rename list", "Enter a new name for the list:", currentName);
+            dialog.Owner = Window.GetWindow(this);
+
+            if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.InputValue))
+            {
+                tcs.SetResult(dialog.InputValue.Trim());
+            }
+            else
+            {
+                tcs.SetResult(null);
+            }
+        });
+
+        return await tcs.Task;
+    }
+
+    /// <summary>
+    /// Handle delete contact list confirmation event from ViewModel
+    /// </summary>
+    private async Task<bool> ViewModel_DeleteContactListConfirmRequested(string listName)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+
+        Dispatcher.Invoke(() =>
+        {
+            var result = ThemedMessageBox.Show(Window.GetWindow(this),
+                $"Are you sure you want to delete the list '{listName}'?\n\nContacts in this list will not be deleted.",
+                "Delete List",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            tcs.SetResult(result == MessageBoxResult.Yes);
+        });
+
+        return await tcs.Task;
+    }
+
+    /// <summary>
+    /// Handle rename list context menu click on a subfolder
+    /// </summary>
+    private async void RenameList_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem menuItem && menuItem.Tag is ContactFolder folder && folder.GroupId != null)
+        {
+            var dialog = new InputDialog("Rename list", "Enter a new name for the list:", folder.Name);
+            dialog.Owner = Window.GetWindow(this);
+
+            if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.InputValue))
+            {
+                if (DataContext is PeopleViewModel vm)
+                {
+                    await vm.RenameContactListAsync(folder.GroupId, dialog.InputValue.Trim());
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handle delete list context menu click on a subfolder
+    /// </summary>
+    private async void DeleteList_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem menuItem && menuItem.Tag is ContactFolder folder && folder.GroupId != null)
+        {
+            var result = ThemedMessageBox.Show(Window.GetWindow(this),
+                $"Are you sure you want to delete the list '{folder.Name}'?\n\nContacts in this list will not be deleted.",
+                "Delete List",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                if (DataContext is PeopleViewModel vm)
+                {
+                    var success = await vm.DeleteContactListAsync(folder.GroupId);
+                    if (success)
+                    {
+                        Services.NotificationService.Instance.ShowSuccess($"List '{folder.Name}' deleted.", "Contacts");
+                    }
+                    else
+                    {
+                        Services.NotificationService.Instance.ShowError("Failed to delete list. Please try again.", "Contacts");
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Dynamically populate context menu when it opens
+    /// </summary>
+    private void ContactContextMenu_Opened(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not PeopleViewModel vm) return;
+
+        // Populate "Add to list" submenu with available contact groups
+        AddToListMenuItem.Items.Clear();
+        foreach (var group in vm.ContactGroups)
+        {
+            var item = new MenuItem
+            {
+                Header = group.Name,
+                Tag = group.Id
+            };
+            item.Click += ContextMenu_AddToList_Click;
+            AddToListMenuItem.Items.Add(item);
+        }
+
+        // Show/hide "Add to list" based on whether groups exist
+        AddToListMenuItem.Visibility = vm.ContactGroups.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+        // Show "Remove from this list" only when viewing a contact group folder
+        RemoveFromListMenuItem.Visibility = vm.SelectedFolder?.GroupId != null
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    /// <summary>
+    /// Handle "Edit" context menu click
+    /// </summary>
+    private void ContextMenu_EditContact_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is PeopleViewModel vm && vm.SelectedContact != null)
+        {
+            vm.EditContactCommand.Execute(null);
+        }
+    }
+
+    /// <summary>
+    /// Handle "Add to favorites" context menu click
+    /// </summary>
+    private void ContextMenu_AddToFavorites_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is PeopleViewModel vm && vm.SelectedContact != null)
+        {
+            vm.AddToFavoritesCommand.Execute(null);
+        }
+    }
+
+    /// <summary>
+    /// Handle "Set category" context menu click
+    /// </summary>
+    private void ContextMenu_SetCategory_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is PeopleViewModel vm && vm.SelectedContact != null)
+        {
+            vm.AddCategoryCommand.Execute(null);
+        }
+    }
+
+    /// <summary>
+    /// Handle "Add to list" submenu click
+    /// </summary>
+    private async void ContextMenu_AddToList_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem menuItem && menuItem.Tag is string groupId)
+        {
+            if (DataContext is PeopleViewModel vm && vm.SelectedContact != null)
+            {
+                var added = await vm.AddContactsToGroupAsync(groupId, new List<string> { vm.SelectedContact.Id });
+                if (added > 0)
+                {
+                    Services.NotificationService.Instance.ShowSuccess(
+                        $"'{vm.SelectedContact.DisplayName}' added to '{menuItem.Header}'.", "Contacts");
+                }
+                else
+                {
+                    Services.NotificationService.Instance.ShowWarning(
+                        "Contact may already be in this list.", "Contacts");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handle "Remove from this list" context menu click
+    /// </summary>
+    private async void ContextMenu_RemoveFromList_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is PeopleViewModel vm && vm.SelectedContact != null)
+        {
+            var success = await vm.RemoveContactFromGroupAsync(vm.SelectedContact.Id);
+            if (success)
+            {
+                Services.NotificationService.Instance.ShowSuccess(
+                    $"'{vm.SelectedContact.DisplayName}' removed from list.", "Contacts");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handle "Delete" context menu click
+    /// </summary>
+    private void ContextMenu_DeleteContact_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is PeopleViewModel vm && vm.SelectedContact != null)
+        {
+            vm.DeleteContactCommand.Execute(null);
+        }
+    }
+
+    /// <summary>
+    /// Handle keyboard shortcuts for the People view
+    /// </summary>
+    private void PeopleView_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (DataContext is not PeopleViewModel vm) return;
+
+        if (Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            switch (e.Key)
+            {
+                case Key.N:
+                    // Ctrl+N: New contact
+                    vm.NewContactCommand.Execute(null);
+                    e.Handled = true;
+                    break;
+
+                case Key.F:
+                    // Ctrl+F: Focus search box
+                    SearchTextBox?.Focus();
+                    SearchTextBox?.SelectAll();
+                    e.Handled = true;
+                    break;
+
+                case Key.E:
+                    // Ctrl+E: Edit selected contact
+                    if (vm.SelectedContact != null)
+                    {
+                        vm.EditContactCommand.Execute(null);
+                        e.Handled = true;
+                    }
+                    break;
+
+                case Key.I:
+                    // Ctrl+I: Import contacts
+                    vm.ImportContactsCommand.Execute(null);
+                    e.Handled = true;
+                    break;
+            }
+        }
+        else if (Keyboard.Modifiers == ModifierKeys.None)
+        {
+            switch (e.Key)
+            {
+                case Key.Delete:
+                    // Delete: Delete selected contact
+                    if (vm.SelectedContact != null)
+                    {
+                        vm.DeleteContactCommand.Execute(null);
+                        e.Handled = true;
+                    }
+                    break;
+
+                case Key.F2:
+                    // F2: Edit selected contact (rename-style shortcut)
+                    if (vm.SelectedContact != null)
+                    {
+                        vm.EditContactCommand.Execute(null);
+                        e.Handled = true;
+                    }
+                    break;
+
+                case Key.Escape:
+                    // Escape: Clear search
+                    if (!string.IsNullOrEmpty(vm.SearchText))
+                    {
+                        vm.SearchText = string.Empty;
+                        e.Handled = true;
+                    }
+                    break;
+            }
+        }
     }
 }
