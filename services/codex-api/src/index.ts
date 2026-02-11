@@ -315,6 +315,104 @@ app.get('/api/audit-logs', async (c) => {
 });
 
 // ============================================================================
+// AUTH ENDPOINTS
+// Routes under /api/auth/ for JubileeOutlook authentication
+// ============================================================================
+
+// OAuth user registration - find or create user by email after OAuth login
+app.post('/api/auth/oauth-register', async (c) => {
+  const body = await c.req.json();
+  const { email, displayName, provider, providerId, avatarUrl } = body;
+
+  if (!email) {
+    return c.json({ success: false, error: 'Email is required' }, 400);
+  }
+
+  try {
+    // Try to find existing user by email
+    let user = await codex.getUserByEmail(email);
+    let isNewUser = false;
+
+    if (!user) {
+      // Create new user for this OAuth account
+      user = await codex.createUser({
+        email,
+        displayName: displayName || email.split('@')[0],
+        role: 'member',
+        authProvider: provider || 'oauth',
+        authProviderId: providerId,
+        avatarUrl,
+      });
+      isNewUser = true;
+
+      await codex.createAuditLog({
+        eventType: 'user.oauth_registered',
+        eventCategory: 'identity',
+        userId: user.id,
+        outcome: 'success',
+        metadata: { email, provider, isNewUser: true },
+      });
+    } else {
+      await codex.createAuditLog({
+        eventType: 'user.oauth_login',
+        eventCategory: 'identity',
+        userId: user.id,
+        outcome: 'success',
+        metadata: { email, provider, isNewUser: false },
+      });
+    }
+
+    const { passwordHash, ...safeUser } = user;
+
+    return c.json({
+      success: true,
+      isNewUser,
+      user: {
+        id: safeUser.id,
+        email: safeUser.email,
+        displayName: safeUser.display_name ?? safeUser.displayName ?? email.split('@')[0],
+        role: safeUser.role,
+        avatarUrl: safeUser.avatar_url ?? safeUser.avatarUrl,
+      },
+    });
+  } catch (error) {
+    console.error('Error in oauth-register:', error);
+    return c.json({ success: false, error: 'Failed to register OAuth user' }, 500);
+  }
+});
+
+// Get current user profile (session validation)
+app.get('/api/auth/me', async (c) => {
+  const userId = c.req.header('X-User-Id');
+
+  if (!userId) {
+    return c.json({ success: false, error: 'Not authenticated' }, 401);
+  }
+
+  try {
+    const user = await codex.getUserById(userId);
+    if (!user) {
+      return c.json({ success: false, error: 'User not found' }, 404);
+    }
+
+    const { passwordHash, ...safeUser } = user;
+    return c.json({
+      success: true,
+      user: {
+        id: safeUser.id,
+        email: safeUser.email,
+        displayName: safeUser.display_name ?? safeUser.displayName,
+        role: safeUser.role,
+        avatarUrl: safeUser.avatar_url ?? safeUser.avatarUrl,
+      },
+    });
+  } catch (error) {
+    console.error('Error in /api/auth/me:', error);
+    return c.json({ success: false, error: 'Failed to get user profile' }, 500);
+  }
+});
+
+// ============================================================================
 // CONTACTS ENDPOINTS (JubileeOutlook People Module)
 // Routes under /api/v1/contacts for WPF client compatibility
 // ============================================================================
@@ -769,6 +867,8 @@ async function start() {
     console.log('');
     console.log('Endpoints:');
     console.log('  GET  /health                    - Health check');
+    console.log('  POST /api/auth/oauth-register   - OAuth user registration');
+    console.log('  GET  /api/auth/me               - Get current user profile');
     console.log('  GET  /api/users/:id             - Get user by ID');
     console.log('  POST /api/users                 - Create user');
     console.log('  GET  /api/personas              - List personas');

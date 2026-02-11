@@ -1381,7 +1381,10 @@ public partial class AuthenticationWindow : Window
                     {
                         // Credentials exist - use existing account directly
                         System.Diagnostics.Debug.WriteLine($"[SyncButton] Using existing credentials for {email}");
-                        SyncStatusText.Text = "Using existing credentials...";
+                        SyncStatusText.Text = "Resolving user identity...";
+
+                        // Resolve user identity in Codex database so contacts/events load correctly
+                        await ResolveUserIdentityAsync(email, existingAccount.ProviderType.ToString().ToLower());
 
                         // Store that we have synced accounts
                         await _secureStorage.StoreAsync("has_synced_accounts", true);
@@ -1459,6 +1462,11 @@ public partial class AuthenticationWindow : Window
 
             if (result.Success && result.Account != null)
             {
+                SyncStatusText.Text = "Resolving user identity...";
+
+                // Ensure user identity is resolved in Codex for contacts/events
+                await ResolveUserIdentityAsync(email, result.Account.ProviderType.ToString().ToLower());
+
                 SyncStatusText.Text = "Email account synced successfully!";
 
                 MessageDialog.ShowInfo(this,
@@ -1556,6 +1564,41 @@ public partial class AuthenticationWindow : Window
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Resolves the user's identity in the Codex database by calling oauth-register.
+    /// This ensures ServiceConfiguration.UserId is set to the correct user after Sync Email login.
+    /// </summary>
+    private async Task ResolveUserIdentityAsync(string email, string provider = "google")
+    {
+        try
+        {
+            System.Diagnostics.Debug.WriteLine($"[AuthWindow] Resolving user identity for {email} (provider: {provider})");
+
+            var oauthService = new OAuth2AuthenticationService(_secureStorage);
+            var result = await oauthService.RegisterOAuthUserAsync(
+                email: email,
+                displayName: email.Split('@')[0],
+                provider: provider,
+                providerId: null,
+                avatarUrl: null
+            );
+
+            if (result.Success)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AuthWindow] User identity resolved: {result.UserId} ({result.Email})");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[AuthWindow] Failed to resolve user identity: {result.ErrorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Non-blocking - don't prevent login if identity resolution fails
+            System.Diagnostics.Debug.WriteLine($"[AuthWindow] Error resolving user identity: {ex.Message}");
+        }
     }
 
     private string DetectEmailProvider(string email)
