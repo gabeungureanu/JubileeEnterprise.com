@@ -614,6 +614,32 @@ app.get('/api/v1/contacts/:id', async (c) => {
   }
 });
 
+// Check for duplicate contacts
+app.post('/api/v1/contacts/check-duplicates', async (c) => {
+  const userId = getRequestUserId(c);
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
+
+  try {
+    const body = await c.req.json();
+    const duplicates = await codex.findDuplicateContacts(
+      userId,
+      body.displayName,
+      body.emailAddresses
+    );
+
+    return c.json({
+      success: true,
+      hasDuplicates: duplicates.length > 0,
+      duplicates: duplicates.map(toCamelCase),
+    });
+  } catch (error) {
+    console.error('Error checking duplicates:', error);
+    return c.json({ success: false, error: 'Failed to check duplicates' }, 500);
+  }
+});
+
 // Create a new contact
 app.post('/api/v1/contacts', async (c) => {
   const body = await c.req.json();
@@ -633,6 +659,24 @@ app.post('/api/v1/contacts', async (c) => {
   }
 
   try {
+    // Check for duplicates unless explicitly skipped
+    if (!body.skipDuplicateCheck) {
+      const duplicates = await codex.findDuplicateContacts(
+        userId,
+        body.displayName,
+        body.emailAddresses
+      );
+
+      if (duplicates.length > 0) {
+        return c.json({
+          success: false,
+          error: 'Potential duplicate contact found',
+          code: 'DUPLICATE_DETECTED',
+          duplicates: duplicates.map(toCamelCase),
+        }, 409);
+      }
+    }
+
     const contact = await codex.createContact({
       userId,
       displayName: body.displayName,

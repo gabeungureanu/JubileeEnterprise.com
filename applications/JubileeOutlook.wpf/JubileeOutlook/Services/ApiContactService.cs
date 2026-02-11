@@ -499,6 +499,26 @@ public class ApiContactService : IContactService
                 };
             }
 
+            // Handle duplicate detection (409 Conflict)
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiContactService] Duplicate contact detected: {content}");
+                try
+                {
+                    var duplicateResponse = JsonSerializer.Deserialize<ApiDuplicateResponse>(content, _jsonOptions);
+                    if (duplicateResponse?.Code == "DUPLICATE_DETECTED")
+                    {
+                        return new ContactServiceResult<Contact>
+                        {
+                            Success = false,
+                            Error = "DUPLICATE_DETECTED",
+                            StatusCode = HttpStatusCode.Conflict
+                        };
+                    }
+                }
+                catch { }
+            }
+
             System.Diagnostics.Debug.WriteLine($"[ApiContactService] Create failed: {response.StatusCode} - {content}");
             return new ContactServiceResult<Contact>
             {
@@ -1068,7 +1088,8 @@ public class ApiContactService : IContactService
             IsFavorite = contact.IsFavorite,
             IsDeleted = contact.IsDeleted,
             DeletedAt = contact.DeletedAt,
-            Category = contact.Category
+            Category = contact.Category,
+            SkipDuplicateCheck = contact.SkipDuplicateCheck
         };
     }
 
@@ -1088,6 +1109,262 @@ public class ApiContactService : IContactService
     {
         // They are the same class
         return contact;
+    }
+
+    #endregion
+
+    #region Contact Groups
+
+    /// <summary>
+    /// Gets all contact groups for the current user
+    /// GET /api/v1/contact-groups
+    /// </summary>
+    public async Task<ContactServiceResult<List<ContactGroupDto>>> GetContactGroupsAsync()
+    {
+        try
+        {
+            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var endpoint = $"contact-groups?userId={Uri.EscapeDataString(userId)}";
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] GET {endpoint}");
+
+            var response = await _httpClientFactory.GetAsync(ApiEndpoint.InspireCodex, endpoint);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = JsonSerializer.Deserialize<ApiContactGroupsListResponse>(content, _jsonOptions);
+                if (apiResponse?.Success == true && apiResponse.Data != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ApiContactService] Retrieved {apiResponse.Data.Count} contact groups");
+                    return new ContactServiceResult<List<ContactGroupDto>>
+                    {
+                        Success = true,
+                        Data = apiResponse.Data
+                    };
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] GET contact-groups failed: {response.StatusCode}");
+            return new ContactServiceResult<List<ContactGroupDto>>
+            {
+                Success = false,
+                Error = $"Failed to get contact groups: {response.StatusCode}",
+                Data = new List<ContactGroupDto>()
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] GetContactGroups error: {ex.Message}");
+            return new ContactServiceResult<List<ContactGroupDto>>
+            {
+                Success = false,
+                Error = ex.Message,
+                Data = new List<ContactGroupDto>()
+            };
+        }
+    }
+
+    /// <summary>
+    /// Gets a single contact group with its members
+    /// GET /api/v1/contact-groups/{id}
+    /// </summary>
+    public async Task<ContactServiceResult<ContactGroupDetailDto>> GetContactGroupAsync(string groupId)
+    {
+        try
+        {
+            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var endpoint = $"contact-groups/{Uri.EscapeDataString(groupId)}?userId={Uri.EscapeDataString(userId)}";
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] GET {endpoint}");
+
+            var response = await _httpClientFactory.GetAsync(ApiEndpoint.InspireCodex, endpoint);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = JsonSerializer.Deserialize<ApiContactGroupDetailResponse>(content, _jsonOptions);
+                if (apiResponse?.Success == true && apiResponse.Data != null)
+                {
+                    return new ContactServiceResult<ContactGroupDetailDto>
+                    {
+                        Success = true,
+                        Data = apiResponse.Data
+                    };
+                }
+            }
+
+            return new ContactServiceResult<ContactGroupDetailDto>
+            {
+                Success = false,
+                Error = $"Failed to get contact group: {response.StatusCode}"
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] GetContactGroup error: {ex.Message}");
+            return new ContactServiceResult<ContactGroupDetailDto>
+            {
+                Success = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    /// <summary>
+    /// Creates a new contact group
+    /// POST /api/v1/contact-groups
+    /// </summary>
+    public async Task<ContactServiceResult<ContactGroupDto>> CreateContactGroupAsync(string name, string? description = null)
+    {
+        try
+        {
+            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var endpoint = $"contact-groups?userId={Uri.EscapeDataString(userId)}";
+            var payload = new { name, description };
+
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] POST {endpoint} - {name}");
+
+            var response = await _httpClientFactory.PostAsync(ApiEndpoint.InspireCodex, endpoint, payload);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = JsonSerializer.Deserialize<ApiContactGroupSingleResponse>(content, _jsonOptions);
+                if (apiResponse?.Success == true && apiResponse.Data != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ApiContactService] Created contact group: {apiResponse.Data.Id}");
+                    return new ContactServiceResult<ContactGroupDto>
+                    {
+                        Success = true,
+                        Data = apiResponse.Data
+                    };
+                }
+            }
+
+            return new ContactServiceResult<ContactGroupDto>
+            {
+                Success = false,
+                Error = $"Failed to create contact group: {response.StatusCode}"
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] CreateContactGroup error: {ex.Message}");
+            return new ContactServiceResult<ContactGroupDto>
+            {
+                Success = false,
+                Error = ex.Message
+            };
+        }
+    }
+
+    /// <summary>
+    /// Deletes a contact group
+    /// DELETE /api/v1/contact-groups/{id}
+    /// </summary>
+    public async Task<ContactServiceResult<bool>> DeleteContactGroupAsync(string groupId)
+    {
+        try
+        {
+            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var endpoint = $"contact-groups/{Uri.EscapeDataString(groupId)}?userId={Uri.EscapeDataString(userId)}";
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] DELETE {endpoint}");
+
+            var response = await _httpClientFactory.DeleteAsync(ApiEndpoint.InspireCodex, endpoint);
+
+            if (response.IsSuccessStatusCode)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiContactService] Deleted contact group: {groupId}");
+                return new ContactServiceResult<bool> { Success = true, Data = true };
+            }
+
+            return new ContactServiceResult<bool>
+            {
+                Success = false,
+                Error = $"Failed to delete contact group: {response.StatusCode}",
+                Data = false
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] DeleteContactGroup error: {ex.Message}");
+            return new ContactServiceResult<bool> { Success = false, Error = ex.Message, Data = false };
+        }
+    }
+
+    /// <summary>
+    /// Adds contacts to a group
+    /// POST /api/v1/contact-groups/{id}/members
+    /// </summary>
+    public async Task<ContactServiceResult<int>> AddContactsToGroupAsync(string groupId, List<string> contactIds)
+    {
+        try
+        {
+            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var endpoint = $"contact-groups/{Uri.EscapeDataString(groupId)}/members?userId={Uri.EscapeDataString(userId)}";
+            var payload = new { contactIds };
+
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] POST {endpoint} - {contactIds.Count} contacts");
+
+            var response = await _httpClientFactory.PostAsync(ApiEndpoint.InspireCodex, endpoint, payload);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = JsonSerializer.Deserialize<ApiAddMembersResponse>(content, _jsonOptions);
+                if (apiResponse?.Success == true)
+                {
+                    return new ContactServiceResult<int>
+                    {
+                        Success = true,
+                        Data = apiResponse.Added
+                    };
+                }
+            }
+
+            return new ContactServiceResult<int>
+            {
+                Success = false,
+                Error = $"Failed to add contacts to group: {response.StatusCode}"
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] AddContactsToGroup error: {ex.Message}");
+            return new ContactServiceResult<int> { Success = false, Error = ex.Message };
+        }
+    }
+
+    /// <summary>
+    /// Removes a contact from a group
+    /// DELETE /api/v1/contact-groups/{id}/members/{contactId}
+    /// </summary>
+    public async Task<ContactServiceResult<bool>> RemoveContactFromGroupAsync(string groupId, string contactId)
+    {
+        try
+        {
+            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var endpoint = $"contact-groups/{Uri.EscapeDataString(groupId)}/members/{Uri.EscapeDataString(contactId)}?userId={Uri.EscapeDataString(userId)}";
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] DELETE {endpoint}");
+
+            var response = await _httpClientFactory.DeleteAsync(ApiEndpoint.InspireCodex, endpoint);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return new ContactServiceResult<bool> { Success = true, Data = true };
+            }
+
+            return new ContactServiceResult<bool>
+            {
+                Success = false,
+                Error = $"Failed to remove contact from group: {response.StatusCode}",
+                Data = false
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] RemoveContactFromGroup error: {ex.Message}");
+            return new ContactServiceResult<bool> { Success = false, Error = ex.Message, Data = false };
+        }
     }
 
     #endregion
@@ -1259,11 +1536,116 @@ public class ContactDto
     [JsonPropertyName("category")]
     public string? Category { get; set; }
 
+    [JsonPropertyName("skipDuplicateCheck")]
+    public bool SkipDuplicateCheck { get; set; }
+
     [JsonPropertyName("createdAt")]
     public DateTime? CreatedAt { get; set; }
 
     [JsonPropertyName("updatedAt")]
     public DateTime? UpdatedAt { get; set; }
+}
+
+/// <summary>
+/// Contact group data transfer object
+/// </summary>
+public class ContactGroupDto
+{
+    [JsonPropertyName("id")]
+    public string? Id { get; set; }
+
+    [JsonPropertyName("userId")]
+    public string? UserId { get; set; }
+
+    [JsonPropertyName("name")]
+    public string? Name { get; set; }
+
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
+
+    [JsonPropertyName("memberCount")]
+    public int MemberCount { get; set; }
+
+    [JsonPropertyName("createdAt")]
+    public DateTime? CreatedAt { get; set; }
+
+    [JsonPropertyName("updatedAt")]
+    public DateTime? UpdatedAt { get; set; }
+}
+
+/// <summary>
+/// Contact group detail with members list
+/// </summary>
+public class ContactGroupDetailDto : ContactGroupDto
+{
+    [JsonPropertyName("members")]
+    public List<ContactDto>? Members { get; set; }
+}
+
+/// <summary>
+/// API response for contact groups list
+/// </summary>
+internal class ApiContactGroupsListResponse
+{
+    [JsonPropertyName("success")]
+    public bool Success { get; set; }
+
+    [JsonPropertyName("data")]
+    public List<ContactGroupDto>? Data { get; set; }
+}
+
+/// <summary>
+/// API response for single contact group
+/// </summary>
+internal class ApiContactGroupSingleResponse
+{
+    [JsonPropertyName("success")]
+    public bool Success { get; set; }
+
+    [JsonPropertyName("data")]
+    public ContactGroupDto? Data { get; set; }
+}
+
+/// <summary>
+/// API response for contact group detail with members
+/// </summary>
+internal class ApiContactGroupDetailResponse
+{
+    [JsonPropertyName("success")]
+    public bool Success { get; set; }
+
+    [JsonPropertyName("data")]
+    public ContactGroupDetailDto? Data { get; set; }
+}
+
+/// <summary>
+/// API response for adding members to a group
+/// </summary>
+internal class ApiAddMembersResponse
+{
+    [JsonPropertyName("success")]
+    public bool Success { get; set; }
+
+    [JsonPropertyName("added")]
+    public int Added { get; set; }
+}
+
+/// <summary>
+/// API response for duplicate detection
+/// </summary>
+internal class ApiDuplicateResponse
+{
+    [JsonPropertyName("success")]
+    public bool Success { get; set; }
+
+    [JsonPropertyName("error")]
+    public string? Error { get; set; }
+
+    [JsonPropertyName("code")]
+    public string? Code { get; set; }
+
+    [JsonPropertyName("duplicates")]
+    public List<ContactDto>? Duplicates { get; set; }
 }
 
 #endregion

@@ -68,10 +68,14 @@ public partial class PeopleViewModel : ObservableObject
         _ => "Name (A-Z)"
     };
 
+    [ObservableProperty]
+    private ContactGroup? _selectedContactGroup;
+
     public ObservableCollection<ContactFolder> Folders { get; } = new();
     public ObservableCollection<Contact> Contacts { get; } = new();
     public ObservableCollection<Contact> FilteredContacts { get; } = new();
     public ObservableCollection<string> Categories { get; } = new();
+    public ObservableCollection<ContactGroup> ContactGroups { get; } = new();
 
     /// <summary>
     /// Collection of selected contacts for multi-select operations
@@ -128,6 +132,60 @@ public partial class PeopleViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Loads contact groups from the API and populates the "Your contact lists" subfolder tree
+    /// </summary>
+    public async Task LoadContactGroupsAsync()
+    {
+        try
+        {
+            System.Diagnostics.Debug.WriteLine("[PeopleViewModel] Loading contact groups from API...");
+            var result = await _contactService.GetContactGroupsAsync();
+
+            if (result.Success && result.Data != null)
+            {
+                ContactGroups.Clear();
+                var listsFolder = Folders.FirstOrDefault(f => f.Name == "Your contact lists");
+
+                if (listsFolder != null)
+                {
+                    listsFolder.SubFolders.Clear();
+                }
+
+                foreach (var groupDto in result.Data)
+                {
+                    var group = new ContactGroup
+                    {
+                        Id = groupDto.Id ?? string.Empty,
+                        Name = groupDto.Name ?? "Unnamed",
+                        Description = groupDto.Description ?? string.Empty,
+                        MemberCount = groupDto.MemberCount
+                    };
+                    ContactGroups.Add(group);
+
+                    // Add as subfolder for tree display
+                    listsFolder?.SubFolders.Add(new ContactFolder
+                    {
+                        Name = group.Name,
+                        Icon = "\ue7ef",
+                        GroupId = group.Id
+                    });
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Loaded {ContactGroups.Count} contact groups");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to load contact groups: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Set of contact IDs that are members of the currently selected group
+    /// </summary>
+    private HashSet<string> _selectedGroupMemberIds = new();
+
+    /// <summary>
     /// Loads contacts from the API (with offline-first support)
     /// </summary>
     public async Task LoadContactsFromDatabaseAsync()
@@ -166,11 +224,17 @@ public partial class PeopleViewModel : ObservableObject
             else
             {
                 System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to load contacts: {result.Error}");
+                Services.NotificationService.Instance.ShowError(
+                    result.Error ?? "Unable to load contacts. Please check your connection.",
+                    "Contacts");
             }
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to load contacts: {ex.Message}");
+            Services.NotificationService.Instance.ShowError(
+                "Unable to load contacts. Please check your connection.",
+                "Contacts");
         }
         finally
         {
@@ -181,11 +245,18 @@ public partial class PeopleViewModel : ObservableObject
     /// <summary>
     /// Creates a new contact via API
     /// </summary>
-    public async Task<Models.Contact> CreateContactViaApiAsync(Contact contact)
+    /// <param name="contact">The contact to create</param>
+    /// <param name="skipDuplicateCheck">If true, skips duplicate detection</param>
+    public async Task<Models.Contact> CreateContactViaApiAsync(Contact contact, bool skipDuplicateCheck = false)
     {
         try
         {
             var apiContact = MapToApiContact(contact);
+            if (skipDuplicateCheck)
+            {
+                apiContact.SkipDuplicateCheck = true;
+            }
+
             var result = await _contactService.CreateContactWithResultAsync(apiContact);
 
             if (result.Success && result.Data != null)
@@ -414,21 +485,77 @@ public partial class PeopleViewModel : ObservableObject
 
     partial void OnSelectedFolderChanged(ContactFolder? value)
     {
-        // Update selection state
+        // Update selection state for top-level folders
         foreach (var folder in Folders)
         {
             folder.IsSelected = folder == value;
+            // Also check sub-folders
+            foreach (var sub in folder.SubFolders)
+            {
+                sub.IsSelected = sub == value;
+            }
         }
 
         // Clear category selection when a folder is selected
         SelectedCategory = null;
 
+        // Update the selected contact group reference
+        if (value?.GroupId != null)
+        {
+            SelectedContactGroup = ContactGroups.FirstOrDefault(g => g.Id == value.GroupId);
+        }
+        else
+        {
+            SelectedContactGroup = null;
+        }
+
         // Notify IsInDeletedFolder changed for UI binding
         OnPropertyChanged(nameof(IsInDeletedFolder));
         OnPropertyChanged(nameof(DeletedContactsCount));
+        OnPropertyChanged(nameof(IsInContactListFolder));
 
-        // Reload contacts for the selected folder
-        LoadContactsForFolder();
+        // Load group members if a group is selected, then filter
+        if (value?.GroupId != null)
+        {
+            _ = LoadGroupMembersAndFilterAsync(value.GroupId);
+        }
+        else
+        {
+            _selectedGroupMemberIds.Clear();
+            LoadContactsForFolder();
+        }
+    }
+
+    /// <summary>
+    /// Loads group members from the API and then filters the contact list
+    /// </summary>
+    private async Task LoadGroupMembersAndFilterAsync(string groupId)
+    {
+        try
+        {
+            IsLoading = true;
+            var result = await _contactService.GetContactGroupAsync(groupId);
+            _selectedGroupMemberIds.Clear();
+
+            if (result.Success && result.Data?.Members != null)
+            {
+                foreach (var member in result.Data.Members)
+                {
+                    if (member.Id != null)
+                        _selectedGroupMemberIds.Add(member.Id);
+                }
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Loaded {_selectedGroupMemberIds.Count} members for group {groupId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to load group members: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+            FilterContacts();
+        }
     }
 
     /// <summary>
@@ -504,13 +631,23 @@ public partial class PeopleViewModel : ObservableObject
             else
             {
                 // Apply folder filter when no category is selected
-                bool matchesFolder = folderName switch
+                bool matchesFolder;
+                if (SelectedFolder?.GroupId != null)
                 {
-                    "Your contacts" => !contact.IsDeleted,
-                    "Favorites" => contact.IsFavorite && !contact.IsDeleted,
-                    "Deleted" => contact.IsDeleted,
-                    _ => !contact.IsDeleted
-                };
+                    // Filtering by a specific contact group
+                    matchesFolder = !contact.IsDeleted && _selectedGroupMemberIds.Contains(contact.Id);
+                }
+                else
+                {
+                    matchesFolder = folderName switch
+                    {
+                        "Your contacts" => !contact.IsDeleted,
+                        "Favorites" => contact.IsFavorite && !contact.IsDeleted,
+                        "Your contact lists" => false, // Parent folder shows nothing; select a sub-group
+                        "Deleted" => contact.IsDeleted,
+                        _ => !contact.IsDeleted
+                    };
+                }
 
                 if (!matchesFolder) continue;
             }
@@ -574,6 +711,11 @@ public partial class PeopleViewModel : ObservableObject
             // Show category name with count (like Outlook: "office (1)")
             ContentHeader = $"{SelectedCategory} ({FilteredContacts.Count})";
         }
+        else if (SelectedFolder?.GroupId != null)
+        {
+            // Show group name with member count
+            ContentHeader = $"{SelectedFolder.Name} ({FilteredContacts.Count})";
+        }
         else
         {
             // Show folder name
@@ -636,6 +778,12 @@ public partial class PeopleViewModel : ObservableObject
     /// <summary>
     /// Add a new contact to the collection and save via API
     /// </summary>
+    /// <summary>
+    /// Event raised when a duplicate contact is detected during creation
+    /// The handler should return true to proceed (skip duplicate check), false to cancel
+    /// </summary>
+    public event Func<Contact, Task<bool>>? DuplicateContactDetected;
+
     public async Task AddContactAsync(Contact contact)
     {
         try
@@ -651,10 +799,33 @@ public partial class PeopleViewModel : ObservableObject
             FilterContacts();
 
             System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Added contact: {contact.DisplayName}");
+            Services.NotificationService.Instance.ShowSuccess($"Contact '{contact.DisplayName}' saved.", "Contacts");
+        }
+        catch (Exception ex) when (ex.Message == "DUPLICATE_DETECTED")
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Duplicate detected for: {contact.DisplayName}");
+
+            // Ask user if they want to proceed
+            bool proceed = false;
+            if (DuplicateContactDetected != null)
+            {
+                proceed = await DuplicateContactDetected.Invoke(contact);
+            }
+
+            if (proceed)
+            {
+                // Retry with skip flag
+                var createdContact = await CreateContactViaApiAsync(contact, skipDuplicateCheck: true);
+                contact.Id = createdContact.Id;
+                Contacts.Add(contact);
+                FilterContacts();
+                Services.NotificationService.Instance.ShowSuccess($"Contact '{contact.DisplayName}' saved.", "Contacts");
+            }
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to add contact: {ex.Message}");
+            Services.NotificationService.Instance.ShowError("Failed to save contact. Please try again.", "Contacts");
             throw;
         }
     }
@@ -689,6 +860,7 @@ public partial class PeopleViewModel : ObservableObject
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to update contact: {ex.Message}");
+            Services.NotificationService.Instance.ShowError("Failed to update contact. Please try again.", "Contacts");
             throw;
         }
     }
@@ -798,6 +970,7 @@ public partial class PeopleViewModel : ObservableObject
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to delete contact: {ex.Message}");
+            Services.NotificationService.Instance.ShowError("Failed to delete contact. Please try again.", "Contacts");
         }
     }
 
@@ -832,6 +1005,7 @@ public partial class PeopleViewModel : ObservableObject
             // Revert on error
             SelectedContact.IsDeleted = true;
             System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to restore contact: {ex.Message}");
+            Services.NotificationService.Instance.ShowError("Failed to restore contact. Please try again.", "Contacts");
         }
     }
 
@@ -846,9 +1020,169 @@ public partial class PeopleViewModel : ObservableObject
     public bool IsInDeletedFolder => SelectedFolder?.Name == "Deleted";
 
     /// <summary>
+    /// Checks if currently viewing a contact list/group folder
+    /// </summary>
+    public bool IsInContactListFolder => SelectedFolder?.GroupId != null || SelectedFolder?.Name == "Your contact lists";
+
+    /// <summary>
     /// Gets the count of deleted contacts
     /// </summary>
     public int DeletedContactsCount => Contacts.Count(c => c.IsDeleted);
+
+    /// <summary>
+    /// Event raised when a new contact list name should be entered
+    /// </summary>
+    public event EventHandler? CreateContactListRequested;
+
+    /// <summary>
+    /// Event raised when contacts should be picked for adding to a group
+    /// </summary>
+    public event EventHandler<string>? AddToContactListRequested;
+
+    /// <summary>
+    /// Creates a new contact group/list
+    /// </summary>
+    public async Task<bool> CreateContactListAsync(string name, string? description = null)
+    {
+        try
+        {
+            var result = await _contactService.CreateContactGroupAsync(name, description);
+            if (result.Success && result.Data != null)
+            {
+                var group = new ContactGroup
+                {
+                    Id = result.Data.Id ?? string.Empty,
+                    Name = result.Data.Name ?? name,
+                    Description = result.Data.Description ?? string.Empty,
+                    MemberCount = 0
+                };
+                ContactGroups.Add(group);
+
+                // Add subfolder
+                var listsFolder = Folders.FirstOrDefault(f => f.Name == "Your contact lists");
+                listsFolder?.SubFolders.Add(new ContactFolder
+                {
+                    Name = group.Name,
+                    Icon = "\ue7ef",
+                    GroupId = group.Id
+                });
+
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Created contact list: {name}");
+                Services.NotificationService.Instance.ShowSuccess($"Contact list '{name}' created.", "Contacts");
+                return true;
+            }
+            return false;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to create contact list: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Deletes the currently selected contact group/list
+    /// </summary>
+    public async Task<bool> DeleteContactListAsync(string groupId)
+    {
+        try
+        {
+            var result = await _contactService.DeleteContactGroupAsync(groupId);
+            if (result.Success)
+            {
+                // Remove from local collections
+                var group = ContactGroups.FirstOrDefault(g => g.Id == groupId);
+                if (group != null) ContactGroups.Remove(group);
+
+                var listsFolder = Folders.FirstOrDefault(f => f.Name == "Your contact lists");
+                var subFolder = listsFolder?.SubFolders.FirstOrDefault(sf => sf.GroupId == groupId);
+                if (subFolder != null) listsFolder?.SubFolders.Remove(subFolder);
+
+                // If we were viewing this group, go back to "Your contacts"
+                if (SelectedFolder?.GroupId == groupId)
+                {
+                    SelectedFolder = Folders.FirstOrDefault();
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Deleted contact list: {groupId}");
+                return true;
+            }
+            return false;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to delete contact list: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Adds the selected contact(s) to a group
+    /// </summary>
+    public async Task<int> AddContactsToGroupAsync(string groupId, List<string> contactIds)
+    {
+        try
+        {
+            var result = await _contactService.AddContactsToGroupAsync(groupId, contactIds);
+            if (result.Success)
+            {
+                // If we're currently viewing this group, refresh the member list
+                if (SelectedFolder?.GroupId == groupId)
+                {
+                    await LoadGroupMembersAndFilterAsync(groupId);
+                }
+
+                // Update member count
+                var group = ContactGroups.FirstOrDefault(g => g.Id == groupId);
+                if (group != null) group.MemberCount += result.Data;
+
+                return result.Data;
+            }
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to add contacts to group: {ex.Message}");
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Removes a contact from the currently selected group
+    /// </summary>
+    public async Task<bool> RemoveContactFromGroupAsync(string contactId)
+    {
+        if (SelectedFolder?.GroupId == null) return false;
+
+        try
+        {
+            var groupId = SelectedFolder.GroupId;
+            var result = await _contactService.RemoveContactFromGroupAsync(groupId, contactId);
+            if (result.Success)
+            {
+                _selectedGroupMemberIds.Remove(contactId);
+                FilterContacts();
+
+                // Update member count
+                var group = ContactGroups.FirstOrDefault(g => g.Id == groupId);
+                if (group != null && group.MemberCount > 0) group.MemberCount--;
+
+                return true;
+            }
+            return false;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to remove contact from group: {ex.Message}");
+            return false;
+        }
+    }
+
+    [RelayCommand]
+    private void CreateContactList()
+    {
+        CreateContactListRequested?.Invoke(this, EventArgs.Empty);
+    }
 
     [RelayCommand]
     private void EmptyDeletedFolder()
@@ -1665,7 +1999,30 @@ public partial class ContactFolder : ObservableObject
     [ObservableProperty]
     private bool _isExpanded = false;
 
+    /// <summary>
+    /// If set, this folder represents a contact group with this ID
+    /// </summary>
+    public string? GroupId { get; set; }
+
     public ObservableCollection<ContactFolder> SubFolders { get; } = new();
+}
+
+/// <summary>
+/// Represents a contact group/distribution list
+/// </summary>
+public partial class ContactGroup : ObservableObject
+{
+    [ObservableProperty]
+    private string _id = string.Empty;
+
+    [ObservableProperty]
+    private string _name = string.Empty;
+
+    [ObservableProperty]
+    private string _description = string.Empty;
+
+    [ObservableProperty]
+    private int _memberCount;
 }
 
 /// <summary>

@@ -31,6 +31,8 @@ public partial class PeopleView : UserControl
             viewModel.EmptyDeletedFolderRequested += ViewModel_EmptyDeletedFolderRequested;
             viewModel.BulkDeleteRequested += ViewModel_BulkDeleteRequested;
             viewModel.BulkAddCategoryRequested += ViewModel_BulkAddCategoryRequested;
+            viewModel.CreateContactListRequested += ViewModel_CreateContactListRequested;
+            viewModel.DuplicateContactDetected += ViewModel_DuplicateContactDetected;
         }
 
         // Load contacts when the view is loaded
@@ -39,10 +41,11 @@ public partial class PeopleView : UserControl
 
     private async void PeopleView_Loaded(object sender, RoutedEventArgs e)
     {
-        // Load contacts from database when view is shown
+        // Load contacts and contact groups from database when view is shown
         if (DataContext is PeopleViewModel viewModel)
         {
             await viewModel.LoadContactsFromDatabaseAsync();
+            await viewModel.LoadContactGroupsAsync();
         }
     }
 
@@ -59,6 +62,8 @@ public partial class PeopleView : UserControl
             oldViewModel.EmptyDeletedFolderRequested -= ViewModel_EmptyDeletedFolderRequested;
             oldViewModel.BulkDeleteRequested -= ViewModel_BulkDeleteRequested;
             oldViewModel.BulkAddCategoryRequested -= ViewModel_BulkAddCategoryRequested;
+            oldViewModel.CreateContactListRequested -= ViewModel_CreateContactListRequested;
+            oldViewModel.DuplicateContactDetected -= ViewModel_DuplicateContactDetected;
         }
 
         if (e.NewValue is PeopleViewModel newViewModel)
@@ -72,9 +77,12 @@ public partial class PeopleView : UserControl
             newViewModel.EmptyDeletedFolderRequested += ViewModel_EmptyDeletedFolderRequested;
             newViewModel.BulkDeleteRequested += ViewModel_BulkDeleteRequested;
             newViewModel.BulkAddCategoryRequested += ViewModel_BulkAddCategoryRequested;
+            newViewModel.CreateContactListRequested += ViewModel_CreateContactListRequested;
+            newViewModel.DuplicateContactDetected += ViewModel_DuplicateContactDetected;
 
-            // Load contacts when DataContext changes
+            // Load contacts and groups when DataContext changes
             _ = newViewModel.LoadContactsFromDatabaseAsync();
+            _ = newViewModel.LoadContactGroupsAsync();
         }
     }
 
@@ -540,5 +548,57 @@ public partial class PeopleView : UserControl
                 UseShellExecute = true
             });
         }
+    }
+
+    private void SubFolder_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement fe && fe.DataContext is ContactFolder subFolder && subFolder.GroupId != null)
+        {
+            if (DataContext is PeopleViewModel vm)
+            {
+                vm.SelectedFolder = subFolder;
+            }
+        }
+    }
+
+    private async void ViewModel_CreateContactListRequested(object? sender, EventArgs e)
+    {
+        var inputDialog = new InputDialog("New contact list", "Enter a name for the new list:");
+        inputDialog.Owner = Window.GetWindow(this);
+
+        if (inputDialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(inputDialog.InputValue))
+        {
+            if (DataContext is PeopleViewModel vm)
+            {
+                var success = await vm.CreateContactListAsync(inputDialog.InputValue.Trim());
+                if (!success)
+                {
+                    ThemedMessageBox.Show(Window.GetWindow(this),
+                        "Failed to create contact list. Please try again.",
+                        "Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+            }
+        }
+    }
+
+    private async Task<bool> ViewModel_DuplicateContactDetected(Contact contact)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+
+        // Must dispatch to UI thread for dialog
+        Dispatcher.Invoke(() =>
+        {
+            var result = ThemedMessageBox.Show(Window.GetWindow(this),
+                $"A contact with the name '{contact.DisplayName}' may already exist.\n\nDo you want to create it anyway?",
+                "Possible Duplicate",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            tcs.SetResult(result == MessageBoxResult.Yes);
+        });
+
+        return await tcs.Task;
     }
 }

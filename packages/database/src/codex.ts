@@ -611,6 +611,58 @@ export async function searchContacts(userId: string, query: string, page: number
   return { contacts: result.rows, totalCount, page, pageSize };
 }
 
+/**
+ * Find potential duplicate contacts for a user by matching display name or email
+ * Returns matching contacts (excluding soft-deleted ones)
+ */
+export async function findDuplicateContacts(
+  userId: string,
+  displayName?: string,
+  emailAddresses?: string[]
+) {
+  const pool = getCodexPool();
+  const conditions: string[] = ['user_id = $1', 'is_deleted = FALSE'];
+  const params: any[] = [userId];
+  let paramIndex = 2;
+
+  const orClauses: string[] = [];
+
+  // Match by exact display name (case-insensitive)
+  if (displayName && displayName.trim()) {
+    orClauses.push(`LOWER(display_name) = LOWER($${paramIndex})`);
+    params.push(displayName.trim());
+    paramIndex++;
+  }
+
+  // Match by any shared email address
+  if (emailAddresses && emailAddresses.length > 0) {
+    const validEmails = emailAddresses.filter(e => e && e.trim());
+    for (const email of validEmails) {
+      orClauses.push(
+        `EXISTS (SELECT 1 FROM jsonb_array_elements_text(email_addresses) e WHERE LOWER(e) = LOWER($${paramIndex}))`
+      );
+      params.push(email.trim());
+      paramIndex++;
+    }
+  }
+
+  if (orClauses.length === 0) {
+    return [];
+  }
+
+  conditions.push(`(${orClauses.join(' OR ')})`);
+
+  const result = await pool.query(
+    `SELECT id, display_name, email_addresses, first_name, last_name
+     FROM user_contacts
+     WHERE ${conditions.join(' AND ')}
+     LIMIT 5`,
+    params
+  );
+
+  return result.rows;
+}
+
 // ============================================================================
 // CONTACT GROUPS (JubileeOutlook People Module)
 // ============================================================================

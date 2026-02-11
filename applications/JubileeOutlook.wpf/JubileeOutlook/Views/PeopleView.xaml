@@ -516,17 +516,70 @@
                                      ItemContainerStyle="{StaticResource FolderItemStyle}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="{Binding Icon}" FontFamily="{StaticResource MaterialIcons}"
-                                                       FontSize="18" Foreground="{StaticResource SecondaryTextBrush}"
-                                                       VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                            <TextBlock Text="{Binding Name}" FontSize="13"
-                                                       Foreground="{StaticResource PrimaryTextBrush}"
-                                                       VerticalAlignment="Center"/>
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Icon}" FontFamily="{StaticResource MaterialIcons}"
+                                                           FontSize="18" Foreground="{StaticResource SecondaryTextBrush}"
+                                                           VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                <TextBlock Text="{Binding Name}" FontSize="13"
+                                                           Foreground="{StaticResource PrimaryTextBrush}"
+                                                           VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <!-- Sub-folders for contact lists -->
+                                            <ItemsControl ItemsSource="{Binding SubFolders}" Margin="24,0,0,0"
+                                                          Visibility="{Binding SubFolders.Count, Converter={StaticResource CountToVisibilityConverter}}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border x:Name="SubFolderBd" Background="Transparent"
+                                                                Padding="8,6" CornerRadius="4" Margin="0,1" Cursor="Hand"
+                                                                MouseLeftButtonUp="SubFolder_Click">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="&#xe7ef;" FontFamily="{StaticResource MaterialIcons}"
+                                                                           FontSize="14" Foreground="{StaticResource SecondaryTextBrush}"
+                                                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                                <TextBlock Text="{Binding Name}" FontSize="12"
+                                                                           Foreground="{StaticResource PrimaryTextBrush}"
+                                                                           VerticalAlignment="Center"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <DataTemplate.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                <Setter TargetName="SubFolderBd" Property="Background" Value="#2D2D4A"/>
+                                                            </DataTrigger>
+                                                        </DataTemplate.Triggers>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
                                         </StackPanel>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
+
+                            <!-- New List button -->
+                            <Button Command="{Binding DataContext.CreateContactListCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    Background="Transparent" BorderThickness="0"
+                                    Padding="12,6" Margin="24,2,8,4" Cursor="Hand"
+                                    HorizontalContentAlignment="Left">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="&#xe145;" FontFamily="{StaticResource MaterialIcons}"
+                                                           FontSize="16" Foreground="{StaticResource GoldBrandBrush}"
+                                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBlock Text="New list" FontSize="12"
+                                                           Foreground="{StaticResource GoldBrandBrush}"
+                                                           VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverBackgroundBrush}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
                         </StackPanel>
                     </Expander>
 

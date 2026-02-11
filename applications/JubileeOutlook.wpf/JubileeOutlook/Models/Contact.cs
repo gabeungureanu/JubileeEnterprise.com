@@ -35,6 +35,7 @@ public class Contact
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
     public string? Category { get; set; }
+    public bool SkipDuplicateCheck { get; set; }
     public DateTime CreatedDate { get; set; } = DateTime.Now;
     public DateTime ModifiedDate { get; set; } = DateTime.Now;
 
