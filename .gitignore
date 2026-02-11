@@ -63,7 +63,6 @@ obj/
 *.suo
 *.userosscache
 *.sln.docstates
-packages/
 *.nupkg
 project.lock.json
 *.nuget.props

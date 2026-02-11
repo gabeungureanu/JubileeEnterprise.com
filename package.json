@@ -6,9 +6,12 @@
   "type": "module",
   "workspaces": [
     "packages/*",
+    "services/codex-api",
+    "services/continuum-api",
+    "services/inspire-api",
     "services/unified",
     "services/jubilee-daily-news",
-    "websites/launcher",
+    "websites/.launcher",
     "websites/codex/JubileeBrowser.com",
     "websites/codex/JubileeInspire.com",
     "websites/codex/JubileeIntelligence.com",

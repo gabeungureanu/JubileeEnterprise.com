@@ -315,6 +315,292 @@ app.get('/api/audit-logs', async (c) => {
 });
 
 // ============================================================================
+// CONTACTS ENDPOINTS (JubileeOutlook People Module)
+// Routes under /api/v1/contacts for WPF client compatibility
+// ============================================================================
+
+/**
+ * Converts a snake_case database row to camelCase for API response
+ */
+function toCamelCase(row: any): any {
+  if (!row) return null;
+  const result: any = {};
+  for (const [key, value] of Object.entries(row)) {
+    const camelKey = key.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+    result[camelKey] = value;
+  }
+  return result;
+}
+
+// Get contacts for a user (paginated)
+app.get('/api/v1/contacts', async (c) => {
+  const userId = c.req.query('userId') || c.req.header('X-User-Id');
+
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
+
+  const page = parseInt(c.req.query('page') ?? '1');
+  const pageSize = parseInt(c.req.query('pageSize') ?? '100');
+
+  try {
+    const result = await codex.getContacts(userId, page, pageSize);
+    return c.json({
+      success: true,
+      contacts: result.contacts.map(toCamelCase),
+      totalCount: result.totalCount,
+      page: result.page,
+      pageSize: result.pageSize,
+    });
+  } catch (error) {
+    console.error('Error fetching contacts:', error);
+    return c.json({ success: false, error: 'Failed to fetch contacts' }, 500);
+  }
+});
+
+// Search contacts
+app.get('/api/v1/contacts/search', async (c) => {
+  const userId = c.req.query('userId') || c.req.header('X-User-Id');
+  const query = c.req.query('q');
+
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
+
+  if (!query) {
+    return c.json({ success: false, error: 'Search query (q) is required' }, 400);
+  }
+
+  const page = parseInt(c.req.query('page') ?? '1');
+  const pageSize = parseInt(c.req.query('pageSize') ?? '50');
+
+  try {
+    const result = await codex.searchContacts(userId, query, page, pageSize);
+    return c.json({
+      success: true,
+      contacts: result.contacts.map(toCamelCase),
+      totalCount: result.totalCount,
+      page: result.page,
+      pageSize: result.pageSize,
+    });
+  } catch (error) {
+    console.error('Error searching contacts:', error);
+    return c.json({ success: false, error: 'Failed to search contacts' }, 500);
+  }
+});
+
+// Get a single contact by ID
+app.get('/api/v1/contacts/:id', async (c) => {
+  const id = c.req.param('id');
+
+  try {
+    const contact = await codex.getContactById(id);
+    if (!contact) {
+      return c.json({ success: false, error: 'Contact not found' }, 404);
+    }
+    return c.json({ success: true, contact: toCamelCase(contact) });
+  } catch (error) {
+    console.error('Error fetching contact:', error);
+    return c.json({ success: false, error: 'Failed to fetch contact' }, 500);
+  }
+});
+
+// Create a new contact
+app.post('/api/v1/contacts', async (c) => {
+  const body = await c.req.json();
+  const userId = body.userId || c.req.header('X-User-Id');
+
+  if (!userId) {
+    return c.json({ success: false, error: 'userId is required' }, 400);
+  }
+
+  if (!body.displayName) {
+    return c.json({ success: false, error: 'displayName is required' }, 400);
+  }
+
+  try {
+    const contact = await codex.createContact({
+      userId,
+      displayName: body.displayName,
+      firstName: body.firstName,
+      lastName: body.lastName,
+      title: body.title,
+      middleName: body.middleName,
+      suffix: body.suffix,
+      nickname: body.nickname,
+      emailAddresses: body.emailAddresses,
+      phoneNumbers: body.phoneNumbers,
+      mobilePhone: body.mobilePhone,
+      company: body.company,
+      jobTitle: body.jobTitle,
+      department: body.department,
+      office: body.office,
+      address: body.address,
+      city: body.city,
+      state: body.state,
+      postalCode: body.postalCode,
+      country: body.country,
+      notes: body.notes,
+      photoUrl: body.photoUrl,
+      birthday: body.birthday,
+      anniversary: body.anniversary,
+      spouse: body.spouse,
+      website: body.website,
+      isFavorite: body.isFavorite,
+      category: body.category,
+    });
+
+    await codex.createAuditLog({
+      eventType: 'contact.created',
+      eventCategory: 'contacts',
+      userId,
+      resourceType: 'contact',
+      resourceId: contact.id,
+      outcome: 'success',
+      metadata: { displayName: body.displayName },
+    });
+
+    return c.json({ success: true, contact: toCamelCase(contact) }, 201);
+  } catch (error) {
+    console.error('Error creating contact:', error);
+    return c.json({ success: false, error: 'Failed to create contact' }, 500);
+  }
+});
+
+// Update a contact
+app.put('/api/v1/contacts/:id', async (c) => {
+  const id = c.req.param('id');
+  const body = await c.req.json();
+
+  try {
+    const contact = await codex.updateContact(id, {
+      displayName: body.displayName,
+      firstName: body.firstName,
+      lastName: body.lastName,
+      title: body.title,
+      middleName: body.middleName,
+      suffix: body.suffix,
+      nickname: body.nickname,
+      emailAddresses: body.emailAddresses,
+      phoneNumbers: body.phoneNumbers,
+      mobilePhone: body.mobilePhone,
+      company: body.company,
+      jobTitle: body.jobTitle,
+      department: body.department,
+      office: body.office,
+      address: body.address,
+      city: body.city,
+      state: body.state,
+      postalCode: body.postalCode,
+      country: body.country,
+      notes: body.notes,
+      photoUrl: body.photoUrl,
+      birthday: body.birthday,
+      anniversary: body.anniversary,
+      spouse: body.spouse,
+      website: body.website,
+      isFavorite: body.isFavorite,
+      category: body.category,
+    });
+
+    if (!contact) {
+      return c.json({ success: false, error: 'Contact not found' }, 404);
+    }
+
+    await codex.createAuditLog({
+      eventType: 'contact.updated',
+      eventCategory: 'contacts',
+      userId: contact.user_id,
+      resourceType: 'contact',
+      resourceId: id,
+      outcome: 'success',
+    });
+
+    return c.json({ success: true, contact: toCamelCase(contact) });
+  } catch (error) {
+    console.error('Error updating contact:', error);
+    return c.json({ success: false, error: 'Failed to update contact' }, 500);
+  }
+});
+
+// Delete a contact (hard delete)
+app.delete('/api/v1/contacts/:id', async (c) => {
+  const id = c.req.param('id');
+
+  try {
+    const existing = await codex.getContactById(id);
+    const deleted = await codex.deleteContact(id);
+
+    if (!deleted) {
+      return c.json({ success: false, error: 'Contact not found' }, 404);
+    }
+
+    await codex.createAuditLog({
+      eventType: 'contact.deleted',
+      eventCategory: 'contacts',
+      userId: existing?.user_id,
+      resourceType: 'contact',
+      resourceId: id,
+      outcome: 'success',
+    });
+
+    return c.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting contact:', error);
+    return c.json({ success: false, error: 'Failed to delete contact' }, 500);
+  }
+});
+
+// Toggle favorite status
+app.patch('/api/v1/contacts/:id/favorite', async (c) => {
+  const id = c.req.param('id');
+  const body = await c.req.json();
+
+  try {
+    const contact = await codex.toggleContactFavorite(id, body.isFavorite ?? false);
+    if (!contact) {
+      return c.json({ success: false, error: 'Contact not found' }, 404);
+    }
+    return c.json({ success: true, contact: toCamelCase(contact) });
+  } catch (error) {
+    console.error('Error toggling favorite:', error);
+    return c.json({ success: false, error: 'Failed to toggle favorite' }, 500);
+  }
+});
+
+// Soft delete a contact
+app.patch('/api/v1/contacts/:id/soft-delete', async (c) => {
+  const id = c.req.param('id');
+
+  try {
+    const contact = await codex.softDeleteContact(id);
+    if (!contact) {
+      return c.json({ success: false, error: 'Contact not found' }, 404);
+    }
+    return c.json({ success: true, contact: toCamelCase(contact) });
+  } catch (error) {
+    console.error('Error soft-deleting contact:', error);
+    return c.json({ success: false, error: 'Failed to soft-delete contact' }, 500);
+  }
+});
+
+// Restore a soft-deleted contact
+app.patch('/api/v1/contacts/:id/restore', async (c) => {
+  const id = c.req.param('id');
+
+  try {
+    const contact = await codex.restoreContact(id);
+    if (!contact) {
+      return c.json({ success: false, error: 'Contact not found' }, 404);
+    }
+    return c.json({ success: true, contact: toCamelCase(contact) });
+  } catch (error) {
+    console.error('Error restoring contact:', error);
+    return c.json({ success: false, error: 'Failed to restore contact' }, 500);
+  }
+});
+
+// ============================================================================
 // USER EMAIL PREFERENCES (JubileeOutlook)
 // Blocked senders and ignored conversations for email filtering
 // ============================================================================
@@ -489,6 +775,12 @@ async function start() {
     console.log('  GET  /api/feature-flags         - List feature flags');
     console.log('  GET  /api/settings              - Get public settings');
     console.log('  GET  /api/bible/books           - List Bible books');
+    console.log('  GET  /api/v1/contacts           - List contacts');
+    console.log('  GET  /api/v1/contacts/search    - Search contacts');
+    console.log('  GET  /api/v1/contacts/:id       - Get contact');
+    console.log('  POST /api/v1/contacts           - Create contact');
+    console.log('  PUT  /api/v1/contacts/:id       - Update contact');
+    console.log('  DEL  /api/v1/contacts/:id       - Delete contact');
   } catch (error) {
     console.error('Failed to start Codex API:', error);
     process.exit(1);
