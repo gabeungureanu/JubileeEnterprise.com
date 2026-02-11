@@ -1,7 +1,7 @@
 # JubileeOutlook Database Integration
 
-**Last Updated:** January 15, 2026
-**Version:** 1.5.0
+**Last Updated:** February 11, 2026
+**Version:** 2.0.0
 
 ## Overview
 
@@ -13,6 +13,7 @@ JubileeOutlook integrates with the Jubilee Enterprise database architecture thro
 |-----------|--------|-------|
 | ApiCalendarService | ✅ Complete | Full CRUD with caching |
 | ApiMailService | 🔄 In Progress | HTTP client ready |
+| ApiContactService | ✅ Complete | Full CRUD, groups, import/export, batch ops |
 | ImageService | ✅ Complete | Upload/download with retry |
 | Date Range Caching | ✅ Complete | Month-based, 5-min expiry |
 
@@ -134,20 +135,67 @@ Stores email messages.
 ### Contact Tables
 
 #### `outlook_contacts`
-Stores contact information.
+Stores contact information. Access through **InspireCodex API** (Codex database, port 4001).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| user_id | UUID | Owner user ID (references Codex users) |
+| display_name | VARCHAR(300) | Full display name |
+| first_name | VARCHAR(100) | First name |
+| last_name | VARCHAR(100) | Last name |
+| title | VARCHAR(50) | Name prefix (Mr., Ms., Dr.) |
+| middle_name | VARCHAR(100) | Middle name |
+| suffix | VARCHAR(50) | Name suffix (Jr., Sr.) |
+| nickname | VARCHAR(100) | Nickname |
+| email_addresses | JSONB | Array of email addresses |
+| phone_numbers | JSONB | Array of phone numbers |
+| mobile_phone | VARCHAR(50) | Mobile phone number |
+| company | VARCHAR(200) | Company name |
+| job_title | VARCHAR(200) | Job title |
+| department | VARCHAR(200) | Department |
+| office | VARCHAR(200) | Office location |
+| address | VARCHAR(500) | Street address |
+| city | VARCHAR(100) | City |
+| state | VARCHAR(100) | State/Province |
+| postal_code | VARCHAR(20) | Postal/ZIP code |
+| country | VARCHAR(100) | Country |
+| notes | TEXT | Free-form notes |
+| photo_url | VARCHAR(1000) | Profile photo URL |
+| birthday | DATE | Birthday |
+| anniversary | DATE | Anniversary date |
+| spouse | VARCHAR(200) | Spouse/partner name |
+| website | VARCHAR(500) | Personal/company website |
+| is_favorite | BOOLEAN | Favorite contact flag |
+| is_deleted | BOOLEAN | Soft-delete flag |
+| deleted_at | TIMESTAMPTZ | Soft-delete timestamp |
+| category | VARCHAR(100) | Contact category label |
+| created_at | TIMESTAMPTZ | Creation timestamp |
+| updated_at | TIMESTAMPTZ | Last update timestamp |
+
+#### `contact_groups`
+Stores user-created contact lists/groups.
 
 | Column | Type | Description |
 |--------|------|-------------|
 | id | UUID | Primary key |
 | user_id | UUID | Owner user ID |
-| display_name | VARCHAR(300) | Full display name |
-| first_name | VARCHAR(100) | First name |
-| last_name | VARCHAR(100) | Last name |
-| company_name | VARCHAR(200) | Company |
-| job_title | VARCHAR(200) | Job title |
-| is_favorite | BOOLEAN | Favorite contact |
+| name | VARCHAR(200) | Group name |
+| description | TEXT | Optional description |
+| created_at | TIMESTAMPTZ | Creation timestamp |
+| updated_at | TIMESTAMPTZ | Last update timestamp |
 
-Related tables: `outlook_contact_emails`, `outlook_contact_phones`, `outlook_contact_addresses`, `outlook_contact_groups`
+#### `contact_group_members`
+Junction table for contact-to-group many-to-many relationship.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| group_id | UUID | Parent group (FK, CASCADE) |
+| contact_id | UUID | Member contact (FK, CASCADE) |
+| added_at | TIMESTAMPTZ | When contact was added |
+
+Unique constraint on (group_id, contact_id).
 
 ## API Endpoints
 
@@ -179,12 +227,33 @@ PATCH  /outlook/messages/:id       - Update message (read, flag, move)
 DELETE /outlook/messages/:id       - Delete message
 ```
 
-### Contact Endpoints
+### Contact Endpoints (via InspireCodex API, port 4001)
 
 ```
-GET    /outlook/contacts           - List contacts (with search)
-POST   /outlook/contacts           - Create contact
-DELETE /outlook/contacts/:id       - Delete contact
+GET    /api/contacts                          - List all contacts for user
+GET    /api/contacts/:id                      - Get single contact
+POST   /api/contacts                          - Create contact
+PUT    /api/contacts/:id                      - Update contact
+DELETE /api/contacts/:id                      - Soft-delete contact
+POST   /api/contacts/:id/restore              - Restore soft-deleted contact
+DELETE /api/contacts/deleted/permanent         - Permanently delete all soft-deleted
+POST   /api/contacts/batch/delete              - Batch soft-delete
+POST   /api/contacts/batch/favorites           - Batch set favorites
+POST   /api/contacts/batch/category            - Batch set category
+POST   /api/contacts/import                    - Import contacts (CSV/vCard)
+GET    /api/contacts/export                    - Export contacts (CSV/vCard)
+```
+
+### Contact Group Endpoints (via InspireCodex API, port 4001)
+
+```
+GET    /api/contact-groups                     - List all groups
+POST   /api/contact-groups                     - Create group
+PUT    /api/contact-groups/:id                 - Update/rename group
+DELETE /api/contact-groups/:id                 - Delete group
+POST   /api/contact-groups/:id/contacts        - Add contacts to group
+DELETE /api/contact-groups/:id/contacts/:cid   - Remove contact from group
+GET    /api/contact-groups/:id/contacts        - Get contacts in group
 ```
 
 ## Service Configuration
@@ -318,10 +387,34 @@ All API services implement:
 - **Retry policies**: Configurable attempt counts
 - **HTTP status handling**: Proper 4xx/5xx response processing
 
+## Implemented Features (v2.0.0)
+
+### ApiContactService Integration (NEW)
+Full contacts management via InspireCodex API:
+- **Contact CRUD**: GET/POST/PUT/DELETE via `/api/contacts`
+- **Contact Groups**: Create, rename, delete lists; add/remove members
+- **Batch Operations**: Bulk delete, favorites, category assignment
+- **Import/Export**: CSV and vCard format support
+- **Soft Delete**: Contacts moved to Deleted folder, permanent purge available
+- **Duplicate Detection**: Checks display_name + email on import
+- **Ownership Verification**: All operations scoped to authenticated user's contacts
+
+### WPF People Module (NEW)
+Complete contacts management UI:
+- **PeopleView.xaml**: Full three-panel layout (sidebar, list, detail)
+- **PeopleViewModel.cs**: MVVM with CommunityToolkit.Mvvm relay commands
+- **PeopleView.xaml.cs**: Event handlers, dialogs, keyboard shortcuts
+- **Ribbon toolbar**: 15+ action buttons with bulk operations
+- **Contact detail panel**: All fields with interactive links
+- **Context menus**: Right-click on contacts and sub-folders
+- **Keyboard shortcuts**: Ctrl+N, Ctrl+F, Ctrl+E, Ctrl+I, Delete, F2, Escape
+
 ## Future Enhancements
 
-1. **Real-time sync** - WebSocket notifications for calendar changes
+1. **Real-time sync** - WebSocket notifications for calendar/contact changes
 2. **Offline mode** - Local SQLite cache with sync on reconnect
 3. **External calendar sync** - Integration with Google Calendar, Outlook.com
 4. **Email send/receive** - SMTP/IMAP integration for actual email functionality
 5. **Recurrence expansion** - Server-side generation of recurring event instances
+6. **Contact photo upload** - Profile picture management with ImageService
+7. **Contact merge** - Merge duplicate contacts with field-level selection

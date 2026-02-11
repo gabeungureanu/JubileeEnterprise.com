@@ -887,7 +887,7 @@
                     <Grid Grid.Row="2">
                         <!-- Loading Overlay -->
                         <Border Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"
-                                Background="{StaticResource SurfaceBrush}" Panel.ZIndex="10"
+                                Background="{StaticResource PrimaryBackgroundBrush}" Panel.ZIndex="10"
                                 VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                                 <TextBlock Text="&#xe863;" FontFamily="{StaticResource MaterialIcons}" FontSize="32"
@@ -935,7 +935,7 @@
                             <TextBlock Text="No contacts found" FontSize="16"
                                        Foreground="{StaticResource SecondaryTextBrush}" HorizontalAlignment="Center"
                                        Margin="0,0,0,8"/>
-                            <TextBlock FontSize="13" Foreground="{StaticResource TertiaryTextBrush}"
+                            <TextBlock FontSize="13" Foreground="{StaticResource DisabledTextBrush}"
                                        HorizontalAlignment="Center">
                                 <Run Text="No results for &quot;"/><Run Text="{Binding SearchText, Mode=OneWay}"/><Run Text="&quot;"/>
                             </TextBlock>
