@@ -94,6 +94,23 @@ export const mailService = {
     return response.data?.success !== false;
   },
 
+  // Folder management
+  async createFolder(name: string, parentFolderId?: string): Promise<{ success: boolean; folderId?: string }> {
+    const userId = tokenStore.getUserId();
+    const response = await continuumClient.post('/outlook/folders', { userId, name, parentFolderId });
+    return response.data;
+  },
+
+  async renameFolder(folderId: string, name: string): Promise<boolean> {
+    const response = await continuumClient.patch(`/outlook/folders/${encodeURIComponent(folderId)}`, { name });
+    return response.data?.success !== false;
+  },
+
+  async deleteFolder(folderId: string): Promise<boolean> {
+    const response = await continuumClient.delete(`/outlook/folders/${encodeURIComponent(folderId)}`);
+    return response.data?.success !== false;
+  },
+
   async searchMessages(query: string, folderId?: string, page = 1, pageSize = 50): Promise<{ messages: EmailMessage[]; totalCount: number }> {
     const userId = tokenStore.getUserId();
     const response = await continuumClient.get<ApiMessagesResponse>('/outlook/messages/search', {

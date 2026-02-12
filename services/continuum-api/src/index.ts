@@ -1268,6 +1268,125 @@ app.get('/api/v1/outlook/folders', async (c) => {
   }
 });
 
+// POST /api/v1/outlook/folders - Create a custom folder
+app.post('/api/v1/outlook/folders', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { userId, name, parentFolderId } = body;
+
+    if (!userId || !name) {
+      return c.json({ error: 'userId and name are required' }, 400);
+    }
+
+    const pool = getContinuumPool();
+
+    // Find the user's account
+    const accountResult = await pool.query(
+      'SELECT id FROM outlook_email_accounts WHERE user_id = $1 LIMIT 1', [userId]
+    );
+    if (accountResult.rows.length === 0) {
+      return c.json({ error: 'No email account found' }, 404);
+    }
+    const accountId = accountResult.rows[0].id;
+
+    // Get max display_order for ordering
+    const orderResult = await pool.query(
+      'SELECT COALESCE(MAX(display_order), 0) + 1 as next_order FROM outlook_email_folders WHERE account_id = $1',
+      [accountId]
+    );
+    const displayOrder = orderResult.rows[0].next_order;
+
+    const folderId = createHash('sha256').update(`folder-${accountId}-${name}-${Date.now()}`).digest('hex').substring(0, 36);
+
+    await pool.query(
+      `INSERT INTO outlook_email_folders (id, account_id, name, folder_type, external_folder_id, display_order, is_system, parent_folder_id, icon)
+       VALUES ($1, $2, $3, 'custom', $4, $5, false, $6, 'folder')`,
+      [folderId, accountId, name, `custom-${folderId}`, displayOrder, parentFolderId || null]
+    );
+
+    return c.json({ success: true, folderId, name });
+  } catch (err: any) {
+    return c.json({ error: 'Failed to create folder', message: err.message }, 500);
+  }
+});
+
+// PATCH /api/v1/outlook/folders/:id - Rename a folder (custom folders only)
+app.patch('/api/v1/outlook/folders/:id', async (c) => {
+  try {
+    const folderId = c.req.param('id');
+    const body = await c.req.json();
+    const { name } = body;
+
+    if (!name) {
+      return c.json({ error: 'name is required' }, 400);
+    }
+
+    const pool = getContinuumPool();
+
+    // Check if folder exists and is not a system folder
+    const folderResult = await pool.query(
+      'SELECT id, is_system FROM outlook_email_folders WHERE id = $1', [folderId]
+    );
+    if (folderResult.rows.length === 0) {
+      return c.json({ error: 'Folder not found' }, 404);
+    }
+    if (folderResult.rows[0].is_system) {
+      return c.json({ error: 'Cannot rename system folders' }, 403);
+    }
+
+    await pool.query(
+      'UPDATE outlook_email_folders SET name = $1, updated_at = NOW() WHERE id = $2',
+      [name, folderId]
+    );
+
+    return c.json({ success: true, folderId, name });
+  } catch (err: any) {
+    return c.json({ error: 'Failed to rename folder', message: err.message }, 500);
+  }
+});
+
+// DELETE /api/v1/outlook/folders/:id - Delete a custom folder (moves messages to Trash)
+app.delete('/api/v1/outlook/folders/:id', async (c) => {
+  try {
+    const folderId = c.req.param('id');
+    const pool = getContinuumPool();
+
+    // Check if folder exists and is not a system folder
+    const folderResult = await pool.query(
+      'SELECT id, is_system, account_id FROM outlook_email_folders WHERE id = $1', [folderId]
+    );
+    if (folderResult.rows.length === 0) {
+      return c.json({ error: 'Folder not found' }, 404);
+    }
+    if (folderResult.rows[0].is_system) {
+      return c.json({ error: 'Cannot delete system folders' }, 403);
+    }
+
+    const accountId = folderResult.rows[0].account_id;
+
+    // Find trash folder to move messages there
+    const trashResult = await pool.query(
+      `SELECT id FROM outlook_email_folders WHERE account_id = $1 AND folder_type = 'trash' LIMIT 1`,
+      [accountId]
+    );
+
+    if (trashResult.rows.length > 0) {
+      // Move all messages from this folder to trash
+      await pool.query(
+        'UPDATE outlook_email_messages SET folder_id = $1 WHERE folder_id = $2',
+        [trashResult.rows[0].id, folderId]
+      );
+    }
+
+    // Delete the folder
+    await pool.query('DELETE FROM outlook_email_folders WHERE id = $1', [folderId]);
+
+    return c.json({ success: true, deleted: folderId });
+  } catch (err: any) {
+    return c.json({ error: 'Failed to delete folder', message: err.message }, 500);
+  }
+});
+
 // GET /api/v1/outlook/folders/:folderId/messages - List messages in a folder
 app.get('/api/v1/outlook/folders/:folderId/messages', async (c) => {
   try {
@@ -1887,6 +2006,9 @@ async function start() {
     console.log('  GET  /api/v1/outlook/accounts         - List email accounts');
     console.log('  DELETE /api/v1/outlook/accounts/:id   - Disconnect account');
     console.log('  GET  /api/v1/outlook/folders          - List email folders');
+    console.log('  POST /api/v1/outlook/folders          - Create custom folder');
+    console.log('  PATCH /api/v1/outlook/folders/:id     - Rename folder');
+    console.log('  DELETE /api/v1/outlook/folders/:id    - Delete folder');
     console.log('  GET  /api/v1/outlook/folders/:id/messages - Get folder messages');
     console.log('  GET  /api/v1/outlook/messages/search  - Search messages');
     console.log('  GET  /api/v1/outlook/messages/:id     - Get single message');

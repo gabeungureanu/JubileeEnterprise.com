@@ -330,6 +330,7 @@ const MailPage: React.FC = () => {
             folders={folders}
             selectedFolderId={selectedFolderId}
             onFolderSelect={handleFolderSelect}
+            onFoldersChanged={refreshFolders}
           />
         )}
         <MessageList
