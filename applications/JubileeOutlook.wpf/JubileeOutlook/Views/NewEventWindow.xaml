@@ -912,6 +912,145 @@
                         </StackPanel>
                     </Grid>
 
+                    <!-- Recurrence Section -->
+                    <Border Padding="0,12,0,0" Margin="0,0,0,0">
+                        <StackPanel>
+                            <!-- Make recurring toggle -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <TextBlock Text="&#xe040;" FontFamily="{StaticResource MaterialIcons}"
+                                           FontSize="20" Foreground="#666666" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <ToggleButton IsChecked="{Binding IsRecurring}"
+                                             Style="{StaticResource ModernToggleSwitchStyle}"
+                                             Margin="0,0,8,0"/>
+                                <TextBlock Text="Make recurring"
+                                           FontSize="13" Foreground="#CCCCCC" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Recurrence options (visible when IsRecurring = true) -->
+                            <Border Visibility="{Binding IsRecurring, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Background="#1E1E1E" CornerRadius="6" Padding="16,12" Margin="32,0,0,0">
+                                <StackPanel>
+                                    <!-- Recurrence Type -->
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Repeat" FontSize="13" Foreground="#AAAAAA" VerticalAlignment="Center"/>
+                                        <ComboBox Grid.Column="1" ItemsSource="{Binding RecurrenceTypeOptions}"
+                                                  SelectedItem="{Binding SelectedRecurrenceType}"
+                                                  Style="{StaticResource DarkComboBoxStyle}"
+                                                  Width="140" HorizontalAlignment="Left"/>
+                                    </Grid>
+
+                                    <!-- Interval -->
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Every" FontSize="13" Foreground="#AAAAAA" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="1" Text="{Binding RecurrenceInterval, UpdateSourceTrigger=PropertyChanged}"
+                                                 Width="60" FontSize="13" Foreground="White" Background="#2A2A2A"
+                                                 BorderBrush="#444444" BorderThickness="1" Padding="6,4"
+                                                 HorizontalAlignment="Left"/>
+                                        <TextBlock Grid.Column="2" FontSize="13" Foreground="#888888"
+                                                   VerticalAlignment="Center" Margin="8,0,0,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="day(s)"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding SelectedRecurrenceType}" Value="Weekly">
+                                                            <Setter Property="Text" Value="week(s)"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding SelectedRecurrenceType}" Value="Monthly">
+                                                            <Setter Property="Text" Value="month(s)"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding SelectedRecurrenceType}" Value="Yearly">
+                                                            <Setter Property="Text" Value="year(s)"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Grid>
+
+                                    <!-- Days of Week (visible only for Weekly) -->
+                                    <StackPanel Margin="0,0,0,10"
+                                                Visibility="{Binding SelectedRecurrenceType, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Weekly}">
+                                        <TextBlock Text="On days" FontSize="13" Foreground="#AAAAAA" Margin="0,0,0,6"/>
+                                        <ItemsControl ItemsSource="{Binding DaysOfWeekOptions}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <ToggleButton IsChecked="{Binding IsSelected}" Content="{Binding Name}"
+                                                                  Margin="0,0,4,0" Padding="8,4" Cursor="Hand">
+                                                        <ToggleButton.Template>
+                                                            <ControlTemplate TargetType="ToggleButton">
+                                                                <Border x:Name="DayBd" Background="#2A2A2A" CornerRadius="4"
+                                                                        BorderBrush="#444444" BorderThickness="1"
+                                                                        Padding="{TemplateBinding Padding}">
+                                                                    <TextBlock Text="{TemplateBinding Content}" FontSize="11"
+                                                                               Foreground="#CCCCCC" HorizontalAlignment="Center"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsChecked" Value="True">
+                                                                        <Setter TargetName="DayBd" Property="Background" Value="#0078D4"/>
+                                                                        <Setter TargetName="DayBd" Property="BorderBrush" Value="#0078D4"/>
+                                                                    </Trigger>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter TargetName="DayBd" Property="Background" Value="#333333"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </ToggleButton.Template>
+                                                    </ToggleButton>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+
+                                    <!-- End condition -->
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Ends" FontSize="13" Foreground="#AAAAAA" VerticalAlignment="Center"/>
+                                        <ComboBox Grid.Column="1" ItemsSource="{Binding RecurrenceEndOptions}"
+                                                  SelectedItem="{Binding RecurrenceEndOption}"
+                                                  Style="{StaticResource DarkComboBoxStyle}"
+                                                  Width="160" HorizontalAlignment="Left"/>
+                                    </Grid>
+
+                                    <!-- End date picker (visible when "On date" selected) -->
+                                    <Grid Margin="100,0,0,6"
+                                          Visibility="{Binding RecurrenceEndOption, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter='On date'}">
+                                        <DatePicker SelectedDate="{Binding RecurrenceEndDate}"
+                                                    Width="160" HorizontalAlignment="Left"
+                                                    FontSize="13" Foreground="White" Background="#2A2A2A"
+                                                    BorderBrush="#444444"/>
+                                    </Grid>
+
+                                    <!-- Occurrences input (visible when "After occurrences" selected) -->
+                                    <StackPanel Orientation="Horizontal" Margin="100,0,0,0"
+                                                Visibility="{Binding RecurrenceEndOption, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter='After occurrences'}">
+                                        <TextBox Text="{Binding RecurrenceOccurrences, UpdateSourceTrigger=PropertyChanged}"
+                                                 Width="60" FontSize="13" Foreground="White" Background="#2A2A2A"
+                                                 BorderBrush="#444444" BorderThickness="1" Padding="6,4"/>
+                                        <TextBlock Text="occurrence(s)" FontSize="13" Foreground="#888888"
+                                                   VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
                     <!-- Description Area -->
                     <Border Padding="0,20,0,0" Margin="0,0,0,0">
                         <Grid>

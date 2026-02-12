@@ -315,7 +315,6 @@ public class ApiMailService : IMailService
         // Debug logging at very start
         System.Diagnostics.Debug.WriteLine($"[ApiMailService] GetMessagesWithResultAsync CALLED for folderId: {folderId}");
         System.Diagnostics.Debug.WriteLine($"[ApiMailService] NetworkStatus.IsOnline: {NetworkStatus.IsOnline}, IsApiReachable: {NetworkStatus.IsApiReachable}");
-        try { System.IO.File.WriteAllText(@"C:\temp\outlook_method_called.txt", $"Method called at {DateTime.Now}\nfolderId: {folderId}\nIsOnline: {NetworkStatus.IsOnline}\nIsApiReachable: {NetworkStatus.IsApiReachable}"); } catch { }
 
         try
         {
@@ -352,9 +351,6 @@ public class ApiMailService : IMailService
             var response = await _httpClientFactory.GetAsync(ApiEndpoint.InspireContinuum, endpoint);
             var content = await response.Content.ReadAsStringAsync();
 
-            // Write raw response for debugging
-            try { System.IO.File.WriteAllText(@"C:\temp\outlook_raw_response.txt", $"Status: {response.StatusCode}\nContent Length: {content.Length}\nContent:\n{content.Substring(0, Math.Min(5000, content.Length))}"); } catch { }
-
             if (response.IsSuccessStatusCode)
             {
                 // Try API response wrapper first
@@ -363,15 +359,11 @@ public class ApiMailService : IMailService
                     System.Diagnostics.Debug.WriteLine($"[ApiMailService] Attempting to deserialize messages response...");
                     var apiResponse = JsonSerializer.Deserialize<ApiMessagesResponse>(content, _jsonOptions);
                     System.Diagnostics.Debug.WriteLine($"[ApiMailService] Deserialized apiResponse, Messages null? {apiResponse?.Messages == null}");
-                    // Write debug info to file
-                    try { System.IO.File.WriteAllText(@"C:\temp\outlook_debug.txt", $"apiResponse null: {apiResponse == null}\nMessages null: {apiResponse?.Messages == null}\nMessages count: {apiResponse?.Messages?.Count ?? -1}"); } catch { }
                     if (apiResponse?.Messages != null)
                     {
                         System.Diagnostics.Debug.WriteLine($"[ApiMailService] apiResponse.Messages.Count = {apiResponse.Messages.Count}");
                         var messages = apiResponse.Messages.Select(MapToEmailMessage).ToList();
                         System.Diagnostics.Debug.WriteLine($"[ApiMailService] Retrieved {messages.Count} messages");
-                        // More debug
-                        try { System.IO.File.AppendAllText(@"C:\temp\outlook_debug.txt", $"\nMapped messages count: {messages.Count}"); if (messages.Count > 0) { System.IO.File.AppendAllText(@"C:\temp\outlook_debug.txt", $"\nFirst msg: {messages[0].Subject} from {messages[0].From}"); } } catch { }
 
                         // Cache the messages for offline use
                         _ = Task.Run(async () =>
@@ -398,8 +390,6 @@ public class ApiMailService : IMailService
                 {
                     System.Diagnostics.Debug.WriteLine($"[ApiMailService] Messages deserialization error: {ex.Message}");
                     System.Diagnostics.Debug.WriteLine($"[ApiMailService] Stack trace: {ex.StackTrace}");
-                    // Write to file for debugging
-                    try { System.IO.File.WriteAllText(@"C:\temp\outlook_error.txt", $"Error: {ex.Message}\n\nStack: {ex.StackTrace}\n\nContent: {content.Substring(0, Math.Min(2000, content.Length))}"); } catch { }
                 }
 
                 // Try direct list parsing

@@ -28,6 +28,11 @@ public class ResiliencePolicyService
     public event EventHandler<RetryExhaustedEventArgs>? RetriesExhausted;
 
     /// <summary>
+    /// Event fired when a 429 rate limit is detected
+    /// </summary>
+    public event EventHandler<RateLimitDetectedEventArgs>? RateLimitDetected;
+
+    /// <summary>
     /// Singleton instance of the resilience policy service
     /// </summary>
     public static ResiliencePolicyService Instance
@@ -70,6 +75,17 @@ public class ResiliencePolicyService
                 {
                     var message = GetRetryMessage(args.Outcome, args.AttemptNumber, retryCount);
                     System.Diagnostics.Debug.WriteLine($"[Retry] Attempt {args.AttemptNumber + 1}/{retryCount}: {message}");
+
+                    // Detect 429 and record with RateLimitTracker
+                    if (args.Outcome.Result?.StatusCode == HttpStatusCode.TooManyRequests)
+                    {
+                        RateLimitTracker.Instance.RecordRateLimit(args.Outcome.Result);
+                        OnRateLimitDetected(new RateLimitDetectedEventArgs
+                        {
+                            RetryAfterSeconds = RateLimitTracker.Instance.RetryAfterSeconds,
+                            ResetTime = RateLimitTracker.Instance.RateLimitResetTime
+                        });
+                    }
 
                     OnRetryAttempted(new RetryEventArgs
                     {
@@ -271,7 +287,9 @@ public class ResiliencePolicyService
             HttpStatusCode.RequestTimeout => "The request timed out. Please try again.",
             HttpStatusCode.Conflict => "There was a conflict with the current state. Please refresh and try again.",
             HttpStatusCode.Gone => "The requested resource is no longer available.",
-            HttpStatusCode.TooManyRequests => "Too many requests. Please wait a moment and try again.",
+            HttpStatusCode.TooManyRequests => RateLimitTracker.Instance.RetryAfterSeconds.HasValue
+                ? $"Too many requests. Please wait {RateLimitTracker.Instance.RetryAfterSeconds}s and try again."
+                : "Too many requests. Please wait a moment and try again.",
             HttpStatusCode.InternalServerError => "A server error occurred. Please try again later.",
             HttpStatusCode.BadGateway => "The server is temporarily unavailable. Please try again later.",
             HttpStatusCode.ServiceUnavailable => "The service is temporarily unavailable. Please try again later.",
@@ -289,6 +307,11 @@ public class ResiliencePolicyService
     private void OnRetriesExhausted(RetryExhaustedEventArgs args)
     {
         RetriesExhausted?.Invoke(this, args);
+    }
+
+    private void OnRateLimitDetected(RateLimitDetectedEventArgs args)
+    {
+        RateLimitDetected?.Invoke(this, args);
     }
 }
 
@@ -310,4 +333,13 @@ public class RetryExhaustedEventArgs : EventArgs
 {
     public Exception? Exception { get; set; }
     public string FriendlyMessage { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Event arguments for rate limit detection (HTTP 429)
+/// </summary>
+public class RateLimitDetectedEventArgs : EventArgs
+{
+    public int? RetryAfterSeconds { get; set; }
+    public DateTime? ResetTime { get; set; }
 }

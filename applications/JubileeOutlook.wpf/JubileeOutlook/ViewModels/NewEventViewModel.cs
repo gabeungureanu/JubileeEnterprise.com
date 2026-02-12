@@ -92,6 +92,29 @@ public partial class NewEventViewModel : ObservableObject
     [ObservableProperty]
     private string _loadingImagesMessage = string.Empty;
 
+    // Recurrence properties
+    [ObservableProperty]
+    private bool _isRecurring;
+
+    [ObservableProperty]
+    private string _selectedRecurrenceType = "Daily";
+
+    [ObservableProperty]
+    private int _recurrenceInterval = 1;
+
+    [ObservableProperty]
+    private DateTime? _recurrenceEndDate;
+
+    [ObservableProperty]
+    private int? _recurrenceOccurrences;
+
+    [ObservableProperty]
+    private string _recurrenceEndOption = "Never";
+
+    public ObservableCollection<string> RecurrenceTypeOptions { get; } = new();
+    public ObservableCollection<string> RecurrenceEndOptions { get; } = new();
+    public ObservableCollection<DayOfWeekItem> DaysOfWeekOptions { get; } = new();
+
     public ObservableCollection<EventAttachment> Attachments { get; } = new();
 
     public ObservableCollection<EventImageViewModel> Images { get; } = new();
@@ -105,7 +128,30 @@ public partial class NewEventViewModel : ObservableObject
         InitializeStatusOptions();
         InitializeReminderOptions();
         InitializeCategoryOptions();
+        InitializeRecurrenceOptions();
         CalculateEventPosition();
+    }
+
+    private void InitializeRecurrenceOptions()
+    {
+        RecurrenceTypeOptions.Add("Daily");
+        RecurrenceTypeOptions.Add("Weekly");
+        RecurrenceTypeOptions.Add("Monthly");
+        RecurrenceTypeOptions.Add("Yearly");
+
+        RecurrenceEndOptions.Add("Never");
+        RecurrenceEndOptions.Add("On date");
+        RecurrenceEndOptions.Add("After occurrences");
+
+        DaysOfWeekOptions.Add(new DayOfWeekItem { Name = "Sun", Day = DayOfWeek.Sunday });
+        DaysOfWeekOptions.Add(new DayOfWeekItem { Name = "Mon", Day = DayOfWeek.Monday });
+        DaysOfWeekOptions.Add(new DayOfWeekItem { Name = "Tue", Day = DayOfWeek.Tuesday });
+        DaysOfWeekOptions.Add(new DayOfWeekItem { Name = "Wed", Day = DayOfWeek.Wednesday });
+        DaysOfWeekOptions.Add(new DayOfWeekItem { Name = "Thu", Day = DayOfWeek.Thursday });
+        DaysOfWeekOptions.Add(new DayOfWeekItem { Name = "Fri", Day = DayOfWeek.Friday });
+        DaysOfWeekOptions.Add(new DayOfWeekItem { Name = "Sat", Day = DayOfWeek.Saturday });
+
+        RecurrenceEndDate = DateTime.Today.AddMonths(3);
     }
 
     public void LoadEventForEditing(CalendarEvent eventToEdit)
@@ -147,6 +193,44 @@ public partial class NewEventViewModel : ObservableObject
             {
                 SelectedCategory = category;
                 break;
+            }
+        }
+
+        // Load recurrence data
+        IsRecurring = eventToEdit.IsRecurring;
+        if (eventToEdit.Recurrence != null)
+        {
+            SelectedRecurrenceType = eventToEdit.Recurrence.Type switch
+            {
+                RecurrenceType.Weekly => "Weekly",
+                RecurrenceType.Monthly => "Monthly",
+                RecurrenceType.Yearly => "Yearly",
+                _ => "Daily"
+            };
+            RecurrenceInterval = eventToEdit.Recurrence.Interval;
+
+            if (eventToEdit.Recurrence.EndDate.HasValue)
+            {
+                RecurrenceEndOption = "On date";
+                RecurrenceEndDate = eventToEdit.Recurrence.EndDate.Value;
+            }
+            else if (eventToEdit.Recurrence.Occurrences.HasValue)
+            {
+                RecurrenceEndOption = "After occurrences";
+                RecurrenceOccurrences = eventToEdit.Recurrence.Occurrences.Value;
+            }
+            else
+            {
+                RecurrenceEndOption = "Never";
+            }
+
+            // Set days of week for weekly
+            if (eventToEdit.Recurrence.DaysOfWeek != null)
+            {
+                foreach (var dayItem in DaysOfWeekOptions)
+                {
+                    dayItem.IsSelected = eventToEdit.Recurrence.DaysOfWeek.Contains(dayItem.Day);
+                }
             }
         }
 
@@ -478,8 +562,52 @@ public partial class NewEventViewModel : ObservableObject
             EventColor = eventColor,
             Attendees = attendeesList,
             Attachments = Attachments.ToList(),
-            Images = Images.Select(i => i.EventImage).ToList()
+            Images = Images.Select(i => i.EventImage).ToList(),
+            IsRecurring = IsRecurring
         };
+
+        // Populate recurrence pattern if recurring
+        if (IsRecurring)
+        {
+            var recurrence = new RecurrencePattern
+            {
+                Type = SelectedRecurrenceType switch
+                {
+                    "Weekly" => RecurrenceType.Weekly,
+                    "Monthly" => RecurrenceType.Monthly,
+                    "Yearly" => RecurrenceType.Yearly,
+                    _ => RecurrenceType.Daily
+                },
+                Interval = Math.Max(1, RecurrenceInterval)
+            };
+
+            // Set end condition
+            if (RecurrenceEndOption == "On date" && RecurrenceEndDate.HasValue)
+            {
+                recurrence.EndDate = RecurrenceEndDate.Value;
+            }
+            else if (RecurrenceEndOption == "After occurrences" && RecurrenceOccurrences.HasValue)
+            {
+                recurrence.Occurrences = RecurrenceOccurrences.Value;
+            }
+
+            // Set days of week for weekly recurrence
+            if (recurrence.Type == RecurrenceType.Weekly)
+            {
+                recurrence.DaysOfWeek = DaysOfWeekOptions
+                    .Where(d => d.IsSelected)
+                    .Select(d => d.Day)
+                    .ToList();
+
+                // Default to event day if none selected
+                if (recurrence.DaysOfWeek.Count == 0)
+                {
+                    recurrence.DaysOfWeek.Add(startDateTime.DayOfWeek);
+                }
+            }
+
+            CreatedEvent.Recurrence = recurrence;
+        }
 
         SaveCompleted?.Invoke(this, EventArgs.Empty);
     }
@@ -630,4 +758,17 @@ public class EventImageViewModel
 {
     public EventImage EventImage { get; set; } = new();
     public BitmapImage? ImageSource { get; set; }
+}
+
+public class DayOfWeekItem : CommunityToolkit.Mvvm.ComponentModel.ObservableObject
+{
+    public string Name { get; set; } = string.Empty;
+    public DayOfWeek Day { get; set; }
+
+    private bool _isSelected;
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetProperty(ref _isSelected, value);
+    }
 }

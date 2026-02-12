@@ -677,6 +677,31 @@ public class InitialsConverter : IValueConverter
 }
 
 /// <summary>
+/// Converts a hex color string (e.g., "#4CAF50") to a SolidColorBrush
+/// </summary>
+public class StringToColorBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is string colorStr && !string.IsNullOrEmpty(colorStr))
+        {
+            try
+            {
+                var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(colorStr);
+                return new System.Windows.Media.SolidColorBrush(color);
+            }
+            catch { }
+        }
+        return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(76, 175, 80));
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
 /// Subtracts a value from the input. Used for calculating widths with margins.
 /// </summary>
 public class SubtractConverter : IValueConverter

@@ -143,6 +143,22 @@ public class ApiContactService : IContactService
 
     #endregion
 
+    /// <summary>
+    /// Creates a rate-limited result with cached data fallback
+    /// </summary>
+    private async Task<ContactServiceResult<List<Contact>>> GetRateLimitedContactsResultAsync()
+    {
+        var cached = await LocalCache.GetCachedContactsAsync();
+        return new ContactServiceResult<List<Contact>>
+        {
+            Success = true,
+            Data = cached,
+            TotalCount = cached.Count,
+            IsRateLimited = true,
+            RetryAfterSeconds = RateLimitTracker.Instance.RetryAfterSeconds
+        };
+    }
+
     #region Extended Methods with Result Objects
 
     /// <summary>
@@ -152,6 +168,13 @@ public class ApiContactService : IContactService
     /// </summary>
     public async Task<ContactServiceResult<List<Contact>>> GetContactsWithResultAsync(int page = 1, int pageSize = 100)
     {
+        // Check rate limit before making API call
+        if (RateLimitTracker.Instance.ShouldThrottle())
+        {
+            System.Diagnostics.Debug.WriteLine("[ApiContactService] Rate limited - returning cached contacts");
+            return await GetRateLimitedContactsResultAsync();
+        }
+
         try
         {
             System.Diagnostics.Debug.WriteLine($"[ApiContactService] GetContactsWithResultAsync called");
@@ -403,6 +426,18 @@ public class ApiContactService : IContactService
     /// </summary>
     public async Task<ContactServiceResult<Contact>> CreateContactWithResultAsync(Contact contact)
     {
+        if (RateLimitTracker.Instance.ShouldThrottle())
+        {
+            return new ContactServiceResult<Contact>
+            {
+                Success = false,
+                Error = $"Rate limited. Please wait {RateLimitTracker.Instance.RetryAfterSeconds}s.",
+                IsRateLimited = true,
+                RetryAfterSeconds = RateLimitTracker.Instance.RetryAfterSeconds,
+                StatusCode = HttpStatusCode.TooManyRequests
+            };
+        }
+
         try
         {
             if (contact == null)
@@ -627,6 +662,18 @@ public class ApiContactService : IContactService
     /// </summary>
     public async Task<ContactServiceResult<Contact>> UpdateContactWithResultAsync(Contact contact)
     {
+        if (RateLimitTracker.Instance.ShouldThrottle())
+        {
+            return new ContactServiceResult<Contact>
+            {
+                Success = false,
+                Error = $"Rate limited. Please wait {RateLimitTracker.Instance.RetryAfterSeconds}s.",
+                IsRateLimited = true,
+                RetryAfterSeconds = RateLimitTracker.Instance.RetryAfterSeconds,
+                StatusCode = HttpStatusCode.TooManyRequests
+            };
+        }
+
         try
         {
             if (contact == null)
@@ -800,6 +847,18 @@ public class ApiContactService : IContactService
     /// </summary>
     public async Task<ContactServiceResult<bool>> DeleteContactWithResultAsync(string contactId)
     {
+        if (RateLimitTracker.Instance.ShouldThrottle())
+        {
+            return new ContactServiceResult<bool>
+            {
+                Success = false,
+                Error = $"Rate limited. Please wait {RateLimitTracker.Instance.RetryAfterSeconds}s.",
+                IsRateLimited = true,
+                RetryAfterSeconds = RateLimitTracker.Instance.RetryAfterSeconds,
+                StatusCode = HttpStatusCode.TooManyRequests
+            };
+        }
+
         try
         {
             if (string.IsNullOrEmpty(contactId))
@@ -895,6 +954,12 @@ public class ApiContactService : IContactService
     /// </summary>
     public async Task<ContactServiceResult<List<Contact>>> SearchContactsWithResultAsync(string query, int page = 1, int pageSize = 50)
     {
+        if (RateLimitTracker.Instance.ShouldThrottle())
+        {
+            System.Diagnostics.Debug.WriteLine("[ApiContactService] Rate limited - returning cached contacts for search");
+            return await GetRateLimitedContactsResultAsync();
+        }
+
         try
         {
             if (string.IsNullOrEmpty(query))
@@ -1446,6 +1511,8 @@ public class ContactServiceResult<T>
     public string? Error { get; set; }
     public HttpStatusCode StatusCode { get; set; } = HttpStatusCode.OK;
     public int? TotalCount { get; set; }
+    public bool IsRateLimited { get; set; }
+    public int? RetryAfterSeconds { get; set; }
 }
 
 /// <summary>

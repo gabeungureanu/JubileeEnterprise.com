@@ -71,6 +71,28 @@ public partial class PeopleViewModel : ObservableObject
     [ObservableProperty]
     private ContactGroup? _selectedContactGroup;
 
+    // Sync status properties
+    [ObservableProperty]
+    private string _syncStatusText = "Synced";
+
+    [ObservableProperty]
+    private string _syncStatusColor = "#4CAF50";
+
+    [ObservableProperty]
+    private bool _isSyncing = false;
+
+    [ObservableProperty]
+    private int _pendingOperationCount = 0;
+
+    [ObservableProperty]
+    private bool _isOffline = false;
+
+    [ObservableProperty]
+    private bool _isRateLimited = false;
+
+    [ObservableProperty]
+    private string _lastSyncTimeText = "";
+
     public ObservableCollection<ContactFolder> Folders { get; } = new();
     public ObservableCollection<Contact> Contacts { get; } = new();
     public ObservableCollection<Contact> FilteredContacts { get; } = new();
@@ -113,6 +135,7 @@ public partial class PeopleViewModel : ObservableObject
     {
         _contactService = ApiContactService.Instance;
         InitializeFolders();
+        SubscribeToSyncEvents();
     }
 
     private void InitializeFolders()
@@ -124,6 +147,119 @@ public partial class PeopleViewModel : ObservableObject
         Folders.Add(new ContactFolder { Name = "Deleted", Icon = "\ue872" });
 
         SelectedFolder = Folders.FirstOrDefault();
+    }
+
+    private void SubscribeToSyncEvents()
+    {
+        try
+        {
+            SyncManager.Instance.SyncStatusChanged += OnSyncStatusChanged;
+            SyncManager.Instance.OperationCompleted += OnSyncOperationCompleted;
+            NetworkStatusService.Instance.NetworkStatusChanged += OnNetworkStatusChanged;
+            RateLimitTracker.Instance.RateLimitStateChanged += OnRateLimitStateChanged;
+
+            // Set initial state
+            IsOffline = !NetworkStatusService.Instance.IsOnline;
+            UpdateSyncStatusDisplay();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to subscribe to sync events: {ex.Message}");
+        }
+    }
+
+    private void OnSyncStatusChanged(object? sender, SyncStatusChangedEventArgs e)
+    {
+        System.Windows.Application.Current?.Dispatcher?.BeginInvoke(() =>
+        {
+            IsSyncing = e.Status == SyncStatus.InProgress || e.Status == SyncStatus.Started;
+            UpdateSyncStatusDisplay();
+        });
+    }
+
+    private void OnSyncOperationCompleted(object? sender, SyncOperationCompletedEventArgs e)
+    {
+        System.Windows.Application.Current?.Dispatcher?.BeginInvoke(async () =>
+        {
+            LastSyncTimeText = DateTime.Now.ToString("h:mm tt");
+            try
+            {
+                PendingOperationCount = await SyncQueueService.Instance.GetPendingCountAsync();
+            }
+            catch { }
+            UpdateSyncStatusDisplay();
+        });
+    }
+
+    private void OnNetworkStatusChanged(object? sender, NetworkStatusChangedEventArgs e)
+    {
+        System.Windows.Application.Current?.Dispatcher?.BeginInvoke(() =>
+        {
+            IsOffline = !e.IsOnline;
+            UpdateSyncStatusDisplay();
+        });
+    }
+
+    private void OnRateLimitStateChanged(object? sender, RateLimitStateChangedEventArgs e)
+    {
+        System.Windows.Application.Current?.Dispatcher?.BeginInvoke(() =>
+        {
+            IsRateLimited = e.IsRateLimited;
+            UpdateSyncStatusDisplay();
+        });
+    }
+
+    private void UpdateSyncStatusDisplay()
+    {
+        if (IsOffline)
+        {
+            SyncStatusText = "Offline";
+            SyncStatusColor = "#9E9E9E"; // Gray
+        }
+        else if (IsRateLimited)
+        {
+            SyncStatusText = "Rate limited";
+            SyncStatusColor = "#FF9800"; // Orange
+        }
+        else if (IsSyncing)
+        {
+            SyncStatusText = PendingOperationCount > 0
+                ? $"Syncing ({PendingOperationCount} pending)..."
+                : "Syncing...";
+            SyncStatusColor = "#2196F3"; // Blue
+        }
+        else if (PendingOperationCount > 0)
+        {
+            SyncStatusText = $"{PendingOperationCount} pending";
+            SyncStatusColor = "#FF9800"; // Orange
+        }
+        else
+        {
+            SyncStatusText = "Synced";
+            SyncStatusColor = "#4CAF50"; // Green
+        }
+    }
+
+    [RelayCommand]
+    private async Task ManualSyncAsync()
+    {
+        try
+        {
+            IsSyncing = true;
+            UpdateSyncStatusDisplay();
+            await SyncManager.Instance.ProcessPendingOperationsAsync();
+            PendingOperationCount = await SyncQueueService.Instance.GetPendingCountAsync();
+            LastSyncTimeText = DateTime.Now.ToString("h:mm tt");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Manual sync failed: {ex.Message}");
+        }
+        finally
+        {
+            IsSyncing = false;
+            UpdateSyncStatusDisplay();
+        }
     }
 
     public void SetUserEmail(string email)

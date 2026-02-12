@@ -648,13 +648,46 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="{Binding ContentHeader, FallbackValue='Your contacts'}"
                                        FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource PrimaryTextBrush}"
                                        VerticalAlignment="Center"/>
 
+                            <!-- Sync Status Badge -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                                <!-- Status circle indicator -->
+                                <Ellipse Width="8" Height="8" VerticalAlignment="Center" Margin="0,0,6,0"
+                                         Fill="{Binding SyncStatusColor, Converter={StaticResource StringToColorBrushConverter}}"/>
+                                <!-- Status text -->
+                                <TextBlock Text="{Binding SyncStatusText, FallbackValue='Synced'}"
+                                           FontSize="11" Foreground="#888888" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <!-- Pending count badge (visible only when > 0) -->
+                                <Border Background="#FF9800" CornerRadius="8" Padding="5,1" VerticalAlignment="Center"
+                                        Visibility="{Binding PendingOperationCount, Converter={StaticResource CountToVisibilityConverter}, FallbackValue=Collapsed}">
+                                    <TextBlock Text="{Binding PendingOperationCount}" FontSize="10" Foreground="White" FontWeight="Bold"/>
+                                </Border>
+                                <!-- Manual sync button -->
+                                <Button Command="{Binding ManualSyncCommand}" Background="Transparent" BorderThickness="0"
+                                        Cursor="Hand" Padding="4,2" Margin="4,0,0,0" ToolTip="Sync now">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="SyncBd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4">
+                                                <TextBlock Text="&#xe627;" FontFamily="{StaticResource MaterialIcons}"
+                                                           FontSize="14" Foreground="#888888" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="SyncBd" Property="Background" Value="#2A2A2A"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </StackPanel>
+
                             <!-- Sort Dropdown -->
-                            <Grid Grid.Column="1">
+                            <Grid Grid.Column="2">
                                 <ToggleButton x:Name="SortDropdownButton"
                                               Background="Transparent" BorderThickness="0" Padding="8,4" Cursor="Hand">
                                     <ToggleButton.Template>

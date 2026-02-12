@@ -158,13 +158,11 @@ public class ApiCalendarService : ICalendarService
         {
             System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] GetEventsWithResultAsync called: {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
             System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] NetworkStatus.IsOnline={NetworkStatus.IsOnline}, IsApiReachable={NetworkStatus.IsApiReachable}");
-            try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"\n[{DateTime.Now:HH:mm:ss}] GetEventsWithResultAsync: {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}, IsOnline={NetworkStatus.IsOnline}, IsApiReachable={NetworkStatus.IsApiReachable}\n"); } catch { }
 
             // If offline, return cached events
             if (!IsOnline)
             {
                 System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Offline - returning cached events for {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
-                try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] OFFLINE - returning cached events\n"); } catch { }
                 var cachedEvents = await LocalCache.GetCachedEventsAsync(startDate, endDate);
                 return new CalendarServiceResult<List<CalendarEvent>>
                 {
@@ -186,12 +184,9 @@ public class ApiCalendarService : ICalendarService
 
             var endpoint = $"outlook/events?{string.Join("&", queryParams)}";
             System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] GET {endpoint}");
-            try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] GET {endpoint}\n"); } catch { }
 
             var response = await _httpClientFactory.GetAsync(ApiEndpoint.InspireContinuum, endpoint);
             var content = await response.Content.ReadAsStringAsync();
-            try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Response: {response.StatusCode}, Content length: {content.Length}\n"); } catch { }
-            try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Response content (first 500 chars): {content.Substring(0, Math.Min(500, content.Length))}\n"); } catch { }
 
             if (response.IsSuccessStatusCode)
             {
@@ -199,12 +194,10 @@ public class ApiCalendarService : ICalendarService
                 try
                 {
                     var apiResponse = JsonSerializer.Deserialize<ApiEventsListResponse>(content, _jsonOptions);
-                    try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Parsed apiResponse, Events: {apiResponse?.Events?.Count ?? -1}\n"); } catch { }
                     if (apiResponse?.Events != null)
                     {
                         var events = apiResponse.Events.Select(MapToCalendarEvent).ToList();
                         System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Retrieved {events.Count} events");
-                        try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Retrieved {events.Count} events from API\n"); } catch { }
 
                         // Cache events for offline use
                         _ = Task.Run(async () =>
@@ -233,27 +226,21 @@ public class ApiCalendarService : ICalendarService
                 catch (Exception ex)
                 {
                     // Fall back to direct list parsing
-                    try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] ApiEventsListResponse parse failed: {ex.Message}, falling back to direct list\n"); } catch { }
                 }
 
                 // Try parsing as direct list
-                try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Trying direct list parse...\n"); } catch { }
                 List<CalendarEventDto>? directEvents = null;
                 try
                 {
                     directEvents = JsonSerializer.Deserialize<List<CalendarEventDto>>(content, _jsonOptions);
-                    try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Direct parse result: {directEvents?.Count ?? -1} events\n"); } catch { }
                 }
                 catch (Exception parseEx)
                 {
-                    try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Direct list parse EXCEPTION: {parseEx.Message}\n"); } catch { }
                 }
                 if (directEvents != null)
                 {
-                    try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] About to call MapToCalendarEvent for {directEvents.Count} items\n"); } catch { }
                     var events = directEvents.Select(MapToCalendarEvent).ToList();
                     System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Retrieved {events.Count} events (direct)");
-                    try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] Retrieved {events.Count} events (direct)\n"); } catch { }
 
                     // Cache events for offline use
                     _ = Task.Run(async () =>
@@ -408,7 +395,6 @@ public class ApiCalendarService : ICalendarService
             System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] POST {endpoint} - {calendarEvent.Subject}, IsPrivate={calendarEvent.IsPrivate}");
             var dtoJson = JsonSerializer.Serialize(dto, _jsonOptions);
             System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Request body: {dtoJson}");
-            try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"\n[{DateTime.Now:HH:mm:ss}] POST {endpoint} - IsPrivate={calendarEvent.IsPrivate}\n[{DateTime.Now:HH:mm:ss}] Request body: {dtoJson}\n"); } catch { }
 
             var response = await _httpClientFactory.PostAsync(ApiEndpoint.InspireContinuum, endpoint, dto);
             var content = await response.Content.ReadAsStringAsync();
@@ -611,7 +597,6 @@ public class ApiCalendarService : ICalendarService
             System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] PUT {endpoint} - {calendarEvent.Subject}, IsPrivate={calendarEvent.IsPrivate}");
             var dtoJson = JsonSerializer.Serialize(dto, _jsonOptions);
             System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Request body: {dtoJson}");
-            try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"\n[{DateTime.Now:HH:mm:ss}] PUT {endpoint} - IsPrivate={calendarEvent.IsPrivate}\n[{DateTime.Now:HH:mm:ss}] Request body: {dtoJson}\n"); } catch { }
 
             var response = await _httpClientFactory.PutAsync(ApiEndpoint.InspireContinuum, endpoint, dto);
             var content = await response.Content.ReadAsStringAsync();
@@ -842,6 +827,22 @@ public class ApiCalendarService : ICalendarService
                 AddedDate = i.AddedDate
             }).ToList() ?? new List<EventImage>(),
             IsRecurring = dto.IsRecurring,
+            Recurrence = dto.IsRecurring && !string.IsNullOrEmpty(dto.RecurrenceType) ? new RecurrencePattern
+            {
+                Type = dto.RecurrenceType switch
+                {
+                    "Weekly" => RecurrenceType.Weekly,
+                    "Monthly" => RecurrenceType.Monthly,
+                    "Yearly" => RecurrenceType.Yearly,
+                    _ => RecurrenceType.Daily
+                },
+                Interval = dto.RecurrenceInterval ?? 1,
+                EndDate = dto.RecurrenceEndDate,
+                Occurrences = dto.RecurrenceOccurrences,
+                DaysOfWeek = dto.RecurrenceDaysOfWeek?
+                    .Select(d => Enum.TryParse<DayOfWeek>(d, true, out var dow) ? dow : DayOfWeek.Monday)
+                    .ToList() ?? new List<DayOfWeek>()
+            } : null,
             Reminder = ParseReminderTime(dto.ReminderMinutes)
         };
     }
@@ -887,6 +888,11 @@ public class ApiCalendarService : ICalendarService
                 AddedDate = i.AddedDate
             }).ToList(),
             IsRecurring = calendarEvent.IsRecurring,
+            RecurrenceType = calendarEvent.Recurrence?.Type.ToString(),
+            RecurrenceInterval = calendarEvent.Recurrence?.Interval,
+            RecurrenceEndDate = calendarEvent.Recurrence?.EndDate,
+            RecurrenceOccurrences = calendarEvent.Recurrence?.Occurrences,
+            RecurrenceDaysOfWeek = calendarEvent.Recurrence?.DaysOfWeek?.Select(d => d.ToString()).ToList(),
             ReminderMinutes = GetReminderMinutes(calendarEvent.Reminder)
         };
     }
@@ -1051,6 +1057,11 @@ public class CalendarEventDto
     public List<AttachmentDto>? Attachments { get; set; }
     public List<ImageDto>? Images { get; set; }
     public bool IsRecurring { get; set; }
+    public string? RecurrenceType { get; set; }
+    public int? RecurrenceInterval { get; set; }
+    public DateTime? RecurrenceEndDate { get; set; }
+    public int? RecurrenceOccurrences { get; set; }
+    public List<string>? RecurrenceDaysOfWeek { get; set; }
     public int? ReminderMinutes { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

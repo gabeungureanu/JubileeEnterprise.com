@@ -90,12 +90,10 @@ public partial class CalendarViewModel : ObservableObject
     public async Task OnViewActivatedAsync()
     {
         System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] OnViewActivatedAsync called. Initialized: {_isInitialized}");
-        try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"\n[{DateTime.Now:HH:mm:ss}] OnViewActivatedAsync called. Initialized: {_isInitialized}\n"); } catch { }
 
         // Refresh service reference in case it changed
         _calendarService = ServiceConfiguration.GetCalendarService();
         System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] CalendarService type: {_calendarService.GetType().Name}");
-        try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] CalendarService type: {_calendarService.GetType().Name}\n"); } catch { }
 
         // Load events for the current visible date range
         await LoadEventsForVisibleRangeAsync();
@@ -117,11 +115,9 @@ public partial class CalendarViewModel : ObservableObject
         var loadEndDate = endDate.AddDays(bufferDays);
 
         System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] LoadEventsForVisibleRangeAsync: {loadStartDate:yyyy-MM-dd} to {loadEndDate:yyyy-MM-dd}");
-        try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] LoadEventsForVisibleRangeAsync: {loadStartDate:yyyy-MM-dd} to {loadEndDate:yyyy-MM-dd}\n"); } catch { }
 
         // Check if this range is already cached
         var isCached = IsDateRangeCached(loadStartDate, loadEndDate);
-        try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] IsDateRangeCached: {isCached}\n"); } catch { }
         if (isCached)
         {
             System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Date range is cached, updating visible events");
@@ -134,7 +130,6 @@ public partial class CalendarViewModel : ObservableObject
 
         // Update visible events
         UpdateVisibleEventsFromCache(startDate, endDate);
-        try { System.IO.File.AppendAllText(@"C:\temp\calendar_debug.txt", $"[{DateTime.Now:HH:mm:ss}] After LoadEventsForRangeAsync, Events.Count: {Events.Count}\n"); } catch { }
     }
 
     /// <summary>
@@ -213,9 +208,12 @@ public partial class CalendarViewModel : ObservableObject
                     .OrderBy(e => e.StartTime)
                     .ToList();
 
+                // Expand recurring events into individual occurrences
+                var expandedEvents = ExpandRecurringEvents(visibleEvents, startDate, endDate);
+
                 // Update the Events collection
                 Events.Clear();
-                foreach (var evt in visibleEvents)
+                foreach (var evt in expandedEvents)
                 {
                     Events.Add(evt);
                 }
@@ -227,6 +225,113 @@ public partial class CalendarViewModel : ObservableObject
             OnPropertyChanged(nameof(Events));
             OnPropertyChanged(nameof(VisibleDays));
         });
+    }
+
+    /// <summary>
+    /// Expands recurring events into individual occurrences within the visible date range.
+    /// Non-recurring events are passed through unchanged. The original recurring event is also included.
+    /// </summary>
+    private List<CalendarEvent> ExpandRecurringEvents(List<CalendarEvent> events, DateTime rangeStart, DateTime rangeEnd)
+    {
+        var result = new List<CalendarEvent>();
+
+        foreach (var evt in events)
+        {
+            if (!evt.IsRecurring || evt.Recurrence == null)
+            {
+                result.Add(evt);
+                continue;
+            }
+
+            // Include the original event occurrence
+            result.Add(evt);
+
+            var pattern = evt.Recurrence;
+            var duration = evt.EndTime - evt.StartTime;
+            var currentDate = evt.StartTime;
+            int occurrenceCount = 0;
+            const int maxOccurrences = 365;
+
+            while (occurrenceCount < maxOccurrences)
+            {
+                // Advance to next occurrence
+                currentDate = pattern.Type switch
+                {
+                    RecurrenceType.Daily => currentDate.AddDays(pattern.Interval),
+                    RecurrenceType.Weekly => currentDate.AddDays(7 * pattern.Interval),
+                    RecurrenceType.Monthly => currentDate.AddMonths(pattern.Interval),
+                    RecurrenceType.Yearly => currentDate.AddYears(pattern.Interval),
+                    _ => currentDate.AddDays(pattern.Interval)
+                };
+
+                // Check end conditions
+                if (pattern.EndDate.HasValue && currentDate.Date > pattern.EndDate.Value.Date)
+                    break;
+                if (pattern.Occurrences.HasValue && occurrenceCount >= pattern.Occurrences.Value)
+                    break;
+                if (currentDate.Date > rangeEnd.Date)
+                    break;
+
+                occurrenceCount++;
+
+                // For weekly recurrence, check if this day-of-week is selected
+                if (pattern.Type == RecurrenceType.Weekly && pattern.DaysOfWeek.Count > 0)
+                {
+                    // Generate occurrences for each selected day in this week
+                    var weekStart = currentDate.AddDays(-(int)currentDate.DayOfWeek);
+                    foreach (var dayOfWeek in pattern.DaysOfWeek)
+                    {
+                        var dayDate = weekStart.AddDays((int)dayOfWeek);
+                        var dayStart = new DateTime(dayDate.Year, dayDate.Month, dayDate.Day,
+                            evt.StartTime.Hour, evt.StartTime.Minute, evt.StartTime.Second, evt.StartTime.Kind);
+
+                        if (dayStart <= evt.StartTime) continue; // Skip if at or before original
+                        if (dayStart.Date < rangeStart.Date) continue;
+                        if (dayStart.Date > rangeEnd.Date) continue;
+                        if (pattern.EndDate.HasValue && dayStart.Date > pattern.EndDate.Value.Date) continue;
+
+                        result.Add(CreateOccurrence(evt, dayStart, duration, occurrenceCount));
+                    }
+                    continue; // Skip the default add below
+                }
+
+                // Skip if before visible range
+                if (currentDate.Date < rangeStart.Date)
+                    continue;
+
+                var occurrenceStart = new DateTime(currentDate.Year, currentDate.Month, currentDate.Day,
+                    evt.StartTime.Hour, evt.StartTime.Minute, evt.StartTime.Second, evt.StartTime.Kind);
+
+                result.Add(CreateOccurrence(evt, occurrenceStart, duration, occurrenceCount));
+            }
+        }
+
+        return result.OrderBy(e => e.StartTime).ToList();
+    }
+
+    private static CalendarEvent CreateOccurrence(CalendarEvent source, DateTime startTime, TimeSpan duration, int index)
+    {
+        return new CalendarEvent
+        {
+            Id = $"{source.Id}_occ_{index}",
+            Subject = source.Subject,
+            Location = source.Location,
+            StartTime = startTime,
+            EndTime = startTime + duration,
+            Description = source.Description,
+            IsAllDay = source.IsAllDay,
+            Category = source.Category,
+            Attendees = source.Attendees,
+            Organizer = source.Organizer,
+            Reminder = source.Reminder,
+            IsRecurring = true,
+            Recurrence = source.Recurrence,
+            Status = source.Status,
+            IsPrivate = source.IsPrivate,
+            IsInPerson = source.IsInPerson,
+            CalendarName = source.CalendarName,
+            EventColor = source.EventColor
+        };
     }
 
     /// <summary>

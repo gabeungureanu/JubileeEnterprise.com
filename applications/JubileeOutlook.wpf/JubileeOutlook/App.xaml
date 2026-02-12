@@ -46,6 +46,7 @@
             <helpers:SubtractConverter x:Key="SubtractConverter"/>
             <helpers:StringToBoolConverter x:Key="StringToBoolConverter"/>
             <helpers:StringToPrefixConverter x:Key="StringToPrefixConverter"/>
+            <helpers:StringToColorBrushConverter x:Key="StringToColorBrushConverter"/>
 
         </ResourceDictionary>
     </Application.Resources>
