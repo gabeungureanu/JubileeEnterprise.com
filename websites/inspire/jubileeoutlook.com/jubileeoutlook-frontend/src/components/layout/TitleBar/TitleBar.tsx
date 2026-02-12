@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { useAppContext } from '../../../context/AppContext';
+import { ReactComponent as JubileeIcon } from '../../../assets/jubilee-icon.svg';
 import './TitleBar.css';
 
 const TitleBar: React.FC = () => {
@@ -77,7 +78,8 @@ const TitleBar: React.FC = () => {
   return (
     <header className="title-bar">
       <div className="title-bar__left">
-        <span className="title-bar__title">Jubilee Outlook</span>
+        <JubileeIcon className="title-bar__icon" />
+        <span className="title-bar__title">JubileeOutlook</span>
       </div>
       <div className="title-bar__right">
         <button

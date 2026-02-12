@@ -15,10 +15,17 @@
   gap: var(--spacing-sm);
 }
 
+.title-bar__icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
 .title-bar__title {
   font-size: var(--font-size-md);
-  font-weight: var(--font-weight-medium);
-  color: var(--text-primary);
+  font-weight: var(--font-weight-bold);
+  color: var(--gold-primary);
+  letter-spacing: -0.3px;
 }
 
 .title-bar__right {
