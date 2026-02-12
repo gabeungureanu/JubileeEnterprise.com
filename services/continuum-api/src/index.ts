@@ -26,6 +26,7 @@ import { logger } from 'hono/logger';
 import { initializePools, closePools, checkAllHealth, getContinuumPool } from '@jubilee/database';
 import * as continuum from '@jubilee/database/continuum';
 import { ImapFlow } from 'imapflow';
+import * as nodemailer from 'nodemailer';
 import { createHash } from 'crypto';
 
 const app = new Hono();
@@ -1654,6 +1655,200 @@ app.delete('/api/v1/outlook/messages/:id', async (c) => {
   }
 });
 
+// POST /api/v1/outlook/messages/send - Send an email via SMTP
+app.post('/api/v1/outlook/messages/send', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { userId, sender_email, subject, body_html, body_text, recipients, importance } = body;
+
+    if (!userId || !sender_email || !recipients?.length) {
+      return c.json({ error: 'userId, sender_email, and recipients are required' }, 400);
+    }
+
+    const pool = getContinuumPool();
+
+    // Lookup SMTP credentials from the account
+    const accountResult = await pool.query(
+      `SELECT id, email_address, smtp_host, smtp_port, smtp_use_ssl, encrypted_password, display_name
+       FROM outlook_email_accounts WHERE user_id = $1 AND email_address = $2 LIMIT 1`,
+      [userId, sender_email]
+    );
+
+    if (accountResult.rows.length === 0) {
+      return c.json({ error: 'No email account found for this sender' }, 404);
+    }
+
+    const account = accountResult.rows[0];
+    const smtpPassword = Buffer.from(account.encrypted_password || '', 'base64').toString('utf-8');
+
+    // Create nodemailer transport
+    const transport = nodemailer.createTransport({
+      host: account.smtp_host,
+      port: account.smtp_port || 587,
+      secure: account.smtp_port === 465,
+      auth: {
+        user: account.email_address,
+        pass: smtpPassword,
+      },
+    });
+
+    // Build recipient lists
+    const toAddresses = recipients.filter((r: any) => r.type === 'to').map((r: any) => r.name ? `"${r.name}" <${r.email}>` : r.email);
+    const ccAddresses = recipients.filter((r: any) => r.type === 'cc').map((r: any) => r.name ? `"${r.name}" <${r.email}>` : r.email);
+    const bccAddresses = recipients.filter((r: any) => r.type === 'bcc').map((r: any) => r.name ? `"${r.name}" <${r.email}>` : r.email);
+
+    const mailOptions: any = {
+      from: account.display_name ? `"${account.display_name}" <${account.email_address}>` : account.email_address,
+      to: toAddresses.join(', '),
+      subject: subject || '(No Subject)',
+      text: body_text || '',
+      html: body_html || undefined,
+      priority: importance === 'high' ? 'high' : importance === 'low' ? 'low' : 'normal',
+    };
+
+    if (ccAddresses.length) mailOptions.cc = ccAddresses.join(', ');
+    if (bccAddresses.length) mailOptions.bcc = bccAddresses.join(', ');
+
+    // Send the email
+    const info = await transport.sendMail(mailOptions);
+
+    // Save a copy in the Sent folder in the database
+    const sentFolder = await pool.query(
+      `SELECT id FROM outlook_email_folders WHERE account_id = $1 AND folder_type = 'sent' LIMIT 1`,
+      [account.id]
+    );
+
+    if (sentFolder.rows.length > 0) {
+      const sentFolderId = sentFolder.rows[0].id;
+      const messageId = createHash('sha256').update(`${info.messageId}-${Date.now()}`).digest('hex').substring(0, 36);
+
+      await pool.query(
+        `INSERT INTO outlook_email_messages
+         (id, folder_id, user_id, subject, sender_name, sender_email, body_html, body_text, body_preview,
+          is_read, is_flagged, has_attachments, is_draft, is_sent, importance, internet_message_id, received_at, sent_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, false, false, false, true, $10, $11, NOW(), NOW())
+         ON CONFLICT DO NOTHING`,
+        [
+          messageId, sentFolderId, userId, subject || '(No Subject)',
+          account.display_name || sender_email, sender_email,
+          body_html || null, body_text || null,
+          (body_text || '').substring(0, 200),
+          importance || 'normal', info.messageId || messageId,
+        ]
+      );
+
+      // Insert recipients for the sent copy
+      for (const r of recipients) {
+        await pool.query(
+          `INSERT INTO outlook_email_recipients (message_id, email_address, display_name, recipient_type)
+           VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
+          [messageId, r.email, r.name || '', r.type || 'to']
+        );
+      }
+
+      // Update folder counts
+      await pool.query(
+        `UPDATE outlook_email_folders SET total_count = (
+           SELECT COUNT(*) FROM outlook_email_messages WHERE folder_id = $1
+         ) WHERE id = $1`,
+        [sentFolderId]
+      );
+    }
+
+    return c.json({ success: true, messageId: info.messageId });
+  } catch (err: any) {
+    console.error('Send email error:', err.message);
+    return c.json({ error: 'Failed to send email', message: err.message }, 500);
+  }
+});
+
+// POST /api/v1/outlook/messages/draft - Save or update a draft
+app.post('/api/v1/outlook/messages/draft', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { userId, id, sender_email, subject, body_html, body_text, recipients } = body;
+
+    if (!userId || !sender_email) {
+      return c.json({ error: 'userId and sender_email are required' }, 400);
+    }
+
+    const pool = getContinuumPool();
+
+    // Find the account and drafts folder
+    const accountResult = await pool.query(
+      `SELECT a.id as account_id, a.display_name, f.id as drafts_folder_id
+       FROM outlook_email_accounts a
+       JOIN outlook_email_folders f ON f.account_id = a.id AND f.folder_type = 'drafts'
+       WHERE a.user_id = $1 AND a.email_address = $2 LIMIT 1`,
+      [userId, sender_email]
+    );
+
+    if (accountResult.rows.length === 0) {
+      return c.json({ error: 'No email account or drafts folder found' }, 404);
+    }
+
+    const { drafts_folder_id, display_name } = accountResult.rows[0];
+    let draftId = id;
+
+    if (draftId) {
+      // Update existing draft
+      await pool.query(
+        `UPDATE outlook_email_messages SET
+           subject = $1, body_html = $2, body_text = $3,
+           body_preview = $4, updated_at = NOW()
+         WHERE id = $5 AND is_draft = true`,
+        [
+          subject || '(No Subject)', body_html || null, body_text || null,
+          (body_text || '').substring(0, 200), draftId,
+        ]
+      );
+
+      // Replace recipients
+      await pool.query('DELETE FROM outlook_email_recipients WHERE message_id = $1', [draftId]);
+    } else {
+      // Create new draft
+      draftId = createHash('sha256').update(`draft-${userId}-${Date.now()}-${Math.random()}`).digest('hex').substring(0, 36);
+
+      await pool.query(
+        `INSERT INTO outlook_email_messages
+         (id, folder_id, user_id, subject, sender_name, sender_email, body_html, body_text, body_preview,
+          is_read, is_flagged, has_attachments, is_draft, is_sent, importance, received_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, false, false, true, false, 'normal', NOW())`,
+        [
+          draftId, drafts_folder_id, userId, subject || '(No Subject)',
+          display_name || sender_email, sender_email,
+          body_html || null, body_text || null,
+          (body_text || '').substring(0, 200),
+        ]
+      );
+    }
+
+    // Insert recipients
+    if (recipients?.length) {
+      for (const r of recipients) {
+        await pool.query(
+          `INSERT INTO outlook_email_recipients (message_id, email_address, display_name, recipient_type)
+           VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
+          [draftId, r.email, r.name || '', r.type || 'to']
+        );
+      }
+    }
+
+    // Update drafts folder count
+    await pool.query(
+      `UPDATE outlook_email_folders SET total_count = (
+         SELECT COUNT(*) FROM outlook_email_messages WHERE folder_id = $1
+       ) WHERE id = $1`,
+      [drafts_folder_id]
+    );
+
+    return c.json({ success: true, draftId });
+  } catch (err: any) {
+    console.error('Save draft error:', err.message);
+    return c.json({ error: 'Failed to save draft', message: err.message }, 500);
+  }
+});
+
 // ============================================================================
 // SERVER STARTUP
 // ============================================================================
@@ -1697,6 +1892,8 @@ async function start() {
     console.log('  GET  /api/v1/outlook/messages/:id     - Get single message');
     console.log('  PATCH /api/v1/outlook/messages/:id    - Update message');
     console.log('  DELETE /api/v1/outlook/messages/:id   - Delete message');
+    console.log('  POST /api/v1/outlook/messages/send   - Send email via SMTP');
+    console.log('  POST /api/v1/outlook/messages/draft  - Save/update draft');
   } catch (error) {
     console.error('Failed to start Continuum API:', error);
     process.exit(1);

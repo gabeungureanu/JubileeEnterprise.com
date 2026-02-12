@@ -42,16 +42,30 @@ export const mailService = {
     return dto?.id ? mapMessageDto(dto as EmailMessageDto) : null;
   },
 
-  async sendMessage(data: CreateMessageRequest): Promise<boolean> {
-    const payload = { ...data, is_draft: false };
-    const response = await continuumClient.post('/outlook/messages', payload);
-    return response.data?.success !== false;
+  async sendMessage(data: {
+    userId: string;
+    sender_email: string;
+    subject: string;
+    body_html?: string;
+    body_text?: string;
+    recipients: { email: string; name: string; type: 'to' | 'cc' | 'bcc' }[];
+    importance?: string;
+  }): Promise<{ success: boolean; messageId?: string }> {
+    const response = await continuumClient.post('/outlook/messages/send', data);
+    return response.data;
   },
 
-  async saveDraft(data: CreateMessageRequest): Promise<boolean> {
-    const payload = { ...data, is_draft: true };
-    const response = await continuumClient.post('/outlook/messages', payload);
-    return response.data?.success !== false;
+  async saveDraft(data: {
+    userId: string;
+    id?: string;
+    sender_email: string;
+    subject: string;
+    body_html?: string;
+    body_text?: string;
+    recipients?: { email: string; name: string; type: 'to' | 'cc' | 'bcc' }[];
+  }): Promise<{ success: boolean; draftId?: string }> {
+    const response = await continuumClient.post('/outlook/messages/draft', data);
+    return response.data;
   },
 
   async deleteMessage(messageId: string): Promise<boolean> {
@@ -81,8 +95,9 @@ export const mailService = {
   },
 
   async searchMessages(query: string, folderId?: string, page = 1, pageSize = 50): Promise<{ messages: EmailMessage[]; totalCount: number }> {
+    const userId = tokenStore.getUserId();
     const response = await continuumClient.get<ApiMessagesResponse>('/outlook/messages/search', {
-      params: { q: query, folderId, page, pageSize },
+      params: { userId, q: query, folderId, page, pageSize },
     });
     const data = response.data;
     const dtos = data.messages || (data as any);

@@ -4,6 +4,7 @@ import { MailProvider, MailContextValue } from '../../context/MailContext';
 import FolderPane from '../../components/mail/FolderPane';
 import MessageList from '../../components/mail/MessageList';
 import ReadingPane from '../../components/mail/ReadingPane';
+import ComposeMail from '../../components/mail/ComposeMail';
 import { MailFolder, EmailMessage, ComposeMode } from '../../types/mail';
 import { mailService } from '../../services/mail/mailService';
 import './MailPage.css';
@@ -26,8 +27,12 @@ const MailPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearching, setIsSearching] = useState(false);
 
-  // Compose state (for Phase 2)
+  // Compose state
   const [composeMode, setComposeMode] = useState<ComposeMode | null>(null);
+
+  // Get sender email from localStorage (set during sign-in/sync)
+  const senderEmail = localStorage.getItem('jubilee_sync_email') || '';
+  const senderName = senderEmail.split('@')[0];
 
   // Track if initial load is done to avoid duplicate fetches
   const initialLoadDone = useRef(false);
@@ -226,10 +231,22 @@ const MailPage: React.FC = () => {
     }
   }, [selectedMessage, refreshFolders]);
 
-  // Open compose handler (for Phase 2)
+  // Open compose handler
   const handleOpenCompose = useCallback((mode: ComposeMode) => {
     setComposeMode(mode);
   }, []);
+
+  // Close compose and return to reading pane
+  const handleCloseCompose = useCallback(() => {
+    setComposeMode(null);
+  }, []);
+
+  // Handle send success — close compose, refresh messages
+  const handleSentSuccess = useCallback(() => {
+    setComposeMode(null);
+    refreshMessages();
+    refreshFolders();
+  }, [refreshMessages, refreshFolders]);
 
   // Search messages handler
   const handleSearchMessages = useCallback(async (query: string) => {
@@ -324,7 +341,18 @@ const MailPage: React.FC = () => {
           loading={loadingMessages}
           folderName={isSearching ? `Search: "${searchQuery}"` : folders.find(f => f.id === selectedFolderId)?.displayName}
         />
-        <ReadingPane message={selectedMessage} />
+        {composeMode ? (
+          <ComposeMail
+            mode={composeMode}
+            originalMessage={selectedMessage}
+            senderEmail={senderEmail}
+            senderName={senderName}
+            onClose={handleCloseCompose}
+            onSent={handleSentSuccess}
+          />
+        ) : (
+          <ReadingPane message={selectedMessage} />
+        )}
       </div>
     </MailProvider>
   );
