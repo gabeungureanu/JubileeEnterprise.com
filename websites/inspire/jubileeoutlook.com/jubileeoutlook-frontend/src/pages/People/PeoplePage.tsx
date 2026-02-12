@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
+import PeopleRibbon from '../../components/layout/Ribbon/PeopleRibbon';
 import ContactGroups from '../../components/people/ContactGroups';
 import ContactList from '../../components/people/ContactList';
 import ContactDetail from '../../components/people/ContactDetail';
@@ -17,19 +18,24 @@ const PeoplePage: React.FC = () => {
 
   return (
     <div className="people-page">
-      {isFolderPaneVisible && (
-        <ContactGroups
-          groups={groups}
-          selectedGroupId={selectedGroupId}
-          onGroupSelect={setSelectedGroupId}
+      <div className="ribbon">
+        <PeopleRibbon />
+      </div>
+      <div className="people-page__content">
+        {isFolderPaneVisible && (
+          <ContactGroups
+            groups={groups}
+            selectedGroupId={selectedGroupId}
+            onGroupSelect={setSelectedGroupId}
+          />
+        )}
+        <ContactList
+          contacts={contacts}
+          selectedContactId={selectedContactId}
+          onContactSelect={setSelectedContactId}
         />
-      )}
-      <ContactList
-        contacts={contacts}
-        selectedContactId={selectedContactId}
-        onContactSelect={setSelectedContactId}
-      />
-      <ContactDetail contact={selectedContact} />
+        <ContactDetail contact={selectedContact} />
+      </div>
     </div>
   );
 };

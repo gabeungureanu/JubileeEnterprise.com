@@ -1,7 +1,14 @@
 .calendar-page {
   display: flex;
+  flex-direction: column;
   flex: 1;
   height: 100%;
+  overflow: hidden;
+}
+
+.calendar-page__content {
+  display: flex;
+  flex: 1;
   overflow: hidden;
 }
 

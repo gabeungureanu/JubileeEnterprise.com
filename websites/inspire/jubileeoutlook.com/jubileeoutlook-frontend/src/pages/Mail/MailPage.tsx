@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { MailProvider, MailContextValue } from '../../context/MailContext';
+import MailRibbon from '../../components/layout/Ribbon/MailRibbon';
 import FolderPane from '../../components/mail/FolderPane';
 import MessageList from '../../components/mail/MessageList';
 import ReadingPane from '../../components/mail/ReadingPane';
@@ -386,35 +387,40 @@ const MailPage: React.FC = () => {
   return (
     <MailProvider value={mailContextValue}>
       <div className="mail-page">
-        {isFolderPaneVisible && (
-          <FolderPane
-            folders={folders}
-            selectedFolderId={selectedFolderId}
-            onFolderSelect={handleFolderSelect}
-            onFoldersChanged={refreshFolders}
+        <div className="ribbon">
+          <MailRibbon />
+        </div>
+        <div className="mail-page__content">
+          {isFolderPaneVisible && (
+            <FolderPane
+              folders={folders}
+              selectedFolderId={selectedFolderId}
+              onFolderSelect={handleFolderSelect}
+              onFoldersChanged={refreshFolders}
+            />
+          )}
+          <MessageList
+            messages={messages}
+            selectedMessageId={selectedMessageId}
+            onMessageSelect={handleMessageSelect}
+            onToggleFlag={handleToggleFlagForMessage}
+            onSearch={handleSearchMessages}
+            loading={loadingMessages}
+            folderName={isSearching ? `Search: "${searchQuery}"` : folders.find(f => f.id === selectedFolderId)?.displayName}
           />
-        )}
-        <MessageList
-          messages={messages}
-          selectedMessageId={selectedMessageId}
-          onMessageSelect={handleMessageSelect}
-          onToggleFlag={handleToggleFlagForMessage}
-          onSearch={handleSearchMessages}
-          loading={loadingMessages}
-          folderName={isSearching ? `Search: "${searchQuery}"` : folders.find(f => f.id === selectedFolderId)?.displayName}
-        />
-        {composeMode ? (
-          <ComposeMail
-            mode={composeMode}
-            originalMessage={selectedMessage}
-            senderEmail={senderEmail}
-            senderName={senderName}
-            onClose={handleCloseCompose}
-            onSent={handleSentSuccess}
-          />
-        ) : (
-          <ReadingPane message={selectedMessage} />
-        )}
+          {composeMode ? (
+            <ComposeMail
+              mode={composeMode}
+              originalMessage={selectedMessage}
+              senderEmail={senderEmail}
+              senderName={senderName}
+              onClose={handleCloseCompose}
+              onSent={handleSentSuccess}
+            />
+          ) : (
+            <ReadingPane message={selectedMessage} />
+          )}
+        </div>
       </div>
     </MailProvider>
   );

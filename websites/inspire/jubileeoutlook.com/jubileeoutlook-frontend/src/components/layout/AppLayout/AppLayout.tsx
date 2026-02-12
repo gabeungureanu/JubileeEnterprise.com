@@ -2,7 +2,6 @@ import React from 'react';
 import { useAppContext } from '../../../context/AppContext';
 import AppRail from '../AppRail';
 import TitleBar from '../TitleBar';
-import Ribbon from '../Ribbon';
 import StatusBar from '../StatusBar';
 import MailPage from '../../../pages/Mail/MailPage';
 import CalendarPage from '../../../pages/Calendar/CalendarPage';
@@ -30,7 +29,6 @@ const AppLayout: React.FC = () => {
       <AppRail />
       <div className="app-layout__main">
         <TitleBar />
-        <Ribbon />
         <div className="app-layout__content">
           {renderActiveModule()}
         </div>

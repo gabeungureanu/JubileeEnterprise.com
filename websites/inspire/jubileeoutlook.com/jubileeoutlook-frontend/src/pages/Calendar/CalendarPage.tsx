@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
+import CalendarRibbon from '../../components/layout/Ribbon/CalendarRibbon';
 import MiniCalendar from '../../components/calendar/MiniCalendar';
 import CalendarGrid from '../../components/calendar/CalendarGrid';
 import { CalendarEvent, CalendarViewMode, CalendarDateRange } from '../../types/calendar';
@@ -40,12 +41,16 @@ const CalendarPage: React.FC = () => {
 
   return (
     <div className="calendar-page">
-      {isFolderPaneVisible && (
-        <div className="calendar-page__sidebar">
-          <MiniCalendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
-        </div>
-      )}
-      <div className="calendar-page__main">
+      <div className="ribbon">
+        <CalendarRibbon />
+      </div>
+      <div className="calendar-page__content">
+        {isFolderPaneVisible && (
+          <div className="calendar-page__sidebar">
+            <MiniCalendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
+          </div>
+        )}
+        <div className="calendar-page__main">
         <div className="calendar-page__header">
           <div className="calendar-page__nav">
             <button className="calendar-page__nav-btn" onClick={navigatePrevious}>
@@ -78,6 +83,7 @@ const CalendarPage: React.FC = () => {
           onEventClick={() => {}}
           onDateClick={(date) => setSelectedDate(date)}
         />
+        </div>
       </div>
     </div>
   );

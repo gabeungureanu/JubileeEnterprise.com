@@ -1,6 +1,13 @@
 .mail-page {
   display: flex;
+  flex-direction: column;
   flex: 1;
   height: 100%;
+  overflow: hidden;
+}
+
+.mail-page__content {
+  display: flex;
+  flex: 1;
   overflow: hidden;
 }

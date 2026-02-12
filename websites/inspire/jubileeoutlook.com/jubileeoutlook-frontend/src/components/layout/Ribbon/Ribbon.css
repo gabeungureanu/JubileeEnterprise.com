@@ -49,8 +49,14 @@
   color: var(--text-primary);
 }
 
-.ribbon__button:active {
+.ribbon__button:active:not(:disabled) {
   background-color: var(--ribbon-active);
+}
+
+.ribbon__button:disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
 }
 
 .ribbon__button--primary {
