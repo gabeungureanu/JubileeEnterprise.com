@@ -1778,7 +1778,7 @@ app.delete('/api/v1/outlook/messages/:id', async (c) => {
 app.post('/api/v1/outlook/messages/send', async (c) => {
   try {
     const body = await c.req.json();
-    const { userId, sender_email, subject, body_html, body_text, recipients, importance } = body;
+    const { userId, sender_email, subject, body_html, body_text, recipients, importance, attachments } = body;
 
     if (!userId || !sender_email || !recipients?.length) {
       return c.json({ error: 'userId, sender_email, and recipients are required' }, 400);
@@ -1828,6 +1828,15 @@ app.post('/api/v1/outlook/messages/send', async (c) => {
     if (ccAddresses.length) mailOptions.cc = ccAddresses.join(', ');
     if (bccAddresses.length) mailOptions.bcc = bccAddresses.join(', ');
 
+    // Handle attachments (base64-encoded from frontend)
+    if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+      mailOptions.attachments = attachments.map((att: any) => ({
+        filename: att.filename,
+        content: Buffer.from(att.content, 'base64'),
+        contentType: att.contentType || 'application/octet-stream',
+      }));
+    }
+
     // Send the email
     const info = await transport.sendMail(mailOptions);
 
@@ -1845,13 +1854,14 @@ app.post('/api/v1/outlook/messages/send', async (c) => {
         `INSERT INTO outlook_email_messages
          (id, folder_id, user_id, subject, sender_name, sender_email, body_html, body_text, body_preview,
           is_read, is_flagged, has_attachments, is_draft, is_sent, importance, internet_message_id, received_at, sent_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, false, false, false, true, $10, $11, NOW(), NOW())
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, false, $10, false, true, $11, $12, NOW(), NOW())
          ON CONFLICT DO NOTHING`,
         [
           messageId, sentFolderId, userId, subject || '(No Subject)',
           account.display_name || sender_email, sender_email,
           body_html || null, body_text || null,
           (body_text || '').substring(0, 200),
+          !!(attachments && attachments.length > 0),
           importance || 'normal', info.messageId || messageId,
         ]
       );

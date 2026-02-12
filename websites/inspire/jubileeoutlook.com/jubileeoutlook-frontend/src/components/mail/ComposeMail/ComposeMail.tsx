@@ -20,6 +20,13 @@ interface ComposeFormData {
   subject: string;
 }
 
+interface AttachmentFile {
+  file: File;
+  id: string;
+}
+
+type ImportanceLevel = 'normal' | 'high' | 'low';
+
 function buildInitialSubject(mode: ComposeMode, original: EmailMessage | null): string {
   if (!original || mode === 'new') return '';
   if (mode === 'reply' || mode === 'replyAll') {
@@ -70,6 +77,26 @@ function getInitialBodyHtml(mode: ComposeMode, original: EmailMessage | null): s
   return buildForwardHtml(original);
 }
 
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Strip the data:...;base64, prefix
+      const base64 = result.split(',')[1] || '';
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, senderEmail, senderName, onClose, onSent }) => {
   const recipients = buildInitialRecipients(mode, originalMessage);
   const [formData, setFormData] = useState<ComposeFormData>({
@@ -82,9 +109,12 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
   const [sendError, setSendError] = useState<string | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState<'saved' | 'saving' | 'unsaved' | null>(null);
+  const [importance, setImportance] = useState<ImportanceLevel>('normal');
+  const [attachments, setAttachments] = useState<AttachmentFile[]>([]);
   const lastSavedHash = useRef<string>('');
   const draftTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize editor content on mount
   useEffect(() => {
@@ -177,11 +207,20 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
       const userId = tokenStore.getUserId();
       if (!userId) throw new Error('Not signed in');
 
-      const recipients = [
+      const allRecipients = [
         ...toRecipients,
         ...parseRecipients(formData.ccInput, 'cc'),
         ...parseRecipients(formData.bccInput, 'bcc'),
       ];
+
+      // Convert attachments to base64 for sending
+      const attachmentPayloads = await Promise.all(
+        attachments.map(async (att) => ({
+          filename: att.file.name,
+          content: await fileToBase64(att.file),
+          contentType: att.file.type || 'application/octet-stream',
+        }))
+      );
 
       await mailService.sendMessage({
         userId,
@@ -189,8 +228,9 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
         subject: formData.subject,
         body_html: getEditorHtml(),
         body_text: getEditorText(),
-        recipients,
-        importance: 'normal',
+        recipients: allRecipients,
+        importance,
+        attachments: attachmentPayloads.length > 0 ? attachmentPayloads : undefined,
       });
 
       if (draftId) {
@@ -203,12 +243,51 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
     } finally {
       setSending(false);
     }
-  }, [formData, senderEmail, draftId, onSent, getEditorHtml, getEditorText]);
+  }, [formData, senderEmail, draftId, onSent, getEditorHtml, getEditorText, importance, attachments]);
 
   // Formatting commands
   const execFormat = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value);
     editorRef.current?.focus();
+  }, []);
+
+  // Insert hyperlink
+  const handleInsertLink = useCallback(() => {
+    const url = window.prompt('Enter URL:');
+    if (url) {
+      const fullUrl = url.startsWith('http') ? url : `https://${url}`;
+      execFormat('createLink', fullUrl);
+    }
+  }, [execFormat]);
+
+  // Cycle importance: normal → high → low → normal
+  const handleToggleImportance = useCallback(() => {
+    setImportance((prev) => {
+      if (prev === 'normal') return 'high';
+      if (prev === 'high') return 'low';
+      return 'normal';
+    });
+  }, []);
+
+  // Attachment file picker
+  const handleAttachClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const newAttachments: AttachmentFile[] = Array.from(files).map((file) => ({
+      file,
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    }));
+    setAttachments((prev) => [...prev, ...newAttachments]);
+    // Reset the input so the same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, []);
+
+  const handleRemoveAttachment = useCallback((id: string) => {
+    setAttachments((prev) => prev.filter((a) => a.id !== id));
   }, []);
 
   // Ctrl+Enter to send
@@ -221,8 +300,20 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
 
   const modeLabel = mode === 'new' ? 'New Message' : mode === 'reply' ? 'Reply' : mode === 'replyAll' ? 'Reply All' : 'Forward';
 
+  const importanceIcon = importance === 'high' ? 'priority_high' : importance === 'low' ? 'arrow_downward' : 'remove';
+  const importanceTitle = importance === 'high' ? 'High importance (click to set low)' : importance === 'low' ? 'Low importance (click to set normal)' : 'Normal importance (click to set high)';
+
   return (
     <div className="compose-mail">
+      {/* Hidden file input for attachments */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+
       {/* Action Bar */}
       <div className="compose-mail__action-bar">
         <button
@@ -236,17 +327,27 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
 
         <div className="compose-mail__action-separator" />
 
-        <button className="compose-mail__action-btn" title="Attach file">
+        <button className="compose-mail__action-btn" onClick={handleAttachClick} title="Attach file">
           <span className="material-symbols-outlined">attach_file</span>
         </button>
-        <button className="compose-mail__action-btn" title="Insert link">
+        <button className="compose-mail__action-btn" onClick={handleInsertLink} title="Insert link">
           <span className="material-symbols-outlined">link</span>
         </button>
-        <button className="compose-mail__action-btn" title="Set importance">
-          <span className="material-symbols-outlined">priority_high</span>
+        <button
+          className={`compose-mail__action-btn ${importance !== 'normal' ? 'compose-mail__action-btn--importance-active' : ''}`}
+          onClick={handleToggleImportance}
+          title={importanceTitle}
+        >
+          <span className="material-symbols-outlined">{importanceIcon}</span>
         </button>
 
         <span className="compose-mail__mode-label">{modeLabel}</span>
+
+        {importance !== 'normal' && (
+          <span className={`compose-mail__importance-badge compose-mail__importance-badge--${importance}`}>
+            {importance === 'high' ? 'High Importance' : 'Low Importance'}
+          </span>
+        )}
 
         {draftStatus && (
           <span className="compose-mail__draft-indicator">
@@ -344,6 +445,32 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
           />
         </div>
       </div>
+
+      {/* Attachments Bar */}
+      {attachments.length > 0 && (
+        <div className="compose-mail__attachments">
+          <span className="compose-mail__attachments-label">
+            <span className="material-symbols-outlined">attach_file</span>
+            {attachments.length} file{attachments.length > 1 ? 's' : ''}
+          </span>
+          <div className="compose-mail__attachment-list">
+            {attachments.map((att) => (
+              <div key={att.id} className="compose-mail__attachment-chip">
+                <span className="material-symbols-outlined">description</span>
+                <span className="compose-mail__attachment-name">{att.file.name}</span>
+                <span className="compose-mail__attachment-size">{formatFileSize(att.file.size)}</span>
+                <button
+                  className="compose-mail__attachment-remove"
+                  onClick={() => handleRemoveAttachment(att.id)}
+                  title="Remove"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Formatting Toolbar */}
       <div className="compose-mail__format-bar">

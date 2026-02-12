@@ -50,6 +50,7 @@ export const mailService = {
     body_text?: string;
     recipients: { email: string; name: string; type: 'to' | 'cc' | 'bcc' }[];
     importance?: string;
+    attachments?: { filename: string; content: string; contentType: string }[];
   }): Promise<{ success: boolean; messageId?: string }> {
     const response = await continuumClient.post('/outlook/messages/send', data);
     return response.data;

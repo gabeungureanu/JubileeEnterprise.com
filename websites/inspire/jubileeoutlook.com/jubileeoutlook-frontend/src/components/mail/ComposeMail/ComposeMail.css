@@ -94,7 +94,28 @@
   font-size: var(--font-size-xs);
   color: var(--text-tertiary);
   font-style: italic;
-  margin-left: auto;
+  margin-left: var(--spacing-sm);
+}
+
+.compose-mail__action-btn--importance-active {
+  color: var(--accent-red);
+}
+
+.compose-mail__importance-badge {
+  font-size: var(--font-size-xs);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.compose-mail__importance-badge--high {
+  background-color: rgba(209, 52, 56, 0.15);
+  color: var(--accent-red);
+}
+
+.compose-mail__importance-badge--low {
+  background-color: rgba(0, 120, 212, 0.15);
+  color: var(--accent-blue);
 }
 
 /* ===== Error Banner ===== */
@@ -186,6 +207,88 @@
 .compose-mail__field-row--subject .compose-mail__field-input {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-medium);
+}
+
+/* ===== Attachments Bar ===== */
+.compose-mail__attachments {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.compose-mail__attachments-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+.compose-mail__attachments-label .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.compose-mail__attachment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.compose-mail__attachment-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px 3px 4px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
+.compose-mail__attachment-chip .material-symbols-outlined {
+  font-size: 16px;
+  color: var(--text-tertiary);
+}
+
+.compose-mail__attachment-name {
+  color: var(--text-secondary);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compose-mail__attachment-size {
+  color: var(--text-disabled);
+  font-size: var(--font-size-xs);
+}
+
+.compose-mail__attachment-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-disabled);
+  cursor: pointer;
+  padding: 0;
+}
+
+.compose-mail__attachment-remove:hover {
+  background-color: var(--accent-red);
+  color: #fff;
+}
+
+.compose-mail__attachment-remove .material-symbols-outlined {
+  font-size: 14px;
 }
 
 /* ===== Formatting Toolbar ===== */
