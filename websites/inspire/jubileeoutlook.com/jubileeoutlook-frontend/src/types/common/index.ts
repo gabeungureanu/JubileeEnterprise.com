@@ -1,18 +1,5 @@
 export type AppModule = 'mail' | 'calendar' | 'people';
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
-
-export interface PaginatedResponse<T> {
-  items: T[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
-}
-
 export interface User {
   id: string;
   email: string;
@@ -20,10 +7,15 @@ export interface User {
   avatarUrl?: string;
 }
 
-export interface Category {
-  id: string;
-  name: string;
-  color: EventColor;
+export interface LoginResponse {
+  success: boolean;
+  error?: string;
+  tokens?: {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+  };
+  user?: User;
 }
 
 export type EventColor = 'blue' | 'green' | 'orange' | 'purple' | 'red' | 'yellow';

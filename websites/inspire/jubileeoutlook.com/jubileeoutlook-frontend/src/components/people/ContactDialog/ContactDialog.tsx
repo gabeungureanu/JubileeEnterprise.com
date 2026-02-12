@@ -1,37 +1,55 @@
 import React, { useState } from 'react';
-import { ContactFormData } from '../../../types/contacts';
+import { ContactDto } from '../../../types/contacts';
 import './ContactDialog.css';
+
+interface ContactFormData {
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  email: string;
+  phone: string;
+  company: string;
+  jobTitle: string;
+  notes: string;
+}
 
 interface ContactDialogProps {
   isOpen: boolean;
-  initialData?: Partial<ContactFormData>;
+  initialData?: Partial<ContactDto>;
   onClose: () => void;
-  onSave: (data: ContactFormData) => void;
+  onSave: (data: Partial<ContactDto>) => void;
 }
 
 const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, initialData, onClose, onSave }) => {
   const [formData, setFormData] = useState<ContactFormData>({
-    firstName: initialData?.firstName || '',
-    lastName: initialData?.lastName || '',
-    displayName: initialData?.displayName || '',
-    emailAddresses: initialData?.emailAddresses || [{ type: 'work', address: '', isPrimary: true }],
-    phoneNumbers: initialData?.phoneNumbers || [{ type: 'mobile', number: '', isPrimary: true }],
-    organization: initialData?.organization || '',
-    jobTitle: initialData?.jobTitle || '',
-    birthday: initialData?.birthday || null,
-    anniversary: initialData?.anniversary || null,
+    firstName: initialData?.first_name || '',
+    lastName: initialData?.last_name || '',
+    displayName: initialData?.display_name || '',
+    email: initialData?.email_addresses?.[0] || '',
+    phone: initialData?.phone_numbers?.[0] || '',
+    company: initialData?.company || '',
+    jobTitle: initialData?.job_title || '',
     notes: initialData?.notes || '',
-    groups: initialData?.groups || [],
   });
 
   if (!isOpen) return null;
 
-  const updateField = (field: keyof ContactFormData, value: any) => {
+  const updateField = (field: keyof ContactFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = () => {
-    onSave(formData);
+    const dto: Partial<ContactDto> = {
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      display_name: formData.displayName || `${formData.firstName} ${formData.lastName}`.trim(),
+      email_addresses: formData.email ? [formData.email] : [],
+      phone_numbers: formData.phone ? [formData.phone] : [],
+      company: formData.company,
+      job_title: formData.jobTitle,
+      notes: formData.notes,
+    };
+    onSave(dto);
     onClose();
   };
 
@@ -66,8 +84,8 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, initialData, onCl
             <label>Email</label>
             <input
               type="email"
-              value={formData.emailAddresses[0]?.address || ''}
-              onChange={(e) => updateField('emailAddresses', [{ ...formData.emailAddresses[0], address: e.target.value }])}
+              value={formData.email}
+              onChange={(e) => updateField('email', e.target.value)}
             />
           </div>
 
@@ -75,15 +93,15 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, initialData, onCl
             <label>Phone</label>
             <input
               type="tel"
-              value={formData.phoneNumbers[0]?.number || ''}
-              onChange={(e) => updateField('phoneNumbers', [{ ...formData.phoneNumbers[0], number: e.target.value }])}
+              value={formData.phone}
+              onChange={(e) => updateField('phone', e.target.value)}
             />
           </div>
 
           <div className="contact-dialog__row">
             <div className="contact-dialog__field">
-              <label>Organization</label>
-              <input type="text" value={formData.organization} onChange={(e) => updateField('organization', e.target.value)} />
+              <label>Company</label>
+              <input type="text" value={formData.company} onChange={(e) => updateField('company', e.target.value)} />
             </div>
             <div className="contact-dialog__field">
               <label>Job Title</label>

@@ -41,7 +41,7 @@ const ReadingPane: React.FC<ReadingPaneProps> = ({ message }) => {
               <span className="reading-pane__sender-email">{message.from.address}</span>
             </div>
           </div>
-          <span className="reading-pane__date">{formatDateTime(message.receivedDateTime)}</span>
+          <span className="reading-pane__date">{formatDateTime(message.receivedAt)}</span>
         </div>
         <div className="reading-pane__recipients">
           <span className="reading-pane__label">To:</span>
@@ -50,7 +50,7 @@ const ReadingPane: React.FC<ReadingPaneProps> = ({ message }) => {
           </span>
         </div>
       </div>
-      <div className="reading-pane__body" dangerouslySetInnerHTML={{ __html: message.body }} />
+      <div className="reading-pane__body" dangerouslySetInnerHTML={{ __html: message.bodyHtml }} />
       {message.attachments.length > 0 && (
         <div className="reading-pane__attachments">
           <h4 className="reading-pane__attachments-title">
@@ -61,7 +61,7 @@ const ReadingPane: React.FC<ReadingPaneProps> = ({ message }) => {
             {message.attachments.map((att) => (
               <div key={att.id} className="reading-pane__attachment-card">
                 <span className="material-symbols-outlined">description</span>
-                <span className="reading-pane__attachment-name text-ellipsis">{att.name}</span>
+                <span className="reading-pane__attachment-name text-ellipsis">{att.fileName}</span>
               </div>
             ))}
           </div>

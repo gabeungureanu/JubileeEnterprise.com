@@ -41,7 +41,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, selectedMessageId, 
             <div className="message-list__item-content">
               <div className="message-list__item-header">
                 <span className="message-list__sender text-ellipsis">{msg.from.name || msg.from.address}</span>
-                <span className="message-list__date">{formatDate(msg.receivedDateTime)}</span>
+                <span className="message-list__date">{formatDate(msg.receivedAt)}</span>
               </div>
               <div className="message-list__subject text-ellipsis">{msg.subject}</div>
               <div className="message-list__preview text-ellipsis">{msg.bodyPreview}</div>

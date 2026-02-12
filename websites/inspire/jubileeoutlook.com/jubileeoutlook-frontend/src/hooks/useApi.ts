@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { ApiResponse } from '../types';
 
 interface UseApiState<T> {
   data: T | null;
@@ -14,12 +13,12 @@ export function useApi<T>() {
     error: null,
   });
 
-  const execute = useCallback(async (apiCall: () => Promise<ApiResponse<T>>) => {
+  const execute = useCallback(async (apiCall: () => Promise<T>) => {
     setState({ data: null, loading: true, error: null });
     try {
-      const response = await apiCall();
-      setState({ data: response.data, loading: false, error: null });
-      return response;
+      const result = await apiCall();
+      setState({ data: result, loading: false, error: null });
+      return result;
     } catch (err: any) {
       const message = err.response?.data?.message || err.message || 'An error occurred';
       setState({ data: null, loading: false, error: message });

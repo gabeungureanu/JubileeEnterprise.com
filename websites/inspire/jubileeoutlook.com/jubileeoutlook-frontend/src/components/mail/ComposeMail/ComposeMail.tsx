@@ -1,32 +1,47 @@
 import React, { useState } from 'react';
-import { ComposeMailData } from '../../../types/mail';
+import { RecipientDto } from '../../../types/mail';
 import './ComposeMail.css';
+
+interface ComposeFormData {
+  toInput: string;
+  ccInput: string;
+  subject: string;
+  bodyText: string;
+}
 
 interface ComposeMailProps {
   isOpen: boolean;
   onClose: () => void;
-  onSend: (data: ComposeMailData) => void;
-  initialData?: Partial<ComposeMailData>;
+  onSend: (data: { subject: string; bodyText: string; recipients: RecipientDto[] }) => void;
+  initialSubject?: string;
+  initialBody?: string;
+  initialTo?: string;
 }
 
-const ComposeMail: React.FC<ComposeMailProps> = ({ isOpen, onClose, onSend, initialData }) => {
-  const [formData, setFormData] = useState<ComposeMailData>({
-    to: initialData?.to || [],
-    cc: initialData?.cc || [],
-    bcc: initialData?.bcc || [],
-    subject: initialData?.subject || '',
-    body: initialData?.body || '',
-    attachments: [],
-    importance: 'normal',
-    isReply: initialData?.isReply || false,
-    isForward: initialData?.isForward || false,
-    originalMessageId: initialData?.originalMessageId,
+const ComposeMail: React.FC<ComposeMailProps> = ({ isOpen, onClose, onSend, initialSubject, initialBody, initialTo }) => {
+  const [formData, setFormData] = useState<ComposeFormData>({
+    toInput: initialTo || '',
+    ccInput: '',
+    subject: initialSubject || '',
+    bodyText: initialBody || '',
   });
 
   if (!isOpen) return null;
 
+  const parseRecipients = (input: string, type: 'to' | 'cc' | 'bcc'): RecipientDto[] => {
+    return input
+      .split(/[,;]/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((email) => ({ email, name: '', type }));
+  };
+
   const handleSend = () => {
-    onSend(formData);
+    const recipients: RecipientDto[] = [
+      ...parseRecipients(formData.toInput, 'to'),
+      ...parseRecipients(formData.ccInput, 'cc'),
+    ];
+    onSend({ subject: formData.subject, bodyText: formData.bodyText, recipients });
     onClose();
   };
 
@@ -63,11 +78,23 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ isOpen, onClose, onSend, init
       <div className="compose-mail__fields">
         <div className="compose-mail__field">
           <label className="compose-mail__label">To</label>
-          <input type="text" className="compose-mail__input" placeholder="Recipients" />
+          <input
+            type="text"
+            className="compose-mail__input"
+            placeholder="Recipients (comma separated)"
+            value={formData.toInput}
+            onChange={(e) => setFormData((prev) => ({ ...prev, toInput: e.target.value }))}
+          />
         </div>
         <div className="compose-mail__field">
           <label className="compose-mail__label">Cc</label>
-          <input type="text" className="compose-mail__input" placeholder="Cc" />
+          <input
+            type="text"
+            className="compose-mail__input"
+            placeholder="Cc"
+            value={formData.ccInput}
+            onChange={(e) => setFormData((prev) => ({ ...prev, ccInput: e.target.value }))}
+          />
         </div>
         <div className="compose-mail__field">
           <label className="compose-mail__label">Subject</label>
@@ -85,8 +112,8 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ isOpen, onClose, onSend, init
         <textarea
           className="compose-mail__textarea"
           placeholder="Write your message..."
-          value={formData.body}
-          onChange={(e) => setFormData((prev) => ({ ...prev, body: e.target.value }))}
+          value={formData.bodyText}
+          onChange={(e) => setFormData((prev) => ({ ...prev, bodyText: e.target.value }))}
         />
       </div>
     </div>

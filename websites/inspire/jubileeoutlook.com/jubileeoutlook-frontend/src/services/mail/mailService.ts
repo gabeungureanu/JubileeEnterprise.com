@@ -1,56 +1,89 @@
-import apiClient from '../apiClient';
-import { MailFolder, EmailMessage, ComposeMailData } from '../../types/mail';
-import { ApiResponse } from '../../types/common';
-
-const CONTINUUM_BASE = process.env.REACT_APP_CONTINUUM_API_URL || '';
+import { continuumClient } from '../apiClient';
+import {
+  ApiFoldersResponse, ApiMessagesResponse,
+  MailFolder, EmailMessage, CreateMessageRequest,
+  mapFolderDto, mapMessageDto, EmailMessageDto,
+} from '../../types/mail';
 
 export const mailService = {
-  async getFolders(): Promise<ApiResponse<MailFolder[]>> {
-    const response = await apiClient.get(`${CONTINUUM_BASE}/api/outlook/folders`);
-    return response.data;
+  async getFolders(): Promise<MailFolder[]> {
+    const response = await continuumClient.get<ApiFoldersResponse>('/outlook/folders');
+    const data = response.data;
+    const dtos = data.folders || (data as any);
+    if (Array.isArray(dtos)) {
+      return dtos.map(mapFolderDto);
+    }
+    return [];
   },
 
-  async getMessages(folderId: string, page = 1, pageSize = 50): Promise<ApiResponse<EmailMessage[]>> {
-    const response = await apiClient.get(`${CONTINUUM_BASE}/api/outlook/messages`, {
-      params: { folderId, page, pageSize },
+  async getMessages(folderId: string, page = 1, pageSize = 50): Promise<{ messages: EmailMessage[]; totalCount: number }> {
+    const response = await continuumClient.get<ApiMessagesResponse>('/outlook/messages', {
+      params: { folderId, page, pageSize, descending: true },
     });
-    return response.data;
+    const data = response.data;
+    const dtos = data.messages || (data as any);
+    return {
+      messages: Array.isArray(dtos) ? dtos.map(mapMessageDto) : [],
+      totalCount: data.total_count || 0,
+    };
   },
 
-  async getMessage(messageId: string): Promise<ApiResponse<EmailMessage>> {
-    const response = await apiClient.get(`${CONTINUUM_BASE}/api/outlook/message/${messageId}`);
-    return response.data;
+  async getMessage(messageId: string): Promise<EmailMessage | null> {
+    const response = await continuumClient.get<EmailMessageDto | { success: boolean; message: EmailMessageDto }>(
+      `/outlook/messages/${encodeURIComponent(messageId)}`
+    );
+    const data = response.data;
+    const dto = (data as any).message || data;
+    return dto?.id ? mapMessageDto(dto as EmailMessageDto) : null;
   },
 
-  async sendMessage(data: ComposeMailData): Promise<ApiResponse<void>> {
-    const response = await apiClient.post(`${CONTINUUM_BASE}/api/outlook/send`, data);
-    return response.data;
+  async sendMessage(data: CreateMessageRequest): Promise<boolean> {
+    const payload = { ...data, is_draft: false };
+    const response = await continuumClient.post('/outlook/messages', payload);
+    return response.data?.success !== false;
   },
 
-  async saveDraft(data: ComposeMailData): Promise<ApiResponse<EmailMessage>> {
-    const response = await apiClient.post(`${CONTINUUM_BASE}/api/outlook/draft`, data);
-    return response.data;
+  async saveDraft(data: CreateMessageRequest): Promise<boolean> {
+    const payload = { ...data, is_draft: true };
+    const response = await continuumClient.post('/outlook/messages', payload);
+    return response.data?.success !== false;
   },
 
-  async deleteMessage(messageId: string): Promise<ApiResponse<void>> {
-    const response = await apiClient.delete(`${CONTINUUM_BASE}/api/outlook/message/${messageId}`);
-    return response.data;
+  async deleteMessage(messageId: string): Promise<boolean> {
+    const response = await continuumClient.delete(`/outlook/messages/${encodeURIComponent(messageId)}`);
+    return response.status === 200 || response.status === 204 || response.status === 404;
   },
 
-  async moveMessage(messageId: string, destinationFolderId: string): Promise<ApiResponse<void>> {
-    const response = await apiClient.post(`${CONTINUUM_BASE}/api/outlook/message/${messageId}/move`, {
-      destinationFolderId,
+  async markAsRead(messageId: string, isRead: boolean): Promise<boolean> {
+    const response = await continuumClient.patch(`/outlook/messages/${encodeURIComponent(messageId)}`, {
+      is_read: isRead,
     });
-    return response.data;
+    return response.data?.success !== false;
   },
 
-  async markAsRead(messageId: string, isRead: boolean): Promise<ApiResponse<void>> {
-    const response = await apiClient.patch(`${CONTINUUM_BASE}/api/outlook/message/${messageId}`, { isRead });
-    return response.data;
+  async toggleFlag(messageId: string, isFlagged: boolean): Promise<boolean> {
+    const response = await continuumClient.patch(`/outlook/messages/${encodeURIComponent(messageId)}`, {
+      is_flagged: isFlagged,
+    });
+    return response.data?.success !== false;
   },
 
-  async toggleFlag(messageId: string, isFlagged: boolean): Promise<ApiResponse<void>> {
-    const response = await apiClient.patch(`${CONTINUUM_BASE}/api/outlook/message/${messageId}`, { isFlagged });
-    return response.data;
+  async moveMessage(messageId: string, folderId: string): Promise<boolean> {
+    const response = await continuumClient.patch(`/outlook/messages/${encodeURIComponent(messageId)}`, {
+      folder_id: folderId,
+    });
+    return response.data?.success !== false;
+  },
+
+  async searchMessages(query: string, folderId?: string, page = 1, pageSize = 50): Promise<{ messages: EmailMessage[]; totalCount: number }> {
+    const response = await continuumClient.get<ApiMessagesResponse>('/outlook/messages/search', {
+      params: { q: query, folderId, page, pageSize },
+    });
+    const data = response.data;
+    const dtos = data.messages || (data as any);
+    return {
+      messages: Array.isArray(dtos) ? dtos.map(mapMessageDto) : [],
+      totalCount: data.total_count || 0,
+    };
   },
 };

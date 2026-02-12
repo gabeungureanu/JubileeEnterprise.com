@@ -31,8 +31,8 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, selectedContactId, 
             onClick={() => onContactSelect(contact.id)}
           >
             <div className="contact-list__avatar">
-              {contact.avatarUrl ? (
-                <img src={contact.avatarUrl} alt={contact.displayName} />
+              {contact.photoUrl ? (
+                <img src={contact.photoUrl} alt={contact.displayName} />
               ) : (
                 <span>{getInitials(contact)}</span>
               )}
@@ -41,7 +41,7 @@ const ContactList: React.FC<ContactListProps> = ({ contacts, selectedContactId, 
               <span className="contact-list__name text-ellipsis">{contact.displayName}</span>
               {contact.emailAddresses.length > 0 && (
                 <span className="contact-list__email text-ellipsis">
-                  {contact.emailAddresses[0].address}
+                  {contact.emailAddresses[0]}
                 </span>
               )}
             </div>

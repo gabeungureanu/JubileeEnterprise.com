@@ -26,15 +26,15 @@ const ContactDetail: React.FC<ContactDetailProps> = ({ contact }) => {
     <div className="contact-detail">
       <div className="contact-detail__header">
         <div className="contact-detail__avatar-lg">
-          {contact.avatarUrl ? (
-            <img src={contact.avatarUrl} alt={contact.displayName} />
+          {contact.photoUrl ? (
+            <img src={contact.photoUrl} alt={contact.displayName} />
           ) : (
             <span>{getInitials()}</span>
           )}
         </div>
         <h2 className="contact-detail__name">{contact.displayName}</h2>
         {contact.jobTitle && <p className="contact-detail__title">{contact.jobTitle}</p>}
-        {contact.organization && <p className="contact-detail__org">{contact.organization}</p>}
+        {contact.company && <p className="contact-detail__org">{contact.company}</p>}
       </div>
 
       <div className="contact-detail__sections">
@@ -45,9 +45,8 @@ const ContactDetail: React.FC<ContactDetailProps> = ({ contact }) => {
             </h4>
             {contact.emailAddresses.map((email, i) => (
               <div key={i} className="contact-detail__field">
-                <span className="contact-detail__field-label">{email.type}</span>
-                <a href={`mailto:${email.address}`} className="contact-detail__field-value">
-                  {email.address}
+                <a href={`mailto:${email}`} className="contact-detail__field-value">
+                  {email}
                 </a>
               </div>
             ))}
@@ -61,10 +60,20 @@ const ContactDetail: React.FC<ContactDetailProps> = ({ contact }) => {
             </h4>
             {contact.phoneNumbers.map((phone, i) => (
               <div key={i} className="contact-detail__field">
-                <span className="contact-detail__field-label">{phone.type}</span>
-                <span className="contact-detail__field-value">{phone.number}</span>
+                <span className="contact-detail__field-value">{phone}</span>
               </div>
             ))}
+          </div>
+        )}
+
+        {contact.mobilePhone && (
+          <div className="contact-detail__section">
+            <h4 className="contact-detail__section-title">
+              <span className="material-symbols-outlined">smartphone</span> Mobile
+            </h4>
+            <div className="contact-detail__field">
+              <span className="contact-detail__field-value">{contact.mobilePhone}</span>
+            </div>
           </div>
         )}
 
