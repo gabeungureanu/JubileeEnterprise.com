@@ -972,7 +972,9 @@ app.post('/api/v1/outlook/accounts/connect', async (c) => {
         const folderResult = await dbClient.query(
           `INSERT INTO outlook_email_folders (user_id, account_id, name, folder_type, display_order, is_system, icon, external_folder_id)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-           ON CONFLICT DO NOTHING
+           ON CONFLICT (account_id, external_folder_id) DO UPDATE SET
+             name = EXCLUDED.name, folder_type = EXCLUDED.folder_type,
+             display_order = EXCLUDED.display_order, icon = EXCLUDED.icon
            RETURNING id`,
           [userId, accountId, folder.name, folderType, displayOrder, isSystem, icon, folder.path]
         );
@@ -1095,10 +1097,12 @@ app.post('/api/v1/outlook/accounts/:id/sync', async (c) => {
               const insertResult = await dbClient.query(
                 `INSERT INTO outlook_email_messages (folder_id, user_id, subject, body_preview, sender_email, sender_name, is_read, is_flagged, has_attachments, received_at, internet_message_id, external_message_id)
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                 ON CONFLICT (folder_id, internet_message_id) DO NOTHING
                  RETURNING id`,
                 [folder.id, account.user_id, subject, bodyPreview, senderEmail, senderName, isRead, isFlagged,
                  !!(msg.bodyStructure?.childNodes?.length), receivedAt, messageIdHeader, String(msg.uid)]
               );
+              if (insertResult.rows.length === 0) continue; // Already exists (conflict)
               const messageId = insertResult.rows[0].id;
 
               // Insert recipients
