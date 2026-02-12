@@ -25,6 +25,8 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { initializePools, closePools, checkAllHealth, getContinuumPool } from '@jubilee/database';
 import * as continuum from '@jubilee/database/continuum';
+import { ImapFlow } from 'imapflow';
+import { createHash } from 'crypto';
 
 const app = new Hono();
 
@@ -752,6 +754,458 @@ app.delete('/api/v1/outlook/events/:id', async (c) => {
 });
 
 // ============================================================================
+// EMAIL PROVIDER DETECTION
+// ============================================================================
+
+interface ProviderConfig {
+  type: string;
+  displayName: string;
+  imapHost: string;
+  imapPort: number;
+  smtpHost: string;
+  smtpPort: number;
+  isAppPassword: boolean;
+  helpText: string;
+}
+
+const KNOWN_PROVIDERS: Record<string, ProviderConfig> = {
+  'gmail.com': {
+    type: 'google', displayName: 'Gmail',
+    imapHost: 'imap.gmail.com', imapPort: 993,
+    smtpHost: 'smtp.gmail.com', smtpPort: 587,
+    isAppPassword: true,
+    helpText: 'To generate an App Password:\n1. Go to myaccount.google.com/apppasswords\n2. Sign in to your Google account\n3. Select "Mail" and "Windows Computer"\n4. Click "Generate" and use the 16-character password',
+  },
+  'googlemail.com': {
+    type: 'google', displayName: 'Gmail',
+    imapHost: 'imap.gmail.com', imapPort: 993,
+    smtpHost: 'smtp.gmail.com', smtpPort: 587,
+    isAppPassword: true,
+    helpText: 'To generate an App Password:\n1. Go to myaccount.google.com/apppasswords\n2. Sign in to your Google account\n3. Select "Mail" and "Windows Computer"\n4. Click "Generate" and use the 16-character password',
+  },
+  'outlook.com': {
+    type: 'microsoft', displayName: 'Microsoft 365',
+    imapHost: 'outlook.office365.com', imapPort: 993,
+    smtpHost: 'smtp.office365.com', smtpPort: 587,
+    isAppPassword: true,
+    helpText: 'To generate an App Password:\n1. Go to account.microsoft.com/security\n2. Turn on Two-step verification\n3. Click "App passwords"\n4. Create a new app password for JubileeOutlook',
+  },
+  'hotmail.com': {
+    type: 'microsoft', displayName: 'Microsoft 365',
+    imapHost: 'outlook.office365.com', imapPort: 993,
+    smtpHost: 'smtp.office365.com', smtpPort: 587,
+    isAppPassword: true,
+    helpText: 'To generate an App Password:\n1. Go to account.microsoft.com/security\n2. Turn on Two-step verification\n3. Click "App passwords"\n4. Create a new app password for JubileeOutlook',
+  },
+  'live.com': {
+    type: 'microsoft', displayName: 'Microsoft 365',
+    imapHost: 'outlook.office365.com', imapPort: 993,
+    smtpHost: 'smtp.office365.com', smtpPort: 587,
+    isAppPassword: true,
+    helpText: 'To generate an App Password:\n1. Go to account.microsoft.com/security\n2. Turn on Two-step verification\n3. Click "App passwords"\n4. Create a new app password for JubileeOutlook',
+  },
+  'yahoo.com': {
+    type: 'yahoo', displayName: 'Yahoo',
+    imapHost: 'imap.mail.yahoo.com', imapPort: 993,
+    smtpHost: 'smtp.mail.yahoo.com', smtpPort: 587,
+    isAppPassword: true,
+    helpText: 'To generate an App Password:\n1. Go to login.yahoo.com/account/security\n2. Under "Other ways to sign in", click "Generate app password"\n3. Select "Other app" and enter "JubileeOutlook"\n4. Use the generated password',
+  },
+  'icloud.com': {
+    type: 'apple', displayName: 'iCloud',
+    imapHost: 'imap.mail.me.com', imapPort: 993,
+    smtpHost: 'smtp.mail.me.com', smtpPort: 587,
+    isAppPassword: true,
+    helpText: 'To generate an App Password:\n1. Go to appleid.apple.com\n2. Sign in and go to Security\n3. Click "Generate Password" under App-Specific Passwords\n4. Enter a label like "JubileeOutlook"\n5. Use the generated password',
+  },
+  'me.com': {
+    type: 'apple', displayName: 'iCloud',
+    imapHost: 'imap.mail.me.com', imapPort: 993,
+    smtpHost: 'smtp.mail.me.com', smtpPort: 587,
+    isAppPassword: true,
+    helpText: 'To generate an App Password:\n1. Go to appleid.apple.com\n2. Sign in and go to Security\n3. Click "Generate Password" under App-Specific Passwords\n4. Enter a label like "JubileeOutlook"\n5. Use the generated password',
+  },
+  'mac.com': {
+    type: 'apple', displayName: 'iCloud',
+    imapHost: 'imap.mail.me.com', imapPort: 993,
+    smtpHost: 'smtp.mail.me.com', smtpPort: 587,
+    isAppPassword: true,
+    helpText: 'To generate an App Password:\n1. Go to appleid.apple.com\n2. Sign in and go to Security\n3. Click "Generate Password" under App-Specific Passwords\n4. Enter a label like "JubileeOutlook"\n5. Use the generated password',
+  },
+};
+
+function detectProvider(email: string): ProviderConfig {
+  const domain = email.split('@').pop()?.toLowerCase() || '';
+  if (KNOWN_PROVIDERS[domain]) return KNOWN_PROVIDERS[domain];
+
+  // Check for Google Workspace or Microsoft custom domains
+  if (domain.includes('google')) return KNOWN_PROVIDERS['gmail.com'];
+  if (domain.includes('microsoft') || domain.includes('office365')) return KNOWN_PROVIDERS['outlook.com'];
+
+  // Fallback: generic IMAP
+  return {
+    type: 'generic', displayName: 'IMAP/POP',
+    imapHost: `imap.${domain}`, imapPort: 993,
+    smtpHost: `smtp.${domain}`, smtpPort: 587,
+    isAppPassword: false,
+    helpText: 'Enter the password for your email account.\nIf your account has two-factor authentication, you may need to use an app-specific password.',
+  };
+}
+
+// ============================================================================
+// EMAIL SYNC ENDPOINTS
+// ============================================================================
+
+// POST /api/v1/outlook/accounts/detect - Detect email provider
+app.post('/api/v1/outlook/accounts/detect', async (c) => {
+  try {
+    const { email } = await c.req.json();
+    if (!email) return c.json({ error: 'Email is required' }, 400);
+
+    const provider = detectProvider(email);
+    return c.json({
+      success: true,
+      provider: {
+        type: provider.type,
+        displayName: provider.displayName,
+        isAppPassword: provider.isAppPassword,
+        helpText: provider.helpText,
+        imapHost: provider.imapHost,
+        imapPort: provider.imapPort,
+        smtpHost: provider.smtpHost,
+        smtpPort: provider.smtpPort,
+      },
+    });
+  } catch (err: any) {
+    return c.json({ error: 'Provider detection failed', message: err.message }, 500);
+  }
+});
+
+// POST /api/v1/outlook/accounts/connect - Test IMAP connection and save account
+app.post('/api/v1/outlook/accounts/connect', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { email, password, userId } = body;
+    if (!email || !password || !userId) {
+      return c.json({ error: 'Email, password, and userId are required' }, 400);
+    }
+
+    const provider = detectProvider(email);
+
+    // Test IMAP connection
+    const client = new ImapFlow({
+      host: provider.imapHost,
+      port: provider.imapPort,
+      secure: true,
+      auth: { user: email, pass: password },
+      logger: false,
+    });
+
+    try {
+      await client.connect();
+    } catch (connErr: any) {
+      const msg = connErr.message || '';
+      if (msg.includes('Invalid credentials') || msg.includes('AUTHENTICATIONFAILED') || msg.includes('LOGIN failed')) {
+        return c.json({ error: 'Invalid email or password. If your account has two-factor authentication, please use an App Password.' }, 401);
+      }
+      if (msg.includes('Application-specific password required') || msg.includes('less secure')) {
+        return c.json({ error: 'This account requires an App Password. Please generate one from your account security settings.' }, 401);
+      }
+      return c.json({ error: `Connection failed: ${msg}` }, 502);
+    }
+
+    // Discover folders
+    const folders: Array<{ name: string; path: string; specialUse: string | null; delimiter: string }> = [];
+    const mailboxes = await client.list();
+    for (const mbox of mailboxes) {
+      folders.push({
+        name: mbox.name,
+        path: mbox.path,
+        specialUse: (mbox as any).specialUse || null,
+        delimiter: mbox.delimiter,
+      });
+    }
+
+    await client.logout();
+
+    // Save account to database
+    const pool = getContinuumPool();
+    const dbClient = await pool.connect();
+
+    try {
+      await dbClient.query('BEGIN');
+
+      // Simple encryption (base64 for now - in production use proper encryption)
+      const encryptedPassword = Buffer.from(password).toString('base64');
+
+      // Upsert the account
+      const accountResult = await dbClient.query(
+        `INSERT INTO outlook_email_accounts (user_id, email_address, display_name, provider_type, auth_method, imap_host, imap_port, imap_use_ssl, smtp_host, smtp_port, smtp_use_ssl, encrypted_password, connection_status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'connected')
+         ON CONFLICT (user_id, email_address) DO UPDATE SET
+           encrypted_password = $12, connection_status = 'connected', error_message = NULL, updated_at = NOW()
+         RETURNING id`,
+        [userId, email, email.split('@')[0], provider.type, provider.isAppPassword ? 'app_password' : 'password',
+         provider.imapHost, provider.imapPort, true, provider.smtpHost, provider.smtpPort, true, encryptedPassword]
+      );
+      const accountId = accountResult.rows[0].id;
+
+      // Map specialUse to folder types
+      const folderTypeMap: Record<string, { type: string; icon: string; order: number }> = {
+        '\\Inbox': { type: 'inbox', icon: 'inbox', order: 1 },
+        '\\Sent': { type: 'sent', icon: 'send', order: 2 },
+        '\\Drafts': { type: 'drafts', icon: 'draft', order: 3 },
+        '\\Trash': { type: 'trash', icon: 'delete', order: 4 },
+        '\\Junk': { type: 'junk', icon: 'report', order: 5 },
+        '\\Archive': { type: 'archive', icon: 'archive', order: 6 },
+      };
+
+      // Create/update folders
+      const createdFolders: Array<{ id: string; name: string; type: string; path: string }> = [];
+      for (const folder of folders) {
+        const mapped = folder.specialUse ? folderTypeMap[folder.specialUse] : null;
+        const folderType = mapped?.type || 'custom';
+        const icon = mapped?.icon || 'folder';
+        const displayOrder = mapped?.order || 99;
+        const isSystem = !!mapped;
+
+        const folderResult = await dbClient.query(
+          `INSERT INTO outlook_email_folders (user_id, account_id, name, folder_type, display_order, is_system, icon, external_folder_id)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+           ON CONFLICT DO NOTHING
+           RETURNING id`,
+          [userId, accountId, folder.name, folderType, displayOrder, isSystem, icon, folder.path]
+        );
+
+        if (folderResult.rows.length > 0) {
+          createdFolders.push({ id: folderResult.rows[0].id, name: folder.name, type: folderType, path: folder.path });
+        }
+      }
+
+      await dbClient.query('COMMIT');
+
+      return c.json({
+        success: true,
+        account: { id: accountId, email, provider: provider.type, displayName: provider.displayName },
+        folders: createdFolders,
+        message: `Connected to ${provider.displayName}. Found ${createdFolders.length} folders.`,
+      });
+    } catch (dbErr) {
+      await dbClient.query('ROLLBACK');
+      throw dbErr;
+    } finally {
+      dbClient.release();
+    }
+  } catch (err: any) {
+    if (err.status) return c.json({ error: err.message }, err.status);
+    return c.json({ error: 'Failed to connect account', message: err.message }, 500);
+  }
+});
+
+// POST /api/v1/outlook/accounts/:id/sync - Sync email messages from IMAP
+app.post('/api/v1/outlook/accounts/:id/sync', async (c) => {
+  try {
+    const accountId = c.req.param('id');
+    const pool = getContinuumPool();
+
+    // Get account details
+    const accountResult = await pool.query(
+      'SELECT * FROM outlook_email_accounts WHERE id = $1', [accountId]
+    );
+    if (accountResult.rows.length === 0) {
+      return c.json({ error: 'Account not found' }, 404);
+    }
+    const account = accountResult.rows[0];
+    const password = Buffer.from(account.encrypted_password, 'base64').toString('utf-8');
+
+    // Get folders for this account
+    const foldersResult = await pool.query(
+      'SELECT * FROM outlook_email_folders WHERE account_id = $1 AND sync_enabled = true ORDER BY display_order',
+      [accountId]
+    );
+
+    // Connect to IMAP
+    const client = new ImapFlow({
+      host: account.imap_host,
+      port: account.imap_port,
+      secure: account.imap_use_ssl,
+      auth: { user: account.email_address, pass: password },
+      logger: false,
+    });
+
+    await client.connect();
+
+    let totalSynced = 0;
+    const syncResults: Array<{ folder: string; synced: number }> = [];
+
+    for (const folder of foldersResult.rows) {
+      try {
+        const lock = await client.getMailboxLock(folder.external_folder_id);
+        try {
+          // Fetch most recent 100 messages
+          const messages: Array<any> = [];
+          const fetchOptions = { uid: true, envelope: true, bodyStructure: true, flags: true, size: true };
+
+          // Get message count
+          const status = client.mailbox;
+          if (!status || status.exists === 0) continue;
+
+          // Fetch last 100 messages by sequence number
+          const startSeq = Math.max(1, (status.exists || 0) - 99);
+          for await (const msg of client.fetch(`${startSeq}:*`, fetchOptions)) {
+            messages.push(msg);
+          }
+
+          // Store messages in database
+          const dbClient = await pool.connect();
+          try {
+            await dbClient.query('BEGIN');
+            let folderSynced = 0;
+
+            for (const msg of messages) {
+              const envelope = msg.envelope;
+              if (!envelope) continue;
+
+              const senderEmail = envelope.from?.[0]?.address || '';
+              const senderName = envelope.from?.[0]?.name || senderEmail.split('@')[0] || '';
+              const subject = envelope.subject || '(No Subject)';
+              const receivedAt = envelope.date || new Date();
+              const messageIdHeader = envelope.messageId || '';
+              const isRead = msg.flags?.has('\\Seen') || false;
+              const isFlagged = msg.flags?.has('\\Flagged') || false;
+
+              // Check if message already exists (by internet_message_id)
+              const existsResult = await dbClient.query(
+                'SELECT id FROM outlook_email_messages WHERE folder_id = $1 AND internet_message_id = $2',
+                [folder.id, messageIdHeader]
+              );
+              if (existsResult.rows.length > 0) {
+                // Update flags only
+                await dbClient.query(
+                  'UPDATE outlook_email_messages SET is_read = $1, is_flagged = $2 WHERE id = $3',
+                  [isRead, isFlagged, existsResult.rows[0].id]
+                );
+                continue;
+              }
+
+              // Build body preview from subject
+              const bodyPreview = subject.substring(0, 200);
+
+              // Insert the message
+              const insertResult = await dbClient.query(
+                `INSERT INTO outlook_email_messages (folder_id, user_id, subject, body_preview, sender_email, sender_name, is_read, is_flagged, has_attachments, received_at, internet_message_id, external_message_id)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                 RETURNING id`,
+                [folder.id, account.user_id, subject, bodyPreview, senderEmail, senderName, isRead, isFlagged,
+                 !!(msg.bodyStructure?.childNodes?.length), receivedAt, messageIdHeader, String(msg.uid)]
+              );
+              const messageId = insertResult.rows[0].id;
+
+              // Insert recipients
+              const recipients = [
+                ...(envelope.to || []).map((r: any) => ({ ...r, type: 'to' })),
+                ...(envelope.cc || []).map((r: any) => ({ ...r, type: 'cc' })),
+                ...(envelope.bcc || []).map((r: any) => ({ ...r, type: 'bcc' })),
+              ];
+
+              for (const recipient of recipients) {
+                if (recipient.address) {
+                  await dbClient.query(
+                    'INSERT INTO outlook_email_recipients (message_id, recipient_type, email, name) VALUES ($1, $2, $3, $4)',
+                    [messageId, recipient.type, recipient.address, recipient.name || '']
+                  );
+                }
+              }
+
+              folderSynced++;
+            }
+
+            // Update folder counts
+            const countResult = await dbClient.query(
+              'SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE is_read = false) as unread FROM outlook_email_messages WHERE folder_id = $1',
+              [folder.id]
+            );
+            await dbClient.query(
+              'UPDATE outlook_email_folders SET total_count = $1, unread_count = $2 WHERE id = $3',
+              [parseInt(countResult.rows[0].total), parseInt(countResult.rows[0].unread), folder.id]
+            );
+
+            await dbClient.query('COMMIT');
+            totalSynced += folderSynced;
+            syncResults.push({ folder: folder.name, synced: folderSynced });
+          } catch (dbErr) {
+            await dbClient.query('ROLLBACK');
+            throw dbErr;
+          } finally {
+            dbClient.release();
+          }
+        } finally {
+          lock.release();
+        }
+      } catch (folderErr: any) {
+        syncResults.push({ folder: folder.name, synced: 0 });
+        console.error(`[Sync] Error syncing folder ${folder.name}: ${folderErr.message}`);
+      }
+    }
+
+    await client.logout();
+
+    // Update last sync time
+    await pool.query(
+      'UPDATE outlook_email_accounts SET last_sync_at = NOW(), connection_status = $1 WHERE id = $2',
+      ['connected', accountId]
+    );
+
+    return c.json({
+      success: true,
+      totalSynced,
+      folders: syncResults,
+      message: `Synced ${totalSynced} new messages across ${syncResults.length} folders.`,
+    });
+  } catch (err: any) {
+    return c.json({ error: 'Sync failed', message: err.message }, 500);
+  }
+});
+
+// GET /api/v1/outlook/accounts - List connected email accounts
+app.get('/api/v1/outlook/accounts', async (c) => {
+  try {
+    const userId = c.req.query('userId');
+    if (!userId) return c.json({ error: 'userId is required' }, 400);
+
+    const pool = getContinuumPool();
+    const result = await pool.query(
+      `SELECT id, email_address, display_name, provider_type, connection_status, last_sync_at, created_at
+       FROM outlook_email_accounts WHERE user_id = $1 ORDER BY created_at`,
+      [userId]
+    );
+
+    return c.json({ success: true, accounts: result.rows });
+  } catch (err: any) {
+    return c.json({ error: 'Failed to list accounts', message: err.message }, 500);
+  }
+});
+
+// DELETE /api/v1/outlook/accounts/:id - Disconnect email account
+app.delete('/api/v1/outlook/accounts/:id', async (c) => {
+  try {
+    const accountId = c.req.param('id');
+    const pool = getContinuumPool();
+
+    const result = await pool.query(
+      'DELETE FROM outlook_email_accounts WHERE id = $1 RETURNING id, email_address', [accountId]
+    );
+    if (result.rows.length === 0) {
+      return c.json({ error: 'Account not found' }, 404);
+    }
+
+    return c.json({ success: true, deleted: result.rows[0].email_address });
+  } catch (err: any) {
+    return c.json({ error: 'Failed to delete account', message: err.message }, 500);
+  }
+});
+
+// ============================================================================
 // SERVER STARTUP
 // ============================================================================
 
@@ -783,6 +1237,11 @@ async function start() {
     console.log('  POST /api/v1/outlook/events           - Create calendar event');
     console.log('  PUT  /api/v1/outlook/events/:id       - Update calendar event');
     console.log('  DELETE /api/v1/outlook/events/:id     - Delete calendar event');
+    console.log('  POST /api/v1/outlook/accounts/detect  - Detect email provider');
+    console.log('  POST /api/v1/outlook/accounts/connect - Connect email account');
+    console.log('  POST /api/v1/outlook/accounts/:id/sync - Sync email messages');
+    console.log('  GET  /api/v1/outlook/accounts         - List email accounts');
+    console.log('  DELETE /api/v1/outlook/accounts/:id   - Disconnect account');
   } catch (error) {
     console.error('Failed to start Continuum API:', error);
     process.exit(1);

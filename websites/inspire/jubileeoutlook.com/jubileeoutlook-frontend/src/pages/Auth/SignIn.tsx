@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { emailSyncService, ProviderInfo } from '../../services/mail/emailSyncService';
 import './SignIn.css';
 
 const EMAIL_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-type AuthPanel = 'sync' | 'signin' | 'signup' | 'forgot';
+type AuthPanel = 'sync' | 'sync-password' | 'signin' | 'signup' | 'forgot';
 
 const PROVIDERS = [
   { icon: 'mail', label: 'Microsoft 365' },
@@ -22,6 +23,10 @@ const SignIn: React.FC = () => {
 
   // Sync Email panel
   const [syncEmail, setSyncEmail] = useState('');
+  const [syncPassword, setSyncPassword] = useState('');
+  const [showSyncPassword, setShowSyncPassword] = useState(false);
+  const [providerInfo, setProviderInfo] = useState<ProviderInfo | null>(null);
+  const [syncStatusText, setSyncStatusText] = useState('');
 
   // Sign In panel
   const [email, setEmail] = useState('');
@@ -226,8 +231,8 @@ const SignIn: React.FC = () => {
     }
   };
 
-  // Sync Continue handler
-  const handleSyncContinue = () => {
+  // Sync Continue handler - detect provider and show password step
+  const handleSyncContinue = async () => {
     const trimmedEmail = syncEmail.trim();
 
     if (!trimmedEmail) {
@@ -240,9 +245,134 @@ const SignIn: React.FC = () => {
       return;
     }
 
-    // Navigate to sign in with the email pre-filled
-    setEmail(trimmedEmail);
-    navigateTo('signin');
+    setLoading(true);
+    setLoadingText('Detecting email provider...');
+    setSyncStatusText('Detecting email provider...');
+
+    try {
+      const provider = await emailSyncService.detectProvider(trimmedEmail);
+      setProviderInfo(provider);
+      setSyncPassword('');
+      setShowSyncPassword(false);
+      clearErrors();
+      setPanel('sync-password');
+    } catch {
+      // Fallback to generic provider info if API unavailable
+      setProviderInfo({
+        type: 'generic',
+        displayName: 'Email',
+        isAppPassword: false,
+        helpText: 'Enter the password for your email account.',
+        imapHost: '', imapPort: 993, smtpHost: '', smtpPort: 587,
+      });
+      setSyncPassword('');
+      setShowSyncPassword(false);
+      clearErrors();
+      setPanel('sync-password');
+    } finally {
+      setLoading(false);
+      setLoadingText('');
+      setSyncStatusText('');
+    }
+  };
+
+  // Sync Confirm handler - connect IMAP and sync
+  const handleSyncConfirm = async () => {
+    if (!syncPassword) {
+      setError('syncPassword', 'Password is required');
+      return;
+    }
+
+    const trimmedEmail = syncEmail.trim();
+    setLoading(true);
+    clearErrors();
+
+    try {
+      // Step 1: Connect
+      setSyncStatusText('Connecting to mail server...');
+      setLoadingText('Connecting...');
+
+      // Get userId from auth context or token store
+      const { tokenStore } = await import('../../services/apiClient');
+      let userId = tokenStore.getUserId();
+
+      // If not logged in yet, try to login/register first
+      if (!userId) {
+        setSyncStatusText('Authenticating...');
+        setLoadingText('Authenticating...');
+        const loginResult = await login(trimmedEmail, syncPassword, true);
+        if (!loginResult.success) {
+          // Try registering
+          const registerResult = await register(trimmedEmail.split('@')[0], trimmedEmail, syncPassword, false);
+          if (!registerResult.success) {
+            setError('syncPassword', 'Authentication failed. Please check your credentials or sign in first.');
+            setLoading(false);
+            setSyncStatusText('');
+            setLoadingText('');
+            return;
+          }
+        }
+        userId = tokenStore.getUserId();
+      }
+
+      if (!userId) {
+        setError('syncPassword', 'Please sign in first, then sync your email.');
+        setLoading(false);
+        setSyncStatusText('');
+        setLoadingText('');
+        return;
+      }
+
+      setSyncStatusText('Testing IMAP connection...');
+      setLoadingText('Testing connection...');
+
+      const connectResult = await emailSyncService.connectAccount(trimmedEmail, syncPassword, userId);
+
+      if (!connectResult.success) {
+        setError('syncPassword', connectResult.error || 'Connection failed. Please check your credentials.');
+        setLoading(false);
+        setSyncStatusText('');
+        setLoadingText('');
+        return;
+      }
+
+      // Step 2: Sync
+      setSyncStatusText('Syncing emails...');
+      setLoadingText('Syncing emails...');
+
+      if (connectResult.account) {
+        const syncResult = await emailSyncService.syncAccount(connectResult.account.id);
+        if (syncResult.success) {
+          setSyncStatusText(`Synced ${syncResult.totalSynced} messages!`);
+          setLoadingText('Sync complete!');
+        }
+      }
+
+      // Step 3: Success - redirect to app
+      setSyncStatusText('Email account synced successfully!');
+      setLoadingText('Preparing your mailbox...');
+
+      // Small delay for user to see success
+      await new Promise(r => setTimeout(r, 1500));
+
+      // The auth state should already be set from login/register above
+      // If authenticated, the App.tsx will auto-redirect to AppLayout
+      window.location.reload();
+    } catch (err: any) {
+      setError('syncPassword', err.message || 'An error occurred during sync.');
+    } finally {
+      setLoading(false);
+      setLoadingText('');
+    }
+  };
+
+  // Back from password step to sync email step
+  const handleBackToSync = () => {
+    setSyncPassword('');
+    setProviderInfo(null);
+    setSyncStatusText('');
+    clearErrors();
+    setPanel('sync');
   };
 
   // Enter key handler
@@ -250,6 +380,7 @@ const SignIn: React.FC = () => {
     if (e.key === 'Enter') {
       switch (panel) {
         case 'sync': handleSyncContinue(); break;
+        case 'sync-password': handleSyncConfirm(); break;
         case 'signin': handleSignIn(); break;
         case 'signup': handleSignUp(); break;
         case 'forgot': handleForgotPassword(); break;
@@ -357,8 +488,107 @@ const SignIn: React.FC = () => {
             </div>
           )}
 
+          {/* ==================== SYNC PASSWORD PANEL ==================== */}
+          {panel === 'sync-password' && providerInfo && (
+            <div className="signin__panel">
+              {/* Avatar */}
+              <div className="signin__avatar">
+                <span className="material-symbols-outlined signin__avatar-icon">lock</span>
+              </div>
+
+              {/* Title */}
+              <h1 className="signin__heading">
+                {providerInfo.isAppPassword ? 'App Password Required' : 'Authentication Required'}
+              </h1>
+              <p className="signin__subtext">
+                Enter password for: <strong>{syncEmail}</strong>
+              </p>
+              <p className="signin__provider-badge">
+                Provider: {providerInfo.displayName}
+              </p>
+
+              <div className="signin__form">
+                {/* Error */}
+                {errors.syncPassword && <div className="signin__error">{errors.syncPassword}</div>}
+
+                {/* Password label */}
+                <div className="signin__password-label">
+                  {providerInfo.isAppPassword ? 'App Password:' : 'Password:'}
+                </div>
+
+                {/* Password with toggle */}
+                <div className="signin__input-wrapper signin__input-wrapper--password">
+                  <input
+                    type={showSyncPassword ? 'text' : 'password'}
+                    className="signin__input"
+                    placeholder={providerInfo.isAppPassword ? 'Enter app password' : 'Enter your password'}
+                    value={syncPassword}
+                    onChange={(e) => {
+                      setSyncPassword(e.target.value);
+                      if (errors.syncPassword) clearError('syncPassword');
+                    }}
+                    onKeyDown={handleKeyDown}
+                    autoFocus
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="signin__password-toggle"
+                    onClick={() => setShowSyncPassword(!showSyncPassword)}
+                    tabIndex={-1}
+                  >
+                    <span className="material-symbols-outlined">
+                      {showSyncPassword ? 'visibility_off' : 'visibility'}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Help text */}
+                {providerInfo.helpText && (
+                  <div className="signin__help-text">
+                    {providerInfo.helpText.split('\n').map((line, i) => (
+                      <p key={i}>{line}</p>
+                    ))}
+                  </div>
+                )}
+
+                {/* Sync progress */}
+                {loading && syncStatusText && (
+                  <div className="signin__sync-progress">
+                    <div className="signin__sync-bar">
+                      <div className="signin__sync-bar-fill" />
+                    </div>
+                    <span className="signin__sync-status">{syncStatusText}</span>
+                  </div>
+                )}
+
+                {/* Buttons */}
+                <div className="signin__btn-row">
+                  <button
+                    type="button"
+                    className="signin__cancel-btn"
+                    onClick={handleBackToSync}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="signin__gold-btn"
+                    onClick={handleSyncConfirm}
+                    disabled={loading || !syncPassword}
+                  >
+                    {loading ? loadingText : 'Confirm'}
+                  </button>
+                </div>
+              </div>
+
+              <p className="signin__footer">&copy; 2026 Jubilee Software, Inc.</p>
+            </div>
+          )}
+
           {/* ==================== SIGN IN / SIGN UP / FORGOT PANELS ==================== */}
-          {panel !== 'sync' && (
+          {panel !== 'sync' && panel !== 'sync-password' && (
             <div className="signin__panel">
               {/* Avatar */}
               <div className="signin__avatar">
