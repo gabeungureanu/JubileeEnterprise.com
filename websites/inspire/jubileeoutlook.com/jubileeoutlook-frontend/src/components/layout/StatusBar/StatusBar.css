@@ -1,0 +1,43 @@
+.status-bar {
+  height: var(--status-bar-height);
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-md);
+  flex-shrink: 0;
+}
+
+.status-bar__left,
+.status-bar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.status-bar__indicator {
+  display: flex;
+  align-items: center;
+}
+
+.status-bar__indicator .material-symbols-outlined {
+  font-size: 14px;
+}
+
+.status-bar__indicator--online {
+  color: var(--accent-green);
+}
+
+.status-bar__indicator--offline {
+  color: var(--accent-red);
+}
+
+.status-bar__indicator--checking {
+  color: var(--accent-orange);
+}
+
+.status-bar__text {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+}

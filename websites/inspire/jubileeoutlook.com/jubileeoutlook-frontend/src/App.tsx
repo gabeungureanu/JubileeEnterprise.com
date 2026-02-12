@@ -1,20 +1,19 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Layout from './components/Layout';
-import Home from './pages/Home';
-import NotFound from './pages/NotFound';
-import './App.css';
+import { ThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { AppProvider } from './context/AppContext';
+import AppLayout from './components/layout/AppLayout';
+import darkTheme from './styles/themes/dark';
+import './styles/global.css';
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
-    </Router>
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <AppProvider>
+        <AppLayout />
+      </AppProvider>
+    </ThemeProvider>
   );
 };
 

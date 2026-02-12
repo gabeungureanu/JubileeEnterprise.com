@@ -1,0 +1,106 @@
+.calendar-page {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+.calendar-page__sidebar {
+  width: var(--folder-pane-width);
+  border-right: 1px solid var(--border-subtle);
+  background-color: var(--bg-secondary);
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.calendar-page__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.calendar-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.calendar-page__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.calendar-page__nav-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.calendar-page__nav-btn:hover {
+  background-color: var(--bg-hover);
+}
+
+.calendar-page__nav-btn .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.calendar-page__date-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.calendar-page__today-btn {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  cursor: pointer;
+}
+
+.calendar-page__today-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.calendar-page__view-modes {
+  display: flex;
+  gap: 1px;
+  background-color: var(--border-primary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.calendar-page__view-btn {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--bg-tertiary);
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  cursor: pointer;
+}
+
+.calendar-page__view-btn:hover {
+  background-color: var(--bg-hover);
+}
+
+.calendar-page__view-btn--active {
+  background-color: var(--gold-primary);
+  color: var(--text-inverse);
+  font-weight: var(--font-weight-medium);
+}

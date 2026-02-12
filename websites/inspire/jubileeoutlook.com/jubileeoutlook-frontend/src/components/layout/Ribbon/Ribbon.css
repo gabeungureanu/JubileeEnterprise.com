@@ -1,0 +1,73 @@
+.ribbon {
+  height: var(--ribbon-height);
+  background-color: var(--ribbon-bg);
+  border-bottom: 1px solid var(--ribbon-border);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.ribbon__content {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-md);
+  height: 100%;
+  gap: var(--spacing-sm);
+}
+
+.ribbon__group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.ribbon__separator {
+  width: 1px;
+  height: 24px;
+  background-color: var(--border-primary);
+  margin: 0 var(--spacing-sm);
+}
+
+.ribbon__button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.ribbon__button:hover {
+  background-color: var(--ribbon-hover);
+  color: var(--text-primary);
+}
+
+.ribbon__button:active {
+  background-color: var(--ribbon-active);
+}
+
+.ribbon__button--primary {
+  background-color: var(--gold-primary);
+  color: var(--text-inverse);
+  font-weight: var(--font-weight-medium);
+}
+
+.ribbon__button--primary:hover {
+  background-color: var(--gold-hover);
+  color: var(--text-inverse);
+}
+
+.ribbon__button .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.ribbon__label {
+  font-size: var(--font-size-sm);
+}

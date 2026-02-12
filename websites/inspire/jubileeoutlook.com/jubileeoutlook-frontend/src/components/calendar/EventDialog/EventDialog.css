@@ -1,0 +1,160 @@
+.event-dialog__overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+}
+
+.event-dialog {
+  width: 520px;
+  max-height: 80vh;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-dialog);
+  display: flex;
+  flex-direction: column;
+}
+
+.event-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.event-dialog__header h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.event-dialog__close {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.event-dialog__close:hover {
+  background-color: var(--accent-red);
+  color: var(--text-primary);
+}
+
+.event-dialog__body {
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.event-dialog__field {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.event-dialog__field .material-symbols-outlined {
+  font-size: 20px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.event-dialog__field input,
+.event-dialog__field select {
+  flex: 1;
+  padding: var(--spacing-sm);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  outline: none;
+}
+
+.event-dialog__field input:focus,
+.event-dialog__field select:focus,
+.event-dialog__field textarea:focus {
+  border-color: var(--gold-primary);
+}
+
+.event-dialog__field--area {
+  align-items: flex-start;
+}
+
+.event-dialog__field textarea {
+  flex: 1;
+  min-height: 80px;
+  padding: var(--spacing-sm);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  outline: none;
+  resize: vertical;
+}
+
+.event-dialog__row {
+  display: flex;
+  gap: var(--spacing-lg);
+  padding-left: 30px;
+}
+
+.event-dialog__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.event-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.event-dialog__btn {
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.event-dialog__btn--cancel {
+  background-color: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.event-dialog__btn--cancel:hover {
+  background-color: var(--border-primary);
+}
+
+.event-dialog__btn--save {
+  background-color: var(--gold-primary);
+  color: var(--text-inverse);
+}
+
+.event-dialog__btn--save:hover {
+  background-color: var(--gold-hover);
+}

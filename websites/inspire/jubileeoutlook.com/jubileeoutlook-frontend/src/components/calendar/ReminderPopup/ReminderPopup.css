@@ -1,0 +1,59 @@
+.reminder-popup {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--gold-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.reminder-popup__icon .material-symbols-outlined {
+  font-size: 24px;
+  color: var(--gold-primary);
+}
+
+.reminder-popup__content {
+  flex: 1;
+}
+
+.reminder-popup__title {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.reminder-popup__time {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+.reminder-popup__actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.reminder-popup__btn {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--bg-hover);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  cursor: pointer;
+}
+
+.reminder-popup__btn:hover {
+  background-color: var(--border-primary);
+}
+
+.reminder-popup__btn--dismiss {
+  background-color: var(--gold-primary);
+  color: var(--text-inverse);
+}
+
+.reminder-popup__btn--dismiss:hover {
+  background-color: var(--gold-hover);
+}

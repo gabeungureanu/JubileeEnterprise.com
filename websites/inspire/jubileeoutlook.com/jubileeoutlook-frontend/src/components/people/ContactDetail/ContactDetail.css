@@ -1,0 +1,123 @@
+.contact-detail {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  background-color: var(--bg-primary);
+}
+
+.contact-detail--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.contact-detail__empty-icon {
+  font-size: 64px !important;
+  color: var(--text-disabled);
+  margin-bottom: var(--spacing-md);
+}
+
+.contact-detail__empty-text {
+  font-size: var(--font-size-md);
+  color: var(--text-disabled);
+}
+
+.contact-detail__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-xl);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.contact-detail__avatar-lg {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-round);
+  background-color: var(--gold-primary);
+  color: var(--text-inverse);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-xxl);
+  margin-bottom: var(--spacing-md);
+  overflow: hidden;
+}
+
+.contact-detail__avatar-lg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.contact-detail__name {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.contact-detail__title {
+  font-size: var(--font-size-md);
+  color: var(--text-secondary);
+  margin-top: var(--spacing-xs);
+}
+
+.contact-detail__org {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+.contact-detail__sections {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.contact-detail__section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+  text-transform: uppercase;
+}
+
+.contact-detail__section-title .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.contact-detail__field {
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-xs) 0;
+}
+
+.contact-detail__field-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  text-transform: capitalize;
+}
+
+.contact-detail__field-value {
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
+}
+
+a.contact-detail__field-value {
+  color: var(--gold-primary);
+}
+
+a.contact-detail__field-value:hover {
+  color: var(--gold-hover);
+}
+
+.contact-detail__notes {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}

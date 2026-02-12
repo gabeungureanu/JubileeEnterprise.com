@@ -1,0 +1,60 @@
+.folder-pane {
+  width: var(--folder-pane-width);
+  height: 100%;
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border-subtle);
+  overflow-y: auto;
+  flex-shrink: 0;
+  transition: width var(--transition-normal);
+}
+
+.folder-pane__list {
+  padding: var(--spacing-sm) 0;
+}
+
+.folder-pane__item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+  transition: background-color var(--transition-fast);
+  user-select: none;
+}
+
+.folder-pane__item:hover {
+  background-color: var(--gold-highlight-hover);
+}
+
+.folder-pane__item--selected {
+  background-color: var(--gold-highlight);
+  color: var(--text-primary);
+}
+
+.folder-pane__expand {
+  font-size: 16px !important;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.folder-pane__icon {
+  font-size: 18px !important;
+  flex-shrink: 0;
+}
+
+.folder-pane__name {
+  flex: 1;
+  min-width: 0;
+}
+
+.folder-pane__badge {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--accent-blue);
+  min-width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}

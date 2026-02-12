@@ -1,11 +1,4 @@
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
-
-export interface User {
-  id: string;
-  email: string;
-  displayName: string;
-}
+export * from './common';
+export * from './mail';
+export * from './calendar';
+export * from './contacts';
