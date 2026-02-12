@@ -17,14 +17,30 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+// Check if user completed email sync (has userId but no Codex auth token)
+const isSyncOnlyUser = (): boolean => {
+  return !tokenStore.getAccessToken() && !!tokenStore.getUserId() && !!localStorage.getItem('jubilee_sync_email');
+};
+
+const getSyncUser = (): User | null => {
+  const email = localStorage.getItem('jubilee_sync_email');
+  const userId = tokenStore.getUserId();
+  if (!email || !userId) return null;
+  return { id: userId, email, displayName: email.split('@')[0] };
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const syncOnly = isSyncOnlyUser();
   const [state, setState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: authService.isAuthenticated(),
-    isLoading: authService.isAuthenticated(),
+    user: syncOnly ? getSyncUser() : null,
+    isAuthenticated: syncOnly || authService.isAuthenticated(),
+    isLoading: !syncOnly && authService.isAuthenticated(),
   });
 
   useEffect(() => {
+    // Skip Codex auth check for sync-only users
+    if (isSyncOnlyUser()) return;
+
     if (state.isAuthenticated && !state.user) {
       authService.getCurrentUser().then((user) => {
         setState((prev) => ({
@@ -78,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await authService.logout();
     localStorage.removeItem('jubilee_remember_email');
     localStorage.removeItem('jubilee_remember_token');
+    localStorage.removeItem('jubilee_sync_email');
     setState({ user: null, isAuthenticated: false, isLoading: false });
   }, []);
 

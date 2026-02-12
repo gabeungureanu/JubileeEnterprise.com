@@ -50,7 +50,8 @@ export const emailSyncService = {
     try {
       const response = await continuumClient.post<ConnectResult>(
         '/outlook/accounts/connect',
-        { email, password, userId }
+        { email, password, userId },
+        { timeout: 60000 }
       );
       return response.data;
     } catch (err: any) {
@@ -62,7 +63,9 @@ export const emailSyncService = {
   async syncAccount(accountId: string): Promise<SyncResult> {
     try {
       const response = await continuumClient.post<SyncResult>(
-        `/outlook/accounts/${accountId}/sync`
+        `/outlook/accounts/${accountId}/sync`,
+        {},
+        { timeout: 120000 }
       );
       return response.data;
     } catch (err: any) {

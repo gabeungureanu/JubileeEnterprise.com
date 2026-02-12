@@ -292,35 +292,19 @@ const SignIn: React.FC = () => {
       setSyncStatusText('Connecting to mail server...');
       setLoadingText('Connecting...');
 
-      // Get userId from auth context or token store
+      // Get userId - use existing auth or generate a temporary one for email sync
       const { tokenStore } = await import('../../services/apiClient');
       let userId = tokenStore.getUserId();
 
-      // If not logged in yet, try to login/register first
       if (!userId) {
-        setSyncStatusText('Authenticating...');
-        setLoadingText('Authenticating...');
-        const loginResult = await login(trimmedEmail, syncPassword, true);
-        if (!loginResult.success) {
-          // Try registering
-          const registerResult = await register(trimmedEmail.split('@')[0], trimmedEmail, syncPassword, false);
-          if (!registerResult.success) {
-            setError('syncPassword', 'Authentication failed. Please check your credentials or sign in first.');
-            setLoading(false);
-            setSyncStatusText('');
-            setLoadingText('');
-            return;
-          }
-        }
-        userId = tokenStore.getUserId();
-      }
-
-      if (!userId) {
-        setError('syncPassword', 'Please sign in first, then sync your email.');
-        setLoading(false);
-        setSyncStatusText('');
-        setLoadingText('');
-        return;
+        // Generate a deterministic UUID from the email for anonymous sync
+        const encoder = new TextEncoder();
+        const data = encoder.encode(trimmedEmail);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        userId = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+        tokenStore.setUserId(userId);
       }
 
       setSyncStatusText('Testing IMAP connection...');
@@ -355,8 +339,10 @@ const SignIn: React.FC = () => {
       // Small delay for user to see success
       await new Promise(r => setTimeout(r, 1500));
 
-      // The auth state should already be set from login/register above
-      // If authenticated, the App.tsx will auto-redirect to AppLayout
+      // Save sync email so AuthContext can create a sync-only user session
+      localStorage.setItem('jubilee_sync_email', trimmedEmail);
+
+      // Reload to enter the app with the synced email data
       window.location.reload();
     } catch (err: any) {
       setError('syncPassword', err.message || 'An error occurred during sync.');

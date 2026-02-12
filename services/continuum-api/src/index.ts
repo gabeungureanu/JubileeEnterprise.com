@@ -1206,6 +1206,369 @@ app.delete('/api/v1/outlook/accounts/:id', async (c) => {
 });
 
 // ============================================================================
+// MAIL DATA ENDPOINTS (Folders, Messages)
+// ============================================================================
+
+// GET /api/v1/outlook/folders - List folders for a user
+app.get('/api/v1/outlook/folders', async (c) => {
+  try {
+    const userId = c.req.query('userId');
+    if (!userId) {
+      return c.json({ error: 'userId is required' }, 400);
+    }
+
+    const pool = getContinuumPool();
+    const result = await pool.query(
+      `SELECT f.id, f.name, f.folder_type, f.unread_count, f.total_count,
+              f.parent_folder_id, f.icon, f.display_order, f.is_system
+       FROM outlook_email_folders f
+       JOIN outlook_email_accounts a ON f.account_id = a.id
+       WHERE a.user_id = $1
+       ORDER BY f.display_order ASC, f.name ASC`,
+      [userId]
+    );
+
+    // Build nested folder structure
+    const foldersMap = new Map<string, any>();
+    const rootFolders: any[] = [];
+
+    for (const row of result.rows) {
+      const folder = {
+        id: row.id,
+        name: row.name,
+        folder_type: row.folder_type || 'custom',
+        unread_count: row.unread_count || 0,
+        total_count: row.total_count || 0,
+        parent_folder_id: row.parent_folder_id || null,
+        icon: row.icon || '',
+        is_account_root: false,
+        wwbw_email_address: '',
+        is_expanded: true,
+        subfolders: [] as any[],
+      };
+      foldersMap.set(row.id, folder);
+    }
+
+    for (const folder of foldersMap.values()) {
+      if (folder.parent_folder_id && foldersMap.has(folder.parent_folder_id)) {
+        foldersMap.get(folder.parent_folder_id)!.subfolders.push(folder);
+      } else {
+        rootFolders.push(folder);
+      }
+    }
+
+    return c.json({ success: true, folders: rootFolders });
+  } catch (err: any) {
+    return c.json({ error: 'Failed to fetch folders', message: err.message }, 500);
+  }
+});
+
+// GET /api/v1/outlook/folders/:folderId/messages - List messages in a folder
+app.get('/api/v1/outlook/folders/:folderId/messages', async (c) => {
+  try {
+    const folderId = c.req.param('folderId');
+    const page = parseInt(c.req.query('page') || '1');
+    const pageSize = parseInt(c.req.query('pageSize') || '50');
+    const offset = (page - 1) * pageSize;
+
+    const pool = getContinuumPool();
+
+    // Get total count
+    const countResult = await pool.query(
+      'SELECT COUNT(*) as count FROM outlook_email_messages WHERE folder_id = $1',
+      [folderId]
+    );
+    const totalCount = parseInt(countResult.rows[0].count);
+
+    // Get messages with recipients
+    const messagesResult = await pool.query(
+      `SELECT m.id, m.subject, m.sender_name, m.sender_email,
+              m.body_preview, m.body_text, m.body_html,
+              m.is_read, m.is_flagged, m.has_attachments, m.is_draft, m.is_sent,
+              m.importance, m.received_at, m.sent_at,
+              m.folder_id, m.conversation_id
+       FROM outlook_email_messages m
+       WHERE m.folder_id = $1
+       ORDER BY m.received_at DESC
+       LIMIT $2 OFFSET $3`,
+      [folderId, pageSize, offset]
+    );
+
+    // Get recipients for all messages
+    const messageIds = messagesResult.rows.map((m: any) => m.id);
+    let recipientsMap = new Map<string, any[]>();
+
+    if (messageIds.length > 0) {
+      const recipientsResult = await pool.query(
+        `SELECT message_id, recipient_type as type, email, name
+         FROM outlook_email_recipients
+         WHERE message_id = ANY($1)`,
+        [messageIds]
+      );
+      for (const r of recipientsResult.rows) {
+        if (!recipientsMap.has(r.message_id)) {
+          recipientsMap.set(r.message_id, []);
+        }
+        recipientsMap.get(r.message_id)!.push({
+          type: r.type,
+          email: r.email,
+          name: r.name || '',
+        });
+      }
+    }
+
+    const messages = messagesResult.rows.map((m: any) => ({
+      id: m.id,
+      subject: m.subject || '(No subject)',
+      sender_name: m.sender_name || '',
+      sender_email: m.sender_email || '',
+      body_preview: m.body_preview || '',
+      body_text: m.body_text || '',
+      body_html: m.body_html || '',
+      is_read: m.is_read,
+      is_flagged: m.is_flagged,
+      has_attachments: m.has_attachments,
+      importance: m.importance || 'normal',
+      received_at: m.received_at,
+      sent_at: m.sent_at,
+      folder_id: m.folder_id,
+      conversation_id: m.conversation_id,
+      recipients: recipientsMap.get(m.id) || [],
+      attachments: [],
+    }));
+
+    return c.json({
+      success: true,
+      messages,
+      total_count: totalCount,
+      page,
+      page_size: pageSize,
+    });
+  } catch (err: any) {
+    return c.json({ error: 'Failed to fetch messages', message: err.message }, 500);
+  }
+});
+
+// GET /api/v1/outlook/messages/:id - Get single message with full details
+// Lazy-loads body from IMAP if not stored in database
+app.get('/api/v1/outlook/messages/:id', async (c) => {
+  try {
+    const messageId = c.req.param('id');
+    const pool = getContinuumPool();
+
+    const msgResult = await pool.query(
+      `SELECT m.id, m.subject, m.sender_name, m.sender_email,
+              m.body_preview, m.body_text, m.body_html,
+              m.is_read, m.is_flagged, m.has_attachments, m.is_draft, m.is_sent,
+              m.importance, m.received_at, m.sent_at,
+              m.folder_id, m.conversation_id, m.external_message_id,
+              f.external_folder_id, a.imap_host, a.imap_port, a.email_address, a.encrypted_password
+       FROM outlook_email_messages m
+       JOIN outlook_email_folders f ON m.folder_id = f.id
+       JOIN outlook_email_accounts a ON f.account_id = a.id
+       WHERE m.id = $1`,
+      [messageId]
+    );
+
+    if (msgResult.rows.length === 0) {
+      return c.json({ error: 'Message not found' }, 404);
+    }
+
+    let m = msgResult.rows[0];
+
+    // Lazy-load body from IMAP if not cached in DB
+    if (!m.body_text && !m.body_html && m.imap_host) {
+      try {
+        const imapPassword = Buffer.from(m.encrypted_password || '', 'base64').toString('utf-8');
+        const client = new ImapFlow({
+          host: m.imap_host,
+          port: m.imap_port || 993,
+          secure: true,
+          auth: { user: m.email_address, pass: imapPassword },
+          logger: false,
+        });
+
+        await client.connect();
+        const lock = await client.getMailboxLock(m.external_folder_id || 'INBOX');
+
+        try {
+          // Search for message by Message-ID header
+          const msgIdHeader = m.conversation_id || m.subject;
+          let targetUid: number | null = null;
+
+          // Use IMAP SEARCH to find the message by its Internet Message-ID
+          const internetMsgId = await pool.query(
+            'SELECT internet_message_id FROM outlook_email_messages WHERE id = $1', [messageId]
+          );
+          const headerMsgId = internetMsgId.rows[0]?.internet_message_id;
+
+          if (headerMsgId) {
+            // Strip angle brackets for IMAP search
+            const cleanMsgId = headerMsgId.replace(/^<|>$/g, '');
+            const uids = await client.search({ header: { 'message-id': cleanMsgId } });
+            if (uids.length > 0) {
+              targetUid = uids[0];
+            }
+          }
+
+          if (targetUid) {
+            for await (const msg of client.fetch(String(targetUid), { source: true, uid: true })) {
+              if (msg.source) {
+                const raw = msg.source.toString();
+                let bodyText = '';
+                let bodyHtml = '';
+
+                // Parse MIME parts from raw source
+                const parts = raw.split(/\r?\n--/);
+                for (const part of parts) {
+                  const headerEnd = part.indexOf('\r\n\r\n');
+                  const headerEndLf = part.indexOf('\n\n');
+                  const splitPos = headerEnd > -1 ? headerEnd : headerEndLf;
+                  if (splitPos === -1) continue;
+
+                  const partHeader = part.substring(0, splitPos);
+                  let partBody = part.substring(splitPos).replace(/^\r?\n\r?\n/, '').trim();
+
+                  // Remove trailing boundary markers
+                  partBody = partBody.replace(/\r?\n--[^\r\n]+--\s*$/, '').trim();
+
+                  const isBase64 = /Content-Transfer-Encoding:\s*base64/i.test(partHeader);
+                  const isQP = /Content-Transfer-Encoding:\s*quoted-printable/i.test(partHeader);
+
+                  if (isBase64 && partBody) {
+                    try { partBody = Buffer.from(partBody.replace(/\s/g, ''), 'base64').toString('utf-8'); } catch {}
+                  } else if (isQP && partBody) {
+                    partBody = partBody.replace(/=\r?\n/g, '').replace(/=([0-9A-Fa-f]{2})/g,
+                      (_: any, hex: string) => String.fromCharCode(parseInt(hex, 16)));
+                  }
+
+                  if (/Content-Type:\s*text\/plain/i.test(partHeader) && !bodyText) {
+                    bodyText = partBody;
+                  } else if (/Content-Type:\s*text\/html/i.test(partHeader) && !bodyHtml) {
+                    bodyHtml = partBody;
+                  }
+                }
+
+                // Fallback: non-multipart email
+                if (!bodyText && !bodyHtml) {
+                  const simpleBody = raw.split(/\r?\n\r?\n/).slice(1).join('\n\n').trim();
+                  if (/Content-Type:\s*text\/html/i.test(raw)) {
+                    bodyHtml = simpleBody;
+                  } else {
+                    bodyText = simpleBody;
+                  }
+                }
+
+                // Cache in database for future requests
+                if (bodyText || bodyHtml) {
+                  const preview = (bodyText || bodyHtml.replace(/<[^>]*>/g, '')).substring(0, 200);
+                  await pool.query(
+                    'UPDATE outlook_email_messages SET body_text = $1, body_html = $2, body_preview = $3 WHERE id = $4',
+                    [bodyText || '', bodyHtml || '', preview, messageId]
+                  );
+                  m.body_text = bodyText;
+                  m.body_html = bodyHtml;
+                  m.body_preview = preview;
+                }
+              }
+            }
+          }
+        } finally {
+          lock.release();
+        }
+
+        await client.logout();
+      } catch (imapErr: any) {
+        console.error('IMAP body fetch failed:', imapErr.message);
+      }
+    }
+
+    // Get recipients
+    const recipientsResult = await pool.query(
+      `SELECT recipient_type as type, email, name
+       FROM outlook_email_recipients WHERE message_id = $1`,
+      [messageId]
+    );
+
+    // Get attachments
+    const attachResult = await pool.query(
+      `SELECT id, file_name as "fileName", file_path as "filePath",
+              file_size as "fileSize", mime_type as "mimeType", is_inline as "isInline"
+       FROM outlook_email_attachments WHERE message_id = $1`,
+      [messageId]
+    );
+
+    const message = {
+      id: m.id,
+      subject: m.subject || '(No subject)',
+      sender_name: m.sender_name || '',
+      sender_email: m.sender_email || '',
+      body_preview: m.body_preview || '',
+      body_text: m.body_text || '',
+      body_html: m.body_html || '',
+      is_read: m.is_read,
+      is_flagged: m.is_flagged,
+      has_attachments: m.has_attachments,
+      importance: m.importance || 'normal',
+      received_at: m.received_at,
+      sent_at: m.sent_at,
+      folder_id: m.folder_id,
+      conversation_id: m.conversation_id,
+      recipients: recipientsResult.rows.map((r: any) => ({
+        type: r.type,
+        email: r.email,
+        name: r.name || '',
+      })),
+      attachments: attachResult.rows,
+    };
+
+    return c.json({ success: true, message });
+  } catch (err: any) {
+    return c.json({ error: 'Failed to fetch message', message: err.message }, 500);
+  }
+});
+
+// PATCH /api/v1/outlook/messages/:id - Update message (read, flag, move)
+app.patch('/api/v1/outlook/messages/:id', async (c) => {
+  try {
+    const messageId = c.req.param('id');
+    const body = await c.req.json();
+    const pool = getContinuumPool();
+
+    const updates: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (typeof body.is_read === 'boolean') {
+      updates.push(`is_read = $${paramIndex++}`);
+      values.push(body.is_read);
+    }
+    if (typeof body.is_flagged === 'boolean') {
+      updates.push(`is_flagged = $${paramIndex++}`);
+      values.push(body.is_flagged);
+    }
+    if (body.folder_id) {
+      updates.push(`folder_id = $${paramIndex++}`);
+      values.push(body.folder_id);
+    }
+
+    if (updates.length === 0) {
+      return c.json({ error: 'No fields to update' }, 400);
+    }
+
+    values.push(messageId);
+    await pool.query(
+      `UPDATE outlook_email_messages SET ${updates.join(', ')} WHERE id = $${paramIndex}`,
+      values
+    );
+
+    return c.json({ success: true });
+  } catch (err: any) {
+    return c.json({ error: 'Failed to update message', message: err.message }, 500);
+  }
+});
+
+// ============================================================================
 // SERVER STARTUP
 // ============================================================================
 
@@ -1242,6 +1605,10 @@ async function start() {
     console.log('  POST /api/v1/outlook/accounts/:id/sync - Sync email messages');
     console.log('  GET  /api/v1/outlook/accounts         - List email accounts');
     console.log('  DELETE /api/v1/outlook/accounts/:id   - Disconnect account');
+    console.log('  GET  /api/v1/outlook/folders          - List email folders');
+    console.log('  GET  /api/v1/outlook/folders/:id/messages - Get folder messages');
+    console.log('  GET  /api/v1/outlook/messages/:id     - Get single message');
+    console.log('  PATCH /api/v1/outlook/messages/:id    - Update message');
   } catch (error) {
     console.error('Failed to start Continuum API:', error);
     process.exit(1);

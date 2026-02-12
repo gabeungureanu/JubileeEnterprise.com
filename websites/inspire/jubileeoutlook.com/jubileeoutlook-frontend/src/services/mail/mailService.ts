@@ -1,4 +1,4 @@
-import { continuumClient } from '../apiClient';
+import { continuumClient, tokenStore } from '../apiClient';
 import {
   ApiFoldersResponse, ApiMessagesResponse,
   MailFolder, EmailMessage, CreateMessageRequest,
@@ -7,7 +7,11 @@ import {
 
 export const mailService = {
   async getFolders(): Promise<MailFolder[]> {
-    const response = await continuumClient.get<ApiFoldersResponse>('/outlook/folders');
+    const userId = tokenStore.getUserId();
+    if (!userId) return [];
+    const response = await continuumClient.get<ApiFoldersResponse>('/outlook/folders', {
+      params: { userId },
+    });
     const data = response.data;
     const dtos = data.folders || (data as any);
     if (Array.isArray(dtos)) {
@@ -17,9 +21,10 @@ export const mailService = {
   },
 
   async getMessages(folderId: string, page = 1, pageSize = 50): Promise<{ messages: EmailMessage[]; totalCount: number }> {
-    const response = await continuumClient.get<ApiMessagesResponse>('/outlook/messages', {
-      params: { folderId, page, pageSize, descending: true },
-    });
+    const response = await continuumClient.get<ApiMessagesResponse>(
+      `/outlook/folders/${encodeURIComponent(folderId)}/messages`,
+      { params: { page, pageSize } }
+    );
     const data = response.data;
     const dtos = data.messages || (data as any);
     return {

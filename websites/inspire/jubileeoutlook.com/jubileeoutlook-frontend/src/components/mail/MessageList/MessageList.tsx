@@ -6,10 +6,13 @@ interface MessageListProps {
   messages: EmailMessage[];
   selectedMessageId: string | null;
   onMessageSelect: (messageId: string) => void;
+  loading?: boolean;
+  folderName?: string;
 }
 
-const MessageList: React.FC<MessageListProps> = ({ messages, selectedMessageId, onMessageSelect }) => {
+const MessageList: React.FC<MessageListProps> = ({ messages, selectedMessageId, onMessageSelect, loading, folderName }) => {
   const formatDate = (dateStr: string): string => {
+    if (!dateStr) return '';
     const date = new Date(dateStr);
     const today = new Date();
     if (date.toDateString() === today.toDateString()) {
@@ -21,13 +24,26 @@ const MessageList: React.FC<MessageListProps> = ({ messages, selectedMessageId, 
   return (
     <div className="message-list">
       <div className="message-list__header">
+        {folderName && <div className="message-list__folder-name">{folderName}</div>}
         <div className="message-list__search">
           <span className="material-symbols-outlined">search</span>
           <input type="text" placeholder="Search mail..." className="message-list__search-input" />
         </div>
       </div>
       <div className="message-list__items">
-        {messages.map((msg) => (
+        {loading && (
+          <div className="message-list__loading">
+            <span className="material-symbols-outlined message-list__loading-icon">hourglass_empty</span>
+            <span>Loading messages...</span>
+          </div>
+        )}
+        {!loading && messages.length === 0 && (
+          <div className="message-list__empty">
+            <span className="material-symbols-outlined message-list__empty-icon">inbox</span>
+            <span>No messages in this folder</span>
+          </div>
+        )}
+        {!loading && messages.map((msg) => (
           <div
             key={msg.id}
             className={`message-list__item ${
