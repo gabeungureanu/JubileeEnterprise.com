@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { EmailMessage } from '../../../types/mail';
 import './MessageList.css';
 
@@ -6,11 +6,18 @@ interface MessageListProps {
   messages: EmailMessage[];
   selectedMessageId: string | null;
   onMessageSelect: (messageId: string) => void;
+  onToggleFlag?: (messageId: string, e: React.MouseEvent) => void;
+  onSearch?: (query: string) => void;
   loading?: boolean;
   folderName?: string;
 }
 
-const MessageList: React.FC<MessageListProps> = ({ messages, selectedMessageId, onMessageSelect, loading, folderName }) => {
+const MessageList: React.FC<MessageListProps> = ({
+  messages, selectedMessageId, onMessageSelect, onToggleFlag, onSearch, loading, folderName
+}) => {
+  const [searchInput, setSearchInput] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const formatDate = (dateStr: string): string => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
@@ -21,13 +28,61 @@ const MessageList: React.FC<MessageListProps> = ({ messages, selectedMessageId, 
     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
 
+  // Debounced search — fires 300ms after user stops typing
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchInput(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      onSearch?.(value);
+    }, 300);
+  }, [onSearch]);
+
+  // Immediate search on Enter key
+  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      onSearch?.(searchInput);
+    }
+  }, [onSearch, searchInput]);
+
+  // Clear search
+  const handleClearSearch = useCallback(() => {
+    setSearchInput('');
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    onSearch?.('');
+  }, [onSearch]);
+
+  // Cleanup debounce timer
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   return (
     <div className="message-list">
       <div className="message-list__header">
         {folderName && <div className="message-list__folder-name">{folderName}</div>}
         <div className="message-list__search">
           <span className="material-symbols-outlined">search</span>
-          <input type="text" placeholder="Search mail..." className="message-list__search-input" />
+          <input
+            type="text"
+            placeholder="Search mail..."
+            className="message-list__search-input"
+            value={searchInput}
+            onChange={handleSearchChange}
+            onKeyDown={handleSearchKeyDown}
+          />
+          {searchInput && (
+            <button
+              className="message-list__search-clear"
+              onClick={handleClearSearch}
+              title="Clear search"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          )}
         </div>
       </div>
       <div className="message-list__items">
@@ -63,9 +118,13 @@ const MessageList: React.FC<MessageListProps> = ({ messages, selectedMessageId, 
               <div className="message-list__preview text-ellipsis">{msg.bodyPreview}</div>
             </div>
             <div className="message-list__item-actions">
-              {msg.isFlagged && (
-                <span className="material-symbols-outlined message-list__flag">flag</span>
-              )}
+              <span
+                className={`material-symbols-outlined message-list__flag ${msg.isFlagged ? 'message-list__flag--active' : 'message-list__flag--inactive'}`}
+                onClick={(e) => onToggleFlag?.(msg.id, e)}
+                title={msg.isFlagged ? 'Unflag' : 'Flag'}
+              >
+                {msg.isFlagged ? 'flag' : 'outlined_flag'}
+              </span>
               {msg.hasAttachments && (
                 <span className="material-symbols-outlined message-list__attachment">attach_file</span>
               )}

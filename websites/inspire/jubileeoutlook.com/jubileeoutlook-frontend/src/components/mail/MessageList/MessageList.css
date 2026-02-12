@@ -49,6 +49,24 @@
   color: var(--text-disabled);
 }
 
+.message-list__search-clear {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: var(--text-tertiary);
+}
+
+.message-list__search-clear .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.message-list__search-clear:hover {
+  color: var(--text-primary);
+}
+
 .message-list__items {
   flex: 1;
   overflow-y: auto;
@@ -147,7 +165,24 @@
 
 .message-list__flag {
   font-size: 16px !important;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.message-list__flag--active {
   color: var(--accent-red);
+}
+
+.message-list__flag--inactive {
+  color: transparent;
+}
+
+.message-list__item:hover .message-list__flag--inactive {
+  color: var(--text-disabled);
+}
+
+.message-list__flag:hover {
+  color: var(--accent-red) !important;
 }
 
 .message-list__attachment {

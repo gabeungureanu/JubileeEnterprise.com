@@ -1353,6 +1353,71 @@ app.get('/api/v1/outlook/folders/:folderId/messages', async (c) => {
   }
 });
 
+// GET /api/v1/outlook/messages/search - Full-text search across messages
+app.get('/api/v1/outlook/messages/search', async (c) => {
+  try {
+    const userId = c.req.query('userId');
+    const q = c.req.query('q');
+    const folderId = c.req.query('folderId');
+    const page = parseInt(c.req.query('page') || '1');
+    const pageSize = Math.min(parseInt(c.req.query('pageSize') || '50'), 100);
+    if (!userId || !q) return c.json({ error: 'userId and q are required' }, 400);
+
+    const pool = getContinuumPool();
+    const offset = (page - 1) * pageSize;
+    // Build tsquery from space-separated words
+    const tsQuery = q.trim().split(/\s+/).filter(Boolean).map((w: string) => w.replace(/[^a-zA-Z0-9]/g, '')).filter(Boolean).join(' & ');
+    if (!tsQuery) return c.json({ success: true, messages: [], total_count: 0, page, page_size: pageSize });
+
+    let whereClause = 'm.user_id = $1 AND m.search_vector @@ to_tsquery(\'english\', $2)';
+    const params: any[] = [userId, tsQuery];
+    let paramCount = 2;
+
+    if (folderId) {
+      params.push(folderId);
+      whereClause += ` AND m.folder_id = $${++paramCount}`;
+    }
+
+    const countResult = await pool.query(
+      `SELECT COUNT(*) as count FROM outlook_email_messages m WHERE ${whereClause}`, params
+    );
+    const totalCount = parseInt(countResult.rows[0].count);
+
+    const messagesResult = await pool.query(
+      `SELECT m.id, m.subject, m.sender_name, m.sender_email, m.body_preview, m.body_text, m.body_html,
+              m.is_read, m.is_flagged, m.has_attachments, m.importance, m.received_at, m.sent_at,
+              m.folder_id, m.conversation_id
+       FROM outlook_email_messages m WHERE ${whereClause}
+       ORDER BY m.received_at DESC LIMIT $${++paramCount} OFFSET $${++paramCount}`,
+      [...params, pageSize, offset]
+    );
+
+    // Batch-fetch recipients
+    const messageIds = messagesResult.rows.map((r: any) => r.id);
+    let recipientMap: Record<string, any[]> = {};
+    if (messageIds.length > 0) {
+      const recipResult = await pool.query(
+        'SELECT message_id, recipient_type as type, email, name FROM outlook_email_recipients WHERE message_id = ANY($1)',
+        [messageIds]
+      );
+      for (const r of recipResult.rows) {
+        if (!recipientMap[r.message_id]) recipientMap[r.message_id] = [];
+        recipientMap[r.message_id].push({ type: r.type, email: r.email, name: r.name });
+      }
+    }
+
+    const messages = messagesResult.rows.map((m: any) => ({
+      ...m,
+      recipients: recipientMap[m.id] || [],
+      attachments: [],
+    }));
+
+    return c.json({ success: true, messages, total_count: totalCount, page, page_size: pageSize });
+  } catch (err: any) {
+    return c.json({ error: 'Failed to search messages', message: err.message }, 500);
+  }
+});
+
 // GET /api/v1/outlook/messages/:id - Get single message with full details
 // Lazy-loads body from IMAP if not stored in database
 app.get('/api/v1/outlook/messages/:id', async (c) => {
@@ -1572,6 +1637,23 @@ app.patch('/api/v1/outlook/messages/:id', async (c) => {
   }
 });
 
+// DELETE /api/v1/outlook/messages/:id - Delete a message permanently
+app.delete('/api/v1/outlook/messages/:id', async (c) => {
+  try {
+    const messageId = c.req.param('id');
+    const pool = getContinuumPool();
+    const result = await pool.query(
+      'DELETE FROM outlook_email_messages WHERE id = $1 RETURNING id, folder_id', [messageId]
+    );
+    if (result.rows.length === 0) {
+      return c.json({ error: 'Message not found' }, 404);
+    }
+    return c.json({ success: true, deleted: messageId });
+  } catch (err: any) {
+    return c.json({ error: 'Failed to delete message', message: err.message }, 500);
+  }
+});
+
 // ============================================================================
 // SERVER STARTUP
 // ============================================================================
@@ -1611,8 +1693,10 @@ async function start() {
     console.log('  DELETE /api/v1/outlook/accounts/:id   - Disconnect account');
     console.log('  GET  /api/v1/outlook/folders          - List email folders');
     console.log('  GET  /api/v1/outlook/folders/:id/messages - Get folder messages');
+    console.log('  GET  /api/v1/outlook/messages/search  - Search messages');
     console.log('  GET  /api/v1/outlook/messages/:id     - Get single message');
     console.log('  PATCH /api/v1/outlook/messages/:id    - Update message');
+    console.log('  DELETE /api/v1/outlook/messages/:id   - Delete message');
   } catch (error) {
     console.error('Failed to start Continuum API:', error);
     process.exit(1);

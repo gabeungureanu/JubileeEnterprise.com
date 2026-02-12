@@ -85,6 +85,8 @@ export interface AttachmentCreateDto {
   isInline: boolean;
 }
 
+export type ComposeMode = 'new' | 'reply' | 'replyAll' | 'forward';
+
 // --- Frontend display types (mapped from DTOs) ---
 
 export interface MailFolder {
