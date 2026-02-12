@@ -1,4 +1,5 @@
 import React from 'react';
+import './Ribbon.css';
 
 const PeopleRibbon: React.FC = () => {
   return (

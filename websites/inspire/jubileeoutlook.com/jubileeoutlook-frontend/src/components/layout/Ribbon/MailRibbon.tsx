@@ -1,5 +1,6 @@
 import React from 'react';
 import { useMailContextSafe } from '../../../context/MailContext';
+import './Ribbon.css';
 
 const MailRibbon: React.FC = () => {
   const mail = useMailContextSafe();
