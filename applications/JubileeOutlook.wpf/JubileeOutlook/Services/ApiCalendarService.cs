@@ -794,8 +794,8 @@ public class ApiCalendarService : ICalendarService
             Id = dto.Id ?? Guid.NewGuid().ToString(),
             Subject = dto.Subject ?? string.Empty,
             Location = dto.Location ?? string.Empty,
-            StartTime = dto.StartTime,
-            EndTime = dto.EndTime,
+            StartTime = dto.StartTime.Kind == DateTimeKind.Utc ? dto.StartTime.ToLocalTime() : dto.StartTime,
+            EndTime = dto.EndTime.Kind == DateTimeKind.Utc ? dto.EndTime.ToLocalTime() : dto.EndTime,
             Description = dto.Description ?? string.Empty,
             IsAllDay = dto.IsAllDay,
             Status = ParseEventStatus(dto.Status),
@@ -855,8 +855,12 @@ public class ApiCalendarService : ICalendarService
             UserId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001",
             Subject = calendarEvent.Subject,
             Location = calendarEvent.Location,
-            StartTime = calendarEvent.StartTime,
-            EndTime = calendarEvent.EndTime,
+            StartTime = calendarEvent.StartTime.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(calendarEvent.StartTime, DateTimeKind.Local).ToUniversalTime()
+                : calendarEvent.StartTime.ToUniversalTime(),
+            EndTime = calendarEvent.EndTime.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(calendarEvent.EndTime, DateTimeKind.Local).ToUniversalTime()
+                : calendarEvent.EndTime.ToUniversalTime(),
             Description = calendarEvent.Description,
             IsAllDay = calendarEvent.IsAllDay,
             Status = calendarEvent.Status.ToString().ToLower(),

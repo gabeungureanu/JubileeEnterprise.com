@@ -23,7 +23,7 @@ import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import { initializePools, closePools, checkAllHealth } from '@jubilee/database';
+import { initializePools, closePools, checkAllHealth, getContinuumPool } from '@jubilee/database';
 import * as continuum from '@jubilee/database/continuum';
 
 const app = new Hono();
@@ -455,6 +455,303 @@ app.get('/api/users/:userId/activity', async (c) => {
 });
 
 // ============================================================================
+// OUTLOOK CALENDAR EVENT ENDPOINTS
+// ============================================================================
+
+// Helper: map DB row to camelCase event response
+function mapEventRow(event: any, calendarName?: string) {
+  return {
+    id: event.id,
+    calendarId: event.calendar_id,
+    subject: event.subject,
+    location: event.location,
+    description: event.description,
+    startTime: event.start_time,
+    endTime: event.end_time,
+    isAllDay: event.is_all_day,
+    status: event.status,
+    category: event.category,
+    eventColor: event.event_color,
+    calendarName: calendarName || event.calendar_name || 'My Calendar',
+    isRecurring: event.is_recurring,
+    reminderMinutes: event.reminder_minutes,
+    isPrivate: event.is_private,
+    isInPerson: event.is_in_person,
+  };
+}
+
+// Helper: fetch attendees, attachments, images for an event
+async function fetchEventRelations(pool: any, eventId: string) {
+  const [attendeesResult, attachmentsResult, imagesResult] = await Promise.all([
+    pool.query('SELECT attendee_email, attendee_name, response_status, is_required FROM outlook_event_attendees WHERE event_id = $1', [eventId]),
+    pool.query('SELECT id, file_name, file_path, file_size, mime_type, url, created_at as added_date FROM outlook_event_attachments WHERE event_id = $1', [eventId]),
+    pool.query('SELECT id, file_name, file_path, file_size, mime_type, url, thumbnail_url, created_at as added_date FROM outlook_event_images WHERE event_id = $1', [eventId]),
+  ]);
+  return {
+    attendees: attendeesResult.rows.map((a: any) => a.attendee_email),
+    attachments: attachmentsResult.rows.map((a: any) => ({ id: a.id, fileName: a.file_name, filePath: a.file_path, fileSize: a.file_size, url: a.url, addedDate: a.added_date })),
+    images: imagesResult.rows.map((img: any) => ({ id: img.id, fileName: img.file_name, filePath: img.file_path, fileSize: img.file_size, mimeType: img.mime_type, url: img.url, thumbnailUrl: img.thumbnail_url, addedDate: img.added_date })),
+  };
+}
+
+// GET /api/v1/outlook/events - Get calendar events
+app.get('/api/v1/outlook/events', async (c) => {
+  try {
+    const pool = getContinuumPool();
+    const userId = c.req.query('userId') || c.req.query('user_id');
+    const startDate = c.req.query('startDate');
+    const endDate = c.req.query('endDate');
+    const calendarId = c.req.query('calendarId');
+
+    if (!userId) {
+      return c.json({ error: 'userId is required' }, 400);
+    }
+
+    let query = `SELECT e.*, c.name as calendar_name FROM outlook_calendar_events e LEFT JOIN outlook_calendars c ON e.calendar_id = c.id WHERE e.user_id = $1`;
+    const params: any[] = [userId];
+    let paramCount = 1;
+
+    if (startDate) { params.push(startDate); query += ` AND e.start_time >= $${++paramCount}`; }
+    if (endDate) { params.push(endDate); query += ` AND e.end_time <= $${++paramCount}`; }
+    if (calendarId) { params.push(calendarId); query += ` AND e.calendar_id = $${++paramCount}`; }
+    query += ' ORDER BY e.start_time';
+
+    const result = await pool.query(query, params);
+
+    const events = await Promise.all(result.rows.map(async (event: any) => {
+      const relations = await fetchEventRelations(pool, event.id);
+      return { ...mapEventRow(event), ...relations };
+    }));
+
+    return c.json(events);
+  } catch (err: any) {
+    return c.json({ error: 'Failed to fetch events', message: err.message }, 500);
+  }
+});
+
+// GET /api/v1/outlook/events/:id - Get single event
+app.get('/api/v1/outlook/events/:id', async (c) => {
+  try {
+    const pool = getContinuumPool();
+    const id = c.req.param('id');
+
+    const result = await pool.query(
+      `SELECT e.*, c.name as calendar_name FROM outlook_calendar_events e LEFT JOIN outlook_calendars c ON e.calendar_id = c.id WHERE e.id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return c.json({ error: 'Event not found' }, 404);
+    }
+
+    const event = result.rows[0];
+    const relations = await fetchEventRelations(pool, event.id);
+    return c.json({ ...mapEventRow(event), ...relations });
+  } catch (err: any) {
+    return c.json({ error: 'Failed to fetch event', message: err.message }, 500);
+  }
+});
+
+// POST /api/v1/outlook/events - Create calendar event
+app.post('/api/v1/outlook/events', async (c) => {
+  try {
+    const pool = getContinuumPool();
+    const body = await c.req.json();
+
+    const userId = body.userId || body.user_id;
+    const startTime = body.startTime || body.start_time;
+    const endTime = body.endTime || body.end_time;
+    const calendarId = body.calendarId || body.calendar_id;
+    const isAllDay = body.isAllDay ?? body.is_all_day ?? false;
+    const eventColor = body.eventColor || body.event_color || '#5B9BD5';
+    const isRecurring = body.isRecurring ?? body.is_recurring ?? false;
+    const reminderMinutes = body.reminderMinutes ?? body.reminder_minutes ?? 15;
+    const isPrivate = body.isPrivate ?? body.is_private ?? false;
+    const isInPerson = body.isInPerson ?? body.is_in_person ?? true;
+
+    if (!userId || !body.subject || !startTime || !endTime) {
+      return c.json({ error: 'userId, subject, startTime, and endTime are required' }, 400);
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Get or create default calendar
+      let calendarIdToUse = calendarId;
+      if (!calendarIdToUse) {
+        const calResult = await client.query(
+          'SELECT id FROM outlook_calendars WHERE user_id = $1 AND is_default = true', [userId]
+        );
+        if (calResult.rows.length === 0) {
+          const newCal = await client.query(
+            `INSERT INTO outlook_calendars (user_id, name, is_default) VALUES ($1, 'My Calendar', true) RETURNING id`, [userId]
+          );
+          calendarIdToUse = newCal.rows[0].id;
+        } else {
+          calendarIdToUse = calResult.rows[0].id;
+        }
+      }
+
+      // Insert event
+      const eventResult = await client.query(`
+        INSERT INTO outlook_calendar_events (
+          calendar_id, user_id, subject, location, description,
+          start_time, end_time, is_all_day, status, category,
+          event_color, is_recurring, reminder_minutes, is_private, is_in_person
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        RETURNING *
+      `, [
+        calendarIdToUse, userId, body.subject, body.location || '', body.description || '',
+        startTime, endTime, isAllDay, body.status || 'free', body.category || '',
+        eventColor, isRecurring, reminderMinutes, isPrivate, isInPerson
+      ]);
+
+      const newEvent = eventResult.rows[0];
+
+      // Insert attendees
+      if (Array.isArray(body.attendees)) {
+        for (const attendee of body.attendees) {
+          const email = typeof attendee === 'string' ? attendee : attendee.email;
+          const name = typeof attendee === 'string' ? null : attendee.name;
+          await client.query(
+            'INSERT INTO outlook_event_attendees (event_id, attendee_email, attendee_name) VALUES ($1, $2, $3)',
+            [newEvent.id, email, name]
+          );
+        }
+      }
+
+      // Insert attachments
+      if (Array.isArray(body.attachments)) {
+        for (const att of body.attachments) {
+          await client.query(
+            'INSERT INTO outlook_event_attachments (event_id, file_name, file_path, file_size, mime_type, url) VALUES ($1, $2, $3, $4, $5, $6)',
+            [newEvent.id, att.fileName || att.file_name, att.filePath || att.file_path, att.fileSize || att.file_size || 0, att.mimeType || att.mime_type, att.url]
+          );
+        }
+      }
+
+      // Insert images
+      if (Array.isArray(body.images)) {
+        for (const img of body.images) {
+          await client.query(
+            'INSERT INTO outlook_event_images (event_id, file_name, file_path, file_size, mime_type, url, thumbnail_url) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            [newEvent.id, img.fileName || img.file_name, img.filePath || img.file_path, img.fileSize || img.file_size || 0, img.mimeType || img.mime_type || 'image/jpeg', img.url, img.thumbnailUrl || img.thumbnail_url]
+          );
+        }
+      }
+
+      await client.query('COMMIT');
+      return c.json(mapEventRow(newEvent), 201);
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (err: any) {
+    return c.json({ error: 'Failed to create event', message: err.message }, 500);
+  }
+});
+
+// PUT /api/v1/outlook/events/:id - Update calendar event
+app.put('/api/v1/outlook/events/:id', async (c) => {
+  try {
+    const pool = getContinuumPool();
+    const id = c.req.param('id');
+    const body = await c.req.json();
+
+    const startTime = body.startTime || body.start_time;
+    const endTime = body.endTime || body.end_time;
+    const isAllDay = body.isAllDay ?? body.is_all_day;
+    const eventColor = body.eventColor || body.event_color;
+    const isRecurring = body.isRecurring ?? body.is_recurring;
+    const reminderMinutes = body.reminderMinutes ?? body.reminder_minutes;
+    const isPrivate = body.isPrivate ?? body.is_private;
+    const isInPerson = body.isInPerson ?? body.is_in_person;
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const result = await client.query(`
+        UPDATE outlook_calendar_events SET
+          subject = COALESCE($1, subject), location = COALESCE($2, location),
+          description = COALESCE($3, description), start_time = COALESCE($4, start_time),
+          end_time = COALESCE($5, end_time), is_all_day = COALESCE($6, is_all_day),
+          status = COALESCE($7, status), category = COALESCE($8, category),
+          event_color = COALESCE($9, event_color), is_recurring = COALESCE($10, is_recurring),
+          reminder_minutes = COALESCE($11, reminder_minutes), is_private = COALESCE($12, is_private),
+          is_in_person = COALESCE($13, is_in_person), updated_at = NOW()
+        WHERE id = $14 RETURNING *
+      `, [
+        body.subject, body.location, body.description, startTime, endTime,
+        isAllDay, body.status, body.category, eventColor, isRecurring,
+        reminderMinutes, isPrivate, isInPerson, id
+      ]);
+
+      if (result.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return c.json({ error: 'Event not found' }, 404);
+      }
+
+      // Update attendees if provided
+      if (Array.isArray(body.attendees)) {
+        await client.query('DELETE FROM outlook_event_attendees WHERE event_id = $1', [id]);
+        for (const attendee of body.attendees) {
+          const email = typeof attendee === 'string' ? attendee : attendee.email;
+          const name = typeof attendee === 'string' ? null : attendee.name;
+          await client.query('INSERT INTO outlook_event_attendees (event_id, attendee_email, attendee_name) VALUES ($1, $2, $3)', [id, email, name]);
+        }
+      }
+
+      // Update attachments if provided
+      if (Array.isArray(body.attachments)) {
+        await client.query('DELETE FROM outlook_event_attachments WHERE event_id = $1', [id]);
+        for (const att of body.attachments) {
+          await client.query('INSERT INTO outlook_event_attachments (event_id, file_name, file_path, file_size, mime_type, url) VALUES ($1, $2, $3, $4, $5, $6)', [id, att.fileName || att.file_name, att.filePath || att.file_path, att.fileSize || att.file_size || 0, att.mimeType || att.mime_type, att.url]);
+        }
+      }
+
+      // Update images if provided
+      if (Array.isArray(body.images)) {
+        await client.query('DELETE FROM outlook_event_images WHERE event_id = $1', [id]);
+        for (const img of body.images) {
+          await client.query('INSERT INTO outlook_event_images (event_id, file_name, file_path, file_size, mime_type, url, thumbnail_url) VALUES ($1, $2, $3, $4, $5, $6, $7)', [id, img.fileName || img.file_name, img.filePath || img.file_path, img.fileSize || img.file_size || 0, img.mimeType || img.mime_type || 'image/jpeg', img.url, img.thumbnailUrl || img.thumbnail_url]);
+        }
+      }
+
+      await client.query('COMMIT');
+      return c.json(mapEventRow(result.rows[0]));
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (err: any) {
+    return c.json({ error: 'Failed to update event', message: err.message }, 500);
+  }
+});
+
+// DELETE /api/v1/outlook/events/:id - Delete calendar event
+app.delete('/api/v1/outlook/events/:id', async (c) => {
+  try {
+    const pool = getContinuumPool();
+    const id = c.req.param('id');
+
+    const result = await pool.query('DELETE FROM outlook_calendar_events WHERE id = $1 RETURNING id', [id]);
+    if (result.rows.length === 0) {
+      return c.json({ error: 'Event not found' }, 404);
+    }
+
+    return c.json({ success: true, deleted: id });
+  } catch (err: any) {
+    return c.json({ error: 'Failed to delete event', message: err.message }, 500);
+  }
+});
+
+// ============================================================================
 // SERVER STARTUP
 // ============================================================================
 
@@ -482,6 +779,10 @@ async function start() {
     console.log('  GET  /api/users/:id/favorites         - Get user favorites');
     console.log('  GET  /api/domains/tlds                - Get available TLDs');
     console.log('  POST /api/activity                    - Log user activity');
+    console.log('  GET  /api/v1/outlook/events           - Get calendar events');
+    console.log('  POST /api/v1/outlook/events           - Create calendar event');
+    console.log('  PUT  /api/v1/outlook/events/:id       - Update calendar event');
+    console.log('  DELETE /api/v1/outlook/events/:id     - Delete calendar event');
   } catch (error) {
     console.error('Failed to start Continuum API:', error);
     process.exit(1);

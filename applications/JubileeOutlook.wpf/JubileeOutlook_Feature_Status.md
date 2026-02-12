@@ -1,8 +1,8 @@
 # JubileeOutlook Feature Status Report
 
 **Project:** JubileeOutlook Email Client
-**Version:** 1.7.0
-**Date:** January 21, 2026
+**Version:** 1.8.0
+**Date:** February 12, 2026
 **Platform:** WPF / .NET 9.0
 
 ---
@@ -151,6 +151,22 @@
 - [x] File attachments with size formatting
 - [x] Add/remove attachment commands
 - [x] Multi-file selection support
+
+#### Recurring Events
+- [x] "Make recurring" toggle in NewEventWindow
+- [x] Recurrence type selection: Daily, Weekly, Monthly, Yearly
+- [x] Recurrence interval (every N days/weeks/months/years)
+- [x] Day-of-week checkboxes for weekly recurrence
+- [x] End conditions: Never, On date, After N occurrences
+- [x] Client-side event expansion in CalendarViewModel
+- [x] 365-instance safety limit for recurring event generation
+- [x] Recurrence data persistence via API
+
+#### Timezone Handling
+- [x] UTC-to-local time conversion on event load (MapToCalendarEvent)
+- [x] Local-to-UTC time conversion on event save (MapToDto)
+- [x] Correct round-trip for all timezones (tested with IST UTC+5:30)
+- [x] PostgreSQL `timestamptz` column support
 
 #### Event Display & Positioning
 - [x] Event colors based on category selection
@@ -324,10 +340,13 @@
 
 | Component | Status |
 |-----------|--------|
-| AuthenticationManager | Class exists, not integrated |
-| SecureStorageService | DPAPI encryption ready, unused |
-| Auth Models | Defined but not used |
-| SSO endpoint | Configured but not connected |
+| AuthenticationManager | ✅ Integrated - email/password login, token refresh, session management |
+| SecureStorageService | ✅ Integrated - DPAPI encryption for tokens and credentials |
+| Auth Models | ✅ Integrated - AuthResponse, UserProfile, TokenStorage |
+| AuthenticationWindow | ✅ Complete - mandatory sign-in/sign-up gate with remember me |
+| OAuth2 Email Sync | ✅ Complete - Google, Microsoft, Yahoo OAuth2 flows |
+| OAuth Register API | ✅ Complete - Codex API endpoint for OAuth user creation |
+| SSO (Sign In with Gmail/Outlook) | Pending - OAuth infrastructure exists, needs UI buttons and flow wiring |
 
 ---
 
@@ -353,14 +372,18 @@
 | People View UI | High | ✅ Complete (PeopleView.xaml) |
 | People ViewModel | High | ✅ Complete (PeopleViewModel.cs) |
 | SetUserEmail Method | High | ✅ Complete |
-| Contact List Display | High | Pending API integration |
-| Contact Creation | High | Pending |
-| Contact Editing | High | Pending |
-| Contact Deletion | High | Pending |
-| Contact Search | Medium | Pending |
-| Contact Groups | Medium | Pending |
-| Contact Import/Export | Low | Pending |
-| Contact Sync | Medium | Pending API integration |
+| Contact List Display | High | ✅ Complete - Full API integration with Codex API |
+| Contact Creation | High | ✅ Complete - Create with validation and duplicate detection |
+| Contact Editing | High | ✅ Complete - Edit all fields with save to API |
+| Contact Deletion | High | ✅ Complete - Soft delete with restore and permanent delete |
+| Contact Search | Medium | ✅ Complete - Full-text search across name, email, phone, company |
+| Contact Groups | Medium | ✅ Complete - Create, rename, delete groups; add/remove members |
+| Contact Import/Export | Low | ✅ Complete - CSV and vCard import/export |
+| Contact Sync | Medium | ✅ Complete - SyncManager with offline queue and status UI |
+| Rate Limiting | Medium | ✅ Complete - RateLimitTracker with Retry-After header parsing |
+| Sync Status UI | Medium | ✅ Complete - Color-coded badge, pending count, manual sync button |
+| Context Menus | Low | ✅ Complete - Right-click actions for contacts and contact lists |
+| Keyboard Shortcuts | Low | ✅ Complete - Ctrl+N, Ctrl+F, Ctrl+E, Ctrl+I, Delete, F2, Escape |
 
 ### 3.3 Tasks Module
 

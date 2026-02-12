@@ -16,11 +16,11 @@
 | Qdrant | 6333 | Vector embeddings |
 
 ### APIs
-| API | Port |
-|-----|------|
-| Codex API | 4001 |
-| Inspire API | 4002 |
-| Continuum API | 4003 |
+| API | Port | Key Endpoints |
+|-----|------|---------------|
+| Codex API | 4001 | /api/auth/*, /api/contacts/*, /api/contact-groups/* |
+| Inspire API | 4002 | Content and conversations |
+| Continuum API | 4003 | /api/v1/outlook/events/*, /api/users/:id/settings |
 
 ### Websites
 | Website | Port |

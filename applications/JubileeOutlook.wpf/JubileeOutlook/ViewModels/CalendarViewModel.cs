@@ -211,18 +211,15 @@ public partial class CalendarViewModel : ObservableObject
                 // Expand recurring events into individual occurrences
                 var expandedEvents = ExpandRecurringEvents(visibleEvents, startDate, endDate);
 
-                // Update the Events collection
-                Events.Clear();
-                foreach (var evt in expandedEvents)
-                {
-                    Events.Add(evt);
-                }
+                // Replace the Events collection with a new instance to guarantee
+                // WPF's MultiBinding detects the property change (new reference)
+                Events = new ObservableCollection<CalendarEvent>(expandedEvents);
 
                 System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Updated visible events: {Events.Count} events for {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
             }
 
-            // Force property change notification to refresh bindings
-            OnPropertyChanged(nameof(Events));
+            // Force property change notification for VisibleDays to trigger
+            // MultiBinding converter re-evaluation in CalendarView
             OnPropertyChanged(nameof(VisibleDays));
         });
     }
@@ -674,11 +671,12 @@ public partial class CalendarViewModel : ObservableObject
                     await _calendarService.CreateEventAsync(viewModel.CreatedEvent);
                     System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] CreateEventAsync completed, event ID: {viewModel.CreatedEvent.Id}");
 
-                    // Add to cache and visible events
+                    // Add to cache and refresh visible events via UpdateVisibleEventsFromCache
+                    // to properly trigger MultiBinding converter re-evaluation in the CalendarView
                     AddEventToCache(viewModel.CreatedEvent);
-                    Events.Add(viewModel.CreatedEvent);
-                    System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Event added. Total events: {Events.Count}");
-                    OnPropertyChanged(nameof(Events));
+                    var (visStartDate, visEndDate) = GetVisibleDateRange();
+                    UpdateVisibleEventsFromCache(visStartDate, visEndDate);
+                    System.Diagnostics.Debug.WriteLine($"[CalendarViewModel] Event added and view refreshed. Total events: {Events.Count}");
 
                     NotificationService.Instance.ShowSuccess(
                         $"Event '{viewModel.CreatedEvent.Subject}' created successfully",
@@ -691,10 +689,10 @@ public partial class CalendarViewModel : ObservableObject
                         $"Failed to save event to server: {ResiliencePolicyService.GetFriendlyErrorMessage(ex)}",
                         "Create Event Error");
 
-                    // Still add locally for offline support (to cache and visible events)
+                    // Still add locally for offline support - refresh via UpdateVisibleEventsFromCache
                     AddEventToCache(viewModel.CreatedEvent);
-                    Events.Add(viewModel.CreatedEvent);
-                    OnPropertyChanged(nameof(Events));
+                    var (errStartDate, errEndDate) = GetVisibleDateRange();
+                    UpdateVisibleEventsFromCache(errStartDate, errEndDate);
                 }
                 finally
                 {
@@ -725,13 +723,8 @@ public partial class CalendarViewModel : ObservableObject
                         LoadingMessage = "Deleting event...";
                         await _calendarService.DeleteEventAsync(viewModel.CreatedEvent.Id);
 
-                        // Remove from cache and visible events
+                        // Remove from cache and refresh visible events
                         RemoveEventFromCache(viewModel.CreatedEvent.Id);
-                        var eventToRemove = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
-                        if (eventToRemove != null)
-                        {
-                            Events.Remove(eventToRemove);
-                        }
                         NotificationService.Instance.ShowSuccess(
                             $"Event '{viewModel.CreatedEvent.Subject}' deleted successfully",
                             "Event Deleted");
@@ -754,15 +747,8 @@ public partial class CalendarViewModel : ObservableObject
                         LoadingMessage = "Saving event...";
                         await _calendarService.UpdateEventAsync(viewModel.CreatedEvent);
 
-                        // Update cache and visible events
+                        // Update cache
                         AddEventToCache(viewModel.CreatedEvent);
-                        var existingEvent = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
-                        if (existingEvent != null)
-                        {
-                            var index = Events.IndexOf(existingEvent);
-                            Events.RemoveAt(index);
-                            Events.Insert(index, viewModel.CreatedEvent);
-                        }
                         NotificationService.Instance.ShowSuccess(
                             $"Event '{viewModel.CreatedEvent.Subject}' updated successfully",
                             "Event Updated");
@@ -780,15 +766,7 @@ public partial class CalendarViewModel : ObservableObject
                     // Apply changes locally anyway for offline support
                     if (!editEventWindow.IsDeleted)
                     {
-                        // Update cache and visible events locally
                         AddEventToCache(viewModel.CreatedEvent);
-                        var existingEvent = Events.FirstOrDefault(e => e.Id == viewModel.CreatedEvent.Id);
-                        if (existingEvent != null)
-                        {
-                            var index = Events.IndexOf(existingEvent);
-                            Events.RemoveAt(index);
-                            Events.Insert(index, viewModel.CreatedEvent);
-                        }
                     }
                 }
                 finally
@@ -797,7 +775,10 @@ public partial class CalendarViewModel : ObservableObject
                     LoadingMessage = string.Empty;
                 }
 
-                OnPropertyChanged(nameof(Events));
+                // Refresh visible events from cache to properly trigger
+                // MultiBinding converter re-evaluation in CalendarView
+                var (editStartDate, editEndDate) = GetVisibleDateRange();
+                UpdateVisibleEventsFromCache(editStartDate, editEndDate);
             }
         }
     }
@@ -891,8 +872,15 @@ public partial class CalendarViewModel : ObservableObject
         var dayEnd = day.Date.AddDays(1);
 
         var dayEvents = new ObservableCollection<CalendarEvent>(
-            Events.Where(e => e.StartTime >= dayStart && e.StartTime < dayEnd)
-                  .OrderBy(e => e.StartTime)
+            Events.Where(e =>
+            {
+                // Convert UTC to local time for proper date comparison
+                var localStartTime = e.StartTime.Kind == DateTimeKind.Utc
+                    ? e.StartTime.ToLocalTime()
+                    : e.StartTime;
+                return localStartTime >= dayStart && localStartTime < dayEnd;
+            })
+            .OrderBy(e => e.StartTime)
         );
 
         return dayEvents;
