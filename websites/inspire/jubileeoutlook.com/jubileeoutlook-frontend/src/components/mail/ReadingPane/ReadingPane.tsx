@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { EmailMessage } from '../../../types/mail';
 import './ReadingPane.css';
 
@@ -7,6 +7,41 @@ interface ReadingPaneProps {
 }
 
 const ReadingPane: React.FC<ReadingPaneProps> = ({ message }) => {
+  const handlePrint = useCallback(() => {
+    if (!message) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const from = message.from.name ? `${message.from.name} &lt;${message.from.address}&gt;` : message.from.address;
+    const to = message.to.map(r => r.name ? `${r.name} &lt;${r.address}&gt;` : r.address).join(', ');
+    const date = new Date(message.receivedAt).toLocaleString();
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html><head><title>${message.subject}</title>
+      <style>
+        body { font-family: Segoe UI, Arial, sans-serif; padding: 24px; color: #333; max-width: 800px; margin: 0 auto; }
+        .header { border-bottom: 2px solid #c5a05e; padding-bottom: 16px; margin-bottom: 16px; }
+        .subject { font-size: 20px; font-weight: 600; margin-bottom: 12px; }
+        .meta { font-size: 13px; color: #666; line-height: 1.6; }
+        .body { font-size: 14px; line-height: 1.6; }
+        @media print { body { padding: 0; } }
+      </style></head><body>
+      <div class="header">
+        <div class="subject">${message.subject}</div>
+        <div class="meta">
+          <div><strong>From:</strong> ${from}</div>
+          <div><strong>To:</strong> ${to}</div>
+          <div><strong>Date:</strong> ${date}</div>
+        </div>
+      </div>
+      <div class="body">${message.bodyHtml || message.bodyText || ''}</div>
+      </body></html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  }, [message]);
+
   if (!message) {
     return (
       <div className="reading-pane reading-pane--empty">
@@ -30,7 +65,12 @@ const ReadingPane: React.FC<ReadingPaneProps> = ({ message }) => {
   return (
     <div className="reading-pane">
       <div className="reading-pane__header">
-        <h2 className="reading-pane__subject">{message.subject}</h2>
+        <div className="reading-pane__header-top">
+          <h2 className="reading-pane__subject">{message.subject}</h2>
+          <button className="reading-pane__print-btn" onClick={handlePrint} title="Print">
+            <span className="material-symbols-outlined">print</span>
+          </button>
+        </div>
         <div className="reading-pane__meta">
           <div className="reading-pane__sender">
             <div className="reading-pane__avatar">

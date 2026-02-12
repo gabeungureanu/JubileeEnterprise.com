@@ -305,6 +305,67 @@ const MailPage: React.FC = () => {
     }
   }, [messages, selectedMessage]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if user is typing in an input/textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+
+      // Skip if compose is open (compose has its own shortcuts)
+      if (composeMode) return;
+
+      // Delete/Backspace → delete selected message
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedMessage) {
+        e.preventDefault();
+        handleDelete();
+        return;
+      }
+
+      // Ctrl+N → new email
+      if (e.ctrlKey && e.key === 'n') {
+        e.preventDefault();
+        handleOpenCompose('new');
+        return;
+      }
+
+      // Ctrl+R → reply (without Shift)
+      if (e.ctrlKey && !e.shiftKey && e.key === 'r' && selectedMessage) {
+        e.preventDefault();
+        handleOpenCompose('reply');
+        return;
+      }
+
+      // Ctrl+Shift+R → reply all
+      if (e.ctrlKey && e.shiftKey && e.key === 'R' && selectedMessage) {
+        e.preventDefault();
+        handleOpenCompose('replyAll');
+        return;
+      }
+
+      // Ctrl+F → forward
+      if (e.ctrlKey && e.key === 'f' && selectedMessage) {
+        e.preventDefault();
+        handleOpenCompose('forward');
+        return;
+      }
+
+      // Arrow Up/Down → navigate messages
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const currentIndex = messages.findIndex(m => m.id === selectedMessageId);
+        const nextIndex = e.key === 'ArrowDown' ? currentIndex + 1 : currentIndex - 1;
+        if (nextIndex >= 0 && nextIndex < messages.length) {
+          handleMessageSelect(messages[nextIndex].id);
+        }
+        return;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedMessage, selectedMessageId, messages, composeMode, handleDelete, handleOpenCompose, handleMessageSelect]);
+
   // Build MailContext value
   const mailContextValue: MailContextValue = {
     selectedMessage,

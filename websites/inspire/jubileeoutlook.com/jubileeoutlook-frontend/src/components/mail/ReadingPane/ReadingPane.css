@@ -28,11 +28,42 @@
   border-bottom: 1px solid var(--border-subtle);
 }
 
+.reading-pane__header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
 .reading-pane__subject {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-medium);
   color: var(--text-primary);
   margin-bottom: var(--spacing-md);
+  flex: 1;
+}
+
+.reading-pane__print-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.reading-pane__print-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.reading-pane__print-btn .material-symbols-outlined {
+  font-size: 18px;
 }
 
 .reading-pane__meta {

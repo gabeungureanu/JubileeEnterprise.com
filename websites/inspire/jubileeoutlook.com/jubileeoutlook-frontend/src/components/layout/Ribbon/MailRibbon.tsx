@@ -95,6 +95,22 @@ const MailRibbon: React.FC = () => {
           <span className="ribbon__label">Forward</span>
         </button>
       </div>
+
+      <div className="ribbon__separator" />
+
+      <div className="ribbon__group">
+        <button
+          className="ribbon__button"
+          title="Sync / Refresh"
+          onClick={() => {
+            mail?.refreshMessages();
+            mail?.refreshFolders();
+          }}
+        >
+          <span className="material-symbols-outlined">sync</span>
+          <span className="ribbon__label">Sync</span>
+        </button>
+      </div>
     </div>
   );
 };
