@@ -15,7 +15,6 @@ const TitleBar: React.FC = () => {
   const popupRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Close popup when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -64,6 +63,11 @@ const TitleBar: React.FC = () => {
     await logout();
   };
 
+  const handleManageAccount = () => {
+    setIsPopupOpen(false);
+    window.open('https://jubileeverse.com/account', '_blank');
+  };
+
   const getInitials = (): string => {
     if (!user?.displayName) return '?';
     const parts = user.displayName.split(' ');
@@ -99,49 +103,55 @@ const TitleBar: React.FC = () => {
         {isPopupOpen && (
           <div ref={popupRef} className="profile-popup">
             {isAuthenticated && user ? (
-              /* ===== Signed-In State ===== */
               <div className="profile-popup__signed-in">
-                <div className="profile-popup__user-section">
+                {/* User avatar with green ring */}
+                <div className="profile-popup__avatar-ring">
                   <div className="profile-popup__avatar">
                     {user.avatarUrl ? (
                       <img src={user.avatarUrl} alt={user.displayName} />
                     ) : (
-                      <span className="profile-popup__avatar-initials">{getInitials()}</span>
+                      <span className="material-symbols-outlined profile-popup__avatar-icon">
+                        person
+                      </span>
                     )}
                   </div>
-                  <div className="profile-popup__user-info">
-                    <span className="profile-popup__name">{user.displayName}</span>
-                    <span className="profile-popup__email">{user.email}</span>
-                  </div>
                 </div>
 
-                <div className="profile-popup__status-label">
+                {/* User name & email centered */}
+                <span className="profile-popup__name">{user.displayName}</span>
+                <span className="profile-popup__email">{user.email}</span>
+                <span className="profile-popup__status-label">
                   Signed in to your Jubilee account
-                </div>
+                </span>
 
+                {/* Sync status box */}
                 <div className="profile-popup__sync-status">
-                  <span className="material-symbols-outlined profile-popup__sync-icon">sync</span>
+                  <span className="material-symbols-outlined profile-popup__sync-icon">
+                    select_check_box
+                  </span>
                   <div className="profile-popup__sync-info">
                     <span className="profile-popup__sync-title">
                       {syncStatus.isSyncing ? 'Syncing...' : 'Syncing is on'}
                     </span>
                     <span className="profile-popup__sync-detail">
-                      {syncStatus.isSyncing
-                        ? 'Updating your data'
-                        : 'Your data is synced'}
+                      {syncStatus.isSyncing ? 'Updating your data' : 'Your data is synced'}
                     </span>
                   </div>
                 </div>
 
-                <div className="profile-popup__divider" />
-
-                <button className="profile-popup__action" onClick={handleSignOut}>
-                  <span className="material-symbols-outlined">logout</span>
-                  <span>Sign out</span>
-                </button>
+                {/* Action buttons */}
+                <div className="profile-popup__actions">
+                  <button className="profile-popup__action" onClick={handleManageAccount}>
+                    <span className="material-symbols-outlined">badge</span>
+                    <span>Manage Account</span>
+                  </button>
+                  <button className="profile-popup__action" onClick={handleSignOut}>
+                    <span className="material-symbols-outlined">bluetooth</span>
+                    <span>Sign Out</span>
+                  </button>
+                </div>
               </div>
             ) : (
-              /* ===== Signed-Out State ===== */
               <div className="profile-popup__signed-out">
                 {!showLoginForm ? (
                   <>
