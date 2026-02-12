@@ -10,7 +10,8 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; error?: string }>;
+  register: (fullName: string, email: string, password: string, newsletter?: boolean) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 }
 
@@ -36,10 +37,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [state.isAuthenticated, state.user]);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, rememberMe: boolean = true) => {
     try {
       const response = await authService.login(email, password);
       if (response.success && response.user) {
+        // Store remember me preference
+        if (rememberMe) {
+          localStorage.setItem('jubilee_remember_email', email);
+          localStorage.setItem('jubilee_remember_token', 'true');
+        } else {
+          localStorage.removeItem('jubilee_remember_email');
+          localStorage.removeItem('jubilee_remember_token');
+        }
         setState({ user: response.user, isAuthenticated: true, isLoading: false });
         return { success: true };
       }
@@ -49,13 +58,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  const register = useCallback(async (fullName: string, email: string, password: string, newsletter: boolean = false) => {
+    try {
+      const response = await authService.register(fullName, email, password, newsletter);
+      if (response.success && response.user) {
+        // Auto-save credentials after registration
+        localStorage.setItem('jubilee_remember_email', email);
+        localStorage.setItem('jubilee_remember_token', 'true');
+        setState({ user: response.user, isAuthenticated: true, isLoading: false });
+        return { success: true };
+      }
+      return { success: false, error: response.error || 'Registration failed' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Registration failed' };
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     await authService.logout();
+    localStorage.removeItem('jubilee_remember_email');
+    localStorage.removeItem('jubilee_remember_token');
     setState({ user: null, isAuthenticated: false, isLoading: false });
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...state, login, logout }}>
+    <AuthContext.Provider value={{ ...state, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

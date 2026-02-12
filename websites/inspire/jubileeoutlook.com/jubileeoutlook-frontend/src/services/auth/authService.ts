@@ -26,12 +26,12 @@ export const authService = {
     return data;
   },
 
-  async register(fullName: string, email: string, password: string): Promise<LoginResponse> {
+  async register(fullName: string, email: string, password: string, newsletter: boolean = false): Promise<LoginResponse> {
     const response = await codexClient.post<LoginResponse>('/auth/register', {
       fullName,
       email,
       password,
-      newsletter: false,
+      newsletter,
       deviceInfo: {
         deviceId: crypto.randomUUID(),
         deviceName: navigator.userAgent.slice(0, 50),
