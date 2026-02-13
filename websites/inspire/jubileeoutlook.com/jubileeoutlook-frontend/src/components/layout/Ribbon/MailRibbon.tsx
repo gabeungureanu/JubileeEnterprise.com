@@ -121,6 +121,29 @@ const MailRibbon: React.FC = () => {
           <span className="ribbon__label">Sync</span>
         </button>
       </div>
+
+      <div className="ribbon__separator" />
+
+      <div className="ribbon__group">
+        <button
+          className={`ribbon__button ${mail?.isGlobalSearch ? 'ribbon__button--active' : ''}`}
+          title={mail?.isGlobalSearch ? 'Search current folder only' : 'Search all folders'}
+          onClick={() => mail?.toggleGlobalSearch()}
+        >
+          <span className="material-symbols-outlined">
+            {mail?.isGlobalSearch ? 'travel_explore' : 'search'}
+          </span>
+          <span className="ribbon__label">{mail?.isGlobalSearch ? 'All Folders' : 'Search'}</span>
+        </button>
+        <button
+          className="ribbon__button"
+          title="Toggle Folder Pane"
+          onClick={() => mail?.toggleFolderPane()}
+        >
+          <span className="material-symbols-outlined">view_sidebar</span>
+          <span className="ribbon__label">Folders</span>
+        </button>
+      </div>
     </div>
   );
 };

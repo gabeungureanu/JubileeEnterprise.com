@@ -59,6 +59,11 @@
   pointer-events: none;
 }
 
+.ribbon__button--active {
+  background-color: var(--gold-highlight);
+  color: var(--gold-primary);
+}
+
 .ribbon__button--primary {
   background-color: var(--gold-primary);
   color: var(--text-inverse);

@@ -1,0 +1,29 @@
+.resize-handle--horizontal {
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+  transition: background-color 0.15s;
+}
+
+.resize-handle--horizontal:hover,
+.resize-handle--horizontal:active {
+  background-color: var(--gold-primary, #c8a951);
+}
+
+.resize-handle--vertical {
+  height: 4px;
+  cursor: row-resize;
+  background: transparent;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+  transition: background-color 0.15s;
+}
+
+.resize-handle--vertical:hover,
+.resize-handle--vertical:active {
+  background-color: var(--gold-primary, #c8a951);
+}

@@ -23,6 +23,11 @@ export interface MailContextValue {
   // Search
   searchMessages: (query: string) => Promise<void>;
   clearSearch: () => void;
+  isGlobalSearch: boolean;
+  toggleGlobalSearch: () => void;
+
+  // View
+  toggleFolderPane: () => void;
 
   // Refresh
   refreshMessages: () => Promise<void>;

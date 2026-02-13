@@ -8,6 +8,7 @@ interface FolderPaneProps {
   selectedFolderId: string | null;
   onFolderSelect: (folderId: string) => void;
   onFoldersChanged?: () => void;
+  onDropMessages?: (messageIds: string[], targetFolderId: string) => void;
 }
 
 interface ContextMenuState {
@@ -17,8 +18,9 @@ interface ContextMenuState {
   folder: MailFolder | null;
 }
 
-const FolderPane: React.FC<FolderPaneProps> = ({ folders, selectedFolderId, onFolderSelect, onFoldersChanged }) => {
+const FolderPane: React.FC<FolderPaneProps> = ({ folders, selectedFolderId, onFolderSelect, onFoldersChanged, onDropMessages }) => {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({ visible: false, x: 0, y: 0, folder: null });
   const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -151,10 +153,31 @@ const FolderPane: React.FC<FolderPaneProps> = ({ folders, selectedFolderId, onFo
     return (
       <div key={folder.id}>
         <div
-          className={`folder-pane__item ${selectedFolderId === folder.id ? 'folder-pane__item--selected' : ''}`}
+          className={`folder-pane__item ${selectedFolderId === folder.id ? 'folder-pane__item--selected' : ''} ${dragOverFolderId === folder.id ? 'folder-pane__item--drag-over' : ''}`}
           style={{ paddingLeft: `${12 + depth * 16}px` }}
           onClick={() => !isRenaming && onFolderSelect(folder.id)}
           onContextMenu={(e) => handleContextMenu(e, folder)}
+          onDragOver={(e) => {
+            if (e.dataTransfer.types.includes('application/x-mail-ids')) {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              setDragOverFolderId(folder.id);
+            }
+          }}
+          onDragLeave={() => setDragOverFolderId(null)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOverFolderId(null);
+            const data = e.dataTransfer.getData('application/x-mail-ids');
+            if (data && onDropMessages) {
+              try {
+                const ids: string[] = JSON.parse(data);
+                if (ids.length > 0 && folder.id !== selectedFolderId) {
+                  onDropMessages(ids, folder.id);
+                }
+              } catch { /* invalid data */ }
+            }
+          }}
         >
           {hasChildren && (
             <span
