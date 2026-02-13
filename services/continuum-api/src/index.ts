@@ -27,7 +27,7 @@ import { initializePools, closePools, checkAllHealth, getContinuumPool } from '@
 import * as continuum from '@jubilee/database/continuum';
 import { ImapFlow } from 'imapflow';
 import * as nodemailer from 'nodemailer';
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 
 const app = new Hono();
 
@@ -1296,7 +1296,7 @@ app.post('/api/v1/outlook/folders', async (c) => {
     );
     const displayOrder = orderResult.rows[0].next_order;
 
-    const folderId = createHash('sha256').update(`folder-${accountId}-${name}-${Date.now()}`).digest('hex').substring(0, 36);
+    const folderId = randomUUID();
 
     await pool.query(
       `INSERT INTO outlook_email_folders (id, account_id, name, folder_type, external_folder_id, display_order, is_system, parent_folder_id, icon)
@@ -1993,7 +1993,7 @@ app.post('/api/v1/outlook/messages/send', async (c) => {
 
     if (sentFolder.rows.length > 0) {
       const sentFolderId = sentFolder.rows[0].id;
-      const messageId = createHash('sha256').update(`${info.messageId}-${Date.now()}`).digest('hex').substring(0, 36);
+      const messageId = randomUUID();
 
       await pool.query(
         `INSERT INTO outlook_email_messages
@@ -2014,7 +2014,7 @@ app.post('/api/v1/outlook/messages/send', async (c) => {
       // Insert recipients for the sent copy
       for (const r of recipients) {
         await pool.query(
-          `INSERT INTO outlook_email_recipients (message_id, email_address, display_name, recipient_type)
+          `INSERT INTO outlook_email_recipients (message_id, email, name, recipient_type)
            VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
           [messageId, r.email, r.name || '', r.type || 'to']
         );
@@ -2081,7 +2081,7 @@ app.post('/api/v1/outlook/messages/draft', async (c) => {
       await pool.query('DELETE FROM outlook_email_recipients WHERE message_id = $1', [draftId]);
     } else {
       // Create new draft
-      draftId = createHash('sha256').update(`draft-${userId}-${Date.now()}-${Math.random()}`).digest('hex').substring(0, 36);
+      draftId = randomUUID();
 
       await pool.query(
         `INSERT INTO outlook_email_messages
@@ -2101,7 +2101,7 @@ app.post('/api/v1/outlook/messages/draft', async (c) => {
     if (recipients?.length) {
       for (const r of recipients) {
         await pool.query(
-          `INSERT INTO outlook_email_recipients (message_id, email_address, display_name, recipient_type)
+          `INSERT INTO outlook_email_recipients (message_id, email, name, recipient_type)
            VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
           [draftId, r.email, r.name || '', r.type || 'to']
         );

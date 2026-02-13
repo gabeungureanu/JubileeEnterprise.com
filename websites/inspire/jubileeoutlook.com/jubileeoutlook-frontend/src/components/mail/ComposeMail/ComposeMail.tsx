@@ -239,7 +239,8 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
 
       onSent();
     } catch (err: any) {
-      setSendError(err.message || 'Failed to send email');
+      const serverMsg = err.response?.data?.message || err.response?.data?.error;
+      setSendError(serverMsg || err.message || 'Failed to send email');
     } finally {
       setSending(false);
     }
