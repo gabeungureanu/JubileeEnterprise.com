@@ -145,45 +145,6 @@ const MailPage: React.FC = () => {
     };
   }, [selectedFolderId, searchQuery, currentPage]);
 
-  // Handle message selection - fetch full message and mark as read
-  const handleMessageSelect = useCallback(async (messageId: string) => {
-    setSelectedMessageId(messageId);
-
-    const listMsg = messages.find(m => m.id === messageId);
-    if (listMsg) {
-      setSelectedMessage(listMsg);
-    }
-
-    try {
-      const fullMessage = await mailService.getMessage(messageId);
-      if (fullMessage) {
-        setSelectedMessage(fullMessage);
-
-        if (!fullMessage.isRead) {
-          await mailService.markAsRead(messageId, true);
-          setMessages(prev =>
-            prev.map(m => m.id === messageId ? { ...m, isRead: true } : m)
-          );
-        }
-      }
-    } catch {
-      showToast('Failed to load message details', 'error');
-    }
-  }, [messages, showToast]);
-
-  // Handle folder selection
-  const handleFolderSelect = useCallback((folderId: string) => {
-    setSearchQuery('');
-    setIsSearching(false);
-    setCurrentPage(1);
-    setSelectedFolderId(folderId);
-  }, []);
-
-  // Handle page change
-  const handlePageChange = useCallback((page: number) => {
-    setCurrentPage(page);
-  }, []);
-
   // Refresh folder counts from API
   const refreshFolders = useCallback(async () => {
     try {
@@ -208,6 +169,47 @@ const MailPage: React.FC = () => {
       setLoadingMessages(false);
     }
   }, [selectedFolderId, currentPage, showToast]);
+
+  // Handle message selection - fetch full message and mark as read
+  const handleMessageSelect = useCallback(async (messageId: string) => {
+    setSelectedMessageId(messageId);
+
+    const listMsg = messages.find(m => m.id === messageId);
+    if (listMsg) {
+      setSelectedMessage(listMsg);
+    }
+
+    try {
+      const fullMessage = await mailService.getMessage(messageId);
+      if (fullMessage) {
+        setSelectedMessage(fullMessage);
+
+        if (!fullMessage.isRead) {
+          await mailService.markAsRead(messageId, true);
+          setMessages(prev =>
+            prev.map(m => m.id === messageId ? { ...m, isRead: true } : m)
+          );
+          // Refresh folder counts to update unread badges
+          refreshFolders();
+        }
+      }
+    } catch {
+      showToast('Failed to load message details', 'error');
+    }
+  }, [messages, refreshFolders, showToast]);
+
+  // Handle folder selection
+  const handleFolderSelect = useCallback((folderId: string) => {
+    setSearchQuery('');
+    setIsSearching(false);
+    setCurrentPage(1);
+    setSelectedFolderId(folderId);
+  }, []);
+
+  // Handle page change
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+  }, []);
 
   // Delete message handler (smart: move-to-trash or hard delete)
   const handleDelete = useCallback(async () => {

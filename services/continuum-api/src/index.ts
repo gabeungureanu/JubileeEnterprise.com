@@ -1891,10 +1891,33 @@ app.patch('/api/v1/outlook/messages/:id', async (c) => {
     }
 
     values.push(messageId);
+
+    // Get the message's folder_id before updating (needed to recalculate folder counts)
+    const msgResult = await pool.query(
+      'SELECT folder_id FROM outlook_email_messages WHERE id = $1', [messageId]
+    );
+    const oldFolderId = msgResult.rows[0]?.folder_id;
+
     await pool.query(
       `UPDATE outlook_email_messages SET ${updates.join(', ')} WHERE id = $${paramIndex}`,
       values
     );
+
+    // Recalculate unread/total counts for affected folders
+    const affectedFolderIds = new Set<string>();
+    if (oldFolderId) affectedFolderIds.add(oldFolderId);
+    if (body.folder_id) affectedFolderIds.add(body.folder_id);
+
+    for (const fid of affectedFolderIds) {
+      const countResult = await pool.query(
+        'SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE is_read = false) as unread FROM outlook_email_messages WHERE folder_id = $1',
+        [fid]
+      );
+      await pool.query(
+        'UPDATE outlook_email_folders SET total_count = $1, unread_count = $2 WHERE id = $3',
+        [parseInt(countResult.rows[0].total), parseInt(countResult.rows[0].unread), fid]
+      );
+    }
 
     return c.json({ success: true });
   } catch (err: any) {
@@ -1913,6 +1936,20 @@ app.delete('/api/v1/outlook/messages/:id', async (c) => {
     if (result.rows.length === 0) {
       return c.json({ error: 'Message not found' }, 404);
     }
+
+    // Recalculate folder counts after deletion
+    const folderId = result.rows[0].folder_id;
+    if (folderId) {
+      const countResult = await pool.query(
+        'SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE is_read = false) as unread FROM outlook_email_messages WHERE folder_id = $1',
+        [folderId]
+      );
+      await pool.query(
+        'UPDATE outlook_email_folders SET total_count = $1, unread_count = $2 WHERE id = $3',
+        [parseInt(countResult.rows[0].total), parseInt(countResult.rows[0].unread), folderId]
+      );
+    }
+
     return c.json({ success: true, deleted: messageId });
   } catch (err: any) {
     return c.json({ error: 'Failed to delete message', message: err.message }, 500);
