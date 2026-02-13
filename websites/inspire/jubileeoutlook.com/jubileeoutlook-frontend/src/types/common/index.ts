@@ -1,4 +1,4 @@
-export type AppModule = 'mail' | 'calendar' | 'people';
+export type AppModule = 'mail' | 'calendar' | 'people' | 'settings';
 
 export interface User {
   id: string;

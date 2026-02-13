@@ -6,6 +6,7 @@ import StatusBar from '../StatusBar';
 import MailPage from '../../../pages/Mail/MailPage';
 import CalendarPage from '../../../pages/Calendar/CalendarPage';
 import PeoplePage from '../../../pages/People/PeoplePage';
+import SettingsPage from '../../../pages/Settings/SettingsPage';
 import './AppLayout.css';
 
 const AppLayout: React.FC = () => {
@@ -19,6 +20,8 @@ const AppLayout: React.FC = () => {
         return <CalendarPage />;
       case 'people':
         return <PeoplePage />;
+      case 'settings':
+        return <SettingsPage />;
       default:
         return <MailPage />;
     }

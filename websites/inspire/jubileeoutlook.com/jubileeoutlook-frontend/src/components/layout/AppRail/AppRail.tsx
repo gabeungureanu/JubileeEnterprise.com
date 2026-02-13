@@ -40,7 +40,11 @@ const AppRail: React.FC = () => {
       </div>
 
       <div className="app-rail__bottom">
-        <button className="app-rail__button" title="Settings">
+        <button
+          className={`app-rail__button ${activeModule === 'settings' ? 'app-rail__module--active' : ''}`}
+          title="Settings"
+          onClick={() => setActiveModule('settings')}
+        >
           <span className="material-symbols-outlined">settings</span>
         </button>
       </div>
