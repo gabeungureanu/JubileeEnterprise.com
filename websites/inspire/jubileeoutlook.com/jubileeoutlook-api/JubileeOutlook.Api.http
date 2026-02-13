@@ -1,6 +1,0 @@
-@JubileeOutlook.Api_HostAddress = http://localhost:5230
-
-GET {{JubileeOutlook.Api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
