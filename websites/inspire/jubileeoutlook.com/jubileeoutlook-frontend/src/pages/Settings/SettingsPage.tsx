@@ -4,10 +4,11 @@ import { emailSyncService, ProviderInfo } from '../../services/mail/emailSyncSer
 import { tokenStore } from '../../services/apiClient';
 import { signatureService, EmailSignature } from '../../services/mail/signatureService';
 import { notificationService } from '../../services/mail/notificationService';
+import { rulesService, EmailRule, RuleCondition, RuleAction, RuleConditionField, RuleConditionOp, RuleActionType } from '../../services/mail/rulesService';
 import SettingsRibbon from '../../components/layout/Ribbon/SettingsRibbon';
 import './SettingsPage.css';
 
-type SettingsTab = 'accounts' | 'signatures' | 'sync' | 'general';
+type SettingsTab = 'accounts' | 'signatures' | 'rules' | 'sync' | 'general';
 
 interface AccountInfo {
   id: string;
@@ -47,6 +48,15 @@ const SettingsPage: React.FC = () => {
   // Notification state
   const [notificationsEnabled, setNotificationsEnabled] = useState(notificationService.isEnabled());
 
+  // Rules state
+  const [rules, setRules] = useState<EmailRule[]>([]);
+  const [showRuleForm, setShowRuleForm] = useState(false);
+  const [editingRule, setEditingRule] = useState<EmailRule | null>(null);
+  const [ruleName, setRuleName] = useState('');
+  const [ruleMatchAll, setRuleMatchAll] = useState(true);
+  const [ruleConditions, setRuleConditions] = useState<RuleCondition[]>([{ field: 'from', operator: 'contains', value: '' }]);
+  const [ruleActions, setRuleActions] = useState<RuleAction[]>([{ type: 'markAsRead' }]);
+
   const loadAccounts = useCallback(async () => {
     const userId = tokenStore.getUserId();
     if (!userId) return;
@@ -64,6 +74,7 @@ const SettingsPage: React.FC = () => {
   useEffect(() => {
     loadAccounts();
     setSignatures(signatureService.getAll());
+    setRules(rulesService.getAll());
   }, [loadAccounts]);
 
   const handleDetectProvider = async () => {
@@ -180,9 +191,78 @@ const SettingsPage: React.FC = () => {
     setSignatures(signatureService.getAll());
   };
 
+  // Rule handlers
+  const openRuleForm = (rule?: EmailRule) => {
+    if (rule) {
+      setEditingRule(rule);
+      setRuleName(rule.name);
+      setRuleMatchAll(rule.matchAll);
+      setRuleConditions([...rule.conditions]);
+      setRuleActions([...rule.actions]);
+    } else {
+      setEditingRule(null);
+      setRuleName('');
+      setRuleMatchAll(true);
+      setRuleConditions([{ field: 'from', operator: 'contains', value: '' }]);
+      setRuleActions([{ type: 'markAsRead' }]);
+    }
+    setShowRuleForm(true);
+  };
+
+  const closeRuleForm = () => {
+    setShowRuleForm(false);
+    setEditingRule(null);
+  };
+
+  const handleSaveRule = () => {
+    if (!ruleName.trim() || ruleConditions.length === 0) return;
+    if (editingRule) {
+      rulesService.update(editingRule.id, { name: ruleName.trim(), matchAll: ruleMatchAll, conditions: ruleConditions, actions: ruleActions });
+    } else {
+      rulesService.create({ name: ruleName.trim(), enabled: true, matchAll: ruleMatchAll, conditions: ruleConditions, actions: ruleActions });
+    }
+    setRules(rulesService.getAll());
+    closeRuleForm();
+  };
+
+  const handleDeleteRule = (id: string) => {
+    rulesService.remove(id);
+    setRules(rulesService.getAll());
+  };
+
+  const handleToggleRule = (id: string) => {
+    rulesService.toggleEnabled(id);
+    setRules(rulesService.getAll());
+  };
+
+  const updateCondition = (index: number, updates: Partial<RuleCondition>) => {
+    setRuleConditions((prev) => prev.map((c, i) => (i === index ? { ...c, ...updates } : c)));
+  };
+
+  const addCondition = () => {
+    setRuleConditions((prev) => [...prev, { field: 'from' as RuleConditionField, operator: 'contains' as RuleConditionOp, value: '' }]);
+  };
+
+  const removeCondition = (index: number) => {
+    setRuleConditions((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateAction = (index: number, updates: Partial<RuleAction>) => {
+    setRuleActions((prev) => prev.map((a, i) => (i === index ? { ...a, ...updates } : a)));
+  };
+
+  const addAction = () => {
+    setRuleActions((prev) => [...prev, { type: 'markAsRead' as RuleActionType }]);
+  };
+
+  const removeAction = (index: number) => {
+    setRuleActions((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const tabs: { id: SettingsTab; icon: string; label: string }[] = [
     { id: 'accounts', icon: 'account_circle', label: 'Accounts' },
     { id: 'signatures', icon: 'draw', label: 'Signatures' },
+    { id: 'rules', icon: 'filter_alt', label: 'Rules' },
     { id: 'sync', icon: 'sync', label: 'Sync Options' },
     { id: 'general', icon: 'tune', label: 'General' },
   ];
@@ -452,6 +532,173 @@ const SettingsPage: React.FC = () => {
     </div>
   );
 
+  const renderRules = () => (
+    <div className="settings-page__section">
+      <h2 className="settings-page__section-title">Email Rules</h2>
+      <p className="settings-page__section-desc">
+        Create rules to automatically organize incoming emails based on conditions.
+      </p>
+
+      {rules.length === 0 && !showRuleForm ? (
+        <div className="settings-page__empty">
+          <span className="material-symbols-outlined">filter_alt</span>
+          <span className="settings-page__empty-text">No rules created yet</span>
+          <button className="settings-page__btn settings-page__btn--primary" onClick={() => openRuleForm()}>
+            Create Rule
+          </button>
+        </div>
+      ) : (
+        <div className="settings-page__accounts">
+          {rules.map((rule) => (
+            <div key={rule.id} className="settings-page__account-card">
+              <div className="settings-page__account-icon" style={{ background: rule.enabled ? 'var(--accent-blue)' : 'var(--bg-hover)' }}>
+                <span className="material-symbols-outlined" style={{ color: rule.enabled ? '#fff' : 'var(--text-secondary)' }}>filter_alt</span>
+              </div>
+              <div className="settings-page__account-info">
+                <div className="settings-page__account-email">{rule.name}</div>
+                <div className="settings-page__account-provider">
+                  {rule.conditions.length} condition{rule.conditions.length !== 1 ? 's' : ''}, {rule.actions.length} action{rule.actions.length !== 1 ? 's' : ''}
+                  {' '}&middot; {rule.enabled ? 'Active' : 'Disabled'}
+                </div>
+              </div>
+              <div className="settings-page__account-actions">
+                <label className="settings-page__toggle" style={{ marginRight: 4 }}>
+                  <input type="checkbox" checked={rule.enabled} onChange={() => handleToggleRule(rule.id)} />
+                  <span className="settings-page__toggle-slider" />
+                </label>
+                <button className="settings-page__icon-btn" title="Edit rule" onClick={() => openRuleForm(rule)}>
+                  <span className="material-symbols-outlined">edit</span>
+                </button>
+                <button className="settings-page__icon-btn settings-page__icon-btn--danger" title="Delete rule" onClick={() => handleDeleteRule(rule.id)}>
+                  <span className="material-symbols-outlined">delete</span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="settings-page__add-account">
+        {!showRuleForm ? (
+          <button className="settings-page__add-btn" onClick={() => openRuleForm()}>
+            <span className="material-symbols-outlined">add</span>
+            Create new rule
+          </button>
+        ) : (
+          <div className="settings-page__form">
+            <div className="settings-page__form-row">
+              <label className="settings-page__form-label">Rule Name</label>
+              <input
+                type="text"
+                className="settings-page__form-input"
+                placeholder="e.g. Move newsletters to folder"
+                value={ruleName}
+                onChange={(e) => setRuleName(e.target.value)}
+              />
+            </div>
+
+            <div className="settings-page__form-row">
+              <label className="settings-page__form-label">
+                Match {' '}
+                <select
+                  className="settings-page__select"
+                  value={ruleMatchAll ? 'all' : 'any'}
+                  onChange={(e) => setRuleMatchAll(e.target.value === 'all')}
+                  style={{ display: 'inline', width: 'auto' }}
+                >
+                  <option value="all">all</option>
+                  <option value="any">any</option>
+                </select>
+                {' '} of the following conditions:
+              </label>
+              {ruleConditions.map((cond, idx) => (
+                <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6 }}>
+                  <select className="settings-page__select" value={cond.field} onChange={(e) => updateCondition(idx, { field: e.target.value as RuleConditionField })}>
+                    <option value="from">From</option>
+                    <option value="to">To</option>
+                    <option value="subject">Subject</option>
+                    <option value="hasAttachment">Has Attachment</option>
+                  </select>
+                  {cond.field !== 'hasAttachment' && (
+                    <>
+                      <select className="settings-page__select" value={cond.operator} onChange={(e) => updateCondition(idx, { operator: e.target.value as RuleConditionOp })}>
+                        <option value="contains">contains</option>
+                        <option value="equals">equals</option>
+                        <option value="startsWith">starts with</option>
+                        <option value="endsWith">ends with</option>
+                      </select>
+                      <input
+                        type="text"
+                        className="settings-page__form-input"
+                        placeholder="Value"
+                        value={cond.value}
+                        onChange={(e) => updateCondition(idx, { value: e.target.value })}
+                        style={{ flex: 1 }}
+                      />
+                    </>
+                  )}
+                  {ruleConditions.length > 1 && (
+                    <button className="settings-page__icon-btn settings-page__icon-btn--danger" onClick={() => removeCondition(idx)}>
+                      <span className="material-symbols-outlined">close</span>
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button className="settings-page__add-btn" onClick={addCondition} style={{ marginTop: 4 }}>
+                <span className="material-symbols-outlined">add</span> Add condition
+              </button>
+            </div>
+
+            <div className="settings-page__form-row">
+              <label className="settings-page__form-label">Actions:</label>
+              {ruleActions.map((action, idx) => (
+                <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6 }}>
+                  <select className="settings-page__select" value={action.type} onChange={(e) => updateAction(idx, { type: e.target.value as RuleActionType })}>
+                    <option value="markAsRead">Mark as Read</option>
+                    <option value="flag">Flag message</option>
+                    <option value="delete">Delete message</option>
+                    <option value="moveToFolder">Move to folder</option>
+                  </select>
+                  {action.type === 'moveToFolder' && (
+                    <input
+                      type="text"
+                      className="settings-page__form-input"
+                      placeholder="Folder ID"
+                      value={action.folderId || ''}
+                      onChange={(e) => updateAction(idx, { folderId: e.target.value })}
+                      style={{ flex: 1 }}
+                    />
+                  )}
+                  {ruleActions.length > 1 && (
+                    <button className="settings-page__icon-btn settings-page__icon-btn--danger" onClick={() => removeAction(idx)}>
+                      <span className="material-symbols-outlined">close</span>
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button className="settings-page__add-btn" onClick={addAction} style={{ marginTop: 4 }}>
+                <span className="material-symbols-outlined">add</span> Add action
+              </button>
+            </div>
+
+            <div className="settings-page__form-actions">
+              <button
+                className="settings-page__btn settings-page__btn--primary"
+                disabled={!ruleName.trim() || ruleConditions.some((c) => c.field !== 'hasAttachment' && !c.value.trim())}
+                onClick={handleSaveRule}
+              >
+                {editingRule ? 'Update Rule' : 'Save Rule'}
+              </button>
+              <button className="settings-page__btn settings-page__btn--secondary" onClick={closeRuleForm}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   const renderSyncOptions = () => (
     <div className="settings-page__section">
       <h2 className="settings-page__section-title">Sync Options</h2>
@@ -628,6 +875,8 @@ const SettingsPage: React.FC = () => {
         return renderAccounts();
       case 'signatures':
         return renderSignatures();
+      case 'rules':
+        return renderRules();
       case 'sync':
         return renderSyncOptions();
       case 'general':
