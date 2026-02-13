@@ -440,3 +440,60 @@
   background-color: var(--border-subtle);
   margin: 4px 0;
 }
+
+/* ===== Conversation/Thread View ===== */
+.message-list__conversation {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.message-list__item--conversation {
+  border-bottom: none;
+}
+
+.message-list__expand-icon {
+  font-size: 18px !important;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.message-list__conv-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.message-list__thread-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--accent-blue);
+  color: #ffffff;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+}
+
+.message-list__item--thread-child {
+  padding-left: 24px !important;
+  border-bottom: none;
+  background: var(--bg-secondary);
+}
+
+.message-list__item--thread-child:hover {
+  background: var(--bg-hover);
+}
+
+.message-list__thread-line {
+  width: 2px;
+  height: 100%;
+  min-height: 16px;
+  background: var(--border-secondary);
+  border-radius: 1px;
+  margin: 0 7px;
+}

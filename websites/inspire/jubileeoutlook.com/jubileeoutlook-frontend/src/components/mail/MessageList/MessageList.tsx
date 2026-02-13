@@ -30,7 +30,36 @@ const SORT_OPTIONS: SortOption[] = [
   { value: 'sender', label: 'Sender' },
   { value: 'subject', label: 'Subject' },
   { value: 'unread', label: 'Unread first' },
+  { value: 'conversation', label: 'Conversations' },
 ];
+
+interface ConversationGroup {
+  conversationId: string;
+  messages: EmailMessage[];
+  latestDate: string;
+  hasUnread: boolean;
+}
+
+function groupByConversation(msgs: EmailMessage[]): ConversationGroup[] {
+  const map: Record<string, EmailMessage[]> = {};
+  for (const msg of msgs) {
+    const key = msg.conversationId || msg.id;
+    if (!map[key]) map[key] = [];
+    map[key].push(msg);
+  }
+  const groups: ConversationGroup[] = Object.keys(map).map((convId) => {
+    const convMsgs = map[convId];
+    convMsgs.sort((a: EmailMessage, b: EmailMessage) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
+    return {
+      conversationId: convId,
+      messages: convMsgs,
+      latestDate: convMsgs[0].receivedAt,
+      hasUnread: convMsgs.some((m: EmailMessage) => !m.isRead),
+    };
+  });
+  groups.sort((a, b) => new Date(b.latestDate).getTime() - new Date(a.latestDate).getTime());
+  return groups;
+}
 
 const MessageList: React.FC<MessageListProps> = ({
   messages, selectedMessageId, onMessageSelect, onToggleFlag, onSearch, loading, folderName,
@@ -42,8 +71,21 @@ const MessageList: React.FC<MessageListProps> = ({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; messageId: string } | null>(null);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [expandedConvos, setExpandedConvos] = useState<Set<string>>(new Set());
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+  const isConversationView = sortBy === 'conversation';
+  const conversations = isConversationView ? groupByConversation(messages) : [];
+
+  const toggleConversation = useCallback((convId: string) => {
+    setExpandedConvos((prev) => {
+      const next = new Set(prev);
+      if (next.has(convId)) next.delete(convId);
+      else next.add(convId);
+      return next;
+    });
+  }, []);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const showPagination = totalCount > pageSize;
@@ -254,7 +296,7 @@ const MessageList: React.FC<MessageListProps> = ({
             <span>No messages in this folder</span>
           </div>
         )}
-        {!loading && messages.map((msg) => (
+        {!loading && !isConversationView && messages.map((msg) => (
           <div
             key={msg.id}
             className={`message-list__item ${
@@ -305,6 +347,83 @@ const MessageList: React.FC<MessageListProps> = ({
             </div>
           </div>
         ))}
+
+        {/* Conversation/Thread View */}
+        {!loading && isConversationView && conversations.map((conv) => {
+          const lead = conv.messages[0];
+          const isExpanded = expandedConvos.has(conv.conversationId);
+          const threadCount = conv.messages.length;
+          return (
+            <div key={conv.conversationId} className="message-list__conversation">
+              <div
+                className={`message-list__item message-list__item--conversation ${
+                  selectedMessageId === lead.id ? 'message-list__item--selected' : ''
+                } ${conv.hasUnread ? 'message-list__item--unread' : ''}`}
+                onClick={() => {
+                  if (threadCount > 1) toggleConversation(conv.conversationId);
+                  onMessageSelect(lead.id);
+                }}
+                onContextMenu={(e) => handleContextMenu(e, lead.id)}
+              >
+                <div className="message-list__item-left">
+                  {threadCount > 1 && (
+                    <span className="material-symbols-outlined message-list__expand-icon">
+                      {isExpanded ? 'expand_more' : 'chevron_right'}
+                    </span>
+                  )}
+                  {threadCount <= 1 && !lead.isRead && <div className="message-list__unread-dot" />}
+                </div>
+                <div className="message-list__item-content">
+                  <div className="message-list__item-header">
+                    <span className="message-list__sender text-ellipsis">{lead.from.name || lead.from.address}</span>
+                    <div className="message-list__conv-meta">
+                      {threadCount > 1 && (
+                        <span className="message-list__thread-count">{threadCount}</span>
+                      )}
+                      <span className="message-list__date">{formatDate(conv.latestDate)}</span>
+                    </div>
+                  </div>
+                  <div className="message-list__subject text-ellipsis">{lead.subject}</div>
+                  <div className="message-list__preview text-ellipsis">{lead.bodyPreview}</div>
+                </div>
+                <div className="message-list__item-actions">
+                  {lead.hasAttachments && (
+                    <span className="material-symbols-outlined message-list__attachment">attach_file</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Expanded thread messages */}
+              {isExpanded && threadCount > 1 && conv.messages.slice(1).map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`message-list__item message-list__item--thread-child ${
+                    selectedMessageId === msg.id ? 'message-list__item--selected' : ''
+                  } ${!msg.isRead ? 'message-list__item--unread' : ''}`}
+                  onClick={() => onMessageSelect(msg.id)}
+                  onContextMenu={(e) => handleContextMenu(e, msg.id)}
+                >
+                  <div className="message-list__item-left">
+                    <div className="message-list__thread-line" />
+                    {!msg.isRead && <div className="message-list__unread-dot" />}
+                  </div>
+                  <div className="message-list__item-content">
+                    <div className="message-list__item-header">
+                      <span className="message-list__sender text-ellipsis">{msg.from.name || msg.from.address}</span>
+                      <span className="message-list__date">{formatDate(msg.receivedAt)}</span>
+                    </div>
+                    <div className="message-list__preview text-ellipsis">{msg.bodyPreview}</div>
+                  </div>
+                  <div className="message-list__item-actions">
+                    {msg.hasAttachments && (
+                      <span className="material-symbols-outlined message-list__attachment">attach_file</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })}
       </div>
 
       {showPagination && (
