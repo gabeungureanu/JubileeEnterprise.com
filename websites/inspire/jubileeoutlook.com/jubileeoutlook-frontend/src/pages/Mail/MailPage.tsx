@@ -11,6 +11,7 @@ import MoveToFolderDialog from '../../components/mail/MoveToFolderDialog';
 import { ResizeHandle } from '../../components/common/ResizeHandle';
 import { MailFolder, EmailMessage, ComposeMode } from '../../types/mail';
 import { mailService } from '../../services/mail/mailService';
+import { notificationService } from '../../services/mail/notificationService';
 import './MailPage.css';
 
 const AUTO_SYNC_INTERVAL = 60000; // 60 seconds
@@ -65,6 +66,7 @@ const MailPage: React.FC = () => {
   // Track if initial load is done to avoid duplicate fetches
   const initialLoadDone = useRef(false);
   const autoSyncRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const knownMessageIdsRef = useRef<Set<string>>(new Set());
 
   // Helper to find all folders (including nested) in a flat list
   const flattenFolders = useCallback((folderList: MailFolder[]): MailFolder[] => {
@@ -99,6 +101,8 @@ const MailPage: React.FC = () => {
       }
     };
     loadFolders();
+    // Request notification permission on mount
+    notificationService.requestPermission();
   }, [showToast]);
 
   // Fetch messages when selected folder or page changes
@@ -114,6 +118,10 @@ const MailPage: React.FC = () => {
         const result = await mailService.getMessages(selectedFolderId, currentPage, pageSize);
         setMessages(result.messages);
         setTotalCount(result.totalCount);
+        // Seed known IDs on initial load
+        for (const m of result.messages) {
+          knownMessageIdsRef.current.add(m.id);
+        }
       } catch {
         setMessages([]);
         showToast('Failed to load messages', 'error');
@@ -124,7 +132,7 @@ const MailPage: React.FC = () => {
     loadMessages();
   }, [selectedFolderId, searchQuery, currentPage, showToast]);
 
-  // Auto-sync scheduler
+  // Auto-sync scheduler with desktop notifications for new mail
   useEffect(() => {
     autoSyncRef.current = setInterval(async () => {
       try {
@@ -132,6 +140,22 @@ const MailPage: React.FC = () => {
         setFolders(fetched);
         if (selectedFolderId && !searchQuery) {
           const result = await mailService.getMessages(selectedFolderId, currentPage, pageSize);
+          // Detect new unread messages
+          const newUnread = result.messages.filter(
+            (m) => !m.isRead && !knownMessageIdsRef.current.has(m.id)
+          );
+          // Update known IDs
+          for (const m of result.messages) {
+            knownMessageIdsRef.current.add(m.id);
+          }
+          if (newUnread.length > 0) {
+            const first = newUnread[0];
+            notificationService.showNewMailNotification(
+              newUnread.length,
+              first.from.name || first.from.address,
+              first.subject
+            );
+          }
           setMessages(result.messages);
           setTotalCount(result.totalCount);
         }

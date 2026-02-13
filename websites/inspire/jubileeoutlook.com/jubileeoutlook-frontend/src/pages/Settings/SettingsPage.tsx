@@ -3,6 +3,7 @@ import { useAppContext } from '../../context/AppContext';
 import { emailSyncService, ProviderInfo } from '../../services/mail/emailSyncService';
 import { tokenStore } from '../../services/apiClient';
 import { signatureService, EmailSignature } from '../../services/mail/signatureService';
+import { notificationService } from '../../services/mail/notificationService';
 import SettingsRibbon from '../../components/layout/Ribbon/SettingsRibbon';
 import './SettingsPage.css';
 
@@ -42,6 +43,9 @@ const SettingsPage: React.FC = () => {
   const [sigName, setSigName] = useState('');
   const [showSigForm, setShowSigForm] = useState(false);
   const sigEditorRef = useRef<HTMLDivElement>(null);
+
+  // Notification state
+  const [notificationsEnabled, setNotificationsEnabled] = useState(notificationService.isEnabled());
 
   const loadAccounts = useCallback(async () => {
     const userId = tokenStore.getUserId();
@@ -517,12 +521,46 @@ const SettingsPage: React.FC = () => {
     </div>
   );
 
+  const handleNotificationToggle = async (checked: boolean) => {
+    if (checked && notificationService.getPermission() !== 'granted') {
+      const perm = await notificationService.requestPermission();
+      if (perm !== 'granted') {
+        setNotificationsEnabled(false);
+        notificationService.setEnabled(false);
+        return;
+      }
+    }
+    setNotificationsEnabled(checked);
+    notificationService.setEnabled(checked);
+  };
+
   const renderGeneral = () => (
     <div className="settings-page__section">
       <h2 className="settings-page__section-title">General</h2>
       <p className="settings-page__section-desc">
         General application preferences.
       </p>
+
+      <div className="settings-page__option">
+        <div className="settings-page__option-info">
+          <span className="settings-page__option-label">Desktop notifications</span>
+          <span className="settings-page__option-desc">
+            Show desktop notifications when new emails arrive
+            {notificationService.isSupported() && notificationService.getPermission() === 'denied' && (
+              <> — notifications are blocked in your browser settings</>
+            )}
+          </span>
+        </div>
+        <label className="settings-page__toggle">
+          <input
+            type="checkbox"
+            checked={notificationsEnabled}
+            onChange={(e) => handleNotificationToggle(e.target.checked)}
+            disabled={!notificationService.isSupported() || notificationService.getPermission() === 'denied'}
+          />
+          <span className="settings-page__toggle-slider" />
+        </label>
+      </div>
 
       <div className="settings-page__option">
         <div className="settings-page__option-info">
