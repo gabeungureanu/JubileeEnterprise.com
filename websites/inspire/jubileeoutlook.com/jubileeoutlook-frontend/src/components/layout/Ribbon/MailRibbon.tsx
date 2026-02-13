@@ -111,11 +111,8 @@ const MailRibbon: React.FC = () => {
       <div className="ribbon__group">
         <button
           className="ribbon__button"
-          title="Sync / Refresh"
-          onClick={() => {
-            mail?.refreshMessages();
-            mail?.refreshFolders();
-          }}
+          title="Sync emails from server"
+          onClick={() => mail?.syncAll()}
         >
           <span className="material-symbols-outlined">sync</span>
           <span className="ribbon__label">Sync</span>

@@ -56,10 +56,14 @@
 .folder-pane__badge {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
-  color: var(--accent-blue);
-  min-width: 18px;
+  color: #ffffff;
+  background-color: var(--accent-blue, #0078d4);
+  min-width: 20px;
+  padding: 2px 8px;
+  border-radius: 999px;
   text-align: center;
   flex-shrink: 0;
+  line-height: 1.4;
 }
 
 /* Inline rename input */

@@ -128,6 +128,18 @@ export const mailService = {
     window.URL.revokeObjectURL(url);
   },
 
+  async getAccounts(): Promise<{ id: string; email_address: string }[]> {
+    const userId = tokenStore.getUserId();
+    if (!userId) return [];
+    const response = await continuumClient.get('/outlook/accounts', { params: { userId } });
+    return response.data?.accounts || [];
+  },
+
+  async syncAccount(accountId: string): Promise<{ success: boolean; synced?: number }> {
+    const response = await continuumClient.post(`/outlook/accounts/${encodeURIComponent(accountId)}/sync`);
+    return response.data;
+  },
+
   async searchMessages(query: string, folderId?: string, page = 1, pageSize = 50): Promise<{ messages: EmailMessage[]; totalCount: number }> {
     const userId = tokenStore.getUserId();
     const response = await continuumClient.get<ApiMessagesResponse>('/outlook/messages/search', {

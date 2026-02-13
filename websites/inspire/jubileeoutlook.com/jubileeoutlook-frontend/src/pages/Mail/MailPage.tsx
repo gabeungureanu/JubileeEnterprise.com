@@ -145,6 +145,32 @@ const MailPage: React.FC = () => {
     };
   }, [selectedFolderId, searchQuery, currentPage]);
 
+  // Sync all accounts via IMAP, then refresh folders and messages
+  const syncAll = useCallback(async () => {
+    try {
+      showToast('Syncing mail...', 'info');
+      const accounts = await mailService.getAccounts();
+      if (accounts.length === 0) {
+        showToast('No email accounts connected', 'warning');
+        return;
+      }
+      for (const account of accounts) {
+        await mailService.syncAccount(account.id);
+      }
+      // Refresh UI after sync
+      const fetched = await mailService.getFolders();
+      setFolders(fetched);
+      if (selectedFolderId) {
+        const result = await mailService.getMessages(selectedFolderId, currentPage, pageSize);
+        setMessages(result.messages);
+        setTotalCount(result.totalCount);
+      }
+      showToast('Mail synced successfully', 'success');
+    } catch {
+      showToast('Sync failed', 'error');
+    }
+  }, [selectedFolderId, currentPage, showToast]);
+
   // Refresh folder counts from API
   const refreshFolders = useCallback(async () => {
     try {
@@ -683,6 +709,7 @@ const MailPage: React.FC = () => {
     isGlobalSearch,
     toggleGlobalSearch: handleToggleGlobalSearch,
     toggleFolderPane,
+    syncAll,
     refreshMessages,
     refreshFolders,
   };

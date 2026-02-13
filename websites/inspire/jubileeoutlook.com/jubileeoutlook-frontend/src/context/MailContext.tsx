@@ -29,7 +29,8 @@ export interface MailContextValue {
   // View
   toggleFolderPane: () => void;
 
-  // Refresh
+  // Sync & Refresh
+  syncAll: () => Promise<void>;
   refreshMessages: () => Promise<void>;
   refreshFolders: () => Promise<void>;
 }
