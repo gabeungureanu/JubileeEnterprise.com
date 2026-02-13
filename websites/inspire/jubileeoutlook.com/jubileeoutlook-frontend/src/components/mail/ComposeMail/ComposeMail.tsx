@@ -3,6 +3,7 @@ import { EmailMessage, ComposeMode, RecipientDto } from '../../../types/mail';
 import { mailService } from '../../../services/mail/mailService';
 import { signatureService } from '../../../services/mail/signatureService';
 import { tokenStore } from '../../../services/apiClient';
+import RecipientInput, { Recipient } from '../RecipientInput/RecipientInput';
 import './ComposeMail.css';
 
 interface ComposeMailProps {
@@ -15,9 +16,6 @@ interface ComposeMailProps {
 }
 
 interface ComposeFormData {
-  toInput: string;
-  ccInput: string;
-  bccInput: string;
   subject: string;
 }
 
@@ -36,25 +34,24 @@ function buildInitialSubject(mode: ComposeMode, original: EmailMessage | null): 
   return original.subject.startsWith('FW:') ? original.subject : `FW: ${original.subject}`;
 }
 
-function buildInitialRecipients(mode: ComposeMode, original: EmailMessage | null): Pick<ComposeFormData, 'toInput' | 'ccInput' | 'bccInput'> {
-  if (!original || mode === 'new') return { toInput: '', ccInput: '', bccInput: '' };
-
-  const senderAddr = original.from.name
-    ? `${original.from.name} <${original.from.address}>`
-    : original.from.address;
+function buildInitialRecipientArrays(mode: ComposeMode, original: EmailMessage | null): { to: Recipient[]; cc: Recipient[]; bcc: Recipient[] } {
+  if (!original || mode === 'new') return { to: [], cc: [], bcc: [] };
 
   if (mode === 'reply') {
-    return { toInput: senderAddr, ccInput: '', bccInput: '' };
+    return { to: [{ name: original.from.name, email: original.from.address }], cc: [], bcc: [] };
   }
 
   if (mode === 'replyAll') {
-    const toAddrs = [senderAddr, ...original.to.map(r => r.name ? `${r.name} <${r.address}>` : r.address)];
-    const ccAddrs = original.cc.map(r => r.name ? `${r.name} <${r.address}>` : r.address);
-    return { toInput: toAddrs.join('; '), ccInput: ccAddrs.join('; '), bccInput: '' };
+    const toList: Recipient[] = [
+      { name: original.from.name, email: original.from.address },
+      ...original.to.map(r => ({ name: r.name, email: r.address })),
+    ];
+    const ccList: Recipient[] = original.cc.map(r => ({ name: r.name, email: r.address }));
+    return { to: toList, cc: ccList, bcc: [] };
   }
 
   // forward
-  return { toInput: '', ccInput: '', bccInput: '' };
+  return { to: [], cc: [], bcc: [] };
 }
 
 function buildQuotedHtml(msg: EmailMessage): string {
@@ -106,12 +103,14 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, senderEmail, senderName, onClose, onSent }) => {
-  const recipients = buildInitialRecipients(mode, originalMessage);
+  const initialRecipients = buildInitialRecipientArrays(mode, originalMessage);
+  const [toRecipients, setToRecipients] = useState<Recipient[]>(initialRecipients.to);
+  const [ccRecipients, setCcRecipients] = useState<Recipient[]>(initialRecipients.cc);
+  const [bccRecipients, setBccRecipients] = useState<Recipient[]>(initialRecipients.bcc);
   const [formData, setFormData] = useState<ComposeFormData>({
-    ...recipients,
     subject: buildInitialSubject(mode, originalMessage),
   });
-  const [showCc, setShowCc] = useState(!!recipients.ccInput);
+  const [showCc, setShowCc] = useState(initialRecipients.cc.length > 0);
   const [showBcc, setShowBcc] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
@@ -132,16 +131,8 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const parseRecipients = (input: string, type: 'to' | 'cc' | 'bcc'): RecipientDto[] => {
-    return input
-      .split(/[,;]/)
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .map((entry) => {
-        const match = entry.match(/^"?([^"<]*)"?\s*<([^>]+)>$/);
-        if (match) return { name: match[1].trim(), email: match[2].trim(), type };
-        return { name: '', email: entry, type };
-      });
+  const toRecipientDtos = (list: Recipient[], type: 'to' | 'cc' | 'bcc'): RecipientDto[] => {
+    return list.filter((r) => r.email).map((r) => ({ name: r.name, email: r.email, type }));
   };
 
   const getEditorText = useCallback((): string => {
@@ -155,17 +146,19 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
   // Create a simple hash of form data for draft change detection
   const getFormHash = useCallback(() => {
     return JSON.stringify({
-      to: formData.toInput, cc: formData.ccInput, bcc: formData.bccInput,
+      to: toRecipients.map((r) => r.email).join(','),
+      cc: ccRecipients.map((r) => r.email).join(','),
+      bcc: bccRecipients.map((r) => r.email).join(','),
       subj: formData.subject, body: getEditorText(),
     });
-  }, [formData, getEditorText]);
+  }, [formData, toRecipients, ccRecipients, bccRecipients, getEditorText]);
 
   // Auto-save draft every 30 seconds if changed
   useEffect(() => {
     draftTimerRef.current = setInterval(async () => {
       const currentHash = getFormHash();
       if (currentHash === lastSavedHash.current) return;
-      if (!formData.toInput && !formData.subject && !getEditorText()) return;
+      if (toRecipients.length === 0 && !formData.subject && !getEditorText()) return;
 
       setDraftStatus('saving');
       try {
@@ -180,9 +173,9 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
           body_html: getEditorHtml(),
           body_text: getEditorText(),
           recipients: [
-            ...parseRecipients(formData.toInput, 'to'),
-            ...parseRecipients(formData.ccInput, 'cc'),
-            ...parseRecipients(formData.bccInput, 'bcc'),
+            ...toRecipientDtos(toRecipients, 'to'),
+            ...toRecipientDtos(ccRecipients, 'cc'),
+            ...toRecipientDtos(bccRecipients, 'bcc'),
           ],
         });
 
@@ -199,10 +192,9 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
     return () => {
       if (draftTimerRef.current) clearInterval(draftTimerRef.current);
     };
-  }, [formData, draftId, senderEmail, getFormHash, getEditorText, getEditorHtml]);
+  }, [formData, toRecipients, ccRecipients, bccRecipients, draftId, senderEmail, getFormHash, getEditorText, getEditorHtml]);
 
   const handleSend = useCallback(async () => {
-    const toRecipients = parseRecipients(formData.toInput, 'to');
     if (toRecipients.length === 0) {
       setSendError('Please add at least one recipient');
       return;
@@ -216,9 +208,9 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
       if (!userId) throw new Error('Not signed in');
 
       const allRecipients = [
-        ...toRecipients,
-        ...parseRecipients(formData.ccInput, 'cc'),
-        ...parseRecipients(formData.bccInput, 'bcc'),
+        ...toRecipientDtos(toRecipients, 'to'),
+        ...toRecipientDtos(ccRecipients, 'cc'),
+        ...toRecipientDtos(bccRecipients, 'bcc'),
       ];
 
       // Convert attachments to base64 for sending
@@ -252,7 +244,7 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
     } finally {
       setSending(false);
     }
-  }, [formData, senderEmail, draftId, onSent, getEditorHtml, getEditorText, importance, attachments]);
+  }, [formData, toRecipients, ccRecipients, bccRecipients, senderEmail, draftId, onSent, getEditorHtml, getEditorText, importance, attachments]);
 
   // Formatting commands
   const execFormat = useCallback((command: string, value?: string) => {
@@ -396,12 +388,10 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
         {/* To */}
         <div className="compose-mail__field-row">
           <span className="compose-mail__field-label">To</span>
-          <input
-            type="text"
-            className="compose-mail__field-input"
+          <RecipientInput
+            recipients={toRecipients}
+            onChange={setToRecipients}
             placeholder="Add recipients"
-            value={formData.toInput}
-            onChange={(e) => setFormData((prev) => ({ ...prev, toInput: e.target.value }))}
             autoFocus
           />
           <div className="compose-mail__field-actions">
@@ -418,12 +408,10 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
         {showCc && (
           <div className="compose-mail__field-row">
             <span className="compose-mail__field-label">Cc</span>
-            <input
-              type="text"
-              className="compose-mail__field-input"
+            <RecipientInput
+              recipients={ccRecipients}
+              onChange={setCcRecipients}
               placeholder="Add Cc recipients"
-              value={formData.ccInput}
-              onChange={(e) => setFormData((prev) => ({ ...prev, ccInput: e.target.value }))}
             />
           </div>
         )}
@@ -432,12 +420,10 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
         {showBcc && (
           <div className="compose-mail__field-row">
             <span className="compose-mail__field-label">Bcc</span>
-            <input
-              type="text"
-              className="compose-mail__field-input"
+            <RecipientInput
+              recipients={bccRecipients}
+              onChange={setBccRecipients}
               placeholder="Add Bcc recipients"
-              value={formData.bccInput}
-              onChange={(e) => setFormData((prev) => ({ ...prev, bccInput: e.target.value }))}
             />
           </div>
         )}
