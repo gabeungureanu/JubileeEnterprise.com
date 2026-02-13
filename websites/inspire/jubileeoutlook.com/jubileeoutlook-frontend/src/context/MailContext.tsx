@@ -20,6 +20,9 @@ export interface MailContextValue {
   // Move
   moveMessage: () => void;
 
+  // Snooze
+  snoozeMessage: () => void;
+
   // Search
   searchMessages: (query: string) => Promise<void>;
   clearSearch: () => void;

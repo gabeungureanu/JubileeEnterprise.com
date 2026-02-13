@@ -8,10 +8,12 @@ import MessageList from '../../components/mail/MessageList';
 import ReadingPane from '../../components/mail/ReadingPane';
 import ComposeMail from '../../components/mail/ComposeMail';
 import MoveToFolderDialog from '../../components/mail/MoveToFolderDialog';
+import SnoozePicker from '../../components/mail/SnoozePicker/SnoozePicker';
 import { ResizeHandle } from '../../components/common/ResizeHandle';
 import { MailFolder, EmailMessage, ComposeMode } from '../../types/mail';
 import { mailService } from '../../services/mail/mailService';
 import { notificationService } from '../../services/mail/notificationService';
+import { snoozeService } from '../../services/mail/snoozeService';
 import './MailPage.css';
 
 const AUTO_SYNC_INTERVAL = 60000; // 60 seconds
@@ -51,6 +53,9 @@ const MailPage: React.FC = () => {
   // Move-to-folder dialog state
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [bulkMoveIds, setBulkMoveIds] = useState<string[] | null>(null);
+
+  // Snooze dialog state
+  const [showSnoozePicker, setShowSnoozePicker] = useState(false);
 
   // Sort state
   const [sortBy, setSortBy] = useState('date_desc');
@@ -613,8 +618,48 @@ const MailPage: React.FC = () => {
         handleMessageSelect(messageId);
         setTimeout(() => handleDelete(), 100);
         break;
+      case 'snooze':
+        handleMessageSelect(messageId);
+        setTimeout(() => setShowSnoozePicker(true), 100);
+        break;
     }
   }, [messages, selectedMessage, handleMessageSelect, handleOpenCompose, handleArchive, handleDelete, refreshFolders, showToast]);
+
+  // Snooze handler
+  const handleSnooze = useCallback((snoozeUntil: Date) => {
+    if (!selectedMessage || !selectedFolderId) return;
+    snoozeService.snooze({
+      messageId: selectedMessage.id,
+      folderId: selectedFolderId,
+      snoozeUntil: snoozeUntil.toISOString(),
+      subject: selectedMessage.subject,
+      senderName: selectedMessage.from.name || selectedMessage.from.address,
+    });
+    // Hide the message from the list
+    setMessages(prev => prev.filter(m => m.id !== selectedMessage.id));
+    setSelectedMessageId(null);
+    setSelectedMessage(null);
+    setShowSnoozePicker(false);
+    showToast(`Snoozed until ${snoozeUntil.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 'success');
+  }, [selectedMessage, selectedFolderId, showToast]);
+
+  // Check for expired snoozes during auto-sync
+  useEffect(() => {
+    const checkSnoozes = () => {
+      const expired = snoozeService.clearExpired();
+      if (expired.length > 0) {
+        // If any expired snooze belongs to current folder, refresh to show them
+        const currentFolderExpired = expired.filter((s) => s.folderId === selectedFolderId);
+        if (currentFolderExpired.length > 0) {
+          refreshMessages();
+        }
+        showToast(`${expired.length} snoozed message(s) returned to inbox`, 'info');
+      }
+    };
+    checkSnoozes();
+    const interval = setInterval(checkSnoozes, 60000);
+    return () => clearInterval(interval);
+  }, [selectedFolderId, refreshMessages, showToast]);
 
   // Sort handler - client-side sort of current messages
   const handleSortChange = useCallback((newSortBy: string) => {
@@ -643,7 +688,8 @@ const MailPage: React.FC = () => {
         sorted.sort((a, b) => (a.isRead === b.isRead ? 0 : a.isRead ? 1 : -1));
         break;
     }
-    return sorted;
+    // Filter out snoozed messages
+    return sorted.filter((m) => !snoozeService.isSnoozed(m.id));
   }, [messages, sortBy]);
 
   // Keyboard shortcuts
@@ -728,6 +774,7 @@ const MailPage: React.FC = () => {
     toggleRead: handleToggleRead,
     openCompose: handleOpenCompose,
     moveMessage: handleOpenMoveDialog,
+    snoozeMessage: () => setShowSnoozePicker(true),
     searchMessages: handleSearchMessages,
     clearSearch: handleClearSearch,
     isGlobalSearch,
@@ -801,6 +848,12 @@ const MailPage: React.FC = () => {
           currentFolderId={selectedFolderId}
           onMove={handleMoveToFolder}
           onClose={() => setShowMoveDialog(false)}
+        />
+      )}
+      {showSnoozePicker && (
+        <SnoozePicker
+          onSnooze={handleSnooze}
+          onClose={() => setShowSnoozePicker(false)}
         />
       )}
     </MailProvider>

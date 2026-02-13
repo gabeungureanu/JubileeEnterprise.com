@@ -72,6 +72,15 @@ const MailRibbon: React.FC = () => {
           <span className="material-symbols-outlined">drive_file_move</span>
           <span className="ribbon__label">Move</span>
         </button>
+        <button
+          className="ribbon__button"
+          title="Snooze"
+          onClick={() => mail?.snoozeMessage()}
+          disabled={!hasMessage}
+        >
+          <span className="material-symbols-outlined">snooze</span>
+          <span className="ribbon__label">Snooze</span>
+        </button>
       </div>
 
       <div className="ribbon__separator" />

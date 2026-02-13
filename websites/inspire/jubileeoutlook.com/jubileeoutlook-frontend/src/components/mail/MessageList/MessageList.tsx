@@ -476,6 +476,9 @@ const MessageList: React.FC<MessageListProps> = ({
             <span className="material-symbols-outlined">flag</span> Toggle Flag
           </button>
           <div className="message-list__context-divider" />
+          <button onClick={() => handleContextAction('snooze')}>
+            <span className="material-symbols-outlined">snooze</span> Snooze
+          </button>
           <button onClick={() => handleContextAction('move')}>
             <span className="material-symbols-outlined">drive_file_move</span> Move to...
           </button>
