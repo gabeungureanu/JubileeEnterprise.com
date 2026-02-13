@@ -5,10 +5,11 @@ import { tokenStore } from '../../services/apiClient';
 import { signatureService, EmailSignature } from '../../services/mail/signatureService';
 import { notificationService } from '../../services/mail/notificationService';
 import { rulesService, EmailRule, RuleCondition, RuleAction, RuleConditionField, RuleConditionOp, RuleActionType } from '../../services/mail/rulesService';
+import { templateService, EmailTemplate } from '../../services/mail/templateService';
 import SettingsRibbon from '../../components/layout/Ribbon/SettingsRibbon';
 import './SettingsPage.css';
 
-type SettingsTab = 'accounts' | 'signatures' | 'rules' | 'sync' | 'general';
+type SettingsTab = 'accounts' | 'signatures' | 'rules' | 'templates' | 'sync' | 'general';
 
 interface AccountInfo {
   id: string;
@@ -57,6 +58,14 @@ const SettingsPage: React.FC = () => {
   const [ruleConditions, setRuleConditions] = useState<RuleCondition[]>([{ field: 'from', operator: 'contains', value: '' }]);
   const [ruleActions, setRuleActions] = useState<RuleAction[]>([{ type: 'markAsRead' }]);
 
+  // Template state
+  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [showTplForm, setShowTplForm] = useState(false);
+  const [editingTpl, setEditingTpl] = useState<EmailTemplate | null>(null);
+  const [tplName, setTplName] = useState('');
+  const [tplSubject, setTplSubject] = useState('');
+  const tplEditorRef = useRef<HTMLDivElement>(null);
+
   const loadAccounts = useCallback(async () => {
     const userId = tokenStore.getUserId();
     if (!userId) return;
@@ -75,6 +84,7 @@ const SettingsPage: React.FC = () => {
     loadAccounts();
     setSignatures(signatureService.getAll());
     setRules(rulesService.getAll());
+    setTemplates(templateService.getAll());
   }, [loadAccounts]);
 
   const handleDetectProvider = async () => {
@@ -259,10 +269,50 @@ const SettingsPage: React.FC = () => {
     setRuleActions((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Template handlers
+  const openTplForm = (tpl?: EmailTemplate) => {
+    if (tpl) {
+      setEditingTpl(tpl);
+      setTplName(tpl.name);
+      setTplSubject(tpl.subject);
+      setShowTplForm(true);
+      setTimeout(() => { if (tplEditorRef.current) tplEditorRef.current.innerHTML = tpl.bodyHtml; }, 0);
+    } else {
+      setEditingTpl(null);
+      setTplName('');
+      setTplSubject('');
+      setShowTplForm(true);
+      setTimeout(() => { if (tplEditorRef.current) tplEditorRef.current.innerHTML = ''; }, 0);
+    }
+  };
+
+  const closeTplForm = () => {
+    setShowTplForm(false);
+    setEditingTpl(null);
+  };
+
+  const handleSaveTpl = () => {
+    const html = tplEditorRef.current?.innerHTML || '';
+    if (!tplName.trim()) return;
+    if (editingTpl) {
+      templateService.update(editingTpl.id, tplName.trim(), tplSubject.trim(), html);
+    } else {
+      templateService.create(tplName.trim(), tplSubject.trim(), html);
+    }
+    setTemplates(templateService.getAll());
+    closeTplForm();
+  };
+
+  const handleDeleteTpl = (id: string) => {
+    templateService.remove(id);
+    setTemplates(templateService.getAll());
+  };
+
   const tabs: { id: SettingsTab; icon: string; label: string }[] = [
     { id: 'accounts', icon: 'account_circle', label: 'Accounts' },
     { id: 'signatures', icon: 'draw', label: 'Signatures' },
     { id: 'rules', icon: 'filter_alt', label: 'Rules' },
+    { id: 'templates', icon: 'quick_reply', label: 'Templates' },
     { id: 'sync', icon: 'sync', label: 'Sync Options' },
     { id: 'general', icon: 'tune', label: 'General' },
   ];
@@ -699,6 +749,120 @@ const SettingsPage: React.FC = () => {
     </div>
   );
 
+  const renderTemplates = () => (
+    <div className="settings-page__section">
+      <h2 className="settings-page__section-title">Email Templates</h2>
+      <p className="settings-page__section-desc">
+        Create reusable templates for quick replies and common messages. Use them when composing emails.
+      </p>
+
+      {templates.length === 0 && !showTplForm ? (
+        <div className="settings-page__empty">
+          <span className="material-symbols-outlined">quick_reply</span>
+          <span className="settings-page__empty-text">No templates created yet</span>
+          <button className="settings-page__btn settings-page__btn--primary" onClick={() => openTplForm()}>
+            Create Template
+          </button>
+        </div>
+      ) : (
+        <div className="settings-page__accounts">
+          {templates.map((tpl) => (
+            <div key={tpl.id} className="settings-page__account-card">
+              <div className="settings-page__account-icon" style={{ background: 'var(--gold-primary)' }}>
+                <span className="material-symbols-outlined" style={{ color: 'var(--text-inverse)' }}>quick_reply</span>
+              </div>
+              <div className="settings-page__account-info">
+                <div className="settings-page__account-email">{tpl.name}</div>
+                <div className="settings-page__account-provider">
+                  {tpl.subject ? `Subject: ${tpl.subject}` : 'No subject'}
+                </div>
+              </div>
+              <div className="settings-page__account-actions">
+                <button className="settings-page__icon-btn" title="Edit template" onClick={() => openTplForm(tpl)}>
+                  <span className="material-symbols-outlined">edit</span>
+                </button>
+                <button className="settings-page__icon-btn settings-page__icon-btn--danger" title="Delete template" onClick={() => handleDeleteTpl(tpl.id)}>
+                  <span className="material-symbols-outlined">delete</span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="settings-page__add-account">
+        {!showTplForm ? (
+          <button className="settings-page__add-btn" onClick={() => openTplForm()}>
+            <span className="material-symbols-outlined">add</span>
+            Create new template
+          </button>
+        ) : (
+          <div className="settings-page__form">
+            <div className="settings-page__form-row">
+              <label className="settings-page__form-label">Template Name</label>
+              <input
+                type="text"
+                className="settings-page__form-input"
+                placeholder="e.g. Meeting Follow-up, Thank You"
+                value={tplName}
+                onChange={(e) => setTplName(e.target.value)}
+              />
+            </div>
+
+            <div className="settings-page__form-row">
+              <label className="settings-page__form-label">Subject Line (optional)</label>
+              <input
+                type="text"
+                className="settings-page__form-input"
+                placeholder="e.g. Following up on our meeting"
+                value={tplSubject}
+                onChange={(e) => setTplSubject(e.target.value)}
+              />
+            </div>
+
+            <div className="settings-page__form-row">
+              <label className="settings-page__form-label">Template Body</label>
+              <div className="settings-page__sig-toolbar">
+                <button className="compose-mail__format-btn" onClick={() => { document.execCommand('bold'); tplEditorRef.current?.focus(); }} title="Bold">
+                  <span className="material-symbols-outlined">format_bold</span>
+                </button>
+                <button className="compose-mail__format-btn" onClick={() => { document.execCommand('italic'); tplEditorRef.current?.focus(); }} title="Italic">
+                  <span className="material-symbols-outlined">format_italic</span>
+                </button>
+                <button className="compose-mail__format-btn" onClick={() => { document.execCommand('underline'); tplEditorRef.current?.focus(); }} title="Underline">
+                  <span className="material-symbols-outlined">format_underlined</span>
+                </button>
+                <button className="compose-mail__format-btn" onClick={() => { const url = window.prompt('Enter URL:'); if (url) document.execCommand('createLink', false, url.startsWith('http') ? url : `https://${url}`); tplEditorRef.current?.focus(); }} title="Insert link">
+                  <span className="material-symbols-outlined">link</span>
+                </button>
+              </div>
+              <div
+                ref={tplEditorRef}
+                className="settings-page__sig-editor"
+                contentEditable
+                data-placeholder="Type your template content here..."
+                suppressContentEditableWarning
+              />
+            </div>
+
+            <div className="settings-page__form-actions">
+              <button
+                className="settings-page__btn settings-page__btn--primary"
+                disabled={!tplName.trim()}
+                onClick={handleSaveTpl}
+              >
+                {editingTpl ? 'Update Template' : 'Save Template'}
+              </button>
+              <button className="settings-page__btn settings-page__btn--secondary" onClick={closeTplForm}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   const renderSyncOptions = () => (
     <div className="settings-page__section">
       <h2 className="settings-page__section-title">Sync Options</h2>
@@ -877,6 +1041,8 @@ const SettingsPage: React.FC = () => {
         return renderSignatures();
       case 'rules':
         return renderRules();
+      case 'templates':
+        return renderTemplates();
       case 'sync':
         return renderSyncOptions();
       case 'general':

@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { EmailMessage, ComposeMode, RecipientDto } from '../../../types/mail';
 import { mailService } from '../../../services/mail/mailService';
 import { signatureService } from '../../../services/mail/signatureService';
+import { templateService, EmailTemplate } from '../../../services/mail/templateService';
 import { tokenStore } from '../../../services/apiClient';
 import RecipientInput, { Recipient } from '../RecipientInput/RecipientInput';
 import './ComposeMail.css';
@@ -118,6 +119,8 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
   const [draftStatus, setDraftStatus] = useState<'saved' | 'saving' | 'unsaved' | null>(null);
   const [importance, setImportance] = useState<ImportanceLevel>('normal');
   const [attachments, setAttachments] = useState<AttachmentFile[]>([]);
+  const [showTemplateMenu, setShowTemplateMenu] = useState(false);
+  const [availableTemplates] = useState<EmailTemplate[]>(() => templateService.getAll());
   const lastSavedHash = useRef<string>('');
   const draftTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -261,6 +264,17 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
     }
   }, [execFormat]);
 
+  // Insert template into editor
+  const handleInsertTemplate = useCallback((tpl: EmailTemplate) => {
+    if (tpl.subject && !formData.subject) {
+      setFormData((prev) => ({ ...prev, subject: tpl.subject }));
+    }
+    if (editorRef.current && tpl.bodyHtml) {
+      editorRef.current.innerHTML = tpl.bodyHtml + (editorRef.current.innerHTML || '');
+    }
+    setShowTemplateMenu(false);
+  }, [formData.subject]);
+
   // Cycle importance: normal → high → low → normal
   const handleToggleImportance = useCallback(() => {
     setImportance((prev) => {
@@ -341,6 +355,34 @@ const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, sender
         >
           <span className="material-symbols-outlined">{importanceIcon}</span>
         </button>
+        {availableTemplates.length > 0 && (
+          <div style={{ position: 'relative' }}>
+            <button
+              className="compose-mail__action-btn"
+              onClick={() => setShowTemplateMenu((prev) => !prev)}
+              title="Insert template"
+            >
+              <span className="material-symbols-outlined">quick_reply</span>
+            </button>
+            {showTemplateMenu && (
+              <div className="compose-mail__template-dropdown">
+                {availableTemplates.map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    className="compose-mail__template-option"
+                    onClick={() => handleInsertTemplate(tpl)}
+                  >
+                    <span className="material-symbols-outlined">description</span>
+                    <div className="compose-mail__template-info">
+                      <span className="compose-mail__template-name">{tpl.name}</span>
+                      {tpl.subject && <span className="compose-mail__template-subject">{tpl.subject}</span>}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <span className="compose-mail__mode-label">{modeLabel}</span>
 
