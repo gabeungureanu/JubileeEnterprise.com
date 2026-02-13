@@ -128,6 +128,14 @@ export const mailService = {
     window.URL.revokeObjectURL(url);
   },
 
+  async fetchAttachmentBlob(messageId: string, attachmentId: string, mimeType?: string): Promise<Blob> {
+    const response = await continuumClient.get(
+      `/outlook/messages/${encodeURIComponent(messageId)}/attachments/${encodeURIComponent(attachmentId)}/download`,
+      { responseType: 'blob' }
+    );
+    return new Blob([response.data], mimeType ? { type: mimeType } : undefined);
+  },
+
   async getAccounts(): Promise<{ id: string; email_address: string }[]> {
     const userId = tokenStore.getUserId();
     if (!userId) return [];

@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
-import { EmailMessage } from '../../../types/mail';
+import { EmailMessage, AttachmentDto } from '../../../types/mail';
 import { mailService } from '../../../services/mail/mailService';
+import AttachmentPreview, { isPreviewable, getPreviewIcon } from '../AttachmentPreview/AttachmentPreview';
 import './ReadingPane.css';
 
 interface ReadingPaneProps {
@@ -18,6 +19,8 @@ const formatFileSize = (bytes: number): string => {
 
 const ReadingPane: React.FC<ReadingPaneProps> = ({ message, onError }) => {
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
+  const [previewAttachment, setPreviewAttachment] = useState<AttachmentDto | null>(null);
+
   const handleDownloadAttachment = useCallback(async (attachmentId: string, fileName: string) => {
     if (!message) return;
     setDownloadingIds(prev => new Set(prev).add(attachmentId));
@@ -33,6 +36,14 @@ const ReadingPane: React.FC<ReadingPaneProps> = ({ message, onError }) => {
       });
     }
   }, [message, onError]);
+
+  const handleAttachmentClick = useCallback((att: AttachmentDto) => {
+    if (isPreviewable(att.mimeType)) {
+      setPreviewAttachment(att);
+    } else {
+      handleDownloadAttachment(att.id, att.fileName);
+    }
+  }, [handleDownloadAttachment]);
 
   const handlePrint = useCallback(() => {
     if (!message) return;
@@ -128,11 +139,11 @@ const ReadingPane: React.FC<ReadingPaneProps> = ({ message, onError }) => {
             {message.attachments.map((att) => (
               <div
                 key={att.id}
-                className="reading-pane__attachment-card"
-                onClick={() => handleDownloadAttachment(att.id, att.fileName)}
-                title={`Download ${att.fileName}`}
+                className={`reading-pane__attachment-card ${isPreviewable(att.mimeType) ? 'reading-pane__attachment-card--previewable' : ''}`}
+                onClick={() => handleAttachmentClick(att)}
+                title={isPreviewable(att.mimeType) ? `Preview ${att.fileName}` : `Download ${att.fileName}`}
               >
-                <span className="material-symbols-outlined">description</span>
+                <span className="material-symbols-outlined">{getPreviewIcon(att.mimeType)}</span>
                 <div className="reading-pane__attachment-info">
                   <span className="reading-pane__attachment-name text-ellipsis">{att.fileName}</span>
                   {att.fileSize > 0 && (
@@ -140,12 +151,23 @@ const ReadingPane: React.FC<ReadingPaneProps> = ({ message, onError }) => {
                   )}
                 </div>
                 <span className="material-symbols-outlined reading-pane__attachment-download">
-                  {downloadingIds.has(att.id) ? 'hourglass_empty' : 'download'}
+                  {downloadingIds.has(att.id)
+                    ? 'hourglass_empty'
+                    : isPreviewable(att.mimeType) ? 'visibility' : 'download'}
                 </span>
               </div>
             ))}
           </div>
         </div>
+      )}
+
+      {previewAttachment && (
+        <AttachmentPreview
+          messageId={message.id}
+          attachment={previewAttachment}
+          onClose={() => setPreviewAttachment(null)}
+          onDownload={handleDownloadAttachment}
+        />
       )}
     </div>
   );

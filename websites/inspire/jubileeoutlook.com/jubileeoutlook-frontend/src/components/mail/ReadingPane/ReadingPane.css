@@ -212,3 +212,13 @@
 .reading-pane__attachment-card:hover .reading-pane__attachment-download {
   color: var(--gold-primary);
 }
+
+.reading-pane__attachment-card--previewable {
+  border-color: var(--accent-blue);
+  border-style: dashed;
+}
+
+.reading-pane__attachment-card--previewable:hover {
+  border-style: solid;
+  border-color: var(--accent-blue);
+}
