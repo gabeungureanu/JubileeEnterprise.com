@@ -1413,7 +1413,7 @@ app.get('/api/v1/outlook/folders/:folderId/messages', async (c) => {
               m.folder_id, m.conversation_id
        FROM outlook_email_messages m
        WHERE m.folder_id = $1
-       ORDER BY m.received_at DESC
+       ORDER BY m.received_at DESC NULLS LAST
        LIMIT $2 OFFSET $3`,
       [folderId, pageSize, offset]
     );
@@ -1508,7 +1508,7 @@ app.get('/api/v1/outlook/messages/search', async (c) => {
               m.is_read, m.is_flagged, m.has_attachments, m.importance, m.received_at, m.sent_at,
               m.folder_id, m.conversation_id
        FROM outlook_email_messages m WHERE ${whereClause}
-       ORDER BY m.received_at DESC LIMIT $${++paramCount} OFFSET $${++paramCount}`,
+       ORDER BY m.received_at DESC NULLS LAST LIMIT $${++paramCount} OFFSET $${++paramCount}`,
       [...params, pageSize, offset]
     );
 

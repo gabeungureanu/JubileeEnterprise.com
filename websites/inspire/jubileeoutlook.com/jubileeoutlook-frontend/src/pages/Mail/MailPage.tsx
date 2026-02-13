@@ -570,14 +570,16 @@ const MailPage: React.FC = () => {
   }, []);
 
   // Apply client-side sorting to messages
+  // Apply client-side sorting to messages (default: newest first)
   const sortedMessages = React.useMemo(() => {
     const sorted = [...messages];
+    const getTime = (dateStr: string) => dateStr ? new Date(dateStr).getTime() : 0;
     switch (sortBy) {
       case 'date_asc':
-        sorted.sort((a, b) => new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime());
+        sorted.sort((a, b) => getTime(a.receivedAt) - getTime(b.receivedAt));
         break;
       case 'date_desc':
-        sorted.sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
+        sorted.sort((a, b) => getTime(b.receivedAt) - getTime(a.receivedAt));
         break;
       case 'sender':
         sorted.sort((a, b) => (a.from.name || a.from.address).localeCompare(b.from.name || b.from.address));
