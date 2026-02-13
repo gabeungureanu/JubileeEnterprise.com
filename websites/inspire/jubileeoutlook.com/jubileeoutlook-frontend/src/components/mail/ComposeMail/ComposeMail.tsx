@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { EmailMessage, ComposeMode, RecipientDto } from '../../../types/mail';
 import { mailService } from '../../../services/mail/mailService';
+import { signatureService } from '../../../services/mail/signatureService';
 import { tokenStore } from '../../../services/apiClient';
 import './ComposeMail.css';
 
@@ -71,10 +72,17 @@ function buildForwardHtml(msg: EmailMessage): string {
   return `<br><br><div style="border-top:1px solid #555;padding-top:12px;margin-top:8px"><div style="margin-bottom:8px;font-size:12px;color:#999"><b>---------- Forwarded message ----------</b><br><b>From:</b> ${from}<br><b>Date:</b> ${date}<br><b>Subject:</b> ${msg.subject}<br><b>To:</b> ${to}</div>${body}</div>`;
 }
 
+function getSignatureHtml(): string {
+  const sig = signatureService.getActive();
+  if (!sig || !sig.html) return '';
+  return `<br><div class="email-signature" style="margin-top:16px;border-top:1px solid #555;padding-top:12px">${sig.html}</div>`;
+}
+
 function getInitialBodyHtml(mode: ComposeMode, original: EmailMessage | null): string {
-  if (!original || mode === 'new') return '';
-  if (mode === 'reply' || mode === 'replyAll') return buildQuotedHtml(original);
-  return buildForwardHtml(original);
+  const signature = getSignatureHtml();
+  if (!original || mode === 'new') return signature;
+  if (mode === 'reply' || mode === 'replyAll') return signature + buildQuotedHtml(original);
+  return signature + buildForwardHtml(original);
 }
 
 function formatFileSize(bytes: number): string {

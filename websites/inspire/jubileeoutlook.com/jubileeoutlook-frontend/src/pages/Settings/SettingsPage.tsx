@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { emailSyncService, ProviderInfo } from '../../services/mail/emailSyncService';
 import { tokenStore } from '../../services/apiClient';
+import { signatureService, EmailSignature } from '../../services/mail/signatureService';
 import SettingsRibbon from '../../components/layout/Ribbon/SettingsRibbon';
 import './SettingsPage.css';
 
-type SettingsTab = 'accounts' | 'sync' | 'general';
+type SettingsTab = 'accounts' | 'signatures' | 'sync' | 'general';
 
 interface AccountInfo {
   id: string;
@@ -35,6 +36,13 @@ const SettingsPage: React.FC = () => {
   // Confirm disconnect
   const [confirmDisconnect, setConfirmDisconnect] = useState<AccountInfo | null>(null);
 
+  // Signature state
+  const [signatures, setSignatures] = useState<EmailSignature[]>([]);
+  const [editingSig, setEditingSig] = useState<EmailSignature | null>(null);
+  const [sigName, setSigName] = useState('');
+  const [showSigForm, setShowSigForm] = useState(false);
+  const sigEditorRef = useRef<HTMLDivElement>(null);
+
   const loadAccounts = useCallback(async () => {
     const userId = tokenStore.getUserId();
     if (!userId) return;
@@ -51,6 +59,7 @@ const SettingsPage: React.FC = () => {
 
   useEffect(() => {
     loadAccounts();
+    setSignatures(signatureService.getAll());
   }, [loadAccounts]);
 
   const handleDetectProvider = async () => {
@@ -120,8 +129,56 @@ const SettingsPage: React.FC = () => {
     setFormError('');
   };
 
+  // Signature handlers
+  const openSigForm = (sig?: EmailSignature) => {
+    if (sig) {
+      setEditingSig(sig);
+      setSigName(sig.name);
+      setShowSigForm(true);
+      setTimeout(() => {
+        if (sigEditorRef.current) sigEditorRef.current.innerHTML = sig.html;
+      }, 0);
+    } else {
+      setEditingSig(null);
+      setSigName('');
+      setShowSigForm(true);
+      setTimeout(() => {
+        if (sigEditorRef.current) sigEditorRef.current.innerHTML = '';
+      }, 0);
+    }
+  };
+
+  const closeSigForm = () => {
+    setShowSigForm(false);
+    setEditingSig(null);
+    setSigName('');
+  };
+
+  const handleSaveSig = () => {
+    const html = sigEditorRef.current?.innerHTML || '';
+    if (!sigName.trim()) return;
+    if (editingSig) {
+      signatureService.update(editingSig.id, sigName.trim(), html);
+    } else {
+      signatureService.create(sigName.trim(), html);
+    }
+    setSignatures(signatureService.getAll());
+    closeSigForm();
+  };
+
+  const handleDeleteSig = (id: string) => {
+    signatureService.remove(id);
+    setSignatures(signatureService.getAll());
+  };
+
+  const handleSetDefaultSig = (id: string) => {
+    signatureService.setDefault(id);
+    setSignatures(signatureService.getAll());
+  };
+
   const tabs: { id: SettingsTab; icon: string; label: string }[] = [
     { id: 'accounts', icon: 'account_circle', label: 'Accounts' },
+    { id: 'signatures', icon: 'draw', label: 'Signatures' },
     { id: 'sync', icon: 'sync', label: 'Sync Options' },
     { id: 'general', icon: 'tune', label: 'General' },
   ];
@@ -258,6 +315,130 @@ const SettingsPage: React.FC = () => {
                 {connecting ? 'Connecting...' : 'Connect Account'}
               </button>
               <button className="settings-page__btn settings-page__btn--secondary" onClick={cancelAddForm}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderSignatures = () => (
+    <div className="settings-page__section">
+      <h2 className="settings-page__section-title">Email Signatures</h2>
+      <p className="settings-page__section-desc">
+        Create and manage email signatures. The default signature is automatically inserted into new messages.
+      </p>
+
+      {signatures.length === 0 && !showSigForm ? (
+        <div className="settings-page__empty">
+          <span className="material-symbols-outlined">draw</span>
+          <span className="settings-page__empty-text">No signatures created yet</span>
+          <button className="settings-page__btn settings-page__btn--primary" onClick={() => openSigForm()}>
+            Create Signature
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="settings-page__accounts">
+            {signatures.map((sig) => (
+              <div key={sig.id} className="settings-page__account-card">
+                <div className="settings-page__account-icon" style={{ background: sig.isDefault ? 'var(--gold-primary)' : 'var(--bg-hover)' }}>
+                  <span className="material-symbols-outlined" style={{ color: sig.isDefault ? 'var(--text-inverse)' : 'var(--text-secondary)' }}>
+                    {sig.isDefault ? 'star' : 'draw'}
+                  </span>
+                </div>
+                <div className="settings-page__account-info">
+                  <div className="settings-page__account-email">{sig.name}</div>
+                  <div className="settings-page__account-provider">
+                    {sig.isDefault ? 'Default signature' : 'Click star to set as default'}
+                  </div>
+                </div>
+                <div className="settings-page__account-actions">
+                  {!sig.isDefault && (
+                    <button
+                      className="settings-page__icon-btn"
+                      title="Set as default"
+                      onClick={() => handleSetDefaultSig(sig.id)}
+                    >
+                      <span className="material-symbols-outlined">star_outline</span>
+                    </button>
+                  )}
+                  <button
+                    className="settings-page__icon-btn"
+                    title="Edit signature"
+                    onClick={() => openSigForm(sig)}
+                  >
+                    <span className="material-symbols-outlined">edit</span>
+                  </button>
+                  <button
+                    className="settings-page__icon-btn settings-page__icon-btn--danger"
+                    title="Delete signature"
+                    onClick={() => handleDeleteSig(sig.id)}
+                  >
+                    <span className="material-symbols-outlined">delete</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="settings-page__add-account">
+        {!showSigForm ? (
+          <button className="settings-page__add-btn" onClick={() => openSigForm()}>
+            <span className="material-symbols-outlined">add</span>
+            Create new signature
+          </button>
+        ) : (
+          <div className="settings-page__form">
+            <div className="settings-page__form-row">
+              <label className="settings-page__form-label">Signature Name</label>
+              <input
+                type="text"
+                className="settings-page__form-input"
+                placeholder="e.g. Work, Personal"
+                value={sigName}
+                onChange={(e) => setSigName(e.target.value)}
+              />
+            </div>
+
+            <div className="settings-page__form-row">
+              <label className="settings-page__form-label">Signature Content</label>
+              <div className="settings-page__sig-toolbar">
+                <button className="compose-mail__format-btn" onClick={() => { document.execCommand('bold'); sigEditorRef.current?.focus(); }} title="Bold">
+                  <span className="material-symbols-outlined">format_bold</span>
+                </button>
+                <button className="compose-mail__format-btn" onClick={() => { document.execCommand('italic'); sigEditorRef.current?.focus(); }} title="Italic">
+                  <span className="material-symbols-outlined">format_italic</span>
+                </button>
+                <button className="compose-mail__format-btn" onClick={() => { document.execCommand('underline'); sigEditorRef.current?.focus(); }} title="Underline">
+                  <span className="material-symbols-outlined">format_underlined</span>
+                </button>
+                <button className="compose-mail__format-btn" onClick={() => { const url = window.prompt('Enter URL:'); if (url) document.execCommand('createLink', false, url.startsWith('http') ? url : `https://${url}`); sigEditorRef.current?.focus(); }} title="Insert link">
+                  <span className="material-symbols-outlined">link</span>
+                </button>
+              </div>
+              <div
+                ref={sigEditorRef}
+                className="settings-page__sig-editor"
+                contentEditable
+                data-placeholder="Type your signature here..."
+                suppressContentEditableWarning
+              />
+            </div>
+
+            <div className="settings-page__form-actions">
+              <button
+                className="settings-page__btn settings-page__btn--primary"
+                disabled={!sigName.trim()}
+                onClick={handleSaveSig}
+              >
+                {editingSig ? 'Update Signature' : 'Save Signature'}
+              </button>
+              <button className="settings-page__btn settings-page__btn--secondary" onClick={closeSigForm}>
                 Cancel
               </button>
             </div>
@@ -407,6 +588,8 @@ const SettingsPage: React.FC = () => {
     switch (activeTab) {
       case 'accounts':
         return renderAccounts();
+      case 'signatures':
+        return renderSignatures();
       case 'sync':
         return renderSyncOptions();
       case 'general':

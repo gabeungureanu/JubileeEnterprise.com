@@ -486,3 +486,43 @@
 .settings-page__btn--danger:hover {
   opacity: 0.9;
 }
+
+/* Signature editor */
+.settings-page__sig-toolbar {
+  display: flex;
+  gap: 2px;
+  padding: var(--spacing-xs);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-bottom: none;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.settings-page__sig-editor {
+  min-height: 150px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-primary);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: var(--font-size-md);
+  font-family: var(--font-family);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.settings-page__sig-editor:focus {
+  border-color: var(--gold-primary);
+}
+
+.settings-page__sig-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-disabled);
+  pointer-events: none;
+}
+
+.settings-page__sig-editor a {
+  color: var(--accent-blue);
+}
