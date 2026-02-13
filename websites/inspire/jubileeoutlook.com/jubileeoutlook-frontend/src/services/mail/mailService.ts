@@ -112,6 +112,22 @@ export const mailService = {
     return response.data?.success !== false;
   },
 
+  async downloadAttachment(messageId: string, attachmentId: string, fileName: string): Promise<void> {
+    const response = await continuumClient.get(
+      `/outlook/messages/${encodeURIComponent(messageId)}/attachments/${encodeURIComponent(attachmentId)}/download`,
+      { responseType: 'blob' }
+    );
+    const blob = new Blob([response.data]);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
+
   async searchMessages(query: string, folderId?: string, page = 1, pageSize = 50): Promise<{ messages: EmailMessage[]; totalCount: number }> {
     const userId = tokenStore.getUserId();
     const response = await continuumClient.get<ApiMessagesResponse>('/outlook/messages/search', {

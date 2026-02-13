@@ -63,6 +63,15 @@ const MailRibbon: React.FC = () => {
           </span>
           <span className="ribbon__label">{mail?.selectedMessage?.isFlagged ? 'Unflag' : 'Flag'}</span>
         </button>
+        <button
+          className="ribbon__button"
+          title="Move to Folder"
+          onClick={() => mail?.moveMessage()}
+          disabled={!hasMessage}
+        >
+          <span className="material-symbols-outlined">drive_file_move</span>
+          <span className="ribbon__label">Move</span>
+        </button>
       </div>
 
       <div className="ribbon__separator" />

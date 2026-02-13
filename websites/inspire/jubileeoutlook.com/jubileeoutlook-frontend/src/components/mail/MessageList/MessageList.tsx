@@ -10,13 +10,21 @@ interface MessageListProps {
   onSearch?: (query: string) => void;
   loading?: boolean;
   folderName?: string;
+  currentPage?: number;
+  totalCount?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
 }
 
 const MessageList: React.FC<MessageListProps> = ({
-  messages, selectedMessageId, onMessageSelect, onToggleFlag, onSearch, loading, folderName
+  messages, selectedMessageId, onMessageSelect, onToggleFlag, onSearch, loading, folderName,
+  currentPage = 1, totalCount = 0, pageSize = 50, onPageChange
 }) => {
   const [searchInput, setSearchInput] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const showPagination = totalCount > pageSize;
 
   const formatDate = (dateStr: string): string => {
     if (!dateStr) return '';
@@ -132,6 +140,29 @@ const MessageList: React.FC<MessageListProps> = ({
           </div>
         ))}
       </div>
+      {showPagination && (
+        <div className="message-list__pagination">
+          <button
+            className="message-list__page-btn"
+            onClick={() => onPageChange?.(currentPage - 1)}
+            disabled={currentPage <= 1}
+            title="Previous page"
+          >
+            <span className="material-symbols-outlined">chevron_left</span>
+          </button>
+          <span className="message-list__page-info">
+            {currentPage} of {totalPages}
+          </span>
+          <button
+            className="message-list__page-btn"
+            onClick={() => onPageChange?.(currentPage + 1)}
+            disabled={currentPage >= totalPages}
+            title="Next page"
+          >
+            <span className="material-symbols-outlined">chevron_right</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

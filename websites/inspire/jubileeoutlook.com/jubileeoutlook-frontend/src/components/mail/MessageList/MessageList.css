@@ -207,3 +207,49 @@
   font-size: 32px !important;
   color: var(--text-disabled);
 }
+
+.message-list__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-top: 1px solid var(--border-subtle);
+  background-color: var(--bg-primary);
+  flex-shrink: 0;
+}
+
+.message-list__page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.message-list__page-btn:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.message-list__page-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.message-list__page-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.message-list__page-info {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  min-width: 60px;
+  text-align: center;
+}

@@ -3,6 +3,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AppProvider } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './components/common/Toast';
 import AppLayout from './components/layout/AppLayout';
 import SignIn from './pages/Auth/SignIn';
 import darkTheme from './styles/themes/dark';
@@ -21,7 +22,9 @@ const AppContent: React.FC = () => {
 
   return (
     <AppProvider>
-      <AppLayout />
+      <ToastProvider>
+        <AppLayout />
+      </ToastProvider>
     </AppProvider>
   );
 };

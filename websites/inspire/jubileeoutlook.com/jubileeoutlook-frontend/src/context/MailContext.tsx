@@ -17,6 +17,9 @@ export interface MailContextValue {
   // Compose actions
   openCompose: (mode: ComposeMode) => void;
 
+  // Move
+  moveMessage: () => void;
+
   // Search
   searchMessages: (query: string) => Promise<void>;
   clearSearch: () => void;

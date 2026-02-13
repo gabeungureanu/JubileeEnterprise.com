@@ -179,13 +179,36 @@
   background-color: var(--bg-hover);
 }
 
-.reading-pane__attachment-card .material-symbols-outlined {
+.reading-pane__attachment-card > .material-symbols-outlined {
   font-size: 16px;
   color: var(--text-tertiary);
+}
+
+.reading-pane__attachment-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
 }
 
 .reading-pane__attachment-name {
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
   max-width: 200px;
+}
+
+.reading-pane__attachment-size {
+  font-size: 11px;
+  color: var(--text-disabled);
+}
+
+.reading-pane__attachment-download {
+  font-size: 14px !important;
+  color: var(--text-disabled);
+  margin-left: var(--spacing-xs);
+  transition: color var(--transition-fast);
+}
+
+.reading-pane__attachment-card:hover .reading-pane__attachment-download {
+  color: var(--gold-primary);
 }

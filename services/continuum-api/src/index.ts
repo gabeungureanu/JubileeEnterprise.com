@@ -1601,7 +1601,7 @@ app.get('/api/v1/outlook/messages/:id', async (c) => {
           }
 
           if (targetUid) {
-            for await (const msg of client.fetch(String(targetUid), { source: true, uid: true })) {
+            for await (const msg of client.fetch(String(targetUid), { source: true, bodyStructure: true, uid: true })) {
               if (msg.source) {
                 const raw = msg.source.toString();
                 let bodyText = '';
@@ -1659,6 +1659,50 @@ app.get('/api/v1/outlook/messages/:id', async (c) => {
                   m.body_html = bodyHtml;
                   m.body_preview = preview;
                 }
+
+                // Extract and store attachment metadata from bodyStructure
+                if (msg.bodyStructure) {
+                  const extractAttachments = (node: any): Array<{ fileName: string; fileSize: number; mimeType: string; isInline: boolean; part: string }> => {
+                    const atts: Array<{ fileName: string; fileSize: number; mimeType: string; isInline: boolean; part: string }> = [];
+                    const fileName = node.dispositionParameters?.filename || node.parameters?.name || '';
+                    const isAttachment = node.disposition === 'attachment' || (fileName && node.disposition !== 'inline');
+                    const isInline = node.disposition === 'inline' && !!fileName;
+                    if ((isAttachment || isInline) && fileName) {
+                      atts.push({
+                        fileName,
+                        fileSize: node.size || 0,
+                        mimeType: node.type || 'application/octet-stream',
+                        isInline,
+                        part: node.part || '',
+                      });
+                    }
+                    if (node.childNodes) {
+                      for (const child of node.childNodes) {
+                        atts.push(...extractAttachments(child));
+                      }
+                    }
+                    return atts;
+                  };
+
+                  const attachments = extractAttachments(msg.bodyStructure);
+                  if (attachments.length > 0) {
+                    // Clear existing attachment metadata for this message to avoid duplicates
+                    await pool.query('DELETE FROM outlook_email_attachments WHERE message_id = $1', [messageId]);
+                    for (const att of attachments) {
+                      await pool.query(
+                        `INSERT INTO outlook_email_attachments (message_id, file_name, file_path, file_size, mime_type, is_inline)
+                         VALUES ($1, $2, $3, $4, $5, $6)`,
+                        [messageId, att.fileName, att.part, att.fileSize, att.mimeType, att.isInline]
+                      );
+                    }
+                    // Update has_attachments flag
+                    await pool.query(
+                      'UPDATE outlook_email_messages SET has_attachments = true WHERE id = $1',
+                      [messageId]
+                    );
+                    m.has_attachments = true;
+                  }
+                }
               }
             }
           }
@@ -1714,6 +1758,107 @@ app.get('/api/v1/outlook/messages/:id', async (c) => {
     return c.json({ success: true, message });
   } catch (err: any) {
     return c.json({ error: 'Failed to fetch message', message: err.message }, 500);
+  }
+});
+
+// GET /api/v1/outlook/messages/:messageId/attachments/:attachmentId/download - Download attachment
+app.get('/api/v1/outlook/messages/:messageId/attachments/:attachmentId/download', async (c) => {
+  try {
+    const messageId = c.req.param('messageId');
+    const attachmentId = c.req.param('attachmentId');
+    const pool = getContinuumPool();
+
+    // Get attachment metadata + IMAP connection info
+    const attResult = await pool.query(
+      `SELECT a.id, a.file_name, a.file_path, a.file_size, a.mime_type, a.is_inline,
+              m.external_message_id, m.internet_message_id, m.folder_id,
+              f.external_folder_id, acc.imap_host, acc.imap_port, acc.email_address, acc.encrypted_password
+       FROM outlook_email_attachments a
+       JOIN outlook_email_messages m ON a.message_id = m.id
+       JOIN outlook_email_folders f ON m.folder_id = f.id
+       JOIN outlook_email_accounts acc ON f.account_id = acc.id
+       WHERE a.id = $1 AND a.message_id = $2`,
+      [attachmentId, messageId]
+    );
+
+    if (attResult.rows.length === 0) {
+      return c.json({ error: 'Attachment not found' }, 404);
+    }
+
+    const att = attResult.rows[0];
+
+    // Connect to IMAP to fetch the attachment content
+    const imapPassword = Buffer.from(att.encrypted_password || '', 'base64').toString('utf-8');
+    const client = new ImapFlow({
+      host: att.imap_host,
+      port: att.imap_port || 993,
+      secure: true,
+      auth: { user: att.email_address, pass: imapPassword },
+      logger: false,
+    });
+
+    await client.connect();
+    const lock = await client.getMailboxLock(att.external_folder_id || 'INBOX');
+
+    try {
+      // Find the message UID by Internet Message-ID
+      const headerMsgId = att.internet_message_id;
+      let targetUid: number | null = null;
+
+      if (headerMsgId) {
+        const cleanMsgId = headerMsgId.replace(/^<|>$/g, '');
+        const uids = await client.search({ header: { 'message-id': cleanMsgId } });
+        if (uids.length > 0) targetUid = uids[0];
+      }
+
+      if (!targetUid) {
+        return c.json({ error: 'Could not find message on mail server' }, 404);
+      }
+
+      // Fetch bodyStructure to find the attachment MIME part
+      let attachmentPart: string | null = null;
+      for await (const msg of client.fetch(String(targetUid), { bodyStructure: true, uid: true })) {
+        const findPart = (node: any, path: string = ''): string | null => {
+          const currentPath = node.part || path;
+          const nodeName = node.dispositionParameters?.filename || node.parameters?.name || '';
+          if (nodeName === att.file_name) {
+            return currentPath;
+          }
+          if (node.childNodes) {
+            for (let i = 0; i < node.childNodes.length; i++) {
+              const childPath = currentPath ? `${currentPath}.${i + 1}` : `${i + 1}`;
+              const found = findPart(node.childNodes[i], childPath);
+              if (found) return found;
+            }
+          }
+          return null;
+        };
+        attachmentPart = findPart(msg.bodyStructure);
+      }
+
+      if (!attachmentPart) {
+        return c.json({ error: 'Attachment part not found in message structure' }, 404);
+      }
+
+      // Download the specific MIME part
+      const { content } = await client.download(String(targetUid), attachmentPart, { uid: true });
+      const chunks: Buffer[] = [];
+      for await (const chunk of content) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as any));
+      }
+      const buffer = Buffer.concat(chunks);
+
+      c.header('Content-Type', att.mime_type || 'application/octet-stream');
+      c.header('Content-Disposition', `attachment; filename="${encodeURIComponent(att.file_name)}"`);
+      c.header('Content-Length', String(buffer.length));
+      return c.body(buffer);
+    } finally {
+      lock.release();
+      await client.logout();
+    }
+  } catch (err: any) {
+    console.error('Attachment download error:', err.message);
+    return c.json({ error: 'Failed to download attachment', message: err.message }, 500);
   }
 });
 

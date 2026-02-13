@@ -1,17 +1,22 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { MailProvider, MailContextValue } from '../../context/MailContext';
+import { useToast } from '../../components/common/Toast';
 import MailRibbon from '../../components/layout/Ribbon/MailRibbon';
 import FolderPane from '../../components/mail/FolderPane';
 import MessageList from '../../components/mail/MessageList';
 import ReadingPane from '../../components/mail/ReadingPane';
 import ComposeMail from '../../components/mail/ComposeMail';
+import MoveToFolderDialog from '../../components/mail/MoveToFolderDialog';
 import { MailFolder, EmailMessage, ComposeMode } from '../../types/mail';
 import { mailService } from '../../services/mail/mailService';
 import './MailPage.css';
 
+const AUTO_SYNC_INTERVAL = 60000; // 60 seconds
+
 const MailPage: React.FC = () => {
   const { isFolderPaneVisible } = useAppContext();
+  const { showToast } = useToast();
 
   // Data state
   const [folders, setFolders] = useState<MailFolder[]>([]);
@@ -24,6 +29,11 @@ const MailPage: React.FC = () => {
   const [loadingFolders, setLoadingFolders] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 50;
+
   // Search state
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearching, setIsSearching] = useState(false);
@@ -31,12 +41,16 @@ const MailPage: React.FC = () => {
   // Compose state
   const [composeMode, setComposeMode] = useState<ComposeMode | null>(null);
 
+  // Move-to-folder dialog state
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+
   // Get sender email from localStorage (set during sign-in/sync)
   const senderEmail = localStorage.getItem('jubilee_sync_email') || '';
   const senderName = senderEmail.split('@')[0];
 
   // Track if initial load is done to avoid duplicate fetches
   const initialLoadDone = useRef(false);
+  const autoSyncRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Helper to find all folders (including nested) in a flat list
   const flattenFolders = useCallback((folderList: MailFolder[]): MailFolder[] => {
@@ -68,15 +82,15 @@ const MailPage: React.FC = () => {
           setSelectedFolderId(fetched[0].id);
         }
       } catch {
-        // Folders will remain empty
+        showToast('Failed to load mail folders', 'error');
       } finally {
         setLoadingFolders(false);
       }
     };
     loadFolders();
-  }, []);
+  }, [showToast]);
 
-  // Fetch messages when selected folder changes
+  // Fetch messages when selected folder or page changes
   useEffect(() => {
     if (!selectedFolderId) return;
     if (searchQuery) return; // Don't fetch folder messages while searching
@@ -86,16 +100,39 @@ const MailPage: React.FC = () => {
       setSelectedMessageId(null);
       setSelectedMessage(null);
       try {
-        const result = await mailService.getMessages(selectedFolderId);
+        const result = await mailService.getMessages(selectedFolderId, currentPage, pageSize);
         setMessages(result.messages);
+        setTotalCount(result.totalCount);
       } catch {
         setMessages([]);
+        showToast('Failed to load messages', 'error');
       } finally {
         setLoadingMessages(false);
       }
     };
     loadMessages();
-  }, [selectedFolderId, searchQuery]);
+  }, [selectedFolderId, searchQuery, currentPage, showToast]);
+
+  // Auto-sync scheduler
+  useEffect(() => {
+    autoSyncRef.current = setInterval(async () => {
+      try {
+        const fetched = await mailService.getFolders();
+        setFolders(fetched);
+        if (selectedFolderId && !searchQuery) {
+          const result = await mailService.getMessages(selectedFolderId, currentPage, pageSize);
+          setMessages(result.messages);
+          setTotalCount(result.totalCount);
+        }
+      } catch {
+        // Silent background sync failure
+      }
+    }, AUTO_SYNC_INTERVAL);
+
+    return () => {
+      if (autoSyncRef.current) clearInterval(autoSyncRef.current);
+    };
+  }, [selectedFolderId, searchQuery, currentPage]);
 
   // Handle message selection - fetch full message and mark as read
   const handleMessageSelect = useCallback(async (messageId: string) => {
@@ -119,15 +156,21 @@ const MailPage: React.FC = () => {
         }
       }
     } catch {
-      // Keep the list message as fallback
+      showToast('Failed to load message details', 'error');
     }
-  }, [messages]);
+  }, [messages, showToast]);
 
   // Handle folder selection
   const handleFolderSelect = useCallback((folderId: string) => {
     setSearchQuery('');
     setIsSearching(false);
+    setCurrentPage(1);
     setSelectedFolderId(folderId);
+  }, []);
+
+  // Handle page change
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
   }, []);
 
   // Refresh folder counts from API
@@ -136,23 +179,24 @@ const MailPage: React.FC = () => {
       const fetched = await mailService.getFolders();
       setFolders(fetched);
     } catch {
-      // silently fail
+      showToast('Failed to refresh folders', 'error');
     }
-  }, []);
+  }, [showToast]);
 
   // Refresh messages for current folder
   const refreshMessages = useCallback(async () => {
     if (!selectedFolderId) return;
     setLoadingMessages(true);
     try {
-      const result = await mailService.getMessages(selectedFolderId);
+      const result = await mailService.getMessages(selectedFolderId, currentPage, pageSize);
       setMessages(result.messages);
+      setTotalCount(result.totalCount);
     } catch {
-      // silently fail
+      showToast('Failed to refresh messages', 'error');
     } finally {
       setLoadingMessages(false);
     }
-  }, [selectedFolderId]);
+  }, [selectedFolderId, currentPage, showToast]);
 
   // Delete message handler (smart: move-to-trash or hard delete)
   const handleDelete = useCallback(async () => {
@@ -176,11 +220,13 @@ const MailPage: React.FC = () => {
       setMessages(prev => prev.filter(m => m.id !== selectedMessage.id));
       setSelectedMessageId(null);
       setSelectedMessage(null);
+      setTotalCount(prev => Math.max(0, prev - 1));
       refreshFolders();
+      showToast(isTrash ? 'Message permanently deleted' : 'Message moved to Trash', 'success');
     } catch {
-      // silently fail
+      showToast('Failed to delete message', 'error');
     }
-  }, [selectedMessage, selectedFolderId, folders, flattenFolders, refreshFolders]);
+  }, [selectedMessage, selectedFolderId, folders, flattenFolders, refreshFolders, showToast]);
 
   // Archive message handler
   const handleArchive = useCallback(async () => {
@@ -188,18 +234,23 @@ const MailPage: React.FC = () => {
     const allFolders = flattenFolders(folders);
     const archiveFolder = allFolders.find(f => f.folderType === 'archive')
       || allFolders.find(f => f.displayName === 'All Mail');
-    if (!archiveFolder) return;
+    if (!archiveFolder) {
+      showToast('No archive folder found', 'warning');
+      return;
+    }
 
     try {
       await mailService.moveMessage(selectedMessage.id, archiveFolder.id);
       setMessages(prev => prev.filter(m => m.id !== selectedMessage.id));
       setSelectedMessageId(null);
       setSelectedMessage(null);
+      setTotalCount(prev => Math.max(0, prev - 1));
       refreshFolders();
+      showToast('Message archived', 'success');
     } catch {
-      // silently fail
+      showToast('Failed to archive message', 'error');
     }
-  }, [selectedMessage, folders, flattenFolders, refreshFolders]);
+  }, [selectedMessage, folders, flattenFolders, refreshFolders, showToast]);
 
   // Toggle flag handler
   const handleToggleFlag = useCallback(async () => {
@@ -212,9 +263,9 @@ const MailPage: React.FC = () => {
       );
       setSelectedMessage(prev => prev ? { ...prev, isFlagged: newFlagged } : null);
     } catch {
-      // silently fail
+      showToast('Failed to update flag', 'error');
     }
-  }, [selectedMessage]);
+  }, [selectedMessage, showToast]);
 
   // Toggle read handler
   const handleToggleRead = useCallback(async () => {
@@ -228,9 +279,9 @@ const MailPage: React.FC = () => {
       setSelectedMessage(prev => prev ? { ...prev, isRead: newRead } : null);
       refreshFolders();
     } catch {
-      // silently fail
+      showToast('Failed to update read status', 'error');
     }
-  }, [selectedMessage, refreshFolders]);
+  }, [selectedMessage, refreshFolders, showToast]);
 
   // Open compose handler
   const handleOpenCompose = useCallback((mode: ComposeMode) => {
@@ -247,21 +298,48 @@ const MailPage: React.FC = () => {
     setComposeMode(null);
     refreshMessages();
     refreshFolders();
-  }, [refreshMessages, refreshFolders]);
+    showToast('Message sent successfully', 'success');
+  }, [refreshMessages, refreshFolders, showToast]);
+
+  // Move-to-folder: open dialog
+  const handleOpenMoveDialog = useCallback(() => {
+    if (!selectedMessage) return;
+    setShowMoveDialog(true);
+  }, [selectedMessage]);
+
+  // Move-to-folder: execute move
+  const handleMoveToFolder = useCallback(async (targetFolderId: string) => {
+    if (!selectedMessage) return;
+    setShowMoveDialog(false);
+    try {
+      await mailService.moveMessage(selectedMessage.id, targetFolderId);
+      setMessages(prev => prev.filter(m => m.id !== selectedMessage.id));
+      setSelectedMessageId(null);
+      setSelectedMessage(null);
+      setTotalCount(prev => Math.max(0, prev - 1));
+      refreshFolders();
+      showToast('Message moved successfully', 'success');
+    } catch {
+      showToast('Failed to move message', 'error');
+    }
+  }, [selectedMessage, refreshFolders, showToast]);
 
   // Search messages handler
   const handleSearchMessages = useCallback(async (query: string) => {
     setSearchQuery(query);
+    setCurrentPage(1);
     if (!query.trim()) {
       setIsSearching(false);
       // Refetch current folder messages
       if (selectedFolderId) {
         setLoadingMessages(true);
         try {
-          const result = await mailService.getMessages(selectedFolderId);
+          const result = await mailService.getMessages(selectedFolderId, 1, pageSize);
           setMessages(result.messages);
+          setTotalCount(result.totalCount);
         } catch {
           setMessages([]);
+          showToast('Failed to load messages', 'error');
         } finally {
           setLoadingMessages(false);
         }
@@ -276,12 +354,14 @@ const MailPage: React.FC = () => {
     try {
       const result = await mailService.searchMessages(query, selectedFolderId || undefined);
       setMessages(result.messages);
+      setTotalCount(result.totalCount);
     } catch {
       setMessages([]);
+      showToast('Search failed', 'error');
     } finally {
       setLoadingMessages(false);
     }
-  }, [selectedFolderId]);
+  }, [selectedFolderId, showToast]);
 
   const handleClearSearch = useCallback(() => {
     handleSearchMessages('');
@@ -302,9 +382,14 @@ const MailPage: React.FC = () => {
         setSelectedMessage(prev => prev ? { ...prev, isFlagged: newFlagged } : null);
       }
     } catch {
-      // silently fail
+      showToast('Failed to update flag', 'error');
     }
-  }, [messages, selectedMessage]);
+  }, [messages, selectedMessage, showToast]);
+
+  // Error handler for ReadingPane
+  const handleReadingPaneError = useCallback((message: string) => {
+    showToast(message, 'error');
+  }, [showToast]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -378,6 +463,7 @@ const MailPage: React.FC = () => {
     toggleFlag: handleToggleFlag,
     toggleRead: handleToggleRead,
     openCompose: handleOpenCompose,
+    moveMessage: handleOpenMoveDialog,
     searchMessages: handleSearchMessages,
     clearSearch: handleClearSearch,
     refreshMessages,
@@ -407,6 +493,10 @@ const MailPage: React.FC = () => {
             onSearch={handleSearchMessages}
             loading={loadingMessages}
             folderName={isSearching ? `Search: "${searchQuery}"` : folders.find(f => f.id === selectedFolderId)?.displayName}
+            currentPage={currentPage}
+            totalCount={totalCount}
+            pageSize={pageSize}
+            onPageChange={handlePageChange}
           />
           {composeMode ? (
             <ComposeMail
@@ -418,10 +508,18 @@ const MailPage: React.FC = () => {
               onSent={handleSentSuccess}
             />
           ) : (
-            <ReadingPane message={selectedMessage} />
+            <ReadingPane message={selectedMessage} onError={handleReadingPaneError} />
           )}
         </div>
       </div>
+      {showMoveDialog && (
+        <MoveToFolderDialog
+          folders={folders}
+          currentFolderId={selectedFolderId}
+          onMove={handleMoveToFolder}
+          onClose={() => setShowMoveDialog(false)}
+        />
+      )}
     </MailProvider>
   );
 };

@@ -1,12 +1,39 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { EmailMessage } from '../../../types/mail';
+import { mailService } from '../../../services/mail/mailService';
 import './ReadingPane.css';
 
 interface ReadingPaneProps {
   message: EmailMessage | null;
+  onError?: (message: string) => void;
 }
 
-const ReadingPane: React.FC<ReadingPaneProps> = ({ message }) => {
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+};
+
+const ReadingPane: React.FC<ReadingPaneProps> = ({ message, onError }) => {
+  const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
+  const handleDownloadAttachment = useCallback(async (attachmentId: string, fileName: string) => {
+    if (!message) return;
+    setDownloadingIds(prev => new Set(prev).add(attachmentId));
+    try {
+      await mailService.downloadAttachment(message.id, attachmentId, fileName);
+    } catch {
+      onError?.('Failed to download attachment');
+    } finally {
+      setDownloadingIds(prev => {
+        const next = new Set(prev);
+        next.delete(attachmentId);
+        return next;
+      });
+    }
+  }, [message, onError]);
+
   const handlePrint = useCallback(() => {
     if (!message) return;
     const printWindow = window.open('', '_blank');
@@ -99,9 +126,22 @@ const ReadingPane: React.FC<ReadingPaneProps> = ({ message }) => {
           </h4>
           <div className="reading-pane__attachment-list">
             {message.attachments.map((att) => (
-              <div key={att.id} className="reading-pane__attachment-card">
+              <div
+                key={att.id}
+                className="reading-pane__attachment-card"
+                onClick={() => handleDownloadAttachment(att.id, att.fileName)}
+                title={`Download ${att.fileName}`}
+              >
                 <span className="material-symbols-outlined">description</span>
-                <span className="reading-pane__attachment-name text-ellipsis">{att.fileName}</span>
+                <div className="reading-pane__attachment-info">
+                  <span className="reading-pane__attachment-name text-ellipsis">{att.fileName}</span>
+                  {att.fileSize > 0 && (
+                    <span className="reading-pane__attachment-size">{formatFileSize(att.fileSize)}</span>
+                  )}
+                </div>
+                <span className="material-symbols-outlined reading-pane__attachment-download">
+                  {downloadingIds.has(att.id) ? 'hourglass_empty' : 'download'}
+                </span>
               </div>
             ))}
           </div>
