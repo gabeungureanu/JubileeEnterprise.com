@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { CalendarEvent, CalendarViewMode, CalendarDateRange } from '../../../types/calendar';
 import './CalendarGrid.css';
 
@@ -68,6 +68,15 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   onDateClick,
 }) => {
   const timeGridRef = useRef<HTMLDivElement>(null);
+
+  // Tick state to re-render current time indicator every minute
+  const [, setTimeTick] = useState(0);
+
+  useEffect(() => {
+    if (viewMode === 'month') return;
+    const id = setInterval(() => setTimeTick((t) => t + 1), 60000);
+    return () => clearInterval(id);
+  }, [viewMode]);
 
   // Auto-scroll to current hour on mount (for time grid views)
   useEffect(() => {

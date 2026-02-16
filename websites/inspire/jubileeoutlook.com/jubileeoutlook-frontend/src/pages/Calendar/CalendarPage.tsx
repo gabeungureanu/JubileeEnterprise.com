@@ -2,11 +2,23 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import CalendarRibbon from '../../components/layout/Ribbon/CalendarRibbon';
 import MiniCalendar from '../../components/calendar/MiniCalendar';
+import MyCalendars from '../../components/calendar/MyCalendars';
 import CalendarGrid from '../../components/calendar/CalendarGrid';
 import EventDialog from '../../components/calendar/EventDialog';
+import ReminderPopup from '../../components/calendar/ReminderPopup';
 import { CalendarEvent, CalendarEventDto, CalendarViewMode, CalendarDateRange } from '../../types/calendar';
 import { calendarService } from '../../services/calendar/calendarService';
+import { expandRecurringEvents } from '../../utils/calendarUtils';
+import { reminderService, ReminderTrigger } from '../../services/calendar/reminderService';
 import './CalendarPage.css';
+
+// Simple event cache: 5-minute TTL per date-range key
+const CACHE_TTL_MS = 5 * 60 * 1000;
+const eventCache = new Map<string, { events: CalendarEvent[]; timestamp: number }>();
+
+function getCacheKey(start: Date, end: Date): string {
+  return `${start.getFullYear()}-${start.getMonth()}-${start.getDate()}_${end.getFullYear()}-${end.getMonth()}-${end.getDate()}`;
+}
 
 const CalendarPage: React.FC = () => {
   const { isFolderPaneVisible } = useAppContext();
@@ -19,6 +31,9 @@ const CalendarPage: React.FC = () => {
   // Event dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+
+  // Reminder state
+  const [reminderEvent, setReminderEvent] = useState<CalendarEvent | null>(null);
 
   // Calculate date range based on view mode and selected date
   const getDateRange = useCallback((date: Date, mode: CalendarViewMode): CalendarDateRange => {
@@ -64,14 +79,27 @@ const CalendarPage: React.FC = () => {
 
   const dateRange = getDateRange(selectedDate, viewMode);
 
-  // Fetch events whenever date range changes
-  const fetchEvents = useCallback(async () => {
+  // Fetch events whenever date range changes (with 5-min cache)
+  const fetchEvents = useCallback(async (forceRefresh = false) => {
+    const range = getDateRange(selectedDate, viewMode);
+    const key = getCacheKey(range.start, range.end);
+
+    // Check cache unless forced
+    if (!forceRefresh) {
+      const cached = eventCache.get(key);
+      if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+        setEvents(cached.events);
+        return;
+      }
+    }
+
     setIsLoading(true);
     setError(null);
     try {
-      const range = getDateRange(selectedDate, viewMode);
       const fetched = await calendarService.getEvents(range.start, range.end);
-      setEvents(fetched);
+      const expanded = expandRecurringEvents(fetched, range.start, range.end);
+      eventCache.set(key, { events: expanded, timestamp: Date.now() });
+      setEvents(expanded);
     } catch (err) {
       console.error('Failed to fetch calendar events:', err);
       setError('Failed to load events. Please try again.');
@@ -84,6 +112,37 @@ const CalendarPage: React.FC = () => {
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
+
+  // Start/stop reminder service
+  useEffect(() => {
+    const handleReminder = (trigger: ReminderTrigger) => {
+      setReminderEvent(trigger.event);
+    };
+    reminderService.start(handleReminder);
+    return () => {
+      reminderService.stop();
+    };
+  }, []);
+
+  // Feed events to reminder service whenever they change
+  useEffect(() => {
+    reminderService.updateEvents(events);
+  }, [events]);
+
+  // Reminder handlers
+  const handleReminderDismiss = () => {
+    if (reminderEvent) {
+      reminderService.dismiss(reminderEvent.id);
+      setReminderEvent(null);
+    }
+  };
+
+  const handleReminderSnooze = (minutes: number) => {
+    if (reminderEvent) {
+      reminderService.snooze(reminderEvent.id, minutes);
+      setReminderEvent(null);
+    }
+  };
 
   // Navigation based on view mode
   const navigatePrevious = () => {
@@ -202,7 +261,7 @@ const CalendarPage: React.FC = () => {
       } else {
         await calendarService.createEvent(dto);
       }
-      await fetchEvents();
+      await fetchEvents(true);
     } catch (err) {
       console.error('Failed to save event:', err);
       setError('Failed to save event. Please try again.');
@@ -212,7 +271,7 @@ const CalendarPage: React.FC = () => {
   const handleEventDelete = async (eventId: string) => {
     try {
       await calendarService.deleteEvent(eventId);
-      await fetchEvents();
+      await fetchEvents(true);
     } catch (err) {
       console.error('Failed to delete event:', err);
       setError('Failed to delete event. Please try again.');
@@ -233,6 +292,7 @@ const CalendarPage: React.FC = () => {
         {isFolderPaneVisible && (
           <div className="calendar-page__sidebar">
             <MiniCalendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
+            <MyCalendars />
           </div>
         )}
         <div className="calendar-page__main">
@@ -295,6 +355,14 @@ const CalendarPage: React.FC = () => {
         onSave={handleEventSave}
         onDelete={editingEvent ? handleEventDelete : undefined}
       />
+
+      {reminderEvent && (
+        <ReminderPopup
+          event={reminderEvent}
+          onDismiss={handleReminderDismiss}
+          onSnooze={handleReminderSnooze}
+        />
+      )}
     </div>
   );
 };
