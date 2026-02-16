@@ -269,13 +269,14 @@ const CalendarPage: React.FC = () => {
   };
 
   const handleEventDelete = async (eventId: string) => {
-    try {
-      await calendarService.deleteEvent(eventId);
-      await fetchEvents(true);
-    } catch (err) {
-      console.error('Failed to delete event:', err);
-      setError('Failed to delete event. Please try again.');
+    const deleted = await calendarService.deleteEvent(eventId);
+    if (!deleted) {
+      throw new Error('Event may not exist or was already deleted.');
     }
+    // Close dialog only after successful delete
+    setIsDialogOpen(false);
+    setEditingEvent(null);
+    await fetchEvents(true);
   };
 
   return (

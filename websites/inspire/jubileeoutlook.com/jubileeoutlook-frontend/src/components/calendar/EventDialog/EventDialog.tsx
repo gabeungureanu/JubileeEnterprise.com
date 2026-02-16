@@ -95,7 +95,7 @@ interface EventDialogProps {
   defaultDate?: Date;
   onClose: () => void;
   onSave: (event: Partial<CalendarEvent>) => void;
-  onDelete?: (eventId: string) => void;
+  onDelete?: (eventId: string) => Promise<void> | void;
 }
 
 const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, onClose, onSave, onDelete }) => {
@@ -289,10 +289,15 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
     onClose();
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (event && onDelete) {
-      onDelete(event.id);
-      onClose();
+      try {
+        await onDelete(event.id);
+        // Parent (CalendarPage) handles closing the dialog after successful delete
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to delete event.';
+        setValidationError(message);
+      }
     }
   };
 

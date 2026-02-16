@@ -47,7 +47,7 @@ export const calendarService = {
 
   async deleteEvent(eventId: string): Promise<boolean> {
     const response = await continuumClient.delete(`/outlook/events/${encodeURIComponent(eventId)}`);
-    return response.status === 200 || response.status === 204 || response.status === 404;
+    return response.status === 200 || response.status === 204;
   },
 
   async getEventsForMonth(year: number, month: number): Promise<CalendarEvent[]> {
