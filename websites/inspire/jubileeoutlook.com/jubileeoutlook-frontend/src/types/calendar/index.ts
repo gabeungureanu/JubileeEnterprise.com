@@ -1,39 +1,61 @@
-// --- API DTO shapes (camelCase from InspireContinuum) ---
+// --- API DTO shape (matches actual InspireContinuum API response) ---
+// The API returns camelCase fields but also accepts snake_case on write.
+// We use `any`-safe accessor in the mapper to handle both conventions.
 
 export interface CalendarEventDto {
   id: string;
-  user_id: string;
-  calendar_id: string;
+  // camelCase (as returned by API)
+  userId?: string;
+  calendarId?: string;
   subject: string;
   location: string;
-  start_time: string;
-  end_time: string;
+  startTime?: string;
+  endTime?: string;
   description: string;
-  is_all_day: boolean;
+  isAllDay?: boolean;
   status: string;
   category: string;
-  calendar_name: string;
-  event_color: string;
-  attendees: string[];
-  organizer: string;
-  is_private: boolean;
-  is_in_person: boolean;
-  is_recurring: boolean;
-  recurrence_type: string;
-  recurrence_interval: number;
-  recurrence_end_date: string | null;
-  recurrence_occurrences: number | null;
-  recurrence_days_of_week: string[];
-  reminder_minutes: number;
-  created_at: string;
-  updated_at: string;
+  calendarName?: string;
+  eventColor?: string;
+  attendees?: string[];
+  organizer?: string;
+  isPrivate?: boolean;
+  isInPerson?: boolean;
+  isRecurring?: boolean;
+  recurrenceType?: string;
+  recurrenceInterval?: number;
+  recurrenceEndDate?: string | null;
+  recurrenceOccurrences?: number | null;
+  recurrenceDaysOfWeek?: string[];
+  reminderMinutes?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  // snake_case aliases (for write payloads)
+  user_id?: string;
+  calendar_id?: string;
+  start_time?: string;
+  end_time?: string;
+  is_all_day?: boolean;
+  calendar_name?: string;
+  event_color?: string;
+  is_private?: boolean;
+  is_in_person?: boolean;
+  is_recurring?: boolean;
+  recurrence_type?: string;
+  recurrence_interval?: number;
+  recurrence_end_date?: string | null;
+  recurrence_occurrences?: number | null;
+  recurrence_days_of_week?: string[];
+  reminder_minutes?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ApiEventsListResponse {
-  success: boolean;
+  success?: boolean;
   error?: string;
-  events: CalendarEventDto[];
-  total_count: number;
+  events?: CalendarEventDto[];
+  total_count?: number;
 }
 
 // --- Frontend display types ---
@@ -75,30 +97,31 @@ export type ReminderOption =
   | 'none' | 'atTime' | '5min' | '15min' | '30min'
   | '1hour' | '2hours' | '12hours' | '1day' | '1week';
 
-// --- Mapper ---
+// --- Mapper (handles both camelCase and snake_case API responses) ---
 
 export function mapEventDto(dto: CalendarEventDto): CalendarEvent {
+  const d = dto as any;
   return {
-    id: dto.id,
-    title: dto.subject,
-    description: dto.description,
-    location: dto.location,
-    startDateTime: dto.start_time,
-    endDateTime: dto.end_time,
-    isAllDay: dto.is_all_day,
-    isRecurring: dto.is_recurring,
-    isPrivate: dto.is_private,
-    isInPerson: dto.is_in_person,
-    showAs: dto.status,
-    category: dto.category,
-    eventColor: dto.event_color,
-    attendees: dto.attendees || [],
-    organizer: dto.organizer,
-    reminderMinutes: dto.reminder_minutes,
-    recurrenceType: dto.recurrence_type,
-    recurrenceInterval: dto.recurrence_interval,
-    recurrenceEndDate: dto.recurrence_end_date,
-    recurrenceOccurrences: dto.recurrence_occurrences,
-    recurrenceDaysOfWeek: dto.recurrence_days_of_week || [],
+    id: d.id,
+    title: d.subject || '',
+    description: d.description || '',
+    location: d.location || '',
+    startDateTime: d.startTime || d.start_time || '',
+    endDateTime: d.endTime || d.end_time || '',
+    isAllDay: d.isAllDay ?? d.is_all_day ?? false,
+    isRecurring: d.isRecurring ?? d.is_recurring ?? false,
+    isPrivate: d.isPrivate ?? d.is_private ?? false,
+    isInPerson: d.isInPerson ?? d.is_in_person ?? false,
+    showAs: d.status || 'busy',
+    category: d.category || 'blue',
+    eventColor: d.eventColor || d.event_color || 'blue',
+    attendees: d.attendees || [],
+    organizer: d.organizer || '',
+    reminderMinutes: d.reminderMinutes ?? d.reminder_minutes ?? 15,
+    recurrenceType: d.recurrenceType || d.recurrence_type || 'none',
+    recurrenceInterval: d.recurrenceInterval ?? d.recurrence_interval ?? 1,
+    recurrenceEndDate: d.recurrenceEndDate ?? d.recurrence_end_date ?? null,
+    recurrenceOccurrences: d.recurrenceOccurrences ?? d.recurrence_occurrences ?? null,
+    recurrenceDaysOfWeek: d.recurrenceDaysOfWeek || d.recurrence_days_of_week || [],
   };
 }
