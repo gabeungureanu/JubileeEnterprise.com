@@ -6,6 +6,7 @@ interface CalendarGridProps {
   events: CalendarEvent[];
   viewMode: CalendarViewMode;
   dateRange: CalendarDateRange;
+  selectedDate?: Date;
   onEventClick: (event: CalendarEvent) => void;
   onDateClick: (date: Date) => void;
 }
