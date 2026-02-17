@@ -1,0 +1,139 @@
+.export-dialog__overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal, 1000);
+}
+
+.export-dialog {
+  width: 420px;
+  max-width: 90vw;
+  background-color: #1A1A1A;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-dialog);
+  display: flex;
+  flex-direction: column;
+}
+
+.export-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.export-dialog__header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.export-dialog__close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.export-dialog__close:hover {
+  background: var(--bg-hover);
+}
+
+.export-dialog__body {
+  padding: 20px;
+}
+
+.export-dialog__info {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 16px;
+}
+
+.export-dialog__options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.export-dialog__option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.export-dialog__option:hover {
+  border-color: var(--gold-primary);
+}
+
+.export-dialog__option input[type="radio"] {
+  accent-color: var(--gold-primary);
+}
+
+.export-dialog__option .material-symbols-outlined {
+  font-size: 24px;
+  color: var(--text-secondary);
+}
+
+.export-dialog__option div {
+  display: flex;
+  flex-direction: column;
+}
+
+.export-dialog__option strong {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.export-dialog__option span {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.export-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-primary);
+}
+
+.export-dialog__btn {
+  padding: 6px 20px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.export-dialog__btn--cancel {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+.export-dialog__btn--cancel:hover {
+  background: var(--bg-hover);
+}
+
+.export-dialog__btn--export {
+  background-color: var(--gold-primary);
+  color: var(--text-inverse);
+}
+
+.export-dialog__btn--export:hover {
+  background-color: var(--gold-hover);
+}

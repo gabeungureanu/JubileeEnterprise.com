@@ -268,6 +268,48 @@
   border-color: var(--gold-primary);
 }
 
+.event-dialog__time-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.event-dialog__time-input {
+  width: 90px;
+  padding: 8px;
+  background-color: #202020;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 13px;
+  outline: none;
+}
+
+.event-dialog__time-input:focus {
+  border-color: var(--gold-primary);
+}
+
+.event-dialog__time-input--error {
+  border-color: #E74856;
+}
+
+.event-dialog__time-mode-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+}
+
+.event-dialog__time-mode-btn:hover {
+  color: var(--gold-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
 .event-dialog__time-sep {
   color: var(--text-tertiary);
   font-size: 13px;
@@ -445,6 +487,103 @@
   border-color: var(--gold-primary);
 }
 
+/* --- Timezone Select --- */
+.event-dialog__timezone-select {
+  flex: 1;
+  padding: 8px;
+  background-color: #202020;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+
+.event-dialog__timezone-select:focus {
+  border-color: var(--gold-primary);
+}
+
+/* --- Attachments --- */
+.event-dialog__attach-btn {
+  background: transparent;
+  border: 1px dashed var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-family: var(--font-family);
+  font-size: 13px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.event-dialog__attach-btn:hover {
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
+}
+
+.event-dialog__attach-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.event-dialog__attachments {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 0 0 32px;
+}
+
+.event-dialog__attachment {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: #202020;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+}
+
+.event-dialog__attachment-icon {
+  font-size: 16px;
+  color: var(--text-tertiary);
+}
+
+.event-dialog__attachment-name {
+  flex: 1;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-dialog__attachment-size {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.event-dialog__attachment-remove {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  padding: 2px;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.event-dialog__attachment-remove:hover {
+  color: #E74856;
+  background: rgba(231, 72, 86, 0.1);
+}
+
+.event-dialog__attachment-remove .material-symbols-outlined {
+  font-size: 14px;
+}
+
 /* --- Buttons --- */
 .event-dialog__btn {
   padding: 6px 20px;
@@ -457,6 +596,24 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.event-dialog__btn--template {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-primary);
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+}
+
+.event-dialog__btn--template:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.event-dialog__btn--template .material-symbols-outlined {
+  font-size: 16px;
 }
 
 .event-dialog__btn--save {

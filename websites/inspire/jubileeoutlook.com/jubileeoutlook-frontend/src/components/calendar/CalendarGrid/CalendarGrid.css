@@ -284,22 +284,30 @@
 /* --- Time-Positioned Events --- */
 .calendar-grid__time-event {
   position: absolute;
-  left: 2px;
-  right: 4px;
   border-radius: var(--radius-sm);
   padding: 4px 8px;
-  cursor: pointer;
+  cursor: grab;
   overflow: hidden;
   z-index: 1;
   display: flex;
   flex-direction: column;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: opacity var(--transition-fast);
+  box-sizing: border-box;
 }
 
 .calendar-grid__time-event:hover {
   opacity: 0.85;
   z-index: 2;
+}
+
+.calendar-grid__time-event:active {
+  cursor: grabbing;
+}
+
+/* Drag-over highlight on time columns */
+.calendar-grid__time-column--drag-over {
+  background-color: rgba(0, 120, 212, 0.06);
 }
 
 .calendar-grid__time-event-title {

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CalendarEvent, CalendarViewMode, CalendarDateRange } from '../../../types/calendar';
+import EventResizeHandle from '../EventResizeHandle/EventResizeHandle';
 import './CalendarGrid.css';
 
 interface CalendarGridProps {
@@ -9,6 +10,8 @@ interface CalendarGridProps {
   selectedDate?: Date;
   onEventClick: (event: CalendarEvent) => void;
   onDateClick: (date: Date) => void;
+  onEventDrop?: (eventId: string, newStart: Date) => void;
+  onEventResize?: (eventId: string, newEndTime: Date) => void;
 }
 
 const HOUR_HEIGHT = 60; // px per hour (matching WPF)
@@ -59,6 +62,94 @@ function isSameDay(d1: Date, d2: Date): boolean {
     d1.getDate() === d2.getDate();
 }
 
+// --- Overlap detection for side-by-side event layout ---
+interface PositionedEvent {
+  event: CalendarEvent;
+  top: number;
+  height: number;
+  column: number;
+  totalColumns: number;
+}
+
+function detectOverlaps(events: CalendarEvent[]): PositionedEvent[] {
+  if (events.length === 0) return [];
+
+  // Calculate positions and sort by start time
+  const items = events.map((evt) => {
+    const start = new Date(evt.startDateTime);
+    const end = new Date(evt.endDateTime);
+    const startMin = start.getHours() * 60 + start.getMinutes();
+    const endMin = end.getHours() * 60 + end.getMinutes();
+    const duration = Math.max(endMin - startMin, 15);
+    return {
+      event: evt,
+      startMin,
+      endMin: startMin + duration,
+      top: (startMin / 60) * HOUR_HEIGHT,
+      height: (duration / 60) * HOUR_HEIGHT,
+    };
+  }).sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin);
+
+  // Group overlapping events into clusters
+  const clusters: typeof items[] = [];
+  let currentCluster = [items[0]];
+
+  for (let i = 1; i < items.length; i++) {
+    const clusterEnd = Math.max(...currentCluster.map((c) => c.endMin));
+    if (items[i].startMin < clusterEnd) {
+      currentCluster.push(items[i]);
+    } else {
+      clusters.push(currentCluster);
+      currentCluster = [items[i]];
+    }
+  }
+  clusters.push(currentCluster);
+
+  // Assign columns within each cluster
+  const result: PositionedEvent[] = [];
+  for (const cluster of clusters) {
+    const columns: typeof items[] = [];
+
+    for (const item of cluster) {
+      // Find first column where this event doesn't overlap
+      let placed = false;
+      for (let col = 0; col < columns.length; col++) {
+        const lastInCol = columns[col][columns[col].length - 1];
+        if (item.startMin >= lastInCol.endMin) {
+          columns[col].push(item);
+          result.push({
+            event: item.event,
+            top: item.top,
+            height: item.height,
+            column: col,
+            totalColumns: 0, // filled in below
+          });
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) {
+        columns.push([item]);
+        result.push({
+          event: item.event,
+          top: item.top,
+          height: item.height,
+          column: columns.length - 1,
+          totalColumns: 0,
+        });
+      }
+    }
+
+    // Set totalColumns for all events in this cluster
+    const totalCols = columns.length;
+    for (let i = result.length - cluster.length; i < result.length; i++) {
+      result[i].totalColumns = totalCols;
+    }
+  }
+
+  return result;
+}
+
 const CalendarGrid: React.FC<CalendarGridProps> = ({
   events,
   viewMode,
@@ -66,8 +157,11 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   selectedDate,
   onEventClick,
   onDateClick,
+  onEventDrop,
+  onEventResize,
 }) => {
   const timeGridRef = useRef<HTMLDivElement>(null);
+  const [dragOverCol, setDragOverCol] = useState<number | null>(null);
 
   // Tick state to re-render current time indicator every minute
   const [, setTimeTick] = useState(0);
@@ -113,19 +207,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
     });
   };
 
-  // Calculate event position on time grid
-  const getEventPosition = (event: CalendarEvent): { top: number; height: number } => {
-    const start = new Date(event.startDateTime);
-    const end = new Date(event.endDateTime);
-    const startMinutes = start.getHours() * 60 + start.getMinutes();
-    const endMinutes = end.getHours() * 60 + end.getMinutes();
-    const duration = Math.max(endMinutes - startMinutes, 15); // minimum 15 min
-    return {
-      top: (startMinutes / 60) * HOUR_HEIGHT,
-      height: (duration / 60) * HOUR_HEIGHT,
-    };
-  };
-
   // Get columns for the current view
   const getViewColumns = (): Date[] => {
     const columns: Date[] = [];
@@ -164,6 +245,51 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
       dayName: days[date.getDay()],
       dayNumber: String(date.getDate()),
     };
+  };
+
+  // --- Drag & Drop handlers ---
+  const handleDragStart = (e: React.DragEvent, evt: CalendarEvent) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', JSON.stringify({
+      eventId: evt.id,
+      startDateTime: evt.startDateTime,
+    }));
+  };
+
+  const handleDragOver = (e: React.DragEvent, colIndex: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverCol(colIndex);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverCol(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, col: Date) => {
+    e.preventDefault();
+    setDragOverCol(null);
+    if (!onEventDrop) return;
+
+    const raw = e.dataTransfer.getData('text/plain');
+    if (!raw) return;
+
+    try {
+      const { eventId } = JSON.parse(raw);
+      const rect = e.currentTarget.getBoundingClientRect();
+      const y = e.clientY - rect.top + (timeGridRef.current?.scrollTop || 0);
+      const totalMinutes = (y / HOUR_HEIGHT) * 60;
+      // Snap to 15-minute intervals
+      const snapped = Math.round(totalMinutes / 15) * 15;
+      const hour = Math.floor(snapped / 60);
+      const minute = snapped % 60;
+
+      const newStart = new Date(col);
+      newStart.setHours(Math.min(hour, 23), minute, 0, 0);
+      onEventDrop(eventId, newStart);
+    } catch {
+      /* ignore invalid drag data */
+    }
   };
 
   // --- MONTH VIEW ---
@@ -300,11 +426,17 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
               {columns.map((col, colIndex) => {
                 const timedEvts = getTimedEvents(col);
                 const isToday = isSameDay(col, new Date());
+                const positioned = detectOverlaps(timedEvts);
 
                 return (
                   <div
                     key={colIndex}
-                    className={`calendar-grid__time-column ${isToday ? 'calendar-grid__time-column--today' : ''}`}
+                    className={`calendar-grid__time-column ${isToday ? 'calendar-grid__time-column--today' : ''} ${
+                      dragOverCol === colIndex ? 'calendar-grid__time-column--drag-over' : ''
+                    }`}
+                    onDragOver={(e) => handleDragOver(e, colIndex)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, col)}
                     onClick={(e) => {
                       const rect = e.currentTarget.getBoundingClientRect();
                       const y = e.clientY - rect.top;
@@ -323,30 +455,43 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
                       />
                     ))}
 
-                    {/* Events */}
-                    {timedEvts.map(evt => {
-                      const pos = getEventPosition(evt);
+                    {/* Events with overlap column layout */}
+                    {positioned.map((pos) => {
+                      const columnWidth = 100 / pos.totalColumns;
                       return (
                         <div
-                          key={evt.id}
+                          key={pos.event.id}
                           className="calendar-grid__time-event"
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, pos.event)}
                           style={{
                             top: pos.top,
                             height: pos.height,
-                            backgroundColor: getEventColor(evt.category),
+                            left: `${pos.column * columnWidth}%`,
+                            width: `${columnWidth - 1}%`,
+                            backgroundColor: getEventColor(pos.event.category),
                           }}
-                          onClick={(e) => { e.stopPropagation(); onEventClick(evt); }}
+                          onClick={(e) => { e.stopPropagation(); onEventClick(pos.event); }}
                         >
                           <span className="calendar-grid__time-event-title">
-                            {evt.isPrivate ? 'Private' : evt.title}
+                            {pos.event.isPrivate ? 'Private' : pos.event.title}
                           </span>
                           <span className="calendar-grid__time-event-time">
-                            {formatTime12h(new Date(evt.startDateTime))} - {formatTime12h(new Date(evt.endDateTime))}
+                            {formatTime12h(new Date(pos.event.startDateTime))} - {formatTime12h(new Date(pos.event.endDateTime))}
                           </span>
-                          {evt.location && (
+                          {pos.event.location && (
                             <span className="calendar-grid__time-event-location">
-                              {evt.location}
+                              {pos.event.location}
                             </span>
+                          )}
+                          {onEventResize && (
+                            <EventResizeHandle
+                              eventId={pos.event.id}
+                              startDateTime={pos.event.startDateTime}
+                              endDateTime={pos.event.endDateTime}
+                              hourHeight={HOUR_HEIGHT}
+                              onResize={onEventResize}
+                            />
                           )}
                         </div>
                       );
