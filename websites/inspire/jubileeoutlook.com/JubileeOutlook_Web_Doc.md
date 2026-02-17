@@ -522,6 +522,9 @@ Message bodies are fetched on-demand from IMAP to save storage:
 | POST | `/api/v1/outlook/events` | Create event (transaction: event + attendees + attachments + images) |
 | PUT | `/api/v1/outlook/events/:id` | Update event (replaces attendees/attachments/images) |
 | DELETE | `/api/v1/outlook/events/:id` | Delete event (cascade) |
+| POST | `/api/v1/outlook/files/upload` | Upload file attachment (multipart/form-data, 25MB max) |
+| GET | `/api/v1/outlook/files/:filename` | Download/serve uploaded file with MIME type detection |
+| DELETE | `/api/v1/outlook/files/:filename` | Delete uploaded file (path traversal protected) |
 
 #### User Settings & Sessions
 
@@ -782,22 +785,30 @@ Five-panel authentication flow:
 
 **Layout:**
 ```
-┌──────────────────────────────────────────────────────────┐
-│                   CalendarRibbon                          │
-├────────────────┬─────────────────────────────────────────┤
-│                │                                         │
-│  MiniCalendar  │  CalendarGrid (Month View)              │
-│  (sidebar)     │                                         │
-│                │  Su Mo Tu We Th Fr Sa                    │
-│  << Feb 2026 >>│  1  2  3  4  5  6  7                    │
-│  [date picker] │  8  9  10 11 12 13 14                   │
-│                │  ...                                    │
-└────────────────┴─────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│  CalendarRibbon [New Event] [Today] [Day|WorkWeek|Week|Month]│
+│  [Templates] [Export] [Share]                                │
+├──────────────┬───────────────────────────────────────────────┤
+│              │  🔍 Search events...                [filter]  │
+│ MiniCalendar │───────────────────────────────────────────────│
+│ (sidebar)    │  ← → Friday, February 6, 2026 [Today]        │
+│              │         [Day] [Work Week] [Week] [Month]      │
+│ << Feb 2026>>│───────────────────────────────────────────────│
+│ [date picker]│  CalendarGrid (Day/Week/WorkWeek/Month)       │
+│              │  24-hour scrollable time grid (60px/hour)     │
+│ My Calendars │  • Event blocks positioned by start/duration  │
+│ ☑ My Calendar│  • Overlap detection (side-by-side columns)   │
+│ ☑ Work       │  • Drag & drop to move events (15-min snap)  │
+│ ☑ Personal   │  • Resize bottom edge to adjust duration      │
+│ ☑ Holidays   │  • Current time indicator (red dot + line)    │
+└──────────────┴───────────────────────────────────────────────┘
 ```
 
-**View Modes:** Month (implemented), Week/WorkWeek/Day (placeholders).
+**View Modes:** Day, WorkWeek, Week, Month — all fully implemented with time grid views.
 
-**Status:** UI-only. Events array is always empty (no API loading wired).
+**Status:** Fully functional with API integration (Continuum API CRUD), 5-minute event cache, recurring event expansion, reminders, search, drag & drop, resize, file attachments, timezone support, templates, sharing, iCal export, and keyboard shortcuts.
+
+**Keyboard Shortcuts:** Ctrl+N (new event), T (today), Left/Right (navigate), 1-4 (views), Ctrl+F (search), Escape (close dialog).
 
 #### PeoplePage (`pages/People/PeoplePage.tsx`)
 
@@ -854,9 +865,14 @@ Five-panel authentication flow:
 - Recipient parsing: `user@email.com` or `"Name" <email>` format
 
 #### CalendarGrid
-- Month view: 7-column grid, event chips with color borders
-- Shows first 3 events per day with "+N more" indicator
-- Today highlighting, other-month day fading
+- **Month view**: 7-column grid, event chips with color borders, first 3 events per day with "+N more" indicator, today highlighting, other-month day fading
+- **Day/Week/WorkWeek views**: 24-hour scrollable time grid (60px/hour), event blocks positioned by start time and sized by duration
+- **Event overlap detection**: Cluster-based column assignment, overlapping events render side-by-side with calculated `left%` and `width%`
+- **Drag & drop**: Native HTML5 drag to move events between time slots (15-minute snap), visual drag-over highlight
+- **Event resize**: `EventResizeHandle` component at bottom of each timed event, mousedown/mousemove/mouseup pattern, 15-minute minimum
+- **All-day events row**: Rendered above time grid when all-day events are present
+- **Current time indicator**: Red dot + line on today's column, updates every 60 seconds
+- **Column headers**: Day name + number with today highlighted in gold (#ffbd59)
 - Category-based color coding
 
 #### MiniCalendar

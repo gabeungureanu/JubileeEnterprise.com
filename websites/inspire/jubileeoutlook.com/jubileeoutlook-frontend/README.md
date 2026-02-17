@@ -30,9 +30,11 @@ All API access goes through `codexClient` and `continuumClient` wrappers. No dir
 ### Key Patterns
 
 - **MailContext** — Shared mail state via React Context (`useMailContext` / `useMailContextSafe`)
-- **localStorage** — Client-side storage for signatures, snooze, rules, templates, preferences
+- **CalendarPage as orchestrator** — All calendar state lives in CalendarPage (no CalendarContext); events filtered via `useMemo` pipeline
+- **localStorage** — Client-side storage for signatures, snooze, rules, templates, calendar filters, reminder dismissals, event templates
 - **contentEditable** — Rich text editing for compose, signatures, templates
 - **60s auto-sync** — Polling interval for new messages with notification detection
+- **Native HTML5 Drag** — Drag & drop for mail and calendar events (no external DnD library)
 
 ## Project Structure
 
@@ -55,10 +57,15 @@ src/
 │   │   ├── AttachmentPreview/   # Inline image/PDF preview modal
 │   │   └── SnoozePicker/        # Snooze time selection dialog
 │   ├── calendar/
-│   │   ├── CalendarGrid/        # Time grid views (Day/Week/WorkWeek/Month)
-│   │   ├── EventDialog/         # Event create/edit dialog (WPF parity)
-│   │   ├── MyCalendars/         # Sidebar with calendar visibility toggles
-│   │   └── ReminderPopup/       # Reminder notification with snooze/dismiss
+│   │   ├── CalendarGrid/        # Time grid views (Day/Week/WorkWeek/Month) with overlap detection
+│   │   ├── EventDialog/         # Event create/edit dialog (WPF parity) with attachments, timezone, templates
+│   │   ├── EventResizeHandle/   # Bottom-edge drag handle for event duration resize
+│   │   ├── ExportDialog/        # iCal (.ics) export and print dialog
+│   │   ├── MyCalendars/         # Sidebar with calendar visibility toggles (localStorage persisted)
+│   │   ├── ReminderPopup/       # Reminder notification with snooze/dismiss
+│   │   ├── SearchBar/           # Debounced search with category filter (Ctrl+F)
+│   │   ├── SharingDialog/       # Calendar sharing with email/permission management
+│   │   └── TemplateManager/     # Event template list with apply/delete actions
 │   └── people/                  # Contacts components
 ├── context/
 │   ├── AppContext.tsx            # Global app state (activeModule, user)
@@ -77,10 +84,16 @@ src/
 │   │   └── templateService.ts   # Email template CRUD
 │   ├── calendar/
 │   │   ├── calendarService.ts   # Calendar CRUD via Continuum API
-│   │   └── reminderService.ts   # 30s reminder check with snooze/dismiss
+│   │   ├── reminderService.ts   # 30s reminder check with snooze/dismiss (localStorage persisted)
+│   │   ├── fileService.ts       # File upload/delete via Continuum API
+│   │   ├── templateService.ts   # Event template CRUD via localStorage
+│   │   └── sharingService.ts    # Calendar sharing API integration
 │   └── api/                     # API client wrappers
+├── hooks/
+│   └── useKeyboardShortcuts.ts  # Calendar keyboard shortcuts (Ctrl+N, T, arrows, 1-4, Ctrl+F, Esc)
 ├── utils/
-│   └── calendarUtils.ts         # Recurring event expansion (365-instance limit)
+│   ├── calendarUtils.ts         # Recurring event expansion (365-instance limit)
+│   └── icalExport.ts            # RFC 5545 iCal export with RRULE, VALARM
 └── types/
     ├── app.ts                   # AppModule, AppUser types
     ├── mail.ts                  # EmailMessage, MailFolder, ComposeMode types
@@ -105,19 +118,33 @@ src/
 - Full CRUD via Continuum API (`/api/v1/outlook/events`)
 - Day, Week, WorkWeek, and Month views with 24-hour scrollable time grid
 - Event blocks positioned by start time, sized by duration (60px/hour)
+- **Event overlap detection**: Overlapping events render side-by-side using cluster-based column assignment
 - Column headers with today highlighted in gold
 - All-day events row above time grid
 - Current time indicator (red dot + line) updating every 60 seconds
 - Click empty time slot to create event at that hour
+- **Drag & drop**: Move events between time slots (HTML5 native drag, 15-minute snap)
+- **Event resize**: Drag bottom edge to adjust duration (15-minute minimum)
 - EventDialog with WPF desktop parity (two-panel 1100x750 layout)
   - ShowAs status, Reminder, Category, Private toggle
-  - Date/time pickers with 48 half-hour slots
+  - **Hybrid time picker**: Dropdown + freeform text input ("8", "8:30 AM", "20:15", "2pm")
   - Location with in-person toggle
   - Full recurrence (Daily/Weekly/Monthly/Yearly with interval, day-of-week, end conditions)
+  - **File/image attachments**: Upload, preview icons, file size, remove
+  - **Timezone selector**: 11 common IANA timezones, defaults to browser timezone
+  - **Save as Template**: Save current event settings as reusable template
   - Calendar day preview panel with event position block
 - Recurring event expansion (Daily/Weekly/Monthly/Yearly) with 365-instance safety limit
 - Reminder notifications with 30-second check interval, snooze, and dismiss
+  - **Persistent dismissals**: Saved to localStorage with 7-day auto-expiry
 - My Calendars sidebar with visibility toggles
+  - **Calendar filter**: Toggle visibility actually filters events; persisted to localStorage
+- **Search bar**: Debounced text search + category filter across title, description, location, attendees
+- **Keyboard shortcuts**: Ctrl+N (new), T (today), Left/Right (navigate), 1-4 (views), Ctrl+F (search), Escape (close)
+- **iCal export**: RFC 5545 compliant .ics file with RRULE, VALARM; plus Print/PDF
+- **Event templates**: Save/apply templates via localStorage; TemplateManager dialog
+- **Calendar sharing**: Share by email with view/edit permissions; graceful API failure
+- **Ribbon toolbar**: Templates, Export, Share buttons
 - 5-minute event cache per date range with auto-invalidation on mutations
 - DTO mapper handles both camelCase and snake_case API responses
 - Private events display "Private" instead of actual title
