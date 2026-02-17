@@ -59,16 +59,15 @@ export default function MailScreen() {
   // ---------- Data Fetching ----------
 
   const loadFolders = useCallback(async () => {
-    if (!user?.id) return;
     try {
-      const result = await mailService.getFolders(user.id);
+      const result = await mailService.getFolders();
       setFolders(result);
       return result;
     } catch (err) {
       console.warn('[MailScreen] loadFolders failed:', err);
       return [];
     }
-  }, [user?.id]);
+  }, []);
 
   const loadMessages = useCallback(
     async (folderId: string) => {
@@ -124,20 +123,17 @@ export default function MailScreen() {
   // ---------- Sync ----------
 
   const handleSync = useCallback(async () => {
-    if (!user?.id) return;
     try {
-      const accounts = await mailService.getAccounts(user.id);
+      const accounts = await mailService.getAccounts();
       for (const account of accounts) {
-        if (account.syncEnabled) {
-          await mailService.syncAccount(account.id);
-        }
+        await mailService.syncAccount(account.id);
       }
       Alert.alert('Sync Complete', 'Your mailbox has been synced.');
       await handleRefresh();
     } catch (err) {
       Alert.alert('Sync Failed', 'Could not sync your mailbox. Please try again.');
     }
-  }, [user?.id, handleRefresh]);
+  }, [handleRefresh]);
 
   // ---------- Folder Selection ----------
 
@@ -214,7 +210,7 @@ export default function MailScreen() {
   // ---------- Derived ----------
 
   const selectedFolder = folders.find((f) => f.id === selectedFolderId);
-  const folderName = selectedFolder?.name || 'Inbox';
+  const folderName = selectedFolder?.displayName || 'Inbox';
 
   // ---------- Render ----------
 

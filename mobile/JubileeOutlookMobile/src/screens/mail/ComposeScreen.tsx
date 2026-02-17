@@ -28,8 +28,9 @@ import { Spacing, BorderRadius } from '../../constants/spacing';
 import { LoadingSpinner } from '../../components/common';
 import { useAuth } from '../../context/AuthContext';
 import { mailService } from '../../services/mail/mailService';
-import type { EmailRecipient } from '../../types';
 import type { MailStackParamList } from '../../types/navigation';
+
+type ComposeRecipient = { email: string; name: string; type: 'to' | 'cc' | 'bcc' };
 
 type ComposeNav = NativeStackNavigationProp<MailStackParamList, 'Compose'>;
 type ComposeRoute = RouteProp<MailStackParamList, 'Compose'>;
@@ -79,12 +80,12 @@ export default function ComposeScreen() {
 
     switch (mode) {
       case 'reply': {
-        const replyTo = originalMessage.senderEmail || '';
+        const replyTo = originalMessage.from.address || '';
         setTo(replyTo);
         setSubject(buildReplySubject(originalMessage.subject || ''));
         setBody(
           buildReplyBody(
-            originalMessage.senderName || originalMessage.senderEmail || '',
+            originalMessage.from.name || originalMessage.from.address || '',
             originalMessage.receivedAt || originalMessage.sentAt || '',
             originalMessage.bodyHtml || originalMessage.bodyText || '',
           ),
@@ -92,13 +93,12 @@ export default function ComposeScreen() {
         break;
       }
       case 'replyAll': {
-        const replyTo = originalMessage.senderEmail || '';
-        const toRecipients = originalMessage.recipients
-          ?.filter((r) => r.type === 'to' && r.email !== user?.email)
-          .map((r) => r.email) || [];
-        const ccRecipients = originalMessage.recipients
-          ?.filter((r) => r.type === 'cc')
-          .map((r) => r.email) || [];
+        const replyTo = originalMessage.from.address || '';
+        const toRecipients = (originalMessage.to || [])
+          .filter((r) => r.address !== user?.email)
+          .map((r) => r.address);
+        const ccRecipients = (originalMessage.cc || [])
+          .map((r) => r.address);
 
         setTo([replyTo, ...toRecipients].join(', '));
         if (ccRecipients.length > 0) {
@@ -108,7 +108,7 @@ export default function ComposeScreen() {
         setSubject(buildReplySubject(originalMessage.subject || ''));
         setBody(
           buildReplyBody(
-            originalMessage.senderName || originalMessage.senderEmail || '',
+            originalMessage.from.name || originalMessage.from.address || '',
             originalMessage.receivedAt || originalMessage.sentAt || '',
             originalMessage.bodyHtml || originalMessage.bodyText || '',
           ),
@@ -119,7 +119,7 @@ export default function ComposeScreen() {
         setSubject(buildForwardSubject(originalMessage.subject || ''));
         setBody(
           buildReplyBody(
-            originalMessage.senderName || originalMessage.senderEmail || '',
+            originalMessage.from.name || originalMessage.from.address || '',
             originalMessage.receivedAt || originalMessage.sentAt || '',
             originalMessage.bodyHtml || originalMessage.bodyText || '',
           ),
@@ -134,12 +134,12 @@ export default function ComposeScreen() {
   // ---------- Recipient Parsing ----------
 
   const parseRecipients = useCallback(
-    (input: string, type: 'to' | 'cc' | 'bcc'): EmailRecipient[] => {
+    (input: string, type: 'to' | 'cc' | 'bcc'): ComposeRecipient[] => {
       return input
         .split(',')
         .map((s) => s.trim())
         .filter((s) => s.length > 0)
-        .map((email) => ({ email, type }));
+        .map((email) => ({ email, name: email, type }));
     },
     [],
   );
@@ -170,7 +170,7 @@ export default function ComposeScreen() {
 
     setIsSending(true);
     try {
-      const recipients: EmailRecipient[] = [
+      const recipients: ComposeRecipient[] = [
         ...parseRecipients(to, 'to'),
         ...parseRecipients(cc, 'cc'),
         ...parseRecipients(bcc, 'bcc'),
@@ -202,7 +202,7 @@ export default function ComposeScreen() {
 
     setIsSavingDraft(true);
     try {
-      const recipients: EmailRecipient[] = [
+      const recipients: ComposeRecipient[] = [
         ...parseRecipients(to, 'to'),
         ...parseRecipients(cc, 'cc'),
         ...parseRecipients(bcc, 'bcc'),

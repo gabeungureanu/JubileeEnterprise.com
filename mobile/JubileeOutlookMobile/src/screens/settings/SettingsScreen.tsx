@@ -27,7 +27,7 @@ import { rulesService } from '../../services/mail/rulesService';
 import { templateService } from '../../services/mail/templateService';
 import { tokenStore } from '../../services/apiClient';
 import { useAuth } from '../../context/AuthContext';
-import type { EmailAccount, EmailSignature, EmailRule, EmailTemplate } from '../../types/mail';
+import type { EmailSignature, EmailRule, EmailTemplate } from '../../types/mail';
 
 // ────────────────────────────────────────────────────────────
 // Reusable SettingsItem
@@ -128,7 +128,7 @@ const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { user, logout } = useAuth();
 
-  const [accounts, setAccounts] = useState<EmailAccount[]>([]);
+  const [accounts, setAccounts] = useState<{ id: string; email_address: string; provider_type: string; connection_status: string }[]>([]);
   const [signatures, setSignatures] = useState<EmailSignature[]>([]);
   const [rules, setRules] = useState<EmailRule[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
@@ -181,7 +181,7 @@ const SettingsScreen: React.FC = () => {
       let totalSynced = 0;
       for (const acct of accounts) {
         const result = await emailSyncService.syncAccount(acct.id);
-        totalSynced += result.totalSynced;
+        totalSynced += result.totalSynced ?? 0;
       }
       Alert.alert('Sync Complete', `Synced ${totalSynced} messages`);
     } catch (err: any) {
@@ -247,11 +247,11 @@ const SettingsScreen: React.FC = () => {
         <SettingsItem
           key={acct.id}
           icon="mail"
-          label={acct.emailAddress}
+          label={acct.email_address}
           value={
-            acct.connectionStatus === 'connected'
+            acct.connection_status === 'connected'
               ? 'Connected'
-              : acct.connectionStatus === 'error'
+              : acct.connection_status === 'error'
                 ? 'Connection Error'
                 : 'Disconnected'
           }

@@ -45,18 +45,19 @@ function FolderItem({
         style={[styles.folderName, isSelected && styles.folderNameSelected]}
         numberOfLines={1}
       >
-        {folder.name}
+        {folder.displayName}
       </Text>
-      {folder.unreadCount > 0 && (
-        <Badge count={folder.unreadCount} color={Colors.accent} size="small" />
+      {folder.unreadItemCount > 0 && (
+        <Badge count={folder.unreadItemCount} color={Colors.accent} size="small" />
       )}
     </TouchableOpacity>
   );
 }
 
 export function FolderList({ folders, selectedFolderId, onSelectFolder }: FolderListProps) {
-  const systemFolders = folders.filter((f) => f.isSystem);
-  const customFolders = folders.filter((f) => !f.isSystem);
+  const systemFolderTypes = new Set(['inbox', 'sent', 'drafts', 'trash', 'archive', 'spam', 'outbox']);
+  const systemFolders = folders.filter((f) => systemFolderTypes.has(f.folderType));
+  const customFolders = folders.filter((f) => !systemFolderTypes.has(f.folderType));
 
   return (
     <View style={styles.container}>

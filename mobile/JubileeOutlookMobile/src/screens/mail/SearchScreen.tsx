@@ -25,7 +25,6 @@ import { Spacing, BorderRadius } from '../../constants/spacing';
 import { LoadingSpinner, EmptyState, SearchBar } from '../../components/common';
 import { MessageListItem } from '../../components/modules/mail/MessageListItem';
 import { mailService } from '../../services/mail/mailService';
-import { tokenStore } from '../../services/apiClient';
 import { useDebounce } from '../../hooks';
 import type { EmailMessage } from '../../types';
 import type { MailStackParamList } from '../../types/navigation';
@@ -46,12 +45,9 @@ export default function SearchScreen() {
   // ---------- Search ----------
 
   const performSearch = useCallback(async (searchTerm: string) => {
-    const userId = tokenStore.getUserId();
-    if (!userId) return;
-
     setIsSearching(true);
     try {
-      const { messages } = await mailService.searchMessages(userId, searchTerm);
+      const { messages } = await mailService.searchMessages(searchTerm);
       setResults(messages);
     } catch (err) {
       console.warn('[SearchScreen] search failed:', err);

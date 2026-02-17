@@ -40,7 +40,7 @@ export function MessageListItem({
   onToggleFlag,
 }: MessageListItemProps) {
   const isUnread = !message.isRead;
-  const senderDisplay = message.senderName || message.senderEmail || 'Unknown';
+  const senderDisplay = message.from.name || message.from.address || 'Unknown';
 
   return (
     <TouchableOpacity

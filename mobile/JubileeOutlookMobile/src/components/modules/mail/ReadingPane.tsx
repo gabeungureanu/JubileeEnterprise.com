@@ -39,9 +39,9 @@ export function ReadingPane({
   onToggleFlag,
 }: ReadingPaneProps) {
   const { width } = useWindowDimensions();
-  const senderDisplay = message.senderName || message.senderEmail || 'Unknown';
-  const toRecipients = message.recipients?.filter((r) => r.type === 'to') || [];
-  const ccRecipients = message.recipients?.filter((r) => r.type === 'cc') || [];
+  const senderDisplay = message.from.name || message.from.address || 'Unknown';
+  const toRecipients = message.to || [];
+  const ccRecipients = message.cc || [];
 
   const htmlSource = message.bodyHtml
     ? { html: message.bodyHtml }
@@ -56,7 +56,7 @@ export function ReadingPane({
             <Avatar name={senderDisplay} size={44} />
             <View style={styles.senderInfo}>
               <Text style={styles.senderName}>{senderDisplay}</Text>
-              <Text style={styles.senderEmail}>{message.senderEmail}</Text>
+              <Text style={styles.senderEmail}>{message.from.address}</Text>
             </View>
             <TouchableOpacity onPress={onToggleFlag} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <Icon
@@ -72,12 +72,12 @@ export function ReadingPane({
 
           {toRecipients.length > 0 && (
             <Text style={styles.recipients}>
-              To: {toRecipients.map((r) => r.name || r.email).join(', ')}
+              To: {toRecipients.map((r) => r.name || r.address).join(', ')}
             </Text>
           )}
           {ccRecipients.length > 0 && (
             <Text style={styles.recipients}>
-              Cc: {ccRecipients.map((r) => r.name || r.email).join(', ')}
+              Cc: {ccRecipients.map((r) => r.name || r.address).join(', ')}
             </Text>
           )}
         </View>

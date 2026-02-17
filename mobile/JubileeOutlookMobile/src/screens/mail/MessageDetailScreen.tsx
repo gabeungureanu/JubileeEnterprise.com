@@ -29,7 +29,7 @@ import { Spacing, BorderRadius } from '../../constants/spacing';
 import { LoadingSpinner } from '../../components/common';
 import { Avatar } from '../../components/common/Avatar';
 import { mailService } from '../../services/mail/mailService';
-import type { EmailMessage, EmailAttachment } from '../../types';
+import type { EmailMessage, AttachmentDto } from '../../types';
 import type { MailStackParamList } from '../../types/navigation';
 
 type DetailNav = NativeStackNavigationProp<MailStackParamList, 'MessageDetail'>;
@@ -77,7 +77,7 @@ export default function MessageDetailScreen() {
     const fetchMessage = async () => {
       try {
         const full = await mailService.getMessage(messageId);
-        if (!cancelled) {
+        if (!cancelled && full) {
           setMessage(full);
           setIsFlagged(full.isFlagged);
         }
@@ -181,9 +181,9 @@ export default function MessageDetailScreen() {
 
   // ---------- Derived ----------
 
-  const senderDisplay = message.senderName || message.senderEmail || 'Unknown';
-  const toRecipients = message.recipients?.filter((r) => r.type === 'to') || [];
-  const ccRecipients = message.recipients?.filter((r) => r.type === 'cc') || [];
+  const senderDisplay = message.from.name || message.from.address || 'Unknown';
+  const toRecipients = message.to || [];
+  const ccRecipients = message.cc || [];
 
   const htmlSource = {
     html: message.bodyHtml || `<p>${message.bodyText || message.bodyPreview || ''}</p>`,
@@ -212,7 +212,7 @@ export default function MessageDetailScreen() {
           <Avatar name={senderDisplay} size={44} />
           <View style={styles.senderInfo}>
             <Text style={styles.senderName}>{senderDisplay}</Text>
-            <Text style={styles.senderEmail}>{message.senderEmail}</Text>
+            <Text style={styles.senderEmail}>{message.from.address}</Text>
           </View>
           <Text style={styles.date}>{formatFullDate(message.receivedAt || message.sentAt)}</Text>
         </View>
@@ -223,7 +223,7 @@ export default function MessageDetailScreen() {
             <View style={styles.recipientRow}>
               <Text style={styles.recipientLabel}>To:</Text>
               <Text style={styles.recipientText} numberOfLines={2}>
-                {toRecipients.map((r) => r.name || r.email).join(', ')}
+                {toRecipients.map((r) => r.name || r.address).join(', ')}
               </Text>
             </View>
           )}
@@ -231,7 +231,7 @@ export default function MessageDetailScreen() {
             <View style={styles.recipientRow}>
               <Text style={styles.recipientLabel}>Cc:</Text>
               <Text style={styles.recipientText} numberOfLines={2}>
-                {ccRecipients.map((r) => r.name || r.email).join(', ')}
+                {ccRecipients.map((r) => r.name || r.address).join(', ')}
               </Text>
             </View>
           )}
@@ -252,7 +252,7 @@ export default function MessageDetailScreen() {
               <Icon name="attach-file" size={14} color={Colors.textSecondary} />
               {'  '}Attachments ({message.attachments.length})
             </Text>
-            {message.attachments.map((att: EmailAttachment) => (
+            {message.attachments.map((att: AttachmentDto) => (
               <View key={att.id} style={styles.attachmentItem}>
                 <Icon name="insert-drive-file" size={20} color={Colors.accent} />
                 <View style={styles.attachmentInfo}>
