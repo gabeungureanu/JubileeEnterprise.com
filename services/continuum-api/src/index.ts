@@ -28,6 +28,8 @@ import * as continuum from '@jubilee/database/continuum';
 import { ImapFlow } from 'imapflow';
 import * as nodemailer from 'nodemailer';
 import { createHash, randomUUID } from 'crypto';
+import { writeFile, mkdir, unlink } from 'node:fs/promises';
+import { join } from 'node:path';
 
 const app = new Hono();
 
@@ -751,6 +753,106 @@ app.delete('/api/v1/outlook/events/:id', async (c) => {
     return c.json({ success: true, deleted: id });
   } catch (err: any) {
     return c.json({ error: 'Failed to delete event', message: err.message }, 500);
+  }
+});
+
+// ============================================================================
+// FILE UPLOAD / DELETE (Calendar Event Attachments)
+// ============================================================================
+
+const UPLOADS_DIR = join(process.cwd(), 'uploads');
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
+
+// POST /api/v1/outlook/files/upload - Upload a file attachment
+app.post('/api/v1/outlook/files/upload', async (c) => {
+  try {
+    const formData = await c.req.formData();
+    const file = formData.get('file');
+
+    if (!file || !(file instanceof File)) {
+      return c.json({ error: 'No file provided' }, 400);
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return c.json({ error: 'File too large. Maximum size is 25 MB.' }, 413);
+    }
+
+    // Generate unique filename to prevent collisions
+    const ext = file.name.includes('.') ? '.' + file.name.split('.').pop() : '';
+    const storageName = `${randomUUID()}${ext}`;
+
+    // Ensure uploads directory exists
+    await mkdir(UPLOADS_DIR, { recursive: true });
+
+    // Write file to disk
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const filePath = join(UPLOADS_DIR, storageName);
+    await writeFile(filePath, buffer);
+
+    const baseUrl = process.env.CONTINUUM_API_URL || `http://localhost:${process.env.CONTINUUM_API_PORT || 4003}`;
+    const fileUrl = `${baseUrl}/api/v1/outlook/files/${storageName}`;
+
+    return c.json({
+      id: randomUUID(),
+      fileName: file.name,
+      fileSize: file.size,
+      fileUrl,
+      mimeType: file.type || 'application/octet-stream',
+      uploadedAt: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    return c.json({ error: 'Failed to upload file', message: err.message }, 500);
+  }
+});
+
+// GET /api/v1/outlook/files/:filename - Serve an uploaded file
+app.get('/api/v1/outlook/files/:filename', async (c) => {
+  try {
+    const filename = c.req.param('filename');
+    // Prevent path traversal
+    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+      return c.json({ error: 'Invalid filename' }, 400);
+    }
+
+    const { readFile } = await import('node:fs/promises');
+    const filePath = join(UPLOADS_DIR, filename);
+    const buffer = await readFile(filePath);
+
+    // Infer content type from extension
+    const ext = filename.split('.').pop()?.toLowerCase() || '';
+    const mimeTypes: Record<string, string> = {
+      pdf: 'application/pdf',
+      doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      xls: 'application/vnd.ms-excel', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ppt: 'application/vnd.ms-powerpoint', pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', bmp: 'image/bmp',
+      zip: 'application/zip', rar: 'application/x-rar-compressed',
+      txt: 'text/plain', csv: 'text/csv', json: 'application/json',
+    };
+    const contentType = mimeTypes[ext] || 'application/octet-stream';
+
+    c.header('Content-Type', contentType);
+    c.header('Content-Length', String(buffer.length));
+    return c.body(buffer);
+  } catch {
+    return c.json({ error: 'File not found' }, 404);
+  }
+});
+
+// DELETE /api/v1/outlook/files/:filename - Delete an uploaded file
+app.delete('/api/v1/outlook/files/:filename', async (c) => {
+  try {
+    const filename = c.req.param('filename');
+    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+      return c.json({ error: 'Invalid filename' }, 400);
+    }
+
+    const filePath = join(UPLOADS_DIR, filename);
+    await unlink(filePath);
+    return c.json({ success: true });
+  } catch {
+    // File may already be deleted — treat as success
+    return c.json({ success: true });
   }
 });
 
@@ -2192,6 +2294,9 @@ async function start() {
     console.log('  POST /api/v1/outlook/events           - Create calendar event');
     console.log('  PUT  /api/v1/outlook/events/:id       - Update calendar event');
     console.log('  DELETE /api/v1/outlook/events/:id     - Delete calendar event');
+    console.log('  POST /api/v1/outlook/files/upload     - Upload file attachment');
+    console.log('  GET  /api/v1/outlook/files/:filename  - Download file attachment');
+    console.log('  DELETE /api/v1/outlook/files/:filename - Delete file attachment');
     console.log('  POST /api/v1/outlook/accounts/detect  - Detect email provider');
     console.log('  POST /api/v1/outlook/accounts/connect - Connect email account');
     console.log('  POST /api/v1/outlook/accounts/:id/sync - Sync email messages');
