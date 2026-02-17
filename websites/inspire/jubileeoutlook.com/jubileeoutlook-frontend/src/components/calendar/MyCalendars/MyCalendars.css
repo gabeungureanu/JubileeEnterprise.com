@@ -1,0 +1,65 @@
+.my-calendars {
+  padding: 16px 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.my-calendars__heading {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.my-calendars__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.my-calendars__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-family);
+}
+
+.my-calendars__item:hover {
+  background-color: var(--bg-hover);
+}
+
+.my-calendars__checkbox {
+  width: 16px;
+  height: 16px;
+  border: 2px solid;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.my-calendars__checkbox .material-symbols-outlined {
+  font-size: 12px;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.my-calendars__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.my-calendars__name {
+  font-size: 13px;
+  color: var(--text-primary);
+}

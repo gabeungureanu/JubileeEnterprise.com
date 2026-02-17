@@ -1,3 +1,9 @@
+/* ============================================================================
+   Event Dialog - WPF Parity Layout
+   Two-panel: Left form + Right calendar preview (320px)
+   Window size: 1100x750 matching WPF NewEventWindow
+   ============================================================================ */
+
 .event-dialog__overlay {
   position: fixed;
   inset: 0;
@@ -9,27 +15,33 @@
 }
 
 .event-dialog {
-  width: 520px;
-  max-height: 80vh;
-  background-color: var(--bg-tertiary);
+  width: 1100px;
+  max-width: 95vw;
+  height: 750px;
+  max-height: 90vh;
+  background-color: #1A1A1A;
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-dialog);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
+/* --- Title Bar --- */
 .event-dialog__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 8px 16px;
+  height: 40px;
+  flex-shrink: 0;
+  background-color: #1A1A1A;
 }
 
 .event-dialog__header h3 {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-medium);
+  font-size: 14px;
+  font-weight: 400;
   color: var(--text-primary);
 }
 
@@ -47,41 +59,168 @@
 }
 
 .event-dialog__close:hover {
-  background-color: var(--accent-red);
-  color: var(--text-primary);
+  background-color: #E74856;
+  color: #FFFFFF;
 }
 
-.event-dialog__body {
-  padding: var(--spacing-lg);
-  overflow-y: auto;
+/* --- Tab Header --- */
+.event-dialog__tab {
+  padding: 6px 16px;
+  background-color: #252525;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+/* --- Content: Two Panels --- */
+.event-dialog__content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* --- Left Panel: Form --- */
+.event-dialog__form {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  overflow: hidden;
+}
+
+/* --- Toolbar Row --- */
+.event-dialog__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.event-dialog__toolbar-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.event-dialog__toolbar-icon {
+  font-size: 18px;
+  color: var(--text-tertiary);
+}
+
+.event-dialog__toolbar-select {
+  padding: 4px 8px;
+  background-color: #252525;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+}
+
+.event-dialog__toolbar-select:focus {
+  border-color: var(--gold-primary);
+}
+
+.event-dialog__color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.event-dialog__toolbar-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-family);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.event-dialog__toolbar-toggle .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.event-dialog__toolbar-toggle--active {
+  background-color: #0078D4;
+  border-color: #0078D4;
+  color: #FFFFFF;
+}
+
+.event-dialog__toolbar-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* --- Validation Error --- */
+.event-dialog__validation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: var(--radius-sm);
+  margin: 8px 16px 0;
+  color: #FF6B6B;
+  font-size: 13px;
+}
+
+.event-dialog__validation .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* --- Form Fields Scroll Area --- */
+.event-dialog__fields {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .event-dialog__field {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: 10px;
 }
 
-.event-dialog__field .material-symbols-outlined {
+.event-dialog__field > .material-symbols-outlined {
   font-size: 20px;
   color: var(--text-tertiary);
   flex-shrink: 0;
+  width: 22px;
+  text-align: center;
 }
 
-.event-dialog__field input,
-.event-dialog__field select {
+.event-dialog__field input[type="text"],
+.event-dialog__field input[type="date"] {
   flex: 1;
-  padding: var(--spacing-sm);
-  background-color: var(--bg-surface);
+  padding: 8px 12px;
+  background-color: #202020;
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-family);
-  font-size: var(--font-size-base);
+  font-size: 14px;
   outline: none;
+}
+
+.event-dialog__field input[type="date"] {
+  color-scheme: dark;
 }
 
 .event-dialog__field input:focus,
@@ -90,64 +229,234 @@
   border-color: var(--gold-primary);
 }
 
+.event-dialog__input--title {
+  font-size: 15px !important;
+  font-weight: 500;
+}
+
+.event-dialog__optional {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* --- Date/Time Row --- */
+.event-dialog__field--datetime {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.event-dialog__date-input {
+  width: 140px;
+  flex: 0 0 auto !important;
+}
+
+.event-dialog__time-select {
+  width: 110px;
+  padding: 8px;
+  background-color: #202020;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+
+.event-dialog__time-select:focus {
+  border-color: var(--gold-primary);
+}
+
+.event-dialog__time-sep {
+  color: var(--text-tertiary);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.event-dialog__allday-toggle,
+.event-dialog__inperson-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* --- Recurrence Toggle --- */
+.event-dialog__recurrence-toggle {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-family: var(--font-family);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.event-dialog__recurrence-toggle:hover {
+  background-color: var(--bg-hover);
+}
+
+.event-dialog__recurrence-toggle--active {
+  background-color: #0078D4;
+  border-color: #0078D4;
+  color: #FFFFFF;
+}
+
+/* --- Recurrence Options Panel --- */
+.event-dialog__recurrence {
+  background-color: #1E1E1E;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-left: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.event-dialog__recurrence-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.event-dialog__recurrence-row--indent {
+  margin-left: 110px;
+}
+
+.event-dialog__recurrence-label {
+  width: 100px;
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.event-dialog__recurrence-select {
+  width: 140px;
+  padding: 6px 8px;
+  background-color: #252525;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 13px;
+  outline: none;
+}
+
+.event-dialog__recurrence-select:focus {
+  border-color: var(--gold-primary);
+}
+
+.event-dialog__recurrence-number {
+  width: 60px;
+  padding: 6px 8px;
+  background-color: #252525;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 13px;
+  outline: none;
+  text-align: center;
+}
+
+.event-dialog__recurrence-number:focus {
+  border-color: var(--gold-primary);
+}
+
+.event-dialog__recurrence-suffix {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.event-dialog__recurrence-date {
+  width: 160px;
+  padding: 6px 8px;
+  background-color: #252525;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 13px;
+  outline: none;
+  color-scheme: dark;
+}
+
+.event-dialog__recurrence-date:focus {
+  border-color: var(--gold-primary);
+}
+
+/* --- Day-of-Week Picker --- */
+.event-dialog__days-picker {
+  display: flex;
+  gap: 4px;
+}
+
+.event-dialog__day-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-primary);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-family);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.event-dialog__day-btn:hover {
+  background-color: var(--bg-hover);
+}
+
+.event-dialog__day-btn--active {
+  background-color: #0078D4;
+  border-color: #0078D4;
+  color: #FFFFFF;
+}
+
+/* --- Description TextArea --- */
 .event-dialog__field--area {
   align-items: flex-start;
 }
 
 .event-dialog__field textarea {
   flex: 1;
-  min-height: 80px;
-  padding: var(--spacing-sm);
-  background-color: var(--bg-surface);
+  min-height: 120px;
+  padding: 10px 12px;
+  background-color: #202020;
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-family);
-  font-size: var(--font-size-base);
+  font-size: 14px;
   outline: none;
   resize: vertical;
 }
 
-.event-dialog__row {
-  display: flex;
-  gap: var(--spacing-lg);
-  padding-left: 30px;
+.event-dialog__field textarea:focus {
+  border-color: var(--gold-primary);
 }
 
-.event-dialog__toggle {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  font-size: var(--font-size-base);
-  color: var(--text-secondary);
-  cursor: pointer;
-}
-
-.event-dialog__footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-top: 1px solid var(--border-subtle);
-}
-
+/* --- Buttons --- */
 .event-dialog__btn {
-  padding: var(--spacing-sm) var(--spacing-xl);
+  padding: 6px 20px;
   border: none;
   border-radius: var(--radius-md);
   font-family: var(--font-family);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-medium);
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-}
-
-.event-dialog__btn--cancel {
-  background-color: var(--bg-hover);
-  color: var(--text-secondary);
-}
-
-.event-dialog__btn--cancel:hover {
-  background-color: var(--border-primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .event-dialog__btn--save {
@@ -157,4 +466,125 @@
 
 .event-dialog__btn--save:hover {
   background-color: var(--gold-hover);
+}
+
+.event-dialog__btn--delete {
+  background-color: transparent;
+  color: #FF6B6B;
+  border: 1px solid #D32F2F;
+}
+
+.event-dialog__btn--delete:hover {
+  background-color: rgba(211, 47, 47, 0.15);
+}
+
+.event-dialog__btn--delete .material-symbols-outlined {
+  font-size: 16px;
+}
+
+/* ============================================================================
+   Right Panel - Calendar Day Preview (320px)
+   ============================================================================ */
+
+.event-dialog__preview {
+  width: 320px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border-primary);
+  background-color: #1A1A1A;
+  display: flex;
+  flex-direction: column;
+}
+
+.event-dialog__preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background-color: #2A2A2A;
+  border-bottom: 1px solid var(--border-primary);
+  flex-shrink: 0;
+}
+
+.event-dialog__preview-nav {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.event-dialog__preview-nav:hover {
+  background-color: var(--bg-hover);
+}
+
+.event-dialog__preview-nav .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.event-dialog__preview-date {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* --- Time Grid --- */
+.event-dialog__preview-grid {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+.event-dialog__preview-times {
+  position: relative;
+  height: 970px; /* 24 hours × ~40px */
+}
+
+.event-dialog__preview-hour {
+  height: 40px;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+}
+
+.event-dialog__preview-hour-label {
+  width: 50px;
+  padding: 0 6px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: right;
+  flex-shrink: 0;
+  line-height: 1;
+  padding-top: 2px;
+}
+
+.event-dialog__preview-hour-line {
+  flex: 1;
+  border-top: 1px solid #333333;
+  margin-top: 6px;
+}
+
+/* --- Event Block on Preview --- */
+.event-dialog__preview-event {
+  position: absolute;
+  left: 56px;
+  right: 10px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  opacity: 0.9;
+  z-index: 1;
+}
+
+.event-dialog__preview-event-time {
+  font-size: 11px;
+  color: #FFFFFF;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }

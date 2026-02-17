@@ -54,7 +54,11 @@ src/
 │   │   ├── ReadingPane/         # Email viewer with attachment preview
 │   │   ├── AttachmentPreview/   # Inline image/PDF preview modal
 │   │   └── SnoozePicker/        # Snooze time selection dialog
-│   ├── calendar/                # Calendar components
+│   ├── calendar/
+│   │   ├── CalendarGrid/        # Time grid views (Day/Week/WorkWeek/Month)
+│   │   ├── EventDialog/         # Event create/edit dialog (WPF parity)
+│   │   ├── MyCalendars/         # Sidebar with calendar visibility toggles
+│   │   └── ReminderPopup/       # Reminder notification with snooze/dismiss
 │   └── people/                  # Contacts components
 ├── context/
 │   ├── AppContext.tsx            # Global app state (activeModule, user)
@@ -71,11 +75,16 @@ src/
 │   │   ├── snoozeService.ts     # Email snooze with localStorage
 │   │   ├── rulesService.ts      # Email rules/filters CRUD
 │   │   └── templateService.ts   # Email template CRUD
-│   ├── calendar/                # Calendar API services
+│   ├── calendar/
+│   │   ├── calendarService.ts   # Calendar CRUD via Continuum API
+│   │   └── reminderService.ts   # 30s reminder check with snooze/dismiss
 │   └── api/                     # API client wrappers
+├── utils/
+│   └── calendarUtils.ts         # Recurring event expansion (365-instance limit)
 └── types/
     ├── app.ts                   # AppModule, AppUser types
-    └── mail.ts                  # EmailMessage, MailFolder, ComposeMode types
+    ├── mail.ts                  # EmailMessage, MailFolder, ComposeMode types
+    └── calendar/index.ts        # CalendarEvent, CalendarEventDto, mapEventDto
 ```
 
 ## Features
@@ -91,6 +100,27 @@ src/
 - Delete, archive, flag, mark read/unread
 - Move to folder, global search toggle
 - Email templates / quick replies in compose
+
+### Calendar
+- Full CRUD via Continuum API (`/api/v1/outlook/events`)
+- Day, Week, WorkWeek, and Month views with 24-hour scrollable time grid
+- Event blocks positioned by start time, sized by duration (60px/hour)
+- Column headers with today highlighted in gold
+- All-day events row above time grid
+- Current time indicator (red dot + line) updating every 60 seconds
+- Click empty time slot to create event at that hour
+- EventDialog with WPF desktop parity (two-panel 1100x750 layout)
+  - ShowAs status, Reminder, Category, Private toggle
+  - Date/time pickers with 48 half-hour slots
+  - Location with in-person toggle
+  - Full recurrence (Daily/Weekly/Monthly/Yearly with interval, day-of-week, end conditions)
+  - Calendar day preview panel with event position block
+- Recurring event expansion (Daily/Weekly/Monthly/Yearly) with 365-instance safety limit
+- Reminder notifications with 30-second check interval, snooze, and dismiss
+- My Calendars sidebar with visibility toggles
+- 5-minute event cache per date range with auto-invalidation on mutations
+- DTO mapper handles both camelCase and snake_case API responses
+- Private events display "Private" instead of actual title
 
 ### Settings
 - Account management (add/remove email accounts)
