@@ -285,7 +285,7 @@ const CalendarScreen: React.FC = () => {
           <EmptyState
             icon="error-outline"
             title="Failed to load events"
-            message={error}
+            subtitle={error}
           />
         </View>
       ) : (
@@ -300,7 +300,7 @@ const CalendarScreen: React.FC = () => {
             <EmptyState
               icon="event"
               title="No events"
-              message="No events scheduled for this day"
+              subtitle="No events scheduled for this day"
             />
           }
           refreshControl={

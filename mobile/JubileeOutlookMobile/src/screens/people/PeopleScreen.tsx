@@ -247,7 +247,7 @@ const PeopleScreen: React.FC = () => {
       onLongPress={() => handleContactLongPress(item)}
       activeOpacity={0.7}
     >
-      <Avatar name={item.displayName} photoUrl={item.photoUrl} size={44} />
+      <Avatar name={item.displayName} imageUrl={item.photoUrl} size={44} />
       <View style={styles.contactInfo}>
         <Text style={styles.contactName} numberOfLines={1}>
           {item.displayName}
@@ -336,7 +336,7 @@ const PeopleScreen: React.FC = () => {
           <EmptyState
             icon="error-outline"
             title="Failed to load contacts"
-            message={error}
+            subtitle={error}
           />
         </View>
       ) : filter === 'groups' ? (
@@ -345,7 +345,7 @@ const PeopleScreen: React.FC = () => {
             <EmptyState
               icon="group"
               title="No groups"
-              message="Create a group to organize your contacts"
+              subtitle="Create a group to organize your contacts"
             />
           </View>
         ) : (
@@ -366,7 +366,7 @@ const PeopleScreen: React.FC = () => {
             <EmptyState
               icon="people"
               title="No contacts"
-              message={
+              subtitle={
                 filter === 'favorites'
                   ? 'Star contacts to see them here'
                   : 'Add your first contact'

@@ -185,7 +185,7 @@ const ContactDetailScreen: React.FC = () => {
         <EmptyState
           icon="error-outline"
           title="Contact not found"
-          message={error || 'Unable to load contact details'}
+          subtitle={error || 'Unable to load contact details'}
         />
       </View>
     );
@@ -201,7 +201,7 @@ const ContactDetailScreen: React.FC = () => {
       <View style={styles.profileSection}>
         <Avatar
           name={contact.displayName}
-          photoUrl={contact.photoUrl}
+          imageUrl={contact.photoUrl}
           size={80}
         />
         <Text style={styles.profileName}>{contact.displayName}</Text>

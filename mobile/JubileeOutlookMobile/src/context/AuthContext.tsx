@@ -3,7 +3,7 @@
  * Manages user authentication state with token persistence via AsyncStorage.
  */
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import type { User } from '../../types';
+import type { User } from '../types';
 import { authService } from '../services/auth/authService';
 import { tokenStore, setOnAuthFailure } from '../services/apiClient';
 import { StorageKeys } from '../constants';

@@ -157,7 +157,7 @@ const EventDetailScreen: React.FC = () => {
         <EmptyState
           icon="error-outline"
           title="Event not found"
-          message={error || 'Unable to load event details'}
+          subtitle={error || 'Unable to load event details'}
         />
       </View>
     );

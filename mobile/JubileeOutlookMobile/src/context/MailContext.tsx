@@ -11,7 +11,7 @@ import React, {
   useEffect,
   useRef,
 } from 'react';
-import type { MailFolder, EmailMessage } from '../../types';
+import type { MailFolder, EmailMessage } from '../types';
 import { mailService } from '../services/mail/mailService';
 import { snoozeService } from '../services/mail/snoozeService';
 import { tokenStore } from '../services/apiClient';

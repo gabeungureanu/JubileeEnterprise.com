@@ -4,7 +4,7 @@
  * network status, and sync status.
  */
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import type { AppModule, NetworkStatus, SyncStatus } from '../../types';
+import type { AppModule, NetworkStatus, SyncStatus } from '../types';
 
 // ---------- State & Context Types ----------
 
