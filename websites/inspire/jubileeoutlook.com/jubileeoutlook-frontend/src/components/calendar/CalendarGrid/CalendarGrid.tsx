@@ -15,7 +15,6 @@ interface CalendarGridProps {
 }
 
 const HOUR_HEIGHT = 60; // px per hour (matching WPF)
-const TIME_LABELS_WIDTH = 60;
 
 const HOURS = Array.from({ length: 24 }, (_, i) => {
   const suffix = i >= 12 ? 'PM' : 'AM';
@@ -225,18 +224,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
     return ((now.getHours() * 60 + now.getMinutes()) / 60) * HOUR_HEIGHT;
   };
 
-  // Check if today falls within the current date range
-  const isTodayVisible = (): boolean => {
-    const today = new Date();
-    return today >= dateRange.start && today <= dateRange.end;
-  };
-
-  // Get today's column index (for week views)
-  const getTodayColumnIndex = (): number => {
-    const today = new Date();
-    const columns = getViewColumns();
-    return columns.findIndex(d => isSameDay(d, today));
-  };
 
   // Format column header
   const formatColumnHeader = (date: Date): { dayName: string; dayNumber: string } => {
@@ -358,7 +345,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   // --- TIME GRID VIEW (Day / Week / WorkWeek) ---
   const renderTimeGridView = () => {
     const columns = getViewColumns();
-    const todayIndex = getTodayColumnIndex();
 
     return (
       <div className="calendar-grid__time-view">

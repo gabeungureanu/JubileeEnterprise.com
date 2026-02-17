@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { sharingService, CalendarShare } from '../../../services/calendar/sharingService';
 import './SharingDialog.css';
 
@@ -15,13 +15,7 @@ const SharingDialog: React.FC<SharingDialogProps> = ({ isOpen, calendarId, onClo
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (isOpen) {
-      loadShares();
-    }
-  }, [isOpen, calendarId]);
-
-  const loadShares = async () => {
+  const loadShares = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await sharingService.getShares(calendarId);
@@ -29,7 +23,13 @@ const SharingDialog: React.FC<SharingDialogProps> = ({ isOpen, calendarId, onClo
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [calendarId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadShares();
+    }
+  }, [isOpen, loadShares]);
 
   const handleAddShare = async () => {
     if (!email.trim()) {
