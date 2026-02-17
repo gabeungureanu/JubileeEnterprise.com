@@ -1,97 +1,143 @@
 /**
- * Contact Service — mirrors web frontend src/services/contacts/contactService.ts
+ * Contact Service — mirrors web frontend src/services/contacts/contactService.ts exactly.
  */
 import { codexClient, tokenStore } from '../apiClient';
-import type { Contact, ContactGroup, CreateContactPayload, UpdateContactPayload } from '../../types';
+import {
+  ApiContactsListResponse, ApiContactGroupsListResponse,
+  ContactDto, Contact, ContactGroup,
+  mapContactDto, mapContactGroupDto,
+} from '../../types/contacts';
 
 export const contactService = {
   // ---------- Contacts ----------
 
-  async getContacts(page: number = 1, pageSize: number = 50): Promise<{ contacts: Contact[]; pagination: any }> {
+  async getContacts(page = 1, pageSize = 100): Promise<{ contacts: Contact[]; totalCount: number }> {
     const userId = tokenStore.getUserId();
-    const { data } = await codexClient.get('/v1/contacts', {
+    const response = await codexClient.get<ApiContactsListResponse>('/contacts', {
       params: { userId, page, pageSize },
     });
+    const data = response.data;
+    const dtos = data.contacts || (data as any);
     return {
-      contacts: data.data || [],
-      pagination: data.pagination || { page, pageSize, total: 0, totalPages: 0 },
+      contacts: Array.isArray(dtos) ? dtos.map(mapContactDto) : [],
+      totalCount: data.total_count || 0,
     };
   },
 
-  async getContact(contactId: string): Promise<Contact> {
-    const { data } = await codexClient.get(`/v1/contacts/${contactId}`);
-    return data.data || data;
+  async getContact(contactId: string): Promise<Contact | null> {
+    const response = await codexClient.get<ContactDto | { success: boolean; contact: ContactDto }>(
+      `/contacts/${encodeURIComponent(contactId)}`
+    );
+    const data = response.data;
+    const dto = (data as any).contact || data;
+    return dto?.id ? mapContactDto(dto as ContactDto) : null;
   },
 
-  async createContact(payload: CreateContactPayload): Promise<Contact> {
-    const { data } = await codexClient.post('/v1/contacts', payload);
-    return data.data || data;
-  },
-
-  async updateContact(contactId: string, payload: UpdateContactPayload): Promise<Contact> {
-    const { data } = await codexClient.put(`/v1/contacts/${contactId}`, payload);
-    return data.data || data;
-  },
-
-  async deleteContact(contactId: string): Promise<void> {
-    await codexClient.delete(`/v1/contacts/${contactId}`);
-  },
-
-  async searchContacts(query: string, page: number = 1, pageSize: number = 50): Promise<{ contacts: Contact[]; pagination: any }> {
+  async createContact(contact: Partial<ContactDto>): Promise<Contact | null> {
     const userId = tokenStore.getUserId();
-    const { data } = await codexClient.get('/v1/contacts/search', {
-      params: { userId, q: query, page, pageSize },
+    const payload = { ...contact, user_id: userId };
+    const response = await codexClient.post('/contacts', payload);
+    const data = response.data;
+    const dto = data?.contact || data;
+    return dto?.id ? mapContactDto(dto) : null;
+  },
+
+  async updateContact(contactId: string, contact: Partial<ContactDto>): Promise<Contact | null> {
+    const response = await codexClient.put(`/contacts/${encodeURIComponent(contactId)}`, contact);
+    const data = response.data;
+    const dto = data?.contact || data;
+    return dto?.id ? mapContactDto(dto) : null;
+  },
+
+  async deleteContact(contactId: string): Promise<boolean> {
+    const response = await codexClient.delete(`/contacts/${encodeURIComponent(contactId)}`);
+    return response.status === 200 || response.status === 204 || response.status === 404;
+  },
+
+  async searchContacts(query: string, page = 1, pageSize = 50): Promise<{ contacts: Contact[]; totalCount: number }> {
+    const response = await codexClient.get<ApiContactsListResponse>('/contacts/search', {
+      params: { q: query, page, pageSize },
     });
+    const data = response.data;
+    const dtos = data.contacts || (data as any);
     return {
-      contacts: data.data || [],
-      pagination: data.pagination || { page, pageSize, total: 0, totalPages: 0 },
+      contacts: Array.isArray(dtos) ? dtos.map(mapContactDto) : [],
+      totalCount: data.total_count || 0,
     };
   },
 
-  async toggleFavorite(contactId: string): Promise<void> {
-    await codexClient.patch(`/v1/contacts/${contactId}/favorite`);
-  },
-
-  async softDelete(contactId: string): Promise<void> {
-    await codexClient.patch(`/v1/contacts/${contactId}/soft-delete`);
-  },
-
-  async restore(contactId: string): Promise<void> {
-    await codexClient.patch(`/v1/contacts/${contactId}/restore`);
-  },
-
-  // ---------- Groups ----------
+  // ---------- Contact Groups ----------
 
   async getGroups(): Promise<ContactGroup[]> {
-    const { data } = await codexClient.get('/v1/contact-groups');
-    return data.data || data;
-  },
-
-  async getGroup(groupId: string): Promise<ContactGroup> {
-    const { data } = await codexClient.get(`/v1/contact-groups/${groupId}`);
-    return data.data || data;
-  },
-
-  async createGroup(name: string, description?: string): Promise<ContactGroup> {
     const userId = tokenStore.getUserId();
-    const { data } = await codexClient.post('/v1/contact-groups', { userId, name, description });
-    return data.data || data;
+    const response = await codexClient.get<ApiContactGroupsListResponse>('/contact-groups', {
+      params: { userId },
+    });
+    const dtos = response.data?.data || [];
+    return dtos.map(mapContactGroupDto);
   },
 
-  async updateGroup(groupId: string, name: string, description?: string): Promise<ContactGroup> {
-    const { data } = await codexClient.put(`/v1/contact-groups/${groupId}`, { name, description });
-    return data.data || data;
+  async createGroup(name: string, description = ''): Promise<ContactGroup | null> {
+    const userId = tokenStore.getUserId();
+    const response = await codexClient.post('/contact-groups', { name, description }, {
+      params: { userId },
+    });
+    const dto = response.data?.data;
+    return dto ? mapContactGroupDto(dto) : null;
   },
 
-  async deleteGroup(groupId: string): Promise<void> {
-    await codexClient.delete(`/v1/contact-groups/${groupId}`);
+  async updateGroup(groupId: string, name: string, description = ''): Promise<ContactGroup | null> {
+    const userId = tokenStore.getUserId();
+    const response = await codexClient.put(`/contact-groups/${encodeURIComponent(groupId)}`, { name, description }, {
+      params: { userId },
+    });
+    const dto = response.data?.data;
+    return dto ? mapContactGroupDto(dto) : null;
   },
 
-  async addMembersToGroup(groupId: string, contactIds: string[]): Promise<void> {
-    await codexClient.post(`/v1/contact-groups/${groupId}/members`, { contactIds });
+  async deleteGroup(groupId: string): Promise<boolean> {
+    const userId = tokenStore.getUserId();
+    const response = await codexClient.delete(`/contact-groups/${encodeURIComponent(groupId)}`, {
+      params: { userId },
+    });
+    return response.status === 200 || response.status === 204;
   },
 
-  async removeMemberFromGroup(groupId: string, contactId: string): Promise<void> {
-    await codexClient.delete(`/v1/contact-groups/${groupId}/members/${contactId}`);
+  async addMembersToGroup(groupId: string, contactIds: string[]): Promise<number> {
+    const userId = tokenStore.getUserId();
+    const response = await codexClient.post(`/contact-groups/${encodeURIComponent(groupId)}/members`, { contactIds }, {
+      params: { userId },
+    });
+    return response.data?.added || 0;
+  },
+
+  async removeMemberFromGroup(groupId: string, contactId: string): Promise<boolean> {
+    const userId = tokenStore.getUserId();
+    const response = await codexClient.delete(
+      `/contact-groups/${encodeURIComponent(groupId)}/members/${encodeURIComponent(contactId)}`,
+      { params: { userId } }
+    );
+    return response.status === 200 || response.status === 204;
+  },
+
+  // ---------- Mobile-specific convenience methods ----------
+
+  async toggleFavorite(contactId: string): Promise<Contact | null> {
+    const response = await codexClient.patch(`/contacts/${encodeURIComponent(contactId)}/favorite`);
+    const data = response.data;
+    const dto = data?.contact || data;
+    return dto?.id ? mapContactDto(dto) : null;
+  },
+
+  async softDelete(contactId: string): Promise<boolean> {
+    const response = await codexClient.patch(`/contacts/${encodeURIComponent(contactId)}/soft-delete`);
+    return response.status === 200 || response.status === 204;
+  },
+
+  async restore(contactId: string): Promise<Contact | null> {
+    const response = await codexClient.patch(`/contacts/${encodeURIComponent(contactId)}/restore`);
+    const data = response.data;
+    const dto = data?.contact || data;
+    return dto?.id ? mapContactDto(dto) : null;
   },
 };

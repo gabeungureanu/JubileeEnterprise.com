@@ -22,11 +22,14 @@ export interface User {
 }
 
 export interface LoginResponse {
-  tokens: {
+  success: boolean;
+  error?: string;
+  tokens?: {
     accessToken: string;
     refreshToken: string;
+    expiresIn?: number;
   };
-  user: User;
+  user?: User;
 }
 
 export interface ApiResponse<T> {

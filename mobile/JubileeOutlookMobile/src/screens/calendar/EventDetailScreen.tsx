@@ -171,7 +171,7 @@ const EventDetailScreen: React.FC = () => {
       <View style={[styles.colorStrip, { backgroundColor: eventColor }]} />
 
       {/* Subject */}
-      <Text style={styles.subject}>{event.subject}</Text>
+      <Text style={styles.subject}>{event.title}</Text>
 
       {/* Date / time */}
       <View style={styles.detailRow}>
@@ -181,16 +181,16 @@ const EventDetailScreen: React.FC = () => {
             <>
               <Text style={styles.detailPrimary}>All Day</Text>
               <Text style={styles.detailSecondary}>
-                {formatDateOnly(event.startTime)}
+                {formatDateOnly(event.startDateTime)}
               </Text>
             </>
           ) : (
             <>
               <Text style={styles.detailPrimary}>
-                {formatDateTime(event.startTime)}
+                {formatDateTime(event.startDateTime)}
               </Text>
               <Text style={styles.detailSecondary}>
-                to {formatDateTime(event.endTime)}
+                to {formatDateTime(event.endDateTime)}
               </Text>
             </>
           )}
@@ -237,26 +237,11 @@ const EventDetailScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Attendees</Text>
           {event.attendees.map((attendee, idx) => (
-            <View key={attendee.id || `attendee-${idx}`} style={styles.attendeeRow}>
-              <Avatar name={attendee.name || attendee.email} size={36} />
+            <View key={`attendee-${idx}`} style={styles.attendeeRow}>
+              <Avatar name={attendee} size={36} />
               <View style={styles.attendeeInfo}>
                 <Text style={styles.attendeeName}>
-                  {attendee.name || attendee.email}
-                </Text>
-                {attendee.name && (
-                  <Text style={styles.attendeeEmail}>{attendee.email}</Text>
-                )}
-              </View>
-              <View
-                style={[
-                  styles.statusBadge,
-                  attendee.responseStatus === 'accepted' && styles.statusAccepted,
-                  attendee.responseStatus === 'declined' && styles.statusDeclined,
-                  attendee.responseStatus === 'tentative' && styles.statusTentative,
-                ]}
-              >
-                <Text style={styles.statusText}>
-                  {attendee.responseStatus}
+                  {attendee}
                 </Text>
               </View>
             </View>
@@ -264,25 +249,7 @@ const EventDetailScreen: React.FC = () => {
         </View>
       )}
 
-      {/* Attachments */}
-      {event.attachments && event.attachments.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Attachments</Text>
-          {event.attachments.map((att, idx) => (
-            <View key={att.id || `att-${idx}`} style={styles.attachmentRow}>
-              <Icon name="attach-file" size={20} color={Colors.textSecondary} />
-              <Text style={styles.attachmentName} numberOfLines={1}>
-                {att.fileName}
-              </Text>
-              {att.fileSize && (
-                <Text style={styles.attachmentSize}>
-                  {(att.fileSize / 1024).toFixed(0)} KB
-                </Text>
-              )}
-            </View>
-          ))}
-        </View>
-      )}
+      {/* Attachments — removed from CalendarEvent type; section disabled */}
     </ScrollView>
   );
 };

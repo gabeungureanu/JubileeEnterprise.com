@@ -13,7 +13,11 @@ export type RootStackParamList = {
 
 // Auth stack
 export type AuthStackParamList = {
+  SyncEmail: undefined;
+  SyncPassword: { email: string };
   SignIn: undefined;
+  SignUp: undefined;
+  ForgotPassword: { email?: string } | undefined;
 };
 
 // Main bottom tabs

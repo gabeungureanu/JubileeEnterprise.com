@@ -98,11 +98,8 @@ export const MailProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ---------- Folder Actions ----------
 
   const refreshFolders = useCallback(async () => {
-    const userId = getUserId();
-    if (!userId) return;
-
     try {
-      const folders = await mailService.getFolders(userId);
+      const folders = await mailService.getFolders();
       setState((prev) => ({ ...prev, folders }));
     } catch (err) {
       console.warn('[MailContext] refreshFolders failed:', err);
@@ -117,15 +114,16 @@ export const MailProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setState((prev) => ({ ...prev, isLoading: true }));
     try {
-      const { messages, pagination } = await mailService.getMessages(
+      const { messages, totalCount } = await mailService.getMessages(
         current.selectedFolderId,
         current.page,
         API.DEFAULT_PAGE_SIZE,
       );
+      const totalPages = Math.ceil(totalCount / API.DEFAULT_PAGE_SIZE);
       setState((prev) => ({
         ...prev,
         messages,
-        pagination: pagination || initialPagination,
+        pagination: { page: current.page, pageSize: API.DEFAULT_PAGE_SIZE, total: totalCount, totalPages },
         isLoading: false,
       }));
     } catch (err) {
@@ -174,16 +172,11 @@ export const MailProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ---------- Sync ----------
 
   const syncAll = useCallback(async () => {
-    const userId = getUserId();
-    if (!userId) return;
-
     setState((prev) => ({ ...prev, isSyncing: true }));
     try {
-      const accounts = await mailService.getAccounts(userId);
+      const accounts = await mailService.getAccounts();
       for (const account of accounts) {
-        if (account.syncEnabled) {
-          await mailService.syncAccount(account.id);
-        }
+        await mailService.syncAccount(account.id);
       }
       // Refresh folders and messages after sync
       await refreshFolders();
@@ -322,8 +315,7 @@ export const MailProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const searchMessages = useCallback(
     async (query: string) => {
-      const userId = getUserId();
-      if (!userId || !query.trim()) return;
+      if (!query.trim()) return;
 
       setState((prev) => ({
         ...prev,
@@ -333,17 +325,17 @@ export const MailProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }));
 
       try {
-        const { messages, pagination } = await mailService.searchMessages(
-          userId,
+        const { messages, totalCount } = await mailService.searchMessages(
           query,
           stateRef.current.selectedFolderId || undefined,
           1,
           API.DEFAULT_PAGE_SIZE,
         );
+        const totalPages = Math.ceil(totalCount / API.DEFAULT_PAGE_SIZE);
         setState((prev) => ({
           ...prev,
           messages,
-          pagination: pagination || initialPagination,
+          pagination: { page: 1, pageSize: API.DEFAULT_PAGE_SIZE, total: totalCount, totalPages },
           page: 1,
           isLoading: false,
         }));

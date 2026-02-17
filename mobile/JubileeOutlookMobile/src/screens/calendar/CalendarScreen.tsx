@@ -138,12 +138,12 @@ const CalendarScreen: React.FC = () => {
   // ── Derived data ──────────────────────────────────────────
 
   const eventsForSelectedDay = events.filter((e) => {
-    const start = new Date(e.startTime);
+    const start = new Date(e.startDateTime);
     return isSameDay(start, selectedDate);
   });
 
   const daysWithEvents = new Set(
-    events.map((e) => new Date(e.startTime).getDate()),
+    events.map((e) => new Date(e.startDateTime).getDate()),
   );
 
   // ── Calendar grid ─────────────────────────────────────────
@@ -211,10 +211,10 @@ const CalendarScreen: React.FC = () => {
       <View style={[styles.eventColorBar, { backgroundColor: item.eventColor || Colors.accent }]} />
       <View style={styles.eventContent}>
         <Text style={styles.eventTime}>
-          {item.isAllDay ? 'All Day' : `${formatTime(item.startTime)} - ${formatTime(item.endTime)}`}
+          {item.isAllDay ? 'All Day' : `${formatTime(item.startDateTime)} - ${formatTime(item.endDateTime)}`}
         </Text>
         <Text style={styles.eventSubject} numberOfLines={1}>
-          {item.subject}
+          {item.title}
         </Text>
         {!!item.location && (
           <View style={styles.eventLocationRow}>

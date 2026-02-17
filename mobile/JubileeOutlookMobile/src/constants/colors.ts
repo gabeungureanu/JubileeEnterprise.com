@@ -52,6 +52,13 @@ export const Colors = {
   overlay: 'rgba(0, 0, 0, 0.6)',
   scrim: 'rgba(0, 0, 0, 0.4)',
 
+  // Auth-screen gold (matches web frontend's #FFD700 exactly)
+  gold: '#FFD700',
+  goldLight: '#FFDF40',
+  goldDark: '#E5C100',
+  goldDisabled: '#8B7500',
+  inputBg: '#0D0D0D',
+
   // Transparent
   transparent: 'transparent',
   white: '#FFFFFF',

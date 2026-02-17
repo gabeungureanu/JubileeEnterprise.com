@@ -4,7 +4,7 @@
  */
 export const API = {
   CONTINUUM_BASE_URL: 'https://inspirecontinuum.com/api',
-  CODEX_BASE_URL: 'https://inspirecodex.com/api',
+  CODEX_BASE_URL: 'https://inspirecodex.com/api/v1',
 
   // Timeout in milliseconds
   REQUEST_TIMEOUT: 30_000,

@@ -1,18 +1,37 @@
 /**
- * Auth Service — mirrors web frontend src/services/auth/authService.ts
+ * Auth Service — mirrors web frontend src/services/auth/authService.ts exactly.
  */
+import { Platform } from 'react-native';
 import { codexClient, tokenStore } from '../apiClient';
 import type { User, LoginResponse } from '../../types';
 
+function buildDeviceInfo() {
+  return {
+    deviceId: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+    deviceName: `${Platform.OS} ${Platform.Version}`,
+    deviceType: 'mobile',
+    platform: Platform.OS,
+    platformVersion: String(Platform.Version),
+    appName: 'JubileeOutlookMobile',
+    appVersion: '1.0.0',
+  };
+}
+
 export const authService = {
   async login(email: string, password: string): Promise<LoginResponse> {
-    const { data } = await codexClient.post('/auth/login', { email, password });
-    const response = data.data || data;
+    const response = await codexClient.post<LoginResponse>('/auth/login', {
+      email,
+      password,
+      rememberMe: true,
+      deviceInfo: buildDeviceInfo(),
+    });
 
-    await tokenStore.setTokens(response.tokens.accessToken, response.tokens.refreshToken);
-    await tokenStore.setUserId(response.user.id);
-
-    return response;
+    const data = response.data;
+    if (data.success && data.tokens && data.user) {
+      await tokenStore.setTokens(data.tokens.accessToken, data.tokens.refreshToken);
+      await tokenStore.setUserId(data.user.id);
+    }
+    return data;
   },
 
   async register(
@@ -21,57 +40,56 @@ export const authService = {
     password: string,
     newsletter: boolean = false
   ): Promise<LoginResponse> {
-    const { data } = await codexClient.post('/auth/register', {
+    const response = await codexClient.post<LoginResponse>('/auth/register', {
       fullName,
       email,
       password,
       newsletter,
+      deviceInfo: buildDeviceInfo(),
     });
-    const response = data.data || data;
 
-    await tokenStore.setTokens(response.tokens.accessToken, response.tokens.refreshToken);
-    await tokenStore.setUserId(response.user.id);
-
-    return response;
-  },
-
-  async oauthRegister(provider: string, token: string): Promise<LoginResponse> {
-    const { data } = await codexClient.post('/auth/oauth-register', { provider, token });
-    const response = data.data || data;
-
-    await tokenStore.setTokens(response.tokens.accessToken, response.tokens.refreshToken);
-    await tokenStore.setUserId(response.user.id);
-
-    return response;
-  },
-
-  async getCurrentUser(): Promise<User> {
-    const { data } = await codexClient.get('/auth/me');
-    return data.data || data;
+    const data = response.data;
+    if (data.success && data.tokens && data.user) {
+      await tokenStore.setTokens(data.tokens.accessToken, data.tokens.refreshToken);
+      await tokenStore.setUserId(data.user.id);
+    }
+    return data;
   },
 
   async logout(): Promise<void> {
     try {
       await codexClient.post('/auth/logout');
     } catch {
-      // Fire-and-forget — clear tokens regardless
+      // Logout regardless of API response
     }
     await tokenStore.clear();
   },
 
-  async forgotPassword(email: string): Promise<void> {
+  async getCurrentUser(): Promise<User | null> {
+    try {
+      const response = await codexClient.get<{ success: boolean; user: User }>('/auth/me');
+      return response.data?.user || null;
+    } catch {
+      return null;
+    }
+  },
+
+  async forgotPassword(email: string): Promise<boolean> {
     await codexClient.post('/auth/forgot-password', { email });
+    return true; // Always returns true for security
   },
 
-  async verifyResetCode(email: string, code: string): Promise<void> {
-    await codexClient.post('/auth/verify-reset-code', { email, code });
+  async verifyResetCode(email: string, code: string): Promise<boolean> {
+    const response = await codexClient.post('/auth/verify-reset-code', { email, code });
+    return response.data?.success === true;
   },
 
-  async resetPassword(email: string, code: string, newPassword: string): Promise<void> {
-    await codexClient.post('/auth/reset-password', { email, code, newPassword });
+  async resetPassword(email: string, code: string, newPassword: string): Promise<boolean> {
+    const response = await codexClient.post('/auth/reset-password', { email, code, newPassword });
+    return response.data?.success === true;
   },
 
   isAuthenticated(): boolean {
-    return !!tokenStore.getAccessToken() && !!tokenStore.getUserId();
+    return !!tokenStore.getAccessToken();
   },
 };

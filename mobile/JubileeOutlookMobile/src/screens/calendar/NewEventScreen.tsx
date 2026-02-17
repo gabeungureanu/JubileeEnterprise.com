@@ -27,7 +27,7 @@ import { Spacing, BorderRadius } from '../../constants/spacing';
 import { LoadingSpinner } from '../../components/common';
 import { calendarService } from '../../services/calendar/calendarService';
 import { tokenStore } from '../../services/apiClient';
-import type { CalendarEvent, CreateEventPayload } from '../../types/calendar';
+import type { CalendarEvent, CalendarEventDto } from '../../types/calendar';
 import type { CalendarStackParamList } from '../../types/navigation';
 
 type Nav = NativeStackNavigationProp<CalendarStackParamList, 'NewEvent'>;
@@ -83,14 +83,14 @@ const NewEventScreen: React.FC = () => {
 
   // ── Form state ────────────────────────────────────────────
 
-  const [subject, setSubject] = useState(existingEvent?.subject || '');
+  const [subject, setSubject] = useState(existingEvent?.title || '');
   const [location, setLocation] = useState(existingEvent?.location || '');
   const [description, setDescription] = useState(existingEvent?.description || '');
   const [startTime, setStartTime] = useState(
-    existingEvent?.startTime || getDefaultStart(date),
+    existingEvent?.startDateTime || getDefaultStart(date),
   );
   const [endTime, setEndTime] = useState(
-    existingEvent?.endTime || getDefaultEnd(existingEvent?.startTime || getDefaultStart(date)),
+    existingEvent?.endDateTime || getDefaultEnd(existingEvent?.startDateTime || getDefaultStart(date)),
   );
   const [isAllDay, setIsAllDay] = useState(existingEvent?.isAllDay || false);
   const [isInPerson, setIsInPerson] = useState(existingEvent?.isInPerson || false);
@@ -156,7 +156,7 @@ const NewEventScreen: React.FC = () => {
 
     setIsSaving(true);
     try {
-      const payload: CreateEventPayload = {
+      const payload: Partial<CalendarEventDto> = {
         userId,
         subject: subject.trim(),
         location: location.trim() || undefined,

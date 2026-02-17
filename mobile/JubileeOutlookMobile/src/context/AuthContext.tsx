@@ -21,6 +21,7 @@ interface AuthContextValue extends AuthState {
   login: (
     email: string,
     password: string,
+    rememberMe?: boolean,
   ) => Promise<{ success: boolean; error?: string }>;
   register: (
     fullName: string,
@@ -144,10 +145,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     async (
       email: string,
       password: string,
+      rememberMe: boolean = true,
     ): Promise<{ success: boolean; error?: string }> => {
       try {
         const response = await authService.login(email, password);
         if (response.user) {
+          // Persist remember-me preference
+          if (rememberMe) {
+            await storage.set(StorageKeys.REMEMBER_EMAIL, email);
+            await storage.set(StorageKeys.REMEMBER_TOKEN, 'true');
+          } else {
+            await storage.remove(StorageKeys.REMEMBER_EMAIL);
+            await storage.remove(StorageKeys.REMEMBER_TOKEN);
+          }
+
           setState({
             user: response.user,
             isAuthenticated: true,

@@ -11,10 +11,10 @@ interface EventCardProps {
   onPress: () => void;
 }
 
-function formatEventTime(startTime: string, endTime: string, isAllDay: boolean): string {
+function formatEventTime(startDateTime: string, endDateTime: string, isAllDay: boolean): string {
   if (isAllDay) return 'All day';
-  const start = new Date(startTime);
-  const end = new Date(endTime);
+  const start = new Date(startDateTime);
+  const end = new Date(endDateTime);
   const fmt = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   return `${fmt(start)} - ${fmt(end)}`;
 }
@@ -25,9 +25,9 @@ export function EventCard({ event, onPress }: EventCardProps) {
       <View style={[styles.colorBar, { backgroundColor: event.eventColor || Colors.accent }]} />
       <View style={styles.content}>
         <Text style={styles.time}>
-          {formatEventTime(event.startTime, event.endTime, event.isAllDay)}
+          {formatEventTime(event.startDateTime, event.endDateTime, event.isAllDay)}
         </Text>
-        <Text style={styles.subject} numberOfLines={1}>{event.subject}</Text>
+        <Text style={styles.subject} numberOfLines={1}>{event.title}</Text>
         {event.location && (
           <View style={styles.locationRow}>
             <Icon name="place" size={14} color={Colors.textTertiary} />

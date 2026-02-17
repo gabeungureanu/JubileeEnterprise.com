@@ -1,49 +1,89 @@
 /**
- * Email Sync Service — mirrors web frontend src/services/mail/emailSyncService.ts
+ * Email Sync Service — mirrors web frontend src/services/mail/emailSyncService.ts exactly.
  */
 import { continuumClient } from '../apiClient';
-import type { ProviderDetection, EmailAccount } from '../../types';
+
+export interface ProviderInfo {
+  type: string;
+  displayName: string;
+  isAppPassword: boolean;
+  helpText: string;
+  imapHost: string;
+  imapPort: number;
+  smtpHost: string;
+  smtpPort: number;
+}
+
+export interface ConnectResult {
+  success: boolean;
+  error?: string;
+  account?: {
+    id: string;
+    email: string;
+    provider: string;
+    displayName: string;
+  };
+  folders?: Array<{
+    id: string;
+    name: string;
+    type: string;
+    path: string;
+  }>;
+  message?: string;
+}
+
+export interface SyncResult {
+  success: boolean;
+  error?: string;
+  totalSynced?: number;
+  folders?: Array<{ folder: string; synced: number }>;
+  message?: string;
+}
 
 export const emailSyncService = {
-  async detectProvider(email: string): Promise<ProviderDetection> {
-    const { data } = await continuumClient.post(
+  async detectProvider(email: string): Promise<ProviderInfo> {
+    const response = await continuumClient.post<{ success: boolean; provider: ProviderInfo }>(
       '/outlook/accounts/detect',
-      { email },
-      { timeout: 30_000 }
+      { email }
     );
-    return data.data || data;
+    return response.data.provider;
   },
 
-  async connectAccount(
-    email: string,
-    password: string,
-    userId: string
-  ): Promise<{ account: EmailAccount; folders: any[] }> {
-    const { data } = await continuumClient.post(
-      '/outlook/accounts/connect',
-      { email, password, userId },
-      { timeout: 60_000 }
-    );
-    return data.data || data;
+  async connectAccount(email: string, password: string, userId: string): Promise<ConnectResult> {
+    try {
+      const response = await continuumClient.post<ConnectResult>(
+        '/outlook/accounts/connect',
+        { email, password, userId },
+        { timeout: 60000 }
+      );
+      return response.data;
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || err.message || 'Connection failed';
+      return { success: false, error: errorMsg };
+    }
   },
 
-  async syncAccount(accountId: string): Promise<{ totalSynced: number; folders: any[] }> {
-    const { data } = await continuumClient.post(
-      `/outlook/accounts/${accountId}/sync`,
-      {},
-      { timeout: 120_000 }
-    );
-    return data.data || data;
+  async syncAccount(accountId: string): Promise<SyncResult> {
+    try {
+      const response = await continuumClient.post<SyncResult>(
+        `/outlook/accounts/${encodeURIComponent(accountId)}/sync`,
+        {},
+        { timeout: 120000 }
+      );
+      return response.data;
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || err.message || 'Sync failed';
+      return { success: false, error: errorMsg };
+    }
   },
 
-  async getAccounts(userId: string): Promise<EmailAccount[]> {
-    const { data } = await continuumClient.get('/outlook/accounts', {
-      params: { userId },
-    });
-    return data.data || data;
+  async getAccounts(userId: string): Promise<Array<{ id: string; email_address: string; provider_type: string; connection_status: string }>> {
+    const response = await continuumClient.get('/outlook/accounts', { params: { userId } });
+    return response.data.accounts || [];
   },
 
-  async disconnectAccount(accountId: string): Promise<void> {
-    await continuumClient.delete(`/outlook/accounts/${accountId}`);
+  async disconnectAccount(accountId: string): Promise<boolean> {
+    const response = await continuumClient.delete(`/outlook/accounts/${encodeURIComponent(accountId)}`);
+    return response.data?.success === true;
   },
 };
