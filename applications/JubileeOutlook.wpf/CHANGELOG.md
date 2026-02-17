@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2026-02-17
+
+### Added (Frontend — jubileeoutlook-frontend)
+- **Calendar Visibility Filter**: Sidebar calendar toggles now filter events in the grid; visibility state persists to localStorage across sessions
+- **Persistent Reminder Dismissals**: Dismissed reminders saved to localStorage with 7-day auto-expiry, surviving page refresh
+- **Search/Filter Bar**: Debounced search (300ms) across title, description, location, and attendees with category dropdown filter; Ctrl+F keyboard shortcut to focus
+- **Event Overlap Detection**: Overlapping events render side-by-side in time grid views using cluster-based column assignment algorithm
+- **Hybrid Time Picker**: Dropdown + freeform text input accepting "8", "8:30 AM", "20:15", "2pm" formats with validation
+- **Drag & Drop Events**: Native HTML5 drag to move events between time slots with 15-minute snap; preserves event duration
+- **Event Resize**: Bottom-edge drag handle to adjust event duration (15-minute minimum) using mousedown/mousemove/mouseup pattern
+- **File/Image Attachments**: Upload via Continuum API (`/outlook/files/upload`), file type icons, size formatting, inline preview, remove with API delete
+- **Timezone Support**: Selector with 11 common IANA timezones, defaults to browser timezone, stored with event
+- **Keyboard Shortcuts**: Ctrl+N (new event), T (today), Left/Right (navigate), 1-4 (view modes), Ctrl+F (search), Escape (close dialog)
+- **iCal Export**: RFC 5545 compliant .ics export with VEVENT, RRULE, VALARM, line folding; plus Print/PDF option
+- **Event Templates**: Save/apply event templates via localStorage; TemplateManager dialog with apply/delete; "Save as Template" button in EventDialog
+- **Calendar Sharing**: Share dialog with email input, permission levels (view/edit), share list with remove; graceful API failure handling
+- **CalendarRibbon Buttons**: Templates, Export, and Share buttons added to ribbon toolbar
+
+### Added (Continuum API)
+- **File Upload Endpoints**: `POST /api/v1/outlook/files/upload` (multipart, 25MB max), `GET /api/v1/outlook/files/:filename` (serve with MIME), `DELETE /api/v1/outlook/files/:filename` (delete with path traversal protection)
+
+### Fixed (Frontend)
+- **Search Bar Dark Theme**: Replaced light-themed CSS fallbacks (#fff, #f5f5f5) with proper dark theme design tokens (--bg-primary, --bg-tertiary, --border-primary, --text-primary)
+- **Lint Warnings**: Removed unused variables (TIME_LABELS_WIDTH, isTodayVisible, todayIndex) and fixed React hooks exhaustive-deps warning in SharingDialog
+
+### Technical Details
+- 15 new files created, 10 existing files modified, ~2,500 lines added
+- No new npm packages — all features built with React 19, native HTML5 APIs, and existing dependencies
+- Native HTML5 Drag API for event movement (consistent with mail MessageList pattern)
+- Filter pipeline via `useMemo` chain: calendar visibility → search query/category
+- File upload uses Hono's native `formData()` API, files stored with UUID names
+- All localStorage keys follow `jubilee_{feature}_{item}` convention
+
 ## [1.5.0] - 2026-02-16
 
 ### Added (Frontend — jubileeoutlook-frontend)

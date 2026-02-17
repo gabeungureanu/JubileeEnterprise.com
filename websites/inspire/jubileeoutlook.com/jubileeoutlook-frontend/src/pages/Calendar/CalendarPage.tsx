@@ -1,15 +1,20 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import CalendarRibbon from '../../components/layout/Ribbon/CalendarRibbon';
 import MiniCalendar from '../../components/calendar/MiniCalendar';
-import MyCalendars from '../../components/calendar/MyCalendars';
+import MyCalendars, { CalendarFolder } from '../../components/calendar/MyCalendars';
 import CalendarGrid from '../../components/calendar/CalendarGrid';
 import EventDialog from '../../components/calendar/EventDialog';
 import ReminderPopup from '../../components/calendar/ReminderPopup';
+import SearchBar, { SearchFilters, SearchBarHandle } from '../../components/calendar/SearchBar/SearchBar';
+import ExportDialog from '../../components/calendar/ExportDialog/ExportDialog';
+import TemplateManager from '../../components/calendar/TemplateManager/TemplateManager';
+import SharingDialog from '../../components/calendar/SharingDialog/SharingDialog';
 import { CalendarEvent, CalendarEventDto, CalendarViewMode, CalendarDateRange } from '../../types/calendar';
 import { calendarService } from '../../services/calendar/calendarService';
 import { expandRecurringEvents } from '../../utils/calendarUtils';
 import { reminderService, ReminderTrigger } from '../../services/calendar/reminderService';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import './CalendarPage.css';
 
 // Simple event cache: 5-minute TTL per date-range key
@@ -34,6 +39,18 @@ const CalendarPage: React.FC = () => {
 
   // Reminder state
   const [reminderEvent, setReminderEvent] = useState<CalendarEvent | null>(null);
+
+  // Calendar visibility filter state
+  const [calendarFilters, setCalendarFilters] = useState<CalendarFolder[]>([]);
+
+  // Search state
+  const [searchFilters, setSearchFilters] = useState<SearchFilters | null>(null);
+  const searchBarRef = useRef<SearchBarHandle>(null);
+
+  // Advanced dialog state
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
+  const [isSharingOpen, setIsSharingOpen] = useState(false);
 
   // Calculate date range based on view mode and selected date
   const getDateRange = useCallback((date: Date, mode: CalendarViewMode): CalendarDateRange => {
@@ -128,6 +145,41 @@ const CalendarPage: React.FC = () => {
   useEffect(() => {
     reminderService.updateEvents(events);
   }, [events]);
+
+  // --- Filter pipeline: calendar visibility -> search ---
+  const filteredEvents = useMemo(() => {
+    let result = events;
+
+    // Calendar visibility filter
+    const visibleCalendars = calendarFilters.filter((c) => c.isVisible).map((c) => c.name);
+    if (visibleCalendars.length > 0 && visibleCalendars.length < calendarFilters.length) {
+      result = result.filter((e) => {
+        const calName = (e as any).calendarName || 'My Calendar';
+        return visibleCalendars.includes(calName);
+      });
+    }
+
+    // Search filter
+    if (searchFilters && (searchFilters.query || searchFilters.category)) {
+      const q = (searchFilters.query || '').toLowerCase();
+      result = result.filter((e) => {
+        if (q && !(
+          e.title.toLowerCase().includes(q) ||
+          e.description.toLowerCase().includes(q) ||
+          e.location.toLowerCase().includes(q) ||
+          e.attendees.some((a) => a.toLowerCase().includes(q))
+        )) {
+          return false;
+        }
+        if (searchFilters.category && e.category !== searchFilters.category) {
+          return false;
+        }
+        return true;
+      });
+    }
+
+    return result;
+  }, [events, calendarFilters, searchFilters]);
 
   // Reminder handlers
   const handleReminderDismiss = () => {
@@ -279,6 +331,67 @@ const CalendarPage: React.FC = () => {
     await fetchEvents(true);
   };
 
+  // Drag & drop handler
+  const handleEventDrop = async (eventId: string, newStart: Date) => {
+    const event = events.find((e) => e.id === eventId);
+    if (!event) return;
+
+    const originalStart = new Date(event.startDateTime);
+    const originalEnd = new Date(event.endDateTime);
+    const duration = originalEnd.getTime() - originalStart.getTime();
+    const newEnd = new Date(newStart.getTime() + duration);
+
+    try {
+      await calendarService.updateEvent(eventId, {
+        start_time: newStart.toISOString(),
+        end_time: newEnd.toISOString(),
+      });
+      await fetchEvents(true);
+    } catch (err) {
+      console.error('Failed to move event:', err);
+      setError('Failed to move event.');
+    }
+  };
+
+  // Resize handler
+  const handleEventResize = async (eventId: string, newEndTime: Date) => {
+    const event = events.find((e) => e.id === eventId);
+    if (!event) return;
+
+    const start = new Date(event.startDateTime);
+    if (newEndTime.getTime() - start.getTime() < 15 * 60 * 1000) return; // min 15 min
+
+    try {
+      await calendarService.updateEvent(eventId, {
+        end_time: newEndTime.toISOString(),
+      });
+      await fetchEvents(true);
+    } catch (err) {
+      console.error('Failed to resize event:', err);
+      setError('Failed to resize event.');
+    }
+  };
+
+  // Template apply handler — opens event dialog pre-filled with template data
+  const handleApplyTemplate = (template: Partial<CalendarEvent>) => {
+    setEditingEvent(template as CalendarEvent);
+    setIsDialogOpen(true);
+  };
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onNewEvent: handleNewEvent,
+    onToday: goToToday,
+    onPrevious: navigatePrevious,
+    onNext: navigateNext,
+    onViewDay: () => setViewMode('day'),
+    onViewWorkWeek: () => setViewMode('workWeek'),
+    onViewWeek: () => setViewMode('week'),
+    onViewMonth: () => setViewMode('month'),
+    onFocusSearch: () => searchBarRef.current?.focus(),
+    onCloseDialog: () => { if (isDialogOpen) handleDialogClose(); },
+  }, !isDialogOpen || true);
+
   return (
     <div className="calendar-page">
       <div className="ribbon">
@@ -287,16 +400,25 @@ const CalendarPage: React.FC = () => {
           onToday={goToToday}
           onViewModeChange={setViewMode}
           activeViewMode={viewMode}
+          onExport={() => setIsExportOpen(true)}
+          onTemplates={() => setIsTemplateManagerOpen(true)}
+          onShare={() => setIsSharingOpen(true)}
         />
       </div>
       <div className="calendar-page__content">
         {isFolderPaneVisible && (
           <div className="calendar-page__sidebar">
             <MiniCalendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
-            <MyCalendars />
+            <MyCalendars onVisibilityChange={setCalendarFilters} />
           </div>
         )}
         <div className="calendar-page__main">
+          <SearchBar
+            ref={searchBarRef}
+            onSearch={setSearchFilters}
+            onClear={() => setSearchFilters(null)}
+          />
+
           <div className="calendar-page__header">
             <div className="calendar-page__nav">
               <button className="calendar-page__nav-btn" onClick={navigatePrevious}>
@@ -338,12 +460,14 @@ const CalendarPage: React.FC = () => {
           )}
 
           <CalendarGrid
-            events={events}
+            events={filteredEvents}
             viewMode={viewMode}
             dateRange={dateRange}
             selectedDate={selectedDate}
             onEventClick={handleEventClick}
             onDateClick={handleDateClick}
+            onEventDrop={handleEventDrop}
+            onEventResize={handleEventResize}
           />
         </div>
       </div>
@@ -364,6 +488,24 @@ const CalendarPage: React.FC = () => {
           onSnooze={handleReminderSnooze}
         />
       )}
+
+      <ExportDialog
+        isOpen={isExportOpen}
+        events={events}
+        onClose={() => setIsExportOpen(false)}
+      />
+
+      <TemplateManager
+        isOpen={isTemplateManagerOpen}
+        onClose={() => setIsTemplateManagerOpen(false)}
+        onApplyTemplate={handleApplyTemplate}
+      />
+
+      <SharingDialog
+        isOpen={isSharingOpen}
+        calendarId="default"
+        onClose={() => setIsSharingOpen(false)}
+      />
     </div>
   );
 };

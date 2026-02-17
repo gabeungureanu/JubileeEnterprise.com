@@ -28,6 +28,8 @@ export interface CalendarEventDto {
   recurrenceOccurrences?: number | null;
   recurrenceDaysOfWeek?: string[];
   reminderMinutes?: number;
+  attachments?: any[];
+  timezone?: string;
   createdAt?: string;
   updatedAt?: string;
   // snake_case aliases (for write payloads)
@@ -82,6 +84,17 @@ export interface CalendarEvent {
   recurrenceEndDate: string | null;
   recurrenceOccurrences: number | null;
   recurrenceDaysOfWeek: string[];
+  attachments: EventAttachment[];
+  timezone: string;
+  calendarName: string;
+}
+
+export interface EventAttachment {
+  id: string;
+  fileName: string;
+  fileSize: number;
+  fileUrl: string;
+  uploadedAt: string;
 }
 
 export type CalendarViewMode = 'day' | 'workWeek' | 'week' | 'month';
@@ -123,5 +136,8 @@ export function mapEventDto(dto: CalendarEventDto): CalendarEvent {
     recurrenceEndDate: d.recurrenceEndDate ?? d.recurrence_end_date ?? null,
     recurrenceOccurrences: d.recurrenceOccurrences ?? d.recurrence_occurrences ?? null,
     recurrenceDaysOfWeek: d.recurrenceDaysOfWeek || d.recurrence_days_of_week || [],
+    attachments: d.attachments || [],
+    timezone: d.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+    calendarName: d.calendarName || d.calendar_name || 'My Calendar',
   };
 }

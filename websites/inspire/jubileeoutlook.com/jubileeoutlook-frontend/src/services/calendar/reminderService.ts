@@ -2,6 +2,8 @@ import { CalendarEvent } from '../../types/calendar';
 
 const CHECK_INTERVAL_MS = 30000; // 30 seconds, matching WPF
 const TRIGGER_WINDOW_MS = 30000; // 30-second trigger window
+const STORAGE_KEY = 'jubilee_calendar_dismissed_reminders';
+const EXPIRY_DAYS = 7;
 
 export interface ReminderTrigger {
   event: CalendarEvent;
@@ -10,11 +12,50 @@ export interface ReminderTrigger {
 
 export type ReminderCallback = (trigger: ReminderTrigger) => void;
 
+interface DismissedEntry {
+  id: string;
+  timestamp: number;
+}
+
 class ReminderService {
   private intervalId: ReturnType<typeof setInterval> | null = null;
   private notifiedEventIds = new Set<string>();
   private events: CalendarEvent[] = [];
   private onTrigger: ReminderCallback | null = null;
+
+  constructor() {
+    this.loadDismissed();
+  }
+
+  private loadDismissed(): void {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const entries: DismissedEntry[] = JSON.parse(stored);
+        const cutoff = Date.now() - EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+        const valid = entries.filter((e) => e.timestamp > cutoff);
+        this.notifiedEventIds = new Set(valid.map((e) => e.id));
+        // Clean up expired entries
+        if (valid.length !== entries.length) {
+          this.saveDismissed();
+        }
+      }
+    } catch {
+      /* ignore corrupt data */
+    }
+  }
+
+  private saveDismissed(): void {
+    try {
+      const entries: DismissedEntry[] = Array.from(this.notifiedEventIds).map((id) => ({
+        id,
+        timestamp: Date.now(),
+      }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    } catch {
+      /* ignore storage errors */
+    }
+  }
 
   start(callback: ReminderCallback): void {
     this.onTrigger = callback;
@@ -37,16 +78,16 @@ class ReminderService {
 
   dismiss(eventId: string): void {
     this.notifiedEventIds.add(eventId);
+    this.saveDismissed();
   }
 
   snooze(eventId: string, minutes: number): void {
     // Remove from notified so it can re-trigger
     this.notifiedEventIds.delete(eventId);
-    // We'll re-add after the snooze period via a timeout
+    this.saveDismissed();
+    // After snooze period, the check cycle will re-evaluate naturally
     setTimeout(() => {
-      // Don't re-add to notified - let the check cycle handle it naturally
-      // The event will be re-evaluated. If the snooze period has passed
-      // and the event is still upcoming, it will trigger again.
+      // Intentionally empty - the check() loop handles re-triggering
     }, minutes * 60 * 1000);
   }
 
@@ -70,6 +111,7 @@ class ReminderService {
       const timeSinceReminder = now.getTime() - reminderTime.getTime();
       if (timeSinceReminder >= 0 && timeSinceReminder < TRIGGER_WINDOW_MS) {
         this.notifiedEventIds.add(event.id);
+        this.saveDismissed();
         this.onTrigger({ event, triggeredAt: now });
       }
     }

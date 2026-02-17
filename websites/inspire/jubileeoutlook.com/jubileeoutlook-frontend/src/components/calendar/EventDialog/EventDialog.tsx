@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CalendarEvent, ShowAsStatus } from '../../../types/calendar';
+import { CalendarEvent, EventAttachment, ShowAsStatus } from '../../../types/calendar';
 import { EventColor } from '../../../types/common';
+import { fileService } from '../../../services/calendar/fileService';
+import { templateService } from '../../../services/calendar/templateService';
 import './EventDialog.css';
 
 // --- Constants matching WPF NewEventViewModel ---
@@ -56,6 +58,113 @@ for (let h = 0; h < 24; h++) {
     TIME_SLOTS.push(`${hh}:${mm}`);
   }
 }
+
+// Parse freeform time input: accepts "8", "8:30", "8:30 AM", "20:15", "2pm"
+function parseTimeInput(input: string): string | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  // Pattern: "8", "8am", "8 pm"
+  const hourOnly = trimmed.match(/^(\d{1,2})\s*(am|pm)?$/i);
+  if (hourOnly) {
+    let h = parseInt(hourOnly[1], 10);
+    const mer = hourOnly[2]?.toLowerCase();
+    if (mer === 'pm' && h < 12) h += 12;
+    if (mer === 'am' && h === 12) h = 0;
+    if (h >= 0 && h < 24) return `${String(h).padStart(2, '0')}:00`;
+    return null;
+  }
+
+  // Pattern: "8:30", "8:30am", "8:30 PM", "20:15"
+  const full = trimmed.match(/^(\d{1,2}):(\d{2})\s*(am|pm)?$/i);
+  if (full) {
+    let h = parseInt(full[1], 10);
+    const min = parseInt(full[2], 10);
+    const mer = full[3]?.toLowerCase();
+    if (mer === 'pm' && h < 12) h += 12;
+    if (mer === 'am' && h === 12) h = 0;
+    if (h >= 0 && h < 24 && min >= 0 && min < 60) {
+      return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+    }
+  }
+
+  return null;
+}
+
+// Hybrid time picker: dropdown + freeform text input
+const TimePicker: React.FC<{
+  value: string;
+  onChange: (v: string) => void;
+}> = ({ value, onChange }) => {
+  const [isFreeform, setIsFreeform] = useState(false);
+  const [textValue, setTextValue] = useState(value);
+  const [isInvalid, setIsInvalid] = useState(false);
+
+  useEffect(() => {
+    setTextValue(value);
+    setIsInvalid(false);
+  }, [value]);
+
+  const handleBlur = () => {
+    const parsed = parseTimeInput(textValue);
+    if (parsed) {
+      setIsInvalid(false);
+      onChange(parsed);
+    } else {
+      setIsInvalid(true);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleBlur();
+  };
+
+  if (isFreeform) {
+    return (
+      <span className="event-dialog__time-picker">
+        <input
+          type="text"
+          value={textValue}
+          onChange={(e) => setTextValue(e.target.value)}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          className={`event-dialog__time-input ${isInvalid ? 'event-dialog__time-input--error' : ''}`}
+          placeholder="8:30 AM"
+        />
+        <button
+          type="button"
+          className="event-dialog__time-mode-btn"
+          onClick={() => setIsFreeform(false)}
+          title="Switch to dropdown"
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>list</span>
+        </button>
+      </span>
+    );
+  }
+
+  return (
+    <span className="event-dialog__time-picker">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="event-dialog__time-select"
+      >
+        {TIME_SLOTS.map(t => (
+          <option key={t} value={t}>{formatTimeLabel(t)}</option>
+        ))}
+      </select>
+      <button
+        type="button"
+        className="event-dialog__time-mode-btn"
+        onClick={() => setIsFreeform(true)}
+        title="Type a custom time"
+      >
+        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>edit</span>
+      </button>
+    </span>
+  );
+};
 
 function formatTimeLabel(time: string): string {
   const [hStr, mStr] = time.split(':');
@@ -123,6 +232,14 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
   const [recurrenceOccurrences, setRecurrenceOccurrences] = useState(10);
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
 
+  // Attachment state
+  const [attachments, setAttachments] = useState<EventAttachment[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Timezone state
+  const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
+
   const [validationError, setValidationError] = useState('');
   const previewGridRef = useRef<HTMLDivElement>(null);
 
@@ -161,6 +278,8 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
       } else {
         setRecurrenceEndOption('Never');
       }
+      setAttachments(event.attachments || []);
+      setTimezone(event.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
     } else {
       setTitle('');
       setAttendees('');
@@ -182,6 +301,8 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
       setRecurrenceEndDate('');
       setRecurrenceOccurrences(10);
       setSelectedDays([]);
+      setAttachments([]);
+      setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
     }
     setValidationError('');
   }, [isOpen, event, defaultDate]);
@@ -229,6 +350,59 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
     setSelectedDays(prev =>
       prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
     );
+  };
+
+  // Attachment handlers
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const attachment = await fileService.uploadFile(file);
+        setAttachments(prev => [...prev, attachment]);
+      }
+    } catch (err) {
+      setValidationError('Failed to upload file.');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveAttachment = (id: string) => {
+    const attachment = attachments.find(a => a.id === id);
+    if (attachment) {
+      fileService.deleteFile(attachment.fileUrl);
+    }
+    setAttachments(prev => prev.filter(a => a.id !== id));
+  };
+
+  const handleSaveAsTemplate = () => {
+    if (!title.trim()) {
+      setValidationError('Add a title before saving as template.');
+      return;
+    }
+    const name = window.prompt('Template name:', title);
+    if (!name) return;
+    templateService.saveTemplate(name, {
+      title,
+      description,
+      location,
+      isAllDay,
+      isInPerson,
+      showAs,
+      reminderMinutes,
+      eventColor,
+      category: eventColor,
+      isPrivate,
+      isRecurring,
+      recurrenceType: isRecurring ? recurrenceType.toLowerCase() : '',
+      recurrenceInterval: isRecurring ? recurrenceInterval : 0,
+      timezone,
+    } as Partial<CalendarEvent>);
+    setValidationError('');
   };
 
   const handleSave = () => {
@@ -285,7 +459,9 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
       recurrenceEndDate: finalRecurrenceEndDate,
       recurrenceOccurrences: finalRecurrenceOccurrences,
       recurrenceDaysOfWeek: isRecurring && recurrenceType === 'Weekly' ? selectedDays : [],
-    });
+      attachments,
+      timezone,
+    } as Partial<CalendarEvent>);
     onClose();
   };
 
@@ -378,6 +554,13 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
               </button>
 
               <div className="event-dialog__toolbar-actions">
+                <button
+                  className="event-dialog__btn event-dialog__btn--template"
+                  onClick={handleSaveAsTemplate}
+                  title="Save as Template"
+                >
+                  <span className="material-symbols-outlined">note_stack</span>
+                </button>
                 <button className="event-dialog__btn event-dialog__btn--save" onClick={handleSave}>
                   Save
                 </button>
@@ -436,25 +619,9 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
                 />
                 {!isAllDay && (
                   <>
-                    <select
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                      className="event-dialog__time-select"
-                    >
-                      {TIME_SLOTS.map(t => (
-                        <option key={`s-${t}`} value={t}>{formatTimeLabel(t)}</option>
-                      ))}
-                    </select>
+                    <TimePicker value={startTime} onChange={setStartTime} />
                     <span className="event-dialog__time-sep">to</span>
-                    <select
-                      value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
-                      className="event-dialog__time-select"
-                    >
-                      {TIME_SLOTS.map(t => (
-                        <option key={`e-${t}`} value={t}>{formatTimeLabel(t)}</option>
-                      ))}
-                    </select>
+                    <TimePicker value={endTime} onChange={setEndTime} />
                   </>
                 )}
                 <label className="event-dialog__allday-toggle">
@@ -589,11 +756,77 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
               <div className="event-dialog__field event-dialog__field--area">
                 <span className="material-symbols-outlined">notes</span>
                 <textarea
-                  placeholder="Add notes, links, or attachments"
+                  placeholder="Add notes or links"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
+
+              {/* Timezone */}
+              <div className="event-dialog__field">
+                <span className="material-symbols-outlined">public</span>
+                <select
+                  value={timezone}
+                  onChange={(e) => setTimezone(e.target.value)}
+                  className="event-dialog__timezone-select"
+                >
+                  <option value="America/New_York">Eastern Time (US)</option>
+                  <option value="America/Chicago">Central Time (US)</option>
+                  <option value="America/Denver">Mountain Time (US)</option>
+                  <option value="America/Los_Angeles">Pacific Time (US)</option>
+                  <option value="Europe/London">London (GMT/BST)</option>
+                  <option value="Europe/Paris">Paris (CET/CEST)</option>
+                  <option value="Europe/Berlin">Berlin (CET/CEST)</option>
+                  <option value="Asia/Tokyo">Tokyo (JST)</option>
+                  <option value="Asia/Shanghai">Shanghai (CST)</option>
+                  <option value="Australia/Sydney">Sydney (AEST)</option>
+                  <option value="UTC">UTC</option>
+                </select>
+              </div>
+
+              {/* Attachments */}
+              <div className="event-dialog__field">
+                <span className="material-symbols-outlined">attach_file</span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  onChange={handleFileUpload}
+                  style={{ display: 'none' }}
+                />
+                <button
+                  type="button"
+                  className="event-dialog__attach-btn"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  {isUploading ? 'Uploading...' : 'Add attachment'}
+                </button>
+              </div>
+
+              {attachments.length > 0 && (
+                <div className="event-dialog__attachments">
+                  {attachments.map(att => (
+                    <div key={att.id} className="event-dialog__attachment">
+                      <span className="material-symbols-outlined event-dialog__attachment-icon">
+                        {fileService.getFileIcon(att.fileName)}
+                      </span>
+                      <span className="event-dialog__attachment-name">{att.fileName}</span>
+                      <span className="event-dialog__attachment-size">
+                        {fileService.formatFileSize(att.fileSize)}
+                      </span>
+                      <button
+                        type="button"
+                        className="event-dialog__attachment-remove"
+                        onClick={() => handleRemoveAttachment(att.id)}
+                        title="Remove attachment"
+                      >
+                        <span className="material-symbols-outlined">close</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
