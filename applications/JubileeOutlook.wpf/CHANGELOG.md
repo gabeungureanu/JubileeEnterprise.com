@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.0] - 2026-02-16
+
+### Added (Frontend — jubileeoutlook-frontend)
+- **Calendar API Integration**: CalendarPage fetches events from Continuum API (`/api/v1/outlook/events`) with date range filtering and full CRUD operations
+- **Day/Week/WorkWeek Time Grid Views**: 24-hour scrollable time grid with 60px/hour rows, event blocks positioned by start time and sized by duration, column headers with today highlighted in gold, all-day events row, current time indicator (red dot + line) updating every 60 seconds, click-to-create on empty time slots, auto-scroll to current hour
+- **EventDialog with WPF Parity**: Complete rewrite as two-panel 1100x750 layout matching WPF NewEventWindow — left panel with toolbar (ShowAs, Reminder, Category, Private toggle), title, attendees, date/time pickers with 48 half-hour slots, location with in-person toggle, full recurrence section (Daily/Weekly/Monthly/Yearly with interval, day-of-week picker, end conditions), description area; right panel with calendar day preview and event position block
+- **Recurring Event Expansion**: Client-side expansion of recurring events (Daily/Weekly/Monthly/Yearly) within visible date range, 365-instance safety limit matching WPF, weekly recurrence with day-of-week selection, end conditions (never, by date, after N occurrences)
+- **Reminder Service**: 30-second check interval matching WPF `CalendarReminderService`, ReminderPopup with event title/time/time-until-event display, snooze options (5/10/15/30 min, 1hr, 2hr), dismiss functionality
+- **Event Cache**: 5-minute cache per date-range key preventing redundant API calls, automatic invalidation on any write operation (create, update, delete)
+- **My Calendars Sidebar**: Calendar list with visibility toggles matching WPF desktop sidebar
+- **CalendarRibbon**: View mode button highlighting with handler prop passthrough
+
+### Fixed (Frontend — jubileeoutlook-frontend)
+- **DTO Mapper camelCase Handling**: Continuum API returns camelCase field names (`startTime`, `endTime`, `isAllDay`) but mapper expected snake_case; updated `mapEventDto` with fallback accessors for both conventions
+- **Delete Event Race Condition**: EventDialog called `onClose()` synchronously after starting async `onDelete()`, causing dialog to close before API call completed; now awaits `onDelete` and displays errors in dialog validation area
+
+### Technical Details (Frontend)
+- All calendar CRUD through `calendarService.ts` → `continuumClient` → InspireContinuum API
+- Recurring events stored as single records with recurrence metadata; expanded client-side via `calendarUtils.ts`
+- Reminder service runs as singleton checking every 30 seconds against loaded event list
+- Event cache uses `Map<string, { events, timestamp }>` keyed by ISO date range strings
+- `CalendarEventDto` interface supports both camelCase (API reads) and snake_case (API writes)
+- New files: `calendarUtils.ts`, `reminderService.ts`, `MyCalendars/` component, updated `CalendarGrid/`, `EventDialog/`, `CalendarPage`, `CalendarRibbon`, `calendar/index.ts` types
+
 ## [1.4.0] - 2026-02-12
 
 ### Added
