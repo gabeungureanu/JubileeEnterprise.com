@@ -8,7 +8,7 @@
 import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons as Icon } from '@expo/vector-icons';
 
 import type { MainTabParamList } from '../types/navigation';
 import { Colors } from '../constants/colors';
@@ -57,7 +57,7 @@ const MainTabs: React.FC = () => {
         headerShown: false,
         tabBarIcon: ({ color, size }) => (
           <Icon
-            name={TAB_ICONS[route.name]}
+            name={TAB_ICONS[route.name] as any}
             size={size || TAB_ICON_SIZE}
             color={color}
           />

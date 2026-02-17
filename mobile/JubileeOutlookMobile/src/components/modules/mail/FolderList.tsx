@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { Badge } from '../../common/Badge';
 import { Colors } from '../../../constants/colors';
 import { Typography } from '../../../constants/typography';
@@ -40,7 +40,7 @@ function FolderItem({
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <Icon name={iconConfig.name} size={22} color={isSelected ? Colors.primary : iconConfig.color} />
+      <Icon name={iconConfig.name as any} size={22} color={isSelected ? Colors.primary : iconConfig.color} />
       <Text
         style={[styles.folderName, isSelected && styles.folderNameSelected]}
         numberOfLines={1}

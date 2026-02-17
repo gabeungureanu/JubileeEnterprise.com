@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
@@ -34,7 +34,7 @@ export function AppHeader({
       <View style={styles.row}>
         {leftIcon && onLeftPress ? (
           <TouchableOpacity onPress={onLeftPress} style={styles.iconButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Icon name={leftIcon} size={24} color={Colors.textPrimary} />
+            <Icon name={leftIcon as any} size={24} color={Colors.textPrimary} />
           </TouchableOpacity>
         ) : (
           <View style={styles.iconButton} />
@@ -48,12 +48,12 @@ export function AppHeader({
         <View style={styles.rightActions}>
           {rightIcon2 && onRightPress2 && (
             <TouchableOpacity onPress={onRightPress2} style={styles.iconButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Icon name={rightIcon2} size={24} color={Colors.textPrimary} />
+              <Icon name={rightIcon2 as any} size={24} color={Colors.textPrimary} />
             </TouchableOpacity>
           )}
           {rightIcon && onRightPress && (
             <TouchableOpacity onPress={onRightPress} style={styles.iconButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Icon name={rightIcon} size={24} color={Colors.textPrimary} />
+              <Icon name={rightIcon as any} size={24} color={Colors.textPrimary} />
             </TouchableOpacity>
           )}
         </View>

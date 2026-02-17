@@ -14,7 +14,7 @@ import {
   Switch,
   Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 import { Colors } from '../../constants/colors';
@@ -53,7 +53,7 @@ function SettingsItem({
   const content = (
     <View style={settingsItemStyles.row}>
       <Icon
-        name={icon}
+        name={icon as any}
         size={22}
         color={isDestructive ? Colors.error : Colors.textSecondary}
         style={settingsItemStyles.icon}

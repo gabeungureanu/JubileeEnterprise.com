@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 
 interface FABProps {
@@ -32,7 +32,7 @@ export function FloatingActionButton({
       onPress={onPress}
       activeOpacity={0.8}
     >
-      <Icon name={icon} size={size * 0.45} color={color} />
+      <Icon name={icon as any} size={size * 0.45} color={color} />
     </TouchableOpacity>
   );
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { Colors } from '../../../constants/colors';
 import { Typography } from '../../../constants/typography';
 import { Spacing } from '../../../constants/spacing';
@@ -37,7 +37,7 @@ export function SettingsItem({
     >
       {icon && (
         <Icon
-          name={icon}
+          name={icon as any}
           size={22}
           color={isDestructive ? Colors.error : Colors.textSecondary}
           style={styles.icon}
