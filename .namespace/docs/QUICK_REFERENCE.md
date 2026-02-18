@@ -74,6 +74,12 @@ cd applications/JubileeBrowser.wpf
 dotnet build                   # Build
 dotnet run                     # Run
 dotnet publish -c Release      # Publish
+
+# Mobile App (JubileeOutlookMobile)
+cd mobile/JubileeOutlookMobile
+npm install                    # Install deps
+npx expo start --port 8081     # Start Expo dev server
+npx tsc --noEmit               # TypeScript check
 ```
 
 ---
@@ -87,6 +93,9 @@ JubileeEnterprise.com/
 ├── websites/
 │   ├── launcher/       # Development navigation hub
 │   └── codex/          # Production websites (JubileeVerse, JubileeInspire, etc.)
+├── mobile/
+│   ├── JubileeOutlookMobile/  # Outlook mobile (Expo SDK 54 / React Native)
+│   └── JubileeInspire.ios/    # AI Bible chat iOS (Expo / React Native)
 ├── applications/       # JubileeBrowser.wpf
 ├── infrastructure/     # docker, migrations, nginx
 └── docs/              # Documentation
@@ -122,6 +131,7 @@ JubileeEnterprise.com/
 - **Database:** PostgreSQL 16, Redis 7, Qdrant
 - **AI:** OpenAI, Anthropic Claude, Qdrant vectors
 - **Desktop:** .NET 8, WPF, WebView2
+- **Mobile:** Expo SDK 54, React Native 0.81.5, TypeScript 5.9.2
 - **Security:** JWT, bcrypt, RBAC, OAuth2
 
 ---

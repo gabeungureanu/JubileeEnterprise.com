@@ -36,6 +36,7 @@
 - **3 API Services** (Codex, Inspire, Continuum)
 - **8 Website Projects** (JubileeVerse, JubileeInternet, etc.)
 - **1 Desktop Application** (JubileeBrowser.WPF)
+- **2 Mobile Applications** (JubileeOutlookMobile, JubileeInspire.ios)
 - **3 Shared Packages** (@jubilee/shared, @jubilee/database, @jubilee/config)
 - **3 PostgreSQL Databases** (Codex, Inspire, Continuum)
 
@@ -67,6 +68,10 @@ JubileeEnterprise.com/
 │       ├── JubileePersonas.com/    # AI persona management (Port 3006)
 │       ├── JubileeVerse.com/       # Faith-based AI chat (Port 3007)
 │       └── JubileeWebsites.com/    # AI website generation (Port 3008)
+│
+├── mobile/                      # Mobile applications
+│   ├── JubileeOutlookMobile/    # Outlook mobile client (Expo/React Native)
+│   └── JubileeInspire.ios/      # AI Bible chat iOS client (Expo/React Native)
 │
 ├── applications/                # Desktop applications
 │   └── JubileeBrowser.wpf/      # Windows browser (.NET 8/WPF)
@@ -298,6 +303,46 @@ The primary application - a faith-based AI chat platform featuring:
 - User authentication via JubileeInternet
 - Content collections
 - Community features
+
+---
+
+## Mobile Applications
+
+### JubileeOutlookMobile (v1.0.0)
+**Location:** `mobile/JubileeOutlookMobile/`
+
+**Technology:**
+- Expo SDK 54
+- React Native 0.81.5
+- TypeScript 5.9.2
+- React Navigation 7.x
+
+**Features:**
+- Full email client mirroring the JubileeOutlook web frontend
+- 5-screen auth flow (Sync Email, Sync Password, Sign In, Sign Up, Forgot Password)
+- IMAP email sync with provider detection (Microsoft 365, Gmail, Yahoo, iCloud, IMAP/POP)
+- Calendar management (events, recurring, reminders)
+- Contact management with groups
+- Dual API client architecture (Codex + Continuum)
+- Cross-platform: iOS, Android, and Web via Expo
+
+**API Integration:**
+- **codexClient** → InspireCodex.com (Auth, Contacts)
+- **continuumClient** → InspireContinuum.com (Mail, Calendar, Sync)
+
+### JubileeInspire.ios (v1.0.0)
+**Location:** `mobile/JubileeInspire.ios/`
+
+**Technology:**
+- Expo + React Native + TypeScript
+- iOS-focused AI Bible chat client
+
+**Features:**
+- AI-powered Scripture conversations
+- Conversation history with chronological grouping
+- Voice input, file attachments, read aloud
+- Collapsible sidebar, search, archive
+- Theme system (System/Dark/Light)
 
 ---
 

@@ -1002,17 +1002,25 @@ app.post('/api/v1/outlook/accounts/connect', async (c) => {
       secure: true,
       auth: { user: email, pass: password },
       logger: false,
+      socketTimeout: 15000,
+      greetingTimeout: 10000,
     });
+
+    // Prevent unhandled socket errors from crashing the process
+    client.on('error', () => { /* handled below */ });
 
     try {
       await client.connect();
     } catch (connErr: any) {
-      const msg = connErr.message || '';
+      const msg = connErr.message || connErr.code || '';
       if (msg.includes('Invalid credentials') || msg.includes('AUTHENTICATIONFAILED') || msg.includes('LOGIN failed')) {
         return c.json({ error: 'Invalid email or password. If your account has two-factor authentication, please use an App Password.' }, 401);
       }
       if (msg.includes('Application-specific password required') || msg.includes('less secure')) {
         return c.json({ error: 'This account requires an App Password. Please generate one from your account security settings.' }, 401);
+      }
+      if (msg.includes('ETIMEOUT') || msg.includes('timeout') || msg.includes('ETIMEDOUT')) {
+        return c.json({ error: `Connection timed out to ${provider.imapHost}. The mail server may be unreachable.` }, 504);
       }
       return c.json({ error: `Connection failed: ${msg}` }, 502);
     }
