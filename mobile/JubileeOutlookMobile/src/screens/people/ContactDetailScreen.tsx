@@ -12,7 +12,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Alert,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -23,6 +22,7 @@ import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius } from '../../constants/spacing';
 import { Avatar, LoadingSpinner, EmptyState } from '../../components/common';
+import { useAlert } from '../../hooks';
 import { contactService } from '../../services/contacts/contactService';
 import type { Contact } from '../../types/contacts';
 import type { PeopleStackParamList } from '../../types/navigation';
@@ -37,6 +37,7 @@ type Route = RouteProp<PeopleStackParamList, 'ContactDetail'>;
 const ContactDetailScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
+  const { alert, AlertComponent } = useAlert();
   const { contactId, contact: routeContact } = route.params;
 
   const [contact, setContact] = useState<Contact | null>(routeContact || null);
@@ -74,7 +75,7 @@ const ContactDetailScreen: React.FC = () => {
         prev ? { ...prev, isFavorite: !prev.isFavorite } : prev,
       );
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to toggle favorite');
+      alert('Error', err?.message || 'Failed to toggle favorite', 'error');
     }
   }, [contact]);
 
@@ -120,27 +121,27 @@ const ContactDetailScreen: React.FC = () => {
   const handleCall = useCallback(() => {
     const phone = contact?.phoneNumbers?.[0] || contact?.mobilePhone;
     if (phone) {
-      Alert.alert('Call', `Calling ${phone}`);
+      alert('Call', `Calling ${phone}`, 'info');
     } else {
-      Alert.alert('No Phone', 'This contact has no phone number');
+      alert('No Phone', 'This contact has no phone number', 'warning');
     }
   }, [contact]);
 
   const handleEmail = useCallback(() => {
     const email = contact?.emailAddresses?.[0];
     if (email) {
-      Alert.alert('Email', `Composing email to ${email}`);
+      alert('Email', `Composing email to ${email}`, 'info');
     } else {
-      Alert.alert('No Email', 'This contact has no email address');
+      alert('No Email', 'This contact has no email address', 'warning');
     }
   }, [contact]);
 
   const handleMessage = useCallback(() => {
     const phone = contact?.mobilePhone || contact?.phoneNumbers?.[0];
     if (phone) {
-      Alert.alert('Message', `Messaging ${phone}`);
+      alert('Message', `Messaging ${phone}`, 'info');
     } else {
-      Alert.alert('No Phone', 'This contact has no phone number');
+      alert('No Phone', 'This contact has no phone number', 'warning');
     }
   }, [contact]);
 
@@ -196,6 +197,7 @@ const ContactDetailScreen: React.FC = () => {
     .join(', ');
 
   return (
+  <>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Avatar & name */}
       <View style={styles.profileSection}>
@@ -285,6 +287,9 @@ const ContactDetailScreen: React.FC = () => {
         </View>
       )}
     </ScrollView>
+
+    {AlertComponent}
+  </>
   );
 };
 

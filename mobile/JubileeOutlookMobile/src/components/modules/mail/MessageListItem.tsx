@@ -4,12 +4,13 @@ import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { Avatar } from '../../common/Avatar';
 import { Colors } from '../../../constants/colors';
 import { Typography } from '../../../constants/typography';
-import { Spacing } from '../../../constants/spacing';
+import { Spacing, BorderRadius } from '../../../constants/spacing';
 import type { EmailMessage } from '../../../types';
 
 interface MessageListItemProps {
   message: EmailMessage;
   isSelected: boolean;
+  isInSelectionMode?: boolean;
   onPress: () => void;
   onLongPress?: () => void;
   onToggleFlag?: () => void;
@@ -35,6 +36,7 @@ function formatRelativeDate(dateStr?: string): string {
 export function MessageListItem({
   message,
   isSelected,
+  isInSelectionMode,
   onPress,
   onLongPress,
   onToggleFlag,
@@ -46,17 +48,24 @@ export function MessageListItem({
     <TouchableOpacity
       style={[
         styles.container,
+        isUnread && !isSelected && styles.unread,
         isSelected && styles.selected,
-        isUnread && styles.unread,
       ]}
       onPress={onPress}
       onLongPress={onLongPress}
       activeOpacity={0.7}
     >
       {/* Unread indicator */}
-      {isUnread && <View style={styles.unreadDot} />}
+      {isUnread && !isInSelectionMode && <View style={styles.unreadDot} />}
 
-      <Avatar name={senderDisplay} size={40} />
+      {/* Avatar or Checkbox */}
+      {isInSelectionMode ? (
+        <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+          {isSelected && <Icon name="check" size={18} color={Colors.textInverse} />}
+        </View>
+      ) : (
+        <Avatar name={senderDisplay} size={40} />
+      )}
 
       <View style={styles.content}>
         <View style={styles.topRow}>
@@ -92,18 +101,20 @@ export function MessageListItem({
         </View>
       </View>
 
-      {/* Flag */}
-      <TouchableOpacity
-        onPress={onToggleFlag}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-        style={styles.flagButton}
-      >
-        <Icon
-          name={message.isFlagged ? 'flag' : 'outlined-flag'}
-          size={18}
-          color={message.isFlagged ? Colors.flagged : Colors.textTertiary}
-        />
-      </TouchableOpacity>
+      {/* Flag (hidden in selection mode) */}
+      {!isInSelectionMode && (
+        <TouchableOpacity
+          onPress={onToggleFlag}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={styles.flagButton}
+        >
+          <Icon
+            name={message.isFlagged ? 'flag' : 'outlined-flag'}
+            size={18}
+            color={message.isFlagged ? Colors.flagged : Colors.textTertiary}
+          />
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 }
@@ -115,11 +126,9 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
     backgroundColor: Colors.background,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.divider,
   },
   selected: {
-    backgroundColor: Colors.surfaceLight,
+    backgroundColor: Colors.accentDark + '25',
   },
   unread: {
     backgroundColor: Colors.surface,
@@ -132,6 +141,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 4,
     top: '50%',
+  },
+  checkbox: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.surfaceLight,
+  },
+  checkboxSelected: {
+    backgroundColor: Colors.accent,
+    borderColor: Colors.accent,
   },
   content: {
     flex: 1,

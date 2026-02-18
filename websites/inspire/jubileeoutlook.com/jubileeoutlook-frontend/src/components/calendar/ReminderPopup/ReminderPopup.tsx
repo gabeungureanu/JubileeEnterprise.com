@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CalendarEvent } from '../../../types/calendar';
 import './ReminderPopup.css';
 
@@ -13,6 +13,7 @@ const SNOOZE_OPTIONS = [
 
 interface ReminderPopupProps {
   event: CalendarEvent;
+  stackIndex?: number;
   onDismiss: () => void;
   onSnooze: (minutes: number) => void;
 }
@@ -35,16 +36,28 @@ function getTimeUntilEvent(event: CalendarEvent): string {
   return remainingMin > 0 ? `In ${diffHours} hours ${remainingMin} min` : `In ${diffHours} hours`;
 }
 
-const ReminderPopup: React.FC<ReminderPopupProps> = ({ event, onDismiss, onSnooze }) => {
+const ReminderPopup: React.FC<ReminderPopupProps> = ({ event, stackIndex = 0, onDismiss, onSnooze }) => {
   const [snoozeMinutes, setSnoozeMinutes] = useState(5);
+  const [timeText, setTimeText] = useState(getTimeUntilEvent(event));
+
+  // Live countdown — update every 30 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeText(getTimeUntilEvent(event));
+    }, 30000);
+    return () => clearInterval(timer);
+  }, [event]);
 
   const eventTime = new Date(event.startDateTime).toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit',
   });
 
+  // Stack multiple popups vertically (each one offset upward)
+  const bottomOffset = 20 + stackIndex * 180;
+
   return (
-    <div className="reminder-popup">
+    <div className="reminder-popup" style={{ bottom: `${bottomOffset}px` }}>
       <div className="reminder-popup__header">
         <span className="material-symbols-outlined reminder-popup__bell">notifications_active</span>
         <span className="reminder-popup__heading">Reminder</span>
@@ -56,7 +69,7 @@ const ReminderPopup: React.FC<ReminderPopupProps> = ({ event, onDismiss, onSnooz
         <h4 className="reminder-popup__title">{event.isPrivate ? 'Private' : event.title}</h4>
         <div className="reminder-popup__details">
           <span className="material-symbols-outlined">schedule</span>
-          <span>{eventTime} - {getTimeUntilEvent(event)}</span>
+          <span>{eventTime} - {timeText}</span>
         </div>
         {event.location && (
           <div className="reminder-popup__details">

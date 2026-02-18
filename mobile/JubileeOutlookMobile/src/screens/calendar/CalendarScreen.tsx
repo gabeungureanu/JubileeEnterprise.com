@@ -14,7 +14,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -24,6 +23,7 @@ import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius } from '../../constants/spacing';
 import { LoadingSpinner, EmptyState, FloatingActionButton } from '../../components/common';
+import { useAlert } from '../../hooks';
 import { calendarService } from '../../services/calendar/calendarService';
 import type { CalendarEvent } from '../../types/calendar';
 import type { CalendarStackParamList } from '../../types/navigation';
@@ -73,6 +73,7 @@ function formatTime(iso: string): string {
 
 const CalendarScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
+  const { alert, AlertComponent } = useAlert();
 
   const today = new Date();
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -90,12 +91,12 @@ const CalendarScreen: React.FC = () => {
       try {
         if (!silent) setIsLoading(true);
         setError(null);
-        const data = await calendarService.getEventsForMonth(year, month + 1);
+        const data = await calendarService.getEventsForMonth(year, month);
         setEvents(data);
       } catch (err: any) {
         const msg = err?.message || 'Failed to load events';
         setError(msg);
-        if (!silent) Alert.alert('Error', msg);
+        if (!silent) alert('Error', msg, 'error');
       } finally {
         setIsLoading(false);
         setIsRefreshing(false);
@@ -313,6 +314,8 @@ const CalendarScreen: React.FC = () => {
           }
         />
       )}
+
+      {AlertComponent}
 
       {/* FAB */}
       <FloatingActionButton

@@ -22,13 +22,23 @@ Jubilee Outlook Mobile is a full-featured email client that mirrors the JubileeO
 - **Real-time Validation**: Per-field error clearing as user corrects input
 - **Animated Progress**: Indeterminate progress bar during IMAP sync
 - **Remember Me**: Persists email to AsyncStorage for returning users
+- **Auto-Navigation**: After successful sync, automatically transitions to Mail inbox via `refreshAuthState()`
 
-### Mail
-- **Inbox/Folder Navigation**: Folder list with unread counts
-- **Message List**: Sender, subject, preview, date, read/unread status
-- **Reading Pane**: Full HTML email rendering via WebView
-- **Compose**: New email with To/Cc/Bcc, subject, body
-- **IMAP Email Sync**: Connect and sync email accounts via Continuum API
+### Mail (Phase 2)
+- **Sidebar Drawer**: Animated two-column layout with icon rail, folder list, account switcher, and unread counts
+- **Date-Grouped Inbox**: SectionList with This Week, Last Week, This Month, Last Month, Older sections
+- **Focused/Other Toggle**: Switch between inbox (Focused) and junk/spam (Other) folders
+- **Filter Menu**: All, Unread, Flagged, Pinned, Has Files, Mention Me
+- **IMAP Sync**: Real IMAP sync via `syncAccount()` for all connected accounts, with ID-based new email counting
+- **Read State Preservation**: Local read status preserved across sync and auto-refresh to prevent IMAP overwriting
+- **Auto-Refresh**: Messages re-fetched when screen regains focus (e.g., after composing)
+- **Selection Mode**: Long-press to multi-select with bulk actions:
+  - Delete, Archive, Move to Folder, Move to Other, Mark as Read, Flag
+  - Three-dot menu with Select All / Unselect All toggle
+  - Folder picker modal for move operations
+- **Compose**: Dark-themed compose screen with gold accents, attachments, To/Cc/Bcc fields
+- **Message Detail**: Full HTML rendering, mark-as-read on open, reply/forward/delete actions
+- **Flag Toggle**: Tap flag icon to toggle flagged status
 
 ### Calendar
 - **Event List**: Upcoming events with details
@@ -36,13 +46,21 @@ Jubilee Outlook Mobile is a full-featured email client that mirrors the JubileeO
 - **New Event**: Create events with date/time pickers, recurrence, reminders
 
 ### People (Contacts)
-- **Contact List**: Alphabetical listing with search
+- **Contact List**: Alphabetical listing with search and favorites
 - **Contact Detail**: Full contact information display
-- **Contact Groups**: Group management
+- **Contact Edit**: Create and edit contacts
+- **Contact Groups**: Group navigation (placeholder screen)
 
 ### Settings
 - **Account Management**: Connected accounts overview
-- **Preferences**: App configuration
+- **Manual Sync**: Trigger IMAP sync from settings
+- **Sign Out**: Returns to auth flow
+
+### Common Components
+- **ThemedToast**: Centered auto-dismiss notification
+- **ThemedAlert**: Modal alert/confirm dialog
+- **SafeScreen**: SafeAreaView wrapper with configurable edges
+- **useAlert Hook**: Provides `alert()`, `confirm()`, `toast()` functions
 
 ## Quick Start
 
@@ -92,29 +110,40 @@ JubileeOutlookMobile/
 └── src/
     ├── components/
     │   ├── auth/
-    │   │   ├── AuthCard.tsx          # Shared auth screen layout wrapper
-    │   │   └── GoldCheckbox.tsx      # Custom gold checkbox component
+    │   │   ├── AuthCard.tsx              # Shared auth screen layout wrapper
+    │   │   └── GoldCheckbox.tsx          # Custom gold checkbox component
+    │   ├── common/
+    │   │   ├── index.ts                  # Component barrel exports
+    │   │   ├── ThemedToast.tsx           # Auto-dismiss notification toast
+    │   │   └── ThemedAlert.tsx           # Modal alert/confirm dialog
+    │   ├── layout/
+    │   │   └── SafeScreen.tsx            # SafeAreaView wrapper
     │   └── modules/
     │       ├── calendar/
-    │       │   └── EventCard.tsx     # Calendar event card
+    │       │   └── EventCard.tsx         # Calendar event card
     │       └── mail/
-    │           ├── ComposeModal.tsx  # Email compose modal
-    │           ├── FolderList.tsx    # Mail folder sidebar
-    │           ├── MessageItem.tsx   # Message list item
-    │           └── ReadingPane.tsx   # Email reading pane
+    │           ├── MessageListItem.tsx   # Message list item (selection mode)
+    │           └── SidebarDrawer.tsx     # Mail sidebar drawer
     ├── constants/
-    │   ├── api.ts                   # API base URLs
-    │   ├── colors.ts                # Color palette (auth gold + app colors)
-    │   ├── index.ts                 # StorageKeys and constants
-    │   ├── spacing.ts               # Spacing, BorderRadius, HitSlop
-    │   └── typography.ts            # Typography scale
+    │   ├── api.ts                       # API base URLs
+    │   ├── colors.ts                    # Color palette (auth gold + app)
+    │   ├── index.ts                     # StorageKeys and constants
+    │   ├── spacing.ts                   # Spacing, BorderRadius, HitSlop
+    │   └── typography.ts                # Typography scale
     ├── context/
-    │   ├── AuthContext.tsx           # Auth state + login/register/logout
-    │   └── MailContext.tsx           # Mail state + folder/message management
+    │   ├── AuthContext.tsx               # Auth state + login/register/logout/refreshAuthState
+    │   └── MailContext.tsx               # Mail state + folder/message management
+    ├── hooks/
+    │   ├── index.ts                     # Hook barrel exports
+    │   └── useAlert.tsx                 # Alert/confirm/toast hook
     ├── navigation/
-    │   ├── AuthStack.tsx            # Auth flow navigator (5 screens)
-    │   ├── MainTabs.tsx             # Bottom tab navigator
-    │   └── RootNavigator.tsx        # Root auth/main switch
+    │   ├── AuthStack.tsx                # Auth flow navigator (5 screens)
+    │   ├── MailStack.tsx                # Mail stack (Inbox, Detail, Compose, Folder, Search)
+    │   ├── CalendarStack.tsx            # Calendar stack
+    │   ├── PeopleStack.tsx              # People stack (Main, Detail, Edit, Group)
+    │   ├── SettingsStack.tsx            # Settings stack
+    │   ├── MainTabs.tsx                 # Bottom tab navigator (3 visible tabs)
+    │   └── RootNavigator.tsx            # Root auth/main switch
     ├── screens/
     │   ├── auth/
     │   │   ├── SyncEmailScreen.tsx       # Default landing — email sync entry
@@ -123,15 +152,20 @@ JubileeOutlookMobile/
     │   │   ├── SignUpScreen.tsx          # Registration form
     │   │   └── ForgotPasswordScreen.tsx  # Password reset
     │   ├── calendar/
-    │   │   ├── CalendarScreen.tsx        # Event list
+    │   │   ├── CalendarScreen.tsx        # Monthly calendar view
     │   │   ├── EventDetailScreen.tsx     # Event details
-    │   │   └── NewEventScreen.tsx        # Create event
+    │   │   └── NewEventScreen.tsx        # Create/edit event
     │   ├── mail/
-    │   │   ├── InboxScreen.tsx           # Mail inbox
-    │   │   └── ComposeScreen.tsx         # Compose email
+    │   │   ├── MailScreen.tsx            # Main inbox (sections, selection, sidebar)
+    │   │   ├── MessageDetailScreen.tsx   # Message reading pane
+    │   │   ├── ComposeScreen.tsx         # Compose email (dark themed)
+    │   │   ├── FolderMessagesScreen.tsx  # Folder-specific message list
+    │   │   └── SearchScreen.tsx          # Mail search
     │   ├── people/
-    │   │   ├── PeopleScreen.tsx          # Contact list
-    │   │   └── ContactDetailScreen.tsx   # Contact details
+    │   │   ├── PeopleScreen.tsx          # Contact list + groups
+    │   │   ├── ContactDetailScreen.tsx   # Contact details
+    │   │   ├── ContactEditScreen.tsx     # Create/edit contact
+    │   │   └── ContactGroupScreen.tsx    # Contact group view
     │   └── settings/
     │       └── SettingsScreen.tsx        # App settings
     ├── services/
@@ -150,6 +184,7 @@ JubileeOutlookMobile/
     │   ├── common.ts                    # Shared API response types
     │   ├── contacts.ts                  # Contact types
     │   ├── mail.ts                      # Email/folder types
+    │   ├── index.ts                     # Type barrel exports
     │   └── navigation.ts               # React Navigation param types
     └── utils/
         └── storage.ts                   # AsyncStorage wrapper

@@ -1,9 +1,8 @@
 /**
  * MainTabs — Bottom tab navigator for authenticated users.
  *
- * Contains four tabs: Mail, Calendar, People, and Settings.
- * Each tab wraps its own stack navigator so that in-tab navigation
- * (e.g. opening a message detail) keeps the tab bar visible.
+ * Contains three visible tabs: Mail, Calendar, and People.
+ * Settings is registered but hidden from the tab bar (accessible via sidebar gear icon).
  */
 import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
@@ -21,9 +20,6 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 /** Icon size for all tab bar icons. */
 const TAB_ICON_SIZE = 24;
-
-/** Height of the bottom tab bar. */
-const TAB_BAR_HEIGHT = 60;
 
 /**
  * Maps each tab route name to its MaterialIcons icon name.
@@ -46,9 +42,9 @@ const TAB_LABELS: Record<keyof MainTabParamList, string> = {
 };
 
 /**
- * MainTabs renders the bottom tab navigator with four tabs.
+ * MainTabs renders the bottom tab navigator with three visible tabs.
  * The tab bar uses a dark surface background with gold active tint
- * and gray inactive tint.
+ * and gray inactive tint. Settings is hidden but navigable from sidebar.
  */
 const MainTabs: React.FC = () => {
   return (
@@ -67,12 +63,17 @@ const MainTabs: React.FC = () => {
         tabBarInactiveTintColor: '#808080',
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabBarLabel,
+        tabBarItemStyle: styles.tabBarItem,
       })}
     >
       <Tab.Screen name="MailTab" component={MailStack} />
       <Tab.Screen name="CalendarTab" component={CalendarStack} />
       <Tab.Screen name="PeopleTab" component={PeopleStack} />
-      <Tab.Screen name="SettingsTab" component={SettingsStack} />
+      <Tab.Screen
+        name="SettingsTab"
+        component={SettingsStack}
+        options={{ tabBarButton: () => null, tabBarItemStyle: { display: 'none' } }}
+      />
     </Tab.Navigator>
   );
 };
@@ -82,13 +83,15 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderTopColor: Colors.border,
     borderTopWidth: StyleSheet.hairlineWidth,
-    height: TAB_BAR_HEIGHT,
-    paddingBottom: Platform.OS === 'ios' ? 8 : 4,
     paddingTop: 4,
+    paddingBottom: Platform.OS === 'web' ? 8 : undefined,
   },
   tabBarLabel: {
     fontSize: 11,
     fontWeight: '600',
+  },
+  tabBarItem: {
+    flex: 1,
   },
 });
 

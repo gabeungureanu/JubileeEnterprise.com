@@ -87,6 +87,7 @@ export function mapFolderDto(dto: MailFolderDto): MailFolder {
     totalItemCount: dto.total_count,
     folderType: typeMap[dto.folder_type?.toLowerCase()] || 'custom',
     childFolders: (dto.subfolders || []).map(mapFolderDto),
+    accountEmail: dto.wwbw_email_address || '',
   };
 }
 
@@ -138,6 +139,8 @@ export interface MailFolder {
   totalItemCount: number;
   folderType: FolderType;
   childFolders: MailFolder[];
+  /** Email address of the account this folder belongs to. */
+  accountEmail: string;
 }
 
 export interface EmailRecipient {

@@ -12,6 +12,7 @@ import { Colors } from '../constants/colors';
 import PeopleScreen from '../screens/people/PeopleScreen';
 import ContactDetailScreen from '../screens/people/ContactDetailScreen';
 import ContactEditScreen from '../screens/people/ContactEditScreen';
+import ContactGroupScreen from '../screens/people/ContactGroupScreen';
 
 const Stack = createNativeStackNavigator<PeopleStackParamList>();
 
@@ -50,6 +51,11 @@ const PeopleStack: React.FC = () => {
           presentation: 'modal',
           animation: 'slide_from_bottom',
         }}
+      />
+      <Stack.Screen
+        name="ContactGroup"
+        component={ContactGroupScreen}
+        options={({ route }) => ({ title: route.params.groupName })}
       />
     </Stack.Navigator>
   );

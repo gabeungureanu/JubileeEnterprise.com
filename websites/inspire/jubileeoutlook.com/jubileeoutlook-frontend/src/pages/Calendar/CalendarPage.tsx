@@ -7,9 +7,6 @@ import CalendarGrid from '../../components/calendar/CalendarGrid';
 import EventDialog from '../../components/calendar/EventDialog';
 import ReminderPopup from '../../components/calendar/ReminderPopup';
 import SearchBar, { SearchFilters, SearchBarHandle } from '../../components/calendar/SearchBar/SearchBar';
-import ExportDialog from '../../components/calendar/ExportDialog/ExportDialog';
-import TemplateManager from '../../components/calendar/TemplateManager/TemplateManager';
-import SharingDialog from '../../components/calendar/SharingDialog/SharingDialog';
 import { CalendarEvent, CalendarEventDto, CalendarViewMode, CalendarDateRange } from '../../types/calendar';
 import { calendarService } from '../../services/calendar/calendarService';
 import { expandRecurringEvents } from '../../utils/calendarUtils';
@@ -37,8 +34,8 @@ const CalendarPage: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
 
-  // Reminder state
-  const [reminderEvent, setReminderEvent] = useState<CalendarEvent | null>(null);
+  // Reminder queue — stays visible until user dismisses or snoozes each one
+  const [reminderQueue, setReminderQueue] = useState<CalendarEvent[]>([]);
 
   // Calendar visibility filter state
   const [calendarFilters, setCalendarFilters] = useState<CalendarFolder[]>([]);
@@ -46,11 +43,8 @@ const CalendarPage: React.FC = () => {
   // Search state
   const [searchFilters, setSearchFilters] = useState<SearchFilters | null>(null);
   const searchBarRef = useRef<SearchBarHandle>(null);
-
-  // Advanced dialog state
-  const [isExportOpen, setIsExportOpen] = useState(false);
-  const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
-  const [isSharingOpen, setIsSharingOpen] = useState(false);
+  const lastSearchNavRef = useRef<string | null>(null);
+  const preSearchViewRef = useRef<CalendarViewMode | null>(null);
 
   // Calculate date range based on view mode and selected date
   const getDateRange = useCallback((date: Date, mode: CalendarViewMode): CalendarDateRange => {
@@ -133,7 +127,11 @@ const CalendarPage: React.FC = () => {
   // Start/stop reminder service
   useEffect(() => {
     const handleReminder = (trigger: ReminderTrigger) => {
-      setReminderEvent(trigger.event);
+      setReminderQueue(prev => {
+        // Don't add duplicates
+        if (prev.some(e => e.id === trigger.event.id)) return prev;
+        return [...prev, trigger.event];
+      });
     };
     reminderService.start(handleReminder);
     return () => {
@@ -181,19 +179,38 @@ const CalendarPage: React.FC = () => {
     return result;
   }, [events, calendarFilters, searchFilters]);
 
-  // Reminder handlers
-  const handleReminderDismiss = () => {
-    if (reminderEvent) {
-      reminderService.dismiss(reminderEvent.id);
-      setReminderEvent(null);
+  // Auto-navigate to first search result's day
+  useEffect(() => {
+    if (!searchFilters || (!searchFilters.query && !searchFilters.category)) {
+      lastSearchNavRef.current = null;
+      return;
     }
+
+    const searchKey = `${searchFilters.query}|${searchFilters.category}`;
+    if (searchKey === lastSearchNavRef.current) return;
+
+    if (filteredEvents.length > 0) {
+      lastSearchNavRef.current = searchKey;
+      // Save pre-search view mode so we can restore on clear
+      if (!preSearchViewRef.current) {
+        preSearchViewRef.current = viewMode;
+      }
+      const firstMatch = filteredEvents[0];
+      const eventDate = new Date(firstMatch.startDateTime);
+      setSelectedDate(new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate()));
+      setViewMode('day');
+    }
+  }, [searchFilters, filteredEvents, viewMode]);
+
+  // Reminder handlers — remove from queue only when user explicitly acts
+  const handleReminderDismiss = (eventId: string) => {
+    reminderService.dismiss(eventId);
+    setReminderQueue(prev => prev.filter(e => e.id !== eventId));
   };
 
-  const handleReminderSnooze = (minutes: number) => {
-    if (reminderEvent) {
-      reminderService.snooze(reminderEvent.id, minutes);
-      setReminderEvent(null);
-    }
+  const handleReminderSnooze = (eventId: string, minutes: number) => {
+    reminderService.snooze(eventId, minutes);
+    setReminderQueue(prev => prev.filter(e => e.id !== eventId));
   };
 
   // Navigation based on view mode
@@ -306,6 +323,12 @@ const CalendarPage: React.FC = () => {
         recurrence_end_date: eventData.recurrenceEndDate,
         recurrence_occurrences: eventData.recurrenceOccurrences,
         recurrence_days_of_week: eventData.recurrenceDaysOfWeek,
+        attachments: eventData.attachments?.map(att => ({
+          fileName: att.fileName,
+          fileSize: att.fileSize,
+          url: att.fileUrl,
+          filePath: att.fileUrl,
+        })),
       };
 
       if (editingEvent) {
@@ -372,12 +395,6 @@ const CalendarPage: React.FC = () => {
     }
   };
 
-  // Template apply handler — opens event dialog pre-filled with template data
-  const handleApplyTemplate = (template: Partial<CalendarEvent>) => {
-    setEditingEvent(template as CalendarEvent);
-    setIsDialogOpen(true);
-  };
-
   // Keyboard shortcuts
   useKeyboardShortcuts({
     onNewEvent: handleNewEvent,
@@ -400,9 +417,6 @@ const CalendarPage: React.FC = () => {
           onToday={goToToday}
           onViewModeChange={setViewMode}
           activeViewMode={viewMode}
-          onExport={() => setIsExportOpen(true)}
-          onTemplates={() => setIsTemplateManagerOpen(true)}
-          onShare={() => setIsSharingOpen(true)}
         />
       </div>
       <div className="calendar-page__content">
@@ -416,7 +430,14 @@ const CalendarPage: React.FC = () => {
           <SearchBar
             ref={searchBarRef}
             onSearch={setSearchFilters}
-            onClear={() => setSearchFilters(null)}
+            onClear={() => {
+              setSearchFilters(null);
+              // Restore pre-search view mode
+              if (preSearchViewRef.current) {
+                setViewMode(preSearchViewRef.current);
+                preSearchViewRef.current = null;
+              }
+            }}
           />
 
           <div className="calendar-page__header">
@@ -481,31 +502,16 @@ const CalendarPage: React.FC = () => {
         onDelete={editingEvent ? handleEventDelete : undefined}
       />
 
-      {reminderEvent && (
+      {reminderQueue.map((event, index) => (
         <ReminderPopup
-          event={reminderEvent}
-          onDismiss={handleReminderDismiss}
-          onSnooze={handleReminderSnooze}
+          key={event.id}
+          event={event}
+          stackIndex={index}
+          onDismiss={() => handleReminderDismiss(event.id)}
+          onSnooze={(minutes) => handleReminderSnooze(event.id, minutes)}
         />
-      )}
+      ))}
 
-      <ExportDialog
-        isOpen={isExportOpen}
-        events={events}
-        onClose={() => setIsExportOpen(false)}
-      />
-
-      <TemplateManager
-        isOpen={isTemplateManagerOpen}
-        onClose={() => setIsTemplateManagerOpen(false)}
-        onApplyTemplate={handleApplyTemplate}
-      />
-
-      <SharingDialog
-        isOpen={isSharingOpen}
-        calendarId="default"
-        onClose={() => setIsSharingOpen(false)}
-      />
     </div>
   );
 };

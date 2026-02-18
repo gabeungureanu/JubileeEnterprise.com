@@ -12,7 +12,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Alert,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -23,6 +22,7 @@ import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius } from '../../constants/spacing';
 import { LoadingSpinner, Avatar, EmptyState } from '../../components/common';
+import { useAlert } from '../../hooks';
 import { calendarService } from '../../services/calendar/calendarService';
 import type { CalendarEvent } from '../../types/calendar';
 import type { CalendarStackParamList } from '../../types/navigation';
@@ -63,6 +63,7 @@ function formatDateOnly(iso: string): string {
 const EventDetailScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
+  const { alert, confirm, AlertComponent } = useAlert();
   const { eventId, event: routeEvent } = route.params;
 
   const [event, setEvent] = useState<CalendarEvent | null>(routeEvent || null);
@@ -124,22 +125,20 @@ const EventDetailScreen: React.FC = () => {
   }, [event, navigation]);
 
   const handleDelete = useCallback(() => {
-    Alert.alert('Delete Event', 'Are you sure you want to delete this event?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await calendarService.deleteEvent(eventId);
-            navigation.goBack();
-          } catch (err: any) {
-            Alert.alert('Error', err?.message || 'Failed to delete event');
-          }
-        },
+    confirm(
+      'Delete Event',
+      'Are you sure you want to delete this event?',
+      async () => {
+        try {
+          await calendarService.deleteEvent(eventId);
+          navigation.goBack();
+        } catch (err: any) {
+          alert('Error', err?.message || 'Failed to delete event', 'error');
+        }
       },
-    ]);
-  }, [eventId, navigation]);
+      { confirmText: 'Delete', destructive: true },
+    );
+  }, [eventId, navigation, confirm, alert]);
 
   // ── Render ────────────────────────────────────────────────
 
@@ -166,6 +165,7 @@ const EventDetailScreen: React.FC = () => {
   const eventColor = event.eventColor || Colors.accent;
 
   return (
+    <>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Colour strip */}
       <View style={[styles.colorStrip, { backgroundColor: eventColor }]} />
@@ -251,6 +251,9 @@ const EventDetailScreen: React.FC = () => {
 
       {/* Attachments — removed from CalendarEvent type; section disabled */}
     </ScrollView>
+
+    {AlertComponent}
+    </>
   );
 };
 

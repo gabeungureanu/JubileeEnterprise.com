@@ -3,8 +3,11 @@
  * Base URLs sourced from environment or defaults.
  */
 export const API = {
-  CONTINUUM_BASE_URL: 'https://inspirecontinuum.com/api',
-  CODEX_BASE_URL: 'https://inspirecodex.com/api/v1',
+  // Local development (restore production URLs when deploying)
+  // Production: 'https://inspirecontinuum.com/api'
+  CONTINUUM_BASE_URL: 'http://192.168.1.52:4003/api',
+  // Production: 'https://inspirecodex.com/api/v1'
+  CODEX_BASE_URL: 'http://192.168.1.52:4001/api/v1',
 
   // Timeout in milliseconds
   REQUEST_TIMEOUT: 30_000,

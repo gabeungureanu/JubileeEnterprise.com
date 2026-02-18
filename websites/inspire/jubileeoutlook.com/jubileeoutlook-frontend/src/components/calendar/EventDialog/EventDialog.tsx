@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { CalendarEvent, EventAttachment, ShowAsStatus } from '../../../types/calendar';
 import { EventColor } from '../../../types/common';
 import { fileService } from '../../../services/calendar/fileService';
-import { templateService } from '../../../services/calendar/templateService';
+
 import './EventDialog.css';
 
 // --- Constants matching WPF NewEventViewModel ---
@@ -143,6 +143,9 @@ const TimePicker: React.FC<{
     );
   }
 
+  // Include current value in slots if it's a custom time not in the 30-min list
+  const slots = TIME_SLOTS.includes(value) ? TIME_SLOTS : [...TIME_SLOTS, value].sort();
+
   return (
     <span className="event-dialog__time-picker">
       <select
@@ -150,7 +153,7 @@ const TimePicker: React.FC<{
         onChange={(e) => onChange(e.target.value)}
         className="event-dialog__time-select"
       >
-        {TIME_SLOTS.map(t => (
+        {slots.map(t => (
           <option key={t} value={t}>{formatTimeLabel(t)}</option>
         ))}
       </select>
@@ -174,6 +177,25 @@ function formatTimeLabel(time: string): string {
   return `${h12}:${mStr} ${suffix}`;
 }
 
+const LAST_TIMES_KEY = 'jubilee_event_last_times';
+
+function getLastUsedTimes(): { start: string; end: string } {
+  try {
+    const stored = localStorage.getItem(LAST_TIMES_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed.start && parsed.end) return parsed;
+    }
+  } catch { /* ignore */ }
+  return { start: '08:00', end: '08:30' };
+}
+
+function saveLastUsedTimes(start: string, end: string): void {
+  try {
+    localStorage.setItem(LAST_TIMES_KEY, JSON.stringify({ start, end }));
+  } catch { /* ignore */ }
+}
+
 function formatDateForInput(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -184,7 +206,7 @@ function formatDateForInput(date: Date): string {
 function getTimeFromISO(isoStr: string): string {
   const d = new Date(isoStr);
   const h = String(d.getHours()).padStart(2, '0');
-  const m = d.getMinutes() < 30 ? '00' : '30';
+  const m = String(d.getMinutes()).padStart(2, '0');
   return `${h}:${m}`;
 }
 
@@ -236,6 +258,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
   const [attachments, setAttachments] = useState<EventAttachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewAttachment, setPreviewAttachment] = useState<EventAttachment | null>(null);
 
   // Timezone state
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -281,11 +304,12 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
       setAttachments(event.attachments || []);
       setTimezone(event.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
     } else {
+      const lastTimes = getLastUsedTimes();
       setTitle('');
       setAttendees('');
       setEventDate(formatDateForInput(defaultDate || new Date()));
-      setStartTime('08:00');
-      setEndTime('08:30');
+      setStartTime(lastTimes.start);
+      setEndTime(lastTimes.end);
       setIsAllDay(false);
       setLocation('');
       setIsInPerson(true);
@@ -371,38 +395,21 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
     }
   };
 
+  const isImageFile = (fileName: string): boolean => {
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext);
+  };
+
+  const isPdfFile = (fileName: string): boolean => {
+    return fileName.toLowerCase().endsWith('.pdf');
+  };
+
   const handleRemoveAttachment = (id: string) => {
     const attachment = attachments.find(a => a.id === id);
     if (attachment) {
       fileService.deleteFile(attachment.fileUrl);
     }
     setAttachments(prev => prev.filter(a => a.id !== id));
-  };
-
-  const handleSaveAsTemplate = () => {
-    if (!title.trim()) {
-      setValidationError('Add a title before saving as template.');
-      return;
-    }
-    const name = window.prompt('Template name:', title);
-    if (!name) return;
-    templateService.saveTemplate(name, {
-      title,
-      description,
-      location,
-      isAllDay,
-      isInPerson,
-      showAs,
-      reminderMinutes,
-      eventColor,
-      category: eventColor,
-      isPrivate,
-      isRecurring,
-      recurrenceType: isRecurring ? recurrenceType.toLowerCase() : '',
-      recurrenceInterval: isRecurring ? recurrenceInterval : 0,
-      timezone,
-    } as Partial<CalendarEvent>);
-    setValidationError('');
   };
 
   const handleSave = () => {
@@ -421,6 +428,11 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
     if (!isAllDay && endDateTime <= startDateTime) {
       setValidationError('End time must be after start time.');
       return;
+    }
+
+    // Remember times for next new event
+    if (!isAllDay) {
+      saveLastUsedTimes(startTime, endTime);
     }
 
     const attendeeList = attendees
@@ -554,13 +566,6 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
               </button>
 
               <div className="event-dialog__toolbar-actions">
-                <button
-                  className="event-dialog__btn event-dialog__btn--template"
-                  onClick={handleSaveAsTemplate}
-                  title="Save as Template"
-                >
-                  <span className="material-symbols-outlined">note_stack</span>
-                </button>
                 <button className="event-dialog__btn event-dialog__btn--save" onClick={handleSave}>
                   Save
                 </button>
@@ -811,7 +816,18 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
                       <span className="material-symbols-outlined event-dialog__attachment-icon">
                         {fileService.getFileIcon(att.fileName)}
                       </span>
-                      <span className="event-dialog__attachment-name">{att.fileName}</span>
+                      {att.fileUrl ? (
+                        <button
+                          type="button"
+                          className="event-dialog__attachment-name event-dialog__attachment-link"
+                          title="View attachment"
+                          onClick={() => setPreviewAttachment(att)}
+                        >
+                          {att.fileName}
+                        </button>
+                      ) : (
+                        <span className="event-dialog__attachment-name">{att.fileName}</span>
+                      )}
                       <span className="event-dialog__attachment-size">
                         {fileService.formatFileSize(att.fileSize)}
                       </span>
@@ -874,6 +890,72 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
           </div>
         </div>
       </div>
+
+      {/* Attachment Preview Modal */}
+      {previewAttachment && (
+        <div className="attachment-preview__overlay" onClick={() => setPreviewAttachment(null)}>
+          <div className="attachment-preview" onClick={(e) => e.stopPropagation()}>
+            <div className="attachment-preview__header">
+              <span className="material-symbols-outlined attachment-preview__icon">
+                {fileService.getFileIcon(previewAttachment.fileName)}
+              </span>
+              <span className="attachment-preview__title">{previewAttachment.fileName}</span>
+              <span className="attachment-preview__size">
+                {fileService.formatFileSize(previewAttachment.fileSize)}
+              </span>
+              <a
+                href={previewAttachment.fileUrl}
+                download={previewAttachment.fileName}
+                className="attachment-preview__download"
+                title="Download"
+              >
+                <span className="material-symbols-outlined">download</span>
+              </a>
+              <button className="attachment-preview__close" onClick={() => setPreviewAttachment(null)}>
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="attachment-preview__body">
+              {isImageFile(previewAttachment.fileName) ? (
+                <img
+                  src={previewAttachment.fileUrl}
+                  alt={previewAttachment.fileName}
+                  className="attachment-preview__image"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    (e.target as HTMLImageElement).parentElement!.querySelector('.attachment-preview__error')?.classList.add('attachment-preview__error--visible');
+                  }}
+                />
+              ) : isPdfFile(previewAttachment.fileName) ? (
+                <iframe
+                  src={previewAttachment.fileUrl}
+                  title={previewAttachment.fileName}
+                  className="attachment-preview__pdf"
+                />
+              ) : (
+                <div className="attachment-preview__generic">
+                  <span className="material-symbols-outlined attachment-preview__generic-icon">
+                    {fileService.getFileIcon(previewAttachment.fileName)}
+                  </span>
+                  <p>Preview not available for this file type.</p>
+                </div>
+              )}
+              <div className="attachment-preview__error">
+                <span className="material-symbols-outlined">error</span>
+                <p>Unable to load file. It may have been moved or deleted.</p>
+                <a
+                  href={previewAttachment.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="attachment-preview__error-link"
+                >
+                  Try opening directly
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -14,7 +14,6 @@ import {
   StyleSheet,
   TextInput,
   Switch,
-  Alert,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -25,6 +24,7 @@ import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius } from '../../constants/spacing';
 import { LoadingSpinner } from '../../components/common';
+import { useAlert } from '../../hooks';
 import { calendarService } from '../../services/calendar/calendarService';
 import { tokenStore } from '../../services/apiClient';
 import type { CalendarEvent, CalendarEventDto } from '../../types/calendar';
@@ -77,6 +77,7 @@ function getDefaultEnd(startIso: string): string {
 const NewEventScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
+  const { alert, AlertComponent } = useAlert();
   const { date, event: existingEvent } = route.params || {};
 
   const isEditing = !!existingEvent;
@@ -137,20 +138,20 @@ const NewEventScreen: React.FC = () => {
 
   const handleSave = useCallback(async () => {
     if (!subject.trim()) {
-      Alert.alert('Validation', 'Subject is required');
+      alert('Validation', 'Subject is required', 'warning');
       return;
     }
 
     const start = new Date(startTime);
     const end = new Date(endTime);
     if (!isAllDay && end <= start) {
-      Alert.alert('Validation', 'End time must be after start time');
+      alert('Validation', 'End time must be after start time', 'warning');
       return;
     }
 
     const userId = tokenStore.getUserId();
     if (!userId) {
-      Alert.alert('Error', 'User not authenticated');
+      alert('Error', 'User not authenticated', 'error');
       return;
     }
 
@@ -176,7 +177,7 @@ const NewEventScreen: React.FC = () => {
 
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to save event');
+      alert('Error', err?.message || 'Failed to save event', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -192,6 +193,7 @@ const NewEventScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {AlertComponent}
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {/* Subject */}
         <View style={styles.field}>

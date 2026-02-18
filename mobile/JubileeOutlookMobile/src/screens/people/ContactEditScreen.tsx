@@ -14,7 +14,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInput,
-  Alert,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -25,6 +24,7 @@ import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius } from '../../constants/spacing';
 import { LoadingSpinner } from '../../components/common';
+import { useAlert } from '../../hooks';
 import { contactService } from '../../services/contacts/contactService';
 import { tokenStore } from '../../services/apiClient';
 import type { CreateContactPayload } from '../../types/contacts';
@@ -42,6 +42,7 @@ const ContactEditScreen: React.FC = () => {
   const route = useRoute<Route>();
   const { contactId, contact: existingContact } = route.params || {};
 
+  const { alert, confirm, AlertComponent } = useAlert();
   const isEditing = !!contactId;
 
   // ── Form state ────────────────────────────────────────────
@@ -77,13 +78,13 @@ const ContactEditScreen: React.FC = () => {
     const displayName = [firstName.trim(), lastName.trim()].filter(Boolean).join(' ');
 
     if (!displayName) {
-      Alert.alert('Validation', 'A name is required (first or last name)');
+      alert('Validation', 'A name is required (first or last name)', 'warning');
       return;
     }
 
     const userId = tokenStore.getUserId();
     if (!userId) {
-      Alert.alert('Error', 'User not authenticated');
+      alert('Error', 'User not authenticated', 'error');
       return;
     }
 
@@ -117,36 +118,34 @@ const ContactEditScreen: React.FC = () => {
 
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to save contact');
+      alert('Error', err?.message || 'Failed to save contact', 'error');
     } finally {
       setIsSaving(false);
     }
   }, [
     firstName, lastName, email, phone, mobilePhone, company,
     jobTitle, department, address, city, state, postalCode,
-    country, notes, website, isEditing, contactId, navigation,
+    country, notes, website, isEditing, contactId, navigation, alert,
   ]);
 
   // ── Delete ────────────────────────────────────────────────
 
   const handleDelete = useCallback(() => {
     if (!contactId) return;
-    Alert.alert('Delete Contact', 'Are you sure you want to delete this contact?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await contactService.deleteContact(contactId);
-            navigation.goBack();
-          } catch (err: any) {
-            Alert.alert('Error', err?.message || 'Failed to delete contact');
-          }
-        },
+    confirm(
+      'Delete Contact',
+      'Are you sure you want to delete this contact?',
+      async () => {
+        try {
+          await contactService.deleteContact(contactId);
+          navigation.goBack();
+        } catch (err: any) {
+          alert('Error', err?.message || 'Failed to delete contact', 'error');
+        }
       },
-    ]);
-  }, [contactId, navigation]);
+      { confirmText: 'Delete', destructive: true },
+    );
+  }, [contactId, navigation, confirm, alert]);
 
   // ── Render helpers ────────────────────────────────────────
 
@@ -252,6 +251,8 @@ const ContactEditScreen: React.FC = () => {
           )}
         </TouchableOpacity>
       </View>
+
+      {AlertComponent}
     </View>
   );
 };

@@ -413,3 +413,83 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ===== Sign Out Confirmation ===== */
+
+.signout-confirm__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.signout-confirm {
+  width: 340px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px 20px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.signout-confirm__icon {
+  margin-bottom: 12px;
+}
+
+.signout-confirm__icon .material-symbols-outlined {
+  font-size: 36px;
+  color: var(--gold-primary);
+}
+
+.signout-confirm__title {
+  font-size: 16px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.signout-confirm__message {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.signout-confirm__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.signout-confirm__btn {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.signout-confirm__btn--cancel {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.signout-confirm__btn--cancel:hover {
+  background: var(--border-primary);
+  color: var(--text-primary);
+}
+
+.signout-confirm__btn--confirm {
+  background: #E74856;
+  color: #fff;
+}
+
+.signout-confirm__btn--confirm:hover {
+  background: #d43a48;
+}

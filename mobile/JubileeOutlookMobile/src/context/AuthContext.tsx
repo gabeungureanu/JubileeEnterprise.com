@@ -30,6 +30,7 @@ interface AuthContextValue extends AuthState {
     newsletter?: boolean,
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  refreshAuthState: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -78,19 +79,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Ensure token cache is hydrated from AsyncStorage
       await tokenStore.init();
 
-      // Check sync-only mode first
-      const isSyncOnly = await checkSyncOnly();
-      if (isSyncOnly) {
-        const syncUser = await buildSyncUser();
-        if (!cancelled) {
-          setState({
-            user: syncUser,
-            isAuthenticated: !!syncUser,
-            isLoading: false,
-          });
-        }
-        return;
-      }
+      // Note: sync-only auto-detection is NOT run on bootstrap.
+      // Sync-only sessions are session-scoped — they only activate when
+      // refreshAuthState() is called explicitly after a successful IMAP sync.
+      // On app restart, the user must go through the auth flow again.
 
       // Standard auth: if tokens exist, fetch the current user from Codex
       if (authService.isAuthenticated()) {
@@ -131,6 +123,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await storage.remove(StorageKeys.REMEMBER_TOKEN);
     await storage.remove(StorageKeys.SYNC_EMAIL);
     setState({ user: null, isAuthenticated: false, isLoading: false });
+  }, []);
+
+  // Re-evaluate auth state on demand (used after IMAP sync completes)
+  const refreshAuthState = useCallback(async () => {
+    await tokenStore.init();
+
+    const isSyncOnly = await checkSyncOnly();
+    if (isSyncOnly) {
+      const syncUser = await buildSyncUser();
+      setState({ user: syncUser, isAuthenticated: !!syncUser, isLoading: false });
+      return;
+    }
+
+    if (authService.isAuthenticated()) {
+      try {
+        const user = await authService.getCurrentUser();
+        setState({ user, isAuthenticated: !!user, isLoading: false });
+      } catch {
+        await tokenStore.clear();
+        setState({ user: null, isAuthenticated: false, isLoading: false });
+      }
+    } else {
+      setState({ user: null, isAuthenticated: false, isLoading: false });
+    }
   }, []);
 
   useEffect(() => {
@@ -208,7 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ---------- Render ----------
 
   return (
-    <AuthContext.Provider value={{ ...state, login, register, logout }}>
+    <AuthContext.Provider value={{ ...state, login, register, logout, refreshAuthState }}>
       {children}
     </AuthContext.Provider>
   );

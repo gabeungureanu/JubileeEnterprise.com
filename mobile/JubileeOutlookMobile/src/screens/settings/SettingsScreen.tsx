@@ -12,7 +12,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Switch,
-  Alert,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -21,6 +20,7 @@ import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius } from '../../constants/spacing';
 import { LoadingSpinner, Avatar } from '../../components/common';
+import { useAlert } from '../../hooks';
 import { emailSyncService } from '../../services/mail/emailSyncService';
 import { signatureService } from '../../services/mail/signatureService';
 import { rulesService } from '../../services/mail/rulesService';
@@ -127,6 +127,7 @@ const APP_VERSION = '1.0.0';
 const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { user, logout } = useAuth();
+  const { alert, confirm, AlertComponent } = useAlert();
 
   const [accounts, setAccounts] = useState<{ id: string; email_address: string; provider_type: string; connection_status: string }[]>([]);
   const [signatures, setSignatures] = useState<EmailSignature[]>([]);
@@ -172,7 +173,7 @@ const SettingsScreen: React.FC = () => {
 
   const handleManualSync = useCallback(async () => {
     if (accounts.length === 0) {
-      Alert.alert('No Accounts', 'Connect an email account first');
+      alert('No Accounts', 'Connect an email account first', 'warning');
       return;
     }
 
@@ -183,34 +184,32 @@ const SettingsScreen: React.FC = () => {
         const result = await emailSyncService.syncAccount(acct.id);
         totalSynced += result.totalSynced ?? 0;
       }
-      Alert.alert('Sync Complete', `Synced ${totalSynced} messages`);
+      alert('Sync Complete', `Synced ${totalSynced} messages`, 'success');
     } catch (err: any) {
-      Alert.alert('Sync Error', err?.message || 'Failed to sync');
+      alert('Sync Error', err?.message || 'Failed to sync', 'error');
     } finally {
       setIsSyncing(false);
     }
-  }, [accounts]);
+  }, [accounts, alert]);
 
   const handleAddAccount = useCallback(() => {
-    Alert.alert('Add Account', 'Account connection will be available in a future update');
-  }, []);
+    alert('Add Account', 'Account connection will be available in a future update', 'info');
+  }, [alert]);
 
   const handleLogout = useCallback(() => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await logout();
-          } catch (err: any) {
-            Alert.alert('Error', err?.message || 'Failed to sign out');
-          }
-        },
+    confirm(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      async () => {
+        try {
+          await logout();
+        } catch (err: any) {
+          alert('Error', err?.message || 'Failed to sign out', 'error');
+        }
       },
-    ]);
-  }, [logout]);
+      { confirmText: 'Sign Out', destructive: true },
+    );
+  }, [logout, confirm, alert]);
 
   // ── Section header helper ─────────────────────────────────
 
@@ -231,6 +230,7 @@ const SettingsScreen: React.FC = () => {
   }
 
   return (
+    <>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* ── Account ──────────────────────────────────────── */}
       {renderSectionHeader('Account')}
@@ -300,7 +300,7 @@ const SettingsScreen: React.FC = () => {
           icon="edit"
           label="No signatures"
           value="Tap to create one"
-          onPress={() => Alert.alert('Signatures', 'Signature editor coming soon')}
+          onPress={() => alert('Signatures', 'Signature editor coming soon', 'info')}
         />
       ) : (
         signatures.map((sig) => (
@@ -309,7 +309,7 @@ const SettingsScreen: React.FC = () => {
             icon={sig.isDefault ? 'star' : 'edit'}
             label={sig.name}
             value={sig.isDefault ? 'Default' : undefined}
-            onPress={() => Alert.alert('Edit Signature', `Editing "${sig.name}" coming soon`)}
+            onPress={() => alert('Edit Signature', `Editing "${sig.name}" coming soon`, 'info')}
           />
         ))
       )}
@@ -321,7 +321,7 @@ const SettingsScreen: React.FC = () => {
           icon="rule"
           label="No rules"
           value="Tap to create one"
-          onPress={() => Alert.alert('Rules', 'Rule editor coming soon')}
+          onPress={() => alert('Rules', 'Rule editor coming soon', 'info')}
         />
       ) : (
         rules.map((rule) => (
@@ -330,7 +330,7 @@ const SettingsScreen: React.FC = () => {
             icon="rule"
             label={rule.name}
             value={rule.enabled ? 'Enabled' : 'Disabled'}
-            onPress={() => Alert.alert('Edit Rule', `Editing "${rule.name}" coming soon`)}
+            onPress={() => alert('Edit Rule', `Editing "${rule.name}" coming soon`, 'info')}
           />
         ))
       )}
@@ -342,7 +342,7 @@ const SettingsScreen: React.FC = () => {
           icon="article"
           label="No templates"
           value="Tap to create one"
-          onPress={() => Alert.alert('Templates', 'Template editor coming soon')}
+          onPress={() => alert('Templates', 'Template editor coming soon', 'info')}
         />
       ) : (
         templates.map((tmpl) => (
@@ -351,7 +351,7 @@ const SettingsScreen: React.FC = () => {
             icon="article"
             label={tmpl.name}
             value={tmpl.subject}
-            onPress={() => Alert.alert('Edit Template', `Editing "${tmpl.name}" coming soon`)}
+            onPress={() => alert('Edit Template', `Editing "${tmpl.name}" coming soon`, 'info')}
           />
         ))
       )}
@@ -393,6 +393,8 @@ const SettingsScreen: React.FC = () => {
         </View>
       )}
     </ScrollView>
+    {AlertComponent}
+    </>
   );
 };
 

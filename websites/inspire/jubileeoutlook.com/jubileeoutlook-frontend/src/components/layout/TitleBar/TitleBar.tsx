@@ -13,6 +13,7 @@ const TitleBar: React.FC = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -59,9 +60,18 @@ const TitleBar: React.FC = () => {
     }
   };
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
+    setShowSignOutConfirm(true);
+  };
+
+  const confirmSignOut = async () => {
+    setShowSignOutConfirm(false);
     setIsPopupOpen(false);
     await logout();
+  };
+
+  const cancelSignOut = () => {
+    setShowSignOutConfirm(false);
   };
 
   const handleManageAccount = () => {
@@ -224,6 +234,28 @@ const TitleBar: React.FC = () => {
           </div>
         )}
       </div>
+
+      {showSignOutConfirm && (
+        <div className="signout-confirm__overlay" onClick={cancelSignOut}>
+          <div className="signout-confirm" onClick={(e) => e.stopPropagation()}>
+            <div className="signout-confirm__icon">
+              <span className="material-symbols-outlined">logout</span>
+            </div>
+            <h3 className="signout-confirm__title">Sign Out</h3>
+            <p className="signout-confirm__message">
+              Are you sure you want to sign out of your Jubilee account?
+            </p>
+            <div className="signout-confirm__actions">
+              <button className="signout-confirm__btn signout-confirm__btn--cancel" onClick={cancelSignOut}>
+                Cancel
+              </button>
+              <button className="signout-confirm__btn signout-confirm__btn--confirm" onClick={confirmSignOut}>
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

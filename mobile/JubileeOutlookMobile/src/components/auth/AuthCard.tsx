@@ -16,6 +16,7 @@ import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
+import { SafeScreen } from '../layout/SafeScreen';
 
 interface AuthCardProps {
   /** Custom heading text. When omitted, shows the "Jubilee Outlook" brand heading. */
@@ -33,40 +34,42 @@ const AuthCard: React.FC<AuthCardProps> = ({
   children,
 }) => {
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+    <SafeScreen edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Avatar */}
-        <View style={styles.avatar}>
-          <Icon name={avatarIcon} size={44} color={Colors.textTertiary} />
-        </View>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Avatar */}
+          <View style={styles.avatar}>
+            <Icon name={avatarIcon} size={44} color={Colors.textTertiary} />
+          </View>
 
-        {/* Heading */}
-        {heading ? (
-          <Text style={styles.heading}>{heading}</Text>
-        ) : (
-          <Text style={styles.brandHeading}>
-            <Text style={styles.brandJubilee}>Jubilee</Text>
-            <Text style={styles.brandOutlook}> Outlook</Text>
-          </Text>
-        )}
+          {/* Heading */}
+          {heading ? (
+            <Text style={styles.heading}>{heading}</Text>
+          ) : (
+            <Text style={styles.brandHeading}>
+              <Text style={styles.brandJubilee}>Jubilee</Text>
+              <Text style={styles.brandOutlook}> Outlook</Text>
+            </Text>
+          )}
 
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>{subtitle}</Text>
+          {/* Subtitle */}
+          <Text style={styles.subtitle}>{subtitle}</Text>
 
-        {/* Form content */}
-        {children}
+          {/* Form content */}
+          {children}
 
-        {/* Footer */}
-        <Text style={styles.footer}>&copy; 2026 Jubilee Software, Inc.</Text>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          {/* Footer */}
+          <Text style={styles.footer}>&copy; 2026 Jubilee Software, Inc.</Text>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeScreen>
   );
 };
 

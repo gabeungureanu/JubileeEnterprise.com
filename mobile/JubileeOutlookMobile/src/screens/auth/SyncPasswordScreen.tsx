@@ -25,6 +25,7 @@ import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius, HitSlop } from '../../constants/spacing';
 import AuthCard from '../../components/auth/AuthCard';
+import { useAuth } from '../../context/AuthContext';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SyncPassword'>;
 
@@ -41,6 +42,7 @@ function generateSyncUserId(email: string): string {
 
 export default function SyncPasswordScreen({ navigation, route }: Props) {
   const syncEmail = route.params.email;
+  const { refreshAuthState } = useAuth();
 
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -166,24 +168,11 @@ export default function SyncPasswordScreen({ navigation, route }: Props) {
       // Brief delay for user to see success
       await new Promise(r => setTimeout(r, 1500));
 
-      // Save sync email so AuthContext creates a sync-only session
+      // Save sync email and re-evaluate auth state.
+      // refreshAuthState detects sync-only mode → isAuthenticated = true
+      // → RootNavigator auto-switches to MainTabs (Mail inbox).
       await storage.set(StorageKeys.SYNC_EMAIL, syncEmail);
-
-      // Force a re-render of the auth state by reloading the app
-      // The AuthContext bootstrap will detect sync-only mode and authenticate
-      // We use a simple approach: navigate to a dummy screen or force re-init
-      // For now, set the userId and trigger auth state change
-      // The RootNavigator will pick up the sync-only state on next check
-
-      // Trigger app reload by clearing and re-initializing
-      await tokenStore.init();
-
-      // Navigation will auto-switch to Main when AuthContext detects sync-only mode
-      // Force a state refresh by navigating back to trigger re-evaluation
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'SignIn' }],
-      });
+      await refreshAuthState();
     } catch (err: any) {
       setErrors({ syncPassword: err.message || 'An error occurred during sync.' });
     } finally {

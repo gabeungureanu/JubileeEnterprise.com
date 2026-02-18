@@ -13,7 +13,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -21,16 +20,27 @@ import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
+import * as DocumentPicker from 'expo-document-picker';
+import { File as ExpoFile } from 'expo-file-system';
 
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius } from '../../constants/spacing';
 import { LoadingSpinner } from '../../components/common';
+import { useAlert } from '../../hooks';
 import { useAuth } from '../../context/AuthContext';
 import { mailService } from '../../services/mail/mailService';
 import type { MailStackParamList } from '../../types/navigation';
 
 type ComposeRecipient = { email: string; name: string; type: 'to' | 'cc' | 'bcc' };
+
+interface AttachmentItem {
+  id: string;
+  name: string;
+  size: number;
+  mimeType: string;
+  uri: string;
+}
 
 type ComposeNav = NativeStackNavigationProp<MailStackParamList, 'Compose'>;
 type ComposeRoute = RouteProp<MailStackParamList, 'Compose'>;
@@ -59,6 +69,7 @@ export default function ComposeScreen() {
   const route = useRoute<ComposeRoute>();
   const { user } = useAuth();
 
+  const { alert, AlertComponent } = useAlert();
   const { mode = 'new', originalMessage, draftId } = route.params;
 
   // ---------- Form State ----------
@@ -72,6 +83,7 @@ export default function ComposeScreen() {
   const [showBcc, setShowBcc] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [attachments, setAttachments] = useState<AttachmentItem[]>([]);
 
   // ---------- Pre-fill based on mode ----------
 
@@ -149,22 +161,57 @@ export default function ComposeScreen() {
   const validate = useCallback((): boolean => {
     const recipients = parseRecipients(to, 'to');
     if (recipients.length === 0) {
-      Alert.alert('Missing Recipient', 'Please add at least one recipient.');
+      alert('Missing Recipient', 'Please add at least one recipient.', 'warning');
       return false;
     }
     if (!subject.trim()) {
-      Alert.alert('Missing Subject', 'Please enter a subject line.');
+      alert('Missing Subject', 'Please enter a subject line.', 'warning');
       return false;
     }
     return true;
   }, [to, subject, parseRecipients]);
+
+  // ---------- Attachments ----------
+
+  const handlePickAttachment = useCallback(async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        multiple: true,
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets) return;
+
+      const newAttachments: AttachmentItem[] = result.assets.map((asset) => ({
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        name: asset.name,
+        size: asset.size ?? 0,
+        mimeType: asset.mimeType ?? 'application/octet-stream',
+        uri: asset.uri,
+      }));
+
+      setAttachments((prev) => [...prev, ...newAttachments]);
+    } catch (err) {
+      alert('Error', 'Could not pick file.', 'error');
+    }
+  }, []);
+
+  const handleRemoveAttachment = useCallback((id: string) => {
+    setAttachments((prev) => prev.filter((a) => a.id !== id));
+  }, []);
+
+  const formatFileSize = useCallback((bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1048576).toFixed(1)} MB`;
+  }, []);
 
   // ---------- Send ----------
 
   const handleSend = useCallback(async () => {
     if (!validate()) return;
     if (!user?.id || !user?.email) {
-      Alert.alert('Error', 'You must be signed in to send messages.');
+      alert('Error', 'You must be signed in to send messages.', 'error');
       return;
     }
 
@@ -176,6 +223,19 @@ export default function ComposeScreen() {
         ...parseRecipients(bcc, 'bcc'),
       ];
 
+      // Convert attachments to base64 for the API
+      const attachmentPayloads = await Promise.all(
+        attachments.map(async (att) => {
+          const file = new ExpoFile(att.uri);
+          const base64 = await file.base64();
+          return {
+            filename: att.name,
+            content: base64,
+            contentType: att.mimeType,
+          };
+        }),
+      );
+
       await mailService.sendMessage({
         userId: user.id,
         sender_email: user.email,
@@ -183,17 +243,16 @@ export default function ComposeScreen() {
         body_html: body || `<p>${body}</p>`,
         body_text: body.replace(/<[^>]*>/g, ''),
         recipients,
+        attachments: attachmentPayloads.length > 0 ? attachmentPayloads : undefined,
       });
 
-      Alert.alert('Sent', 'Your message has been sent.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      alert('Sent', 'Your message has been sent.', 'success', () => navigation.goBack());
     } catch (err) {
-      Alert.alert('Send Failed', 'Could not send your message. Please try again.');
+      alert('Send Failed', 'Could not send your message. Please try again.', 'error');
     } finally {
       setIsSending(false);
     }
-  }, [validate, user, to, cc, bcc, subject, body, parseRecipients, navigation]);
+  }, [validate, user, to, cc, bcc, subject, body, attachments, parseRecipients, navigation]);
 
   // ---------- Save Draft ----------
 
@@ -218,11 +277,9 @@ export default function ComposeScreen() {
         recipients,
       });
 
-      Alert.alert('Draft Saved', 'Your draft has been saved.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      alert('Draft Saved', 'Your draft has been saved.', 'success', () => navigation.goBack());
     } catch (err) {
-      Alert.alert('Error', 'Could not save draft.');
+      alert('Error', 'Could not save draft.', 'error');
     } finally {
       setIsSavingDraft(false);
     }
@@ -232,7 +289,7 @@ export default function ComposeScreen() {
 
   useEffect(() => {
     const titleMap: Record<string, string> = {
-      new: 'New Message',
+      new: 'Compose',
       reply: 'Reply',
       replyAll: 'Reply All',
       forward: 'Forward',
@@ -245,7 +302,7 @@ export default function ComposeScreen() {
           onPress={() => navigation.goBack()}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Icon name="close" size={24} color={Colors.textSecondary} />
+          <Icon name="close" size={24} color={Colors.primary} />
         </TouchableOpacity>
       ),
       headerRight: () => (
@@ -256,12 +313,12 @@ export default function ComposeScreen() {
             style={styles.headerAction}
             disabled={isSavingDraft}
           >
-            <Icon name="save" size={22} color={Colors.textSecondary} />
+            <Icon name="save" size={22} color={isSavingDraft ? Colors.textDisabled : Colors.textSecondary} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleSend}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            style={styles.sendButton}
+            style={[styles.sendButton, isSending && { opacity: 0.5 }]}
             disabled={isSending}
           >
             <Icon name="send" size={20} color={Colors.textInverse} />
@@ -371,11 +428,32 @@ export default function ComposeScreen() {
           />
         </View>
 
-        {/* Attachment placeholder */}
-        <TouchableOpacity style={styles.attachmentRow}>
-          <Icon name="attach-file" size={20} color={Colors.textTertiary} />
+        {/* Attachment picker */}
+        <TouchableOpacity style={styles.attachmentRow} onPress={handlePickAttachment} activeOpacity={0.7}>
+          <Icon name="attach-file" size={20} color={Colors.primary} />
           <Text style={styles.attachmentText}>Add attachment</Text>
         </TouchableOpacity>
+
+        {/* Attachment chips */}
+        {attachments.length > 0 && (
+          <View style={styles.attachmentList}>
+            {attachments.map((att) => (
+              <View key={att.id} style={styles.attachmentChip}>
+                <Icon name="insert-drive-file" size={18} color={Colors.primary} />
+                <View style={styles.attachmentChipInfo}>
+                  <Text style={styles.attachmentChipName} numberOfLines={1}>{att.name}</Text>
+                  <Text style={styles.attachmentChipSize}>{formatFileSize(att.size)}</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => handleRemoveAttachment(att.id)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Icon name="cancel" size={18} color={Colors.textTertiary} />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Body */}
         <View style={styles.bodyContainer}>
@@ -391,6 +469,8 @@ export default function ComposeScreen() {
           />
         </View>
       </ScrollView>
+
+      {AlertComponent}
     </KeyboardAvoidingView>
   );
 }
@@ -418,7 +498,7 @@ const styles = StyleSheet.create({
     padding: Spacing.xs,
   },
   sendButton: {
-    backgroundColor: Colors.accent,
+    backgroundColor: Colors.primary,
     borderRadius: BorderRadius.full,
     width: 36,
     height: 36,
@@ -430,14 +510,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.divider,
+    borderBottomColor: Colors.border,
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    minHeight: 48,
+    paddingVertical: Spacing.md,
+    minHeight: 50,
+    backgroundColor: Colors.surface,
   },
   fieldLabel: {
     ...Typography.label,
-    color: Colors.textTertiary,
+    color: Colors.textSecondary,
     width: 56,
   },
   fieldInput: {
@@ -448,7 +529,7 @@ const styles = StyleSheet.create({
   },
   ccToggle: {
     ...Typography.bodySmall,
-    color: Colors.accent,
+    color: Colors.primary,
     fontWeight: '600',
     marginLeft: Spacing.sm,
   },
@@ -459,22 +540,57 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.divider,
+    borderBottomColor: Colors.border,
+    backgroundColor: Colors.surface,
     gap: Spacing.sm,
   },
   attachmentText: {
     ...Typography.body,
+    color: Colors.textSecondary,
+  },
+  attachmentList: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.border,
+    gap: Spacing.sm,
+  },
+  attachmentChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceLight,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  attachmentChipInfo: {
+    flex: 1,
+  },
+  attachmentChipName: {
+    ...Typography.bodySmall,
+    color: Colors.textPrimary,
+    fontWeight: '500',
+  },
+  attachmentChipSize: {
+    ...Typography.caption,
     color: Colors.textTertiary,
+    marginTop: 1,
   },
   // Body
   bodyContainer: {
+    flex: 1,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
+    backgroundColor: Colors.background,
   },
   bodyInput: {
     ...Typography.body,
     color: Colors.textPrimary,
-    minHeight: 200,
+    minHeight: 250,
     lineHeight: 22,
   },
 });

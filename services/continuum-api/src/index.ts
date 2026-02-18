@@ -516,8 +516,8 @@ app.get('/api/v1/outlook/events', async (c) => {
     const params: any[] = [userId];
     let paramCount = 1;
 
-    if (startDate) { params.push(startDate); query += ` AND e.start_time >= $${++paramCount}`; }
-    if (endDate) { params.push(endDate); query += ` AND e.end_time <= $${++paramCount}`; }
+    if (startDate) { params.push(startDate); query += ` AND e.end_time >= $${++paramCount}`; }
+    if (endDate) { params.push(endDate); query += ` AND e.start_time <= $${++paramCount}`; }
     if (calendarId) { params.push(calendarId); query += ` AND e.calendar_id = $${++paramCount}`; }
     query += ' ORDER BY e.start_time';
 

@@ -37,7 +37,7 @@ const MailStack: React.FC = () => {
       <Stack.Screen
         name="MailInbox"
         component={MailScreen}
-        options={{ title: 'Inbox' }}
+        options={{ title: 'Inbox', headerShown: false }}
       />
       <Stack.Screen
         name="MessageDetail"
@@ -48,7 +48,7 @@ const MailStack: React.FC = () => {
         name="Compose"
         component={ComposeScreen}
         options={{
-          title: 'New Message',
+          title: 'Compose',
           presentation: 'modal',
           animation: 'slide_from_bottom',
         }}

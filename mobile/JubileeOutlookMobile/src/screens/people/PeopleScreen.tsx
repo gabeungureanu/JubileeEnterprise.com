@@ -14,7 +14,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -30,6 +29,7 @@ import {
   FloatingActionButton,
   SearchBar,
 } from '../../components/common';
+import { useAlert } from '../../hooks';
 import { contactService } from '../../services/contacts/contactService';
 import type { Contact, ContactGroup } from '../../types/contacts';
 import type { PeopleStackParamList } from '../../types/navigation';
@@ -72,6 +72,7 @@ function buildSections(contacts: Contact[]): ContactSection[] {
 
 const PeopleScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
+  const { alert, confirm, AlertComponent } = useAlert();
 
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [groups, setGroups] = useState<ContactGroup[]>([]);
@@ -96,7 +97,7 @@ const PeopleScreen: React.FC = () => {
     } catch (err: any) {
       const msg = err?.message || 'Failed to load contacts';
       setError(msg);
-      if (!silent) Alert.alert('Error', msg);
+      if (!silent) alert('Error', msg, 'error');
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -158,49 +159,21 @@ const PeopleScreen: React.FC = () => {
 
   const handleContactLongPress = useCallback(
     (contact: Contact) => {
-      Alert.alert(contact.displayName, 'Choose an action', [
-        {
-          text: 'Email',
-          onPress: () => {
-            // Placeholder — email action
-            Alert.alert('Email', `Compose email to ${contact.emailAddresses[0] || 'N/A'}`);
-          },
+      confirm(
+        'Delete Contact',
+        `Are you sure you want to delete ${contact.displayName}?`,
+        async () => {
+          try {
+            await contactService.softDelete(contact.id);
+            setContacts((prev) => prev.filter((c) => c.id !== contact.id));
+          } catch (err: any) {
+            alert('Error', err?.message || 'Failed to delete contact', 'error');
+          }
         },
-        {
-          text: 'Call',
-          onPress: () => {
-            Alert.alert('Call', `Calling ${contact.phoneNumbers[0] || contact.mobilePhone || 'N/A'}`);
-          },
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert(
-              'Delete Contact',
-              `Are you sure you want to delete ${contact.displayName}?`,
-              [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Delete',
-                  style: 'destructive',
-                  onPress: async () => {
-                    try {
-                      await contactService.softDelete(contact.id);
-                      setContacts((prev) => prev.filter((c) => c.id !== contact.id));
-                    } catch (err: any) {
-                      Alert.alert('Error', err?.message || 'Failed to delete contact');
-                    }
-                  },
-                },
-              ],
-            );
-          },
-        },
-        { text: 'Cancel', style: 'cancel' },
-      ]);
+        { confirmText: 'Delete', destructive: true },
+      );
     },
-    [],
+    [confirm, alert],
   );
 
   const handleToggleFavorite = useCallback(async (contact: Contact) => {
@@ -212,7 +185,7 @@ const PeopleScreen: React.FC = () => {
         ),
       );
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'Failed to toggle favorite');
+      alert('Error', err?.message || 'Failed to toggle favorite', 'error');
     }
   }, []);
 
@@ -389,6 +362,8 @@ const PeopleScreen: React.FC = () => {
         icon="person-add"
         onPress={() => navigation.navigate('ContactEdit', {})}
       />
+
+      {AlertComponent}
     </View>
   );
 };

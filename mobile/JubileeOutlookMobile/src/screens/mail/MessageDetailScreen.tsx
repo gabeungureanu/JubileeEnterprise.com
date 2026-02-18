@@ -14,21 +14,27 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Alert,
+  ActivityIndicator,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import RenderHtml from 'react-native-render-html';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
+import { File as ExpoFile, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius } from '../../constants/spacing';
 import { LoadingSpinner } from '../../components/common';
 import { Avatar } from '../../components/common/Avatar';
+import { useAlert } from '../../hooks';
 import { mailService } from '../../services/mail/mailService';
+import { tokenStore } from '../../services/apiClient';
+import { API } from '../../constants/api';
 import type { EmailMessage, AttachmentDto } from '../../types';
 import type { MailStackParamList } from '../../types/navigation';
 
@@ -63,6 +69,7 @@ export default function MessageDetailScreen() {
   const route = useRoute<DetailRoute>();
   const { width: contentWidth } = useWindowDimensions();
 
+  const { alert, confirm, AlertComponent } = useAlert();
   const { messageId } = route.params;
 
   const [message, setMessage] = useState<EmailMessage | null>(route.params.message || null);
@@ -84,7 +91,7 @@ export default function MessageDetailScreen() {
       } catch (err) {
         console.warn('[MessageDetail] fetch failed:', err);
         if (!cancelled) {
-          Alert.alert('Error', 'Could not load message.');
+          alert('Error', 'Could not load message.', 'error');
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -122,22 +129,20 @@ export default function MessageDetailScreen() {
 
   const handleDelete = useCallback(async () => {
     if (!message) return;
-    Alert.alert('Delete Message', 'Are you sure you want to delete this message?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await mailService.deleteMessage(message.id);
-            navigation.goBack();
-          } catch (err) {
-            Alert.alert('Error', 'Could not delete message.');
-          }
-        },
+    confirm(
+      'Delete Message',
+      'Are you sure you want to delete this message?',
+      async () => {
+        try {
+          await mailService.deleteMessage(message.id);
+          navigation.goBack();
+        } catch (err) {
+          alert('Error', 'Could not delete message.', 'error');
+        }
       },
-    ]);
-  }, [message, navigation]);
+      { confirmText: 'Delete', destructive: true },
+    );
+  }, [message, navigation, confirm, alert]);
 
   const handleToggleFlag = useCallback(async () => {
     if (!message) return;
@@ -149,6 +154,47 @@ export default function MessageDetailScreen() {
       console.warn('[MessageDetail] toggleFlag failed:', err);
     }
   }, [message, isFlagged]);
+
+  // ---------- Attachment Download ----------
+
+  const [downloadingAttachmentId, setDownloadingAttachmentId] = useState<string | null>(null);
+
+  const handleDownloadAttachment = useCallback(async (att: AttachmentDto) => {
+    if (!message) return;
+    setDownloadingAttachmentId(att.id);
+    try {
+      const baseUrl = `${API.CONTINUUM_BASE_URL}/v1`;
+      const downloadUrl =
+        `${baseUrl}/outlook/messages/${encodeURIComponent(message.id)}/attachments/${encodeURIComponent(att.id)}/download`;
+
+      const token = tokenStore.getAccessToken();
+      const userId = tokenStore.getUserId();
+      const headers: Record<string, string> = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+      if (userId) headers['X-User-Id'] = userId;
+
+      const destination = new ExpoFile(Paths.cache, att.fileName);
+      const downloaded = await ExpoFile.downloadFileAsync(downloadUrl, destination, {
+        headers,
+        idempotent: true,
+      });
+
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(downloaded.uri, {
+          mimeType: att.mimeType || 'application/octet-stream',
+          dialogTitle: att.fileName,
+        });
+      } else {
+        alert('Downloaded', `File saved to: ${downloaded.uri}`, 'success');
+      }
+    } catch (err) {
+      console.warn('[MessageDetail] download failed:', err);
+      alert('Download Failed', 'Could not download attachment.', 'error');
+    } finally {
+      setDownloadingAttachmentId(null);
+    }
+  }, [message]);
 
   // ---------- Set Header ----------
 
@@ -253,15 +299,26 @@ export default function MessageDetailScreen() {
               {'  '}Attachments ({message.attachments.length})
             </Text>
             {message.attachments.map((att: AttachmentDto) => (
-              <View key={att.id} style={styles.attachmentItem}>
-                <Icon name="insert-drive-file" size={20} color={Colors.accent} />
+              <TouchableOpacity
+                key={att.id}
+                style={styles.attachmentItem}
+                onPress={() => handleDownloadAttachment(att)}
+                activeOpacity={0.7}
+                disabled={downloadingAttachmentId === att.id}
+              >
+                {downloadingAttachmentId === att.id ? (
+                  <ActivityIndicator size="small" color={Colors.accent} />
+                ) : (
+                  <Icon name="insert-drive-file" size={20} color={Colors.accent} />
+                )}
                 <View style={styles.attachmentInfo}>
                   <Text style={styles.attachmentName} numberOfLines={1}>
                     {att.fileName}
                   </Text>
                   <Text style={styles.attachmentSize}>{formatFileSize(att.fileSize)}</Text>
                 </View>
-              </View>
+                <Icon name="file-download" size={20} color={Colors.textTertiary} />
+              </TouchableOpacity>
             ))}
           </View>
         )}
@@ -303,6 +360,8 @@ export default function MessageDetailScreen() {
           <Text style={[styles.actionLabel, { color: Colors.error }]}>Delete</Text>
         </TouchableOpacity>
       </View>
+
+      {AlertComponent}
     </View>
   );
 }

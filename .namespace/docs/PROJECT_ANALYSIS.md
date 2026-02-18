@@ -319,10 +319,16 @@ The primary application - a faith-based AI chat platform featuring:
 
 **Features:**
 - Full email client mirroring the JubileeOutlook web frontend
-- 5-screen auth flow (Sync Email, Sync Password, Sign In, Sign Up, Forgot Password)
+- 5-screen auth flow (Sync Email, Sync Password, Sign In, Sign Up, Forgot Password) with auto-navigation after sync
 - IMAP email sync with provider detection (Microsoft 365, Gmail, Yahoo, iCloud, IMAP/POP)
+- Mail inbox with date-grouped sections (This Week, Last Week, This Month, Last Month, Older)
+- Sidebar drawer with folder navigation, account switcher, and unread counts
+- Long-press email selection mode with bulk actions (delete, archive, move, flag, mark read)
+- Focused/Other toggle with filter menu (Unread, Flagged, Has Files, etc.)
+- Dark-themed compose screen with attachments and To/Cc/Bcc
 - Calendar management (events, recurring, reminders)
-- Contact management with groups
+- Contact management with groups, search, favorites
+- Common components: ThemedToast, ThemedAlert, SafeScreen, useAlert hook
 - Dual API client architecture (Codex + Continuum)
 - Cross-platform: iOS, Android, and Web via Expo
 

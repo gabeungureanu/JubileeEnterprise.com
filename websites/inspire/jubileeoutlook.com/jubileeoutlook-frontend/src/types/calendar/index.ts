@@ -136,7 +136,13 @@ export function mapEventDto(dto: CalendarEventDto): CalendarEvent {
     recurrenceEndDate: d.recurrenceEndDate ?? d.recurrence_end_date ?? null,
     recurrenceOccurrences: d.recurrenceOccurrences ?? d.recurrence_occurrences ?? null,
     recurrenceDaysOfWeek: d.recurrenceDaysOfWeek || d.recurrence_days_of_week || [],
-    attachments: d.attachments || [],
+    attachments: (d.attachments || []).map((a: any) => ({
+      id: a.id,
+      fileName: a.fileName || a.file_name || '',
+      fileSize: a.fileSize || a.file_size || 0,
+      fileUrl: a.fileUrl || a.url || '',
+      uploadedAt: a.uploadedAt || a.addedDate || a.added_date || '',
+    })),
     timezone: d.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
     calendarName: d.calendarName || d.calendar_name || 'My Calendar',
   };
