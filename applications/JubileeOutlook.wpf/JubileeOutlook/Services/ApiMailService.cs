@@ -1287,6 +1287,64 @@ public class ApiMailService : IMailService
     }
 
     /// <summary>
+    /// Toggles or sets the pin status
+    /// PATCH /api/v1/outlook/messages/{id} with is_pinned field
+    /// </summary>
+    public async Task<MailServiceResult<bool>> TogglePinWithResultAsync(string messageId, bool isPinned)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(messageId))
+            {
+                return new MailServiceResult<bool>
+                {
+                    Success = false,
+                    Error = "Message ID is required",
+                    Data = false
+                };
+            }
+
+            var endpoint = $"outlook/messages/{Uri.EscapeDataString(messageId)}";
+            var payload = new { is_pinned = isPinned };
+
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] PATCH {endpoint} -> is_pinned={isPinned}");
+
+            var response = await _httpClientFactory.PatchAsync(ApiEndpoint.InspireContinuum, endpoint, payload);
+
+            if (response.IsSuccessStatusCode)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiMailService] Set pin for message {messageId} to {isPinned}");
+                return new MailServiceResult<bool>
+                {
+                    Success = true,
+                    Data = true
+                };
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] TogglePin failed: {response.StatusCode} - {content}");
+
+            return new MailServiceResult<bool>
+            {
+                Success = false,
+                Error = $"Failed to toggle pin: {response.StatusCode}",
+                StatusCode = response.StatusCode,
+                Data = false
+            };
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ApiMailService] TogglePin error: {ex.Message}");
+            return new MailServiceResult<bool>
+            {
+                Success = false,
+                Error = ex.Message,
+                Data = false
+            };
+        }
+    }
+
+    /// <summary>
     /// Searches messages with detailed result
     /// GET /api/outlook/messages/search?q={query}
     /// </summary>
@@ -1476,6 +1534,7 @@ public class ApiMailService : IMailService
             SentDate = sentDate,
             IsRead = dto.IsRead,
             IsFlagged = dto.IsFlagged,
+            IsPinned = dto.IsPinned,
             HasAttachments = dto.HasAttachments,
             Attachments = dto.Attachments?.Select(a => new EmailAttachment
             {
@@ -1508,6 +1567,7 @@ public class ApiMailService : IMailService
             SentDate = message.SentDate,
             IsRead = message.IsRead,
             IsFlagged = message.IsFlagged,
+            IsPinned = message.IsPinned,
             HasAttachments = message.HasAttachments,
             Attachments = message.Attachments?.Select(a => new EmailAttachmentDto
             {
@@ -1753,6 +1813,9 @@ public class EmailMessageDto
 
     [System.Text.Json.Serialization.JsonPropertyName("is_flagged")]
     public bool IsFlagged { get; set; }
+
+    [System.Text.Json.Serialization.JsonPropertyName("is_pinned")]
+    public bool IsPinned { get; set; }
 
     [System.Text.Json.Serialization.JsonPropertyName("has_attachments")]
     public bool HasAttachments { get; set; }

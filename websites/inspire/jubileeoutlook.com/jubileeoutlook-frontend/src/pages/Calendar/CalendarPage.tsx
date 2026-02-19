@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import CalendarRibbon from '../../components/layout/Ribbon/CalendarRibbon';
 import MiniCalendar from '../../components/calendar/MiniCalendar';
@@ -6,7 +6,6 @@ import MyCalendars, { CalendarFolder } from '../../components/calendar/MyCalenda
 import CalendarGrid from '../../components/calendar/CalendarGrid';
 import EventDialog from '../../components/calendar/EventDialog';
 import ReminderPopup from '../../components/calendar/ReminderPopup';
-import SearchBar, { SearchFilters, SearchBarHandle } from '../../components/calendar/SearchBar/SearchBar';
 import { CalendarEvent, CalendarEventDto, CalendarViewMode, CalendarDateRange } from '../../types/calendar';
 import { calendarService } from '../../services/calendar/calendarService';
 import { expandRecurringEvents } from '../../utils/calendarUtils';
@@ -39,12 +38,6 @@ const CalendarPage: React.FC = () => {
 
   // Calendar visibility filter state
   const [calendarFilters, setCalendarFilters] = useState<CalendarFolder[]>([]);
-
-  // Search state
-  const [searchFilters, setSearchFilters] = useState<SearchFilters | null>(null);
-  const searchBarRef = useRef<SearchBarHandle>(null);
-  const lastSearchNavRef = useRef<string | null>(null);
-  const preSearchViewRef = useRef<CalendarViewMode | null>(null);
 
   // Calculate date range based on view mode and selected date
   const getDateRange = useCallback((date: Date, mode: CalendarViewMode): CalendarDateRange => {
@@ -144,7 +137,7 @@ const CalendarPage: React.FC = () => {
     reminderService.updateEvents(events);
   }, [events]);
 
-  // --- Filter pipeline: calendar visibility -> search ---
+  // --- Filter pipeline: calendar visibility ---
   const filteredEvents = useMemo(() => {
     let result = events;
 
@@ -157,50 +150,8 @@ const CalendarPage: React.FC = () => {
       });
     }
 
-    // Search filter
-    if (searchFilters && (searchFilters.query || searchFilters.category)) {
-      const q = (searchFilters.query || '').toLowerCase();
-      result = result.filter((e) => {
-        if (q && !(
-          e.title.toLowerCase().includes(q) ||
-          e.description.toLowerCase().includes(q) ||
-          e.location.toLowerCase().includes(q) ||
-          e.attendees.some((a) => a.toLowerCase().includes(q))
-        )) {
-          return false;
-        }
-        if (searchFilters.category && e.category !== searchFilters.category) {
-          return false;
-        }
-        return true;
-      });
-    }
-
     return result;
-  }, [events, calendarFilters, searchFilters]);
-
-  // Auto-navigate to first search result's day
-  useEffect(() => {
-    if (!searchFilters || (!searchFilters.query && !searchFilters.category)) {
-      lastSearchNavRef.current = null;
-      return;
-    }
-
-    const searchKey = `${searchFilters.query}|${searchFilters.category}`;
-    if (searchKey === lastSearchNavRef.current) return;
-
-    if (filteredEvents.length > 0) {
-      lastSearchNavRef.current = searchKey;
-      // Save pre-search view mode so we can restore on clear
-      if (!preSearchViewRef.current) {
-        preSearchViewRef.current = viewMode;
-      }
-      const firstMatch = filteredEvents[0];
-      const eventDate = new Date(firstMatch.startDateTime);
-      setSelectedDate(new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate()));
-      setViewMode('day');
-    }
-  }, [searchFilters, filteredEvents, viewMode]);
+  }, [events, calendarFilters]);
 
   // Reminder handlers — remove from queue only when user explicitly acts
   const handleReminderDismiss = (eventId: string) => {
@@ -405,7 +356,7 @@ const CalendarPage: React.FC = () => {
     onViewWorkWeek: () => setViewMode('workWeek'),
     onViewWeek: () => setViewMode('week'),
     onViewMonth: () => setViewMode('month'),
-    onFocusSearch: () => searchBarRef.current?.focus(),
+    onFocusSearch: () => {},
     onCloseDialog: () => { if (isDialogOpen) handleDialogClose(); },
   }, !isDialogOpen || true);
 
@@ -427,19 +378,6 @@ const CalendarPage: React.FC = () => {
           </div>
         )}
         <div className="calendar-page__main">
-          <SearchBar
-            ref={searchBarRef}
-            onSearch={setSearchFilters}
-            onClear={() => {
-              setSearchFilters(null);
-              // Restore pre-search view mode
-              if (preSearchViewRef.current) {
-                setViewMode(preSearchViewRef.current);
-                preSearchViewRef.current = null;
-              }
-            }}
-          />
-
           <div className="calendar-page__header">
             <div className="calendar-page__nav">
               <button className="calendar-page__nav-btn" onClick={navigatePrevious}>

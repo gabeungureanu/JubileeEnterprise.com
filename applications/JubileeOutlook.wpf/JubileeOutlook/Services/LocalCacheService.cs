@@ -136,13 +136,13 @@ public class LocalCacheService : IDisposable
             INSERT INTO cached_emails (
                 server_id, folder_id, subject, sender_name, sender_email,
                 recipients, cc_recipients, bcc_recipients, body, body_preview,
-                is_html, is_read, is_flagged, is_draft, has_attachments,
+                is_html, is_read, is_flagged, is_pinned, is_draft, has_attachments,
                 attachments, importance, received_date, sent_date, conversation_id,
                 sync_status
             ) VALUES (
                 @server_id, @folder_id, @subject, @sender_name, @sender_email,
                 @recipients::jsonb, @cc_recipients::jsonb, @bcc_recipients::jsonb, @body, @body_preview,
-                @is_html, @is_read, @is_flagged, @is_draft, @has_attachments,
+                @is_html, @is_read, @is_flagged, @is_pinned, @is_draft, @has_attachments,
                 @attachments::jsonb, @importance, @received_date, @sent_date, @conversation_id,
                 'synced'
             )
@@ -159,6 +159,7 @@ public class LocalCacheService : IDisposable
                 is_html = EXCLUDED.is_html,
                 is_read = EXCLUDED.is_read,
                 is_flagged = EXCLUDED.is_flagged,
+                is_pinned = EXCLUDED.is_pinned,
                 is_draft = EXCLUDED.is_draft,
                 has_attachments = EXCLUDED.has_attachments,
                 attachments = EXCLUDED.attachments,
@@ -188,6 +189,7 @@ public class LocalCacheService : IDisposable
             cmd.Parameters.AddWithValue("is_html", email.IsHtml);
             cmd.Parameters.AddWithValue("is_read", email.IsRead);
             cmd.Parameters.AddWithValue("is_flagged", email.IsFlagged);
+            cmd.Parameters.AddWithValue("is_pinned", email.IsPinned);
             cmd.Parameters.AddWithValue("is_draft", email.FolderId?.ToLower() == "drafts");
             cmd.Parameters.AddWithValue("has_attachments", email.HasAttachments);
             cmd.Parameters.AddWithValue("attachments", JsonSerializer.Serialize(email.Attachments ?? new List<EmailAttachment>(), _jsonOptions));
@@ -225,7 +227,7 @@ public class LocalCacheService : IDisposable
         const string sql = @"
             SELECT server_id, folder_id, subject, sender_name, sender_email,
                    recipients, cc_recipients, bcc_recipients, body, body_preview,
-                   is_html, is_read, is_flagged, is_draft, has_attachments,
+                   is_html, is_read, is_flagged, is_pinned, is_draft, has_attachments,
                    attachments, importance, received_date, conversation_id
             FROM cached_emails
             WHERE folder_id = @folder_id AND is_deleted = FALSE
@@ -264,7 +266,7 @@ public class LocalCacheService : IDisposable
         const string sql = @"
             SELECT server_id, folder_id, subject, sender_name, sender_email,
                    recipients, cc_recipients, bcc_recipients, body, body_preview,
-                   is_html, is_read, is_flagged, is_draft, has_attachments,
+                   is_html, is_read, is_flagged, is_pinned, is_draft, has_attachments,
                    attachments, importance, received_date, conversation_id
             FROM cached_emails
             WHERE server_id = @server_id AND is_deleted = FALSE";
@@ -293,11 +295,11 @@ public class LocalCacheService : IDisposable
     /// <summary>
     /// Updates email status (read/flagged)
     /// </summary>
-    public async Task UpdateEmailStatusAsync(string serverId, bool isRead, bool isFlagged)
+    public async Task UpdateEmailStatusAsync(string serverId, bool isRead, bool isFlagged, bool isPinned = false)
     {
         const string sql = @"
             UPDATE cached_emails
-            SET is_read = @is_read, is_flagged = @is_flagged, last_modified = CURRENT_TIMESTAMP
+            SET is_read = @is_read, is_flagged = @is_flagged, is_pinned = @is_pinned, last_modified = CURRENT_TIMESTAMP
             WHERE server_id = @server_id";
 
         try
@@ -308,6 +310,7 @@ public class LocalCacheService : IDisposable
             cmd.Parameters.AddWithValue("server_id", serverId);
             cmd.Parameters.AddWithValue("is_read", isRead);
             cmd.Parameters.AddWithValue("is_flagged", isFlagged);
+            cmd.Parameters.AddWithValue("is_pinned", isPinned);
 
             await cmd.ExecuteNonQueryAsync();
             System.Diagnostics.Debug.WriteLine($"[LocalCacheService] Updated email status: {serverId}");
@@ -354,7 +357,7 @@ public class LocalCacheService : IDisposable
         const string sql = @"
             SELECT server_id, folder_id, subject, sender_name, sender_email,
                    recipients, cc_recipients, bcc_recipients, body, body_preview,
-                   is_html, is_read, is_flagged, is_draft, has_attachments,
+                   is_html, is_read, is_flagged, is_pinned, is_draft, has_attachments,
                    attachments, importance, received_date, conversation_id
             FROM cached_emails
             WHERE is_deleted = FALSE
@@ -401,6 +404,7 @@ public class LocalCacheService : IDisposable
             IsHtml = reader.GetBoolean(reader.GetOrdinal("is_html")),
             IsRead = reader.GetBoolean(reader.GetOrdinal("is_read")),
             IsFlagged = reader.GetBoolean(reader.GetOrdinal("is_flagged")),
+            IsPinned = reader.GetBoolean(reader.GetOrdinal("is_pinned")),
             HasAttachments = reader.GetBoolean(reader.GetOrdinal("has_attachments")),
             ReceivedDate = reader.GetDateTime(reader.GetOrdinal("received_date")),
             ConversationId = reader.IsDBNull(reader.GetOrdinal("conversation_id")) ? "" : reader.GetString(reader.GetOrdinal("conversation_id"))

@@ -2,6 +2,7 @@
  * EventDetailScreen — Displays full details for a single calendar event.
  *
  * Shows subject, date/time range, location, description, attendees,
+ * showAs status, recurrence, private badge, color category, timezone,
  * and attachments. A colour strip at the top reflects the event colour.
  * The header contains Edit and Delete actions.
  */
@@ -12,6 +13,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Linking,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -24,6 +26,14 @@ import { Spacing, BorderRadius } from '../../constants/spacing';
 import { LoadingSpinner, Avatar, EmptyState } from '../../components/common';
 import { useAlert } from '../../hooks';
 import { calendarService } from '../../services/calendar/calendarService';
+import { reminderService } from '../../services/calendar/reminderService';
+import {
+  formatRecurrenceDescription,
+  formatReminderLabel,
+  getEventColor,
+  SHOW_AS_OPTIONS,
+  CATEGORY_OPTIONS,
+} from '../../utils/calendarUtils';
 import type { CalendarEvent } from '../../types/calendar';
 import type { CalendarStackParamList } from '../../types/navigation';
 
@@ -56,6 +66,12 @@ function formatDateOnly(iso: string): string {
   });
 }
 
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 // ────────────────────────────────────────────────────────────
 // Component
 // ────────────────────────────────────────────────────────────
@@ -71,7 +87,6 @@ const EventDetailScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // ── Fetch event ───────────────────────────────────────────
-
   const fetchEvent = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -85,14 +100,31 @@ const EventDetailScreen: React.FC = () => {
     }
   }, [eventId]);
 
+  // Silent refetch (no loading spinner) — used on focus return
+  const refetchEvent = useCallback(async () => {
+    try {
+      const data = await calendarService.getEvent(eventId);
+      setEvent(data);
+    } catch {
+      // Silent — keep existing data on failure
+    }
+  }, [eventId]);
+
   useEffect(() => {
     if (!routeEvent) {
       fetchEvent();
     }
   }, [routeEvent, fetchEvent]);
 
-  // ── Header buttons ────────────────────────────────────────
+  // Re-fetch when screen regains focus (e.g., after editing)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      refetchEvent();
+    });
+    return unsubscribe;
+  }, [navigation, refetchEvent]);
 
+  // ── Header buttons ────────────────────────────────────────
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -117,7 +149,6 @@ const EventDetailScreen: React.FC = () => {
   }, [event]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Actions ───────────────────────────────────────────────
-
   const handleEdit = useCallback(() => {
     if (event) {
       navigation.navigate('NewEvent', { event });
@@ -130,6 +161,8 @@ const EventDetailScreen: React.FC = () => {
       'Are you sure you want to delete this event?',
       async () => {
         try {
+          // Cancel any scheduled reminder before deleting
+          await reminderService.cancelReminder(eventId);
           await calendarService.deleteEvent(eventId);
           navigation.goBack();
         } catch (err: any) {
@@ -141,7 +174,6 @@ const EventDetailScreen: React.FC = () => {
   }, [eventId, navigation, confirm, alert]);
 
   // ── Render ────────────────────────────────────────────────
-
   if (isLoading) {
     return (
       <View style={styles.centered}>
@@ -162,97 +194,174 @@ const EventDetailScreen: React.FC = () => {
     );
   }
 
-  const eventColor = event.eventColor || Colors.accent;
+  const eventColor = getEventColor(event.eventColor || event.category);
+  const showAsOption = SHOW_AS_OPTIONS.find((o) => o.value === event.showAs);
+  const colorOption = CATEGORY_OPTIONS.find((o) => o.value === (event.eventColor || event.category));
+  const recurrenceDesc = formatRecurrenceDescription(event);
 
   return (
     <>
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Colour strip */}
-      <View style={[styles.colorStrip, { backgroundColor: eventColor }]} />
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        {/* Colour strip */}
+        <View style={[styles.colorStrip, { backgroundColor: eventColor }]} />
 
-      {/* Subject */}
-      <Text style={styles.subject}>{event.title}</Text>
+        {/* Subject */}
+        <Text style={styles.subject}>{event.isPrivate ? 'Private' : event.title}</Text>
 
-      {/* Date / time */}
-      <View style={styles.detailRow}>
-        <Icon name="access-time" size={20} color={Colors.textSecondary} />
-        <View style={styles.detailContent}>
-          {event.isAllDay ? (
-            <>
-              <Text style={styles.detailPrimary}>All Day</Text>
-              <Text style={styles.detailSecondary}>
-                {formatDateOnly(event.startDateTime)}
-              </Text>
-            </>
-          ) : (
-            <>
-              <Text style={styles.detailPrimary}>
-                {formatDateTime(event.startDateTime)}
-              </Text>
-              <Text style={styles.detailSecondary}>
-                to {formatDateTime(event.endDateTime)}
-              </Text>
-            </>
-          )}
-        </View>
-      </View>
-
-      {/* Location */}
-      {!!event.location && (
+        {/* Date / time */}
         <View style={styles.detailRow}>
-          <Icon name="place" size={20} color={Colors.textSecondary} />
+          <Icon name="access-time" size={20} color={Colors.textSecondary} />
           <View style={styles.detailContent}>
-            <Text style={styles.detailPrimary}>{event.location}</Text>
-            {event.isInPerson && (
-              <Text style={styles.detailSecondary}>In Person</Text>
+            {event.isAllDay ? (
+              <>
+                <Text style={styles.detailPrimary}>All Day</Text>
+                <Text style={styles.detailSecondary}>
+                  {formatDateOnly(event.startDateTime)}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.detailPrimary}>
+                  {formatDateTime(event.startDateTime)}
+                </Text>
+                <Text style={styles.detailSecondary}>
+                  to {formatDateTime(event.endDateTime)}
+                </Text>
+              </>
             )}
           </View>
         </View>
-      )}
 
-      {/* Description */}
-      {!!event.description && (
-        <View style={styles.detailRow}>
-          <Icon name="notes" size={20} color={Colors.textSecondary} />
-          <View style={styles.detailContent}>
-            <Text style={styles.detailPrimary}>{event.description}</Text>
+        {/* Location */}
+        {!!event.location && (
+          <View style={styles.detailRow}>
+            <Icon name="place" size={20} color={Colors.textSecondary} />
+            <View style={styles.detailContent}>
+              <Text style={styles.detailPrimary}>{event.location}</Text>
+              {event.isInPerson && (
+                <Text style={styles.detailSecondary}>In Person</Text>
+              )}
+            </View>
           </View>
-        </View>
-      )}
+        )}
 
-      {/* Reminder */}
-      {event.reminderMinutes > 0 && (
-        <View style={styles.detailRow}>
-          <Icon name="notifications" size={20} color={Colors.textSecondary} />
-          <View style={styles.detailContent}>
-            <Text style={styles.detailPrimary}>
-              {event.reminderMinutes} minutes before
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {/* Attendees */}
-      {event.attendees && event.attendees.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Attendees</Text>
-          {event.attendees.map((attendee, idx) => (
-            <View key={`attendee-${idx}`} style={styles.attendeeRow}>
-              <Avatar name={attendee} size={36} />
-              <View style={styles.attendeeInfo}>
-                <Text style={styles.attendeeName}>
-                  {attendee}
-                </Text>
+        {/* ShowAs status */}
+        {showAsOption && (
+          <View style={styles.detailRow}>
+            <Icon name="event-busy" size={20} color={Colors.textSecondary} />
+            <View style={styles.detailContent}>
+              <View style={styles.showAsRow}>
+                <View style={[styles.showAsDot, { backgroundColor: showAsOption.color }]} />
+                <Text style={styles.detailPrimary}>{showAsOption.label}</Text>
               </View>
             </View>
-          ))}
-        </View>
-      )}
+          </View>
+        )}
 
-      {/* Attachments — removed from CalendarEvent type; section disabled */}
-    </ScrollView>
+        {/* Recurrence */}
+        {!!recurrenceDesc && (
+          <View style={styles.detailRow}>
+            <Icon name="repeat" size={20} color={Colors.textSecondary} />
+            <View style={styles.detailContent}>
+              <Text style={styles.detailPrimary}>{recurrenceDesc}</Text>
+            </View>
+          </View>
+        )}
 
-    {AlertComponent}
+        {/* Private */}
+        {event.isPrivate && (
+          <View style={styles.detailRow}>
+            <Icon name="lock" size={20} color={Colors.textSecondary} />
+            <View style={styles.detailContent}>
+              <Text style={styles.detailPrimary}>Private event</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Event Color / Category */}
+        {colorOption && (
+          <View style={styles.detailRow}>
+            <View style={[styles.colorCircle, { backgroundColor: colorOption.color }]} />
+            <View style={styles.detailContent}>
+              <Text style={styles.detailPrimary}>{colorOption.label}</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Description */}
+        {!!event.description && (
+          <View style={styles.detailRow}>
+            <Icon name="notes" size={20} color={Colors.textSecondary} />
+            <View style={styles.detailContent}>
+              <Text style={styles.detailPrimary}>{event.description}</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Reminder */}
+        {event.reminderMinutes > 0 && (
+          <View style={styles.detailRow}>
+            <Icon name="notifications" size={20} color={Colors.textSecondary} />
+            <View style={styles.detailContent}>
+              <Text style={styles.detailPrimary}>
+                {formatReminderLabel(event.reminderMinutes)}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Timezone */}
+        {!!event.timezone && (
+          <View style={styles.detailRow}>
+            <Icon name="public" size={20} color={Colors.textSecondary} />
+            <View style={styles.detailContent}>
+              <Text style={styles.detailPrimary}>{event.timezone}</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Attendees */}
+        {event.attendees && event.attendees.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Attendees</Text>
+            {event.attendees.map((attendee, idx) => (
+              <View key={`attendee-${idx}`} style={styles.attendeeRow}>
+                <Avatar name={attendee} size={36} />
+                <View style={styles.attendeeInfo}>
+                  <Text style={styles.attendeeName}>{attendee}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Attachments */}
+        {event.attachments && event.attachments.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Attachments</Text>
+            {event.attachments.map((att, idx) => (
+              <TouchableOpacity
+                key={`att-${idx}`}
+                style={styles.attachmentRow}
+                onPress={() => {
+                  if (att.fileUrl) Linking.openURL(att.fileUrl);
+                }}
+                activeOpacity={0.7}
+              >
+                <Icon name="attach-file" size={20} color={Colors.textSecondary} />
+                <Text style={styles.attachmentName} numberOfLines={1}>
+                  {att.fileName}
+                </Text>
+                <Text style={styles.attachmentSize}>
+                  {formatFileSize(att.fileSize)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </ScrollView>
+
+      {AlertComponent}
     </>
   );
 };
@@ -321,6 +430,25 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
+  // ShowAs
+  showAsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  showAsDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: Spacing.sm,
+  },
+
+  // Color circle
+  colorCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+  },
+
   // Sections
   section: {
     marginTop: Spacing.xl,
@@ -349,30 +477,6 @@ const styles = StyleSheet.create({
   attendeeName: {
     ...Typography.body,
     color: Colors.textPrimary,
-  },
-  attendeeEmail: {
-    ...Typography.bodySmall,
-    color: Colors.textTertiary,
-  },
-  statusBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xxs,
-    borderRadius: BorderRadius.sm,
-    backgroundColor: Colors.surfaceLight,
-  },
-  statusAccepted: {
-    backgroundColor: 'rgba(16, 124, 16, 0.2)',
-  },
-  statusDeclined: {
-    backgroundColor: 'rgba(209, 52, 56, 0.2)',
-  },
-  statusTentative: {
-    backgroundColor: 'rgba(255, 140, 0, 0.2)',
-  },
-  statusText: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    textTransform: 'capitalize',
   },
 
   // Attachments

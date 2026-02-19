@@ -22,6 +22,9 @@ public partial class EmailMessage : ObservableObject
     [ObservableProperty]
     private bool _isFlagged;
 
+    [ObservableProperty]
+    private bool _isPinned;
+
     public bool HasAttachments { get; set; }
     public List<EmailAttachment> Attachments { get; set; } = new();
     public string FolderId { get; set; } = string.Empty;

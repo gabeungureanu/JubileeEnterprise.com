@@ -1518,7 +1518,7 @@ app.get('/api/v1/outlook/folders/:folderId/messages', async (c) => {
     const messagesResult = await pool.query(
       `SELECT m.id, m.subject, m.sender_name, m.sender_email,
               m.body_preview, m.body_text, m.body_html,
-              m.is_read, m.is_flagged, m.has_attachments, m.is_draft, m.is_sent,
+              m.is_read, m.is_flagged, m.is_pinned, m.has_attachments, m.is_draft, m.is_sent,
               m.importance, m.received_at, m.sent_at,
               m.folder_id, m.conversation_id
        FROM outlook_email_messages m
@@ -1561,6 +1561,7 @@ app.get('/api/v1/outlook/folders/:folderId/messages', async (c) => {
       body_html: m.body_html || '',
       is_read: m.is_read,
       is_flagged: m.is_flagged,
+      is_pinned: m.is_pinned ?? false,
       has_attachments: m.has_attachments,
       importance: m.importance || 'normal',
       received_at: m.received_at,
@@ -1615,7 +1616,7 @@ app.get('/api/v1/outlook/messages/search', async (c) => {
 
     const messagesResult = await pool.query(
       `SELECT m.id, m.subject, m.sender_name, m.sender_email, m.body_preview, m.body_text, m.body_html,
-              m.is_read, m.is_flagged, m.has_attachments, m.importance, m.received_at, m.sent_at,
+              m.is_read, m.is_flagged, m.is_pinned, m.has_attachments, m.importance, m.received_at, m.sent_at,
               m.folder_id, m.conversation_id
        FROM outlook_email_messages m WHERE ${whereClause}
        ORDER BY m.received_at DESC NULLS LAST LIMIT $${++paramCount} OFFSET $${++paramCount}`,
@@ -1658,7 +1659,7 @@ app.get('/api/v1/outlook/messages/:id', async (c) => {
     const msgResult = await pool.query(
       `SELECT m.id, m.subject, m.sender_name, m.sender_email,
               m.body_preview, m.body_text, m.body_html,
-              m.is_read, m.is_flagged, m.has_attachments, m.is_draft, m.is_sent,
+              m.is_read, m.is_flagged, m.is_pinned, m.has_attachments, m.is_draft, m.is_sent,
               m.importance, m.received_at, m.sent_at,
               m.folder_id, m.conversation_id, m.external_message_id,
               f.external_folder_id, a.imap_host, a.imap_port, a.email_address, a.encrypted_password
@@ -1851,6 +1852,7 @@ app.get('/api/v1/outlook/messages/:id', async (c) => {
       body_html: m.body_html || '',
       is_read: m.is_read,
       is_flagged: m.is_flagged,
+      is_pinned: m.is_pinned ?? false,
       has_attachments: m.has_attachments,
       importance: m.importance || 'normal',
       received_at: m.received_at,
@@ -1972,7 +1974,7 @@ app.get('/api/v1/outlook/messages/:messageId/attachments/:attachmentId/download'
   }
 });
 
-// PATCH /api/v1/outlook/messages/:id - Update message (read, flag, move)
+// PATCH /api/v1/outlook/messages/:id - Update message (read, flag, pin, move)
 app.patch('/api/v1/outlook/messages/:id', async (c) => {
   try {
     const messageId = c.req.param('id');
@@ -1990,6 +1992,10 @@ app.patch('/api/v1/outlook/messages/:id', async (c) => {
     if (typeof body.is_flagged === 'boolean') {
       updates.push(`is_flagged = $${paramIndex++}`);
       values.push(body.is_flagged);
+    }
+    if (typeof body.is_pinned === 'boolean') {
+      updates.push(`is_pinned = $${paramIndex++}`);
+      values.push(body.is_pinned);
     }
     if (body.folder_id) {
       updates.push(`folder_id = $${paramIndex++}`);

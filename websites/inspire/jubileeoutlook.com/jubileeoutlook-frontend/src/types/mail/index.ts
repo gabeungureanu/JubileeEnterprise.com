@@ -27,6 +27,7 @@ export interface EmailMessageDto {
   sent_at: string;
   is_read: boolean;
   is_flagged: boolean;
+  is_pinned: boolean;
   has_attachments: boolean;
   attachments: AttachmentDto[];
   folder_id: string;
@@ -113,6 +114,7 @@ export interface EmailMessage {
   bodyPreview: string;
   isRead: boolean;
   isFlagged: boolean;
+  isPinned: boolean;
   hasAttachments: boolean;
   attachments: AttachmentDto[];
   folderId: string;
@@ -167,6 +169,7 @@ export function mapMessageDto(dto: EmailMessageDto): EmailMessage {
     bodyPreview: dto.body_preview,
     isRead: dto.is_read,
     isFlagged: dto.is_flagged,
+    isPinned: dto.is_pinned ?? false,
     hasAttachments: dto.has_attachments,
     attachments: dto.attachments || [],
     folderId: dto.folder_id,

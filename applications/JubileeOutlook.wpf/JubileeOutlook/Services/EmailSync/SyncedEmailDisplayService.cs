@@ -288,6 +288,7 @@ public class SyncedEmailDisplayService
             SentDate = syncedMessage.SentAt ?? DateTime.MinValue,
             IsRead = syncedMessage.IsRead,
             IsFlagged = syncedMessage.IsFlagged,
+            IsPinned = false,
             HasAttachments = syncedMessage.HasAttachments || attachments.Count > 0,
             Attachments = attachments,
             FolderId = syncedMessage.FolderId.ToString(),

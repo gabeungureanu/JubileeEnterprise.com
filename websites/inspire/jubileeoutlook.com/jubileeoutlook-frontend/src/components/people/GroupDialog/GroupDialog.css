@@ -1,0 +1,142 @@
+.group-dialog__overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+}
+
+.group-dialog {
+  width: 420px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-dialog);
+  display: flex;
+  flex-direction: column;
+}
+
+.group-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.group-dialog__header h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.group-dialog__close {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.group-dialog__close:hover {
+  background-color: var(--accent-red);
+  color: var(--text-primary);
+}
+
+.group-dialog__body {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.group-dialog__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.group-dialog__field label {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  font-weight: var(--font-weight-medium);
+}
+
+.group-dialog__field input {
+  padding: var(--spacing-sm);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  outline: none;
+}
+
+.group-dialog__field input:focus {
+  border-color: var(--gold-primary);
+}
+
+.group-dialog__error {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: rgba(231, 72, 86, 0.1);
+  border: 1px solid rgba(231, 72, 86, 0.3);
+  border-radius: var(--radius-md);
+  color: #E74856;
+  font-size: var(--font-size-sm);
+}
+
+.group-dialog__error .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.group-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.group-dialog__btn {
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.group-dialog__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.group-dialog__btn--cancel {
+  background-color: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.group-dialog__btn--cancel:hover:not(:disabled) {
+  background-color: var(--border-primary);
+}
+
+.group-dialog__btn--save {
+  background-color: var(--gold-primary);
+  color: var(--text-inverse);
+}
+
+.group-dialog__btn--save:hover:not(:disabled) {
+  background-color: var(--gold-hover);
+}

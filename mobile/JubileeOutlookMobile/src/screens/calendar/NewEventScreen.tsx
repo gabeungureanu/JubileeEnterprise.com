@@ -1,11 +1,12 @@
 /**
  * NewEventScreen — Create or edit a calendar event.
  *
- * When an existing event is passed via route params the form is
- * pre-filled for editing; otherwise it defaults to a blank form
- * with the selected date (if provided).
+ * Redesigned with collapsible FormSection cards for mobile usability.
+ * Includes all fields matching web frontend feature parity:
+ * subject, location, date/time, recurrence, showAs, reminder,
+ * color, private, attendees, attachments, description, timezone.
  */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -23,11 +24,29 @@ import type { RouteProp } from '@react-navigation/native';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius } from '../../constants/spacing';
-import { LoadingSpinner } from '../../components/common';
+import { LoadingSpinner, FormSection } from '../../components/common';
+import {
+  TimePickerSheet,
+  DatePickerField,
+  EventColorPicker,
+  ShowAsPicker,
+  RecurrenceEditor,
+  AttendeeInput,
+  AttachmentPicker,
+  TimezonePickerSheet,
+} from '../../components/modules/calendar';
+import type { PickedFile } from '../../components/modules/calendar';
 import { useAlert } from '../../hooks';
 import { calendarService } from '../../services/calendar/calendarService';
+import { reminderService } from '../../services/calendar/reminderService';
 import { tokenStore } from '../../services/apiClient';
-import type { CalendarEvent, CalendarEventDto } from '../../types/calendar';
+import {
+  REMINDER_OPTIONS,
+  formatTime24h,
+  getLastUsedTimes,
+  saveLastUsedTimes,
+} from '../../utils/calendarUtils';
+import type { CalendarEventDto, ShowAsStatus } from '../../types/calendar';
 import type { CalendarStackParamList } from '../../types/navigation';
 
 type Nav = NativeStackNavigationProp<CalendarStackParamList, 'NewEvent'>;
@@ -37,37 +56,27 @@ type Route = RouteProp<CalendarStackParamList, 'NewEvent'>;
 // Helpers
 // ────────────────────────────────────────────────────────────
 
-const REMINDER_OPTIONS = [
-  { label: 'None', value: 0 },
-  { label: '5 minutes', value: 5 },
-  { label: '15 minutes', value: 15 },
-  { label: '30 minutes', value: 30 },
-  { label: '1 hour', value: 60 },
-  { label: '1 day', value: 1440 },
-];
-
-function formatDateTimeForDisplay(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
-
-function getDefaultStart(date?: string): string {
+function getDefaultStart(date?: string): Date {
   const d = date ? new Date(date) : new Date();
   d.setMinutes(0, 0, 0);
   d.setHours(d.getHours() + 1);
-  return d.toISOString();
+  return d;
 }
 
-function getDefaultEnd(startIso: string): string {
-  const d = new Date(startIso);
+function getDefaultEnd(start: Date): Date {
+  const d = new Date(start);
   d.setHours(d.getHours() + 1);
-  return d.toISOString();
+  return d;
+}
+
+function formatDuration(startMs: number, endMs: number): string {
+  const diff = Math.max(endMs - startMs, 0);
+  const totalMinutes = Math.round(diff / 60000);
+  if (totalMinutes < 60) return `${totalMinutes} minutes`;
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+  if (mins === 0) return `${hours} hour${hours > 1 ? 's' : ''}`;
+  return `${hours} hour${hours > 1 ? 's' : ''} ${mins} min`;
 }
 
 // ────────────────────────────────────────────────────────────
@@ -83,68 +92,193 @@ const NewEventScreen: React.FC = () => {
   const isEditing = !!existingEvent;
 
   // ── Form state ────────────────────────────────────────────
-
   const [subject, setSubject] = useState(existingEvent?.title || '');
   const [location, setLocation] = useState(existingEvent?.location || '');
   const [description, setDescription] = useState(existingEvent?.description || '');
-  const [startTime, setStartTime] = useState(
-    existingEvent?.startDateTime || getDefaultStart(date),
-  );
-  const [endTime, setEndTime] = useState(
-    existingEvent?.endDateTime || getDefaultEnd(existingEvent?.startDateTime || getDefaultStart(date)),
-  );
   const [isAllDay, setIsAllDay] = useState(existingEvent?.isAllDay || false);
   const [isInPerson, setIsInPerson] = useState(existingEvent?.isInPerson || false);
+
+  // Date/time
+  const initialStart = existingEvent
+    ? new Date(existingEvent.startDateTime)
+    : getDefaultStart(date);
+  const initialEnd = existingEvent
+    ? new Date(existingEvent.endDateTime)
+    : getDefaultEnd(initialStart);
+
+  const [startDate, setStartDate] = useState<Date>(initialStart);
+  const [endDate, setEndDate] = useState<Date>(initialEnd);
+
+  // Time picker sheets
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+
+  // Reminder
   const [reminderMinutes, setReminderMinutes] = useState(
     existingEvent?.reminderMinutes ?? 15,
   );
   const [showReminderPicker, setShowReminderPicker] = useState(false);
+
+  // ShowAs
+  const [showAs, setShowAs] = useState<ShowAsStatus>(
+    (existingEvent?.showAs as ShowAsStatus) || 'busy',
+  );
+
+  // Event color
+  const [eventColor, setEventColor] = useState(existingEvent?.eventColor || 'blue');
+
+  // Private
+  const [isPrivate, setIsPrivate] = useState(existingEvent?.isPrivate || false);
+
+  // Recurrence
+  const [isRecurring, setIsRecurring] = useState(existingEvent?.isRecurring || false);
+  const [recurrenceType, setRecurrenceType] = useState(
+    existingEvent?.recurrenceType
+      ? existingEvent.recurrenceType.charAt(0).toUpperCase() +
+        existingEvent.recurrenceType.slice(1)
+      : 'Daily',
+  );
+  const [recurrenceInterval, setRecurrenceInterval] = useState(
+    existingEvent?.recurrenceInterval || 1,
+  );
+  const [recurrenceDaysOfWeek, setRecurrenceDaysOfWeek] = useState<string[]>(
+    existingEvent?.recurrenceDaysOfWeek || [],
+  );
+  const [recurrenceEndCondition, setRecurrenceEndCondition] = useState<string>(() => {
+    if (existingEvent?.recurrenceEndDate) return 'On date';
+    if (existingEvent?.recurrenceOccurrences) return 'After occurrences';
+    return 'Never';
+  });
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState<Date | null>(
+    existingEvent?.recurrenceEndDate ? new Date(existingEvent.recurrenceEndDate) : null,
+  );
+  const [recurrenceOccurrences, setRecurrenceOccurrences] = useState<number | null>(
+    existingEvent?.recurrenceOccurrences || null,
+  );
+
+  // Attendees
+  const [attendees, setAttendees] = useState<string[]>(existingEvent?.attendees || []);
+
+  // Attachments
+  const [attachments, setAttachments] = useState<PickedFile[]>([]);
+
+  // Timezone
+  const [timezone, setTimezone] = useState(
+    existingEvent?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+  );
+  const [showTimezonePicker, setShowTimezonePicker] = useState(false);
+
+  // Save state
   const [isSaving, setIsSaving] = useState(false);
 
   // ── Navigation title ──────────────────────────────────────
-
   useEffect(() => {
     navigation.setOptions({
       title: isEditing ? 'Edit Event' : 'New Event',
     });
   }, [isEditing, navigation]);
 
-  // ── Time adjustment helpers ───────────────────────────────
+  // ── Load last-used times (new events only, not from a date tap) ─
+  useEffect(() => {
+    if (!isEditing && !date) {
+      getLastUsedTimes().then((times) => {
+        setStartDate((prev) => {
+          const d = new Date(prev);
+          d.setHours(times.startHour, times.startMin, 0, 0);
+          return d;
+        });
+        setEndDate((prev) => {
+          const d = new Date(prev);
+          d.setHours(times.endHour, times.endMin, 0, 0);
+          return d;
+        });
+      });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const adjustTime = useCallback(
-    (which: 'start' | 'end', direction: 'forward' | 'back') => {
-      const setter = which === 'start' ? setStartTime : setEndTime;
-      const current = which === 'start' ? startTime : endTime;
-      const d = new Date(current);
-      const delta = direction === 'forward' ? 30 : -30;
-      d.setMinutes(d.getMinutes() + delta);
-      setter(d.toISOString());
-
-      // Keep end after start
-      if (which === 'start') {
-        const newStart = d.getTime();
-        const currentEnd = new Date(endTime).getTime();
-        if (currentEnd <= newStart) {
-          const autoEnd = new Date(newStart);
-          autoEnd.setHours(autoEnd.getHours() + 1);
-          setEndTime(autoEnd.toISOString());
-        }
+  // ── Time selection handlers ───────────────────────────────
+  const handleStartTimeSelect = useCallback(
+    (hour: number, minute: number) => {
+      const d = new Date(startDate);
+      d.setHours(hour, minute, 0, 0);
+      setStartDate(d);
+      // Auto-push end if needed
+      if (d.getTime() >= endDate.getTime()) {
+        const newEnd = new Date(d);
+        newEnd.setHours(newEnd.getHours() + 1);
+        setEndDate(newEnd);
       }
     },
-    [startTime, endTime],
+    [startDate, endDate],
   );
 
-  // ── Save ──────────────────────────────────────────────────
+  const handleEndTimeSelect = useCallback(
+    (hour: number, minute: number) => {
+      const d = new Date(endDate);
+      d.setHours(hour, minute, 0, 0);
+      if (d.getTime() > startDate.getTime()) {
+        setEndDate(d);
+      }
+    },
+    [endDate, startDate],
+  );
 
+  // ── Start/end date change handlers ────────────────────────
+  const handleStartDateChange = useCallback(
+    (d: Date) => {
+      setStartDate(d);
+      if (d.getTime() >= endDate.getTime()) {
+        const newEnd = new Date(d);
+        newEnd.setHours(newEnd.getHours() + 1);
+        setEndDate(newEnd);
+      }
+    },
+    [endDate],
+  );
+
+  // ── Recurrence day toggle ─────────────────────────────────
+  const handleDayOfWeekToggle = useCallback((day: string) => {
+    setRecurrenceDaysOfWeek((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
+    );
+  }, []);
+
+  // ── Attendee handlers ─────────────────────────────────────
+  const handleAddAttendee = useCallback((att: string) => {
+    setAttendees((prev) => [...prev, att]);
+  }, []);
+
+  const handleRemoveAttendee = useCallback((idx: number) => {
+    setAttendees((prev) => prev.filter((_, i) => i !== idx));
+  }, []);
+
+  // ── Attachment handlers ───────────────────────────────────
+  const handleAddAttachment = useCallback((file: PickedFile) => {
+    setAttachments((prev) => [...prev, file]);
+  }, []);
+
+  const handleRemoveAttachment = useCallback((idx: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== idx));
+  }, []);
+
+  // ── Duration label ────────────────────────────────────────
+  const durationLabel = useMemo(
+    () => (isAllDay ? 'All day' : formatDuration(startDate.getTime(), endDate.getTime())),
+    [isAllDay, startDate, endDate],
+  );
+
+  // ── Reminder label ────────────────────────────────────────
+  const selectedReminderLabel =
+    REMINDER_OPTIONS.find((r) => r.minutes === reminderMinutes)?.label || '15 minutes before';
+
+  // ── Save ──────────────────────────────────────────────────
   const handleSave = useCallback(async () => {
     if (!subject.trim()) {
       alert('Validation', 'Subject is required', 'warning');
       return;
     }
 
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-    if (!isAllDay && end <= start) {
+    if (!isAllDay && endDate <= startDate) {
       alert('Validation', 'End time must be after start time', 'warning');
       return;
     }
@@ -162,17 +296,66 @@ const NewEventScreen: React.FC = () => {
         subject: subject.trim(),
         location: location.trim() || undefined,
         description: description.trim() || undefined,
-        startTime: startTime,
-        endTime: endTime,
+        startTime: startDate.toISOString(),
+        endTime: endDate.toISOString(),
         isAllDay,
         isInPerson,
         reminderMinutes,
+        status: showAs,
+        eventColor,
+        isPrivate,
+        timezone,
+        attendees: attendees.length > 0 ? attendees : undefined,
       };
 
+      // Recurrence fields
+      if (isRecurring) {
+        payload.isRecurring = true;
+        payload.recurrenceType = recurrenceType.toLowerCase();
+        payload.recurrenceInterval = recurrenceInterval;
+        if (recurrenceType === 'Weekly' && recurrenceDaysOfWeek.length > 0) {
+          payload.recurrenceDaysOfWeek = recurrenceDaysOfWeek;
+        }
+        if (recurrenceEndCondition === 'On date' && recurrenceEndDate) {
+          payload.recurrenceEndDate = recurrenceEndDate.toISOString();
+        } else if (recurrenceEndCondition === 'After occurrences' && recurrenceOccurrences) {
+          payload.recurrenceOccurrences = recurrenceOccurrences;
+        }
+      }
+
+      let savedEvent;
       if (isEditing && existingEvent) {
-        await calendarService.updateEvent(existingEvent.id, payload);
+        savedEvent = await calendarService.updateEvent(existingEvent.id, payload);
       } else {
-        await calendarService.createEvent(payload);
+        savedEvent = await calendarService.createEvent(payload);
+      }
+
+      // Schedule/reschedule device notification for the reminder
+      if (savedEvent) {
+        console.log(`[Reminder] savedEvent: id=${savedEvent.id}, reminderMinutes=${savedEvent.reminderMinutes}, start=${savedEvent.startDateTime}`);
+        // Clear any previous dismiss so the fresh reminder can schedule
+        await reminderService.undismiss(savedEvent.id);
+        if (savedEvent.reminderMinutes > 0) {
+          reminderService.scheduleReminder(savedEvent, true).catch((err) => {
+            console.warn('[Reminder] Failed to schedule after save:', err);
+          });
+        } else if (isEditing && existingEvent) {
+          reminderService.cancelReminder(existingEvent.id).catch((err) => {
+            console.warn('[Reminder] Failed to cancel after save:', err);
+          });
+        }
+      } else {
+        console.warn('[Reminder] savedEvent is null — API may not have returned event data. Reminder not scheduled.');
+      }
+
+      // Persist start/end times for next new event (non-all-day only)
+      if (!isAllDay) {
+        saveLastUsedTimes(
+          startDate.getHours(),
+          startDate.getMinutes(),
+          endDate.getHours(),
+          endDate.getMinutes(),
+        ).catch(() => {});
       }
 
       navigation.goBack();
@@ -182,21 +365,21 @@ const NewEventScreen: React.FC = () => {
       setIsSaving(false);
     }
   }, [
-    subject, location, description, startTime, endTime,
-    isAllDay, isInPerson, reminderMinutes, isEditing, existingEvent, navigation,
+    subject, location, description, startDate, endDate, isAllDay, isInPerson,
+    reminderMinutes, showAs, eventColor, isPrivate, timezone, attendees,
+    isRecurring, recurrenceType, recurrenceInterval, recurrenceDaysOfWeek,
+    recurrenceEndCondition, recurrenceEndDate, recurrenceOccurrences,
+    isEditing, existingEvent, navigation, alert,
   ]);
 
   // ── Render ────────────────────────────────────────────────
-
-  const selectedReminder =
-    REMINDER_OPTIONS.find((r) => r.value === reminderMinutes) || REMINDER_OPTIONS[2];
-
   return (
     <View style={styles.container}>
       {AlertComponent}
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        {/* Subject */}
-        <View style={styles.field}>
+        {/* ── Section: Event Details (always expanded) ── */}
+        <FormSection title="Event Details" icon="event" initiallyExpanded collapsible={false}>
+          {/* Subject */}
           <Text style={styles.label}>Subject *</Text>
           <TextInput
             style={styles.textInput}
@@ -206,11 +389,9 @@ const NewEventScreen: React.FC = () => {
             placeholderTextColor={Colors.textTertiary}
             autoFocus={!isEditing}
           />
-        </View>
 
-        {/* Location */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Location</Text>
+          {/* Location */}
+          <Text style={[styles.label, styles.fieldGap]}>Location</Text>
           <TextInput
             style={styles.textInput}
             value={location}
@@ -218,77 +399,123 @@ const NewEventScreen: React.FC = () => {
             placeholder="Add location"
             placeholderTextColor={Colors.textTertiary}
           />
-        </View>
 
-        {/* All Day toggle */}
-        <View style={styles.toggleRow}>
-          <Icon name="today" size={20} color={Colors.textSecondary} />
-          <Text style={styles.toggleLabel}>All Day</Text>
-          <Switch
-            value={isAllDay}
-            onValueChange={setIsAllDay}
-            trackColor={{ false: Colors.surfaceLight, true: Colors.primaryDark }}
-            thumbColor={isAllDay ? Colors.primary : Colors.textTertiary}
-          />
-        </View>
-
-        {/* Start time */}
-        {!isAllDay && (
-          <View style={styles.field}>
-            <Text style={styles.label}>Start</Text>
-            <View style={styles.timeRow}>
-              <TouchableOpacity
-                onPress={() => adjustTime('start', 'back')}
-                style={styles.timeArrow}
-              >
-                <Icon name="remove" size={20} color={Colors.primary} />
-              </TouchableOpacity>
-              <Text style={styles.timeDisplay}>
-                {formatDateTimeForDisplay(startTime)}
-              </Text>
-              <TouchableOpacity
-                onPress={() => adjustTime('start', 'forward')}
-                style={styles.timeArrow}
-              >
-                <Icon name="add" size={20} color={Colors.primary} />
-              </TouchableOpacity>
-            </View>
+          {/* In Person toggle */}
+          <View style={styles.toggleRow}>
+            <Icon name="groups" size={20} color={Colors.textSecondary} />
+            <Text style={styles.toggleLabel}>In Person</Text>
+            <Switch
+              value={isInPerson}
+              onValueChange={setIsInPerson}
+              trackColor={{ false: Colors.surfaceLight, true: Colors.primaryDark }}
+              thumbColor={isInPerson ? Colors.primary : Colors.textTertiary}
+            />
           </View>
-        )}
+        </FormSection>
 
-        {/* End time */}
-        {!isAllDay && (
-          <View style={styles.field}>
-            <Text style={styles.label}>End</Text>
-            <View style={styles.timeRow}>
-              <TouchableOpacity
-                onPress={() => adjustTime('end', 'back')}
-                style={styles.timeArrow}
-              >
-                <Icon name="remove" size={20} color={Colors.primary} />
-              </TouchableOpacity>
-              <Text style={styles.timeDisplay}>
-                {formatDateTimeForDisplay(endTime)}
-              </Text>
-              <TouchableOpacity
-                onPress={() => adjustTime('end', 'forward')}
-                style={styles.timeArrow}
-              >
-                <Icon name="add" size={20} color={Colors.primary} />
-              </TouchableOpacity>
-            </View>
+        {/* ── Section: Date & Time (always expanded) ── */}
+        <FormSection title="Date & Time" icon="schedule" initiallyExpanded collapsible={false}>
+          {/* All Day toggle */}
+          <View style={styles.toggleRow}>
+            <Icon name="today" size={20} color={Colors.textSecondary} />
+            <Text style={styles.toggleLabel}>All Day</Text>
+            <Switch
+              value={isAllDay}
+              onValueChange={setIsAllDay}
+              trackColor={{ false: Colors.surfaceLight, true: Colors.primaryDark }}
+              thumbColor={isAllDay ? Colors.primary : Colors.textTertiary}
+            />
           </View>
-        )}
 
-        {/* Reminder picker */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Reminder</Text>
+          {/* Start */}
+          <Text style={styles.label}>Start</Text>
+          <View style={styles.dateTimeRow}>
+            <DatePickerField date={startDate} onDateChange={handleStartDateChange} />
+            {!isAllDay && (
+              <TouchableOpacity
+                style={styles.timeButton}
+                onPress={() => setShowStartTimePicker(true)}
+              >
+                <Text style={styles.timeButtonText}>
+                  {formatTime24h(startDate)}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* End */}
+          <Text style={[styles.label, styles.fieldGap]}>End</Text>
+          <View style={styles.dateTimeRow}>
+            <DatePickerField date={endDate} onDateChange={setEndDate} />
+            {!isAllDay && (
+              <TouchableOpacity
+                style={styles.timeButton}
+                onPress={() => setShowEndTimePicker(true)}
+              >
+                <Text style={styles.timeButtonText}>
+                  {formatTime24h(endDate)}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Duration */}
+          <Text style={styles.durationText}>{durationLabel}</Text>
+        </FormSection>
+
+        {/* ── Section: Recurrence ── */}
+        <FormSection title="Recurrence" icon="repeat">
+          {/* Toggle recurring */}
+          <View style={styles.toggleRow}>
+            <Icon name="repeat" size={20} color={Colors.textSecondary} />
+            <Text style={styles.toggleLabel}>Make recurring</Text>
+            <Switch
+              value={isRecurring}
+              onValueChange={setIsRecurring}
+              trackColor={{ false: Colors.surfaceLight, true: Colors.primaryDark }}
+              thumbColor={isRecurring ? Colors.primary : Colors.textTertiary}
+            />
+          </View>
+
+          {isRecurring && (
+            <RecurrenceEditor
+              recurrenceType={recurrenceType}
+              recurrenceInterval={recurrenceInterval}
+              recurrenceDaysOfWeek={recurrenceDaysOfWeek}
+              recurrenceEndCondition={recurrenceEndCondition}
+              recurrenceEndDate={recurrenceEndDate}
+              recurrenceOccurrences={recurrenceOccurrences}
+              onTypeChange={setRecurrenceType}
+              onIntervalChange={setRecurrenceInterval}
+              onDaysOfWeekToggle={handleDayOfWeekToggle}
+              onEndConditionChange={(cond) => {
+                setRecurrenceEndCondition(cond);
+                if (cond === 'On date' && !recurrenceEndDate) {
+                  const d = new Date(startDate);
+                  d.setMonth(d.getMonth() + 3);
+                  setRecurrenceEndDate(d);
+                }
+              }}
+              onEndDateChange={setRecurrenceEndDate}
+              onOccurrencesChange={setRecurrenceOccurrences}
+            />
+          )}
+        </FormSection>
+
+        {/* ── Section: Options ── */}
+        <FormSection title="Options" icon="tune">
+          {/* Show As */}
+          <Text style={styles.label}>Show As</Text>
+          <ShowAsPicker selected={showAs} onSelect={setShowAs} />
+
+          {/* Reminder */}
+          <Text style={[styles.label, styles.fieldGap]}>Reminder</Text>
           <TouchableOpacity
             style={styles.pickerButton}
             onPress={() => setShowReminderPicker(!showReminderPicker)}
           >
             <Icon name="notifications" size={20} color={Colors.textSecondary} />
-            <Text style={styles.pickerText}>{selectedReminder.label}</Text>
+            <Text style={styles.pickerText}>{selectedReminderLabel}</Text>
             <Icon
               name={showReminderPicker ? 'expand-less' : 'expand-more'}
               size={20}
@@ -299,20 +526,20 @@ const NewEventScreen: React.FC = () => {
             <View style={styles.pickerOptions}>
               {REMINDER_OPTIONS.map((opt) => (
                 <TouchableOpacity
-                  key={opt.value}
+                  key={opt.minutes}
                   style={[
                     styles.pickerOption,
-                    opt.value === reminderMinutes && styles.pickerOptionActive,
+                    opt.minutes === reminderMinutes && styles.pickerOptionActive,
                   ]}
                   onPress={() => {
-                    setReminderMinutes(opt.value);
+                    setReminderMinutes(opt.minutes);
                     setShowReminderPicker(false);
                   }}
                 >
                   <Text
                     style={[
                       styles.pickerOptionText,
-                      opt.value === reminderMinutes && styles.pickerOptionTextActive,
+                      opt.minutes === reminderMinutes && styles.pickerOptionTextActive,
                     ]}
                   >
                     {opt.label}
@@ -321,34 +548,67 @@ const NewEventScreen: React.FC = () => {
               ))}
             </View>
           )}
-        </View>
 
-        {/* In Person toggle */}
-        <View style={styles.toggleRow}>
-          <Icon name="groups" size={20} color={Colors.textSecondary} />
-          <Text style={styles.toggleLabel}>In Person</Text>
-          <Switch
-            value={isInPerson}
-            onValueChange={setIsInPerson}
-            trackColor={{ false: Colors.surfaceLight, true: Colors.primaryDark }}
-            thumbColor={isInPerson ? Colors.primary : Colors.textTertiary}
+          {/* Event Color */}
+          <Text style={[styles.label, styles.fieldGap]}>Color</Text>
+          <EventColorPicker selected={eventColor} onSelect={setEventColor} />
+
+          {/* Private toggle */}
+          <View style={[styles.toggleRow, styles.fieldGap]}>
+            <Icon name="lock" size={20} color={Colors.textSecondary} />
+            <Text style={styles.toggleLabel}>Private</Text>
+            <Switch
+              value={isPrivate}
+              onValueChange={setIsPrivate}
+              trackColor={{ false: Colors.surfaceLight, true: Colors.primaryDark }}
+              thumbColor={isPrivate ? Colors.primary : Colors.textTertiary}
+            />
+          </View>
+        </FormSection>
+
+        {/* ── Section: People ── */}
+        <FormSection title="People" icon="people">
+          <AttendeeInput
+            attendees={attendees}
+            onAdd={handleAddAttendee}
+            onRemove={handleRemoveAttendee}
           />
-        </View>
+        </FormSection>
 
-        {/* Description */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Description</Text>
+        {/* ── Section: Attachments ── */}
+        <FormSection title="Attachments" icon="attach-file">
+          <AttachmentPicker
+            files={attachments}
+            onAdd={handleAddAttachment}
+            onRemove={handleRemoveAttachment}
+          />
+        </FormSection>
+
+        {/* ── Section: Notes ── */}
+        <FormSection title="Notes" icon="notes">
           <TextInput
             style={[styles.textInput, styles.multilineInput]}
             value={description}
             onChangeText={setDescription}
-            placeholder="Add description"
+            placeholder="Add description or notes"
             placeholderTextColor={Colors.textTertiary}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
           />
-        </View>
+        </FormSection>
+
+        {/* ── Section: Timezone ── */}
+        <FormSection title="Timezone" icon="public">
+          <TouchableOpacity
+            style={styles.pickerButton}
+            onPress={() => setShowTimezonePicker(true)}
+          >
+            <Icon name="public" size={20} color={Colors.textSecondary} />
+            <Text style={styles.pickerText}>{timezone}</Text>
+            <Icon name="expand-more" size={20} color={Colors.textTertiary} />
+          </TouchableOpacity>
+        </FormSection>
       </ScrollView>
 
       {/* Save button */}
@@ -368,6 +628,30 @@ const NewEventScreen: React.FC = () => {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* Bottom sheet modals */}
+      <TimePickerSheet
+        visible={showStartTimePicker}
+        onClose={() => setShowStartTimePicker(false)}
+        selectedHour={startDate.getHours()}
+        selectedMinute={startDate.getMinutes()}
+        onSelect={handleStartTimeSelect}
+        title="Start Time"
+      />
+      <TimePickerSheet
+        visible={showEndTimePicker}
+        onClose={() => setShowEndTimePicker(false)}
+        selectedHour={endDate.getHours()}
+        selectedMinute={endDate.getMinutes()}
+        onSelect={handleEndTimeSelect}
+        title="End Time"
+      />
+      <TimezonePickerSheet
+        visible={showTimezonePicker}
+        onClose={() => setShowTimezonePicker(false)}
+        selected={timezone}
+        onSelect={setTimezone}
+      />
     </View>
   );
 };
@@ -391,16 +675,16 @@ const styles = StyleSheet.create({
   },
 
   // Fields
-  field: {
-    marginBottom: Spacing.xl,
-  },
   label: {
     ...Typography.label,
     color: Colors.textSecondary,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  fieldGap: {
+    marginTop: Spacing.md,
   },
   textInput: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.surfaceLight,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -418,7 +702,6 @@ const styles = StyleSheet.create({
   toggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.xl,
     paddingVertical: Spacing.sm,
   },
   toggleLabel: {
@@ -428,32 +711,37 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.md,
   },
 
-  // Time picker
-  timeRow: {
+  // Date/time row
+  dateTimeRow: {
     flexDirection: 'row',
+    gap: Spacing.sm,
     alignItems: 'center',
-    backgroundColor: Colors.surface,
+  },
+  timeButton: {
+    backgroundColor: Colors.surfaceLight,
     borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingVertical: Spacing.sm,
-  },
-  timeArrow: {
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.md,
+    minWidth: 90,
+    alignItems: 'center',
   },
-  timeDisplay: {
-    flex: 1,
-    textAlign: 'center',
+  timeButtonText: {
     ...Typography.body,
-    color: Colors.textPrimary,
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+  durationText: {
+    ...Typography.caption,
+    color: Colors.textTertiary,
+    marginTop: Spacing.xs,
+    textAlign: 'center',
   },
 
-  // Reminder picker
+  // Picker (inline dropdown)
   pickerButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.surfaceLight,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -468,7 +756,7 @@ const styles = StyleSheet.create({
   },
   pickerOptions: {
     marginTop: Spacing.xs,
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.surfaceLight,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
     borderColor: Colors.border,
@@ -481,7 +769,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.divider,
   },
   pickerOptionActive: {
-    backgroundColor: Colors.surfaceLight,
+    backgroundColor: Colors.primary + '15',
   },
   pickerOptionText: {
     ...Typography.body,

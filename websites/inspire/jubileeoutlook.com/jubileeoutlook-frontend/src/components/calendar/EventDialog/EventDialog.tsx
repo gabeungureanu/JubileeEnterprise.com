@@ -264,6 +264,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
 
   const [validationError, setValidationError] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const previewGridRef = useRef<HTMLDivElement>(null);
 
   // Reset form when dialog opens
@@ -477,11 +478,15 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
     onClose();
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    setShowDeleteConfirm(false);
     if (event && onDelete) {
       try {
         await onDelete(event.id);
-        // Parent (CalendarPage) handles closing the dialog after successful delete
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to delete event.';
         setValidationError(message);
@@ -952,6 +957,29 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
                   Try opening directly
                 </a>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="delete-confirm__overlay" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="delete-confirm" onClick={(e) => e.stopPropagation()}>
+            <div className="delete-confirm__icon">
+              <span className="material-symbols-outlined">delete_forever</span>
+            </div>
+            <h3 className="delete-confirm__title">Delete Event</h3>
+            <p className="delete-confirm__message">
+              Are you sure you want to delete <strong>"{title || 'this event'}"</strong>? This action cannot be undone.
+            </p>
+            <div className="delete-confirm__actions">
+              <button className="delete-confirm__btn delete-confirm__btn--cancel" onClick={() => setShowDeleteConfirm(false)}>
+                Cancel
+              </button>
+              <button className="delete-confirm__btn delete-confirm__btn--confirm" onClick={confirmDelete}>
+                Delete
+              </button>
             </div>
           </div>
         </div>

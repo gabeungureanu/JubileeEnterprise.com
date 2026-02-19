@@ -24,7 +24,7 @@ const MAX_FOLDER_PANE_WIDTH = 400;
 const MAX_MESSAGE_LIST_WIDTH = 600;
 
 const MailPage: React.FC = () => {
-  const { isFolderPaneVisible, toggleFolderPane } = useAppContext();
+  const { isFolderPaneVisible, toggleFolderPane, composeRequest, setComposeRequest } = useAppContext();
   const { showToast } = useToast();
 
   // Data state
@@ -49,6 +49,7 @@ const MailPage: React.FC = () => {
 
   // Compose state
   const [composeMode, setComposeMode] = useState<ComposeMode | null>(null);
+  const [composePrefill, setComposePrefill] = useState<{ name: string; email: string }[] | undefined>(undefined);
 
   // Move-to-folder dialog state
   const [showMoveDialog, setShowMoveDialog] = useState(false);
@@ -353,17 +354,29 @@ const MailPage: React.FC = () => {
 
   // Open compose handler
   const handleOpenCompose = useCallback((mode: ComposeMode) => {
+    setComposePrefill(undefined);
     setComposeMode(mode);
   }, []);
+
+  // Consume cross-module compose request (e.g. People → Mail)
+  useEffect(() => {
+    if (composeRequest) {
+      setComposePrefill([{ name: composeRequest.toName, email: composeRequest.to }]);
+      setComposeMode('new');
+      setComposeRequest(null);
+    }
+  }, [composeRequest, setComposeRequest]);
 
   // Close compose and return to reading pane
   const handleCloseCompose = useCallback(() => {
     setComposeMode(null);
+    setComposePrefill(undefined);
   }, []);
 
   // Handle send success — close compose, refresh messages
   const handleSentSuccess = useCallback(() => {
     setComposeMode(null);
+    setComposePrefill(undefined);
     refreshMessages();
     refreshFolders();
     showToast('Message sent successfully', 'success');
@@ -836,6 +849,7 @@ const MailPage: React.FC = () => {
               senderName={senderName}
               onClose={handleCloseCompose}
               onSent={handleSentSuccess}
+              prefillRecipients={composePrefill}
             />
           ) : (
             <ReadingPane message={selectedMessage} onError={handleReadingPaneError} />

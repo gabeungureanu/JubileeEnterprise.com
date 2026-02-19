@@ -27,6 +27,15 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
+/** Wrap audit log writes so failures never cascade into 500 responses */
+async function safeAuditLog(data: Parameters<typeof codex.createAuditLog>[0]) {
+  try {
+    await safeAuditLog(data);
+  } catch (err) {
+    console.warn('Audit log write failed (non-fatal):', err);
+  }
+}
+
 const app = new Hono();
 
 // Middleware
@@ -121,7 +130,7 @@ app.post('/api/users', async (c) => {
     const user = await codex.createUser(body);
     const { passwordHash, ...safeUser } = user;
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'user.created',
       eventCategory: 'identity',
       userId: user.id,
@@ -173,7 +182,7 @@ app.post('/api/users/:id/roles/:roleId', async (c) => {
 
   await codex.assignRoleToUser(userId, roleId, body.assignedBy, body.resourceScope);
 
-  await codex.createAuditLog({
+  await safeAuditLog({
     eventType: 'role.assigned',
     eventCategory: 'authorization',
     userId,
@@ -234,7 +243,7 @@ app.post('/api/personas', async (c) => {
   try {
     const persona = await codex.createPersona(body);
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'persona.created',
       eventCategory: 'content',
       resourceType: 'persona',
@@ -382,7 +391,7 @@ app.post('/api/auth/oauth-register', async (c) => {
       });
       isNewUser = true;
 
-      await codex.createAuditLog({
+      await safeAuditLog({
         eventType: 'user.oauth_registered',
         eventCategory: 'identity',
         userId: user.id,
@@ -390,7 +399,7 @@ app.post('/api/auth/oauth-register', async (c) => {
         metadata: { email, provider, isNewUser: true },
       });
     } else {
-      await codex.createAuditLog({
+      await safeAuditLog({
         eventType: 'user.oauth_login',
         eventCategory: 'identity',
         userId: user.id,
@@ -708,7 +717,7 @@ app.post('/api/v1/contacts', async (c) => {
       category: body.category,
     });
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'contact.created',
       eventCategory: 'contacts',
       userId,
@@ -781,7 +790,7 @@ app.put('/api/v1/contacts/:id', async (c) => {
       return c.json({ success: false, error: 'Contact not found' }, 404);
     }
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'contact.updated',
       eventCategory: 'contacts',
       userId: contact.user_id,
@@ -814,7 +823,7 @@ app.delete('/api/v1/contacts/:id', async (c) => {
 
     await codex.deleteContact(id);
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'contact.deleted',
       eventCategory: 'contacts',
       userId: existing.user_id,
@@ -852,7 +861,7 @@ app.patch('/api/v1/contacts/:id/favorite', async (c) => {
       return c.json({ success: false, error: 'Contact not found' }, 404);
     }
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: body.isFavorite ? 'contact.favorited' : 'contact.unfavorited',
       eventCategory: 'contacts',
       userId: contact.user_id,
@@ -890,7 +899,7 @@ app.patch('/api/v1/contacts/:id/soft-delete', async (c) => {
       return c.json({ success: false, error: 'Contact not found' }, 404);
     }
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'contact.soft_deleted',
       eventCategory: 'contacts',
       userId: contact.user_id,
@@ -928,7 +937,7 @@ app.patch('/api/v1/contacts/:id/restore', async (c) => {
       return c.json({ success: false, error: 'Contact not found' }, 404);
     }
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'contact.restored',
       eventCategory: 'contacts',
       userId: contact.user_id,
@@ -963,7 +972,7 @@ app.post('/api/v1/contacts/batch/soft-delete', async (c) => {
     const succeeded = results.filter(Boolean);
 
     if (succeeded.length > 0) {
-      await codex.createAuditLog({
+      await safeAuditLog({
         eventType: 'contact.batch_soft_deleted',
         eventCategory: 'contacts',
         userId: succeeded[0].user_id,
@@ -997,7 +1006,7 @@ app.post('/api/v1/contacts/batch/restore', async (c) => {
     const succeeded = results.filter(Boolean);
 
     if (succeeded.length > 0) {
-      await codex.createAuditLog({
+      await safeAuditLog({
         eventType: 'contact.batch_restored',
         eventCategory: 'contacts',
         userId: succeeded[0].user_id,
@@ -1037,7 +1046,7 @@ app.post('/api/v1/contacts/batch/category', async (c) => {
     const succeeded = results.filter(Boolean);
 
     if (succeeded.length > 0) {
-      await codex.createAuditLog({
+      await safeAuditLog({
         eventType: 'contact.batch_category_updated',
         eventCategory: 'contacts',
         userId: succeeded[0].user_id,
@@ -1077,7 +1086,7 @@ app.post('/api/v1/contacts/batch/delete', async (c) => {
     const succeeded = results.filter(Boolean).length;
 
     if (succeeded > 0 && userId) {
-      await codex.createAuditLog({
+      await safeAuditLog({
         eventType: 'contact.batch_deleted',
         eventCategory: 'contacts',
         userId,
@@ -1164,7 +1173,7 @@ app.post('/api/v1/contacts/:id/photo', async (c) => {
     const photoUrl = `/uploads/photos/${filename}`;
     await codex.updateContact(id, { photoUrl });
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'contact.photo_uploaded',
       eventCategory: 'contacts',
       userId: contact.user_id,
@@ -1382,7 +1391,7 @@ app.post('/api/v1/contacts/import/vcard', async (c) => {
       imported.push(toCamelCase(created));
     }
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'contact.import_vcard',
       eventCategory: 'contacts',
       userId,
@@ -1426,7 +1435,7 @@ app.post('/api/v1/contacts/import/csv', async (c) => {
       imported.push(toCamelCase(created));
     }
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'contact.import_csv',
       eventCategory: 'contacts',
       userId,
@@ -1453,7 +1462,7 @@ app.get('/api/v1/contacts/export/vcard', async (c) => {
     const { contacts } = await codex.getContacts(userId, 1, 10000);
     const vcardContent = contacts.map(contactToVCard).join('\r\n');
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'contact.export_vcard',
       eventCategory: 'contacts',
       userId,
@@ -1500,7 +1509,7 @@ app.get('/api/v1/contacts/export/csv', async (c) => {
       csvLines.push(row.join(','));
     }
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'contact.export_csv',
       eventCategory: 'contacts',
       userId,
@@ -1583,7 +1592,7 @@ app.post('/api/v1/contact-groups', async (c) => {
 
     const group = await codex.createContactGroup(userId, body.name.trim(), body.description?.trim());
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'contact_group.created',
       eventCategory: 'contacts',
       userId,
@@ -1651,7 +1660,7 @@ app.delete('/api/v1/contact-groups/:id', async (c) => {
 
     await codex.deleteContactGroup(id);
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'contact_group.deleted',
       eventCategory: 'contacts',
       userId,
@@ -1775,7 +1784,7 @@ app.post('/api/user-preferences/:userId/blocked-senders', async (c) => {
   try {
     const result = await codex.addBlockedSender(userId, body.emailAddress.toLowerCase().trim());
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'email.sender_blocked',
       eventCategory: 'preferences',
       userId,
@@ -1803,7 +1812,7 @@ app.delete('/api/user-preferences/:userId/blocked-senders/:email', async (c) => 
     const removed = await codex.removeBlockedSender(userId, email.toLowerCase().trim());
 
     if (removed) {
-      await codex.createAuditLog({
+      await safeAuditLog({
         eventType: 'email.sender_unblocked',
         eventCategory: 'preferences',
         userId,
@@ -1846,7 +1855,7 @@ app.post('/api/user-preferences/:userId/ignored-conversations', async (c) => {
   try {
     const result = await codex.addIgnoredConversation(userId, body.conversationId);
 
-    await codex.createAuditLog({
+    await safeAuditLog({
       eventType: 'email.conversation_ignored',
       eventCategory: 'preferences',
       userId,
@@ -1874,7 +1883,7 @@ app.delete('/api/user-preferences/:userId/ignored-conversations/:conversationId'
     const removed = await codex.removeIgnoredConversation(userId, conversationId);
 
     if (removed) {
-      await codex.createAuditLog({
+      await safeAuditLog({
         eventType: 'email.conversation_unignored',
         eventCategory: 'preferences',
         userId,

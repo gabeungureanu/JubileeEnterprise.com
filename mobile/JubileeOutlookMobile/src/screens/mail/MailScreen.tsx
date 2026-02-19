@@ -60,7 +60,7 @@ const FILTER_OPTIONS: { key: FilterOption; label: string }[] = [
 
 // ---------- Date Grouping Helpers ----------
 
-type DateSection = 'This Week' | 'Last Week' | 'This Month' | 'Last Month' | 'Older';
+type DateSection = 'Pinned' | 'This Week' | 'Last Week' | 'This Month' | 'Last Month' | 'Older';
 
 function getStartOfWeek(date: Date): Date {
   const d = new Date(date);
@@ -88,7 +88,7 @@ function getDateSection(receivedAt: string | undefined, now: Date): DateSection 
   return 'Older';
 }
 
-const SECTION_ORDER: DateSection[] = ['This Week', 'Last Week', 'This Month', 'Last Month', 'Older'];
+const SECTION_ORDER: DateSection[] = ['Pinned', 'This Week', 'Last Week', 'This Month', 'Last Month', 'Older'];
 
 function buildSections(messages: EmailMessage[]): { title: string; data: EmailMessage[] }[] {
   // Sort all messages latest first
@@ -98,10 +98,23 @@ function buildSections(messages: EmailMessage[]): { title: string; data: EmailMe
     return db - da;
   });
 
+  // Partition: pinned messages go to the Pinned section,
+  // unpinned messages go into date-based sections (no duplicates)
+  const pinned: EmailMessage[] = [];
+  const unpinned: EmailMessage[] = [];
+  for (const msg of sorted) {
+    if (msg.isPinned) pinned.push(msg);
+    else unpinned.push(msg);
+  }
+
   const now = new Date();
   const groups = new Map<DateSection, EmailMessage[]>();
 
-  for (const msg of sorted) {
+  if (pinned.length > 0) {
+    groups.set('Pinned', pinned);
+  }
+
+  for (const msg of unpinned) {
     const section = getDateSection(msg.receivedAt, now);
     const list = groups.get(section);
     if (list) list.push(msg);
@@ -220,9 +233,12 @@ export default function MailScreen() {
       try {
         const { messages: freshMsgs } = await mailService.getMessages(selectedFolderId, 1, 50);
         const readIds = new Set(messages.filter((m) => m.isRead).map((m) => m.id));
-        const merged = freshMsgs.map((m) =>
-          readIds.has(m.id) && !m.isRead ? { ...m, isRead: true } : m,
-        );
+        const pinnedIds = new Set(messages.filter((m) => m.isPinned).map((m) => m.id));
+        const merged = freshMsgs.map((m) => ({
+          ...m,
+          isRead: readIds.has(m.id) && !m.isRead ? true : m.isRead,
+          isPinned: pinnedIds.has(m.id) || m.isPinned,
+        }));
         setMessages(merged);
       } catch { /* silent */ }
     });
@@ -261,11 +277,14 @@ export default function MailScreen() {
       await loadFolders();
       const { messages: freshMsgs } = await mailService.getMessages(selectedFolderId, 1, 50);
 
-      // 3. Preserve local read status — IMAP sync may overwrite is_read flags
+      // 3. Preserve local read + pin status — IMAP sync may overwrite is_read flags
       const readIds = new Set(messages.filter((m) => m.isRead).map((m) => m.id));
-      const merged = freshMsgs.map((m) =>
-        readIds.has(m.id) && !m.isRead ? { ...m, isRead: true } : m,
-      );
+      const pinnedIds = new Set(messages.filter((m) => m.isPinned).map((m) => m.id));
+      const merged = freshMsgs.map((m) => ({
+        ...m,
+        isRead: readIds.has(m.id) && !m.isRead ? true : m.isRead,
+        isPinned: pinnedIds.has(m.id) || m.isPinned,
+      }));
       setMessages(merged);
 
       // 4. Count truly new messages by comparing IDs (not array length, which is capped by pagination)
@@ -415,31 +434,48 @@ export default function MailScreen() {
 
   const handleBulkMarkRead = useCallback(async () => {
     const ids = Array.from(selectedIds);
+    const newRead = !allRead; // If all read → mark unread; otherwise → mark all read
     try {
-      await Promise.all(ids.map((id) => mailService.markAsRead(id, true)));
+      await Promise.all(ids.map((id) => mailService.markAsRead(id, newRead)));
       setMessages((prev) =>
-        prev.map((m) => (selectedIds.has(m.id) ? { ...m, isRead: true } : m)),
+        prev.map((m) => (selectedIds.has(m.id) ? { ...m, isRead: newRead } : m)),
       );
-      toast('Marked Read', `${ids.length} email${ids.length > 1 ? 's' : ''}`, 'success');
+      toast(newRead ? 'Marked Read' : 'Marked Unread', `${ids.length} email${ids.length > 1 ? 's' : ''}`, 'success');
     } catch {
-      alert('Error', 'Could not mark some messages as read.', 'error');
+      alert('Error', `Could not mark some messages as ${newRead ? 'read' : 'unread'}.`, 'error');
     }
     clearSelection();
-  }, [selectedIds, toast, alert, clearSelection]);
+  }, [selectedIds, allRead, toast, alert, clearSelection]);
 
   const handleBulkFlag = useCallback(async () => {
     const ids = Array.from(selectedIds);
+    const newFlagged = !allFlagged; // If all flagged → unflag; otherwise → flag all
     try {
-      await Promise.all(ids.map((id) => mailService.toggleFlag(id, true)));
+      await Promise.all(ids.map((id) => mailService.toggleFlag(id, newFlagged)));
       setMessages((prev) =>
-        prev.map((m) => (selectedIds.has(m.id) ? { ...m, isFlagged: true } : m)),
+        prev.map((m) => (selectedIds.has(m.id) ? { ...m, isFlagged: newFlagged } : m)),
       );
-      toast('Flagged', `${ids.length} email${ids.length > 1 ? 's' : ''}`, 'success');
+      toast(newFlagged ? 'Flagged' : 'Unflagged', `${ids.length} email${ids.length > 1 ? 's' : ''}`, 'success');
     } catch {
-      alert('Error', 'Could not flag some messages.', 'error');
+      alert('Error', `Could not ${newFlagged ? 'flag' : 'unflag'} some messages.`, 'error');
     }
     clearSelection();
-  }, [selectedIds, toast, alert, clearSelection]);
+  }, [selectedIds, allFlagged, toast, alert, clearSelection]);
+
+  const handleBulkPin = useCallback(async () => {
+    const ids = Array.from(selectedIds);
+    const newPinned = !allPinned; // If all pinned → unpin; otherwise → pin all
+    try {
+      await Promise.all(ids.map((id) => mailService.togglePin(id, newPinned)));
+      setMessages((prev) =>
+        prev.map((m) => (selectedIds.has(m.id) ? { ...m, isPinned: newPinned } : m)),
+      );
+      toast(newPinned ? 'Pinned' : 'Unpinned', `${ids.length} email${ids.length > 1 ? 's' : ''}`, 'success');
+    } catch {
+      alert('Error', `Could not ${newPinned ? 'pin' : 'unpin'} some messages.`, 'error');
+    }
+    clearSelection();
+  }, [selectedIds, allPinned, toast, alert, clearSelection]);
 
   const handleBulkMoveToOther = useCallback(async () => {
     const junkFolder = folders.find((f) => f.folderType === 'spam');
@@ -517,6 +553,7 @@ export default function MailScreen() {
       case 'hasFiles':
         return messages.filter((m) => m.hasAttachments);
       case 'pinned':
+        return messages.filter((m) => m.isPinned);
       case 'mentionMe':
         // Not supported by current API — return empty
         return [];
@@ -526,6 +563,15 @@ export default function MailScreen() {
   }, [messages, activeFilter]);
 
   const allSelected = filteredMessages.length > 0 && selectedIds.size === filteredMessages.length;
+
+  // ── Dynamic bulk action state (derived from selected items) ──
+  const selectedMessages = useMemo(
+    () => messages.filter((m) => selectedIds.has(m.id)),
+    [messages, selectedIds],
+  );
+  const allFlagged = selectedMessages.length > 0 && selectedMessages.every((m) => m.isFlagged);
+  const allPinned = selectedMessages.length > 0 && selectedMessages.every((m) => m.isPinned);
+  const allRead = selectedMessages.length > 0 && selectedMessages.every((m) => m.isRead);
 
   const toggleSelectAll = useCallback(() => {
     if (allSelected) {
@@ -801,14 +847,14 @@ export default function MailScreen() {
             {[
               { key: 'moveFolder', label: 'Move to Folder', icon: 'drive-file-move-outline' },
               { key: 'moveOther', label: 'Move to Other', icon: 'move-to-inbox' },
-              { key: 'markRead', label: 'Mark as Read', icon: 'mark-email-read' },
-              { key: 'flag', label: 'Flag', icon: 'flag' },
-              { key: 'pin', label: 'Pin', icon: 'push-pin', disabled: true },
+              { key: 'markRead', label: allRead ? 'Mark as Unread' : 'Mark as Read', icon: allRead ? 'mark-email-unread' : 'mark-email-read' },
+              { key: 'flag', label: allFlagged ? 'Unflag' : 'Flag', icon: allFlagged ? 'outlined-flag' : 'flag' },
+              { key: 'pin', label: allPinned ? 'Unpin' : 'Pin', icon: 'push-pin' },
               { key: 'selectAll', label: allSelected ? 'Unselect All' : 'Select All', icon: allSelected ? 'deselect' : 'select-all' },
             ].map((item) => (
               <TouchableOpacity
                 key={item.key}
-                style={[styles.moreMenuItem, item.disabled && styles.moreMenuItemDisabled]}
+                style={styles.moreMenuItem}
                 onPress={() => {
                   setShowMoreMenu(false);
                   switch (item.key) {
@@ -816,21 +862,18 @@ export default function MailScreen() {
                     case 'moveOther': handleBulkMoveToOther(); break;
                     case 'markRead': handleBulkMarkRead(); break;
                     case 'flag': handleBulkFlag(); break;
+                    case 'pin': handleBulkPin(); break;
                     case 'selectAll': toggleSelectAll(); break;
                   }
                 }}
                 activeOpacity={0.7}
-                disabled={!!item.disabled}
               >
                 <Icon
                   name={item.icon as any}
                   size={20}
-                  color={item.disabled ? Colors.textDisabled : Colors.textSecondary}
+                  color={Colors.textSecondary}
                 />
-                <Text style={[
-                  styles.moreMenuItemText,
-                  item.disabled && styles.moreMenuItemTextDisabled,
-                ]}>
+                <Text style={styles.moreMenuItemText}>
                   {item.label}
                 </Text>
               </TouchableOpacity>

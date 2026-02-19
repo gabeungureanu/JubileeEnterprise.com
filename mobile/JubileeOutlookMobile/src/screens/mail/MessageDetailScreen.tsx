@@ -75,6 +75,7 @@ export default function MessageDetailScreen() {
   const [message, setMessage] = useState<EmailMessage | null>(route.params.message || null);
   const [isLoading, setIsLoading] = useState(!route.params.message);
   const [isFlagged, setIsFlagged] = useState(route.params.message?.isFlagged ?? false);
+  const [isPinned, setIsPinned] = useState(route.params.message?.isPinned ?? false);
 
   // ---------- Fetch Full Message ----------
 
@@ -87,6 +88,7 @@ export default function MessageDetailScreen() {
         if (!cancelled && full) {
           setMessage(full);
           setIsFlagged(full.isFlagged);
+          setIsPinned(full.isPinned);
         }
       } catch (err) {
         console.warn('[MessageDetail] fetch failed:', err);
@@ -155,6 +157,17 @@ export default function MessageDetailScreen() {
     }
   }, [message, isFlagged]);
 
+  const handleTogglePin = useCallback(async () => {
+    if (!message) return;
+    try {
+      const newPinned = !isPinned;
+      await mailService.togglePin(message.id, newPinned);
+      setIsPinned(newPinned);
+    } catch (err) {
+      console.warn('[MessageDetail] togglePin failed:', err);
+    }
+  }, [message, isPinned]);
+
   // ---------- Attachment Download ----------
 
   const [downloadingAttachmentId, setDownloadingAttachmentId] = useState<string | null>(null);
@@ -201,19 +214,31 @@ export default function MessageDetailScreen() {
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity
-          onPress={handleToggleFlag}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Icon
-            name={isFlagged ? 'flag' : 'outlined-flag'}
-            size={24}
-            color={isFlagged ? Colors.flagged : Colors.textSecondary}
-          />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <TouchableOpacity
+            onPress={handleTogglePin}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Icon
+              name="push-pin"
+              size={22}
+              color={isPinned ? Colors.accent : Colors.textSecondary}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleToggleFlag}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Icon
+              name={isFlagged ? 'flag' : 'outlined-flag'}
+              size={24}
+              color={isFlagged ? Colors.flagged : Colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
       ),
     });
-  }, [navigation, handleToggleFlag, isFlagged]);
+  }, [navigation, handleToggleFlag, handleTogglePin, isFlagged, isPinned]);
 
   // ---------- Loading ----------
 

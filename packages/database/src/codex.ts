@@ -327,14 +327,14 @@ export async function getContacts(userId: string, page: number = 1, pageSize: nu
   const offset = (page - 1) * pageSize;
 
   const countResult = await pool.query(
-    'SELECT COUNT(*) FROM user_contacts WHERE user_id = $1 AND is_deleted = FALSE',
+    'SELECT COUNT(*) FROM user_contacts WHERE user_id = $1',
     [userId]
   );
   const totalCount = parseInt(countResult.rows[0].count, 10);
 
   const result = await pool.query(
     `SELECT * FROM user_contacts
-     WHERE user_id = $1 AND is_deleted = FALSE
+     WHERE user_id = $1
      ORDER BY is_favorite DESC, display_name ASC
      LIMIT $2 OFFSET $3`,
     [userId, pageSize, offset]

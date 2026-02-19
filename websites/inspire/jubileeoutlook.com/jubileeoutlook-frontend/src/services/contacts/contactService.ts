@@ -5,6 +5,16 @@ import {
   mapContactDto, mapContactGroupDto,
 } from '../../types/contacts';
 
+/** Convert snake_case DTO keys to camelCase for the API */
+function toCamelCaseKeys(obj: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const key of Object.keys(obj)) {
+    const camelKey = key.replace(/_([a-z])/g, (_, ch) => ch.toUpperCase());
+    result[camelKey] = obj[key];
+  }
+  return result;
+}
+
 export const contactService = {
   async getContacts(page = 1, pageSize = 100): Promise<{ contacts: Contact[]; totalCount: number }> {
     const userId = tokenStore.getUserId();
@@ -15,7 +25,7 @@ export const contactService = {
     const dtos = data.contacts || (data as any);
     return {
       contacts: Array.isArray(dtos) ? dtos.map(mapContactDto) : [],
-      totalCount: data.total_count || 0,
+      totalCount: (data as any).totalCount || data.total_count || 0,
     };
   },
 
@@ -30,7 +40,7 @@ export const contactService = {
 
   async createContact(contact: Partial<ContactDto>): Promise<Contact | null> {
     const userId = tokenStore.getUserId();
-    const payload = { ...contact, user_id: userId };
+    const payload = toCamelCaseKeys({ ...contact, user_id: userId } as Record<string, unknown>);
     const response = await codexClient.post('/contacts', payload);
     const data = response.data;
     const dto = data?.contact || data;
@@ -38,7 +48,8 @@ export const contactService = {
   },
 
   async updateContact(contactId: string, contact: Partial<ContactDto>): Promise<Contact | null> {
-    const response = await codexClient.put(`/contacts/${encodeURIComponent(contactId)}`, contact);
+    const payload = toCamelCaseKeys(contact as Record<string, unknown>);
+    const response = await codexClient.put(`/contacts/${encodeURIComponent(contactId)}`, payload);
     const data = response.data;
     const dto = data?.contact || data;
     return dto?.id ? mapContactDto(dto) : null;
@@ -57,7 +68,7 @@ export const contactService = {
     const dtos = data.contacts || (data as any);
     return {
       contacts: Array.isArray(dtos) ? dtos.map(mapContactDto) : [],
-      totalCount: data.total_count || 0,
+      totalCount: (data as any).totalCount || data.total_count || 0,
     };
   },
 
@@ -113,5 +124,125 @@ export const contactService = {
       { params: { userId } }
     );
     return response.status === 200 || response.status === 204;
+  },
+
+  // --- Soft Delete / Restore / Favorites ---
+
+  async softDeleteContact(contactId: string): Promise<boolean> {
+    const response = await codexClient.patch(`/contacts/${encodeURIComponent(contactId)}/soft-delete`);
+    return response.status === 200;
+  },
+
+  async restoreContact(contactId: string): Promise<boolean> {
+    const response = await codexClient.patch(`/contacts/${encodeURIComponent(contactId)}/restore`);
+    return response.status === 200;
+  },
+
+  async toggleFavorite(contactId: string, isFavorite: boolean): Promise<boolean> {
+    const response = await codexClient.patch(`/contacts/${encodeURIComponent(contactId)}/favorite`, { isFavorite });
+    return response.status === 200;
+  },
+
+  async getGroupMembers(groupId: string): Promise<Contact[]> {
+    const userId = tokenStore.getUserId();
+    const response = await codexClient.get(`/contact-groups/${encodeURIComponent(groupId)}`, {
+      params: { userId },
+    });
+    const members = response.data?.data?.members || [];
+    return Array.isArray(members) ? members.map(mapContactDto) : [];
+  },
+
+  // --- Batch Operations ---
+
+  async batchSoftDelete(contactIds: string[]): Promise<number> {
+    const response = await codexClient.post('/contacts/batch/soft-delete', { contactIds });
+    return response.data?.success_count || 0;
+  },
+
+  async batchRestore(contactIds: string[]): Promise<number> {
+    const response = await codexClient.post('/contacts/batch/restore', { contactIds });
+    return response.data?.success_count || 0;
+  },
+
+  async batchHardDelete(contactIds: string[]): Promise<number> {
+    const response = await codexClient.post('/contacts/batch/delete', { contactIds });
+    return response.data?.success_count || 0;
+  },
+
+  async batchUpdateCategory(contactIds: string[], category: string): Promise<number> {
+    const response = await codexClient.post('/contacts/batch/category', { contactIds, category });
+    return response.data?.success_count || 0;
+  },
+
+  // --- Duplicate Detection ---
+
+  async checkDuplicates(displayName: string, emailAddresses: string[]): Promise<Contact[]> {
+    const userId = tokenStore.getUserId();
+    const response = await codexClient.post('/contacts/check-duplicates', {
+      userId, displayName, emailAddresses,
+    });
+    const matches = response.data?.matches || response.data?.contacts || [];
+    return Array.isArray(matches) ? matches.map(mapContactDto) : [];
+  },
+
+  // --- Photo Upload ---
+
+  async uploadPhoto(contactId: string, file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('photo', file);
+    const response = await codexClient.post(
+      `/contacts/${encodeURIComponent(contactId)}/photo`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    return response.data?.photo_url || response.data?.photoUrl || '';
+  },
+
+  // --- Import / Export ---
+
+  async importVCard(file: File): Promise<{ imported: number; skipped: number }> {
+    const userId = tokenStore.getUserId();
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('userId', userId || '');
+    const response = await codexClient.post('/contacts/import/vcard', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return {
+      imported: response.data?.imported || response.data?.success_count || 0,
+      skipped: response.data?.skipped || 0,
+    };
+  },
+
+  async importCsv(file: File): Promise<{ imported: number; skipped: number }> {
+    const userId = tokenStore.getUserId();
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('userId', userId || '');
+    const response = await codexClient.post('/contacts/import/csv', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return {
+      imported: response.data?.imported || response.data?.success_count || 0,
+      skipped: response.data?.skipped || 0,
+    };
+  },
+
+  async exportVCard(): Promise<Blob> {
+    const userId = tokenStore.getUserId();
+    const response = await codexClient.get('/contacts/export/vcard', {
+      params: { userId },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  async exportCsv(): Promise<Blob> {
+    const userId = tokenStore.getUserId();
+    const response = await codexClient.get('/contacts/export/csv', {
+      params: { userId },
+      responseType: 'blob',
+    });
+    return response.data;
   },
 };

@@ -29,6 +29,8 @@ export interface CalendarEventDto {
   recurrenceOccurrences?: number | null;
   recurrenceDaysOfWeek?: string[];
   reminderMinutes?: number;
+  attachments?: any[];
+  timezone?: string;
   createdAt?: string;
   updatedAt?: string;
   // snake_case aliases (for write payloads)
@@ -59,6 +61,16 @@ export interface ApiEventsListResponse {
   total_count?: number;
 }
 
+// --- Event Attachment type ---
+
+export interface EventAttachment {
+  id: string;
+  fileName: string;
+  fileSize: number;
+  fileUrl: string;
+  uploadedAt: string;
+}
+
 // --- DTO Mapper (handles both camelCase and snake_case API responses) ---
 
 export function mapEventDto(dto: CalendarEventDto): CalendarEvent {
@@ -85,6 +97,15 @@ export function mapEventDto(dto: CalendarEventDto): CalendarEvent {
     recurrenceEndDate: d.recurrenceEndDate ?? d.recurrence_end_date ?? null,
     recurrenceOccurrences: d.recurrenceOccurrences ?? d.recurrence_occurrences ?? null,
     recurrenceDaysOfWeek: d.recurrenceDaysOfWeek || d.recurrence_days_of_week || [],
+    attachments: (d.attachments || []).map((a: any) => ({
+      id: a.id,
+      fileName: a.fileName || a.file_name || '',
+      fileSize: a.fileSize || a.file_size || 0,
+      fileUrl: a.fileUrl || a.url || '',
+      uploadedAt: a.uploadedAt || a.addedDate || a.added_date || '',
+    })),
+    timezone: d.timezone || '',
+    calendarName: d.calendarName || d.calendar_name || 'My Calendar',
   };
 }
 
@@ -112,6 +133,9 @@ export interface CalendarEvent {
   recurrenceEndDate: string | null;
   recurrenceOccurrences: number | null;
   recurrenceDaysOfWeek: string[];
+  attachments: EventAttachment[];
+  timezone: string;
+  calendarName: string;
 }
 
 export type CalendarViewMode = 'day' | 'workWeek' | 'week' | 'month';

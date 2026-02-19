@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS cached_emails (
     is_html BOOLEAN DEFAULT FALSE,
     is_read BOOLEAN DEFAULT FALSE,
     is_flagged BOOLEAN DEFAULT FALSE,
+    is_pinned BOOLEAN DEFAULT FALSE,
     is_draft BOOLEAN DEFAULT FALSE,
     has_attachments BOOLEAN DEFAULT FALSE,
     attachments JSONB DEFAULT '[]',

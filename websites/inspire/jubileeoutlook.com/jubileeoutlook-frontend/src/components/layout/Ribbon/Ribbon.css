@@ -10,23 +10,176 @@
 .ribbon__content {
   display: flex;
   align-items: center;
-  padding: 0 var(--spacing-md);
+  padding: 0 var(--spacing-sm);
   height: 100%;
-  gap: var(--spacing-sm);
+  gap: 2px;
 }
 
 .ribbon__group {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: 2px;
 }
 
 .ribbon__separator {
   width: 1px;
-  height: 24px;
-  background-color: var(--border-primary);
+  height: 28px;
+  background-color: #444444;
   margin: 0 var(--spacing-sm);
 }
+
+/* Icon-only toolbar button (WPF style) */
+
+.ribbon__icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.ribbon__icon-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.ribbon__icon-btn:active:not(:disabled) {
+  background-color: var(--border-primary);
+}
+
+.ribbon__icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+
+.ribbon__icon-btn .material-symbols-outlined {
+  font-size: 24px;
+}
+
+/* Split "New contact" button (Gold theme) */
+
+.ribbon__split-btn {
+  display: flex;
+  align-items: stretch;
+  position: relative;
+  margin: 0 4px;
+}
+
+.ribbon__split-btn-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: var(--gold-primary);
+  color: #000000;
+  border: none;
+  border-radius: 4px 0 0 4px;
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color var(--transition-fast);
+}
+
+.ribbon__split-btn-main:hover {
+  background-color: var(--gold-hover);
+}
+
+.ribbon__split-btn-main .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.ribbon__split-btn-label {
+  white-space: nowrap;
+}
+
+.ribbon__split-btn-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  background-color: var(--gold-primary);
+  color: #000000;
+  border: none;
+  border-left: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.ribbon__split-btn-arrow:hover {
+  background-color: var(--gold-hover);
+}
+
+/* Dropdown popup */
+
+.ribbon__dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dialog);
+  padding: 4px;
+  z-index: var(--z-dropdown);
+  min-width: 180px;
+}
+
+.ribbon__dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ribbon__dropdown-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.ribbon__dropdown-item .material-symbols-outlined {
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.ribbon__dropdown-sep {
+  height: 1px;
+  background-color: var(--border-primary);
+  margin: 4px 8px;
+}
+
+/* Selection count badge */
+
+.ribbon__selection-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: #3D3D5C;
+  color: var(--gold-primary);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin: 0 4px;
+  white-space: nowrap;
+}
+
+/* Legacy text-label buttons (kept for other ribbons) */
 
 .ribbon__button {
   display: flex;
@@ -73,6 +226,15 @@
 .ribbon__button--primary:hover {
   background-color: var(--gold-hover);
   color: var(--text-inverse);
+}
+
+.ribbon__button--danger {
+  color: #E74856;
+}
+
+.ribbon__button--danger:hover {
+  background-color: rgba(231, 72, 86, 0.1);
+  color: #E74856;
 }
 
 .ribbon__button .material-symbols-outlined {

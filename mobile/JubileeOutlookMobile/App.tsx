@@ -11,10 +11,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from './src/context/AuthContext';
 import { AppProvider } from './src/context/AppContext';
 import { ToastProvider } from './src/context/ToastContext';
+import { ReminderProvider } from './src/context/ReminderContext';
 import { RootNavigator } from './src/navigation';
 import { tokenStore } from './src/services/apiClient';
 import { Colors } from './src/constants/colors';
-import { LoadingSpinner } from './src/components/common';
+import { LoadingSpinner, ReminderOverlay } from './src/components/common';
 
 const DarkNavigationTheme = {
   ...DefaultTheme,
@@ -59,7 +60,10 @@ export default function App() {
           <AuthProvider>
             <AppProvider>
               <ToastProvider>
-                <RootNavigator />
+                <ReminderProvider>
+                  <RootNavigator />
+                  <ReminderOverlay />
+                </ReminderProvider>
               </ToastProvider>
             </AppProvider>
           </AuthProvider>

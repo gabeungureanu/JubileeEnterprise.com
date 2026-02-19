@@ -91,6 +91,9 @@ export function MessageListItem({
           </Text>
 
           <View style={styles.indicators}>
+            {message.isPinned && (
+              <Icon name="push-pin" size={14} color={Colors.accent} />
+            )}
             {message.hasAttachments && (
               <Icon name="attach-file" size={14} color={Colors.textTertiary} />
             )}

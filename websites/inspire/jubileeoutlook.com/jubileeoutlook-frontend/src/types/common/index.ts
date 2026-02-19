@@ -27,3 +27,9 @@ export interface SyncStatus {
   isSyncing: boolean;
   pendingOperations: number;
 }
+
+/** Cross-module compose request (People → Mail) */
+export interface ComposeRequest {
+  to: string;
+  toName: string;
+}

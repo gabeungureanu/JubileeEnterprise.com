@@ -14,6 +14,8 @@ interface ComposeMailProps {
   senderName: string;
   onClose: () => void;
   onSent: () => void;
+  /** Pre-fill To recipients (used for cross-module compose, e.g. People → Mail) */
+  prefillRecipients?: Recipient[];
 }
 
 interface ComposeFormData {
@@ -103,15 +105,17 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, senderEmail, senderName, onClose, onSent }) => {
-  const initialRecipients = buildInitialRecipientArrays(mode, originalMessage);
-  const [toRecipients, setToRecipients] = useState<Recipient[]>(initialRecipients.to);
-  const [ccRecipients, setCcRecipients] = useState<Recipient[]>(initialRecipients.cc);
-  const [bccRecipients, setBccRecipients] = useState<Recipient[]>(initialRecipients.bcc);
+const ComposeMail: React.FC<ComposeMailProps> = ({ mode, originalMessage, senderEmail, senderName, onClose, onSent, prefillRecipients }) => {
+  const builtRecipients = buildInitialRecipientArrays(mode, originalMessage);
+  const [toRecipients, setToRecipients] = useState<Recipient[]>(
+    prefillRecipients && prefillRecipients.length > 0 ? prefillRecipients : builtRecipients.to
+  );
+  const [ccRecipients, setCcRecipients] = useState<Recipient[]>(builtRecipients.cc);
+  const [bccRecipients, setBccRecipients] = useState<Recipient[]>(builtRecipients.bcc);
   const [formData, setFormData] = useState<ComposeFormData>({
     subject: buildInitialSubject(mode, originalMessage),
   });
-  const [showCc, setShowCc] = useState(initialRecipients.cc.length > 0);
+  const [showCc, setShowCc] = useState(builtRecipients.cc.length > 0);
   const [showBcc, setShowBcc] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);

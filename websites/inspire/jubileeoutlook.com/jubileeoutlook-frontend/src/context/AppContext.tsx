@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { AppModule, NetworkStatus, SyncStatus } from '../types/common';
+import { AppModule, NetworkStatus, SyncStatus, ComposeRequest } from '../types/common';
 
 interface AppState {
   activeModule: AppModule;
   isFolderPaneVisible: boolean;
   networkStatus: NetworkStatus;
   syncStatus: SyncStatus;
+  composeRequest: ComposeRequest | null;
 }
 
 interface AppContextValue extends AppState {
@@ -13,6 +14,7 @@ interface AppContextValue extends AppState {
   toggleFolderPane: () => void;
   setNetworkStatus: (status: NetworkStatus) => void;
   setSyncStatus: (status: SyncStatus) => void;
+  setComposeRequest: (request: ComposeRequest | null) => void;
 }
 
 const initialState: AppState = {
@@ -24,6 +26,7 @@ const initialState: AppState = {
     isSyncing: false,
     pendingOperations: 0,
   },
+  composeRequest: null,
 };
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
@@ -47,6 +50,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setState((prev) => ({ ...prev, syncStatus }));
   }, []);
 
+  const setComposeRequest = useCallback((composeRequest: ComposeRequest | null) => {
+    setState((prev) => ({ ...prev, composeRequest }));
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -55,6 +62,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleFolderPane,
         setNetworkStatus,
         setSyncStatus,
+        setComposeRequest,
       }}
     >
       {children}

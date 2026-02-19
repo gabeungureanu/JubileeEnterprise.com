@@ -88,6 +88,13 @@ export const mailService = {
     return response.data?.success !== false;
   },
 
+  async togglePin(messageId: string, isPinned: boolean): Promise<boolean> {
+    const response = await continuumClient.patch(`/outlook/messages/${encodeURIComponent(messageId)}`, {
+      is_pinned: isPinned,
+    });
+    return response.data?.success !== false;
+  },
+
   async moveMessage(messageId: string, folderId: string): Promise<boolean> {
     const response = await continuumClient.patch(`/outlook/messages/${encodeURIComponent(messageId)}`, {
       folder_id: folderId,
