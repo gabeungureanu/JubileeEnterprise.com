@@ -823,6 +823,107 @@ public partial class PeopleView : UserControl
     }
 
     /// <summary>
+    /// Hover action: Email button clicked on a contact row
+    /// </summary>
+    private void RowAction_Email_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if (sender is Button btn && btn.DataContext is ViewModels.Contact contact
+            && DataContext is PeopleViewModel vm)
+        {
+            vm.SelectedContact = contact;
+            vm.EmailContactCommand.Execute(null);
+        }
+    }
+
+    /// <summary>
+    /// Hover action: More menu (...) button clicked on a contact row
+    /// </summary>
+    private void RowAction_MoreMenu_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if (sender is Button btn && btn.DataContext is ViewModels.Contact contact
+            && DataContext is PeopleViewModel vm)
+        {
+            vm.SelectedContact = contact;
+            var contextMenu = ContactsListBox.ContextMenu;
+            if (contextMenu != null)
+            {
+                contextMenu.PlacementTarget = btn;
+                contextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+                contextMenu.IsOpen = true;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Context menu: Share as vCard
+    /// </summary>
+    private void ContextMenu_ShareAsVCard_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is PeopleViewModel vm && vm.SelectedContact != null)
+        {
+            vm.ShareAsVCardCommand.Execute(null);
+        }
+    }
+
+    /// <summary>
+    /// Context menu: Email contact
+    /// </summary>
+    private void ContextMenu_Email_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is PeopleViewModel vm && vm.SelectedContact != null)
+        {
+            vm.EmailContactCommand.Execute(null);
+        }
+    }
+
+    /// <summary>
+    /// Context menu: Call contact
+    /// </summary>
+    private void ContextMenu_Call_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is PeopleViewModel vm && vm.SelectedContact != null)
+        {
+            vm.CallContactCommand.Execute(null);
+        }
+    }
+
+    /// <summary>
+    /// Close the detail modal when clicking the backdrop
+    /// </summary>
+    private void DetailOverlay_BackdropClick(object sender, MouseButtonEventArgs e)
+    {
+        if (DataContext is PeopleViewModel vm)
+        {
+            vm.SelectedContact = null;
+        }
+    }
+
+    /// <summary>
+    /// Close the detail modal via close button
+    /// </summary>
+    private void DetailModal_Close_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is PeopleViewModel vm)
+        {
+            vm.SelectedContact = null;
+        }
+    }
+
+    /// <summary>
+    /// Handle tab navigation in the detail modal
+    /// </summary>
+    private void DetailTab_Click(object sender, RoutedEventArgs e)
+    {
+        // Tab switching is visual-only for now (Overview is default active)
+        // Future: show/hide content sections based on selected tab
+        if (sender is not Button clickedTab) return;
+        var tabName = clickedTab.Tag?.ToString() ?? "Overview";
+        System.Diagnostics.Debug.WriteLine($"[PeopleView] Detail tab clicked: {tabName}");
+    }
+
+    /// <summary>
     /// Handle keyboard shortcuts for the People view
     /// </summary>
     private void PeopleView_KeyDown(object sender, KeyEventArgs e)
@@ -885,8 +986,13 @@ public partial class PeopleView : UserControl
                     break;
 
                 case Key.Escape:
-                    // Escape: Clear search
-                    if (!string.IsNullOrEmpty(vm.SearchText))
+                    // Escape: Close detail modal first, then clear search
+                    if (vm.SelectedContact != null)
+                    {
+                        vm.SelectedContact = null;
+                        e.Handled = true;
+                    }
+                    else if (!string.IsNullOrEmpty(vm.SearchText))
                     {
                         vm.SearchText = string.Empty;
                         e.Handled = true;

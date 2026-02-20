@@ -58,7 +58,7 @@ export const emailSyncService = {
       );
       return response.data;
     } catch (err: any) {
-      const errorMsg = err.response?.data?.error || err.message || 'Connection failed';
+      const errorMsg = err?.response?.data?.error || err?.message || 'Connection failed';
       return { success: false, error: errorMsg };
     }
   },
@@ -72,7 +72,7 @@ export const emailSyncService = {
       );
       return response.data;
     } catch (err: any) {
-      const errorMsg = err.response?.data?.error || err.message || 'Sync failed';
+      const errorMsg = err?.response?.data?.error || err?.message || 'Sync failed';
       return { success: false, error: errorMsg };
     }
   },

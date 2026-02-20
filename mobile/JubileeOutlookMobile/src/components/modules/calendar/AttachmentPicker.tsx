@@ -5,9 +5,10 @@
  * with name, size, and a remove button.
  */
 import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Linking } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
+import * as Sharing from 'expo-sharing';
 
 import { Colors } from '../../../constants/colors';
 import { Typography } from '../../../constants/typography';
@@ -38,7 +39,38 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   onAdd,
   onRemove,
 }) => {
-  const { confirm, AlertComponent } = useAlert();
+  const { alert, confirm, AlertComponent } = useAlert();
+
+  const handleOpen = useCallback(
+    async (file: PickedFile) => {
+      try {
+        const isLocal = file.uri.startsWith('file://') || file.uri.startsWith('content://');
+        if (isLocal) {
+          // Local file — share via OS share sheet
+          const canShare = await Sharing.isAvailableAsync();
+          if (canShare) {
+            await Sharing.shareAsync(file.uri, {
+              mimeType: file.mimeType || 'application/octet-stream',
+              dialogTitle: file.name,
+            });
+          } else {
+            alert('Cannot Open', 'Sharing is not available on this device.', 'warning');
+          }
+        } else {
+          // Server URL — open in browser/viewer
+          const supported = await Linking.canOpenURL(file.uri);
+          if (supported) {
+            await Linking.openURL(file.uri);
+          } else {
+            alert('Cannot Open', 'Unable to open this file.', 'warning');
+          }
+        }
+      } catch {
+        alert('Error', 'Could not open attachment.', 'error');
+      }
+    },
+    [alert],
+  );
 
   const handleRemove = useCallback(
     (idx: number) => {
@@ -79,7 +111,12 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
       <View style={styles.container}>
         {/* File list */}
         {files.map((file, idx) => (
-          <View key={`${file.name}-${idx}`} style={styles.fileRow}>
+          <TouchableOpacity
+            key={`${file.name}-${idx}`}
+            style={styles.fileRow}
+            onPress={() => handleOpen(file)}
+            activeOpacity={0.7}
+          >
             <Icon name="attach-file" size={20} color={Colors.textSecondary} />
             <View style={styles.fileInfo}>
               <Text style={styles.fileName} numberOfLines={1}>
@@ -93,7 +130,7 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
             >
               <Icon name="close" size={20} color={Colors.error} />
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         ))}
 
         {/* Add button */}

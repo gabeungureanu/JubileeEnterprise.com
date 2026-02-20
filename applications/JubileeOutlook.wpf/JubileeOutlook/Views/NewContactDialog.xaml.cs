@@ -175,6 +175,16 @@ public partial class NewContactDialog : Window
             return;
         }
 
+        // Validate phone — at least one phone number required
+        if (string.IsNullOrWhiteSpace(WorkPhoneTextBox.Text) && string.IsNullOrWhiteSpace(MobilePhoneTextBox.Text))
+        {
+            // Show additional phone fields so user can see the mobile option
+            AdditionalPhoneFields.Visibility = Visibility.Visible;
+            ThemedMessageBox.Show(this, "At least one phone number is required (work phone or mobile phone).", "Phone Required", MessageBoxButton.OK, MessageBoxImage.Warning);
+            WorkPhoneTextBox.Focus();
+            return;
+        }
+
         // Upload photo if a local file is selected
         string? avatarUrl = _selectedImagePath;
         if (!string.IsNullOrEmpty(_selectedImagePath) && IsLocalFilePath(_selectedImagePath))

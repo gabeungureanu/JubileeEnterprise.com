@@ -18,8 +18,8 @@ import React, {
   useRef,
 } from 'react';
 import * as Notifications from 'expo-notifications';
-import { useNavigation, NavigationContainerRef } from '@react-navigation/native';
-import { reminderService, SNOOZE_OPTIONS } from '../services/calendar/reminderService';
+import { NavigationContainerRef } from '@react-navigation/native';
+import { reminderService } from '../services/calendar/reminderService';
 import { calendarService } from '../services/calendar/calendarService';
 import type { CalendarEvent } from '../types/calendar';
 

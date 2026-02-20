@@ -30,7 +30,7 @@ import { randomUUID } from 'node:crypto';
 /** Wrap audit log writes so failures never cascade into 500 responses */
 async function safeAuditLog(data: Parameters<typeof codex.createAuditLog>[0]) {
   try {
-    await safeAuditLog(data);
+    await codex.createAuditLog(data);
   } catch (err) {
     console.warn('Audit log write failed (non-fatal):', err);
   }
@@ -384,9 +384,6 @@ app.post('/api/auth/oauth-register', async (c) => {
       user = await codex.createUser({
         email,
         displayName: displayName || email.split('@')[0],
-        role: 'member',
-        authProvider: provider || 'oauth',
-        authProviderId: providerId,
         avatarUrl,
       });
       isNewUser = true;
@@ -487,6 +484,14 @@ function isValidUrl(url: string): boolean {
  */
 function validateContactInput(body: any): string[] {
   const errors: string[] = [];
+
+  // Phone is required — at least one phone number must be provided
+  const hasPhone = (body.phoneNumbers && Array.isArray(body.phoneNumbers) &&
+    body.phoneNumbers.some((p: any) => typeof p === 'string' && p.trim()));
+  const hasMobile = (typeof body.mobilePhone === 'string' && body.mobilePhone.trim());
+  if (!hasPhone && !hasMobile) {
+    errors.push('At least one phone number is required (work phone or mobile phone)');
+  }
 
   if (body.emailAddresses && Array.isArray(body.emailAddresses)) {
     for (const email of body.emailAddresses) {

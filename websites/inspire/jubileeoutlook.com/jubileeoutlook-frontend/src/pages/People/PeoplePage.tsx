@@ -46,6 +46,7 @@ const PeoplePage: React.FC = () => {
   // Category dialog state
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [categoryInput, setCategoryInput] = useState('');
+  const [categoryTargetContact, setCategoryTargetContact] = useState<Contact | null>(null);
 
   // Info dialog state (for "coming soon" / "under progress" features)
   const [infoDialog, setInfoDialog] = useState<{
@@ -536,15 +537,6 @@ const PeoplePage: React.FC = () => {
     if (selectedContact) handleEmailContact(selectedContact);
   };
 
-  // --- Ribbon: Chat (placeholder — matches WPF) ---
-  const handleRibbonChat = () => {
-    setInfoDialog({
-      icon: 'chat',
-      title: 'Coming Soon',
-      message: 'This feature is not available yet. Chat functionality is currently under development.',
-    });
-  };
-
   // --- Ribbon: Call (prefers mobile, falls back to work phone) ---
   const handleRibbonCall = () => {
     if (!selectedContact) return;
@@ -581,19 +573,70 @@ const PeoplePage: React.FC = () => {
   // --- Ribbon: Category ---
   const handleRibbonCategory = () => {
     if (!selectedContact) return;
+    setCategoryTargetContact(selectedContact);
     setCategoryInput(selectedContact.category || '');
     setCategoryDialogOpen(true);
   };
 
   const handleCategorySave = async () => {
-    if (!selectedContact) return;
+    if (!categoryTargetContact) return;
     try {
-      await contactService.updateContact(selectedContact.id, { category: categoryInput.trim() } as Partial<ContactDto>);
+      await contactService.updateContact(categoryTargetContact.id, { category: categoryInput.trim() } as Partial<ContactDto>);
       setCategoryDialogOpen(false);
+      setCategoryTargetContact(null);
       await refreshData();
     } catch {
       setError('Failed to update category.');
     }
+  };
+
+  // --- Row action handlers (contact-specific) ---
+
+  const handleCallContact = (contact: Contact) => {
+    const phone = contact.mobilePhone || contact.phoneNumbers[0];
+    if (phone) {
+      const cleaned = phone.replace(/[^\d+]/g, '');
+      window.location.href = `tel:${cleaned}`;
+    } else {
+      setToast('This contact has no phone number.');
+    }
+  };
+
+  const handleShareVCardContact = (contact: Contact) => {
+    setConfirmDialog({
+      icon: 'share',
+      title: 'Share as vCard',
+      message: <>Download <strong>{contact.displayName}</strong> as a vCard (.vcf) file?</>,
+      confirmLabel: 'Download',
+      onConfirm: () => {
+        const vcf = generateVCard(contact);
+        const blob = new Blob([vcf], { type: 'text/vcard;charset=utf-8' });
+        const safeName = contact.displayName.replace(/[^a-zA-Z0-9]/g, '_');
+        downloadBlob(blob, `${safeName}.vcf`);
+      },
+      danger: false,
+    });
+  };
+
+  const handleCategoryContact = (contact: Contact) => {
+    setCategoryTargetContact(contact);
+    setCategoryInput(contact.category || '');
+    setCategoryDialogOpen(true);
+  };
+
+  const handleRowDeleteContact = (contactId: string) => {
+    const contact = contacts.find(c => c.id === contactId);
+    if (!contact) return;
+    const isPermanent = activeFolder === 'deleted';
+    setConfirmDialog({
+      icon: 'delete_forever',
+      title: isPermanent ? 'Permanently Delete Contact' : 'Delete Contact',
+      message: isPermanent
+        ? <>This will permanently delete <strong>{contact.displayName}</strong>. This action cannot be undone.</>
+        : <>Are you sure you want to delete <strong>{contact.displayName}</strong>? The contact will be moved to the Deleted folder.</>,
+      confirmLabel: isPermanent ? 'Delete Forever' : 'Delete',
+      onConfirm: () => handleDeleteContact(contactId),
+    });
   };
 
   return (
@@ -609,7 +652,6 @@ const PeoplePage: React.FC = () => {
           onBatchDelete={handleBatchDelete}
           onFavorite={handleRibbonFavorite}
           onEmail={handleRibbonEmail}
-          onChat={handleRibbonChat}
           onCall={handleRibbonCall}
           onShareVCard={handleRibbonShareVCard}
           onCategory={handleRibbonCategory}
@@ -656,24 +698,35 @@ const PeoplePage: React.FC = () => {
           onSelectAll={handleSelectAll}
           onRefresh={refreshData}
           onNewContact={handleNewContact}
+          onEditContact={handleEditContact}
+          onDeleteContact={handleRowDeleteContact}
+          onFavoriteToggle={handleFavoriteToggle}
+          onEmailContact={handleEmailContact}
+          onCallContact={handleCallContact}
+          onShareVCard={handleShareVCardContact}
+          onCategoryContact={handleCategoryContact}
+          onAddToGroup={handleAddToGroup}
+          groups={groups}
         />
-        {selectedContact && (
-          <ContactDetail
-            contact={selectedContact}
-            groups={groups}
-            memberGroups={contactGroupMap[selectedContact.id] || []}
-            isInDeletedFolder={activeFolder === 'deleted'}
-            onFavoriteToggle={handleFavoriteToggle}
-            onEdit={handleEditContact}
-            onDelete={handleDeleteContact}
-            onRestore={handleRestoreContact}
-            onAddToGroup={handleAddToGroup}
-            onRemoveFromGroup={handleRemoveFromGroup}
-            onEmail={handleEmailContact}
-            onClose={() => setSelectedContactId(null)}
-          />
-        )}
       </div>
+
+      {/* Contact Detail Modal */}
+      {selectedContact && (
+        <ContactDetail
+          contact={selectedContact}
+          groups={groups}
+          memberGroups={contactGroupMap[selectedContact.id] || []}
+          isInDeletedFolder={activeFolder === 'deleted'}
+          onFavoriteToggle={handleFavoriteToggle}
+          onEdit={handleEditContact}
+          onDelete={handleDeleteContact}
+          onRestore={handleRestoreContact}
+          onAddToGroup={handleAddToGroup}
+          onRemoveFromGroup={handleRemoveFromGroup}
+          onEmail={handleEmailContact}
+          onClose={() => setSelectedContactId(null)}
+        />
+      )}
 
       <ContactDialog
         isOpen={contactDialogOpen}
@@ -745,13 +798,13 @@ const PeoplePage: React.FC = () => {
       )}
 
       {/* Category Dialog */}
-      {categoryDialogOpen && selectedContact && (
-        <div className="confirm-dialog__overlay" onClick={() => setCategoryDialogOpen(false)}>
+      {categoryDialogOpen && categoryTargetContact && (
+        <div className="confirm-dialog__overlay" onClick={() => { setCategoryDialogOpen(false); setCategoryTargetContact(null); }}>
           <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
             <span className="material-symbols-outlined confirm-dialog__icon" style={{ color: 'var(--gold-primary)' }}>label</span>
             <h4 className="confirm-dialog__title">Set Category</h4>
             <p className="confirm-dialog__message">
-              Assign a category to <strong>{selectedContact.displayName}</strong>
+              Assign a category to <strong>{categoryTargetContact.displayName}</strong>
             </p>
             <input
               type="text"
@@ -765,7 +818,7 @@ const PeoplePage: React.FC = () => {
             <div className="confirm-dialog__actions">
               <button
                 className="confirm-dialog__btn confirm-dialog__btn--cancel"
-                onClick={() => setCategoryDialogOpen(false)}
+                onClick={() => { setCategoryDialogOpen(false); setCategoryTargetContact(null); }}
               >
                 Cancel
               </button>

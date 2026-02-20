@@ -124,7 +124,6 @@ export const reminderService = {
    */
   async scheduleReminder(event: CalendarEvent, force = false): Promise<string | null> {
     if (event.reminderMinutes <= 0) {
-      console.log(`[Reminder] Skipped "${event.title}" — reminderMinutes=${event.reminderMinutes}`);
       return null;
     }
 
@@ -132,7 +131,6 @@ export const reminderService = {
     if (!force) {
       const dismissed = await getDismissedReminders();
       if (dismissed[event.id]) {
-        console.log(`[Reminder] Skipped "${event.title}" — previously dismissed`);
         return null;
       }
     }
@@ -148,14 +146,12 @@ export const reminderService = {
 
     // If the event itself is already in the past, skip entirely
     if (eventStart.getTime() <= now) {
-      console.log(`[Reminder] Skipped "${event.title}" — event already started/passed`);
       return null;
     }
 
     // If fire time is in the past but event hasn't started yet,
     // fire immediately (5-second delay) so the user still gets notified
     if (fireAt.getTime() <= now) {
-      console.log(`[Reminder] "${event.title}" fire time was in the past — scheduling immediate (5s)`);
       fireAt = new Date(now + 5000);
     }
 
@@ -167,8 +163,6 @@ export const reminderService = {
       hour: 'numeric',
       minute: '2-digit',
     });
-
-    console.log(`[Reminder] Scheduling "${event.title}" to fire at ${fireAt.toISOString()} (event starts ${event.startDateTime})`);
 
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
@@ -191,8 +185,6 @@ export const reminderService = {
         date: fireAt,
       },
     });
-
-    console.log(`[Reminder] Scheduled OK — notificationId=${notificationId}`);
 
     // Persist the mapping
     const records = await getStoredReminders();
@@ -281,7 +273,6 @@ export const reminderService = {
     const dismissed = await getDismissedReminders();
     dismissed[eventId] = { eventStart: eventStart || new Date().toISOString() };
     await saveDismissedReminders(dismissed);
-    console.log(`[Reminder] Dismissed and blocked re-schedule for event ${eventId}`);
   },
 
   /**
@@ -298,7 +289,6 @@ export const reminderService = {
         else skipped++;
       }
     }
-    console.log(`[Reminder] Batch: ${scheduled} scheduled, ${skipped} skipped, ${events.length} total events`);
   },
 
   /**

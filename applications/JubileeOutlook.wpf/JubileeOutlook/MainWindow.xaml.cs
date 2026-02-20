@@ -1438,14 +1438,6 @@ public partial class MainWindow : Window
                 Dispatcher.Invoke(() => ShowComposePanelWithRecipient(email));
             };
 
-            peopleViewModel.ChatFeatureRequested += (s, contactName) =>
-            {
-                System.Diagnostics.Debug.WriteLine($"[MainWindow] ChatFeatureRequested for: {contactName}");
-                Dispatcher.Invoke(() =>
-                {
-                    NotificationService.Instance.ShowInfo($"Chat feature coming soon. Cannot chat with {contactName} yet.");
-                });
-            };
         }
     }
 

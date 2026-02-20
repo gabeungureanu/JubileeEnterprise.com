@@ -1,10 +1,9 @@
 /**
  * ContactEditScreen — Create or edit a contact.
  *
- * When an existing contact is passed via route params the form is
- * pre-filled for editing. Includes a delete button when editing.
- * Validates that displayName (derived from first + last name) is
- * provided before saving.
+ * Full form with all contact fields matching web frontend parity:
+ * name, contact info, work, address, personal (birthday, anniversary, spouse),
+ * category, and notes. Validates displayName, handles create + edit + delete.
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -45,8 +44,7 @@ const ContactEditScreen: React.FC = () => {
   const { alert, confirm, AlertComponent } = useAlert();
   const isEditing = !!contactId;
 
-  // ── Form state ────────────────────────────────────────────
-
+  // ── Form state ──────────────────────────────────────────
   const [firstName, setFirstName] = useState(existingContact?.firstName || '');
   const [lastName, setLastName] = useState(existingContact?.lastName || '');
   const [email, setEmail] = useState(existingContact?.emailAddresses?.[0] || '');
@@ -55,6 +53,7 @@ const ContactEditScreen: React.FC = () => {
   const [company, setCompany] = useState(existingContact?.company || '');
   const [jobTitle, setJobTitle] = useState(existingContact?.jobTitle || '');
   const [department, setDepartment] = useState(existingContact?.department || '');
+  const [office, setOffice] = useState(existingContact?.office || '');
   const [address, setAddress] = useState(existingContact?.address || '');
   const [city, setCity] = useState(existingContact?.city || '');
   const [state, setState] = useState(existingContact?.state || '');
@@ -62,23 +61,30 @@ const ContactEditScreen: React.FC = () => {
   const [country, setCountry] = useState(existingContact?.country || '');
   const [notes, setNotes] = useState(existingContact?.notes || '');
   const [website, setWebsite] = useState(existingContact?.website || '');
+  const [birthday, setBirthday] = useState(existingContact?.birthday || '');
+  const [anniversary, setAnniversary] = useState(existingContact?.anniversary || '');
+  const [spouse, setSpouse] = useState(existingContact?.spouse || '');
+  const [category, setCategory] = useState(existingContact?.category || '');
   const [isSaving, setIsSaving] = useState(false);
 
-  // ── Navigation title ──────────────────────────────────────
-
+  // ── Navigation title ────────────────────────────────────
   useEffect(() => {
     navigation.setOptions({
       title: isEditing ? 'Edit Contact' : 'New Contact',
     });
   }, [isEditing, navigation]);
 
-  // ── Save ──────────────────────────────────────────────────
-
+  // ── Save ────────────────────────────────────────────────
   const handleSave = useCallback(async () => {
     const displayName = [firstName.trim(), lastName.trim()].filter(Boolean).join(' ');
 
     if (!displayName) {
       alert('Validation', 'A name is required (first or last name)', 'warning');
+      return;
+    }
+
+    if (!phone.trim() && !mobilePhone.trim()) {
+      alert('Validation', 'At least one phone number is required (phone or mobile)', 'warning');
       return;
     }
 
@@ -90,7 +96,7 @@ const ContactEditScreen: React.FC = () => {
 
     setIsSaving(true);
     try {
-      const payload: CreateContactPayload = {
+      const payload: CreateContactPayload & { office?: string; spouse?: string } = {
         userId,
         displayName,
         firstName: firstName.trim() || undefined,
@@ -101,6 +107,7 @@ const ContactEditScreen: React.FC = () => {
         company: company.trim() || undefined,
         jobTitle: jobTitle.trim() || undefined,
         department: department.trim() || undefined,
+        office: office.trim() || undefined,
         address: address.trim() || undefined,
         city: city.trim() || undefined,
         state: state.trim() || undefined,
@@ -108,6 +115,10 @@ const ContactEditScreen: React.FC = () => {
         country: country.trim() || undefined,
         notes: notes.trim() || undefined,
         website: website.trim() || undefined,
+        birthday: birthday.trim() || undefined,
+        anniversary: anniversary.trim() || undefined,
+        spouse: spouse.trim() || undefined,
+        category: category.trim() || undefined,
       };
 
       if (isEditing && contactId) {
@@ -123,21 +134,21 @@ const ContactEditScreen: React.FC = () => {
       setIsSaving(false);
     }
   }, [
-    firstName, lastName, email, phone, mobilePhone, company,
-    jobTitle, department, address, city, state, postalCode,
-    country, notes, website, isEditing, contactId, navigation, alert,
+    firstName, lastName, email, phone, mobilePhone, company, jobTitle,
+    department, office, address, city, state, postalCode, country,
+    notes, website, birthday, anniversary, spouse, category,
+    isEditing, contactId, navigation, alert,
   ]);
 
-  // ── Delete ────────────────────────────────────────────────
-
+  // ── Delete ──────────────────────────────────────────────
   const handleDelete = useCallback(() => {
     if (!contactId) return;
     confirm(
       'Delete Contact',
-      'Are you sure you want to delete this contact?',
+      'Move this contact to deleted contacts?',
       async () => {
         try {
-          await contactService.deleteContact(contactId);
+          await contactService.softDelete(contactId);
           navigation.goBack();
         } catch (err: any) {
           alert('Error', err?.message || 'Failed to delete contact', 'error');
@@ -147,8 +158,7 @@ const ContactEditScreen: React.FC = () => {
     );
   }, [contactId, navigation, confirm, alert]);
 
-  // ── Render helpers ────────────────────────────────────────
-
+  // ── Render helpers ──────────────────────────────────────
   const renderField = (
     label: string,
     value: string,
@@ -158,10 +168,16 @@ const ContactEditScreen: React.FC = () => {
       keyboardType?: 'default' | 'email-address' | 'phone-pad';
       autoCapitalize?: 'none' | 'sentences' | 'words';
       multiline?: boolean;
+      isRequired?: boolean;
     },
   ) => (
     <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
+      <View style={styles.labelRow}>
+        <Text style={styles.label}>{label}</Text>
+        {!options?.isRequired && (
+          <Text style={styles.optionalText}>Optional</Text>
+        )}
+      </View>
       <TextInput
         style={[styles.textInput, options?.multiline && styles.multilineInput]}
         value={value}
@@ -177,15 +193,14 @@ const ContactEditScreen: React.FC = () => {
     </View>
   );
 
-  // ── Main render ───────────────────────────────────────────
-
+  // ── Main render ─────────────────────────────────────────
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {/* Name section */}
         <Text style={styles.sectionTitle}>Name</Text>
-        {renderField('First Name', firstName, setFirstName)}
-        {renderField('Last Name', lastName, setLastName)}
+        {renderField('First Name', firstName, setFirstName, { isRequired: true })}
+        {renderField('Last Name', lastName, setLastName, { isRequired: true })}
 
         {/* Contact info */}
         <Text style={styles.sectionTitle}>Contact Info</Text>
@@ -193,7 +208,7 @@ const ContactEditScreen: React.FC = () => {
           keyboardType: 'email-address',
           autoCapitalize: 'none',
         })}
-        {renderField('Phone', phone, setPhone, { keyboardType: 'phone-pad' })}
+        {renderField('Phone', phone, setPhone, { keyboardType: 'phone-pad', isRequired: true })}
         {renderField('Mobile', mobilePhone, setMobilePhone, {
           keyboardType: 'phone-pad',
         })}
@@ -204,6 +219,7 @@ const ContactEditScreen: React.FC = () => {
         {renderField('Company', company, setCompany)}
         {renderField('Job Title', jobTitle, setJobTitle)}
         {renderField('Department', department, setDepartment)}
+        {renderField('Office', office, setOffice)}
 
         {/* Address */}
         <Text style={styles.sectionTitle}>Address</Text>
@@ -212,6 +228,24 @@ const ContactEditScreen: React.FC = () => {
         {renderField('State / Province', state, setState)}
         {renderField('Postal Code', postalCode, setPostalCode)}
         {renderField('Country', country, setCountry)}
+
+        {/* Personal */}
+        <Text style={styles.sectionTitle}>Personal</Text>
+        {renderField('Birthday', birthday, setBirthday, {
+          placeholder: 'YYYY-MM-DD',
+          autoCapitalize: 'none',
+        })}
+        {renderField('Anniversary', anniversary, setAnniversary, {
+          placeholder: 'YYYY-MM-DD',
+          autoCapitalize: 'none',
+        })}
+        {renderField('Spouse / Partner', spouse, setSpouse)}
+
+        {/* Category */}
+        <Text style={styles.sectionTitle}>Category</Text>
+        {renderField('Category', category, setCategory, {
+          placeholder: 'e.g. Work, Family, Friends',
+        })}
 
         {/* Notes */}
         <Text style={styles.sectionTitle}>Notes</Text>
@@ -289,10 +323,21 @@ const styles = StyleSheet.create({
   field: {
     marginBottom: Spacing.lg,
   },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.xs,
+  },
   label: {
     ...Typography.bodySmall,
     color: Colors.textTertiary,
-    marginBottom: Spacing.xs,
+  },
+  optionalText: {
+    fontSize: 11,
+    color: Colors.textTertiary,
+    opacity: 0.7,
+    fontStyle: 'italic',
   },
   textInput: {
     backgroundColor: Colors.surface,

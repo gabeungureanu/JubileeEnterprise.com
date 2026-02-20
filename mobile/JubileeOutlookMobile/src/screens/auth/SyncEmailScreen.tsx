@@ -15,7 +15,6 @@ import { MaterialIcons as Icon } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../types/navigation';
 import { Colors } from '../../constants/colors';
-import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius } from '../../constants/spacing';
 import AuthCard from '../../components/auth/AuthCard';
 

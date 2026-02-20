@@ -22,7 +22,6 @@ import { tokenStore } from '../../services/apiClient';
 import { storage } from '../../utils/storage';
 import { StorageKeys } from '../../constants';
 import { Colors } from '../../constants/colors';
-import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius, HitSlop } from '../../constants/spacing';
 import AuthCard from '../../components/auth/AuthCard';
 import { useAuth } from '../../context/AuthContext';
@@ -174,7 +173,7 @@ export default function SyncPasswordScreen({ navigation, route }: Props) {
       await storage.set(StorageKeys.SYNC_EMAIL, syncEmail);
       await refreshAuthState();
     } catch (err: any) {
-      setErrors({ syncPassword: err.message || 'An error occurred during sync.' });
+      setErrors({ syncPassword: err?.message || 'An error occurred during sync.' });
     } finally {
       setLoading(false);
       setLoadingText('');

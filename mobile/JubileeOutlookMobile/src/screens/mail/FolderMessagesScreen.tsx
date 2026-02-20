@@ -5,23 +5,18 @@
  * Receives folderId and folderName via route params. Uses the same
  * message list pattern as MailScreen with pull-to-refresh.
  */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
-  Text,
   FlatList,
-  TouchableOpacity,
   StyleSheet,
   RefreshControl,
-  Alert,
 } from 'react-native';
-import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 
 import { Colors } from '../../constants/colors';
-import { Typography } from '../../constants/typography';
 import { Spacing } from '../../constants/spacing';
 import { LoadingSpinner, EmptyState } from '../../components/common';
 import { MessageListItem } from '../../components/modules/mail/MessageListItem';
@@ -39,6 +34,9 @@ export default function FolderMessagesScreen() {
   const { folderId, folderName } = route.params;
 
   const [messages, setMessages] = useState<EmailMessage[]>([]);
+  // Ref always mirrors latest messages — used by focus handler to avoid stale closures
+  const messagesRef = useRef<EmailMessage[]>(messages);
+  messagesRef.current = messages;
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
@@ -76,6 +74,23 @@ export default function FolderMessagesScreen() {
     };
   }, [loadMessages]);
 
+  // Re-fetch with merge when screen regains focus (e.g. returning from MessageDetail)
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      try {
+        const { messages: freshMsgs } = await mailService.getMessages(folderId, 1, 50);
+        const prev = messagesRef.current;
+        const readIds = new Set(prev.filter((m) => m.isRead).map((m) => m.id));
+        const merged = freshMsgs.map((m) => ({
+          ...m,
+          isRead: readIds.has(m.id) || m.isRead,
+        }));
+        setMessages(merged);
+      } catch { /* silent */ }
+    });
+    return unsubscribe;
+  }, [navigation, folderId]);
+
   // ---------- Refresh ----------
 
   const handleRefresh = useCallback(async () => {
@@ -89,6 +104,15 @@ export default function FolderMessagesScreen() {
   const handleMessagePress = useCallback(
     (message: EmailMessage) => {
       setSelectedMessageId(message.id);
+      // Optimistically mark as read locally
+      if (!message.isRead) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === message.id ? { ...m, isRead: true } : m)),
+        );
+        // Persist to backend so read state survives hard reload
+        mailService.markAsRead(message.id, true)
+          .catch((err) => console.warn('[FolderMessages] markAsRead failed:', err));
+      }
       navigation.navigate('MessageDetail', { messageId: message.id, message });
     },
     [navigation],

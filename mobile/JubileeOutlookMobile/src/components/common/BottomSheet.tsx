@@ -11,10 +11,10 @@ import {
   Modal,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  ScrollView,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Dimensions,
   DimensionValue,
 } from 'react-native';
 
@@ -71,7 +71,13 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
               )}
 
               {/* Content */}
-              <View style={styles.content}>{children}</View>
+              <ScrollView
+                contentContainerStyle={styles.content}
+                bounces={false}
+                keyboardShouldPersistTaps="handled"
+              >
+                {children}
+              </ScrollView>
             </KeyboardAvoidingView>
           </TouchableWithoutFeedback>
         </View>

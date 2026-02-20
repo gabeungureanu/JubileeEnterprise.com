@@ -114,15 +114,26 @@ export const MailProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setState((prev) => ({ ...prev, isLoading: true }));
     try {
-      const { messages, totalCount } = await mailService.getMessages(
+      const { messages: freshMessages, totalCount } = await mailService.getMessages(
         current.selectedFolderId,
         current.page,
         API.DEFAULT_PAGE_SIZE,
       );
       const totalPages = Math.ceil(totalCount / API.DEFAULT_PAGE_SIZE);
+
+      // Merge: preserve local read/pin state to prevent revert during sync race
+      const prev = stateRef.current.messages;
+      const readIds = new Set(prev.filter((m) => m.isRead).map((m) => m.id));
+      const pinnedIds = new Set(prev.filter((m) => m.isPinned).map((m) => m.id));
+      const merged = freshMessages.map((m) => ({
+        ...m,
+        isRead: readIds.has(m.id) || m.isRead,
+        isPinned: pinnedIds.has(m.id) || m.isPinned,
+      }));
+
       setState((prev) => ({
         ...prev,
-        messages,
+        messages: merged,
         pagination: { page: current.page, pageSize: API.DEFAULT_PAGE_SIZE, total: totalCount, totalPages },
         isLoading: false,
       }));
@@ -165,9 +176,25 @@ export const MailProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Auto-mark as read when selecting an unread message
     if (message && !message.isRead) {
-      mailService.markAsRead(message.id, true).catch(() => {});
+      // Optimistically update local state immediately
+      setState((prev) => ({
+        ...prev,
+        messages: prev.messages.map((m) =>
+          m.id === message.id ? { ...m, isRead: true } : m,
+        ),
+        // Also update folder unread count
+        folders: prev.folders.map((f) =>
+          f.id === message.folderId
+            ? { ...f, unreadItemCount: Math.max(0, f.unreadItemCount - 1) }
+            : f,
+        ),
+      }));
+      // Persist to backend and refresh folders for accurate count
+      mailService.markAsRead(message.id, true)
+        .then(() => refreshFolders())
+        .catch((err) => console.warn('[MailContext] markAsRead failed:', err));
     }
-  }, []);
+  }, [refreshFolders]);
 
   // ---------- Sync ----------
 

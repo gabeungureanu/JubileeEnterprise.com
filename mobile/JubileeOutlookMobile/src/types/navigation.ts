@@ -1,6 +1,7 @@
 /**
  * Navigation type definitions for React Navigation.
  */
+import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { CalendarEvent } from './calendar';
 import type { Contact } from './contacts';
 import type { EmailMessage } from './mail';
@@ -20,15 +21,7 @@ export type AuthStackParamList = {
   ForgotPassword: { email?: string } | undefined;
 };
 
-// Main bottom tabs
-export type MainTabParamList = {
-  MailTab: undefined;
-  CalendarTab: undefined;
-  PeopleTab: undefined;
-  SettingsTab: undefined;
-};
-
-// Mail stack
+// Mail stack (defined before MainTabParamList so it can be referenced)
 export type MailStackParamList = {
   MailInbox: undefined;
   MessageDetail: { messageId: string; message?: EmailMessage };
@@ -36,9 +29,18 @@ export type MailStackParamList = {
     mode: 'new' | 'reply' | 'replyAll' | 'forward';
     originalMessage?: EmailMessage;
     draftId?: string;
+    to?: string;
   };
   FolderMessages: { folderId: string; folderName: string };
   Search: undefined;
+};
+
+// Main bottom tabs
+export type MainTabParamList = {
+  MailTab: NavigatorScreenParams<MailStackParamList> | undefined;
+  CalendarTab: undefined;
+  PeopleTab: undefined;
+  SettingsTab: undefined;
 };
 
 // Calendar stack

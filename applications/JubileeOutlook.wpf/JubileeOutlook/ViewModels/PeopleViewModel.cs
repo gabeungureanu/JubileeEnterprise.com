@@ -1450,21 +1450,6 @@ public partial class PeopleViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Event raised when chat feature is requested (not yet implemented)
-    /// </summary>
-    public event EventHandler<string>? ChatFeatureRequested;
-
-    [RelayCommand]
-    private void ChatContact()
-    {
-        if (SelectedContact == null) return;
-        System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Chat with: {SelectedContact.DisplayName}");
-
-        // Chat module is not yet implemented - notify the user
-        ChatFeatureRequested?.Invoke(this, SelectedContact.DisplayName);
-    }
-
-    /// <summary>
     /// Event raised when vCard export is requested
     /// </summary>
     public event EventHandler<(Contact Contact, string VCardContent)>? ShareAsVCardRequested;

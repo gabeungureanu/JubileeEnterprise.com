@@ -10,13 +10,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
   useWindowDimensions,
-  Platform,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import RenderHtml from 'react-native-render-html';
@@ -104,12 +102,14 @@ export default function MessageDetailScreen() {
     return () => {
       cancelled = true;
     };
-  }, [messageId]);
+  }, [messageId, alert]);
 
   // ---------- Mark as Read ----------
 
   useEffect(() => {
-    mailService.markAsRead(messageId, true).catch(() => {});
+    mailService.markAsRead(messageId, true).catch((err) => {
+      console.warn('[MessageDetail] markAsRead failed:', err);
+    });
   }, [messageId]);
 
   // ---------- Actions ----------
@@ -207,7 +207,7 @@ export default function MessageDetailScreen() {
     } finally {
       setDownloadingAttachmentId(null);
     }
-  }, [message]);
+  }, [message, alert]);
 
   // ---------- Set Header ----------
 

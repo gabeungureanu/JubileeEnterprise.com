@@ -58,6 +58,9 @@ const ContactGroups: React.FC<ContactGroupsProps> = ({
           >
             <span className="material-symbols-outlined">people</span>
             <span className="contact-groups__name">Your contacts</span>
+            {contactCounts.all > 0 && (
+              <span className="contact-groups__folder-count">{contactCounts.all}</span>
+            )}
           </div>
           <div
             className={`contact-groups__item ${selectedGroupId === 'favorites' ? 'contact-groups__item--selected' : ''}`}

@@ -91,7 +91,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
         visible={visible}
         onClose={() => setVisible(false)}
         title="Select Date"
-        maxHeight="55%"
+        maxHeight="70%"
       >
         {/* Month navigation inside sheet */}
         <View style={styles.sheetNav}>
@@ -112,6 +112,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
           selectedDate={date}
           events={[]}
           onDateSelect={handleSelect}
+          expanded
         />
       </BottomSheet>
     </>

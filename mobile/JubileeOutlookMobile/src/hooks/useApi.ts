@@ -16,7 +16,7 @@ export function useApi<T>() {
       setState({ data: result, isLoading: false, error: null });
       return result;
     } catch (err: any) {
-      const message = err.response?.data?.error || err.message || 'An error occurred';
+      const message = err?.response?.data?.error || err?.message || 'An error occurred';
       setState({ data: null, isLoading: false, error: message });
       return null;
     }

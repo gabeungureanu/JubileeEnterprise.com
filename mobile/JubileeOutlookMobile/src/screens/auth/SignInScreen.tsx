@@ -19,7 +19,6 @@ import { useAuth } from '../../context/AuthContext';
 import { storage } from '../../utils/storage';
 import { StorageKeys } from '../../constants';
 import { Colors } from '../../constants/colors';
-import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius, HitSlop } from '../../constants/spacing';
 import AuthCard from '../../components/auth/AuthCard';
 import GoldCheckbox from '../../components/auth/GoldCheckbox';

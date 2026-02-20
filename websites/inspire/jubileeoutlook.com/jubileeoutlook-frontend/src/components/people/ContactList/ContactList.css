@@ -8,7 +8,7 @@
   background-color: var(--bg-primary);
 }
 
-/* Content header: "Your contacts" title + sync + sort */
+/* Content header: "Your contacts" title + sort */
 
 .contact-list__content-header {
   display: flex;
@@ -29,21 +29,6 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-}
-
-.contact-list__sync-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--font-size-sm);
-  color: var(--text-tertiary);
-}
-
-.contact-list__sync-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: var(--accent-green);
 }
 
 .contact-list__sync-icon {
@@ -178,20 +163,21 @@
   font-size: 16px;
 }
 
-/* Toolbar (select all + count) */
+/* Table column headers — grid-template-columns set via inline style */
 
-.contact-list__toolbar {
-  display: flex;
+.contact-list__table-header {
+  display: grid;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--spacing-xs) var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
   border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--bg-primary);
+  position: relative;
 }
 
-.contact-list__toolbar-left {
+.contact-list__col-check {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  justify-content: center;
 }
 
 .contact-list__select-all {
@@ -199,18 +185,99 @@
   cursor: pointer;
 }
 
+.contact-list__header-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.contact-list__sort-arrow {
+  font-size: 14px !important;
+  color: var(--text-tertiary);
+}
+
+/* Column menu trigger (header "..." icon) */
+
+.contact-list__column-menu-anchor {
+  position: absolute;
+  right: var(--spacing-md);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.contact-list__column-menu-trigger {
+  font-size: 18px !important;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+
+.contact-list__column-menu-trigger:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-hover);
+}
+
+/* "Show columns" dropdown menu */
+
+.contact-list__column-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dialog);
+  padding: var(--spacing-md) var(--spacing-lg);
+  z-index: var(--z-dropdown);
+  min-width: 200px;
+}
+
+.contact-list__column-menu-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.contact-list__column-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.contact-list__column-menu-item input[type="checkbox"] {
+  accent-color: var(--gold-primary);
+  cursor: pointer;
+}
+
+.contact-list__column-menu-item--disabled {
+  color: var(--text-disabled);
+  cursor: default;
+}
+
+.contact-list__column-menu-item--disabled input[type="checkbox"] {
+  cursor: default;
+}
+
+/* Checkbox styling */
+
 .contact-list__checkbox {
   accent-color: var(--gold-primary);
   cursor: pointer;
   flex-shrink: 0;
 }
 
-.contact-list__count {
-  font-size: var(--font-size-sm);
-  color: var(--text-tertiary);
-}
-
-/* Contact list items */
+/* Contact list items — grid-template-columns set via inline style */
 
 .contact-list__items {
   flex: 1;
@@ -218,14 +285,14 @@
 }
 
 .contact-list__item {
-  display: flex;
+  display: grid;
   align-items: center;
-  gap: var(--spacing-md);
   padding: var(--spacing-sm) var(--spacing-md);
   cursor: pointer;
   border-bottom: 1px solid var(--border-subtle);
   border-left: 3px solid transparent;
   transition: background-color var(--transition-fast);
+  position: relative;
 }
 
 .contact-list__item:hover {
@@ -241,9 +308,19 @@
   background-color: var(--gold-highlight);
 }
 
+/* Name column: avatar + name inline */
+
+.contact-list__col-name {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 0;
+  overflow: hidden;
+}
+
 .contact-list__avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-round);
   background-color: var(--gold-primary);
   color: #1E1E1E;
@@ -251,7 +328,7 @@
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   flex-shrink: 0;
   overflow: hidden;
 }
@@ -262,27 +339,10 @@
   object-fit: cover;
 }
 
-.contact-list__info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
 .contact-list__name {
   font-size: 14px;
   color: var(--text-primary);
   font-weight: var(--font-weight-medium);
-}
-
-.contact-list__email {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-.contact-list__company {
-  font-size: var(--font-size-xs);
-  color: var(--text-disabled);
 }
 
 .contact-list__category-badge {
@@ -293,18 +353,36 @@
   font-size: 10px;
   padding: 2px 6px;
   border-radius: 3px;
-  margin-left: var(--spacing-sm);
-}
-
-.contact-list__name-row {
-  display: flex;
-  align-items: center;
+  margin-left: var(--spacing-xs);
+  flex-shrink: 0;
 }
 
 .contact-list__favorite {
-  font-size: 16px !important;
+  font-size: 14px !important;
   color: var(--accent-yellow);
   flex-shrink: 0;
+  margin-left: var(--spacing-xs);
+}
+
+/* Email / Contact info column */
+
+.contact-list__col-email {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.contact-list__email {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+/* Optional data columns (Categories, Company, Office location) */
+
+.contact-list__col-data {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
 }
 
 /* Empty / Loading */
@@ -347,4 +425,152 @@
 .contact-list__empty-action:hover {
   text-decoration: underline;
   color: var(--gold-hover);
+}
+
+/* ===== Row menu-open state ===== */
+
+.contact-list__item--menu-open {
+  background-color: var(--bg-hover);
+}
+
+/* ===== Hover action buttons (right edge of Name column) ===== */
+
+.contact-list__col-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  padding-right: 12px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.contact-list__item:hover .contact-list__col-actions,
+.contact-list__col-actions--visible {
+  opacity: 1;
+}
+
+.contact-list__row-action-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.contact-list__row-action-btn:hover {
+  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.contact-list__row-action-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* ===== Row context menu (fixed positioning) ===== */
+
+.contact-list__row-menu {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dialog);
+  padding: var(--spacing-xs) 0;
+  z-index: var(--z-dropdown);
+  min-width: 220px;
+}
+
+.contact-list__row-menu button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  text-align: left;
+}
+
+.contact-list__row-menu button:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.contact-list__row-menu button .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.contact-list__row-menu-divider {
+  height: 1px;
+  background-color: var(--border-subtle);
+  margin: var(--spacing-xs) 0;
+}
+
+.contact-list__row-menu-danger:hover {
+  color: #E74856 !important;
+}
+
+.contact-list__row-menu-arrow {
+  margin-left: auto;
+  font-size: 14px !important;
+}
+
+/* ===== Row context menu — "Add to list" submenu ===== */
+
+.contact-list__row-menu-submenu-wrapper {
+  position: relative;
+}
+
+.contact-list__row-submenu {
+  position: absolute;
+  left: calc(100% - 4px);
+  top: -4px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-dialog);
+  padding: var(--spacing-xs) 0;
+  min-width: 160px;
+  z-index: var(--z-dropdown);
+}
+
+.contact-list__row-submenu button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  text-align: left;
+}
+
+.contact-list__row-submenu button:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.contact-list__row-submenu button .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.contact-list__row-submenu-empty {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  color: var(--text-disabled);
+  font-style: italic;
 }

@@ -17,7 +17,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../types/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { Colors } from '../../constants/colors';
-import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius, HitSlop } from '../../constants/spacing';
 import AuthCard from '../../components/auth/AuthCard';
 import GoldCheckbox from '../../components/auth/GoldCheckbox';

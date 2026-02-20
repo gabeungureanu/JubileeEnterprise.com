@@ -6,7 +6,7 @@
  * and right folder list. Pull-to-refresh reloads messages.
  * A FAB opens the Compose screen.
  */
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -136,12 +136,13 @@ export default function MailScreen() {
 
   const [folders, setFolders] = useState<MailFolder[]>([]);
   const [messages, setMessages] = useState<EmailMessage[]>([]);
+  // Ref always mirrors latest messages — used by async merge helpers to avoid stale closures
+  const messagesRef = useRef<EmailMessage[]>(messages);
+  messagesRef.current = messages;
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
-  const [selectedMessage, setSelectedMessage] = useState<EmailMessage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showFolders, setShowFolders] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [accounts, setAccounts] = useState<{ id: string; email: string }[]>([]);
   const [focusTab, setFocusTab] = useState<FocusTab>('focused');
   const [activeFilter, setActiveFilter] = useState<FilterOption>('all');
@@ -225,25 +226,32 @@ export default function MailScreen() {
     };
   }, [loadFolders, loadMessages]);
 
-  // Re-fetch messages when screen regains focus (e.g. returning from Compose)
-  // Preserves local read status so opened messages stay read.
+  // Re-fetch messages + folders when screen regains focus (e.g. returning from MessageDetail/Compose)
+  // Preserves local read/pin status so opened messages stay read.
+  // Also refreshes folders so sidebar unread count stays accurate.
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
       if (!selectedFolderId) return;
       try {
-        const { messages: freshMsgs } = await mailService.getMessages(selectedFolderId, 1, 50);
-        const readIds = new Set(messages.filter((m) => m.isRead).map((m) => m.id));
-        const pinnedIds = new Set(messages.filter((m) => m.isPinned).map((m) => m.id));
+        // Fetch messages and folders in parallel for speed
+        const [{ messages: freshMsgs }] = await Promise.all([
+          mailService.getMessages(selectedFolderId, 1, 50),
+          loadFolders(),
+        ]);
+        // Use ref (not closure) so we always read the latest local state
+        const prev = messagesRef.current;
+        const readIds = new Set(prev.filter((m) => m.isRead).map((m) => m.id));
+        const pinnedIds = new Set(prev.filter((m) => m.isPinned).map((m) => m.id));
         const merged = freshMsgs.map((m) => ({
           ...m,
-          isRead: readIds.has(m.id) && !m.isRead ? true : m.isRead,
+          isRead: readIds.has(m.id) || m.isRead,
           isPinned: pinnedIds.has(m.id) || m.isPinned,
         }));
         setMessages(merged);
       } catch { /* silent */ }
     });
     return unsubscribe;
-  }, [navigation, selectedFolderId, messages]);
+  }, [navigation, selectedFolderId, loadFolders]); // messagesRef used instead of messages
 
   // ---------- Refresh ----------
 
@@ -252,11 +260,21 @@ export default function MailScreen() {
     setIsRefreshing(true);
     try {
       await loadFolders();
-      await loadMessages(selectedFolderId);
+      const { messages: freshMsgs } = await mailService.getMessages(selectedFolderId, 1, 50);
+      // Preserve local read/pin status — backend may lag behind optimistic updates
+      const prev = messagesRef.current;
+      const readIds = new Set(prev.filter((m) => m.isRead).map((m) => m.id));
+      const pinnedIds = new Set(prev.filter((m) => m.isPinned).map((m) => m.id));
+      const merged = freshMsgs.map((m) => ({
+        ...m,
+        isRead: readIds.has(m.id) || m.isRead,
+        isPinned: pinnedIds.has(m.id) || m.isPinned,
+      }));
+      setMessages(merged);
     } finally {
       setIsRefreshing(false);
     }
-  }, [selectedFolderId, loadFolders, loadMessages]);
+  }, [selectedFolderId, loadFolders]);
 
   // ---------- Sync (fetch latest mail) ----------
 
@@ -265,7 +283,9 @@ export default function MailScreen() {
   const handleSync = useCallback(async () => {
     if (!selectedFolderId || isSyncing) return;
     setIsSyncing(true);
-    const prevIds = new Set(messages.map((m) => m.id));
+    // Snapshot current state via ref (avoids stale closure)
+    const prev = messagesRef.current;
+    const prevIds = new Set(prev.map((m) => m.id));
     try {
       // 1. Trigger real IMAP sync for all accounts (mirrors web frontend syncAll)
       if (accounts.length > 0) {
@@ -278,11 +298,13 @@ export default function MailScreen() {
       const { messages: freshMsgs } = await mailService.getMessages(selectedFolderId, 1, 50);
 
       // 3. Preserve local read + pin status — IMAP sync may overwrite is_read flags
-      const readIds = new Set(messages.filter((m) => m.isRead).map((m) => m.id));
-      const pinnedIds = new Set(messages.filter((m) => m.isPinned).map((m) => m.id));
+      //    Re-read ref for the freshest local state (may have changed during async sync)
+      const latest = messagesRef.current;
+      const readIds = new Set(latest.filter((m) => m.isRead).map((m) => m.id));
+      const pinnedIds = new Set(latest.filter((m) => m.isPinned).map((m) => m.id));
       const merged = freshMsgs.map((m) => ({
         ...m,
-        isRead: readIds.has(m.id) && !m.isRead ? true : m.isRead,
+        isRead: readIds.has(m.id) || m.isRead,
         isPinned: pinnedIds.has(m.id) || m.isPinned,
       }));
       setMessages(merged);
@@ -299,24 +321,7 @@ export default function MailScreen() {
     } finally {
       setIsSyncing(false);
     }
-  }, [selectedFolderId, isSyncing, messages, accounts, loadFolders, alert, toast]);
-
-  // ---------- Folder Selection ----------
-
-  const handleSelectFolder = useCallback(
-    async (folder: MailFolder) => {
-      setSelectedFolderId(folder.id);
-      setSelectedMessage(null);
-      clearSelection();
-      setMessages([]);
-      setSearchQuery('');
-      closeDrawer();
-      setIsLoading(true);
-      await loadMessages(folder.id);
-      setIsLoading(false);
-    },
-    [loadMessages],
-  );
+  }, [selectedFolderId, isSyncing, accounts, loadFolders, alert, toast]); // messagesRef used instead of messages
 
   // ---------- Drawer ----------
 
@@ -355,6 +360,21 @@ export default function MailScreen() {
     setShowMoreMenu(false);
   }, []);
 
+  // ---------- Folder Selection ----------
+
+  const handleSelectFolder = useCallback(
+    async (folder: MailFolder) => {
+      setSelectedFolderId(folder.id);
+      clearSelection();
+      setMessages([]);
+      closeDrawer();
+      setIsLoading(true);
+      await loadMessages(folder.id);
+      setIsLoading(false);
+    },
+    [loadMessages, clearSelection, closeDrawer],
+  );
+
   // ---------- Navigation ----------
 
   const handleMessagePress = useCallback(
@@ -364,16 +384,27 @@ export default function MailScreen() {
         toggleSelection(message.id);
         return;
       }
-      setSelectedMessage(message);
       // Mark as read locally so the blue unread dot disappears immediately
       if (!message.isRead) {
         setMessages((prev) =>
           prev.map((m) => (m.id === message.id ? { ...m, isRead: true } : m)),
         );
+        // Optimistically decrement sidebar unread count
+        setFolders((prev) =>
+          prev.map((f) =>
+            f.id === message.folderId
+              ? { ...f, unreadItemCount: Math.max(0, f.unreadItemCount - 1) }
+              : f,
+          ),
+        );
+        // Persist to backend — await ensures read state survives hard reload
+        mailService.markAsRead(message.id, true)
+          .then(() => loadFolders()) // reconcile with true server counts
+          .catch((err) => console.warn('[MailScreen] markAsRead failed:', err));
       }
       navigation.navigate('MessageDetail', { messageId: message.id, message });
     },
-    [navigation, isSelectionMode, toggleSelection],
+    [navigation, isSelectionMode, toggleSelection, loadFolders],
   );
 
   const handleCompose = useCallback(() => {
@@ -400,6 +431,15 @@ export default function MailScreen() {
     },
     [],
   );
+
+  // ── Dynamic bulk action state (derived from selected items) ──
+  const selectedMessages = useMemo(
+    () => messages.filter((m) => selectedIds.has(m.id)),
+    [messages, selectedIds],
+  );
+  const allFlagged = selectedMessages.length > 0 && selectedMessages.every((m) => m.isFlagged);
+  const allPinned = selectedMessages.length > 0 && selectedMessages.every((m) => m.isPinned);
+  const allRead = selectedMessages.length > 0 && selectedMessages.every((m) => m.isRead);
 
   // ---------- Bulk Actions ----------
 
@@ -440,12 +480,14 @@ export default function MailScreen() {
       setMessages((prev) =>
         prev.map((m) => (selectedIds.has(m.id) ? { ...m, isRead: newRead } : m)),
       );
+      // Refresh folders so sidebar unread count reflects the bulk change
+      await loadFolders();
       toast(newRead ? 'Marked Read' : 'Marked Unread', `${ids.length} email${ids.length > 1 ? 's' : ''}`, 'success');
     } catch {
       alert('Error', `Could not mark some messages as ${newRead ? 'read' : 'unread'}.`, 'error');
     }
     clearSelection();
-  }, [selectedIds, allRead, toast, alert, clearSelection]);
+  }, [selectedIds, allRead, toast, alert, clearSelection, loadFolders]);
 
   const handleBulkFlag = useCallback(async () => {
     const ids = Array.from(selectedIds);
@@ -516,7 +558,6 @@ export default function MailScreen() {
     async (tab: FocusTab) => {
       setFocusTab(tab);
       setActiveFilter('all');
-      setSelectedMessage(null);
       clearSelection();
       setMessages([]);
       setIsLoading(true);
@@ -538,7 +579,7 @@ export default function MailScreen() {
       }
       setIsLoading(false);
     },
-    [folders, loadMessages],
+    [folders, loadMessages, clearSelection],
   );
 
   // ---------- Filtered Messages ----------
@@ -563,15 +604,6 @@ export default function MailScreen() {
   }, [messages, activeFilter]);
 
   const allSelected = filteredMessages.length > 0 && selectedIds.size === filteredMessages.length;
-
-  // ── Dynamic bulk action state (derived from selected items) ──
-  const selectedMessages = useMemo(
-    () => messages.filter((m) => selectedIds.has(m.id)),
-    [messages, selectedIds],
-  );
-  const allFlagged = selectedMessages.length > 0 && selectedMessages.every((m) => m.isFlagged);
-  const allPinned = selectedMessages.length > 0 && selectedMessages.every((m) => m.isPinned);
-  const allRead = selectedMessages.length > 0 && selectedMessages.every((m) => m.isRead);
 
   const toggleSelectAll = useCallback(() => {
     if (allSelected) {
@@ -954,10 +986,6 @@ export default function MailScreen() {
 // ---------- Styles ----------
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1130,15 +1158,9 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     gap: Spacing.md,
   },
-  moreMenuItemDisabled: {
-    opacity: 0.4,
-  },
   moreMenuItemText: {
     ...Typography.body,
     color: Colors.textPrimary,
-  },
-  moreMenuItemTextDisabled: {
-    color: Colors.textDisabled,
   },
   // Folder Picker Modal
   folderPickerOverlay: {

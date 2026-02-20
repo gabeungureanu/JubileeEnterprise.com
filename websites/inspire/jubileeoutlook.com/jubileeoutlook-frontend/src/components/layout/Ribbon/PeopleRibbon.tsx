@@ -12,7 +12,6 @@ interface PeopleRibbonProps {
   onBatchDelete?: () => void;
   onFavorite?: () => void;
   onEmail?: () => void;
-  onChat?: () => void;
   onCall?: () => void;
   onShareVCard?: () => void;
   onCategory?: () => void;
@@ -27,7 +26,7 @@ const PeopleRibbon: React.FC<PeopleRibbonProps> = ({
   onNewContact, onDelete, onEdit,
   onImport, onExportVCard,
   onBatchDelete, onFavorite,
-  onEmail, onChat, onCall, onShareVCard, onCategory,
+  onEmail, onCall, onShareVCard, onCategory,
   selectedCount = 0, hasSelection = false,
   isInDeletedFolder = false, onEmptyTrash, onRestore,
 }) => {
@@ -88,13 +87,10 @@ const PeopleRibbon: React.FC<PeopleRibbonProps> = ({
 
       <div className="ribbon__separator" />
 
-      {/* Email, Chat, Call, Share vCard */}
+      {/* Email, Call, Share vCard */}
       <div className="ribbon__group">
         <button className="ribbon__icon-btn" onClick={onEmail} disabled={!hasSelection} title="Email">
           <span className="material-symbols-outlined">mail</span>
-        </button>
-        <button className="ribbon__icon-btn" onClick={onChat} disabled={!hasSelection} title="Chat">
-          <span className="material-symbols-outlined">chat</span>
         </button>
         <button className="ribbon__icon-btn" onClick={onCall} disabled={!hasSelection} title="Call">
           <span className="material-symbols-outlined">call</span>

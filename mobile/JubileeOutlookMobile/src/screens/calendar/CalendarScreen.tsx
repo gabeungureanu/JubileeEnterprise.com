@@ -265,6 +265,7 @@ const CalendarScreen: React.FC = () => {
       {/* Header: nav + view toggle */}
       <CalendarHeader
         viewDate={viewDate}
+        selectedDate={selectedDate}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onPrevious={goToPrevious}

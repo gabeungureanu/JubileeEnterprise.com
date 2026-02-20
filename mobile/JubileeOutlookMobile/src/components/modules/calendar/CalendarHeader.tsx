@@ -37,6 +37,7 @@ const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 interface CalendarHeaderProps {
   viewDate: Date;
+  selectedDate: Date | null;
   viewMode: CalendarViewMode;
   onViewModeChange: (mode: CalendarViewMode) => void;
   onPrevious: () => void;
@@ -46,6 +47,7 @@ interface CalendarHeaderProps {
 
 export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   viewDate,
+  selectedDate,
   viewMode,
   onViewModeChange,
   onPrevious,
@@ -53,9 +55,12 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   onToday,
 }) => {
   const today = new Date();
-  const isCurrentPeriod = viewMode === 'month'
+  // Show "Today" button when: not on current period OR selected date is not today
+  const isOnCurrentPeriod = viewMode === 'month'
     ? viewDate.getFullYear() === today.getFullYear() && viewDate.getMonth() === today.getMonth()
     : isSameDay(viewDate, today);
+  const isSelectedToday = selectedDate ? isSameDay(selectedDate, today) : false;
+  const isCurrentPeriod = isOnCurrentPeriod && isSelectedToday;
 
   const title = useMemo(() => {
     switch (viewMode) {

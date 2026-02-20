@@ -124,30 +124,6 @@ const EventDetailScreen: React.FC = () => {
     return unsubscribe;
   }, [navigation, refetchEvent]);
 
-  // ── Header buttons ────────────────────────────────────────
-  useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            onPress={handleEdit}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            style={styles.headerButton}
-          >
-            <Icon name="edit" size={22} color={Colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleDelete}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            style={styles.headerButton}
-          >
-            <Icon name="delete" size={22} color={Colors.error} />
-          </TouchableOpacity>
-        </View>
-      ),
-    });
-  }, [event]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // ── Actions ───────────────────────────────────────────────
   const handleEdit = useCallback(() => {
     if (event) {
@@ -172,6 +148,30 @@ const EventDetailScreen: React.FC = () => {
       { confirmText: 'Delete', destructive: true },
     );
   }, [eventId, navigation, confirm, alert]);
+
+  // ── Header buttons ────────────────────────────────────────
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            onPress={handleEdit}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={styles.headerButton}
+          >
+            <Icon name="edit" size={22} color={Colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleDelete}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={styles.headerButton}
+          >
+            <Icon name="delete" size={22} color={Colors.error} />
+          </TouchableOpacity>
+        </View>
+      ),
+    });
+  }, [event, navigation, handleEdit, handleDelete]);
 
   // ── Render ────────────────────────────────────────────────
   if (isLoading) {

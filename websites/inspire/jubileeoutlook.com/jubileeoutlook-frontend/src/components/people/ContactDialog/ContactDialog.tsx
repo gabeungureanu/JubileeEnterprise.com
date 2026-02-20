@@ -157,6 +157,12 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, contact, onClose,
       return;
     }
 
+    if (!formData.phone.trim() && !formData.mobilePhone.trim()) {
+      setError('At least one phone number is required (work phone or mobile phone).');
+      setActiveTab('contact');
+      return;
+    }
+
     if (!isEditing && !duplicateChecked) {
       try {
         const displayName = formData.displayName.trim() || `${formData.firstName} ${formData.lastName}`.trim();
@@ -360,7 +366,7 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, contact, onClose,
 
                 {/* Phone section */}
                 <div className="contact-dialog__section-title">Phone</div>
-                {renderField('Work phone', 'phone', 'tel', '+1 (555) 000-0000')}
+                {renderField('Work phone *', 'phone', 'tel', '+1 (555) 000-0000')}
                 {!showMorePhone && (
                   <button className="contact-dialog__add-link" onClick={() => setShowMorePhone(true)}>
                     <span>+</span><span>Add phone</span>

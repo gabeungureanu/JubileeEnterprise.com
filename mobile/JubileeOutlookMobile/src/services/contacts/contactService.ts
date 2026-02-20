@@ -120,10 +120,14 @@ export const contactService = {
     return response.status === 200 || response.status === 204;
   },
 
-  // ---------- Mobile-specific convenience methods ----------
+  // ---------- Favorite / Soft-delete / Restore ----------
 
-  async toggleFavorite(contactId: string): Promise<Contact | null> {
-    const response = await codexClient.patch(`/contacts/${encodeURIComponent(contactId)}/favorite`);
+  async toggleFavorite(contactId: string, isFavorite?: boolean): Promise<Contact | null> {
+    const body = isFavorite !== undefined ? { isFavorite } : undefined;
+    const response = await codexClient.patch(
+      `/contacts/${encodeURIComponent(contactId)}/favorite`,
+      body,
+    );
     const data = response.data;
     const dto = data?.contact || data;
     return dto?.id ? mapContactDto(dto) : null;
@@ -139,5 +143,38 @@ export const contactService = {
     const data = response.data;
     const dto = data?.contact || data;
     return dto?.id ? mapContactDto(dto) : null;
+  },
+
+  // ---------- Batch operations ----------
+
+  async batchSoftDelete(ids: string[]): Promise<number> {
+    const response = await codexClient.post('/contacts/batch/soft-delete', { ids });
+    return response.data?.deleted || 0;
+  },
+
+  async batchRestore(ids: string[]): Promise<number> {
+    const response = await codexClient.post('/contacts/batch/restore', { ids });
+    return response.data?.restored || 0;
+  },
+
+  async batchHardDelete(ids: string[]): Promise<number> {
+    const response = await codexClient.post('/contacts/batch/delete', { ids });
+    return response.data?.deleted || 0;
+  },
+
+  async batchUpdateCategory(ids: string[], category: string | null): Promise<number> {
+    const response = await codexClient.post('/contacts/batch/category', { ids, category });
+    return response.data?.updated || 0;
+  },
+
+  // ---------- Group member fetching ----------
+
+  async getGroupMembers(groupId: string): Promise<Contact[]> {
+    const userId = tokenStore.getUserId();
+    const response = await codexClient.get(`/contact-groups/${encodeURIComponent(groupId)}`, {
+      params: { userId },
+    });
+    const members = response.data?.data?.members || [];
+    return members.map((m: any) => mapContactDto(m));
   },
 };

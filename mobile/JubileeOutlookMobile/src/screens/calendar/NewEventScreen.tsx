@@ -38,6 +38,7 @@ import {
 import type { PickedFile } from '../../components/modules/calendar';
 import { useAlert } from '../../hooks';
 import { calendarService } from '../../services/calendar/calendarService';
+import { fileService } from '../../services/calendar/fileService';
 import { reminderService } from '../../services/calendar/reminderService';
 import { tokenStore } from '../../services/apiClient';
 import {
@@ -46,7 +47,7 @@ import {
   getLastUsedTimes,
   saveLastUsedTimes,
 } from '../../utils/calendarUtils';
-import type { CalendarEventDto, ShowAsStatus } from '../../types/calendar';
+import type { CalendarEventDto, EventAttachment, ShowAsStatus } from '../../types/calendar';
 import type { CalendarStackParamList } from '../../types/navigation';
 
 type Nav = NativeStackNavigationProp<CalendarStackParamList, 'NewEvent'>;
@@ -77,6 +78,35 @@ function formatDuration(startMs: number, endMs: number): string {
   const mins = totalMinutes % 60;
   if (mins === 0) return `${hours} hour${hours > 1 ? 's' : ''}`;
   return `${hours} hour${hours > 1 ? 's' : ''} ${mins} min`;
+}
+
+const MIME_MAP: Record<string, string> = {
+  pdf: 'application/pdf',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ppt: 'application/vnd.ms-powerpoint',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  svg: 'image/svg+xml',
+  webp: 'image/webp',
+  mp4: 'video/mp4',
+  mp3: 'audio/mpeg',
+  wav: 'audio/wav',
+  txt: 'text/plain',
+  csv: 'text/csv',
+  html: 'text/html',
+  json: 'application/json',
+  zip: 'application/zip',
+};
+
+function guessMimeType(fileName: string): string {
+  const ext = fileName.split('.').pop()?.toLowerCase() || '';
+  return MIME_MAP[ext] || 'application/octet-stream';
 }
 
 // ────────────────────────────────────────────────────────────
@@ -159,8 +189,18 @@ const NewEventScreen: React.FC = () => {
   // Attendees
   const [attendees, setAttendees] = useState<string[]>(existingEvent?.attendees || []);
 
-  // Attachments
-  const [attachments, setAttachments] = useState<PickedFile[]>([]);
+  // Attachments — seed from existing event when editing
+  const [attachments, setAttachments] = useState<PickedFile[]>(() => {
+    if (existingEvent?.attachments?.length) {
+      return existingEvent.attachments.map((a: EventAttachment) => ({
+        name: a.fileName,
+        size: a.fileSize,
+        uri: a.fileUrl,
+        mimeType: guessMimeType(a.fileName),
+      }));
+    }
+    return [];
+  });
 
   // Timezone
   const [timezone, setTimezone] = useState(
@@ -291,6 +331,39 @@ const NewEventScreen: React.FC = () => {
 
     setIsSaving(true);
     try {
+      // ── Upload local attachments ───────────────────────────
+      const uploadedAttachments: { fileName: string; filePath?: string; fileSize?: number; mimeType?: string }[] = [];
+      for (const file of attachments) {
+        const isLocal = file.uri.startsWith('file://') || file.uri.startsWith('content://');
+        if (isLocal) {
+          try {
+            const result = await fileService.uploadFile({
+              name: file.name,
+              uri: file.uri,
+              type: file.mimeType || 'application/octet-stream',
+            });
+            uploadedAttachments.push({
+              fileName: result.fileName,
+              filePath: result.fileUrl,
+              fileSize: result.fileSize,
+              mimeType: file.mimeType || undefined,
+            });
+          } catch (uploadErr: any) {
+            alert('Upload Failed', `Failed to upload "${file.name}": ${uploadErr?.message || 'Unknown error'}`, 'error');
+            setIsSaving(false);
+            return;
+          }
+        } else {
+          // Already-uploaded file (from edit mode) — keep existing reference
+          uploadedAttachments.push({
+            fileName: file.name,
+            filePath: file.uri,
+            fileSize: file.size,
+            mimeType: file.mimeType || undefined,
+          });
+        }
+      }
+
       const payload: Partial<CalendarEventDto> = {
         userId,
         subject: subject.trim(),
@@ -306,6 +379,7 @@ const NewEventScreen: React.FC = () => {
         isPrivate,
         timezone,
         attendees: attendees.length > 0 ? attendees : undefined,
+        attachments: uploadedAttachments.length > 0 ? uploadedAttachments : undefined,
       };
 
       // Recurrence fields
@@ -332,7 +406,6 @@ const NewEventScreen: React.FC = () => {
 
       // Schedule/reschedule device notification for the reminder
       if (savedEvent) {
-        console.log(`[Reminder] savedEvent: id=${savedEvent.id}, reminderMinutes=${savedEvent.reminderMinutes}, start=${savedEvent.startDateTime}`);
         // Clear any previous dismiss so the fresh reminder can schedule
         await reminderService.undismiss(savedEvent.id);
         if (savedEvent.reminderMinutes > 0) {
@@ -366,7 +439,7 @@ const NewEventScreen: React.FC = () => {
     }
   }, [
     subject, location, description, startDate, endDate, isAllDay, isInPerson,
-    reminderMinutes, showAs, eventColor, isPrivate, timezone, attendees,
+    reminderMinutes, showAs, eventColor, isPrivate, timezone, attendees, attachments,
     isRecurring, recurrenceType, recurrenceInterval, recurrenceDaysOfWeek,
     recurrenceEndCondition, recurrenceEndDate, recurrenceOccurrences,
     isEditing, existingEvent, navigation, alert,

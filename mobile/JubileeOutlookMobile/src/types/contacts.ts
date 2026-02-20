@@ -68,43 +68,47 @@ export interface ApiContactGroupsListResponse {
 // --- DTO Mappers ---
 
 export function mapContactDto(dto: ContactDto): Contact {
+  // API may return camelCase or snake_case — handle both
+  const d = dto as any;
   return {
     id: dto.id,
-    displayName: dto.display_name,
-    firstName: dto.first_name,
-    lastName: dto.last_name,
-    title: dto.title,
-    emailAddresses: dto.email_addresses || [],
-    phoneNumbers: dto.phone_numbers || [],
-    mobilePhone: dto.mobile_phone,
-    company: dto.company,
-    jobTitle: dto.job_title,
-    department: dto.department,
-    office: dto.office,
-    address: dto.address,
-    city: dto.city,
-    state: dto.state,
-    postalCode: dto.postal_code,
-    country: dto.country,
-    notes: dto.notes,
-    photoUrl: dto.photo_url,
-    birthday: dto.birthday,
-    anniversary: dto.anniversary,
-    spouse: dto.spouse,
-    isFavorite: dto.is_favorite,
-    category: dto.category,
-    website: dto.website,
-    createdAt: dto.created_at,
-    updatedAt: dto.updated_at,
+    displayName: d.displayName || dto.display_name || '',
+    firstName: d.firstName || dto.first_name || '',
+    lastName: d.lastName || dto.last_name || '',
+    title: d.title || dto.title || '',
+    emailAddresses: d.emailAddresses || dto.email_addresses || [],
+    phoneNumbers: d.phoneNumbers || dto.phone_numbers || [],
+    mobilePhone: d.mobilePhone || dto.mobile_phone || '',
+    company: d.company || dto.company || '',
+    jobTitle: d.jobTitle || dto.job_title || '',
+    department: d.department || dto.department || '',
+    office: d.office || dto.office || '',
+    address: d.address || dto.address || '',
+    city: d.city || dto.city || '',
+    state: d.state || dto.state || '',
+    postalCode: d.postalCode || dto.postal_code || '',
+    country: d.country || dto.country || '',
+    notes: d.notes || dto.notes || '',
+    photoUrl: d.photoUrl || dto.photo_url || '',
+    birthday: d.birthday ?? dto.birthday,
+    anniversary: d.anniversary ?? dto.anniversary,
+    spouse: d.spouse || dto.spouse || '',
+    isFavorite: d.isFavorite ?? dto.is_favorite ?? false,
+    isDeleted: d.isDeleted ?? dto.is_deleted ?? false,
+    category: d.category || dto.category || '',
+    website: d.website || dto.website || '',
+    createdAt: d.createdAt || dto.created_at || '',
+    updatedAt: d.updatedAt || dto.updated_at || '',
   };
 }
 
 export function mapContactGroupDto(dto: ContactGroupDto): ContactGroup {
+  const d = dto as any;
   return {
     id: dto.id,
-    name: dto.name,
-    description: dto.description,
-    memberCount: dto.member_count,
+    name: d.name || dto.name || '',
+    description: d.description || dto.description || '',
+    memberCount: d.memberCount ?? dto.member_count ?? 0,
   };
 }
 
@@ -134,6 +138,7 @@ export interface Contact {
   anniversary: string | null;
   spouse?: string;
   isFavorite: boolean;
+  isDeleted: boolean;
   category: string;
   website: string;
   createdAt: string;

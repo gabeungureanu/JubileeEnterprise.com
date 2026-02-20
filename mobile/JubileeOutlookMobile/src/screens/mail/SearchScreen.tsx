@@ -12,16 +12,13 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  RefreshControl,
-  Alert,
 } from 'react-native';
-import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
-import { Spacing, BorderRadius } from '../../constants/spacing';
+import { Spacing } from '../../constants/spacing';
 import { LoadingSpinner, EmptyState, SearchBar } from '../../components/common';
 import { MessageListItem } from '../../components/modules/mail/MessageListItem';
 import { mailService } from '../../services/mail/mailService';
