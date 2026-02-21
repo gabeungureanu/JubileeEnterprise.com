@@ -171,7 +171,7 @@ public class ApiCalendarService : ICalendarService
                 };
             }
 
-            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var userId = ServiceConfiguration.RequireUserId();
             var queryParams = new List<string>
             {
                 $"userId={Uri.EscapeDataString(userId)}",
@@ -860,7 +860,7 @@ public class ApiCalendarService : ICalendarService
         return new CalendarEventDto
         {
             Id = calendarEvent.Id,
-            UserId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001",
+            UserId = ServiceConfiguration.RequireUserId(),
             Subject = calendarEvent.Subject,
             Location = calendarEvent.Location,
             StartTime = calendarEvent.StartTime.Kind == DateTimeKind.Unspecified

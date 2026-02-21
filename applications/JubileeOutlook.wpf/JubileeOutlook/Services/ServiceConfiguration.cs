@@ -76,6 +76,19 @@ public static class ServiceConfiguration
     public static bool IsAuthenticated => !string.IsNullOrEmpty(_userId);
 
     /// <summary>
+    /// Returns the authenticated user ID or throws if not authenticated.
+    /// Use this instead of falling back to a test user ID.
+    /// </summary>
+    public static string RequireUserId()
+    {
+        if (string.IsNullOrEmpty(_userId))
+        {
+            throw new InvalidOperationException("User is not authenticated. Please sign in to continue.");
+        }
+        return _userId;
+    }
+
+    /// <summary>
     /// Initializes the service configuration
     /// Reads from environment variables and configuration settings
     /// </summary>
@@ -95,10 +108,9 @@ public static class ServiceConfiguration
             ?? config.Api.InspireContinuum.BaseUrl;
 
         // Read user ID from parameter or environment
-        // Default to test user ID for development if not set
+        // No default fallback — authentication is required
         _userId = userId
-            ?? Environment.GetEnvironmentVariable("JUBILEE_USER_ID")
-            ?? "00000000-0000-0000-0000-000000000001"; // Default test user
+            ?? Environment.GetEnvironmentVariable("JUBILEE_USER_ID");
 
         // Determine whether to use API services
         // Priority: Parameter > Environment variable > Config setting

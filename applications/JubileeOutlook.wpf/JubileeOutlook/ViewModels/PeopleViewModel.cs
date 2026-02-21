@@ -1030,7 +1030,7 @@ public partial class PeopleViewModel : ObservableObject
             System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] EditContact - Fetching contact by ID: {SelectedContact.Id}");
 
             // Fetch fresh contact data from API
-            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var userId = ServiceConfiguration.RequireUserId();
             var result = await _contactService.GetContactByIdWithResultAsync(SelectedContact.Id);
 
             if (result.Success && result.Data != null)

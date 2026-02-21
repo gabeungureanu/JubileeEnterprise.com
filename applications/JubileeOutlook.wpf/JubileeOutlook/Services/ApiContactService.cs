@@ -183,7 +183,7 @@ public class ApiContactService : IContactService
 
             // Always try API first, fall back to cache on failure
             // This ensures contacts load even if network status check hasn't completed
-            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var userId = ServiceConfiguration.RequireUserId();
             var queryParams = new List<string>
             {
                 $"userId={Uri.EscapeDataString(userId)}",
@@ -1124,7 +1124,7 @@ public class ApiContactService : IContactService
         return new ContactDto
         {
             Id = contact.Id,
-            UserId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001",
+            UserId = ServiceConfiguration.RequireUserId(),
             DisplayName = contact.DisplayName,
             FirstName = contact.FirstName,
             LastName = contact.LastName,
@@ -1188,7 +1188,7 @@ public class ApiContactService : IContactService
     {
         try
         {
-            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var userId = ServiceConfiguration.RequireUserId();
             var endpoint = $"contact-groups?userId={Uri.EscapeDataString(userId)}";
             System.Diagnostics.Debug.WriteLine($"[ApiContactService] GET {endpoint}");
 
@@ -1237,7 +1237,7 @@ public class ApiContactService : IContactService
     {
         try
         {
-            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var userId = ServiceConfiguration.RequireUserId();
             var endpoint = $"contact-groups/{Uri.EscapeDataString(groupId)}?userId={Uri.EscapeDataString(userId)}";
             System.Diagnostics.Debug.WriteLine($"[ApiContactService] GET {endpoint}");
 
@@ -1282,7 +1282,7 @@ public class ApiContactService : IContactService
     {
         try
         {
-            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var userId = ServiceConfiguration.RequireUserId();
             var endpoint = $"contact-groups?userId={Uri.EscapeDataString(userId)}";
             var payload = new { name, description };
 
@@ -1330,7 +1330,7 @@ public class ApiContactService : IContactService
     {
         try
         {
-            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var userId = ServiceConfiguration.RequireUserId();
             var endpoint = $"contact-groups/{Uri.EscapeDataString(groupId)}?userId={Uri.EscapeDataString(userId)}";
             var payload = new { name, description };
             var json = JsonSerializer.Serialize(payload, _jsonOptions);
@@ -1379,7 +1379,7 @@ public class ApiContactService : IContactService
     {
         try
         {
-            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var userId = ServiceConfiguration.RequireUserId();
             var endpoint = $"contact-groups/{Uri.EscapeDataString(groupId)}?userId={Uri.EscapeDataString(userId)}";
             System.Diagnostics.Debug.WriteLine($"[ApiContactService] DELETE {endpoint}");
 
@@ -1413,7 +1413,7 @@ public class ApiContactService : IContactService
     {
         try
         {
-            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var userId = ServiceConfiguration.RequireUserId();
             var endpoint = $"contact-groups/{Uri.EscapeDataString(groupId)}/members?userId={Uri.EscapeDataString(userId)}";
             var payload = new { contactIds };
 
@@ -1456,7 +1456,7 @@ public class ApiContactService : IContactService
     {
         try
         {
-            var userId = ServiceConfiguration.UserId ?? "00000000-0000-0000-0000-000000000001";
+            var userId = ServiceConfiguration.RequireUserId();
             var endpoint = $"contact-groups/{Uri.EscapeDataString(groupId)}/members/{Uri.EscapeDataString(contactId)}?userId={Uri.EscapeDataString(userId)}";
             System.Diagnostics.Debug.WriteLine($"[ApiContactService] DELETE {endpoint}");
 

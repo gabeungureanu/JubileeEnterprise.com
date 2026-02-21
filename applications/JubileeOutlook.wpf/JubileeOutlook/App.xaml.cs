@@ -85,7 +85,7 @@ public partial class App : Application
 
         // Use config file URL (environment variable may be stale/outdated)
         var apiUrl = config.Api.InspireContinuum.BaseUrl;
-        var userId = Environment.GetEnvironmentVariable("JUBILEE_USER_ID") ?? "00000000-0000-0000-0000-000000000001";
+        var userId = Environment.GetEnvironmentVariable("JUBILEE_USER_ID");
 
         logLines.Add($"apiUrl = {apiUrl}");
         logLines.Add($"userId = {userId}");
