@@ -3,10 +3,11 @@
  * Manages user authentication state with token persistence via AsyncStorage.
  */
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import axios from 'axios';
 import type { User } from '../types';
 import { authService } from '../services/auth/authService';
 import { tokenStore, setOnAuthFailure } from '../services/apiClient';
-import { StorageKeys } from '../constants';
+import { StorageKeys, API } from '../constants';
 import { storage } from '../utils/storage';
 
 // ---------- State & Context Types ----------
@@ -61,6 +62,25 @@ const buildSyncUser = async (): Promise<User | null> => {
     createdAt: new Date().toISOString(),
   };
 };
+
+// Resolve the real Codex userId for a sync-only user by email lookup
+async function resolveSyncUserId(): Promise<void> {
+  const syncEmail = await storage.get(StorageKeys.SYNC_EMAIL);
+  if (!syncEmail) return;
+  try {
+    const codexBaseUrl = API.CODEX_BASE_URL.replace(/\/api\/v1$/, '');
+    const res = await axios.get(`${codexBaseUrl}/api/users/email/${encodeURIComponent(syncEmail)}`);
+    const userData = res.data?.data || res.data;
+    if (userData?.id) {
+      const currentId = tokenStore.getUserId();
+      if (currentId !== userData.id) {
+        await tokenStore.setUserId(userData.id);
+      }
+    }
+  } catch {
+    // User not found in Codex — keep existing userId
+  }
+}
 
 // ---------- Provider ----------
 
@@ -131,6 +151,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const isSyncOnly = await checkSyncOnly();
     if (isSyncOnly) {
+      // Resolve the real Codex userId before building the sync user
+      await resolveSyncUserId();
       const syncUser = await buildSyncUser();
       setState({ user: syncUser, isAuthenticated: !!syncUser, isLoading: false });
       return;

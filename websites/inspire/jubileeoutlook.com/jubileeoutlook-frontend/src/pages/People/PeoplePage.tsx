@@ -119,6 +119,26 @@ const PeoplePage: React.FC = () => {
     fetchGroups().then(buildContactGroupMap);
   }, [fetchContacts, fetchGroups, buildContactGroupMap]);
 
+  // Auto-refresh contacts every 30 seconds to stay in sync with DB
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchContacts();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [fetchContacts]);
+
+  // Refresh contacts when browser tab regains focus (catches external edits)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchContacts();
+        fetchGroups().then(buildContactGroupMap);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [fetchContacts, fetchGroups, buildContactGroupMap]);
+
   // When a group folder is selected, fetch its members
   useEffect(() => {
     if (activeFolder !== 'all' && activeFolder !== 'favorites' && activeFolder !== 'deleted' && activeFolder !== 'lists') {

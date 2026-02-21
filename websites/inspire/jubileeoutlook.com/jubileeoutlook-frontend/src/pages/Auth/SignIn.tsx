@@ -292,20 +292,36 @@ const SignIn: React.FC = () => {
       setSyncStatusText('Connecting to mail server...');
       setLoadingText('Connecting...');
 
-      // Get userId - use existing auth or generate a temporary one for email sync
+      // Get userId - use existing auth, look up from Codex, or generate a temporary one
+      const { default: axios } = await import('axios');
       const { tokenStore } = await import('../../services/apiClient');
       let userId = tokenStore.getUserId();
 
       if (!userId) {
-        // Generate a deterministic UUID from the email for anonymous sync
+        // Try to resolve the real userId from Codex by email
+        try {
+          const codexBaseUrl = (process.env.REACT_APP_CODEX_API_URL || 'http://localhost:4001/api/v1').replace(/\/api\/v1$/, '');
+          const userLookup = await axios.get(`${codexBaseUrl}/api/users/email/${encodeURIComponent(trimmedEmail)}`);
+          const userData = userLookup.data?.data || userLookup.data;
+          if (userData?.id) {
+            userId = userData.id;
+          }
+        } catch {
+          // User not found in Codex - fall through to generate synthetic ID
+        }
+      }
+
+      if (!userId) {
+        // Fallback: generate a deterministic UUID from the email for anonymous sync
         const encoder = new TextEncoder();
         const data = encoder.encode(trimmedEmail);
         const hashBuffer = await crypto.subtle.digest('SHA-256', data);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         const hex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         userId = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
-        tokenStore.setUserId(userId);
       }
+
+      tokenStore.setUserId(userId);
 
       setSyncStatusText('Testing IMAP connection...');
       setLoadingText('Testing connection...');

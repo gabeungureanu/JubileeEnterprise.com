@@ -13,8 +13,9 @@ const CONTINUUM_HEALTH_URL = (process.env.REACT_APP_CONTINUUM_API_URL || 'http:/
 export function useHealthCheck(
   setNetworkStatus: (status: NetworkStatus) => void
 ): void {
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastStatusRef = useRef<NetworkStatus>('online');
+  const mountedRef = useRef(true);
 
   const checkHealth = useCallback(async () => {
     if (!navigator.onLine) {
@@ -47,10 +48,26 @@ export function useHealthCheck(
     }
   }, [setNetworkStatus]);
 
-  useEffect(() => {
-    checkHealth();
+  // Use setTimeout chain instead of setInterval to prevent overlapping checks
+  // and avoid browser "setInterval handler took Xms" violations
+  const scheduleNext = useCallback(() => {
+    timeoutRef.current = setTimeout(async () => {
+      await checkHealth();
+      if (mountedRef.current) {
+        scheduleNext();
+      }
+    }, HEALTH_CHECK_INTERVAL);
+  }, [checkHealth]);
 
-    intervalRef.current = setInterval(checkHealth, HEALTH_CHECK_INTERVAL);
+  useEffect(() => {
+    mountedRef.current = true;
+
+    // Initial check, then start the chain
+    checkHealth().then(() => {
+      if (mountedRef.current) {
+        scheduleNext();
+      }
+    });
 
     const handleOnline = () => {
       checkHealth();
@@ -65,9 +82,10 @@ export function useHealthCheck(
     window.addEventListener('offline', handleOffline);
 
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      mountedRef.current = false;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [checkHealth, setNetworkStatus]);
+  }, [checkHealth, scheduleNext, setNetworkStatus]);
 }

@@ -19,7 +19,7 @@ export const contactService = {
   async getContacts(page = 1, pageSize = 100): Promise<{ contacts: Contact[]; totalCount: number }> {
     const userId = tokenStore.getUserId();
     const response = await codexClient.get<ApiContactsListResponse>('/contacts', {
-      params: { userId, page, pageSize },
+      params: { userId, page, pageSize, _t: Date.now() },
     });
     const data = response.data;
     const dtos = data.contacts || (data as any);

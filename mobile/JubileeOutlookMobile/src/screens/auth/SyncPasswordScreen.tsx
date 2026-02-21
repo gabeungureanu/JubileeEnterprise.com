@@ -17,10 +17,11 @@ import {
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../types/navigation';
+import axios from 'axios';
 import { emailSyncService, ProviderInfo } from '../../services/mail/emailSyncService';
 import { tokenStore } from '../../services/apiClient';
 import { storage } from '../../utils/storage';
-import { StorageKeys } from '../../constants';
+import { StorageKeys, API } from '../../constants';
 import { Colors } from '../../constants/colors';
 import { Spacing, BorderRadius, HitSlop } from '../../constants/spacing';
 import AuthCard from '../../components/auth/AuthCard';
@@ -28,7 +29,7 @@ import { useAuth } from '../../context/AuthContext';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SyncPassword'>;
 
-// Simple hash function for generating deterministic userId from email (mobile adaptation)
+// Fallback: simple hash function for generating deterministic userId from email
 function generateSyncUserId(email: string): string {
   let hash = 0;
   for (let i = 0; i < email.length; i++) {
@@ -37,6 +38,18 @@ function generateSyncUserId(email: string): string {
   }
   const hex = Math.abs(hash).toString(16).padStart(32, '0');
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+}
+
+// Look up the real Codex userId by email before falling back to synthetic ID
+async function resolveCodexUserId(email: string): Promise<string | null> {
+  try {
+    const codexBaseUrl = API.CODEX_BASE_URL.replace(/\/api\/v1$/, '');
+    const res = await axios.get(`${codexBaseUrl}/api/users/email/${encodeURIComponent(email)}`);
+    const userData = res.data?.data || res.data;
+    return userData?.id || null;
+  } catch {
+    return null;
+  }
 }
 
 export default function SyncPasswordScreen({ navigation, route }: Props) {
@@ -122,13 +135,18 @@ export default function SyncPasswordScreen({ navigation, route }: Props) {
     setErrors({});
 
     try {
-      // Step 1: Get or generate userId
+      // Step 1: Get or resolve userId from Codex, or generate fallback
       setSyncStatusText('Connecting to mail server...');
       setLoadingText('Connecting...');
 
       let userId = tokenStore.getUserId();
       if (!userId) {
-        userId = generateSyncUserId(syncEmail);
+        // Try to resolve the real userId from Codex by email
+        userId = await resolveCodexUserId(syncEmail);
+        if (!userId) {
+          // Fallback: generate a deterministic UUID for anonymous sync
+          userId = generateSyncUserId(syncEmail);
+        }
         await tokenStore.setUserId(userId);
       }
 

@@ -31,6 +31,9 @@ const attachAuth = (config: InternalAxiosRequestConfig) => {
   if (userId) {
     config.headers['X-User-Id'] = userId;
   }
+  // Prevent browser from caching API responses (ensures fresh data on every request)
+  config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+  config.headers['Pragma'] = 'no-cache';
   return config;
 };
 

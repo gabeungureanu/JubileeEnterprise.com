@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import axios from 'axios';
 import { User } from '../types/common';
 import { authService } from '../services/auth/authService';
 import { tokenStore } from '../services/apiClient';
@@ -29,6 +30,25 @@ const getSyncUser = (): User | null => {
   return { id: userId, email, displayName: email.split('@')[0] };
 };
 
+// Resolve the real Codex userId for a sync-only user by email lookup
+async function resolveSyncUserId(): Promise<void> {
+  const email = localStorage.getItem('jubilee_sync_email');
+  if (!email) return;
+  try {
+    const codexBaseUrl = (process.env.REACT_APP_CODEX_API_URL || 'http://localhost:4001/api/v1').replace(/\/api\/v1$/, '');
+    const res = await axios.get(`${codexBaseUrl}/api/users/email/${encodeURIComponent(email)}`);
+    const userData = res.data?.data || res.data;
+    if (userData?.id) {
+      const currentId = tokenStore.getUserId();
+      if (currentId !== userData.id) {
+        tokenStore.setUserId(userData.id);
+      }
+    }
+  } catch {
+    // User not found in Codex — keep existing userId
+  }
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const syncOnly = isSyncOnlyUser();
   const [state, setState] = useState<AuthState>({
@@ -36,6 +56,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: syncOnly || authService.isAuthenticated(),
     isLoading: !syncOnly && authService.isAuthenticated(),
   });
+
+  // For sync-only users, resolve their real Codex userId on mount
+  useEffect(() => {
+    if (!isSyncOnlyUser()) return;
+    resolveSyncUserId().then(() => {
+      // Refresh user object with the resolved userId
+      const resolved = getSyncUser();
+      if (resolved) {
+        setState(prev => ({ ...prev, user: resolved }));
+      }
+    });
+  }, []);
 
   useEffect(() => {
     // Skip Codex auth check for sync-only users
