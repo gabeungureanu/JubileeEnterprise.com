@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.8.0] - 2026-02-21
+
+### Added (Frontend — jubileeoutlook-frontend)
+- **Attendee Autocomplete**: EventDialog attendees field now searches contacts via Codex API (`/contacts/search`) with 300ms debounced autocomplete dropdown; reuses RecipientInput component from mail compose
+- **Attendee Display Name Chips**: Selected attendees show display name only (not email) via new `chipDisplay="name"` prop; email visible on hover tooltip
+- **Jubilee Branding**: Replaced default CRA favicon/icons with Jubilee AI character — `favicon.ico`, `logo192.png`, `logo512.png`, plus `jubilee-icon.svg` as SVG favicon; theme-color set to `#ffbd59`
+- **Sign-In Jubilee Logo**: Replaced person icon placeholder in sign-in page avatar circle with Jubilee AI character image across all 3 panels (sync, sync-password, signin/signup)
+
+### Added (Cross-Platform — Codex API + All Clients)
+- **Contact Duplicate Validation**: Database `findDuplicateContacts` rewritten to match by Display Name AND Phone Number; API returns `DUPLICATE_DETECTED` (409) for active and `DELETED_DUPLICATE_FOUND` (409) for soft-deleted matches
+- **Web Duplicate Handling**: Frontend pre-save duplicate check, import duplicate detection with soft-deleted restore, batch operations skip duplicates
+- **WPF Duplicate Handling**: Restore dialog for deleted duplicates, `RestoreContactAsync` via PATCH endpoint
+- **Mobile Duplicate Handling**: Handle 409 responses in `createContact`, offer restore for deleted duplicates
+- **PeopleRibbon**: Contextual delete/restore buttons for Deleted folder
+
+### Added (WPF Desktop)
+- **Attendee Autocomplete (WPF)**: Contact filtering with suggestions Popup in NewEventWindow, selection logic in NewEventViewModel
+- **Folder Pane Toggle Fix**: Replaced broken DoubleAnimation with direct GridLength/Visibility assignment
+- **Cursor Fix**: Added `WindowChrome.IsHitTestVisibleInChrome` and `ForceCursor` for AppRail buttons
+
+### Fixed (Frontend)
+- **Sign-In Dropdown Arrow**: Removed misleading `arrow_drop_down` icon from email text input
+- **ContactDialog Dark Theme**: Fixed date picker color-scheme for dark theme
+- **ContactDialog Validation**: Added frontend email/website URL validation
+
+### Technical Details
+- RecipientInput `chipDisplay` prop: `'full'` for mail compose (Name <email>), `'name'` for calendar (Name only)
+- Attendee state changed from `string` to `Recipient[]` in EventDialog; emails extracted on save
+- Contact duplicate detection normalizes phone digits for comparison
+- 28 files modified across web, WPF, mobile, and API layers
+- No new npm packages — reuses existing RecipientInput and contactService
+
 ## [1.7.0] - 2026-02-21
 
 ### Added (Frontend — jubileeoutlook-frontend)

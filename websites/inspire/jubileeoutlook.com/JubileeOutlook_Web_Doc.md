@@ -1,6 +1,6 @@
 # JubileeOutlook.com - Comprehensive Web Documentation
 
-**Version:** 1.7.0
+**Version:** 1.8.0
 **Last Updated:** February 21, 2026
 **Document Scope:** Full-stack architecture, API specifications, UI structure, data flow, and system behavior
 
@@ -634,7 +634,7 @@ src/
 ├── components/
 │   ├── layout/                  # AppLayout, AppRail, TitleBar, StatusBar, Ribbons
 │   ├── mail/                    # FolderPane, MessageList, ReadingPane, ComposeMail
-│   ├── calendar/                # CalendarGrid, MiniCalendar, EventDialog, ReminderPopup
+│   ├── calendar/                # CalendarGrid, EventDialog (attendee autocomplete), ReminderPopup
 │   └── people/                  # ContactGroups, ContactList, ContactDetail, ContactDialog
 ├── pages/
 │   ├── Auth/SignIn.tsx           # Multi-panel auth with email sync
@@ -912,7 +912,7 @@ function mapFolderDto(dto: MailFolderDto): MailFolder { ... }
 | `User` | types/common | id, email, displayName, avatarUrl |
 | `MailFolder` | types/mail | id, displayName, folderType, unreadItemCount, childFolders[] |
 | `EmailMessage` | types/mail | id, subject, from, to[], cc[], bcc[], bodyHtml, bodyText, isRead, isFlagged, attachments[] |
-| `CalendarEvent` | types/calendar | id, title, startDateTime, endDateTime, isAllDay, category, eventColor, attendees[] |
+| `CalendarEvent` | types/calendar | id, title, startDateTime, endDateTime, isAllDay, category, eventColor, attendees[], timezone |
 | `Contact` | types/contacts | id, displayName, firstName, lastName, emailAddresses[], phoneNumbers[], company, isFavorite |
 | `ContactGroup` | types/contacts | id, name, description, memberCount |
 
@@ -1357,10 +1357,12 @@ Codex (Identity)                    Continuum (Data)
 | **Calendar** | ~~Week/WorkWeek/Day views are placeholders~~ — RESOLVED in v1.5.0 |
 | **Calendar** | ~~No event creation/editing from UI~~ — RESOLVED in v1.5.0 |
 | **Calendar** | ~~Events array always empty~~ — RESOLVED in v1.5.0 + v1.7.0 (migration 0007 fix) |
+| **Calendar** | ~~No attendee autocomplete in EventDialog~~ — RESOLVED in v1.8.0 (contacts search via RecipientInput) |
 | **People** | ~~No contact CRUD from UI~~ — RESOLVED in v1.6.0 |
 | **People** | ~~No group management from UI~~ — RESOLVED in v1.6.0 |
 | **People** | ~~Contacts array always empty~~ — RESOLVED in v1.6.0 |
 | **People** | ~~Search input not connected~~ — RESOLVED in v1.6.0 |
+| **People** | ~~No duplicate detection~~ — RESOLVED in v1.8.0 (Display Name + Phone cross-platform) |
 | **Auth** | Trust-based X-User-Id header (no server-side token verification) |
 | **Security** | IMAP passwords stored as base64 (not AES-256) |
 | **Security** | HTML rendered via dangerouslySetInnerHTML without sanitization |

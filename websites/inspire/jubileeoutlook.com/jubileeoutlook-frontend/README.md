@@ -51,6 +51,7 @@ src/
 │   │   └── TitleBar/            # App title bar with branding
 │   ├── mail/
 │   │   ├── ComposeMail/         # Email compose with rich text, autocomplete, templates
+│   │   ├── RecipientInput/     # Reusable autocomplete chip input (contacts search, chipDisplay modes)
 │   │   ├── FolderList/          # IMAP folder tree
 │   │   ├── MessageList/         # Message list with thread grouping
 │   │   ├── ReadingPane/         # Email viewer with attachment preview
@@ -58,7 +59,7 @@ src/
 │   │   └── SnoozePicker/        # Snooze time selection dialog
 │   ├── calendar/
 │   │   ├── CalendarGrid/        # Time grid views (Day/Week/WorkWeek/Month) with overlap detection
-│   │   ├── EventDialog/         # Event create/edit dialog (WPF parity) with attachments, timezone, templates
+│   │   ├── EventDialog/         # Event create/edit dialog (WPF parity) with attendee autocomplete, attachments, timezone, templates
 │   │   ├── EventResizeHandle/   # Bottom-edge drag handle for event duration resize
 │   │   ├── ExportDialog/        # iCal (.ics) export and print dialog
 │   │   ├── MyCalendars/         # Sidebar with calendar visibility toggles (localStorage persisted)
@@ -126,6 +127,7 @@ src/
 - **Drag & drop**: Move events between time slots (HTML5 native drag, 15-minute snap)
 - **Event resize**: Drag bottom edge to adjust duration (15-minute minimum)
 - EventDialog with WPF desktop parity (two-panel 1100x750 layout)
+  - **Attendee autocomplete**: Type to search contacts via Codex API; dropdown with name, email, avatar initials; display name chips (email on hover)
   - ShowAs status, Reminder, Category, Private toggle
   - **Hybrid time picker**: Dropdown + freeform text input ("8", "8:30 AM", "20:15", "2pm")
   - Location with in-person toggle
@@ -149,6 +151,19 @@ src/
 - 30-second event cache per date range with auto-invalidation on mutations
 - DTO mapper handles both camelCase and snake_case API responses
 - Private events display "Private" instead of actual title
+
+### People
+- Full contact CRUD via Codex API
+- Contact duplicate validation (Display Name + Phone) with soft-delete restore
+- Contact groups with member management
+- Batch operations (delete, restore, hard delete, category update)
+- Import (vCard, CSV) with duplicate detection / Export (vCard, CSV)
+- Contextual PeopleRibbon with delete/restore for Deleted folder
+
+### Branding
+- Jubilee AI character favicon and PWA icons (favicon.ico, logo192, logo512, SVG)
+- Jubilee logo on sign-in page avatar
+- Gold theme color (`#ffbd59`) throughout
 
 ### Settings
 - Account management (add/remove email accounts)
