@@ -745,17 +745,15 @@ app.put('/api/v1/contacts/:id', async (c) => {
     return c.json({ success: false, error: 'userId is required' }, 400);
   }
 
-  // Skip full validation for soft-delete operations (only updating is_deleted flag)
-  if (!body.isDeleted) {
-    const validationErrors = validateContactInput(body);
-    if (validationErrors.length > 0) {
-      return c.json({ success: false, error: 'Validation failed', details: validationErrors }, 400);
-    }
+  // Validate contact input (all fields are optional, only format checks)
+  const validationErrors = validateContactInput(body);
+  if (validationErrors.length > 0) {
+    return c.json({ success: false, error: 'Validation failed', details: validationErrors }, 400);
   }
 
   try {
-    // Verify ownership before update
-    const existing = await verifyContactOwnership(id, userId);
+    // Verify ownership before update (include deleted contacts so restore works)
+    const existing = await verifyContactOwnership(id, userId, true);
     if (!existing) {
       return c.json({ success: false, error: 'Contact not found' }, 404);
     }
