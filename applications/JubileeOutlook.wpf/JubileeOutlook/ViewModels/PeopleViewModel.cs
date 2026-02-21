@@ -40,6 +40,9 @@ public partial class PeopleViewModel : ObservableObject
     private Contact? _selectedContact;
 
     [ObservableProperty]
+    private Contact? _previewContact;
+
+    [ObservableProperty]
     private bool _isLoading = false;
 
     [ObservableProperty]
@@ -1059,55 +1062,56 @@ public partial class PeopleViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Event raised when single contact delete is requested (needs confirmation)
+    /// </summary>
+    public event EventHandler<Contact>? DeleteContactConfirmRequested;
+
     [RelayCommand]
-    private async Task DeleteContactAsync()
+    private void DeleteContact()
     {
         if (SelectedContact == null) return;
 
-        try
+        // Raise event so the View can show a confirmation dialog
+        DeleteContactConfirmRequested?.Invoke(this, SelectedContact);
+    }
+
+    /// <summary>
+    /// Performs the actual contact deletion after user confirmation
+    /// </summary>
+    public async Task DeleteContactConfirmedAsync(Contact contactToDelete)
+    {
+        var folderName = SelectedFolder?.Name ?? "Your contacts";
+
+        if (folderName == "Deleted")
         {
-            var contactToDelete = SelectedContact;
-            var folderName = SelectedFolder?.Name ?? "Your contacts";
+            // Hard delete - permanently remove from database
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Permanently deleting contact: {contactToDelete.DisplayName}");
 
-            // If already in Deleted folder, permanently delete
-            if (folderName == "Deleted")
-            {
-                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Permanently deleting contact: {contactToDelete.DisplayName}");
+            await DeleteContactViaApiAsync(contactToDelete.Id);
 
-                // Hard delete via API
-                await DeleteContactViaApiAsync(contactToDelete.Id);
+            Contacts.Remove(contactToDelete);
+            FilterContacts();
 
-                // Remove from local collection
-                Contacts.Remove(contactToDelete);
-                FilterContacts();
-
-                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Contact permanently deleted: {contactToDelete.DisplayName}");
-            }
-            else
-            {
-                // Soft delete - move to Deleted folder
-                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Moving contact to Deleted: {contactToDelete.DisplayName}");
-
-                contactToDelete.IsDeleted = true;
-                contactToDelete.DeletedAt = DateTime.UtcNow;
-
-                // Update via API
-                await UpdateContactViaApiAsync(contactToDelete);
-
-                // Refresh the filtered view
-                FilterContacts();
-
-                System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Contact moved to Deleted: {contactToDelete.DisplayName}");
-            }
-
-            // Clear selection
-            SelectedContact = null;
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Contact permanently deleted: {contactToDelete.DisplayName}");
         }
-        catch (Exception ex)
+        else
         {
-            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to delete contact: {ex.Message}");
-            Services.NotificationService.Instance.ShowError("Failed to delete contact. Please try again.", "Contacts");
+            // Soft delete - mark as deleted so it appears in the Deleted folder
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Soft-deleting contact: {contactToDelete.DisplayName}");
+
+            contactToDelete.IsDeleted = true;
+            contactToDelete.DeletedAt = DateTime.UtcNow;
+
+            await UpdateContactViaApiAsync(contactToDelete);
+
+            FilterContacts();
+
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Contact moved to Deleted folder: {contactToDelete.DisplayName}");
         }
+
+        // Clear selection
+        SelectedContact = null;
     }
 
     /// <summary>

@@ -468,11 +468,13 @@ function isValidEmail(email: string): boolean {
 }
 
 /**
- * Validates a URL format
+ * Validates a URL format (accepts URLs with or without protocol prefix)
  */
 function isValidUrl(url: string): boolean {
   try {
-    new URL(url);
+    // If no protocol, prepend https:// for validation
+    const urlToTest = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    new URL(urlToTest);
     return true;
   } catch {
     return false;
@@ -485,13 +487,7 @@ function isValidUrl(url: string): boolean {
 function validateContactInput(body: any): string[] {
   const errors: string[] = [];
 
-  // Phone is required — at least one phone number must be provided
-  const hasPhone = (body.phoneNumbers && Array.isArray(body.phoneNumbers) &&
-    body.phoneNumbers.some((p: any) => typeof p === 'string' && p.trim()));
-  const hasMobile = (typeof body.mobilePhone === 'string' && body.mobilePhone.trim());
-  if (!hasPhone && !hasMobile) {
-    errors.push('At least one phone number is required (work phone or mobile phone)');
-  }
+  // All fields are optional — only validate format when provided
 
   if (body.emailAddresses && Array.isArray(body.emailAddresses)) {
     for (const email of body.emailAddresses) {
@@ -749,9 +745,12 @@ app.put('/api/v1/contacts/:id', async (c) => {
     return c.json({ success: false, error: 'userId is required' }, 400);
   }
 
-  const validationErrors = validateContactInput(body);
-  if (validationErrors.length > 0) {
-    return c.json({ success: false, error: 'Validation failed', details: validationErrors }, 400);
+  // Skip full validation for soft-delete operations (only updating is_deleted flag)
+  if (!body.isDeleted) {
+    const validationErrors = validateContactInput(body);
+    if (validationErrors.length > 0) {
+      return c.json({ success: false, error: 'Validation failed', details: validationErrors }, 400);
+    }
   }
 
   try {
@@ -789,6 +788,8 @@ app.put('/api/v1/contacts/:id', async (c) => {
       website: body.website,
       isFavorite: body.isFavorite,
       category: body.category,
+      isDeleted: body.isDeleted,
+      deletedAt: body.deletedAt,
     });
 
     if (!contact) {

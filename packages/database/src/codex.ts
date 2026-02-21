@@ -447,6 +447,8 @@ export async function updateContact(contactId: string, data: {
   website?: string;
   isFavorite?: boolean;
   category?: string;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
 }) {
   const pool = getCodexPool();
   const fields: string[] = [];
@@ -481,6 +483,8 @@ export async function updateContact(contactId: string, data: {
     website: 'website',
     isFavorite: 'is_favorite',
     category: 'category',
+    isDeleted: 'is_deleted',
+    deletedAt: 'deleted_at',
   };
 
   const arrayFields = new Set(['emailAddresses', 'phoneNumbers']);

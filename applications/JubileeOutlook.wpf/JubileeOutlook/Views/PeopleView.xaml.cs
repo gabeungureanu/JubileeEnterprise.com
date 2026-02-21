@@ -35,6 +35,7 @@ public partial class PeopleView : UserControl
             viewModel.DuplicateContactDetected += ViewModel_DuplicateContactDetected;
             viewModel.RenameContactListRequested += ViewModel_RenameContactListRequested;
             viewModel.DeleteContactListConfirmRequested += ViewModel_DeleteContactListConfirmRequested;
+            viewModel.DeleteContactConfirmRequested += ViewModel_DeleteContactConfirmRequested;
         }
 
         // Load contacts when the view is loaded
@@ -72,6 +73,7 @@ public partial class PeopleView : UserControl
             oldViewModel.DuplicateContactDetected -= ViewModel_DuplicateContactDetected;
             oldViewModel.RenameContactListRequested -= ViewModel_RenameContactListRequested;
             oldViewModel.DeleteContactListConfirmRequested -= ViewModel_DeleteContactListConfirmRequested;
+            oldViewModel.DeleteContactConfirmRequested -= ViewModel_DeleteContactConfirmRequested;
         }
 
         if (e.NewValue is PeopleViewModel newViewModel)
@@ -89,6 +91,7 @@ public partial class PeopleView : UserControl
             newViewModel.DuplicateContactDetected += ViewModel_DuplicateContactDetected;
             newViewModel.RenameContactListRequested += ViewModel_RenameContactListRequested;
             newViewModel.DeleteContactListConfirmRequested += ViewModel_DeleteContactListConfirmRequested;
+            newViewModel.DeleteContactConfirmRequested += ViewModel_DeleteContactConfirmRequested;
 
             // Load contacts and groups when DataContext changes
             _ = newViewModel.LoadContactsFromDatabaseAsync();
@@ -161,13 +164,13 @@ public partial class PeopleView : UserControl
     }
 
     /// <summary>
-    /// Handle double-click on contact to open edit dialog
+    /// Handle double-click on contact to show detail preview
     /// </summary>
     private void ContactsListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (DataContext is PeopleViewModel viewModel && viewModel.SelectedContact != null)
         {
-            viewModel.EditContactCommand.Execute(null);
+            viewModel.PreviewContact = viewModel.SelectedContact;
         }
     }
 
@@ -501,9 +504,9 @@ public partial class PeopleView : UserControl
 
     private void ViewOnMap_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        if (DataContext is ViewModels.PeopleViewModel vm && vm.SelectedContact != null)
+        if (DataContext is ViewModels.PeopleViewModel vm && vm.PreviewContact != null)
         {
-            var contact = vm.SelectedContact;
+            var contact = vm.PreviewContact;
             var parts = new[] { contact.Address, contact.City, contact.State, contact.PostalCode, contact.Country }
                 .Where(p => !string.IsNullOrWhiteSpace(p));
             var query = Uri.EscapeDataString(string.Join(", ", parts));
@@ -896,7 +899,7 @@ public partial class PeopleView : UserControl
     {
         if (DataContext is PeopleViewModel vm)
         {
-            vm.SelectedContact = null;
+            vm.PreviewContact = null;
         }
     }
 
@@ -907,7 +910,44 @@ public partial class PeopleView : UserControl
     {
         if (DataContext is PeopleViewModel vm)
         {
-            vm.SelectedContact = null;
+            vm.PreviewContact = null;
+        }
+    }
+
+    /// <summary>
+    /// Handle single contact delete request - show confirmation dialog
+    /// </summary>
+    private async void ViewModel_DeleteContactConfirmRequested(object? sender, Contact contact)
+    {
+        try
+        {
+            var isInDeletedFolder = DataContext is PeopleViewModel vm2 && vm2.IsInDeletedFolder;
+            var message = isInDeletedFolder
+                ? $"Are you sure you want to permanently delete '{contact.DisplayName}'?\n\nThis action cannot be undone."
+                : $"Are you sure you want to delete '{contact.DisplayName}'?";
+            var title = isInDeletedFolder ? "Permanently Delete Contact" : "Delete Contact";
+            var icon = isInDeletedFolder ? MessageBoxImage.Warning : MessageBoxImage.Question;
+
+            var result = ThemedMessageBox.Show(Window.GetWindow(this),
+                message, title, MessageBoxButton.YesNo, icon);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                if (DataContext is PeopleViewModel viewModel)
+                {
+                    await viewModel.DeleteContactConfirmedAsync(contact);
+                    Services.NotificationService.Instance.ShowSuccess($"'{contact.DisplayName}' deleted.", "Contacts");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleView] Delete contact failed: {ex.Message}");
+            ThemedMessageBox.Show(Window.GetWindow(this),
+                $"Failed to delete contact: {ex.Message}",
+                "Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
         }
     }
 
@@ -987,9 +1027,9 @@ public partial class PeopleView : UserControl
 
                 case Key.Escape:
                     // Escape: Close detail modal first, then clear search
-                    if (vm.SelectedContact != null)
+                    if (vm.PreviewContact != null)
                     {
-                        vm.SelectedContact = null;
+                        vm.PreviewContact = null;
                         e.Handled = true;
                     }
                     else if (!string.IsNullOrEmpty(vm.SearchText))
