@@ -466,7 +466,6 @@ const SignIn: React.FC = () => {
                     onKeyDown={handleKeyDown}
                     autoFocus
                   />
-                  <span className="material-symbols-outlined signin__input-arrow">arrow_drop_down</span>
                 </div>
                 {errors.syncEmail && <div className="signin__field-error">{errors.syncEmail}</div>}
 
