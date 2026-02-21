@@ -234,6 +234,32 @@
   font-weight: 500;
 }
 
+/* --- Attendees Field with RecipientInput --- */
+.event-dialog__field--attendees {
+  position: relative;
+}
+
+.event-dialog__field--attendees .recipient-input {
+  flex: 1;
+  padding: 4px 8px;
+  background-color: #202020;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  min-height: 36px;
+}
+
+.event-dialog__field--attendees .recipient-input:focus-within {
+  border-color: var(--gold-primary);
+}
+
+.event-dialog__field--attendees .recipient-input__dropdown {
+  position: absolute;
+  top: 100%;
+  left: 32px;
+  right: 48px;
+  z-index: 100;
+}
+
 .event-dialog__optional {
   color: var(--text-tertiary);
   font-size: 12px;

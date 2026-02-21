@@ -12,6 +12,7 @@ interface RecipientInputProps {
   onChange: (recipients: Recipient[]) => void;
   placeholder?: string;
   autoFocus?: boolean;
+  chipDisplay?: 'full' | 'name';
 }
 
 function getInitials(name: string): string {
@@ -27,7 +28,7 @@ function parseEmailEntry(entry: string): Recipient {
   return { name: '', email: trimmed };
 }
 
-const RecipientInput: React.FC<RecipientInputProps> = ({ recipients, onChange, placeholder, autoFocus }) => {
+const RecipientInput: React.FC<RecipientInputProps> = ({ recipients, onChange, placeholder, autoFocus, chipDisplay = 'full' }) => {
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState<{ name: string; email: string }[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -149,9 +150,9 @@ const RecipientInput: React.FC<RecipientInputProps> = ({ recipients, onChange, p
   return (
     <div className="recipient-input" onClick={() => inputRef.current?.focus()}>
       {recipients.map((r, i) => (
-        <span key={`${r.email}-${i}`} className="recipient-input__chip">
+        <span key={`${r.email}-${i}`} className="recipient-input__chip" title={r.name ? `${r.name} <${r.email}>` : r.email}>
           <span className="recipient-input__chip-text">
-            {r.name ? `${r.name} <${r.email}>` : r.email}
+            {chipDisplay === 'name' && r.name ? r.name : (r.name ? `${r.name} <${r.email}>` : r.email)}
           </span>
           <button
             className="recipient-input__chip-remove"

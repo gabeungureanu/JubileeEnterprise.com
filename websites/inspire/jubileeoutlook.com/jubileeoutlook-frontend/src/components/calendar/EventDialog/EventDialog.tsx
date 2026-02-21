@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { CalendarEvent, EventAttachment, ShowAsStatus } from '../../../types/calendar';
 import { EventColor } from '../../../types/common';
 import { fileService } from '../../../services/calendar/fileService';
+import RecipientInput, { Recipient } from '../../mail/RecipientInput/RecipientInput';
 
 import './EventDialog.css';
 
@@ -233,7 +234,7 @@ interface EventDialogProps {
 const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, editMode, defaultDate, onClose, onSave, onDelete }) => {
   // Form state
   const [title, setTitle] = useState('');
-  const [attendees, setAttendees] = useState('');
+  const [attendeeList, setAttendeeList] = useState<Recipient[]>([]);
   const [eventDate, setEventDate] = useState('');
   const [startTime, setStartTime] = useState('08:00');
   const [endTime, setEndTime] = useState('08:30');
@@ -274,7 +275,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, editMode, defa
 
     if (event) {
       setTitle(event.title || '');
-      setAttendees((event.attendees || []).join('; '));
+      setAttendeeList((event.attendees || []).map(a => ({ name: '', email: a })));
       setEventDate(formatDateForInput(new Date(event.startDateTime)));
       setStartTime(getTimeFromISO(event.startDateTime));
       setEndTime(getTimeFromISO(event.endDateTime));
@@ -308,7 +309,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, editMode, defa
     } else {
       const lastTimes = getLastUsedTimes();
       setTitle('');
-      setAttendees('');
+      setAttendeeList([]);
       setEventDate(formatDateForInput(defaultDate || new Date()));
       setStartTime(lastTimes.start);
       setEndTime(lastTimes.end);
@@ -437,9 +438,8 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, editMode, defa
       saveLastUsedTimes(startTime, endTime);
     }
 
-    const attendeeList = attendees
-      .split(/[;,]/)
-      .map(a => a.trim())
+    const attendeeEmails = attendeeList
+      .map(a => a.email.trim())
       .filter(a => a.length > 0);
 
     let finalRecurrenceEndDate: string | null = null;
@@ -465,7 +465,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, editMode, defa
       reminderMinutes,
       eventColor,
       category: eventColor,
-      attendees: attendeeList,
+      attendees: attendeeEmails,
       organizer: '',
       isRecurring,
       recurrenceType: isRecurring ? recurrenceType.toLowerCase() : '',
@@ -608,13 +608,13 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, editMode, defa
               </div>
 
               {/* Attendees */}
-              <div className="event-dialog__field">
+              <div className="event-dialog__field event-dialog__field--attendees">
                 <span className="material-symbols-outlined">group</span>
-                <input
-                  type="text"
+                <RecipientInput
+                  recipients={attendeeList}
+                  onChange={setAttendeeList}
                   placeholder="Invite attendees"
-                  value={attendees}
-                  onChange={(e) => setAttendees(e.target.value)}
+                  chipDisplay="name"
                 />
                 <span className="event-dialog__optional">Optional</span>
               </div>
