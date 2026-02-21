@@ -9,7 +9,7 @@ import {
 
 export const calendarService = {
   async getEvents(startDate: Date, endDate: Date): Promise<CalendarEvent[]> {
-    const userId = tokenStore.getUserId();
+    const userId = tokenStore.requireUserId();
     const response = await continuumClient.get<ApiEventsListResponse>('/outlook/events', {
       params: {
         userId,
@@ -33,7 +33,7 @@ export const calendarService = {
   },
 
   async createEvent(event: Partial<CalendarEventDto>): Promise<CalendarEvent | null> {
-    const userId = tokenStore.getUserId();
+    const userId = tokenStore.requireUserId();
     const payload = { ...event, user_id: userId };
     const response = await continuumClient.post('/outlook/events', payload);
     const data = response.data;

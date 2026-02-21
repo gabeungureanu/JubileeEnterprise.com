@@ -24,6 +24,14 @@ export const tokenStore = {
   getRefreshToken: () => cachedRefreshToken,
   getUserId: () => cachedUserId,
 
+  /** Throws if user is not authenticated — use this instead of getUserId() in service calls. */
+  requireUserId(): string {
+    if (!cachedUserId) {
+      throw new Error('User is not authenticated. Please sign in to continue.');
+    }
+    return cachedUserId;
+  },
+
   async setTokens(access: string, refresh: string): Promise<void> {
     cachedAccessToken = access;
     cachedRefreshToken = refresh;

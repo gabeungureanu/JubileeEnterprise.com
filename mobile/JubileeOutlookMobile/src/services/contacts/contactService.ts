@@ -12,7 +12,7 @@ export const contactService = {
   // ---------- Contacts ----------
 
   async getContacts(page = 1, pageSize = 100): Promise<{ contacts: Contact[]; totalCount: number }> {
-    const userId = tokenStore.getUserId();
+    const userId = tokenStore.requireUserId();
     const response = await codexClient.get<ApiContactsListResponse>('/contacts', {
       params: { userId, page, pageSize },
     });
@@ -34,7 +34,7 @@ export const contactService = {
   },
 
   async createContact(contact: Partial<ContactDto>): Promise<Contact | null> {
-    const userId = tokenStore.getUserId();
+    const userId = tokenStore.requireUserId();
     const payload = { ...contact, user_id: userId };
     const response = await codexClient.post('/contacts', payload);
     const data = response.data;
@@ -69,7 +69,7 @@ export const contactService = {
   // ---------- Contact Groups ----------
 
   async getGroups(): Promise<ContactGroup[]> {
-    const userId = tokenStore.getUserId();
+    const userId = tokenStore.requireUserId();
     const response = await codexClient.get<ApiContactGroupsListResponse>('/contact-groups', {
       params: { userId },
     });
@@ -78,7 +78,7 @@ export const contactService = {
   },
 
   async createGroup(name: string, description = ''): Promise<ContactGroup | null> {
-    const userId = tokenStore.getUserId();
+    const userId = tokenStore.requireUserId();
     const response = await codexClient.post('/contact-groups', { name, description }, {
       params: { userId },
     });
@@ -87,7 +87,7 @@ export const contactService = {
   },
 
   async updateGroup(groupId: string, name: string, description = ''): Promise<ContactGroup | null> {
-    const userId = tokenStore.getUserId();
+    const userId = tokenStore.requireUserId();
     const response = await codexClient.put(`/contact-groups/${encodeURIComponent(groupId)}`, { name, description }, {
       params: { userId },
     });
@@ -96,7 +96,7 @@ export const contactService = {
   },
 
   async deleteGroup(groupId: string): Promise<boolean> {
-    const userId = tokenStore.getUserId();
+    const userId = tokenStore.requireUserId();
     const response = await codexClient.delete(`/contact-groups/${encodeURIComponent(groupId)}`, {
       params: { userId },
     });
@@ -104,7 +104,7 @@ export const contactService = {
   },
 
   async addMembersToGroup(groupId: string, contactIds: string[]): Promise<number> {
-    const userId = tokenStore.getUserId();
+    const userId = tokenStore.requireUserId();
     const response = await codexClient.post(`/contact-groups/${encodeURIComponent(groupId)}/members`, { contactIds }, {
       params: { userId },
     });
@@ -112,7 +112,7 @@ export const contactService = {
   },
 
   async removeMemberFromGroup(groupId: string, contactId: string): Promise<boolean> {
-    const userId = tokenStore.getUserId();
+    const userId = tokenStore.requireUserId();
     const response = await codexClient.delete(
       `/contact-groups/${encodeURIComponent(groupId)}/members/${encodeURIComponent(contactId)}`,
       { params: { userId } }
@@ -170,7 +170,7 @@ export const contactService = {
   // ---------- Group member fetching ----------
 
   async getGroupMembers(groupId: string): Promise<Contact[]> {
-    const userId = tokenStore.getUserId();
+    const userId = tokenStore.requireUserId();
     const response = await codexClient.get(`/contact-groups/${encodeURIComponent(groupId)}`, {
       params: { userId },
     });

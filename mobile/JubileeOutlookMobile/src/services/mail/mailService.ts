@@ -12,8 +12,7 @@ export const mailService = {
   // ---------- Folders ----------
 
   async getFolders(): Promise<MailFolder[]> {
-    const userId = tokenStore.getUserId();
-    if (!userId) return [];
+    const userId = tokenStore.requireUserId();
     const response = await continuumClient.get<ApiFoldersResponse>('/outlook/folders', {
       params: { userId },
     });
@@ -26,7 +25,7 @@ export const mailService = {
   },
 
   async createFolder(name: string, parentFolderId?: string): Promise<{ success: boolean; folderId?: string }> {
-    const userId = tokenStore.getUserId();
+    const userId = tokenStore.requireUserId();
     const response = await continuumClient.post('/outlook/folders', { userId, name, parentFolderId });
     return response.data;
   },
@@ -66,7 +65,7 @@ export const mailService = {
   },
 
   async searchMessages(query: string, folderId?: string, page = 1, pageSize = 50): Promise<{ messages: EmailMessage[]; totalCount: number }> {
-    const userId = tokenStore.getUserId();
+    const userId = tokenStore.requireUserId();
     const response = await continuumClient.get<ApiMessagesResponse>('/outlook/messages/search', {
       params: { userId, q: query, folderId, page, pageSize },
     });
@@ -159,8 +158,7 @@ export const mailService = {
   // ---------- Accounts ----------
 
   async getAccounts(): Promise<{ id: string; email_address: string }[]> {
-    const userId = tokenStore.getUserId();
-    if (!userId) return [];
+    const userId = tokenStore.requireUserId();
     const response = await continuumClient.get('/outlook/accounts', { params: { userId } });
     return response.data?.accounts || [];
   },
