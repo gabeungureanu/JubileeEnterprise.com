@@ -19,9 +19,12 @@ import React, {
 } from 'react';
 import * as Notifications from 'expo-notifications';
 import { NavigationContainerRef } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { reminderService } from '../services/calendar/reminderService';
 import { calendarService } from '../services/calendar/calendarService';
 import type { CalendarEvent } from '../types/calendar';
+
+const DISMISSED_STORAGE_KEY = '@jubilee_dismissed_reminders';
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -96,6 +99,13 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           data?.type === 'calendar_reminder' ||
           data?.type === 'calendar_reminder_snoozed'
         ) {
+          // Check if this event was dismissed — never show again if so
+          try {
+            const raw = await AsyncStorage.getItem(DISMISSED_STORAGE_KEY);
+            const dismissed = raw ? JSON.parse(raw) : {};
+            if (dismissed[data.eventId as string]) return;
+          } catch { /* continue */ }
+
           // Fetch fresh event data for the popup
           try {
             const event = await calendarService.getEvent(data.eventId as string);
@@ -136,6 +146,13 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           data?.type === 'calendar_reminder_snoozed'
         ) {
           const eventId = data.eventId as string;
+
+          // Check if this event was dismissed — never show again if so
+          try {
+            const raw = await AsyncStorage.getItem(DISMISSED_STORAGE_KEY);
+            const dismissed = raw ? JSON.parse(raw) : {};
+            if (dismissed[eventId]) return;
+          } catch { /* continue */ }
 
           // Try to fetch the event and navigate to detail
           try {

@@ -318,6 +318,12 @@ function generateOccurrences(
     : null;
   const daysOfWeek = event.recurrenceDaysOfWeek || [];
 
+  // Exception dates: occurrences that have been individually deleted or modified.
+  // These should be excluded from expansion (matching web frontend exactly).
+  const exceptionDates = new Set(
+    (event.recurrenceExceptionDates || []).map((d) => new Date(d).toDateString()),
+  );
+
   let occurrenceCount = 0;
   const currentDate = new Date(eventStart);
 
@@ -344,7 +350,11 @@ function generateOccurrences(
         if (recurrenceEndDate && dayDate > recurrenceEndDate) continue;
         if (occurrenceCount >= maxOccurrences) break;
 
-        if (dayDate >= rangeStart && dayDate <= rangeEnd) {
+        if (
+          dayDate >= rangeStart &&
+          dayDate <= rangeEnd &&
+          !exceptionDates.has(dayDate.toDateString())
+        ) {
           const occStart = new Date(dayDate);
           occStart.setHours(
             eventStart.getHours(),
@@ -360,7 +370,11 @@ function generateOccurrences(
 
       currentDate.setDate(currentDate.getDate() + 7 * interval);
     } else {
-      if (currentDate >= rangeStart && currentDate <= rangeEnd) {
+      if (
+        currentDate >= rangeStart &&
+        currentDate <= rangeEnd &&
+        !exceptionDates.has(currentDate.toDateString())
+      ) {
         const occStart = new Date(currentDate);
         const occEnd = new Date(occStart.getTime() + durationMs);
 

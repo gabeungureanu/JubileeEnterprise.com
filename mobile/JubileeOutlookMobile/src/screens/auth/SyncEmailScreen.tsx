@@ -117,6 +117,9 @@ export default function SyncEmailScreen({ navigation }: Props) {
             autoCapitalize="none"
             autoCorrect={false}
             autoComplete="email"
+            autoFocus
+            returnKeyType="go"
+            onSubmitEditing={handleContinue}
           />
         </View>
         {errors.syncEmail && <Text style={styles.fieldError}>{errors.syncEmail}</Text>}
@@ -140,6 +143,14 @@ export default function SyncEmailScreen({ navigation }: Props) {
             Continue
           </Text>
         </TouchableOpacity>
+
+        {/* Sign In link (matching web's sync panel navigation) */}
+        <View style={styles.signInRow}>
+          <Text style={styles.createAccountText}>Already have an account? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
+            <Text style={styles.goldLink}>Sign In</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </AuthCard>
   );
@@ -251,5 +262,11 @@ const styles = StyleSheet.create({
   },
   goldButtonTextDisabled: {
     color: '#4D4D4D',
+  },
+  signInRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Spacing.lg,
   },
 });

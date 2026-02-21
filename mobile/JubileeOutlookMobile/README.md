@@ -12,8 +12,8 @@ Jubilee Outlook Mobile is a full-featured email client that mirrors the JubileeO
 
 ### Authentication (Phase 1)
 - **5-Screen Auth Flow**: Matching the web frontend's 5-panel auth system
-  - **Sync Email** (default landing) — Enter email to sync existing accounts
-  - **Sync Password** — IMAP app password entry with provider detection
+  - **Sync Email** (default landing) — Enter email to sync existing accounts, with "Sign In" and "Create account" links
+  - **Sync Password** — IMAP app password entry with provider detection, SHA-256 userId hashing (via expo-crypto)
   - **Sign In** — Codex auth with email/password and "Keep me signed in"
   - **Sign Up** — Full registration with name, email, password, newsletter
   - **Forgot Password** — Email-based password reset with auto-redirect
@@ -21,8 +21,13 @@ Jubilee Outlook Mobile is a full-featured email client that mirrors the JubileeO
 - **Gold Theme**: Matches web's `#FFD700` gold accent throughout auth screens
 - **Real-time Validation**: Per-field error clearing as user corrects input
 - **Animated Progress**: Indeterminate progress bar during IMAP sync
-- **Remember Me**: Persists email to AsyncStorage for returning users
+- **Remember Me**: Persists email to AsyncStorage for returning users; auto-saves email after registration
 - **Auto-Navigation**: After successful sync, automatically transitions to Mail inbox via `refreshAuthState()`
+- **Loading Gate**: Returns to authenticated state without AuthStack flash (LoadingSpinner during bootstrap)
+- **Sync-Only Persistence**: Sync-only sessions survive app restart (matches web behavior)
+- **Keyboard Handling**: `returnKeyType` and `onSubmitEditing` on all inputs with ref-chaining for multi-input forms
+- **AutoFocus**: First input on each auth screen receives autoFocus
+- **Button Loading Text**: Shows "Signing in..." / "Creating account..." text during loading (matches web, no spinner)
 
 ### Mail (Phase 2)
 - **Sidebar Drawer**: Animated two-column layout with icon rail, folder list, account switcher, and unread counts
@@ -41,15 +46,20 @@ Jubilee Outlook Mobile is a full-featured email client that mirrors the JubileeO
 - **Flag Toggle**: Tap flag icon to toggle flagged status
 
 ### Calendar
-- **Event List**: Upcoming events with details
-- **Event Detail**: Full event view with attendees, location, recurrence
-- **New Event**: Create events with date/time pickers, recurrence, reminders
+- **Event List**: Upcoming events with 30-second auto-refresh sync
+- **Event Detail**: Full event view with attendees, location, recurrence, attachment preview
+- **New Event**: Create events with date/time pickers, recurrence, reminders, attendee input with email validation
+- **Recurring Event Delete**: "This event" vs "All events in series" dialog (matches web RecurrenceEditDialog)
+- **Delete Confirmation**: Confirmation popup before all event deletions (recurring and non-recurring)
+- **Attachment Preview**: In-app preview modal for calendar event attachments with download/share
+- **Reminders**: Local notification reminders with dismiss/snooze actions
 
 ### People (Contacts)
-- **Contact List**: Alphabetical listing with search and favorites
-- **Contact Detail**: Full contact information display
-- **Contact Edit**: Create and edit contacts
-- **Contact Groups**: Group navigation (placeholder screen)
+- **Contact List**: Alphabetical listing with search, favorites, filter tabs (All/Favorites/Groups/Deleted), category filtering, sort options
+- **Contact Detail**: Full contact profile with quick actions (call, email, message), group membership, favorite toggle
+- **Contact Edit**: Create/edit contacts with full validation, date pickers for birthday/anniversary (MonthGrid + BottomSheet), URL validation for website, snake_case DTO payload matching web frontend
+- **Contact Groups**: Group CRUD, member management, add/remove members with search
+- **Batch Operations**: Multi-select with bulk delete, restore, hard-delete, category update
 
 ### Settings
 - **Account Management**: Connected accounts overview
@@ -61,6 +71,11 @@ Jubilee Outlook Mobile is a full-featured email client that mirrors the JubileeO
 - **ThemedAlert**: Modal alert/confirm dialog
 - **SafeScreen**: SafeAreaView wrapper with configurable edges
 - **useAlert Hook**: Provides `alert()`, `confirm()`, `toast()` functions
+- **AttachmentPreviewModal**: In-app file preview with download/share via expo-web-browser and expo-sharing
+- **RecurrenceActionDialog**: "This event" / "All events in series" modal for recurring event operations
+- **BottomSheet**: Reusable bottom sheet with backdrop and customizable height
+- **Avatar**: Contact/user avatar with initials fallback
+- **ReminderPopup / ReminderOverlay**: Local notification reminder UI
 
 ## Quick Start
 
@@ -115,12 +130,23 @@ JubileeOutlookMobile/
     │   ├── common/
     │   │   ├── index.ts                  # Component barrel exports
     │   │   ├── ThemedToast.tsx           # Auto-dismiss notification toast
-    │   │   └── ThemedAlert.tsx           # Modal alert/confirm dialog
+    │   │   ├── ThemedAlert.tsx           # Modal alert/confirm dialog
+    │   │   ├── AttachmentPreviewModal.tsx # File preview with download/share
+    │   │   ├── RecurrenceActionDialog.tsx # Recurring event action chooser
+    │   │   ├── BottomSheet.tsx           # Reusable bottom sheet
+    │   │   ├── Avatar.tsx               # User/contact avatar
+    │   │   ├── ReminderPopup.tsx         # Reminder notification popup
+    │   │   └── ReminderOverlay.tsx       # Reminder overlay
     │   ├── layout/
     │   │   └── SafeScreen.tsx            # SafeAreaView wrapper
     │   └── modules/
     │       ├── calendar/
-    │       │   └── EventCard.tsx         # Calendar event card
+    │       │   ├── EventCard.tsx         # Calendar event card
+    │       │   ├── AttachmentPicker.tsx  # File attachment picker
+    │       │   ├── AttendeeInput.tsx     # Attendee email input with validation
+    │       │   ├── DatePickerField.tsx   # Tappable date field with MonthGrid
+    │       │   ├── MonthGrid.tsx         # Month calendar grid
+    │       │   └── CalendarHeader.tsx    # Calendar header with nav
     │       └── mail/
     │           ├── MessageListItem.tsx   # Message list item (selection mode)
     │           └── SidebarDrawer.tsx     # Mail sidebar drawer
@@ -131,8 +157,9 @@ JubileeOutlookMobile/
     │   ├── spacing.ts                   # Spacing, BorderRadius, HitSlop
     │   └── typography.ts                # Typography scale
     ├── context/
-    │   ├── AuthContext.tsx               # Auth state + login/register/logout/refreshAuthState
-    │   └── MailContext.tsx               # Mail state + folder/message management
+    │   ├── AuthContext.tsx               # Auth state + login/register/logout/refreshAuthState + sync-only persistence
+    │   ├── MailContext.tsx               # Mail state + folder/message management
+    │   └── ReminderContext.tsx           # Local notification reminders
     ├── hooks/
     │   ├── index.ts                     # Hook barrel exports
     │   └── useAlert.tsx                 # Alert/confirm/toast hook
@@ -173,9 +200,10 @@ JubileeOutlookMobile/
     │   ├── auth/
     │   │   └── authService.ts           # Auth API (login, register, forgot)
     │   ├── calendar/
-    │   │   └── calendarService.ts       # Calendar CRUD via Continuum API
+    │   │   ├── calendarService.ts       # Calendar CRUD via Continuum API
+    │   │   └── reminderService.ts       # Local notification reminder scheduling
     │   ├── contacts/
-    │   │   └── contactService.ts        # Contacts via Codex API
+    │   │   └── contactService.ts        # Contacts via Codex API (toCamelCaseKeys matching web)
     │   └── mail/
     │       ├── mailService.ts           # Mail CRUD via Continuum API
     │       └── emailSyncService.ts      # IMAP sync via Continuum API
@@ -187,7 +215,8 @@ JubileeOutlookMobile/
     │   ├── index.ts                     # Type barrel exports
     │   └── navigation.ts               # React Navigation param types
     └── utils/
-        └── storage.ts                   # AsyncStorage wrapper
+        ├── storage.ts                   # AsyncStorage wrapper
+        └── calendarUtils.ts             # Calendar date/time utilities
 ```
 
 ## API Integration
@@ -223,6 +252,13 @@ Screen-level code (e.g., `NewEventScreen`, `ContactEditScreen`) may still use `g
 | Axios | 1.13.5 | HTTP client |
 | AsyncStorage | 2.2.0 | Local persistence |
 | date-fns | 4.1.0 | Date formatting |
+| expo-crypto | 15.0.8 | SHA-256 hashing for sync userId |
+| expo-web-browser | 15.0.10 | In-app browser for attachment preview |
+| expo-sharing | 14.0.8 | File sharing |
+| expo-file-system | 19.0.21 | File system access |
+| expo-document-picker | 14.0.8 | Document picker for attachments |
+| expo-notifications | 0.32.16 | Local notification reminders |
+| expo-contacts | 15.0.11 | Device contacts access |
 
 ## Auth Screen Architecture
 

@@ -126,7 +126,7 @@ const NewEventScreen: React.FC = () => {
   const [location, setLocation] = useState(existingEvent?.location || '');
   const [description, setDescription] = useState(existingEvent?.description || '');
   const [isAllDay, setIsAllDay] = useState(existingEvent?.isAllDay || false);
-  const [isInPerson, setIsInPerson] = useState(existingEvent?.isInPerson || false);
+  const [isInPerson, setIsInPerson] = useState(existingEvent?.isInPerson ?? true);
 
   // Date/time
   const initialStart = existingEvent
@@ -332,7 +332,7 @@ const NewEventScreen: React.FC = () => {
     setIsSaving(true);
     try {
       // ── Upload local attachments ───────────────────────────
-      const uploadedAttachments: { fileName: string; filePath?: string; fileSize?: number; mimeType?: string }[] = [];
+      const uploadedAttachments: { fileName: string; fileUrl?: string; url?: string; filePath?: string; fileSize?: number; mimeType?: string }[] = [];
       for (const file of attachments) {
         const isLocal = file.uri.startsWith('file://') || file.uri.startsWith('content://');
         if (isLocal) {
@@ -344,6 +344,8 @@ const NewEventScreen: React.FC = () => {
             });
             uploadedAttachments.push({
               fileName: result.fileName,
+              fileUrl: result.fileUrl,
+              url: result.fileUrl,
               filePath: result.fileUrl,
               fileSize: result.fileSize,
               mimeType: file.mimeType || undefined,
@@ -357,6 +359,8 @@ const NewEventScreen: React.FC = () => {
           // Already-uploaded file (from edit mode) — keep existing reference
           uploadedAttachments.push({
             fileName: file.name,
+            fileUrl: file.uri,
+            url: file.uri,
             filePath: file.uri,
             fileSize: file.size,
             mimeType: file.mimeType || undefined,
@@ -364,19 +368,28 @@ const NewEventScreen: React.FC = () => {
         }
       }
 
+      // Build payload with both camelCase and snake_case keys (matching web frontend)
       const payload: Partial<CalendarEventDto> = {
         userId,
+        user_id: userId,
         subject: subject.trim(),
         location: location.trim() || undefined,
         description: description.trim() || undefined,
         startTime: startDate.toISOString(),
+        start_time: startDate.toISOString(),
         endTime: endDate.toISOString(),
+        end_time: endDate.toISOString(),
         isAllDay,
+        is_all_day: isAllDay,
         isInPerson,
+        is_in_person: isInPerson,
         reminderMinutes,
+        reminder_minutes: reminderMinutes,
         status: showAs,
         eventColor,
+        event_color: eventColor,
         isPrivate,
+        is_private: isPrivate,
         timezone,
         attendees: attendees.length > 0 ? attendees : undefined,
         attachments: uploadedAttachments.length > 0 ? uploadedAttachments : undefined,
@@ -385,15 +398,21 @@ const NewEventScreen: React.FC = () => {
       // Recurrence fields
       if (isRecurring) {
         payload.isRecurring = true;
+        payload.is_recurring = true;
         payload.recurrenceType = recurrenceType.toLowerCase();
+        payload.recurrence_type = recurrenceType.toLowerCase();
         payload.recurrenceInterval = recurrenceInterval;
+        payload.recurrence_interval = recurrenceInterval;
         if (recurrenceType === 'Weekly' && recurrenceDaysOfWeek.length > 0) {
           payload.recurrenceDaysOfWeek = recurrenceDaysOfWeek;
+          payload.recurrence_days_of_week = recurrenceDaysOfWeek;
         }
         if (recurrenceEndCondition === 'On date' && recurrenceEndDate) {
           payload.recurrenceEndDate = recurrenceEndDate.toISOString();
+          payload.recurrence_end_date = recurrenceEndDate.toISOString();
         } else if (recurrenceEndCondition === 'After occurrences' && recurrenceOccurrences) {
           payload.recurrenceOccurrences = recurrenceOccurrences;
+          payload.recurrence_occurrences = recurrenceOccurrences;
         }
       }
 

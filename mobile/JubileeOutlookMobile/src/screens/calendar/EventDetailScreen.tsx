@@ -13,7 +13,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Linking,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -23,7 +22,8 @@ import type { RouteProp } from '@react-navigation/native';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius } from '../../constants/spacing';
-import { LoadingSpinner, Avatar, EmptyState } from '../../components/common';
+import { LoadingSpinner, Avatar, EmptyState, AttachmentPreviewModal, RecurrenceActionDialog } from '../../components/common';
+import type { PreviewAttachment, RecurrenceAction } from '../../components/common';
 import { useAlert } from '../../hooks';
 import { calendarService } from '../../services/calendar/calendarService';
 import { reminderService } from '../../services/calendar/reminderService';
@@ -131,23 +131,67 @@ const EventDetailScreen: React.FC = () => {
     }
   }, [event, navigation]);
 
+  const [previewAttachment, setPreviewAttachment] = useState<PreviewAttachment | null>(null);
+  const [showRecurrenceDialog, setShowRecurrenceDialog] = useState(false);
+
+  /** Strip _occ_N suffix from expanded occurrence IDs (matches web getBaseEventId) */
+  const getBaseEventId = useCallback((id: string) => id.replace(/_occ_\d+$/, ''), []);
+
+  const executeDelete = useCallback(
+    async (scope: 'series' | 'occurrence' = 'series') => {
+      try {
+        const baseId = getBaseEventId(eventId);
+        await reminderService.cancelReminder(baseId);
+
+        if (scope === 'occurrence' && event) {
+          const occDate = new Date(event.startDateTime).toISOString().split('T')[0];
+          await calendarService.deleteEvent(baseId, 'occurrence', occDate);
+        } else {
+          await calendarService.deleteEvent(baseId, 'series');
+        }
+
+        navigation.goBack();
+      } catch (err: any) {
+        alert('Error', err?.message || 'Failed to delete event', 'error');
+      }
+    },
+    [eventId, event, navigation, alert, getBaseEventId],
+  );
+
+  const handleRecurrenceAction = useCallback(
+    (action: RecurrenceAction) => {
+      setShowRecurrenceDialog(false);
+      if (action === 'cancel') return;
+
+      const msg =
+        action === 'series'
+          ? 'Are you sure you want to delete all events in this series?'
+          : 'Are you sure you want to delete this occurrence?';
+
+      confirm('Delete Event', msg, () => executeDelete(action), {
+        confirmText: 'Delete',
+        destructive: true,
+      });
+    },
+    [executeDelete, confirm],
+  );
+
   const handleDelete = useCallback(() => {
+    if (event?.isRecurring) {
+      // Show "this occurrence or entire series?" dialog
+      setShowRecurrenceDialog(true);
+      return;
+    }
+    // Non-recurring: simple confirm
     confirm(
       'Delete Event',
       'Are you sure you want to delete this event?',
       async () => {
-        try {
-          // Cancel any scheduled reminder before deleting
-          await reminderService.cancelReminder(eventId);
-          await calendarService.deleteEvent(eventId);
-          navigation.goBack();
-        } catch (err: any) {
-          alert('Error', err?.message || 'Failed to delete event', 'error');
-        }
+        await executeDelete('series');
       },
       { confirmText: 'Delete', destructive: true },
     );
-  }, [eventId, navigation, confirm, alert]);
+  }, [event, confirm, executeDelete]);
 
   // ── Header buttons ────────────────────────────────────────
   useEffect(() => {
@@ -343,18 +387,25 @@ const EventDetailScreen: React.FC = () => {
               <TouchableOpacity
                 key={`att-${idx}`}
                 style={styles.attachmentRow}
-                onPress={() => {
-                  if (att.fileUrl) Linking.openURL(att.fileUrl);
-                }}
+                onPress={() =>
+                  setPreviewAttachment({
+                    fileName: att.fileName,
+                    fileUrl: att.fileUrl,
+                    fileSize: att.fileSize,
+                  })
+                }
                 activeOpacity={0.7}
               >
                 <Icon name="attach-file" size={20} color={Colors.textSecondary} />
-                <Text style={styles.attachmentName} numberOfLines={1}>
-                  {att.fileName}
-                </Text>
-                <Text style={styles.attachmentSize}>
-                  {formatFileSize(att.fileSize)}
-                </Text>
+                <View style={styles.attachmentInfo}>
+                  <Text style={styles.attachmentName} numberOfLines={1}>
+                    {att.fileName}
+                  </Text>
+                  <Text style={styles.attachmentSize}>
+                    {formatFileSize(att.fileSize)}
+                  </Text>
+                </View>
+                <Icon name="visibility" size={18} color={Colors.primary} />
               </TouchableOpacity>
             ))}
           </View>
@@ -362,6 +413,19 @@ const EventDetailScreen: React.FC = () => {
       </ScrollView>
 
       {AlertComponent}
+
+      {/* Attachment preview modal */}
+      <AttachmentPreviewModal
+        attachment={previewAttachment}
+        onClose={() => setPreviewAttachment(null)}
+      />
+
+      {/* Recurring event delete dialog */}
+      <RecurrenceActionDialog
+        visible={showRecurrenceDialog}
+        mode="delete"
+        onAction={handleRecurrenceAction}
+      />
     </>
   );
 };
@@ -486,12 +550,15 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Colors.divider,
+    gap: Spacing.sm,
+  },
+  attachmentInfo: {
+    flex: 1,
   },
   attachmentName: {
     ...Typography.body,
-    color: Colors.textPrimary,
-    flex: 1,
-    marginLeft: Spacing.sm,
+    color: Colors.primary,
+    textDecorationLine: 'underline',
   },
   attachmentSize: {
     ...Typography.caption,

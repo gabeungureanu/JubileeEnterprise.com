@@ -3,9 +3,8 @@
  * Fields: Email, Password with visibility toggle.
  * Features: Remember me, forgot password link, per-field validation.
  */
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
-  ActivityIndicator,
   StyleSheet,
   Text,
   TextInput,
@@ -29,6 +28,8 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'SignIn'>;
 
 export default function SignInScreen({ navigation }: Props) {
   const { login } = useAuth();
+
+  const passwordRef = useRef<TextInput>(null);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -148,6 +149,9 @@ export default function SignInScreen({ navigation }: Props) {
             autoCorrect={false}
             autoComplete="email"
             editable={!loading}
+            autoFocus
+            returnKeyType="next"
+            onSubmitEditing={() => passwordRef.current?.focus()}
           />
         </View>
         {errors.email && <Text style={styles.fieldError}>{errors.email}</Text>}
@@ -155,6 +159,7 @@ export default function SignInScreen({ navigation }: Props) {
         {/* Password */}
         <View style={[styles.inputWrapper, styles.passwordWrapper]}>
           <TextInput
+            ref={passwordRef}
             style={[styles.input, styles.passwordInput, errors.password && styles.inputError]}
             placeholder="Password"
             placeholderTextColor="#606060"
@@ -167,6 +172,8 @@ export default function SignInScreen({ navigation }: Props) {
             autoCapitalize="none"
             autoComplete="password"
             editable={!loading}
+            returnKeyType="go"
+            onSubmitEditing={handleSignIn}
           />
           <TouchableOpacity
             style={styles.passwordToggle}
@@ -205,15 +212,10 @@ export default function SignInScreen({ navigation }: Props) {
           disabled={loading}
           activeOpacity={0.8}
         >
-          {loading ? (
-            <ActivityIndicator size="small" color={Colors.black} />
-          ) : (
-            <Text style={styles.goldButtonText}>Sign In</Text>
-          )}
+          <Text style={styles.goldButtonText}>
+            {loading ? loadingText : 'Sign In'}
+          </Text>
         </TouchableOpacity>
-
-        {/* Loading text */}
-        {loading && <Text style={styles.loadingText}>{loadingText}</Text>}
       </View>
     </AuthCard>
   );
@@ -313,11 +315,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: Colors.black,
-  },
-  loadingText: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginTop: Spacing.xl,
   },
 });

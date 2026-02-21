@@ -85,10 +85,17 @@ async function resolveSyncUserId(): Promise<void> {
 // ---------- Provider ----------
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Optimise initial loading state: tokenStore.init() already ran in App.tsx,
+  // so the in-memory cache is hydrated. If no tokens exist, skip the loading
+  // spinner and render AuthStack immediately.
+  const hasToken = !!tokenStore.getAccessToken();
+  const hasUserId = !!tokenStore.getUserId();
+  const mightBeSyncOnly = !hasToken && hasUserId;
+
   const [state, setState] = useState<AuthState>({
     user: null,
     isAuthenticated: false,
-    isLoading: true,
+    isLoading: hasToken || mightBeSyncOnly,
   });
 
   // Initialise tokens from AsyncStorage and determine initial auth state
@@ -99,10 +106,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Ensure token cache is hydrated from AsyncStorage
       await tokenStore.init();
 
-      // Note: sync-only auto-detection is NOT run on bootstrap.
-      // Sync-only sessions are session-scoped — they only activate when
-      // refreshAuthState() is called explicitly after a successful IMAP sync.
-      // On app restart, the user must go through the auth flow again.
+      // Check for sync-only session FIRST (matching web frontend behavior).
+      // Web checks isSyncOnlyUser() on every page load so sync-only users
+      // remain authenticated across reloads. We now do the same on mobile.
+      const isSyncOnly = await checkSyncOnly();
+      if (isSyncOnly) {
+        await resolveSyncUserId();
+        const syncUser = await buildSyncUser();
+        if (!cancelled) {
+          setState({ user: syncUser, isAuthenticated: !!syncUser, isLoading: false });
+        }
+        return;
+      }
 
       // Standard auth: if tokens exist, fetch the current user from Codex
       if (authService.isAuthenticated()) {
@@ -225,6 +240,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const response = await authService.register(fullName, email, password, newsletter);
         if (response.user) {
+          // Auto-save email for remember-me after registration (matching web)
+          await storage.set(StorageKeys.REMEMBER_EMAIL, email);
+          await storage.set(StorageKeys.REMEMBER_TOKEN, 'true');
+
           setState({
             user: response.user,
             isAuthenticated: true,

@@ -4,7 +4,6 @@
  */
 import React, { useState, useCallback } from 'react';
 import {
-  ActivityIndicator,
   StyleSheet,
   Text,
   TextInput,
@@ -111,6 +110,9 @@ export default function ForgotPasswordScreen({ navigation, route }: Props) {
             autoCorrect={false}
             autoComplete="email"
             editable={!loading}
+            autoFocus
+            returnKeyType="go"
+            onSubmitEditing={handleForgotPassword}
           />
         </View>
         {errors.email && <Text style={styles.fieldError}>{errors.email}</Text>}
@@ -122,15 +124,10 @@ export default function ForgotPasswordScreen({ navigation, route }: Props) {
           disabled={loading}
           activeOpacity={0.8}
         >
-          {loading ? (
-            <ActivityIndicator size="small" color={Colors.black} />
-          ) : (
-            <Text style={styles.goldButtonText}>Send Reset Link</Text>
-          )}
+          <Text style={styles.goldButtonText}>
+            {loading ? loadingText : 'Send Reset Link'}
+          </Text>
         </TouchableOpacity>
-
-        {/* Loading text */}
-        {loading && <Text style={styles.loadingText}>{loadingText}</Text>}
 
         {/* Back link */}
         <View style={styles.backLinks}>
@@ -209,12 +206,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: Colors.black,
-  },
-  loadingText: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginTop: Spacing.xl,
   },
   backLinks: {
     alignItems: 'center',

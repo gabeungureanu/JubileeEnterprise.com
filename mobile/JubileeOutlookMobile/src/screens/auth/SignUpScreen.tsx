@@ -3,9 +3,8 @@
  * Fields: Full Name, Email, Password, Confirm Password.
  * Features: Newsletter checkbox, per-field validation, real-time error clearing.
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
-  ActivityIndicator,
   StyleSheet,
   Text,
   TextInput,
@@ -27,6 +26,10 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
 
 export default function SignUpScreen({ navigation }: Props) {
   const { register } = useAuth();
+
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmPasswordRef = useRef<TextInput>(null);
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -145,6 +148,9 @@ export default function SignUpScreen({ navigation }: Props) {
             autoCapitalize="words"
             autoComplete="name"
             editable={!loading}
+            autoFocus
+            returnKeyType="next"
+            onSubmitEditing={() => emailRef.current?.focus()}
           />
         </View>
         {errors.fullName && <Text style={styles.fieldError}>{errors.fullName}</Text>}
@@ -152,6 +158,7 @@ export default function SignUpScreen({ navigation }: Props) {
         {/* Email */}
         <View style={styles.inputWrapper}>
           <TextInput
+            ref={emailRef}
             style={[styles.input, errors.email && styles.inputError]}
             placeholder="Email"
             placeholderTextColor="#606060"
@@ -165,6 +172,8 @@ export default function SignUpScreen({ navigation }: Props) {
             autoCorrect={false}
             autoComplete="email"
             editable={!loading}
+            returnKeyType="next"
+            onSubmitEditing={() => passwordRef.current?.focus()}
           />
         </View>
         {errors.email && <Text style={styles.fieldError}>{errors.email}</Text>}
@@ -172,6 +181,7 @@ export default function SignUpScreen({ navigation }: Props) {
         {/* Password */}
         <View style={[styles.inputWrapper, styles.passwordWrapper]}>
           <TextInput
+            ref={passwordRef}
             style={[styles.input, styles.passwordInput, errors.password && styles.inputError]}
             placeholder="Password"
             placeholderTextColor="#606060"
@@ -184,6 +194,8 @@ export default function SignUpScreen({ navigation }: Props) {
             autoCapitalize="none"
             autoComplete="new-password"
             editable={!loading}
+            returnKeyType="next"
+            onSubmitEditing={() => confirmPasswordRef.current?.focus()}
           />
           <TouchableOpacity
             style={styles.passwordToggle}
@@ -202,6 +214,7 @@ export default function SignUpScreen({ navigation }: Props) {
         {/* Confirm Password */}
         <View style={[styles.inputWrapper, styles.passwordWrapper]}>
           <TextInput
+            ref={confirmPasswordRef}
             style={[
               styles.input,
               styles.passwordInput,
@@ -220,6 +233,8 @@ export default function SignUpScreen({ navigation }: Props) {
             autoCapitalize="none"
             autoComplete="new-password"
             editable={!loading}
+            returnKeyType="go"
+            onSubmitEditing={handleSignUp}
           />
           <TouchableOpacity
             style={styles.passwordToggle}
@@ -253,15 +268,10 @@ export default function SignUpScreen({ navigation }: Props) {
           disabled={loading}
           activeOpacity={0.8}
         >
-          {loading ? (
-            <ActivityIndicator size="small" color={Colors.black} />
-          ) : (
-            <Text style={styles.goldButtonText}>Sign Up</Text>
-          )}
+          <Text style={styles.goldButtonText}>
+            {loading ? loadingText : 'Sign Up'}
+          </Text>
         </TouchableOpacity>
-
-        {/* Loading text */}
-        {loading && <Text style={styles.loadingText}>{loadingText}</Text>}
 
         {/* Back links */}
         <View style={styles.backLinks}>
@@ -356,12 +366,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: Colors.black,
-  },
-  loadingText: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginTop: Spacing.xl,
   },
   backLinks: {
     flexDirection: 'row',

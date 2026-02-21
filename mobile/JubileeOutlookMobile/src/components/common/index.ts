@@ -14,3 +14,7 @@ export { FormSection } from './FormSection';
 export { BottomSheet } from './BottomSheet';
 export { ReminderPopup } from './ReminderPopup';
 export { ReminderOverlay } from './ReminderOverlay';
+export { AttachmentPreviewModal } from './AttachmentPreviewModal';
+export type { PreviewAttachment } from './AttachmentPreviewModal';
+export { RecurrenceActionDialog } from './RecurrenceActionDialog';
+export type { RecurrenceAction } from './RecurrenceActionDialog';

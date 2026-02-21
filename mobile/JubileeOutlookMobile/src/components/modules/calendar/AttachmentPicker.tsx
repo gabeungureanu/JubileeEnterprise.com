@@ -3,17 +3,19 @@
  *
  * Shows an "Add attachment" button and a list of picked files
  * with name, size, and a remove button.
+ * Tapping a file name opens an in-app preview modal.
  */
-import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Linking } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import * as Sharing from 'expo-sharing';
 
 import { Colors } from '../../../constants/colors';
 import { Typography } from '../../../constants/typography';
 import { Spacing, BorderRadius } from '../../../constants/spacing';
 import { useAlert } from '../../../hooks';
+import { AttachmentPreviewModal } from '../../common';
+import type { PreviewAttachment } from '../../common';
 
 export interface PickedFile {
   name: string;
@@ -39,37 +41,18 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   onAdd,
   onRemove,
 }) => {
-  const { alert, confirm, AlertComponent } = useAlert();
+  const { confirm, AlertComponent } = useAlert();
+  const [previewAttachment, setPreviewAttachment] = useState<PreviewAttachment | null>(null);
 
   const handleOpen = useCallback(
-    async (file: PickedFile) => {
-      try {
-        const isLocal = file.uri.startsWith('file://') || file.uri.startsWith('content://');
-        if (isLocal) {
-          // Local file — share via OS share sheet
-          const canShare = await Sharing.isAvailableAsync();
-          if (canShare) {
-            await Sharing.shareAsync(file.uri, {
-              mimeType: file.mimeType || 'application/octet-stream',
-              dialogTitle: file.name,
-            });
-          } else {
-            alert('Cannot Open', 'Sharing is not available on this device.', 'warning');
-          }
-        } else {
-          // Server URL — open in browser/viewer
-          const supported = await Linking.canOpenURL(file.uri);
-          if (supported) {
-            await Linking.openURL(file.uri);
-          } else {
-            alert('Cannot Open', 'Unable to open this file.', 'warning');
-          }
-        }
-      } catch {
-        alert('Error', 'Could not open attachment.', 'error');
-      }
+    (file: PickedFile) => {
+      setPreviewAttachment({
+        fileName: file.name,
+        fileUrl: file.uri,
+        fileSize: file.size,
+      });
     },
-    [alert],
+    [],
   );
 
   const handleRemove = useCallback(
@@ -111,26 +94,32 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
       <View style={styles.container}>
         {/* File list */}
         {files.map((file, idx) => (
-          <TouchableOpacity
-            key={`${file.name}-${idx}`}
-            style={styles.fileRow}
-            onPress={() => handleOpen(file)}
-            activeOpacity={0.7}
-          >
+          <View key={`${file.name}-${idx}`} style={styles.fileRow}>
             <Icon name="attach-file" size={20} color={Colors.textSecondary} />
-            <View style={styles.fileInfo}>
+            <TouchableOpacity
+              style={styles.fileInfo}
+              onPress={() => handleOpen(file)}
+              activeOpacity={0.7}
+            >
               <Text style={styles.fileName} numberOfLines={1}>
                 {file.name}
               </Text>
               <Text style={styles.fileSize}>{formatFileSize(file.size)}</Text>
-            </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleOpen(file)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              style={styles.openButton}
+            >
+              <Icon name="visibility" size={18} color={Colors.primary} />
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleRemove(idx)}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Icon name="close" size={20} color={Colors.error} />
             </TouchableOpacity>
-          </TouchableOpacity>
+          </View>
         ))}
 
         {/* Add button */}
@@ -139,7 +128,14 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
           <Text style={styles.addText}>Add attachment</Text>
         </TouchableOpacity>
       </View>
+
       {AlertComponent}
+
+      {/* Preview modal */}
+      <AttachmentPreviewModal
+        attachment={previewAttachment}
+        onClose={() => setPreviewAttachment(null)}
+      />
     </>
   );
 };
@@ -162,7 +158,11 @@ const styles = StyleSheet.create({
   },
   fileName: {
     ...Typography.body,
-    color: Colors.textPrimary,
+    color: Colors.primary,
+    textDecorationLine: 'underline',
+  },
+  openButton: {
+    marginRight: Spacing.xs,
   },
   fileSize: {
     ...Typography.caption,

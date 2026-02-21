@@ -18,6 +18,7 @@ import { MaterialIcons as Icon } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../../types/navigation';
 import axios from 'axios';
+import * as Crypto from 'expo-crypto';
 import { emailSyncService, ProviderInfo } from '../../services/mail/emailSyncService';
 import { tokenStore } from '../../services/apiClient';
 import { storage } from '../../utils/storage';
@@ -29,15 +30,13 @@ import { useAuth } from '../../context/AuthContext';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SyncPassword'>;
 
-// Fallback: simple hash function for generating deterministic userId from email
-function generateSyncUserId(email: string): string {
-  let hash = 0;
-  for (let i = 0; i < email.length; i++) {
-    const char = email.charCodeAt(i);
-    hash = ((hash << 5) - hash + char) | 0;
-  }
-  const hex = Math.abs(hash).toString(16).padStart(32, '0');
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+// Fallback: SHA-256 based deterministic userId from email (matches web frontend exactly)
+async function generateSyncUserId(email: string): Promise<string> {
+  const hash = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    email,
+  );
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-4${hash.slice(13, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
 }
 
 // Look up the real Codex userId by email before falling back to synthetic ID
@@ -145,7 +144,7 @@ export default function SyncPasswordScreen({ navigation, route }: Props) {
         userId = await resolveCodexUserId(syncEmail);
         if (!userId) {
           // Fallback: generate a deterministic UUID for anonymous sync
-          userId = generateSyncUserId(syncEmail);
+          userId = await generateSyncUserId(syncEmail);
         }
         await tokenStore.setUserId(userId);
       }
@@ -262,6 +261,8 @@ export default function SyncPasswordScreen({ navigation, route }: Props) {
             autoCapitalize="none"
             editable={!loading}
             autoFocus
+            returnKeyType="go"
+            onSubmitEditing={handleConfirm}
           />
           <TouchableOpacity
             style={styles.passwordToggle}

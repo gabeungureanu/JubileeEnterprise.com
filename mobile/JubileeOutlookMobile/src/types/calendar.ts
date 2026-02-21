@@ -104,7 +104,7 @@ export function mapEventDto(dto: CalendarEventDto): CalendarEvent {
       id: a.id,
       fileName: a.fileName || a.file_name || '',
       fileSize: a.fileSize || a.file_size || 0,
-      fileUrl: a.fileUrl || a.url || '',
+      fileUrl: a.fileUrl || a.file_url || a.filePath || a.file_path || a.url || '',
       uploadedAt: a.uploadedAt || a.addedDate || a.added_date || '',
     })),
     timezone: d.timezone || '',

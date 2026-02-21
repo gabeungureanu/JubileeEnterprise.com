@@ -8,6 +8,22 @@ import {
   mapContactDto, mapContactGroupDto,
 } from '../../types/contacts';
 
+/** Convert snake_case DTO keys to camelCase for the API (matches web frontend) */
+function toCamelCaseKeys(obj: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const key of Object.keys(obj)) {
+    const camelKey = key.replace(/_([a-z])/g, (_, ch: string) => ch.toUpperCase());
+    result[camelKey] = obj[key];
+  }
+  return result;
+}
+
+/** Extract human-readable error message from Axios error responses */
+function extractApiError(err: any): string {
+  const data = err?.response?.data;
+  return data?.error || data?.message || err?.message || 'An unexpected error occurred.';
+}
+
 export const contactService = {
   // ---------- Contacts ----------
 
@@ -35,7 +51,7 @@ export const contactService = {
 
   async createContact(contact: Partial<ContactDto>): Promise<Contact | null> {
     const userId = tokenStore.requireUserId();
-    const payload = { ...contact, user_id: userId };
+    const payload = toCamelCaseKeys({ ...contact, user_id: userId } as Record<string, unknown>);
     try {
       const response = await codexClient.post('/contacts', payload);
       const data = response.data;
@@ -44,20 +60,20 @@ export const contactService = {
     } catch (err: any) {
       // Extract meaningful error from 409 duplicate responses
       if (err?.response?.status === 409) {
-        const apiError = err.response.data?.error;
         const code = err.response.data?.code;
         const deletedId = err.response.data?.duplicates?.[0]?.id;
-        const error = new Error(apiError || 'Duplicate contact found.');
+        const error = new Error(extractApiError(err));
         (error as any).code = code;
         (error as any).deletedContactId = deletedId;
         throw error;
       }
-      throw err;
+      throw new Error(extractApiError(err));
     }
   },
 
   async updateContact(contactId: string, contact: Partial<ContactDto>): Promise<Contact | null> {
-    const response = await codexClient.put(`/contacts/${encodeURIComponent(contactId)}`, contact);
+    const payload = toCamelCaseKeys(contact as Record<string, unknown>);
+    const response = await codexClient.put(`/contacts/${encodeURIComponent(contactId)}`, payload);
     const data = response.data;
     const dto = data?.contact || data;
     return dto?.id ? mapContactDto(dto) : null;

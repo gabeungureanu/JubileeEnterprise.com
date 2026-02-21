@@ -22,11 +22,11 @@ import type { RouteProp } from '@react-navigation/native';
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius } from '../../constants/spacing';
-import { LoadingSpinner } from '../../components/common';
+import { LoadingSpinner, BottomSheet } from '../../components/common';
+import { MonthGrid } from '../../components/modules/calendar/MonthGrid';
 import { useAlert } from '../../hooks';
 import { contactService } from '../../services/contacts/contactService';
-import { tokenStore } from '../../services/apiClient';
-import type { CreateContactPayload } from '../../types/contacts';
+import type { ContactDto } from '../../types/contacts';
 import type { PeopleStackParamList } from '../../types/navigation';
 
 type Nav = NativeStackNavigationProp<PeopleStackParamList, 'ContactEdit'>;
@@ -67,6 +67,11 @@ const ContactEditScreen: React.FC = () => {
   const [category, setCategory] = useState(existingContact?.category || '');
   const [isSaving, setIsSaving] = useState(false);
 
+  // ── Date picker state ────────────────────────────────────
+  const [datePickerTarget, setDatePickerTarget] = useState<'birthday' | 'anniversary' | null>(null);
+  const [browseYear, setBrowseYear] = useState(new Date().getFullYear());
+  const [browseMonth, setBrowseMonth] = useState(new Date().getMonth());
+
   // ── Navigation title ────────────────────────────────────
   useEffect(() => {
     navigation.setOptions({
@@ -83,40 +88,42 @@ const ContactEditScreen: React.FC = () => {
       return;
     }
 
-    if (!phone.trim() && !mobilePhone.trim()) {
-      alert('Validation', 'At least one phone number is required (phone or mobile)', 'warning');
-      return;
-    }
-
-    const userId = tokenStore.getUserId();
-    if (!userId) {
-      alert('Error', 'User not authenticated', 'error');
-      return;
+    // Validate website URL if provided (matches web frontend)
+    if (website.trim()) {
+      try {
+        const urlToTest = /^https?:\/\//i.test(website.trim())
+          ? website.trim()
+          : `https://${website.trim()}`;
+        new URL(urlToTest);
+      } catch {
+        alert('Validation', 'Invalid website URL. Please enter a valid URL (e.g., https://www.example.com).', 'warning');
+        return;
+      }
     }
 
     setIsSaving(true);
     try {
-      const payload: CreateContactPayload & { office?: string; spouse?: string } = {
-        userId,
-        displayName,
-        firstName: firstName.trim() || undefined,
-        lastName: lastName.trim() || undefined,
-        emailAddresses: email.trim() ? [email.trim()] : undefined,
-        phoneNumbers: phone.trim() ? [phone.trim()] : undefined,
-        mobilePhone: mobilePhone.trim() || undefined,
+      // Build payload with snake_case keys matching ContactDto / web frontend's ContactDialog
+      const payload: Partial<ContactDto> = {
+        display_name: displayName,
+        first_name: firstName.trim() || undefined,
+        last_name: lastName.trim() || undefined,
+        email_addresses: email.trim() ? [email.trim()] : undefined,
+        phone_numbers: phone.trim() ? [phone.trim()] : undefined,
+        mobile_phone: mobilePhone.trim() || undefined,
         company: company.trim() || undefined,
-        jobTitle: jobTitle.trim() || undefined,
+        job_title: jobTitle.trim() || undefined,
         department: department.trim() || undefined,
         office: office.trim() || undefined,
         address: address.trim() || undefined,
         city: city.trim() || undefined,
         state: state.trim() || undefined,
-        postalCode: postalCode.trim() || undefined,
+        postal_code: postalCode.trim() || undefined,
         country: country.trim() || undefined,
         notes: notes.trim() || undefined,
         website: website.trim() || undefined,
-        birthday: birthday.trim() || undefined,
-        anniversary: anniversary.trim() || undefined,
+        birthday: birthday.trim() || null,
+        anniversary: anniversary.trim() || null,
         spouse: spouse.trim() || undefined,
         category: category.trim() || undefined,
       };
@@ -211,6 +218,70 @@ const ContactEditScreen: React.FC = () => {
     </View>
   );
 
+  const MONTH_NAMES = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+
+  const openDatePicker = useCallback((target: 'birthday' | 'anniversary') => {
+    const current = target === 'birthday' ? birthday : anniversary;
+    const d = current ? new Date(current) : new Date();
+    const valid = !isNaN(d.getTime());
+    setBrowseYear(valid ? d.getFullYear() : new Date().getFullYear());
+    setBrowseMonth(valid ? d.getMonth() : new Date().getMonth());
+    setDatePickerTarget(target);
+  }, [birthday, anniversary]);
+
+  const handleDateSelect = useCallback((selected: Date) => {
+    const iso = selected.toISOString().split('T')[0]; // YYYY-MM-DD
+    if (datePickerTarget === 'birthday') setBirthday(iso);
+    else if (datePickerTarget === 'anniversary') setAnniversary(iso);
+    setDatePickerTarget(null);
+  }, [datePickerTarget]);
+
+  const formatDateDisplay = (value: string): string => {
+    if (!value) return '';
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  const renderDateField = (
+    label: string,
+    value: string,
+    target: 'birthday' | 'anniversary',
+  ) => (
+    <View style={styles.field}>
+      <View style={styles.labelRow}>
+        <Text style={styles.label}>{label}</Text>
+        <Text style={styles.optionalText}>Optional</Text>
+      </View>
+      <TouchableOpacity
+        style={styles.dateField}
+        onPress={() => openDatePicker(target)}
+        activeOpacity={0.7}
+      >
+        <Icon name="calendar-today" size={18} color={Colors.textSecondary} />
+        <Text style={[styles.dateFieldText, !value && styles.dateFieldPlaceholder]}>
+          {value ? formatDateDisplay(value) : `Select ${label.toLowerCase()}`}
+        </Text>
+        {value ? (
+          <TouchableOpacity
+            onPress={() => {
+              if (target === 'birthday') setBirthday('');
+              else setAnniversary('');
+            }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Icon name="close" size={18} color={Colors.textTertiary} />
+          </TouchableOpacity>
+        ) : (
+          <Icon name="expand-more" size={20} color={Colors.textTertiary} />
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+
   // ── Main render ─────────────────────────────────────────
   return (
     <View style={styles.container}>
@@ -226,7 +297,7 @@ const ContactEditScreen: React.FC = () => {
           keyboardType: 'email-address',
           autoCapitalize: 'none',
         })}
-        {renderField('Phone', phone, setPhone, { keyboardType: 'phone-pad', isRequired: true })}
+        {renderField('Phone', phone, setPhone, { keyboardType: 'phone-pad' })}
         {renderField('Mobile', mobilePhone, setMobilePhone, {
           keyboardType: 'phone-pad',
         })}
@@ -249,14 +320,8 @@ const ContactEditScreen: React.FC = () => {
 
         {/* Personal */}
         <Text style={styles.sectionTitle}>Personal</Text>
-        {renderField('Birthday', birthday, setBirthday, {
-          placeholder: 'YYYY-MM-DD',
-          autoCapitalize: 'none',
-        })}
-        {renderField('Anniversary', anniversary, setAnniversary, {
-          placeholder: 'YYYY-MM-DD',
-          autoCapitalize: 'none',
-        })}
+        {renderDateField('Birthday', birthday, 'birthday')}
+        {renderDateField('Anniversary', anniversary, 'anniversary')}
         {renderField('Spouse / Partner', spouse, setSpouse)}
 
         {/* Category */}
@@ -305,6 +370,52 @@ const ContactEditScreen: React.FC = () => {
       </View>
 
       {AlertComponent}
+
+      {/* Date picker bottom sheet */}
+      <BottomSheet
+        visible={!!datePickerTarget}
+        onClose={() => setDatePickerTarget(null)}
+        title={`Select ${datePickerTarget === 'birthday' ? 'Birthday' : 'Anniversary'}`}
+        maxHeight="70%"
+      >
+        <View style={styles.sheetNav}>
+          <TouchableOpacity
+            onPress={() => {
+              if (browseMonth === 0) { setBrowseYear(y => y - 1); setBrowseMonth(11); }
+              else setBrowseMonth(m => m - 1);
+            }}
+            style={styles.sheetNavBtn}
+          >
+            <Icon name="chevron-left" size={24} color={Colors.primary} />
+          </TouchableOpacity>
+          <Text style={styles.sheetNavTitle}>
+            {MONTH_NAMES[browseMonth]} {browseYear}
+          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              if (browseMonth === 11) { setBrowseYear(y => y + 1); setBrowseMonth(0); }
+              else setBrowseMonth(m => m + 1);
+            }}
+            style={styles.sheetNavBtn}
+          >
+            <Icon name="chevron-right" size={24} color={Colors.primary} />
+          </TouchableOpacity>
+        </View>
+        <MonthGrid
+          currentYear={browseYear}
+          currentMonth={browseMonth}
+          selectedDate={
+            (() => {
+              const val = datePickerTarget === 'birthday' ? birthday : anniversary;
+              const d = val ? new Date(val) : null;
+              return d && !isNaN(d.getTime()) ? d : new Date();
+            })()
+          }
+          events={[]}
+          onDateSelect={handleDateSelect}
+          expanded
+        />
+      </BottomSheet>
     </View>
   );
 };
@@ -370,6 +481,47 @@ const styles = StyleSheet.create({
   multilineInput: {
     minHeight: 100,
     paddingTop: Spacing.md,
+  },
+
+  // Date picker field
+  dateField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+  },
+  dateFieldText: {
+    ...Typography.body,
+    color: Colors.textPrimary,
+    flex: 1,
+    marginLeft: Spacing.sm,
+  },
+  dateFieldPlaceholder: {
+    color: Colors.textTertiary,
+  },
+
+  // Date picker sheet
+  sheetNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+  sheetNavBtn: {
+    padding: Spacing.xs,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sheetNavTitle: {
+    ...Typography.label,
+    color: Colors.textPrimary,
   },
 
   // Delete button
