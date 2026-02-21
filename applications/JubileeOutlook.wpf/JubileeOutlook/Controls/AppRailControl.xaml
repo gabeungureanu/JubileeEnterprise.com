@@ -21,7 +21,7 @@
 
             <!-- Menu/Hamburger Button at Top - Toggles Folder Pane -->
             <Button x:Name="HamburgerButton" Grid.Row="0" Style="{StaticResource AppRailMenuButtonStyle}"
-                    Command="{Binding ToggleFolderPaneCommand}" Click="HamburgerButton_Click" ToolTip="Toggle Folder Pane">
+                    Command="{Binding ToggleFolderPaneCommand}" ToolTip="Toggle Folder Pane">
                 <TextBlock Text="{StaticResource IconMenu}" FontFamily="{StaticResource MaterialIcons}" FontSize="18" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
             </Button>
 

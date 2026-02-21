@@ -42,7 +42,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- LEFT APP RAIL: Full height from top to bottom -->
-        <controls:AppRailControl x:Name="AppRail" Grid.Row="0" Grid.Column="0" DataContext="{Binding AppViewModel}"/>
+        <controls:AppRailControl x:Name="AppRail" Grid.Row="0" Grid.Column="0" DataContext="{Binding AppViewModel}" WindowChrome.IsHitTestVisibleInChrome="True"/>
 
         <!-- Right side: Title bar, Ribbon, Content, Status Bar -->
         <Grid Grid.Row="0" Grid.Column="1">

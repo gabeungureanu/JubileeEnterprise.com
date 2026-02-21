@@ -458,4 +458,80 @@ public partial class NewEventWindow : Window
         var caretPosition = DescriptionRichTextBox.CaretPosition;
         caretPosition.InsertTextInRun(text);
     }
+
+    #region Attendees Contact Suggestions
+
+    private bool _isSuppressingTextChanged;
+
+    private async void AttendeesTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_isSuppressingTextChanged) return;
+        if (DataContext is not NewEventViewModel viewModel) return;
+
+        // Extract the current token (text after the last separator)
+        var text = AttendeesTextBox.Text;
+        var lastSeparatorIndex = text.LastIndexOfAny(new[] { ';', ',' });
+        var currentToken = lastSeparatorIndex >= 0
+            ? text[(lastSeparatorIndex + 1)..].Trim()
+            : text.Trim();
+
+        if (currentToken.Length >= 1)
+        {
+            await viewModel.FilterContactsAsync(currentToken);
+        }
+        else
+        {
+            viewModel.SuggestedContacts.Clear();
+            viewModel.ShowContactSuggestions = false;
+        }
+    }
+
+    private void AttendeesTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (DataContext is not NewEventViewModel viewModel) return;
+
+        if (e.Key == Key.Escape && viewModel.ShowContactSuggestions)
+        {
+            viewModel.ShowContactSuggestions = false;
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Down && viewModel.ShowContactSuggestions && viewModel.SuggestedContacts.Count > 0)
+        {
+            ContactSuggestionsListBox.SelectedIndex = 0;
+            ContactSuggestionsListBox.Focus();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Enter && viewModel.ShowContactSuggestions && viewModel.SuggestedContacts.Count > 0)
+        {
+            // Select the first suggestion
+            var firstContact = viewModel.SuggestedContacts[0];
+            ApplyContactSelection(viewModel, firstContact);
+            e.Handled = true;
+        }
+    }
+
+    private void ContactSuggestion_Selected(object sender, MouseButtonEventArgs e)
+    {
+        if (DataContext is not NewEventViewModel viewModel) return;
+        if (ContactSuggestionsListBox.SelectedItem is not Models.Contact contact) return;
+
+        ApplyContactSelection(viewModel, contact);
+    }
+
+    private void ApplyContactSelection(NewEventViewModel viewModel, Models.Contact contact)
+    {
+        _isSuppressingTextChanged = true;
+        viewModel.SelectContact(contact);
+        _isSuppressingTextChanged = false;
+
+        // Move caret to end of text
+        AttendeesTextBox.CaretIndex = AttendeesTextBox.Text.Length;
+        AttendeesTextBox.Focus();
+    }
+
+    #endregion
 }

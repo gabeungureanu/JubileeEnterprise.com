@@ -35,7 +35,7 @@
 
 - **3 API Services** (Codex, Inspire, Continuum)
 - **8 Website Projects** (JubileeVerse, JubileeInternet, etc.)
-- **1 Desktop Application** (JubileeBrowser.WPF)
+- **2 Desktop Applications** (JubileeOutlook.WPF, JubileeBrowser.WPF)
 - **2 Mobile Applications** (JubileeOutlookMobile, JubileeInspire.ios)
 - **3 Shared Packages** (@jubilee/shared, @jubilee/database, @jubilee/config)
 - **3 PostgreSQL Databases** (Codex, Inspire, Continuum)
@@ -74,6 +74,7 @@ JubileeEnterprise.com/
 │   └── JubileeInspire.ios/      # AI Bible chat iOS client (Expo/React Native)
 │
 ├── applications/                # Desktop applications
+│   ├── JubileeOutlook.wpf/      # Outlook email client (.NET 9/WPF)
 │   └── JubileeBrowser.wpf/      # Windows browser (.NET 8/WPF)
 │       ├── App.xaml             # Application entry
 │       ├── MainWindow.xaml      # Main UI
@@ -353,7 +354,37 @@ The primary application - a faith-based AI chat platform featuring:
 
 ---
 
-## Desktop Application
+## Desktop Applications
+
+### JubileeOutlook.WPF
+**Location:** `applications/JubileeOutlook.wpf/`
+
+**Technology:**
+- .NET 9.0
+- WPF (Windows Presentation Foundation)
+- CommunityToolkit.Mvvm (MVVM with source generators)
+- Fluent.Ribbon
+
+**Features:**
+- Full email client with IMAP sync, mail compose, folder management
+- Calendar module with event creation/editing, recurrence, attachments, images
+- Attendee autocomplete: typing in "Invite attendees" field shows contact suggestions from address book (local filtering, keyboard/mouse selection)
+- People/Contacts module with groups, search, favorites, detail preview
+- App rail navigation (Mail, Calendar, People) with hamburger menu folder pane toggle
+- Dark theme with WindowChrome custom title bar
+- Dual API integration: Codex (contacts, auth) + Continuum (mail, calendar)
+- Auth guard: `ServiceConfiguration.RequireUserId()` ensures all API calls require authenticated user
+
+**Key Files:**
+- `MainWindow.xaml` / `MainWindow.xaml.cs` — Main window with app rail, folder pane, content area
+- `Controls/AppRailControl.xaml` — Vertical module switcher
+- `ViewModels/NewEventViewModel.cs` — Calendar event form with contact autocomplete
+- `Views/NewEventWindow.xaml` — New/Edit event dialog
+- `Services/ApiContactService.cs` — Contact CRUD via Codex API (singleton)
+- `Services/ApiCalendarService.cs` — Calendar CRUD via Continuum API
+- `Themes/DarkTheme.xaml` — Application-wide dark theme styles
+
+---
 
 ### JubileeBrowser.WPF (v8.0.6)
 **Location:** `applications/JubileeBrowser.wpf/`

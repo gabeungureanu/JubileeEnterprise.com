@@ -12,6 +12,9 @@ public partial class NewEventViewModel : ObservableObject
     public event EventHandler? SaveCompleted;
     public event EventHandler? DeleteCompleted;
 
+    private readonly ApiContactService _contactService;
+    private List<Models.Contact>? _allContacts;
+
     [ObservableProperty]
     private bool _isEditMode;
 
@@ -25,6 +28,11 @@ public partial class NewEventViewModel : ObservableObject
 
     [ObservableProperty]
     private string _attendees = string.Empty;
+
+    [ObservableProperty]
+    private bool _showContactSuggestions;
+
+    public ObservableCollection<Models.Contact> SuggestedContacts { get; } = new();
 
     [ObservableProperty]
     private DateTime _eventDate = DateTime.Today;
@@ -123,6 +131,7 @@ public partial class NewEventViewModel : ObservableObject
 
     public NewEventViewModel()
     {
+        _contactService = ApiContactService.Instance;
         InitializeTimeOptions();
         InitializeTimeSlots();
         InitializeStatusOptions();
@@ -130,6 +139,104 @@ public partial class NewEventViewModel : ObservableObject
         InitializeCategoryOptions();
         InitializeRecurrenceOptions();
         CalculateEventPosition();
+    }
+
+    /// <summary>
+    /// Filters contacts based on the current search token and populates SuggestedContacts
+    /// </summary>
+    public async Task FilterContactsAsync(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            SuggestedContacts.Clear();
+            ShowContactSuggestions = false;
+            return;
+        }
+
+        try
+        {
+            // Load all contacts once and cache
+            if (_allContacts == null)
+            {
+                _allContacts = await _contactService.GetContactsAsync();
+            }
+
+            var lowerQuery = query.ToLowerInvariant();
+
+            // Get already-added attendees to exclude from suggestions
+            var existingAttendees = string.IsNullOrWhiteSpace(Attendees)
+                ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                : Attendees.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(a => a.Trim())
+                    .Where(a => !string.IsNullOrEmpty(a))
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var filtered = _allContacts
+                .Where(c =>
+                    (!string.IsNullOrEmpty(c.DisplayName) && c.DisplayName.ToLowerInvariant().Contains(lowerQuery)) ||
+                    (!string.IsNullOrEmpty(c.FirstName) && c.FirstName.ToLowerInvariant().Contains(lowerQuery)) ||
+                    (!string.IsNullOrEmpty(c.LastName) && c.LastName.ToLowerInvariant().Contains(lowerQuery)) ||
+                    c.EmailAddresses.Any(e => e.ToLowerInvariant().Contains(lowerQuery)))
+                .Where(c =>
+                {
+                    // Exclude contacts already added as attendees
+                    var email = c.EmailAddresses.FirstOrDefault();
+                    var name = c.DisplayName;
+                    return (email == null || !existingAttendees.Contains(email)) &&
+                           (name == null || !existingAttendees.Contains(name));
+                })
+                .Take(8)
+                .ToList();
+
+            SuggestedContacts.Clear();
+            foreach (var contact in filtered)
+            {
+                SuggestedContacts.Add(contact);
+            }
+
+            ShowContactSuggestions = SuggestedContacts.Count > 0;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[NewEventViewModel] Error filtering contacts: {ex.Message}");
+            ShowContactSuggestions = false;
+        }
+    }
+
+    /// <summary>
+    /// Adds a selected contact to the attendees field
+    /// </summary>
+    public void SelectContact(Models.Contact contact)
+    {
+        var value = contact.DisplayName ?? contact.PrimaryEmail;
+        if (string.IsNullOrEmpty(value)) return;
+
+        // Parse existing attendees (everything before the current token being typed)
+        var parts = Attendees.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(a => a.Trim())
+            .Where(a => !string.IsNullOrEmpty(a))
+            .ToList();
+
+        // Remove the last partial entry (the search token) if it doesn't match a complete attendee
+        if (parts.Count > 0)
+        {
+            var lastPart = parts.Last();
+            // Check if last part is a partial search (not a full email/name already added)
+            var isPartial = !lastPart.Contains('@') &&
+                            _allContacts?.Any(c =>
+                                string.Equals(c.DisplayName, lastPart, StringComparison.OrdinalIgnoreCase) ||
+                                string.Equals(c.PrimaryEmail, lastPart, StringComparison.OrdinalIgnoreCase)) != true;
+            if (isPartial)
+            {
+                parts.RemoveAt(parts.Count - 1);
+            }
+        }
+
+        parts.Add(value);
+        Attendees = string.Join("; ", parts) + "; ";
+
+        SuggestedContacts.Clear();
+        ShowContactSuggestions = false;
     }
 
     private void InitializeRecurrenceOptions()

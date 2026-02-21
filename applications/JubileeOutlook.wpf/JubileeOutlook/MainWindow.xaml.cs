@@ -167,11 +167,8 @@ public partial class MainWindow : Window
         // Subscribe to category management events
         _mainViewModel.ApplyCategoryRequested += (s, message) => Dispatcher.Invoke(() => ShowCategoryDialog(message));
 
-        // Subscribe to folder pane toggle event
+        // Subscribe to folder pane toggle event (Command binding on HamburgerButton fires this)
         _appViewModel.ToggleFolderPaneRequested += (s, e) => HamburgerMenu_Click(s ?? this, new RoutedEventArgs());
-
-        // Subscribe to AppRail hamburger menu click event (backup for command binding)
-        AppRail.HamburgerMenuClicked += (s, e) => HamburgerMenu_Click(s ?? this, new RoutedEventArgs());
 
         // Set the DataContext to a composite object containing both view models
         DataContext = new WindowDataContext
@@ -1251,6 +1248,7 @@ public partial class MainWindow : Window
     }
 
     private bool _isFolderPaneCollapsed = false;
+    private double _folderPaneWidth = 250;
 
     private void HamburgerMenu_Click(object sender, RoutedEventArgs e)
     {
@@ -1260,81 +1258,29 @@ public partial class MainWindow : Window
             _isFolderPaneCollapsed = !_isFolderPaneCollapsed;
             System.Diagnostics.Debug.WriteLine($"[MainWindow] Folder pane collapsed: {_isFolderPaneCollapsed}");
 
-            // Animate the folder pane column width
-            var widthAnimation = new DoubleAnimation
-            {
-                Duration = TimeSpan.FromMilliseconds(300),
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
-            };
+            if (FolderPaneColumn == null) return;
 
             if (_isFolderPaneCollapsed)
             {
-                // Collapse to 0 width - completely hide the panel
-                widthAnimation.To = 0;
-                widthAnimation.From = FolderPaneColumn?.Width.Value ?? 250;
+                // Save current width before collapsing
+                _folderPaneWidth = FolderPaneColumn.Width.Value;
+                FolderPaneColumn.MinWidth = 0;
+                FolderPaneColumn.Width = new GridLength(0);
+                FolderPaneBorder.Visibility = Visibility.Collapsed;
+                FolderPaneSplitter.Visibility = Visibility.Collapsed;
             }
             else
             {
-                // Expand to full width (250px)
-                widthAnimation.To = 250;
-                widthAnimation.From = 0;
+                // Restore to saved width
+                FolderPaneBorder.Visibility = Visibility.Visible;
+                FolderPaneSplitter.Visibility = Visibility.Visible;
+                FolderPaneColumn.MinWidth = 150;
+                FolderPaneColumn.Width = new GridLength(_folderPaneWidth);
             }
-
-            // Apply animation to the folder pane column
-            if (FolderPaneColumn != null)
-            {
-                FolderPaneColumn.BeginAnimation(ColumnDefinition.WidthProperty, widthAnimation);
-            }
-
-            // Also animate the grid splitter visibility
-            AnimateGridSplitter();
         }
         catch (Exception ex)
         {
-            // Log error but don't crash
             System.Diagnostics.Debug.WriteLine($"Error in HamburgerMenu_Click: {ex.Message}");
-        }
-    }
-
-    private void AnimateGridSplitter()
-    {
-        // Find the grid splitter next to the folder pane
-        if (MailModuleContent != null)
-        {
-            // Grid splitter is at column 1
-            foreach (var child in MailModuleContent.Children)
-            {
-                if (child is GridSplitter splitter && Grid.GetColumn(splitter) == 1)
-                {
-                    var opacityAnimation = new DoubleAnimation
-                    {
-                        To = _isFolderPaneCollapsed ? 0 : 1,
-                        Duration = TimeSpan.FromMilliseconds(300),
-                        EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
-                    };
-                    splitter.BeginAnimation(UIElement.OpacityProperty, opacityAnimation);
-
-                    // After animation completes, set visibility
-                    if (_isFolderPaneCollapsed)
-                    {
-                        System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer
-                        {
-                            Interval = TimeSpan.FromMilliseconds(300)
-                        };
-                        timer.Tick += (s, e) =>
-                        {
-                            splitter.Visibility = Visibility.Collapsed;
-                            timer.Stop();
-                        };
-                        timer.Start();
-                    }
-                    else
-                    {
-                        splitter.Visibility = Visibility.Visible;
-                    }
-                    break;
-                }
-            }
         }
     }
 
