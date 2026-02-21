@@ -1,7 +1,7 @@
 # JubileeOutlook.com - Comprehensive Web Documentation
 
-**Version:** 1.0.0
-**Last Updated:** February 13, 2026
+**Version:** 1.7.0
+**Last Updated:** February 21, 2026
 **Document Scope:** Full-stack architecture, API specifications, UI structure, data flow, and system behavior
 
 [NAMESPACE-BOOTSTRAP: VERIFIED]
@@ -352,7 +352,7 @@ InspireContinuum is the **user data and activity** service. For JubileeOutlook, 
 | Table | Purpose | Key Fields |
 |-------|---------|-----------|
 | `outlook_calendars` | User calendars | id, user_id, name, external_provider_id |
-| `outlook_calendar_events` | Calendar events | id, calendar_id, user_id, subject, location, description, start/end_time, is_all_day, status, category, event_color, is_recurring, reminder_minutes |
+| `outlook_calendar_events` | Calendar events | id, calendar_id, user_id, subject, location, description, start/end_time, is_all_day, status, category, event_color, is_recurring, recurrence_type, recurrence_interval, recurrence_end_date, recurrence_occurrences, recurrence_days_of_week, recurrence_exception_dates, reminder_minutes |
 | `outlook_event_attendees` | Event attendees | id, event_id, email, rsvp_status |
 | `outlook_event_attachments` | Event files | id, event_id, fileName, filePath, fileSize, url |
 | `outlook_event_images` | Event images | id, event_id, fileName, mimeType, url, thumbnailUrl |
@@ -806,7 +806,7 @@ Five-panel authentication flow:
 
 **View Modes:** Day, WorkWeek, Week, Month — all fully implemented with time grid views.
 
-**Status:** Fully functional with API integration (Continuum API CRUD), 5-minute event cache, recurring event expansion, reminders, search, drag & drop, resize, file attachments, timezone support, templates, sharing, iCal export, and keyboard shortcuts.
+**Status:** Fully functional with API integration (Continuum API CRUD), 30-second auto-refresh sync (setTimeout chain polling with cache-busting and tab visibility listener), recurring event expansion, reminders, search, drag & drop, resize, file attachments, timezone support, templates, sharing, iCal export, and keyboard shortcuts.
 
 **Keyboard Shortcuts:** Ctrl+N (new event), T (today), Left/Right (navigate), 1-4 (views), Ctrl+F (search), Escape (close dialog).
 
@@ -1354,13 +1354,13 @@ Codex (Identity)                    Continuum (Data)
 | **Mail** | No bulk message operations (select multiple) |
 | **Mail** | No conversation threading view |
 | **Mail** | No inline image/attachment preview |
-| **Calendar** | Week/WorkWeek/Day views are placeholders |
-| **Calendar** | No event creation/editing from UI (API exists) |
-| **Calendar** | Events array always empty (no API loading wired) |
-| **People** | No contact CRUD from UI (API exists) |
-| **People** | No group management from UI (API exists) |
-| **People** | Contacts array always empty (no API loading wired) |
-| **People** | Search input exists but not connected to handler |
+| **Calendar** | ~~Week/WorkWeek/Day views are placeholders~~ — RESOLVED in v1.5.0 |
+| **Calendar** | ~~No event creation/editing from UI~~ — RESOLVED in v1.5.0 |
+| **Calendar** | ~~Events array always empty~~ — RESOLVED in v1.5.0 + v1.7.0 (migration 0007 fix) |
+| **People** | ~~No contact CRUD from UI~~ — RESOLVED in v1.6.0 |
+| **People** | ~~No group management from UI~~ — RESOLVED in v1.6.0 |
+| **People** | ~~Contacts array always empty~~ — RESOLVED in v1.6.0 |
+| **People** | ~~Search input not connected~~ — RESOLVED in v1.6.0 |
 | **Auth** | Trust-based X-User-Id header (no server-side token verification) |
 | **Security** | IMAP passwords stored as base64 (not AES-256) |
 | **Security** | HTML rendered via dangerouslySetInnerHTML without sanitization |
@@ -1370,7 +1370,7 @@ Codex (Identity)                    Continuum (Data)
 
 ### 11.2 Recommended Improvements
 
-1. **Wire Calendar & People pages** to their respective API services
+1. ~~**Wire Calendar & People pages** to their respective API services~~ — DONE
 2. **Implement URL routing** with react-router-dom for deep linking
 3. **Add DOMPurify** for HTML email sanitization
 4. **Upgrade IMAP password encryption** from base64 to AES-256

@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0] - 2026-02-21
+
+### Added (Frontend — jubileeoutlook-frontend)
+- **Calendar 30-Second Auto-Refresh**: CalendarPage now polls Continuum API every 30 seconds using setTimeout chain pattern (prevents overlapping fetches); cache TTL reduced from 5 minutes to 30 seconds
+- **Tab Visibility Refresh**: Calendar auto-refreshes when user returns to tab via `visibilitychange` listener
+- **Cache-Busting**: Calendar service appends `_t: Date.now()` query parameter to bypass CDN/browser caching
+
+### Added (Mobile — JubileeOutlookMobile)
+- **Calendar 30-Second Auto-Refresh**: CalendarScreen polls every 30 seconds using same setTimeout chain pattern as web
+- **Foreground Refresh**: Calendar auto-refreshes when app returns to foreground via `AppState` listener
+- **Cache-Busting**: Mobile calendar service uses same `_t: Date.now()` pattern as web
+
+### Added (Continuum Database)
+- **Migration 0007 Applied**: Added 6 recurrence columns to `outlook_calendar_events` table: `recurrence_type` (VARCHAR), `recurrence_interval` (INTEGER), `recurrence_end_date` (TIMESTAMPTZ), `recurrence_occurrences` (INTEGER), `recurrence_days_of_week` (TEXT[]), `recurrence_exception_dates` (TEXT[])
+- **Recurrence Index**: `idx_outlook_events_is_recurring` on `(user_id, is_recurring) WHERE is_recurring = TRUE`
+
+### Fixed (Continuum API)
+- **Event Creation Unblocked**: `POST /api/v1/outlook/events` was failing with `column "recurrence_type" does not exist` because migration 0007 had never been applied; all event creation across web, desktop, and mobile was broken
+- **Event Update Unblocked**: `PUT /api/v1/outlook/events/:id` had the same schema mismatch for recurrence columns
+
+### Fixed (Data Layer)
+- **UserId Fragmentation**: Migrated orphaned calendar events (3), calendars (1), and contacts (1) from synthetic SHA-256-based userId to real Codex userId, resolving data mismatches between web and desktop platforms
+- **Duplicate Email Account**: Removed duplicate `outlook_email_accounts` entry for synthetic userId (unique constraint prevented migration)
+
+### Verified (WPF Desktop)
+- **Auth Flow Correct**: Both email/password (`AuthenticationManager`) and OAuth (`OAuth2AuthenticationService`) paths correctly resolve real Codex userId — no code changes needed
+
+### Technical Details
+- setTimeout chain pattern: next poll starts only after previous fetch completes, preventing request pile-up
+- Cache-busting `_t` parameter appended to all calendar API requests
+- Migration 0007 is idempotent (`IF NOT EXISTS` on all ALTER TABLE and CREATE INDEX statements)
+- Real Codex userId for test user: `f66610b1-853e-41bd-a0b1-3d6670a68f36`
+- 4 frontend/mobile files modified, 1 migration applied, 0 API code changes
+
 ## [1.6.0] - 2026-02-17
 
 ### Added (Frontend — jubileeoutlook-frontend)

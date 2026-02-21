@@ -30,7 +30,7 @@ All API access goes through `codexClient` and `continuumClient` wrappers. No dir
 ### Key Patterns
 
 - **MailContext** — Shared mail state via React Context (`useMailContext` / `useMailContextSafe`)
-- **CalendarPage as orchestrator** — All calendar state lives in CalendarPage (no CalendarContext); events filtered via `useMemo` pipeline
+- **CalendarPage as orchestrator** — All calendar state lives in CalendarPage (no CalendarContext); events filtered via `useMemo` pipeline; 30-second auto-refresh sync with setTimeout chain pattern
 - **localStorage** — Client-side storage for signatures, snooze, rules, templates, calendar filters, reminder dismissals, event templates
 - **contentEditable** — Rich text editing for compose, signatures, templates
 - **60s auto-sync** — Polling interval for new messages with notification detection
@@ -145,7 +145,8 @@ src/
 - **Event templates**: Save/apply templates via localStorage; TemplateManager dialog
 - **Calendar sharing**: Share by email with view/edit permissions; graceful API failure
 - **Ribbon toolbar**: Templates, Export, Share buttons
-- 5-minute event cache per date range with auto-invalidation on mutations
+- **30-second auto-refresh sync**: setTimeout chain polling with cache-busting, tab visibility refresh
+- 30-second event cache per date range with auto-invalidation on mutations
 - DTO mapper handles both camelCase and snake_case API responses
 - Private events display "Private" instead of actual title
 
