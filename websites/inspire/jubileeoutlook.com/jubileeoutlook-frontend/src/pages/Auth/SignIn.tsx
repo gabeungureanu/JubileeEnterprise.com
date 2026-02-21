@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { emailSyncService, ProviderInfo } from '../../services/mail/emailSyncService';
+import jubileeLogo from '../../assets/jubilee-logo.png';
 import './SignIn.css';
 
 const EMAIL_REGEX = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -415,7 +416,7 @@ const SignIn: React.FC = () => {
             <div className="signin__panel">
               {/* Avatar */}
               <div className="signin__avatar">
-                <span className="material-symbols-outlined signin__avatar-icon">person</span>
+                <img src={jubileeLogo} alt="Jubilee" className="signin__avatar-img" />
               </div>
 
               {/* Title */}
@@ -495,7 +496,7 @@ const SignIn: React.FC = () => {
             <div className="signin__panel">
               {/* Avatar */}
               <div className="signin__avatar">
-                <span className="material-symbols-outlined signin__avatar-icon">lock</span>
+                <img src={jubileeLogo} alt="Jubilee" className="signin__avatar-img" />
               </div>
 
               {/* Title */}
@@ -594,7 +595,7 @@ const SignIn: React.FC = () => {
             <div className="signin__panel">
               {/* Avatar */}
               <div className="signin__avatar">
-                <span className="material-symbols-outlined signin__avatar-icon">person</span>
+                <img src={jubileeLogo} alt="Jubilee" className="signin__avatar-img" />
               </div>
 
               {/* Branding */}
