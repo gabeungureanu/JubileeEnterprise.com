@@ -163,11 +163,36 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, contact, onClose,
       return;
     }
 
+    // Validate email format
+    const emails = [formData.email, formData.email2, formData.email3].filter(Boolean);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    for (const email of emails) {
+      if (!emailRegex.test(email.trim())) {
+        setError(`Invalid email format: ${email}`);
+        setActiveTab('contact');
+        return;
+      }
+    }
+
+    // Validate website URL if provided
+    if (formData.website.trim()) {
+      try {
+        const urlToTest = /^https?:\/\//i.test(formData.website.trim())
+          ? formData.website.trim()
+          : `https://${formData.website.trim()}`;
+        new URL(urlToTest);
+      } catch {
+        setError('Invalid website URL. Please enter a valid URL (e.g., https://www.example.com).');
+        setActiveTab('other');
+        return;
+      }
+    }
+
     if (!isEditing && !duplicateChecked) {
       try {
         const displayName = formData.displayName.trim() || `${formData.firstName} ${formData.lastName}`.trim();
-        const emails = [formData.email, formData.email2, formData.email3].filter(Boolean);
-        const dupes = await contactService.checkDuplicates(displayName, emails);
+        const phones = [formData.phone, formData.phone2].filter(Boolean);
+        const dupes = await contactService.checkDuplicates(displayName, phones, formData.mobilePhone.trim() || undefined);
         if (dupes.length > 0) {
           setDuplicates(dupes);
           setDuplicateChecked(true);
@@ -219,8 +244,18 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, contact, onClose,
       if (photoFile && contact?.id) {
         try { await contactService.uploadPhoto(contact.id, photoFile); } catch { /* best-effort */ }
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save contact.');
+    } catch (err: any) {
+      const apiError = err?.response?.data?.error;
+      const details = err?.response?.data?.details;
+      let msg = 'Failed to save contact.';
+      if (details && Array.isArray(details)) {
+        msg = details.join(', ');
+      } else if (apiError) {
+        msg = apiError;
+      } else if (err instanceof Error) {
+        msg = err.message;
+      }
+      setError(msg);
       setSaving(false);
     }
   };
@@ -234,6 +269,30 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, contact, onClose,
         onChange={(e) => updateField(field, e.target.value)}
         placeholder={placeholder}
       />
+    </div>
+  );
+
+  const renderDateField = (label: string, field: keyof ContactFormData) => (
+    <div className="contact-dialog__date-field">
+      <label>{label}</label>
+      <div className="contact-dialog__date-input-wrapper">
+        <input
+          type="date"
+          value={formData[field]}
+          onChange={(e) => updateField(field, e.target.value)}
+          placeholder="Select a date"
+        />
+        {formData[field] && (
+          <button
+            type="button"
+            className="contact-dialog__date-clear"
+            onClick={() => updateField(field, '')}
+            title="Clear date"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 
@@ -410,8 +469,8 @@ const ContactDialog: React.FC<ContactDialogProps> = ({ isOpen, contact, onClose,
             {activeTab === 'other' && (
               <>
                 <div className="contact-dialog__section-title">Other</div>
-                {renderField('Birthday', 'birthday', 'date')}
-                {renderField('Anniversary', 'anniversary', 'date')}
+                {renderDateField('Birthday', 'birthday')}
+                {renderDateField('Anniversary', 'anniversary')}
                 {renderField('Spouse/Partner', 'spouse', 'text', 'Enter name')}
                 {renderField('Website', 'website', 'url', 'https://www.example.com')}
                 {renderField('Category', 'category', 'text', 'Enter category')}

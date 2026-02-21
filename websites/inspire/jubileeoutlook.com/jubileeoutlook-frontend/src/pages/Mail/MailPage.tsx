@@ -227,7 +227,12 @@ const MailPage: React.FC = () => {
   }, [selectedFolderId, currentPage, showToast]);
 
   // Handle message selection - fetch full message and mark as read
+  // Closes any open compose/reply/forward to show the reading pane
   const handleMessageSelect = useCallback(async (messageId: string) => {
+    // Close compose/reply/forward — reading pane takes priority when selecting a message
+    setComposeMode(null);
+    setComposePrefill(undefined);
+
     setSelectedMessageId(messageId);
 
     const listMsg = messages.find(m => m.id === messageId);
@@ -254,8 +259,10 @@ const MailPage: React.FC = () => {
     }
   }, [messages, refreshFolders, showToast]);
 
-  // Handle folder selection
+  // Handle folder selection — close compose and reset all view state
   const handleFolderSelect = useCallback((folderId: string) => {
+    setComposeMode(null);
+    setComposePrefill(undefined);
     setSearchQuery('');
     setIsSearching(false);
     setCurrentPage(1);
@@ -352,9 +359,14 @@ const MailPage: React.FC = () => {
     }
   }, [selectedMessage, refreshFolders, showToast]);
 
-  // Open compose handler
+  // Open compose handler — mutually exclusive with reading pane
   const handleOpenCompose = useCallback((mode: ComposeMode) => {
     setComposePrefill(undefined);
+    if (mode === 'new') {
+      // New compose doesn't need a selected message — clear stale selection
+      setSelectedMessageId(null);
+      setSelectedMessage(null);
+    }
     setComposeMode(mode);
   }, []);
 

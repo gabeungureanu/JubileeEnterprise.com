@@ -36,10 +36,24 @@ export const contactService = {
   async createContact(contact: Partial<ContactDto>): Promise<Contact | null> {
     const userId = tokenStore.requireUserId();
     const payload = { ...contact, user_id: userId };
-    const response = await codexClient.post('/contacts', payload);
-    const data = response.data;
-    const dto = data?.contact || data;
-    return dto?.id ? mapContactDto(dto) : null;
+    try {
+      const response = await codexClient.post('/contacts', payload);
+      const data = response.data;
+      const dto = data?.contact || data;
+      return dto?.id ? mapContactDto(dto) : null;
+    } catch (err: any) {
+      // Extract meaningful error from 409 duplicate responses
+      if (err?.response?.status === 409) {
+        const apiError = err.response.data?.error;
+        const code = err.response.data?.code;
+        const deletedId = err.response.data?.duplicates?.[0]?.id;
+        const error = new Error(apiError || 'Duplicate contact found.');
+        (error as any).code = code;
+        (error as any).deletedContactId = deletedId;
+        throw error;
+      }
+      throw err;
+    }
   },
 
   async updateContact(contactId: string, contact: Partial<ContactDto>): Promise<Contact | null> {

@@ -24,7 +24,9 @@ import { serve } from '@hono/node-server';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { initializePools, closePools, checkAllHealth, getContinuumPool } from '@jubilee/database';
-import * as continuum from '@jubilee/database/continuum';
+// @jubilee/database/continuum is a stub — functions are planned but not yet exported
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const continuum: any = await import('@jubilee/database/continuum');
 import { ImapFlow } from 'imapflow';
 import * as nodemailer from 'nodemailer';
 import { createHash, randomUUID } from 'crypto';
@@ -1770,7 +1772,7 @@ app.get('/api/v1/outlook/messages/:id', async (c) => {
             // Strip angle brackets for IMAP search
             const cleanMsgId = headerMsgId.replace(/^<|>$/g, '');
             const uids = await client.search({ header: { 'message-id': cleanMsgId } });
-            if (uids.length > 0) {
+            if (Array.isArray(uids) && uids.length > 0) {
               targetUid = uids[0];
             }
           }
@@ -1984,7 +1986,7 @@ app.get('/api/v1/outlook/messages/:messageId/attachments/:attachmentId/download'
       if (headerMsgId) {
         const cleanMsgId = headerMsgId.replace(/^<|>$/g, '');
         const uids = await client.search({ header: { 'message-id': cleanMsgId } });
-        if (uids.length > 0) targetUid = uids[0];
+        if (Array.isArray(uids) && uids.length > 0) targetUid = uids[0];
       }
 
       if (!targetUid) {

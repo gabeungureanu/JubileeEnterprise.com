@@ -405,7 +405,13 @@ public partial class PeopleViewModel : ObservableObject
             }
             else
             {
-                throw new Exception(result.Error ?? "Failed to create contact");
+                var ex = new Exception(result.Error ?? "Failed to create contact");
+                // Attach deleted contact ID for DELETED_DUPLICATE_FOUND handling
+                if (result.Error == "DELETED_DUPLICATE_FOUND" && result.Data?.Id != null)
+                {
+                    ex.Data["DeletedContactId"] = result.Data.Id;
+                }
+                throw ex;
             }
         }
         catch (Exception ex)
@@ -923,6 +929,12 @@ public partial class PeopleViewModel : ObservableObject
     /// </summary>
     public event Func<Contact, Task<bool>>? DuplicateContactDetected;
 
+    /// <summary>
+    /// Event raised when a deleted duplicate is found during creation
+    /// The handler should return true to restore the deleted contact, false to cancel
+    /// </summary>
+    public event Func<Contact, string, Task<bool>>? DeletedDuplicateDetected;
+
     public async Task AddContactAsync(Contact contact)
     {
         try
@@ -959,6 +971,37 @@ public partial class PeopleViewModel : ObservableObject
                 Contacts.Add(contact);
                 FilterContacts();
                 Services.NotificationService.Instance.ShowSuccess($"Contact '{contact.DisplayName}' saved.", "Contacts");
+            }
+        }
+        catch (Exception ex) when (ex.Message == "DELETED_DUPLICATE_FOUND")
+        {
+            System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Deleted duplicate found for: {contact.DisplayName}");
+
+            // Ask user if they want to restore the deleted contact
+            bool restore = false;
+            if (DeletedDuplicateDetected != null)
+            {
+                restore = await DeletedDuplicateDetected.Invoke(contact, ex.Data["DeletedContactId"]?.ToString() ?? "");
+            }
+
+            if (restore)
+            {
+                // Restore the deleted contact via API
+                try
+                {
+                    var deletedId = ex.Data["DeletedContactId"]?.ToString();
+                    if (!string.IsNullOrEmpty(deletedId))
+                    {
+                        await _contactService.RestoreContactAsync(deletedId);
+                        await LoadContactsFromDatabaseAsync();
+                        Services.NotificationService.Instance.ShowSuccess($"Contact '{contact.DisplayName}' restored.", "Contacts");
+                    }
+                }
+                catch (Exception restoreEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[PeopleViewModel] Failed to restore contact: {restoreEx.Message}");
+                    Services.NotificationService.Instance.ShowError("Failed to restore contact. Please try again.", "Contacts");
+                }
             }
         }
         catch (Exception ex)

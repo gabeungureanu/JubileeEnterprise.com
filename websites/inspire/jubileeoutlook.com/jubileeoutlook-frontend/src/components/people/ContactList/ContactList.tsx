@@ -7,6 +7,7 @@ interface ContactListProps {
   contacts: Contact[];
   selectedContactId: string | null;
   onContactSelect: (contactId: string) => void;
+  onContactOpen?: (contactId: string) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   sortOption: ContactSortOption;
@@ -40,7 +41,7 @@ const SORT_OPTIONS: { value: ContactSortOption; label: string; shortLabel: strin
 ];
 
 const ContactList: React.FC<ContactListProps> = ({
-  contacts, selectedContactId, onContactSelect,
+  contacts, selectedContactId, onContactSelect, onContactOpen,
   searchQuery, onSearchChange,
   sortOption, onSortChange,
   isLoading, activeFolder,
@@ -332,6 +333,7 @@ const ContactList: React.FC<ContactListProps> = ({
             className={`contact-list__item ${selectedContactId === contact.id ? 'contact-list__item--selected' : ''} ${selectedIds.has(contact.id) ? 'contact-list__item--checked' : ''} ${openRowMenuId === contact.id ? 'contact-list__item--menu-open' : ''}`}
             style={gridStyle}
             onClick={() => onContactSelect(contact.id)}
+            onDoubleClick={() => onContactOpen?.(contact.id)}
           >
             <div className="contact-list__col-check">
               <input

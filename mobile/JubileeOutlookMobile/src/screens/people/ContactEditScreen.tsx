@@ -129,7 +129,25 @@ const ContactEditScreen: React.FC = () => {
 
       navigation.goBack();
     } catch (err: any) {
-      alert('Error', err?.message || 'Failed to save contact', 'error');
+      if (err?.code === 'DELETED_DUPLICATE_FOUND' && err?.deletedContactId) {
+        // Offer to restore the deleted duplicate
+        const deletedId = err.deletedContactId;
+        confirm(
+          'Deleted Contact Found',
+          `A deleted contact with the same name and phone number already exists. Would you like to restore it instead?`,
+          async () => {
+            try {
+              await contactService.restore(deletedId);
+              navigation.goBack();
+            } catch {
+              alert('Error', 'Failed to restore contact.', 'error');
+            }
+          },
+          { confirmText: 'Restore' }
+        );
+      } else {
+        alert('Error', err?.message || 'Failed to save contact', 'error');
+      }
     } finally {
       setIsSaving(false);
     }
@@ -137,7 +155,7 @@ const ContactEditScreen: React.FC = () => {
     firstName, lastName, email, phone, mobilePhone, company, jobTitle,
     department, office, address, city, state, postalCode, country,
     notes, website, birthday, anniversary, spouse, category,
-    isEditing, contactId, navigation, alert,
+    isEditing, contactId, navigation, alert, confirm,
   ]);
 
   // ── Delete ──────────────────────────────────────────────

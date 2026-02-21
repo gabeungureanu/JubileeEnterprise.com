@@ -328,6 +328,84 @@
   color: var(--text-tertiary);
 }
 
+/* Date input — ensure calendar icon is visible on dark background */
+
+.contact-dialog__field input[type="date"] {
+  color-scheme: dark;
+  cursor: pointer;
+}
+
+.contact-dialog__field input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
+}
+
+/* Date field wrapper with calendar icon */
+
+.contact-dialog__date-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 8px;
+}
+
+.contact-dialog__date-field label {
+  font-size: 11px;
+  color: #808080;
+  margin-bottom: 4px;
+}
+
+.contact-dialog__date-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.contact-dialog__date-input-wrapper input {
+  flex: 1;
+  padding: 8px 36px 10px 8px;
+  background-color: #0D0D0D;
+  border: none;
+  border-bottom: 1px solid #444444;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition-fast);
+  color-scheme: dark;
+  cursor: pointer;
+}
+
+.contact-dialog__date-input-wrapper input:focus {
+  border-bottom-color: var(--accent-blue);
+}
+
+.contact-dialog__date-input-wrapper input::placeholder {
+  color: #666666;
+}
+
+.contact-dialog__date-clear {
+  position: absolute;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #808080;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.contact-dialog__date-clear:hover {
+  color: #E57373;
+}
+
+.contact-dialog__date-clear .material-symbols-outlined {
+  font-size: 16px;
+}
+
 /* Footer */
 
 .contact-dialog__footer {

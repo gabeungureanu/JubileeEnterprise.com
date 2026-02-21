@@ -33,6 +33,7 @@ public partial class PeopleView : UserControl
             viewModel.BulkAddCategoryRequested += ViewModel_BulkAddCategoryRequested;
             viewModel.CreateContactListRequested += ViewModel_CreateContactListRequested;
             viewModel.DuplicateContactDetected += ViewModel_DuplicateContactDetected;
+            viewModel.DeletedDuplicateDetected += ViewModel_DeletedDuplicateDetected;
             viewModel.RenameContactListRequested += ViewModel_RenameContactListRequested;
             viewModel.DeleteContactListConfirmRequested += ViewModel_DeleteContactListConfirmRequested;
             viewModel.DeleteContactConfirmRequested += ViewModel_DeleteContactConfirmRequested;
@@ -71,6 +72,7 @@ public partial class PeopleView : UserControl
             oldViewModel.BulkAddCategoryRequested -= ViewModel_BulkAddCategoryRequested;
             oldViewModel.CreateContactListRequested -= ViewModel_CreateContactListRequested;
             oldViewModel.DuplicateContactDetected -= ViewModel_DuplicateContactDetected;
+            oldViewModel.DeletedDuplicateDetected -= ViewModel_DeletedDuplicateDetected;
             oldViewModel.RenameContactListRequested -= ViewModel_RenameContactListRequested;
             oldViewModel.DeleteContactListConfirmRequested -= ViewModel_DeleteContactListConfirmRequested;
             oldViewModel.DeleteContactConfirmRequested -= ViewModel_DeleteContactConfirmRequested;
@@ -89,6 +91,7 @@ public partial class PeopleView : UserControl
             newViewModel.BulkAddCategoryRequested += ViewModel_BulkAddCategoryRequested;
             newViewModel.CreateContactListRequested += ViewModel_CreateContactListRequested;
             newViewModel.DuplicateContactDetected += ViewModel_DuplicateContactDetected;
+            newViewModel.DeletedDuplicateDetected += ViewModel_DeletedDuplicateDetected;
             newViewModel.RenameContactListRequested += ViewModel_RenameContactListRequested;
             newViewModel.DeleteContactListConfirmRequested += ViewModel_DeleteContactListConfirmRequested;
             newViewModel.DeleteContactConfirmRequested += ViewModel_DeleteContactConfirmRequested;
@@ -604,8 +607,27 @@ public partial class PeopleView : UserControl
         Dispatcher.Invoke(() =>
         {
             var result = ThemedMessageBox.Show(Window.GetWindow(this),
-                $"A contact with the name '{contact.DisplayName}' may already exist.\n\nDo you want to create it anyway?",
-                "Possible Duplicate",
+                $"Contact already exists with the same Display Name and Phone Number.\n\n'{contact.DisplayName}'\n\nDo you want to create it anyway?",
+                "Duplicate Contact Found",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            tcs.SetResult(result == MessageBoxResult.Yes);
+        });
+
+        return await tcs.Task;
+    }
+
+    private async Task<bool> ViewModel_DeletedDuplicateDetected(Contact contact, string deletedContactId)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+
+        // Must dispatch to UI thread for dialog
+        Dispatcher.Invoke(() =>
+        {
+            var result = ThemedMessageBox.Show(Window.GetWindow(this),
+                $"A deleted contact '{contact.DisplayName}' with the same name and phone number already exists.\n\nWould you like to restore it instead of creating a new one?",
+                "Deleted Contact Found",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
 

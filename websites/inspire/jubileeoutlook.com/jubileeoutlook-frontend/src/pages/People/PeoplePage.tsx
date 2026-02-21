@@ -27,6 +27,7 @@ const PeoplePage: React.FC = () => {
 
   // Selection & filter state
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
+  const [openContactId, setOpenContactId] = useState<string | null>(null);
   const [activeFolder, setActiveFolder] = useState<FolderFilter>('all');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -231,6 +232,7 @@ const PeoplePage: React.FC = () => {
   }, [contacts, activeFolder, selectedCategory, groupMembers, searchQuery, sortOption]);
 
   const selectedContact = contacts.find(c => c.id === selectedContactId) || null;
+  const openContact = contacts.find(c => c.id === openContactId) || null;
 
   // Refresh data after mutations
   const refreshData = useCallback(async () => {
@@ -244,6 +246,7 @@ const PeoplePage: React.FC = () => {
     setActiveFolder(folder);
     setSelectedCategory(null); // Clear category when selecting a folder (matches WPF)
     setSelectedContactId(null);
+    setOpenContactId(null);
     setSearchQuery('');
     setSelectedIds(new Set());
   };
@@ -258,6 +261,7 @@ const PeoplePage: React.FC = () => {
       setActiveFolder('all'); // Clear folder selection when category is active
     }
     setSelectedContactId(null);
+    setOpenContactId(null);
     setSearchQuery('');
     setSelectedIds(new Set());
   };
@@ -298,31 +302,65 @@ const PeoplePage: React.FC = () => {
   };
 
   const handleContactDialogSave = async (dto: Partial<ContactDto>) => {
-    try {
-      if (editingContact) {
-        const updated = await contactService.updateContact(editingContact.id, dto);
-        // Immediately update local state with the fresh contact from API
-        if (updated) {
-          setContacts(prev => prev.map(c => c.id === updated.id ? updated : c));
+    if (editingContact) {
+      const updated = await contactService.updateContact(editingContact.id, dto);
+      if (updated) {
+        setContacts(prev => prev.map(c => c.id === updated.id ? updated : c));
+      }
+    } else {
+      // --- Duplicate check: same Display Name AND same Phone Number ---
+      const newName = (dto.display_name || '').toLowerCase().trim();
+      const newPhones = [
+        ...(dto.phone_numbers || []),
+        dto.mobile_phone || '',
+      ].map(p => normalizePhone(p)).filter(p => p.length > 0);
+
+      if (newName && newPhones.length > 0) {
+        // Check active contacts first
+        const activeMatch = contacts.find(c => {
+          if (c.isDeleted) return false;
+          if (c.displayName.toLowerCase().trim() !== newName) return false;
+          const existingPhones = [...c.phoneNumbers, c.mobilePhone]
+            .map(p => normalizePhone(p)).filter(p => p.length > 0);
+          return newPhones.some(np => existingPhones.includes(np));
+        });
+
+        if (activeMatch) {
+          throw new Error('Contact already exists with the same Display Name and Phone Number.');
         }
-      } else {
-        const created = await contactService.createContact(dto);
-        if (created) {
-          setContacts(prev => [...prev, created]);
+
+        // Check soft-deleted contacts — offer restore instead
+        const deletedMatch = contacts.find(c => {
+          if (!c.isDeleted) return false;
+          if (c.displayName.toLowerCase().trim() !== newName) return false;
+          const existingPhones = [...c.phoneNumbers, c.mobilePhone]
+            .map(p => normalizePhone(p)).filter(p => p.length > 0);
+          return newPhones.some(np => existingPhones.includes(np));
+        });
+
+        if (deletedMatch) {
+          setContactDialogOpen(false);
+          setEditingContact(null);
+          setConfirmDialog({
+            icon: 'restore_from_trash',
+            title: 'Deleted Contact Found',
+            message: <>A deleted contact <strong>{deletedMatch.displayName}</strong> with the same name and phone number already exists. Would you like to restore it instead?</>,
+            confirmLabel: 'Restore Contact',
+            onConfirm: () => executeRestore(deletedMatch.id),
+            danger: false,
+          });
+          return;
         }
       }
-      setContactDialogOpen(false);
-      setEditingContact(null);
-      // Full refresh as safety net to ensure consistency
-      await refreshData();
-    } catch (err) {
-      console.error('Failed to save contact:', err);
-      setError('Failed to save contact. Please try again.');
-      // Still close dialog and refresh to show whatever state the server has
-      setContactDialogOpen(false);
-      setEditingContact(null);
-      await refreshData();
+
+      const created = await contactService.createContact(dto);
+      if (created) {
+        setContacts(prev => [...prev, created]);
+      }
     }
+    setContactDialogOpen(false);
+    setEditingContact(null);
+    await refreshData();
   };
 
   const handleContactDialogClose = () => {
@@ -393,6 +431,23 @@ const PeoplePage: React.FC = () => {
     });
   };
 
+  // --- Duplicate detection helper for restore ---
+
+  const findActiveDuplicate = useCallback((contact: Contact): Contact | undefined => {
+    return contacts.find(c =>
+      !c.isDeleted && c.id !== contact.id && (
+        (c.displayName && contact.displayName &&
+          c.displayName.toLowerCase().trim() === contact.displayName.toLowerCase().trim()) ||
+        c.emailAddresses.some(e =>
+          contact.emailAddresses.some(re =>
+            e.toLowerCase().trim() !== '' && re.toLowerCase().trim() !== '' &&
+            e.toLowerCase().trim() === re.toLowerCase().trim()
+          )
+        )
+      )
+    );
+  }, [contacts]);
+
   // --- Delete / Restore ---
 
   const handleDeleteContact = async (contactId: string) => {
@@ -404,19 +459,41 @@ const PeoplePage: React.FC = () => {
       }
       await refreshData();
       setSelectedContactId(null);
+      setOpenContactId(null);
     } catch {
       setError('Failed to delete contact.');
     }
   };
 
-  const handleRestoreContact = async (contactId: string) => {
+  const executeRestore = async (contactId: string) => {
     try {
       await contactService.restoreContact(contactId);
       await refreshData();
       setSelectedContactId(null);
+      setOpenContactId(null);
     } catch {
       setError('Failed to restore contact.');
     }
+  };
+
+  const handleRestoreContact = async (contactId: string) => {
+    const contactToRestore = contacts.find(c => c.id === contactId);
+    if (!contactToRestore) return;
+
+    const activeDuplicate = findActiveDuplicate(contactToRestore);
+    if (activeDuplicate) {
+      setConfirmDialog({
+        icon: 'warning',
+        title: 'Duplicate Contact Found',
+        message: <>An active contact <strong>{activeDuplicate.displayName}</strong> already exists with the same name or email. Restoring will create a duplicate. Restore anyway?</>,
+        confirmLabel: 'Restore Anyway',
+        onConfirm: () => executeRestore(contactId),
+        danger: true,
+      });
+      return;
+    }
+
+    await executeRestore(contactId);
   };
 
   const handleRibbonDelete = () => {
@@ -442,23 +519,105 @@ const PeoplePage: React.FC = () => {
   const executeBatchDelete = async () => {
     if (selectedIds.size === 0) return;
     try {
-      await contactService.batchSoftDelete(Array.from(selectedIds));
+      if (activeFolder === 'deleted') {
+        await contactService.batchHardDelete(Array.from(selectedIds));
+      } else {
+        await contactService.batchSoftDelete(Array.from(selectedIds));
+      }
       setSelectedIds(new Set());
       setSelectedContactId(null);
+      setOpenContactId(null);
       await refreshData();
     } catch {
       setError('Failed to delete selected contacts.');
     }
   };
 
+  const executeBatchRestore = async () => {
+    if (selectedIds.size === 0) return;
+
+    const idsToRestore = Array.from(selectedIds);
+    const contactsToRestore = idsToRestore
+      .map(id => contacts.find(c => c.id === id))
+      .filter(Boolean) as Contact[];
+
+    // Separate contacts with active duplicates from safe ones
+    const safeIds: string[] = [];
+    const duplicateIds: string[] = [];
+    for (const contact of contactsToRestore) {
+      if (findActiveDuplicate(contact)) {
+        duplicateIds.push(contact.id);
+      } else {
+        safeIds.push(contact.id);
+      }
+    }
+
+    if (duplicateIds.length > 0) {
+      if (safeIds.length === 0) {
+        // All selected contacts have active duplicates
+        setInfoDialog({
+          icon: 'warning',
+          title: 'All Duplicates',
+          message: <>All {duplicateIds.length} selected contact{duplicateIds.length !== 1 ? 's' : ''} already have active duplicates. No contacts were restored.</>,
+        });
+        return;
+      }
+      // Some have duplicates — offer to restore only safe ones
+      setConfirmDialog({
+        icon: 'warning',
+        title: 'Duplicates Found',
+        message: <>{duplicateIds.length} of {idsToRestore.length} contact{idsToRestore.length !== 1 ? 's' : ''} already have active duplicates. Restore only the {safeIds.length} non-duplicate contact{safeIds.length !== 1 ? 's' : ''}?</>,
+        confirmLabel: `Restore ${safeIds.length}`,
+        onConfirm: async () => {
+          try {
+            await contactService.batchRestore(safeIds);
+            setSelectedIds(new Set());
+            setSelectedContactId(null);
+            setOpenContactId(null);
+            await refreshData();
+            setToast(`Restored ${safeIds.length} contact${safeIds.length !== 1 ? 's' : ''}, skipped ${duplicateIds.length} duplicate${duplicateIds.length !== 1 ? 's' : ''}.`);
+          } catch {
+            setError('Failed to restore contacts.');
+          }
+        },
+      });
+      return;
+    }
+
+    // No duplicates — proceed normally
+    try {
+      await contactService.batchRestore(idsToRestore);
+      setSelectedIds(new Set());
+      setSelectedContactId(null);
+      setOpenContactId(null);
+      await refreshData();
+    } catch {
+      setError('Failed to restore selected contacts.');
+    }
+  };
+
   const handleBatchDelete = () => {
     if (selectedIds.size === 0) return;
+    const isPermanent = activeFolder === 'deleted';
     setConfirmDialog({
       icon: 'delete_forever',
-      title: 'Delete Selected Contacts',
-      message: <>Are you sure you want to delete <strong>{selectedIds.size} contacts</strong>? They will be moved to the Deleted folder.</>,
-      confirmLabel: 'Delete All',
+      title: isPermanent ? 'Permanently Delete Selected' : 'Delete Selected Contacts',
+      message: isPermanent
+        ? <>This will permanently delete <strong>{selectedIds.size} contact{selectedIds.size !== 1 ? 's' : ''}</strong>. This action cannot be undone.</>
+        : <>Are you sure you want to delete <strong>{selectedIds.size} contact{selectedIds.size !== 1 ? 's' : ''}</strong>? They will be moved to the Deleted folder.</>,
+      confirmLabel: isPermanent ? 'Delete Forever' : 'Delete All',
       onConfirm: executeBatchDelete,
+    });
+  };
+
+  const handleBatchRestore = () => {
+    if (selectedIds.size === 0) return;
+    setConfirmDialog({
+      icon: 'restore_from_trash',
+      title: 'Restore Selected Contacts',
+      message: <>Restore <strong>{selectedIds.size} contact{selectedIds.size !== 1 ? 's' : ''}</strong> from the Deleted folder?</>,
+      confirmLabel: 'Restore All',
+      onConfirm: executeBatchRestore,
     });
   };
 
@@ -468,6 +627,7 @@ const PeoplePage: React.FC = () => {
     try {
       await contactService.batchHardDelete(deletedContacts.map(c => c.id));
       setSelectedContactId(null);
+      setOpenContactId(null);
       await refreshData();
     } catch {
       setError('Failed to empty trash.');
@@ -670,6 +830,7 @@ const PeoplePage: React.FC = () => {
           onImport={() => setImportDialogOpen(true)}
           onExportVCard={handleExportVCard}
           onBatchDelete={handleBatchDelete}
+          onBatchRestore={handleBatchRestore}
           onFavorite={handleRibbonFavorite}
           onEmail={handleRibbonEmail}
           onCall={handleRibbonCall}
@@ -707,6 +868,7 @@ const PeoplePage: React.FC = () => {
           contacts={filteredContacts}
           selectedContactId={selectedContactId}
           onContactSelect={setSelectedContactId}
+          onContactOpen={setOpenContactId}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           sortOption={sortOption}
@@ -730,12 +892,12 @@ const PeoplePage: React.FC = () => {
         />
       </div>
 
-      {/* Contact Detail Modal */}
-      {selectedContact && (
+      {/* Contact Detail Modal — opens on double-click */}
+      {openContact && (
         <ContactDetail
-          contact={selectedContact}
+          contact={openContact}
           groups={groups}
-          memberGroups={contactGroupMap[selectedContact.id] || []}
+          memberGroups={contactGroupMap[openContact.id] || []}
           isInDeletedFolder={activeFolder === 'deleted'}
           onFavoriteToggle={handleFavoriteToggle}
           onEdit={handleEditContact}
@@ -744,7 +906,7 @@ const PeoplePage: React.FC = () => {
           onAddToGroup={handleAddToGroup}
           onRemoveFromGroup={handleRemoveFromGroup}
           onEmail={handleEmailContact}
-          onClose={() => setSelectedContactId(null)}
+          onClose={() => setOpenContactId(null)}
         />
       )}
 
@@ -873,6 +1035,11 @@ const PeoplePage: React.FC = () => {
     </div>
   );
 };
+
+/** Strip non-digit characters from a phone number for comparison */
+function normalizePhone(phone: string): string {
+  return phone.replace(/[^\d]/g, '');
+}
 
 /** Generate vCard 3.0 string for a contact (matches WPF GenerateVCard) */
 function generateVCard(contact: Contact): string {

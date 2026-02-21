@@ -10,6 +10,7 @@ interface PeopleRibbonProps {
   onExportVCard?: () => void;
   onExportCsv?: () => void;
   onBatchDelete?: () => void;
+  onBatchRestore?: () => void;
   onFavorite?: () => void;
   onEmail?: () => void;
   onCall?: () => void;
@@ -25,7 +26,7 @@ interface PeopleRibbonProps {
 const PeopleRibbon: React.FC<PeopleRibbonProps> = ({
   onNewContact, onDelete, onEdit,
   onImport, onExportVCard,
-  onBatchDelete, onFavorite,
+  onBatchDelete, onBatchRestore, onFavorite,
   onEmail, onCall, onShareVCard, onCategory,
   selectedCount = 0, hasSelection = false,
   isInDeletedFolder = false, onEmptyTrash, onRestore,
@@ -145,12 +146,19 @@ const PeopleRibbon: React.FC<PeopleRibbonProps> = ({
           <div className="ribbon__separator" />
           <div className="ribbon__group">
             <span className="ribbon__selection-badge">{selectedCount} selected</span>
-            <button className="ribbon__icon-btn" onClick={onBatchDelete} title="Delete selected">
-              <span className="material-symbols-outlined">delete</span>
+            <button className="ribbon__icon-btn" onClick={onBatchDelete} title={isInDeletedFolder ? 'Permanently delete selected' : 'Delete selected'}>
+              <span className="material-symbols-outlined">{isInDeletedFolder ? 'delete_forever' : 'delete'}</span>
             </button>
-            <button className="ribbon__icon-btn" title="Add selected to favorites">
-              <span className="material-symbols-outlined">star</span>
-            </button>
+            {isInDeletedFolder && (
+              <button className="ribbon__icon-btn" onClick={onBatchRestore} title="Restore selected">
+                <span className="material-symbols-outlined">restore_from_trash</span>
+              </button>
+            )}
+            {!isInDeletedFolder && (
+              <button className="ribbon__icon-btn" title="Add selected to favorites">
+                <span className="material-symbols-outlined">star</span>
+              </button>
+            )}
             <button className="ribbon__icon-btn" onClick={onExportVCard} title="Export selected">
               <span className="material-symbols-outlined">upload</span>
             </button>

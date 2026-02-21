@@ -616,52 +616,46 @@ export async function searchContacts(userId: string, query: string, page: number
 }
 
 /**
- * Find potential duplicate contacts for a user by matching display name or email
- * Returns matching contacts (excluding soft-deleted ones)
+ * Find potential duplicate contacts for a user by matching display name AND phone number.
+ * Both conditions must match together (AND logic).
+ * Checks both active and soft-deleted contacts, returning is_deleted so callers can differentiate.
+ * Phone comparison strips non-digit characters for normalization.
  */
 export async function findDuplicateContacts(
   userId: string,
   displayName?: string,
-  emailAddresses?: string[]
+  phoneNumbers?: string[],
+  mobilePhone?: string
 ) {
   const pool = getCodexPool();
-  const conditions: string[] = ['user_id = $1', 'is_deleted = FALSE'];
-  const params: any[] = [userId];
-  let paramIndex = 2;
 
-  const orClauses: string[] = [];
+  // Must have a display name AND at least one phone number to check
+  if (!displayName || !displayName.trim()) return [];
 
-  // Match by exact display name (case-insensitive)
-  if (displayName && displayName.trim()) {
-    orClauses.push(`LOWER(display_name) = LOWER($${paramIndex})`);
-    params.push(displayName.trim());
-    paramIndex++;
-  }
+  // Collect and normalize all input phone numbers (strip non-digits)
+  const allPhones = [
+    ...(phoneNumbers || []),
+    mobilePhone || '',
+  ]
+    .map(p => p.replace(/[^\d]/g, ''))
+    .filter(p => p.length > 0);
 
-  // Match by any shared email address
-  if (emailAddresses && emailAddresses.length > 0) {
-    const validEmails = emailAddresses.filter(e => e && e.trim());
-    for (const email of validEmails) {
-      orClauses.push(
-        `EXISTS (SELECT 1 FROM jsonb_array_elements_text(email_addresses) e WHERE LOWER(e) = LOWER($${paramIndex}))`
-      );
-      params.push(email.trim());
-      paramIndex++;
-    }
-  }
-
-  if (orClauses.length === 0) {
-    return [];
-  }
-
-  conditions.push(`(${orClauses.join(' OR ')})`);
+  if (allPhones.length === 0) return [];
 
   const result = await pool.query(
-    `SELECT id, display_name, email_addresses, first_name, last_name
+    `SELECT id, display_name, phone_numbers, mobile_phone, first_name, last_name, is_deleted
      FROM user_contacts
-     WHERE ${conditions.join(' AND ')}
+     WHERE user_id = $1
+       AND LOWER(TRIM(display_name)) = LOWER(TRIM($2))
+       AND (
+         EXISTS (
+           SELECT 1 FROM jsonb_array_elements_text(COALESCE(phone_numbers, '[]'::jsonb)) db_phone
+           WHERE regexp_replace(db_phone, '[^0-9]', '', 'g') = ANY($3::text[])
+         )
+         OR regexp_replace(COALESCE(mobile_phone, ''), '[^0-9]', '', 'g') = ANY($3::text[])
+       )
      LIMIT 5`,
-    params
+    [userId, displayName.trim(), allPhones]
   );
 
   return result.rows;

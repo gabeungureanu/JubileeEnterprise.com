@@ -132,6 +132,31 @@ public class ApiContactService : IContactService
     }
 
     /// <summary>
+    /// Restores a soft-deleted contact
+    /// PATCH /api/v1/contacts/{id}/restore
+    /// </summary>
+    public async Task RestoreContactAsync(string contactId)
+    {
+        if (RateLimitTracker.Instance.ShouldThrottle())
+        {
+            System.Diagnostics.Debug.WriteLine("[ApiContactService] Rate limited — skipping restore");
+            throw new Exception("Rate limited");
+        }
+
+        var endpoint = $"/api/v1/contacts/{Uri.EscapeDataString(contactId)}/restore";
+        var response = await _httpClientFactory.PatchAsync(ApiEndpoint.InspireCodex, endpoint);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            System.Diagnostics.Debug.WriteLine($"[ApiContactService] Restore failed: {response.StatusCode} - {content}");
+            throw new Exception($"Failed to restore contact: {response.StatusCode}");
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[ApiContactService] Contact restored: {contactId}");
+    }
+
+    /// <summary>
     /// Searches contacts by query
     /// GET /api/v1/contacts/search?q={query}
     /// </summary>
@@ -548,6 +573,17 @@ public class ApiContactService : IContactService
                             Success = false,
                             Error = "DUPLICATE_DETECTED",
                             StatusCode = HttpStatusCode.Conflict
+                        };
+                    }
+                    if (duplicateResponse?.Code == "DELETED_DUPLICATE_FOUND")
+                    {
+                        var deletedId = duplicateResponse.Duplicates?.FirstOrDefault()?.Id;
+                        return new ContactServiceResult<Contact>
+                        {
+                            Success = false,
+                            Error = "DELETED_DUPLICATE_FOUND",
+                            StatusCode = HttpStatusCode.Conflict,
+                            Data = deletedId != null ? new Contact { Id = deletedId } : null
                         };
                     }
                 }

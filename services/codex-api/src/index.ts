@@ -636,7 +636,8 @@ app.post('/api/v1/contacts/check-duplicates', async (c) => {
     const duplicates = await codex.findDuplicateContacts(
       userId,
       body.displayName,
-      body.emailAddresses
+      body.phoneNumbers,
+      body.mobilePhone
     );
 
     return c.json({
@@ -674,16 +675,32 @@ app.post('/api/v1/contacts', async (c) => {
       const duplicates = await codex.findDuplicateContacts(
         userId,
         body.displayName,
-        body.emailAddresses
+        body.phoneNumbers,
+        body.mobilePhone
       );
 
       if (duplicates.length > 0) {
-        return c.json({
-          success: false,
-          error: 'Potential duplicate contact found',
-          code: 'DUPLICATE_DETECTED',
-          duplicates: duplicates.map(toCamelCase),
-        }, 409);
+        // Separate active vs soft-deleted matches
+        const activeDupes = duplicates.filter((d: any) => !d.is_deleted);
+        const deletedDupes = duplicates.filter((d: any) => d.is_deleted);
+
+        if (activeDupes.length > 0) {
+          return c.json({
+            success: false,
+            error: 'Contact already exists with the same Display Name and Phone Number.',
+            code: 'DUPLICATE_DETECTED',
+            duplicates: activeDupes.map(toCamelCase),
+          }, 409);
+        }
+
+        if (deletedDupes.length > 0) {
+          return c.json({
+            success: false,
+            error: 'A deleted contact with the same Display Name and Phone Number already exists. Consider restoring it instead.',
+            code: 'DELETED_DUPLICATE_FOUND',
+            duplicates: deletedDupes.map(toCamelCase),
+          }, 409);
+        }
       }
     }
 
