@@ -9,8 +9,8 @@
  *   viewDate     — always valid; drives header title, month display, date range
  *   selectedDate — nullable; drives cell highlighting and event list filtering
  */
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, LayoutAnimation, Platform, UIManager, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { View, LayoutAnimation, Platform, UIManager, StyleSheet, AppState } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -42,6 +42,8 @@ if (
 }
 
 type Nav = NativeStackNavigationProp<CalendarStackParamList, 'CalendarMain'>;
+
+const SYNC_INTERVAL_MS = 30_000;
 
 const CalendarScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
@@ -98,6 +100,35 @@ const CalendarScreen: React.FC = () => {
     });
     return unsubscribe;
   }, [navigation, fetchEvents]);
+
+  // 30-second auto-refresh — uses setTimeout chain to prevent overlapping fetches
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    const scheduleNext = () => {
+      syncTimerRef.current = setTimeout(async () => {
+        await fetchEvents(true);
+        if (mountedRef.current) scheduleNext();
+      }, SYNC_INTERVAL_MS);
+    };
+    scheduleNext();
+    return () => {
+      mountedRef.current = false;
+      if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    };
+  }, [fetchEvents]);
+
+  // Refresh when app returns to foreground
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        fetchEvents(true);
+      }
+    });
+    return () => subscription.remove();
+  }, [fetchEvents]);
 
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);

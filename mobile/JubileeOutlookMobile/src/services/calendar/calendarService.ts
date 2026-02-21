@@ -15,6 +15,7 @@ export const calendarService = {
         userId,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
+        _t: Date.now(),
       },
     });
     const data = response.data;

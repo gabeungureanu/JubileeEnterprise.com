@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import CalendarRibbon from '../../components/layout/Ribbon/CalendarRibbon';
 import MiniCalendar from '../../components/calendar/MiniCalendar';
@@ -19,8 +19,9 @@ function getBaseEventId(id: string): string {
   return id.replace(/_occ_\d+$/, '');
 }
 
-// Simple event cache: 5-minute TTL per date-range key
-const CACHE_TTL_MS = 5 * 60 * 1000;
+// Event cache TTL aligned with 30-second sync interval
+const CACHE_TTL_MS = 30 * 1000;
+const SYNC_INTERVAL_MS = 30_000;
 const eventCache = new Map<string, { events: CalendarEvent[]; timestamp: number }>();
 
 function getCacheKey(start: Date, end: Date): string {
@@ -129,6 +130,36 @@ const CalendarPage: React.FC = () => {
 
   useEffect(() => {
     fetchEvents();
+  }, [fetchEvents]);
+
+  // 30-second auto-refresh — uses setTimeout chain to prevent overlapping fetches
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    const scheduleNext = () => {
+      syncTimerRef.current = setTimeout(async () => {
+        await fetchEvents(true);
+        if (mountedRef.current) scheduleNext();
+      }, SYNC_INTERVAL_MS);
+    };
+    scheduleNext();
+    return () => {
+      mountedRef.current = false;
+      if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    };
+  }, [fetchEvents]);
+
+  // Refresh on tab visibility change (user returns to tab)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchEvents(true);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [fetchEvents]);
 
   // Start/stop reminder service
