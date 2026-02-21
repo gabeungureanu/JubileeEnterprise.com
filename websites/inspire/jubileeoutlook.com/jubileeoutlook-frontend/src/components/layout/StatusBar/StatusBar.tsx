@@ -30,7 +30,7 @@ const StatusBar: React.FC = () => {
         <span className={`status-bar__indicator status-bar__indicator--${networkStatus}`}>
           <span className="material-symbols-outlined">{getStatusIcon()}</span>
         </span>
-        <span className="status-bar__text">{getStatusText()}</span>
+        <span className={`status-bar__text${networkStatus === 'offline' ? ' status-bar__text--offline' : ''}`}>{getStatusText()}</span>
       </div>
       <div className="status-bar__right">
         {syncStatus.lastSyncTime && (

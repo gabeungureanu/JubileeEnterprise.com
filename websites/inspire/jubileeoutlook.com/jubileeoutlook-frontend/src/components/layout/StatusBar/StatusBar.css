@@ -41,3 +41,7 @@
   font-size: var(--font-size-xs);
   color: var(--text-tertiary);
 }
+
+.status-bar__text--offline {
+  color: var(--accent-red);
+}

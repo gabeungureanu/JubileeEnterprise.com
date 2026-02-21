@@ -135,9 +135,9 @@ public class ApiCalendarService : ICalendarService
     /// Deletes a calendar event
     /// DELETE /api/outlook/events/{id}
     /// </summary>
-    public async Task DeleteEventAsync(string eventId)
+    public async Task DeleteEventAsync(string eventId, string scope = "series", string? occurrenceDate = null)
     {
-        await DeleteEventWithResultAsync(eventId);
+        await DeleteEventWithResultAsync(eventId, scope, occurrenceDate);
     }
 
     #endregion
@@ -665,7 +665,7 @@ public class ApiCalendarService : ICalendarService
     /// Deletes a calendar event with detailed result
     /// DELETE /api/outlook/events/{id}
     /// </summary>
-    public async Task<CalendarServiceResult<bool>> DeleteEventWithResultAsync(string eventId)
+    public async Task<CalendarServiceResult<bool>> DeleteEventWithResultAsync(string eventId, string scope = "series", string? occurrenceDate = null)
     {
         try
         {
@@ -679,15 +679,18 @@ public class ApiCalendarService : ICalendarService
                 };
             }
 
-            // Mark as deleted in local cache (optimistic update)
-            try
+            // Mark as deleted in local cache (optimistic update) — only for full series deletion
+            if (scope == "series")
             {
-                await LocalCache.MarkEventDeletedAsync(eventId);
-                System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Marked event as deleted in local cache: {eventId}");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Failed to mark event deleted locally: {ex.Message}");
+                try
+                {
+                    await LocalCache.MarkEventDeletedAsync(eventId);
+                    System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Marked event as deleted in local cache: {eventId}");
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] Failed to mark event deleted locally: {ex.Message}");
+                }
             }
 
             // If offline, queue the delete operation
@@ -706,7 +709,11 @@ public class ApiCalendarService : ICalendarService
                 };
             }
 
-            var endpoint = $"outlook/events/{Uri.EscapeDataString(eventId)}";
+            var endpoint = $"outlook/events/{Uri.EscapeDataString(eventId)}?scope={scope}";
+            if (scope == "occurrence" && !string.IsNullOrEmpty(occurrenceDate))
+            {
+                endpoint += $"&date={Uri.EscapeDataString(occurrenceDate)}";
+            }
             System.Diagnostics.Debug.WriteLine($"[ApiCalendarService] DELETE {endpoint}");
 
             var response = await _httpClientFactory.DeleteAsync(ApiEndpoint.InspireContinuum, endpoint);
@@ -841,7 +848,8 @@ public class ApiCalendarService : ICalendarService
                 Occurrences = dto.RecurrenceOccurrences,
                 DaysOfWeek = dto.RecurrenceDaysOfWeek?
                     .Select(d => Enum.TryParse<DayOfWeek>(d, true, out var dow) ? dow : DayOfWeek.Monday)
-                    .ToList() ?? new List<DayOfWeek>()
+                    .ToList() ?? new List<DayOfWeek>(),
+                ExceptionDates = dto.RecurrenceExceptionDates ?? new List<string>()
             } : null,
             Reminder = ParseReminderTime(dto.ReminderMinutes)
         };
@@ -897,6 +905,7 @@ public class ApiCalendarService : ICalendarService
             RecurrenceEndDate = calendarEvent.Recurrence?.EndDate,
             RecurrenceOccurrences = calendarEvent.Recurrence?.Occurrences,
             RecurrenceDaysOfWeek = calendarEvent.Recurrence?.DaysOfWeek?.Select(d => d.ToString()).ToList(),
+            RecurrenceExceptionDates = calendarEvent.Recurrence?.ExceptionDates,
             ReminderMinutes = GetReminderMinutes(calendarEvent.Reminder)
         };
     }
@@ -1066,6 +1075,7 @@ public class CalendarEventDto
     public DateTime? RecurrenceEndDate { get; set; }
     public int? RecurrenceOccurrences { get; set; }
     public List<string>? RecurrenceDaysOfWeek { get; set; }
+    public List<string>? RecurrenceExceptionDates { get; set; }
     public int? ReminderMinutes { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

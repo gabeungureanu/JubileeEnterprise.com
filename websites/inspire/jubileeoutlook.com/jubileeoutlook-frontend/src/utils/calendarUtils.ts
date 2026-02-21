@@ -41,6 +41,9 @@ function generateOccurrences(
   const maxOccurrences = event.recurrenceOccurrences || MAX_OCCURRENCES;
   const recurrenceEndDate = event.recurrenceEndDate ? new Date(event.recurrenceEndDate) : null;
   const daysOfWeek = event.recurrenceDaysOfWeek || [];
+  const exceptionDates = new Set(
+    (event.recurrenceExceptionDates || []).map(d => new Date(d).toDateString())
+  );
 
   let occurrenceCount = 0;
   let currentDate = new Date(eventStart);
@@ -70,7 +73,7 @@ function generateOccurrences(
         if (recurrenceEndDate && dayDate > recurrenceEndDate) continue;
         if (occurrenceCount >= maxOccurrences) break;
 
-        if (dayDate >= rangeStart && dayDate <= rangeEnd) {
+        if (dayDate >= rangeStart && dayDate <= rangeEnd && !exceptionDates.has(dayDate.toDateString())) {
           const occStart = new Date(dayDate);
           occStart.setHours(eventStart.getHours(), eventStart.getMinutes(), eventStart.getSeconds());
           const occEnd = new Date(occStart.getTime() + durationMs);
@@ -84,7 +87,7 @@ function generateOccurrences(
       currentDate.setDate(currentDate.getDate() + (7 * interval));
     } else {
       // Standard recurrence: Daily/Weekly/Monthly/Yearly
-      if (currentDate >= rangeStart && currentDate <= rangeEnd) {
+      if (currentDate >= rangeStart && currentDate <= rangeEnd && !exceptionDates.has(currentDate.toDateString())) {
         const occStart = new Date(currentDate);
         const occEnd = new Date(occStart.getTime() + durationMs);
 

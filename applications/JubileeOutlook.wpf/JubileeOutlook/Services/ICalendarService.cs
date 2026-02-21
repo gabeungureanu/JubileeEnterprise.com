@@ -8,5 +8,5 @@ public interface ICalendarService
     Task<CalendarEvent?> GetEventByIdAsync(string eventId);
     Task CreateEventAsync(CalendarEvent calendarEvent);
     Task UpdateEventAsync(CalendarEvent calendarEvent);
-    Task DeleteEventAsync(string eventId);
+    Task DeleteEventAsync(string eventId, string scope = "series", string? occurrenceDate = null);
 }

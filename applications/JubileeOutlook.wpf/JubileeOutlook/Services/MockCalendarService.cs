@@ -102,7 +102,7 @@ public class MockCalendarService : ICalendarService
         return Task.CompletedTask;
     }
 
-    public Task DeleteEventAsync(string eventId)
+    public Task DeleteEventAsync(string eventId, string scope = "series", string? occurrenceDate = null)
     {
         var calendarEvent = _events.FirstOrDefault(e => e.Id == eventId);
         if (calendarEvent != null)

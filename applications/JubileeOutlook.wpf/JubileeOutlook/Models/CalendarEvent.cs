@@ -71,6 +71,7 @@ public class RecurrencePattern
     public DateTime? EndDate { get; set; }
     public int? Occurrences { get; set; }
     public List<DayOfWeek> DaysOfWeek { get; set; } = new();
+    public List<string> ExceptionDates { get; set; } = new();
 }
 
 public enum RecurrenceType

@@ -27,6 +27,7 @@ export interface CalendarEventDto {
   recurrenceEndDate?: string | null;
   recurrenceOccurrences?: number | null;
   recurrenceDaysOfWeek?: string[];
+  recurrenceExceptionDates?: string[];
   reminderMinutes?: number;
   attachments?: any[];
   timezone?: string;
@@ -48,6 +49,7 @@ export interface CalendarEventDto {
   recurrence_end_date?: string | null;
   recurrence_occurrences?: number | null;
   recurrence_days_of_week?: string[];
+  recurrence_exception_dates?: string[];
   reminder_minutes?: number;
   created_at?: string;
   updated_at?: string;
@@ -84,6 +86,7 @@ export interface CalendarEvent {
   recurrenceEndDate: string | null;
   recurrenceOccurrences: number | null;
   recurrenceDaysOfWeek: string[];
+  recurrenceExceptionDates: string[];
   attachments: EventAttachment[];
   timezone: string;
   calendarName: string;
@@ -136,6 +139,7 @@ export function mapEventDto(dto: CalendarEventDto): CalendarEvent {
     recurrenceEndDate: d.recurrenceEndDate ?? d.recurrence_end_date ?? null,
     recurrenceOccurrences: d.recurrenceOccurrences ?? d.recurrence_occurrences ?? null,
     recurrenceDaysOfWeek: d.recurrenceDaysOfWeek || d.recurrence_days_of_week || [],
+    recurrenceExceptionDates: d.recurrenceExceptionDates || d.recurrence_exception_dates || [],
     attachments: (d.attachments || []).map((a: any) => ({
       id: a.id,
       fileName: a.fileName || a.file_name || '',

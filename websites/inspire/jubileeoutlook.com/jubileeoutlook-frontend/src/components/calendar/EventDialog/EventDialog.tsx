@@ -223,13 +223,14 @@ function getRecurrenceSuffix(type: string): string {
 interface EventDialogProps {
   isOpen: boolean;
   event?: CalendarEvent | null;
+  editMode?: 'series' | 'occurrence' | null;
   defaultDate?: Date;
   onClose: () => void;
   onSave: (event: Partial<CalendarEvent>) => void;
   onDelete?: (eventId: string) => Promise<void> | void;
 }
 
-const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, onClose, onSave, onDelete }) => {
+const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, editMode, defaultDate, onClose, onSave, onDelete }) => {
   // Form state
   const [title, setTitle] = useState('');
   const [attendees, setAttendees] = useState('');
@@ -285,7 +286,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
       setReminderMinutes(event.reminderMinutes ?? 15);
       setEventColor((event.eventColor as EventColor) || 'blue');
       setIsPrivate(event.isPrivate || false);
-      setIsRecurring(event.isRecurring || false);
+      setIsRecurring(editMode === 'occurrence' ? false : (event.isRecurring || false));
       setRecurrenceType(
         event.recurrenceType
           ? event.recurrenceType.charAt(0).toUpperCase() + event.recurrenceType.slice(1)
@@ -330,7 +331,7 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
       setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
     }
     setValidationError('');
-  }, [isOpen, event, defaultDate]);
+  }, [isOpen, event, editMode, defaultDate]);
 
   // Auto-scroll preview to event time
   useEffect(() => {
@@ -663,7 +664,8 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
                 </label>
               </div>
 
-              {/* Recurrence Toggle */}
+              {/* Recurrence Toggle — hidden when editing a single occurrence */}
+              {editMode !== 'occurrence' && (
               <div className="event-dialog__field">
                 <span className="material-symbols-outlined">repeat</span>
                 <button
@@ -673,9 +675,10 @@ const EventDialog: React.FC<EventDialogProps> = ({ isOpen, event, defaultDate, o
                   Make recurring
                 </button>
               </div>
+              )}
 
-              {/* Recurrence Options */}
-              {isRecurring && (
+              {/* Recurrence Options — hidden when editing a single occurrence */}
+              {isRecurring && editMode !== 'occurrence' && (
                 <div className="event-dialog__recurrence">
                   <div className="event-dialog__recurrence-row">
                     <span className="event-dialog__recurrence-label">Repeat</span>

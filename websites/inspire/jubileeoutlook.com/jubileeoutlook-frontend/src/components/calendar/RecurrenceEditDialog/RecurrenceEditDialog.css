@@ -1,0 +1,91 @@
+.recurrence-dialog__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+
+.recurrence-dialog {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 24px;
+  width: 380px;
+  max-width: 90vw;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.recurrence-dialog__icon {
+  margin-bottom: 12px;
+}
+
+.recurrence-dialog__icon .material-symbols-outlined {
+  font-size: 32px;
+  color: var(--gold-primary, #C8A951);
+}
+
+.recurrence-dialog__title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.recurrence-dialog__subtitle {
+  margin: 0 0 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.recurrence-dialog__actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.recurrence-dialog__btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: 1px solid var(--border-default);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.recurrence-dialog__btn--secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.recurrence-dialog__btn--secondary:hover {
+  background: var(--bg-tertiary);
+}
+
+.recurrence-dialog__btn--primary {
+  background: var(--gold-primary, #C8A951);
+  color: #000;
+  border-color: var(--gold-primary, #C8A951);
+}
+
+.recurrence-dialog__btn--primary:hover {
+  background: var(--gold-hover, #D4B85C);
+}
+
+.recurrence-dialog__cancel {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.recurrence-dialog__cancel:hover {
+  color: var(--text-secondary);
+}

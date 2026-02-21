@@ -5,6 +5,7 @@ import MiniCalendar from '../../components/calendar/MiniCalendar';
 import MyCalendars, { CalendarFolder } from '../../components/calendar/MyCalendars';
 import CalendarGrid from '../../components/calendar/CalendarGrid';
 import EventDialog from '../../components/calendar/EventDialog';
+import RecurrenceEditDialog, { RecurrenceAction } from '../../components/calendar/RecurrenceEditDialog';
 import ReminderPopup from '../../components/calendar/ReminderPopup';
 import { CalendarEvent, CalendarEventDto, CalendarViewMode, CalendarDateRange } from '../../types/calendar';
 import { calendarService } from '../../services/calendar/calendarService';
@@ -12,6 +13,11 @@ import { expandRecurringEvents } from '../../utils/calendarUtils';
 import { reminderService, ReminderTrigger } from '../../services/calendar/reminderService';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import './CalendarPage.css';
+
+/** Strip _occ_N suffix from expanded occurrence IDs to get the base event ID */
+function getBaseEventId(id: string): string {
+  return id.replace(/_occ_\d+$/, '');
+}
 
 // Simple event cache: 5-minute TTL per date-range key
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -32,6 +38,14 @@ const CalendarPage: React.FC = () => {
   // Event dialog state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+  const [editMode, setEditMode] = useState<'series' | 'occurrence' | null>(null);
+
+  // Recurrence prompt dialog state
+  const [recurrencePrompt, setRecurrencePrompt] = useState<{
+    isOpen: boolean;
+    mode: 'edit' | 'delete';
+    event: CalendarEvent | null;
+  }>({ isOpen: false, mode: 'edit', event: null });
 
   // Reminder queue — stays visible until user dismisses or snoozes each one
   const [reminderQueue, setReminderQueue] = useState<CalendarEvent[]>([]);
@@ -235,8 +249,58 @@ const CalendarPage: React.FC = () => {
   };
 
   const handleEventClick = (event: CalendarEvent) => {
-    setEditingEvent(event);
-    setIsDialogOpen(true);
+    if (event.isRecurring) {
+      setRecurrencePrompt({ isOpen: true, mode: 'edit', event });
+    } else {
+      setEditMode(null);
+      setEditingEvent(event);
+      setIsDialogOpen(true);
+    }
+  };
+
+  const handleRecurrenceAction = async (action: RecurrenceAction) => {
+    const event = recurrencePrompt.event;
+    if (!event || action === 'cancel') {
+      setRecurrencePrompt({ isOpen: false, mode: 'edit', event: null });
+      return;
+    }
+
+    const baseId = getBaseEventId(event.id);
+
+    if (recurrencePrompt.mode === 'edit') {
+      if (action === 'series') {
+        // Fetch the base event fresh from API for editing the series
+        try {
+          const baseEvent = await calendarService.getEvent(baseId);
+          if (baseEvent) {
+            setEditMode('series');
+            setEditingEvent(baseEvent);
+            setIsDialogOpen(true);
+          }
+        } catch {
+          setError('Failed to load event for editing.');
+        }
+      } else if (action === 'occurrence') {
+        // Edit this single occurrence — opens dialog with occurrence dates, hides recurrence
+        setEditMode('occurrence');
+        setEditingEvent(event);
+        setIsDialogOpen(true);
+      }
+    } else if (recurrencePrompt.mode === 'delete') {
+      try {
+        if (action === 'series') {
+          await calendarService.deleteEvent(baseId, 'series');
+        } else if (action === 'occurrence') {
+          const occDate = new Date(event.startDateTime).toISOString().split('T')[0];
+          await calendarService.deleteEvent(baseId, 'occurrence', occDate);
+        }
+        await fetchEvents(true);
+      } catch {
+        setError('Failed to delete event.');
+      }
+    }
+
+    setRecurrencePrompt({ isOpen: false, mode: 'edit', event: null });
   };
 
   const handleDateClick = (date: Date) => {
@@ -283,10 +347,28 @@ const CalendarPage: React.FC = () => {
       };
 
       if (editingEvent) {
-        await calendarService.updateEvent(editingEvent.id, dto);
+        if (editMode === 'occurrence') {
+          // Creating a standalone exception event: save as new, add exception date to series
+          dto.is_recurring = false;
+          dto.recurrence_type = undefined;
+          dto.recurrence_interval = undefined;
+          dto.recurrence_end_date = undefined;
+          dto.recurrence_occurrences = undefined;
+          dto.recurrence_days_of_week = undefined;
+          await calendarService.createEvent(dto);
+          // Add exception date to the base series event
+          const baseId = getBaseEventId(editingEvent.id);
+          const occDate = new Date(editingEvent.startDateTime).toISOString().split('T')[0];
+          await calendarService.deleteEvent(baseId, 'occurrence', occDate);
+        } else {
+          // Edit series or non-recurring event — use base ID
+          const eventId = getBaseEventId(editingEvent.id);
+          await calendarService.updateEvent(eventId, dto);
+        }
       } else {
         await calendarService.createEvent(dto);
       }
+      setEditMode(null);
       await fetchEvents(true);
     } catch (err) {
       console.error('Failed to save event:', err);
@@ -295,13 +377,22 @@ const CalendarPage: React.FC = () => {
   };
 
   const handleEventDelete = async (eventId: string) => {
-    const deleted = await calendarService.deleteEvent(eventId);
+    const event = editingEvent;
+    if (event?.isRecurring) {
+      // Close the event dialog first, then show recurrence prompt
+      setIsDialogOpen(false);
+      setRecurrencePrompt({ isOpen: true, mode: 'delete', event });
+      return;
+    }
+    // Non-recurring: delete directly
+    const baseId = getBaseEventId(eventId);
+    const deleted = await calendarService.deleteEvent(baseId);
     if (!deleted) {
       throw new Error('Event may not exist or was already deleted.');
     }
-    // Close dialog only after successful delete
     setIsDialogOpen(false);
     setEditingEvent(null);
+    setEditMode(null);
     await fetchEvents(true);
   };
 
@@ -315,8 +406,9 @@ const CalendarPage: React.FC = () => {
     const duration = originalEnd.getTime() - originalStart.getTime();
     const newEnd = new Date(newStart.getTime() + duration);
 
+    const baseId = getBaseEventId(eventId);
     try {
-      await calendarService.updateEvent(eventId, {
+      await calendarService.updateEvent(baseId, {
         start_time: newStart.toISOString(),
         end_time: newEnd.toISOString(),
       });
@@ -335,8 +427,9 @@ const CalendarPage: React.FC = () => {
     const start = new Date(event.startDateTime);
     if (newEndTime.getTime() - start.getTime() < 15 * 60 * 1000) return; // min 15 min
 
+    const baseId = getBaseEventId(eventId);
     try {
-      await calendarService.updateEvent(eventId, {
+      await calendarService.updateEvent(baseId, {
         end_time: newEndTime.toISOString(),
       });
       await fetchEvents(true);
@@ -434,10 +527,17 @@ const CalendarPage: React.FC = () => {
       <EventDialog
         isOpen={isDialogOpen}
         event={editingEvent}
+        editMode={editMode}
         defaultDate={selectedDate}
         onClose={handleDialogClose}
         onSave={handleEventSave}
         onDelete={editingEvent ? handleEventDelete : undefined}
+      />
+
+      <RecurrenceEditDialog
+        isOpen={recurrencePrompt.isOpen}
+        mode={recurrencePrompt.mode}
+        onAction={handleRecurrenceAction}
       />
 
       {reminderQueue.map((event, index) => (

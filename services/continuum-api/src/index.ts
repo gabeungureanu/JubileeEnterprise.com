@@ -479,6 +479,12 @@ function mapEventRow(event: any, calendarName?: string) {
     eventColor: event.event_color,
     calendarName: calendarName || event.calendar_name || 'My Calendar',
     isRecurring: event.is_recurring,
+    recurrenceType: event.recurrence_type || null,
+    recurrenceInterval: event.recurrence_interval || 1,
+    recurrenceEndDate: event.recurrence_end_date || null,
+    recurrenceOccurrences: event.recurrence_occurrences || null,
+    recurrenceDaysOfWeek: event.recurrence_days_of_week || [],
+    recurrenceExceptionDates: event.recurrence_exception_dates || [],
     reminderMinutes: event.reminder_minutes,
     isPrivate: event.is_private,
     isInPerson: event.is_in_person,
@@ -516,8 +522,16 @@ app.get('/api/v1/outlook/events', async (c) => {
     const params: any[] = [userId];
     let paramCount = 1;
 
-    if (startDate) { params.push(startDate); query += ` AND e.end_time >= $${++paramCount}`; }
-    if (endDate) { params.push(endDate); query += ` AND e.start_time <= $${++paramCount}`; }
+    if (startDate && endDate) {
+      // Return events in date range OR recurring events that started before range end
+      params.push(startDate, endDate);
+      paramCount += 2;
+      query += ` AND ((e.end_time >= $${paramCount - 1} AND e.start_time <= $${paramCount}) OR (e.is_recurring = true AND e.start_time <= $${paramCount}))`;
+    } else if (startDate) {
+      params.push(startDate); query += ` AND (e.end_time >= $${++paramCount} OR e.is_recurring = true)`;
+    } else if (endDate) {
+      params.push(endDate); query += ` AND e.start_time <= $${++paramCount}`;
+    }
     if (calendarId) { params.push(calendarId); query += ` AND e.calendar_id = $${++paramCount}`; }
     query += ' ORDER BY e.start_time';
 
@@ -570,6 +584,11 @@ app.post('/api/v1/outlook/events', async (c) => {
     const isAllDay = body.isAllDay ?? body.is_all_day ?? false;
     const eventColor = body.eventColor || body.event_color || '#5B9BD5';
     const isRecurring = body.isRecurring ?? body.is_recurring ?? false;
+    const recurrenceType = isRecurring ? (body.recurrenceType || body.recurrence_type || null) : null;
+    const recurrenceInterval = isRecurring ? (body.recurrenceInterval ?? body.recurrence_interval ?? 1) : null;
+    const recurrenceEndDate = isRecurring ? (body.recurrenceEndDate || body.recurrence_end_date || null) : null;
+    const recurrenceOccurrences = isRecurring ? (body.recurrenceOccurrences ?? body.recurrence_occurrences ?? null) : null;
+    const recurrenceDaysOfWeek = isRecurring ? (body.recurrenceDaysOfWeek || body.recurrence_days_of_week || null) : null;
     const reminderMinutes = body.reminderMinutes ?? body.reminder_minutes ?? 15;
     const isPrivate = body.isPrivate ?? body.is_private ?? false;
     const isInPerson = body.isInPerson ?? body.is_in_person ?? true;
@@ -603,13 +622,17 @@ app.post('/api/v1/outlook/events', async (c) => {
         INSERT INTO outlook_calendar_events (
           calendar_id, user_id, subject, location, description,
           start_time, end_time, is_all_day, status, category,
-          event_color, is_recurring, reminder_minutes, is_private, is_in_person
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+          event_color, is_recurring, recurrence_type, recurrence_interval,
+          recurrence_end_date, recurrence_occurrences, recurrence_days_of_week,
+          reminder_minutes, is_private, is_in_person
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
         RETURNING *
       `, [
         calendarIdToUse, userId, body.subject, body.location || '', body.description || '',
         startTime, endTime, isAllDay, body.status || 'free', body.category || '',
-        eventColor, isRecurring, reminderMinutes, isPrivate, isInPerson
+        eventColor, isRecurring, recurrenceType, recurrenceInterval,
+        recurrenceEndDate, recurrenceOccurrences, recurrenceDaysOfWeek,
+        reminderMinutes, isPrivate, isInPerson
       ]);
 
       const newEvent = eventResult.rows[0];
@@ -675,6 +698,15 @@ app.put('/api/v1/outlook/events/:id', async (c) => {
     const isPrivate = body.isPrivate ?? body.is_private;
     const isInPerson = body.isInPerson ?? body.is_in_person;
 
+    // Recurrence fields — when isRecurring is explicitly false, clear all recurrence data
+    const clearRecurrence = isRecurring === false;
+    const recurrenceType = clearRecurrence ? null : (body.recurrenceType || body.recurrence_type || undefined);
+    const recurrenceInterval = clearRecurrence ? null : (body.recurrenceInterval ?? body.recurrence_interval ?? undefined);
+    const recurrenceEndDate = clearRecurrence ? null : (body.recurrenceEndDate || body.recurrence_end_date || undefined);
+    const recurrenceOccurrences = clearRecurrence ? null : (body.recurrenceOccurrences ?? body.recurrence_occurrences ?? undefined);
+    const recurrenceDaysOfWeek = clearRecurrence ? null : (body.recurrenceDaysOfWeek || body.recurrence_days_of_week || undefined);
+    const recurrenceExceptionDates = body.recurrenceExceptionDates || body.recurrence_exception_dates || undefined;
+
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
@@ -687,12 +719,21 @@ app.put('/api/v1/outlook/events/:id', async (c) => {
           status = COALESCE($7, status), category = COALESCE($8, category),
           event_color = COALESCE($9, event_color), is_recurring = COALESCE($10, is_recurring),
           reminder_minutes = COALESCE($11, reminder_minutes), is_private = COALESCE($12, is_private),
-          is_in_person = COALESCE($13, is_in_person), updated_at = NOW()
+          is_in_person = COALESCE($13, is_in_person),
+          recurrence_type = CASE WHEN $10 IS NOT NULL AND $10 = false THEN NULL ELSE COALESCE($15, recurrence_type) END,
+          recurrence_interval = CASE WHEN $10 IS NOT NULL AND $10 = false THEN NULL ELSE COALESCE($16, recurrence_interval) END,
+          recurrence_end_date = CASE WHEN $10 IS NOT NULL AND $10 = false THEN NULL ELSE COALESCE($17, recurrence_end_date) END,
+          recurrence_occurrences = CASE WHEN $10 IS NOT NULL AND $10 = false THEN NULL ELSE COALESCE($18, recurrence_occurrences) END,
+          recurrence_days_of_week = CASE WHEN $10 IS NOT NULL AND $10 = false THEN NULL ELSE COALESCE($19, recurrence_days_of_week) END,
+          recurrence_exception_dates = CASE WHEN $10 IS NOT NULL AND $10 = false THEN NULL ELSE COALESCE($20, recurrence_exception_dates) END,
+          updated_at = NOW()
         WHERE id = $14 RETURNING *
       `, [
         body.subject, body.location, body.description, startTime, endTime,
         isAllDay, body.status, body.category, eventColor, isRecurring,
-        reminderMinutes, isPrivate, isInPerson, id
+        reminderMinutes, isPrivate, isInPerson, id,
+        recurrenceType, recurrenceInterval, recurrenceEndDate,
+        recurrenceOccurrences, recurrenceDaysOfWeek, recurrenceExceptionDates
       ]);
 
       if (result.rows.length === 0) {
@@ -740,11 +781,34 @@ app.put('/api/v1/outlook/events/:id', async (c) => {
 });
 
 // DELETE /api/v1/outlook/events/:id - Delete calendar event
+// Query params: scope=series (default, deletes event) or scope=occurrence&date=ISO (adds exception date)
 app.delete('/api/v1/outlook/events/:id', async (c) => {
   try {
     const pool = getContinuumPool();
     const id = c.req.param('id');
+    const scope = c.req.query('scope') || 'series';
+    const occurrenceDate = c.req.query('date');
 
+    if (scope === 'occurrence' && occurrenceDate) {
+      // Add the occurrence date to exception_dates array (soft-delete this occurrence)
+      const result = await pool.query(`
+        UPDATE outlook_calendar_events SET
+          recurrence_exception_dates = array_append(
+            COALESCE(recurrence_exception_dates, ARRAY[]::text[]),
+            $2
+          ),
+          updated_at = NOW()
+        WHERE id = $1 RETURNING id
+      `, [id, occurrenceDate]);
+
+      if (result.rows.length === 0) {
+        return c.json({ error: 'Event not found' }, 404);
+      }
+
+      return c.json({ success: true, action: 'occurrence_excluded', eventId: id, excludedDate: occurrenceDate });
+    }
+
+    // Default: delete entire event (series)
     const result = await pool.query('DELETE FROM outlook_calendar_events WHERE id = $1 RETURNING id', [id]);
     if (result.rows.length === 0) {
       return c.json({ error: 'Event not found' }, 404);

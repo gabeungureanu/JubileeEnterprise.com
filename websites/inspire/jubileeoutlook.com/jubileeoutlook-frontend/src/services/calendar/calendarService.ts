@@ -45,8 +45,12 @@ export const calendarService = {
     return dto?.id ? mapEventDto(dto) : null;
   },
 
-  async deleteEvent(eventId: string): Promise<boolean> {
-    const response = await continuumClient.delete(`/outlook/events/${encodeURIComponent(eventId)}`);
+  async deleteEvent(eventId: string, scope: 'series' | 'occurrence' = 'series', occurrenceDate?: string): Promise<boolean> {
+    const params: Record<string, string> = { scope };
+    if (scope === 'occurrence' && occurrenceDate) {
+      params.date = occurrenceDate;
+    }
+    const response = await continuumClient.delete(`/outlook/events/${encodeURIComponent(eventId)}`, { params });
     return response.status === 200 || response.status === 204;
   },
 
