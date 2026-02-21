@@ -201,6 +201,17 @@ The app uses two API clients (dual Axios instances):
 
 All API communication is routed through the approved API layer. No direct database connections.
 
+### Authentication Guard (`requireUserId`)
+
+All service-layer API calls use `tokenStore.requireUserId()` instead of `tokenStore.getUserId()` to enforce authentication. If the user is not signed in, service calls throw a clear error (`"User is not authenticated. Please sign in to continue."`) rather than silently passing `null` to the API.
+
+| Method | Returns | Use Case |
+|--------|---------|----------|
+| `tokenStore.getUserId()` | `string \| null` | Auth checks, interceptors, context providers |
+| `tokenStore.requireUserId()` | `string` (throws if null) | Service calls (`calendarService`, `contactService`, `mailService`) |
+
+Screen-level code (e.g., `NewEventScreen`, `ContactEditScreen`) may still use `getUserId()` with explicit null-check UI alerts for user-friendly error messages.
+
 ## Technology Stack
 
 | Technology | Version | Purpose |

@@ -335,6 +335,7 @@ The primary application - a faith-based AI chat platform featuring:
 **API Integration:**
 - **codexClient** → InspireCodex.com (Auth, Contacts)
 - **continuumClient** → InspireContinuum.com (Mail, Calendar, Sync)
+- **Auth Guard**: All service-layer calls use `tokenStore.requireUserId()` which throws if the user is not authenticated, preventing null userId from reaching APIs. Screen-level code uses `getUserId()` with explicit UI alerts for user-friendly error handling.
 
 ### JubileeInspire.ios (v1.0.0)
 **Location:** `mobile/JubileeInspire.ios/`
@@ -1129,6 +1130,12 @@ CONTINUUM_API_URL=http://localhost:4003
 - Cross-database operations via API calls
 - Consistent authentication across services
 - Centralized rate limiting and logging
+
+### Authentication Guard Pattern
+- **WPF**: `ServiceConfiguration.RequireUserId()` throws `InvalidOperationException` if no authenticated user
+- **Mobile**: `tokenStore.requireUserId()` throws `Error` if no cached userId
+- **Principle**: Service-layer API calls must never silently pass null/fake user IDs — they throw immediately with a clear "Please sign in" message
+- **Soft checks**: `getUserId()` (returns nullable) is still used for auth state inspection, request interceptors, and UI-level guards with user-friendly alerts
 
 ### Event-Driven Processing
 - BullMQ for async job processing
