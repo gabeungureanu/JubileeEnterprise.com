@@ -1,11 +1,15 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
-import RenderHtml from 'react-native-render-html';
+import React, { useMemo, useState, useEffect } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { Avatar } from '../../common/Avatar';
+import { EmailBodyViewer } from '../../common/EmailBodyViewer';
 import { Colors } from '../../../constants/colors';
 import { Typography } from '../../../constants/typography';
 import { Spacing, BorderRadius } from '../../../constants/spacing';
+import {
+  processEmailHtmlAsync,
+  getRegularAttachments,
+} from '../../../utils/emailHtmlProcessor';
 import type { EmailMessage } from '../../../types';
 
 interface ReadingPaneProps {
@@ -38,54 +42,77 @@ export function ReadingPane({
   onDelete,
   onToggleFlag,
 }: ReadingPaneProps) {
-  const { width } = useWindowDimensions();
   const senderDisplay = message.from.name || message.from.address || 'Unknown';
   const toRecipients = message.to || [];
   const ccRecipients = message.cc || [];
 
-  const htmlSource = message.bodyHtml
-    ? { html: message.bodyHtml }
-    : { html: `<pre style="color: #fff; font-family: sans-serif;">${message.bodyText || message.bodyPreview || ''}</pre>` };
+  // Process HTML async: replace CID inline image refs with base64 data URIs
+  const [processedHtml, setProcessedHtml] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    const raw = message.bodyHtml
+      || `<pre style="color: #fff; font-family: sans-serif;">${message.bodyText || message.bodyPreview || ''}</pre>`;
+    processEmailHtmlAsync(raw, message.id, message.attachments || [])
+      .then((result) => {
+        if (!cancelled) setProcessedHtml(result);
+      })
+      .catch(() => {
+        // Fallback: use raw HTML without CID processing
+        if (!cancelled) setProcessedHtml(raw);
+      });
+    return () => { cancelled = true; };
+  }, [message.id, message.bodyHtml]);
+
+  // Separate inline attachments from regular attachments
+  const displayAttachments = useMemo(
+    () => getRegularAttachments(message.attachments || []),
+    [message.attachments],
+  );
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.senderRow}>
-            <Avatar name={senderDisplay} size={44} />
-            <View style={styles.senderInfo}>
-              <Text style={styles.senderName}>{senderDisplay}</Text>
-              <Text style={styles.senderEmail}>{message.from.address}</Text>
-            </View>
-            <TouchableOpacity onPress={onToggleFlag} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Icon
-                name={message.isFlagged ? 'flag' : 'outlined-flag'}
-                size={22}
-                color={message.isFlagged ? Colors.flagged : Colors.textTertiary}
-              />
-            </TouchableOpacity>
+      {/* ── Fixed header area ── */}
+      <ScrollView
+        style={styles.headerScroll}
+        contentContainerStyle={styles.headerContent}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        nestedScrollEnabled
+      >
+        <View style={styles.senderRow}>
+          <Avatar name={senderDisplay} size={40} />
+          <View style={styles.senderInfo}>
+            <Text style={styles.senderName}>{senderDisplay}</Text>
+            <Text style={styles.senderEmail} numberOfLines={1}>{message.from.address}</Text>
           </View>
-
-          <Text style={styles.subject}>{message.subject || '(No Subject)'}</Text>
-          <Text style={styles.date}>{formatFullDate(message.receivedAt)}</Text>
-
-          {toRecipients.length > 0 && (
-            <Text style={styles.recipients}>
-              To: {toRecipients.map((r) => r.name || r.address).join(', ')}
-            </Text>
-          )}
-          {ccRecipients.length > 0 && (
-            <Text style={styles.recipients}>
-              Cc: {ccRecipients.map((r) => r.name || r.address).join(', ')}
-            </Text>
-          )}
+          <TouchableOpacity onPress={onToggleFlag} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Icon
+              name={message.isFlagged ? 'flag' : 'outlined-flag'}
+              size={22}
+              color={message.isFlagged ? Colors.flagged : Colors.textTertiary}
+            />
+          </TouchableOpacity>
         </View>
 
-        {/* Attachments */}
-        {message.attachments && message.attachments.length > 0 && (
+        <Text style={styles.subject}>{message.subject || '(No Subject)'}</Text>
+        <Text style={styles.date}>{formatFullDate(message.receivedAt)}</Text>
+
+        {toRecipients.length > 0 && (
+          <Text style={styles.recipients} numberOfLines={1}>
+            To: {toRecipients.map((r) => r.name || r.address).join(', ')}
+          </Text>
+        )}
+        {ccRecipients.length > 0 && (
+          <Text style={styles.recipients} numberOfLines={1}>
+            Cc: {ccRecipients.map((r) => r.name || r.address).join(', ')}
+          </Text>
+        )}
+
+        {/* Attachments (only non-inline) */}
+        {displayAttachments.length > 0 && (
           <View style={styles.attachments}>
-            {message.attachments.map((att) => (
+            {displayAttachments.map((att) => (
               <View key={att.id} style={styles.attachmentItem}>
                 <Icon name="attach-file" size={16} color={Colors.textTertiary} />
                 <Text style={styles.attachmentName} numberOfLines={1}>
@@ -95,20 +122,17 @@ export function ReadingPane({
             ))}
           </View>
         )}
-
-        {/* Body */}
-        <View style={styles.body}>
-          <RenderHtml
-            contentWidth={width - 32}
-            source={htmlSource}
-            baseStyle={{ color: Colors.textPrimary, fontSize: 14, lineHeight: 22 }}
-            tagsStyles={{
-              a: { color: Colors.accent },
-              img: { maxWidth: width - 32 },
-            }}
-          />
-        </View>
       </ScrollView>
+
+      {/* Divider */}
+      <View style={styles.divider} />
+
+      {/* ── Email body — WebView fills remaining space ── */}
+      <View style={styles.body}>
+        {processedHtml ? (
+          <EmailBodyViewer html={processedHtml} />
+        ) : null}
+      </View>
 
       {/* Action Bar */}
       <View style={styles.actionBar}>
@@ -138,16 +162,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  scrollView: {
-    flex: 1,
+  headerScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+    maxHeight: '40%',
   },
-  scrollContent: {
-    paddingBottom: Spacing.xxl,
-  },
-  header: {
+  headerContent: {
     padding: Spacing.lg,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.divider,
+    paddingBottom: Spacing.xs,
   },
   senderRow: {
     flexDirection: 'row',
@@ -181,12 +203,10 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   attachments: {
-    padding: Spacing.lg,
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.divider,
+    marginTop: Spacing.sm,
   },
   attachmentItem: {
     flexDirection: 'row',
@@ -202,8 +222,13 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     maxWidth: 150,
   },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: Colors.divider,
+    marginHorizontal: Spacing.lg,
+  },
   body: {
-    padding: Spacing.lg,
+    flex: 1,
   },
   actionBar: {
     flexDirection: 'row',

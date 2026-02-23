@@ -67,10 +67,10 @@ Jubilee Outlook Mobile is a full-featured email client that mirrors the JubileeO
 - **Sign Out**: Returns to auth flow
 
 ### Common Components
-- **ThemedToast**: Centered auto-dismiss notification
-- **ThemedAlert**: Modal alert/confirm dialog
+- **ThemedToast**: Centered auto-dismiss notification (outlined icons matching web's Material Symbols Outlined)
+- **ThemedAlert**: Modal alert/confirm dialog with optional `icon`/`iconColor` overrides for context-specific confirmation icons (outlined icons matching web)
 - **SafeScreen**: SafeAreaView wrapper with configurable edges
-- **useAlert Hook**: Provides `alert()`, `confirm()`, `toast()` functions
+- **useAlert Hook**: Provides `alert()`, `confirm(title, message, onConfirm, { icon?, iconColor?, ... })`, `toast()` functions — confirm supports per-call icon customization
 - **AttachmentPreviewModal**: In-app file preview with download/share via expo-web-browser and expo-sharing
 - **RecurrenceActionDialog**: "This event" / "All events in series" modal for recurring event operations
 - **BottomSheet**: Reusable bottom sheet with backdrop and customizable height

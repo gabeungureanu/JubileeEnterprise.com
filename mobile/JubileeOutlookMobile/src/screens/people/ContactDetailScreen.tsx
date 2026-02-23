@@ -340,7 +340,7 @@ const ContactDetailScreen: React.FC = () => {
           alert('Error', err?.message || 'Failed to delete contact', 'error');
         }
       },
-      { confirmText: 'Delete', destructive: true },
+      { confirmText: 'Delete', destructive: true, icon: 'delete-outline' },
     );
   }, [contact, confirm, alert, navigation]);
 
@@ -357,19 +357,46 @@ const ContactDetailScreen: React.FC = () => {
           alert('Error', err?.message || 'Failed to delete contact', 'error');
         }
       },
-      { confirmText: 'Delete Forever', destructive: true },
+      { confirmText: 'Delete Forever', destructive: true, icon: 'delete-forever' },
     );
   }, [contact, confirm, alert, navigation]);
 
   const handleRestore = useCallback(async () => {
     if (!contact) return;
+
+    // Check for active duplicate before restoring (matches web frontend)
+    try {
+      const existingRes = await contactService.getContacts(1, 500);
+      const activeContacts = existingRes.contacts.filter((c) => !c.isDeleted);
+      const duplicate = contactService.findActiveDuplicate(contact, activeContacts);
+
+      if (duplicate) {
+        confirm(
+          'Duplicate Contact Found',
+          `An active contact "${duplicate.displayName}" already exists with the same name or email. Restore anyway?`,
+          async () => {
+            try {
+              await contactService.restore(contact.id);
+              navigation.goBack();
+            } catch (err: any) {
+              alert('Error', err?.message || 'Failed to restore contact', 'error');
+            }
+          },
+          { confirmText: 'Restore Anyway', icon: 'content-copy', iconColor: Colors.warning },
+        );
+        return;
+      }
+    } catch {
+      // If fetch fails, proceed with restore without duplicate check
+    }
+
     try {
       await contactService.restore(contact.id);
       navigation.goBack();
     } catch (err: any) {
       alert('Error', err?.message || 'Failed to restore contact', 'error');
     }
-  }, [contact, alert, navigation]);
+  }, [contact, alert, confirm, navigation]);
 
   // ── Add to group ────────────────────────────────────────
   const handleAddToGroup = useCallback(

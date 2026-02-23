@@ -18,3 +18,4 @@ export { AttachmentPreviewModal } from './AttachmentPreviewModal';
 export type { PreviewAttachment } from './AttachmentPreviewModal';
 export { RecurrenceActionDialog } from './RecurrenceActionDialog';
 export type { RecurrenceAction } from './RecurrenceActionDialog';
+export { EmailBodyViewer } from './EmailBodyViewer';

@@ -136,6 +136,17 @@
   font-size: var(--font-size-md);
   line-height: 1.6;
   color: var(--text-primary);
+  overflow: auto;
+}
+
+.reading-pane__body--plain {
+  white-space: pre-wrap;
+}
+
+.reading-pane__body img,
+.reading-pane__body video {
+  max-width: 100%;
+  height: auto;
 }
 
 .reading-pane__attachments {

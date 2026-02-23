@@ -28,6 +28,7 @@ import { initializePools, closePools, checkAllHealth, getContinuumPool } from '@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const continuum: any = await import('@jubilee/database/continuum');
 import { ImapFlow } from 'imapflow';
+import { simpleParser } from 'mailparser';
 import * as nodemailer from 'nodemailer';
 import { createHash, randomUUID } from 'crypto';
 import { writeFile, mkdir, unlink } from 'node:fs/promises';
@@ -54,6 +55,66 @@ app.get('/health', async (c) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// ============================================================================
+// IMAP SYNC HELPERS
+// ============================================================================
+
+/**
+ * Connect to IMAP server for a specific message.
+ * Returns client, mailbox lock, parsed UID, and account metadata.
+ * Returns null if IMAP is unavailable (no credentials, no UID, DB-only account).
+ * Caller MUST call lock.release() in finally and client.logout() after.
+ */
+async function connectImapForMessage(pool: any, messageId: string): Promise<{
+  client: InstanceType<typeof ImapFlow>;
+  lock: any;
+  uid: number;
+  externalFolderId: string;
+  folderId: string;
+  accountId: string;
+} | null> {
+  const result = await pool.query(
+    `SELECT m.external_message_id, m.internet_message_id, m.folder_id,
+            f.external_folder_id, f.account_id,
+            a.imap_host, a.imap_port, a.imap_use_ssl, a.email_address, a.encrypted_password
+     FROM outlook_email_messages m
+     JOIN outlook_email_folders f ON m.folder_id = f.id
+     JOIN outlook_email_accounts a ON f.account_id = a.id
+     WHERE m.id = $1`,
+    [messageId]
+  );
+
+  if (result.rows.length === 0) return null;
+  const row = result.rows[0];
+
+  // DB-only account — no IMAP credentials
+  if (!row.imap_host || !row.encrypted_password) return null;
+
+  const uid = parseInt(row.external_message_id, 10);
+  if (isNaN(uid) || uid <= 0) return null;
+
+  const password = Buffer.from(row.encrypted_password, 'base64').toString('utf-8');
+  const client = new ImapFlow({
+    host: row.imap_host,
+    port: row.imap_port || 993,
+    secure: row.imap_use_ssl !== false,
+    auth: { user: row.email_address, pass: password },
+    logger: false,
+  });
+
+  await client.connect();
+  const lock = await client.getMailboxLock(row.external_folder_id || 'INBOX');
+
+  return {
+    client,
+    lock,
+    uid,
+    externalFolderId: row.external_folder_id || 'INBOX',
+    folderId: row.folder_id,
+    accountId: row.account_id,
+  };
+}
 
 // ============================================================================
 // USER SETTINGS ENDPOINTS
@@ -1219,11 +1280,18 @@ app.post('/api/v1/outlook/accounts/:id/sync', async (c) => {
 
     for (const folder of foldersResult.rows) {
       try {
+        // Skip non-selectable container folders (e.g., [Gmail] namespace)
+        const folderPath = folder.external_folder_id || '';
+        if (!folderPath || folderPath === '[Gmail]' || folderPath === '[Google Mail]') {
+          syncResults.push({ folder: folder.name, synced: 0 });
+          continue;
+        }
+
         const lock = await client.getMailboxLock(folder.external_folder_id);
         try {
-          // Fetch most recent 100 messages
+          // Fetch most recent 100 messages (including full source for body parsing)
           const messages: Array<any> = [];
-          const fetchOptions = { uid: true, envelope: true, bodyStructure: true, flags: true, size: true };
+          const fetchOptions = { uid: true, envelope: true, bodyStructure: true, flags: true, size: true, source: true };
 
           // Get message count
           const status = client.mailbox;
@@ -1259,24 +1327,68 @@ app.post('/api/v1/outlook/accounts/:id/sync', async (c) => {
                 [folder.id, messageIdHeader]
               );
               if (existsResult.rows.length > 0) {
-                // Update flags only
-                await dbClient.query(
-                  'UPDATE outlook_email_messages SET is_read = $1, is_flagged = $2 WHERE id = $3',
-                  [isRead, isFlagged, existsResult.rows[0].id]
+                const existingId = existsResult.rows[0].id;
+                // Check if body is missing and backfill if needed
+                const bodyCheck = await dbClient.query(
+                  'SELECT body_text, body_html FROM outlook_email_messages WHERE id = $1',
+                  [existingId]
                 );
+                const hasBody = bodyCheck.rows[0]?.body_text || bodyCheck.rows[0]?.body_html;
+                if (!hasBody && msg.source) {
+                  try {
+                    const parsed = await simpleParser(msg.source);
+                    const bt = parsed.text || '';
+                    const bh = parsed.html || '';
+                    if (bt || bh) {
+                      const bp = (bt || bh.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()).substring(0, 200);
+                      await dbClient.query(
+                        'UPDATE outlook_email_messages SET body_text = $1, body_html = $2, body_preview = $3, is_read = $4, is_flagged = $5 WHERE id = $6',
+                        [bt, bh, bp, isRead, isFlagged, existingId]
+                      );
+                    }
+                  } catch {
+                    // Update flags even if body parse fails
+                    await dbClient.query(
+                      'UPDATE outlook_email_messages SET is_read = $1, is_flagged = $2 WHERE id = $3',
+                      [isRead, isFlagged, existingId]
+                    );
+                  }
+                } else {
+                  // Update flags only
+                  await dbClient.query(
+                    'UPDATE outlook_email_messages SET is_read = $1, is_flagged = $2 WHERE id = $3',
+                    [isRead, isFlagged, existingId]
+                  );
+                }
                 continue;
               }
 
-              // Build body preview from subject
-              const bodyPreview = subject.substring(0, 200);
+              // Parse full message source for body text and HTML
+              let bodyText = '';
+              let bodyHtml = '';
+              let bodyPreview = '';
+              try {
+                if (msg.source) {
+                  const parsed = await simpleParser(msg.source);
+                  bodyText = parsed.text || '';
+                  bodyHtml = parsed.html || '';
+                }
+              } catch {
+                // Ignore message parsing errors
+              }
+              // Generate preview from body content
+              bodyPreview = (bodyText || bodyHtml.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()).substring(0, 200);
+              if (!bodyPreview) {
+                bodyPreview = subject.substring(0, 200);
+              }
 
-              // Insert the message
+              // Insert the message with full body
               const insertResult = await dbClient.query(
-                `INSERT INTO outlook_email_messages (folder_id, user_id, subject, body_preview, sender_email, sender_name, is_read, is_flagged, has_attachments, received_at, internet_message_id, external_message_id)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                `INSERT INTO outlook_email_messages (folder_id, user_id, subject, body_preview, body_text, body_html, sender_email, sender_name, is_read, is_flagged, has_attachments, received_at, internet_message_id, external_message_id)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
                  ON CONFLICT (folder_id, internet_message_id) DO NOTHING
                  RETURNING id`,
-                [folder.id, account.user_id, subject, bodyPreview, senderEmail, senderName, isRead, isFlagged,
+                [folder.id, account.user_id, subject, bodyPreview, bodyText, bodyHtml, senderEmail, senderName, isRead, isFlagged,
                  !!(msg.bodyStructure?.childNodes?.length), receivedAt, messageIdHeader, String(msg.uid)]
               );
               if (insertResult.rows.length === 0) continue; // Already exists (conflict)
@@ -1486,7 +1598,7 @@ app.post('/api/v1/outlook/folders', async (c) => {
   }
 });
 
-// PATCH /api/v1/outlook/folders/:id - Rename a folder (custom folders only)
+// PATCH /api/v1/outlook/folders/:id - Rename a folder (custom folders only, syncs to IMAP)
 app.patch('/api/v1/outlook/folders/:id', async (c) => {
   try {
     const folderId = c.req.param('id');
@@ -1499,9 +1611,14 @@ app.patch('/api/v1/outlook/folders/:id', async (c) => {
 
     const pool = getContinuumPool();
 
-    // Check if folder exists and is not a system folder
+    // Get folder info with account credentials for IMAP rename
     const folderResult = await pool.query(
-      'SELECT id, is_system FROM outlook_email_folders WHERE id = $1', [folderId]
+      `SELECT f.id, f.is_system, f.external_folder_id, f.account_id,
+              a.imap_host, a.imap_port, a.imap_use_ssl, a.email_address, a.encrypted_password
+       FROM outlook_email_folders f
+       JOIN outlook_email_accounts a ON f.account_id = a.id
+       WHERE f.id = $1`,
+      [folderId]
     );
     if (folderResult.rows.length === 0) {
       return c.json({ error: 'Folder not found' }, 404);
@@ -1510,26 +1627,76 @@ app.patch('/api/v1/outlook/folders/:id', async (c) => {
       return c.json({ error: 'Cannot rename system folders' }, 403);
     }
 
-    await pool.query(
-      'UPDATE outlook_email_folders SET name = $1, updated_at = NOW() WHERE id = $2',
-      [name, folderId]
-    );
+    const folder = folderResult.rows[0];
+
+    // ─── IMAP SYNC (before DB) ─────────────────────────────────────
+    let newImapPath: string | null = null;
+
+    const isRealImapFolder = folder.imap_host && folder.encrypted_password
+      && folder.external_folder_id && !folder.external_folder_id.startsWith('custom-');
+
+    if (isRealImapFolder) {
+      const password = Buffer.from(folder.encrypted_password, 'base64').toString('utf-8');
+      const client = new ImapFlow({
+        host: folder.imap_host,
+        port: folder.imap_port || 993,
+        secure: folder.imap_use_ssl !== false,
+        auth: { user: folder.email_address, pass: password },
+        logger: false,
+      });
+
+      try {
+        await client.connect();
+
+        // Build new IMAP path: replace last segment with new name
+        const oldPath = folder.external_folder_id;
+        const delimiter = oldPath.includes('/') ? '/' : '.';
+        const parts = oldPath.split(delimiter);
+        parts[parts.length - 1] = name;
+        newImapPath = parts.join(delimiter);
+
+        await client.mailboxRename(oldPath, newImapPath);
+      } finally {
+        await client.logout();
+      }
+    }
+
+    // ─── DB UPDATE ─────────────────────────────────────────────────
+    if (newImapPath) {
+      // Update both name and external_folder_id (IMAP path changed)
+      await pool.query(
+        'UPDATE outlook_email_folders SET name = $1, external_folder_id = $2, updated_at = NOW() WHERE id = $3',
+        [name, newImapPath, folderId]
+      );
+    } else {
+      // DB-only rename (local custom folder or no IMAP credentials)
+      await pool.query(
+        'UPDATE outlook_email_folders SET name = $1, updated_at = NOW() WHERE id = $2',
+        [name, folderId]
+      );
+    }
 
     return c.json({ success: true, folderId, name });
   } catch (err: any) {
+    console.error('[IMAP-SYNC] PATCH folder error:', err.message);
     return c.json({ error: 'Failed to rename folder', message: err.message }, 500);
   }
 });
 
-// DELETE /api/v1/outlook/folders/:id - Delete a custom folder (moves messages to Trash)
+// DELETE /api/v1/outlook/folders/:id - Delete a custom folder (syncs to IMAP, moves messages to Trash)
 app.delete('/api/v1/outlook/folders/:id', async (c) => {
   try {
     const folderId = c.req.param('id');
     const pool = getContinuumPool();
 
-    // Check if folder exists and is not a system folder
+    // Get folder info with account credentials for IMAP delete
     const folderResult = await pool.query(
-      'SELECT id, is_system, account_id FROM outlook_email_folders WHERE id = $1', [folderId]
+      `SELECT f.id, f.is_system, f.account_id, f.external_folder_id,
+              a.imap_host, a.imap_port, a.imap_use_ssl, a.email_address, a.encrypted_password
+       FROM outlook_email_folders f
+       JOIN outlook_email_accounts a ON f.account_id = a.id
+       WHERE f.id = $1`,
+      [folderId]
     );
     if (folderResult.rows.length === 0) {
       return c.json({ error: 'Folder not found' }, 404);
@@ -1538,27 +1705,86 @@ app.delete('/api/v1/outlook/folders/:id', async (c) => {
       return c.json({ error: 'Cannot delete system folders' }, 403);
     }
 
-    const accountId = folderResult.rows[0].account_id;
+    const folder = folderResult.rows[0];
+    const accountId = folder.account_id;
 
-    // Find trash folder to move messages there
+    // ─── IMAP SYNC (before DB) ─────────────────────────────────────
+    const isRealImapFolder = folder.imap_host && folder.encrypted_password
+      && folder.external_folder_id && !folder.external_folder_id.startsWith('custom-');
+
+    if (isRealImapFolder) {
+      const password = Buffer.from(folder.encrypted_password, 'base64').toString('utf-8');
+      const client = new ImapFlow({
+        host: folder.imap_host,
+        port: folder.imap_port || 993,
+        secure: folder.imap_use_ssl !== false,
+        auth: { user: folder.email_address, pass: password },
+        logger: false,
+      });
+
+      try {
+        await client.connect();
+
+        // Step 1: Move all messages in this folder to Trash on IMAP
+        const trashImapResult = await pool.query(
+          `SELECT external_folder_id FROM outlook_email_folders
+           WHERE account_id = $1 AND folder_type = 'trash' LIMIT 1`,
+          [accountId]
+        );
+        const trashImapPath = trashImapResult.rows[0]?.external_folder_id;
+
+        if (trashImapPath && !trashImapPath.startsWith('custom-')) {
+          const lock = await client.getMailboxLock(folder.external_folder_id);
+          try {
+            // Move ALL messages (sequence range 1:*) to trash if any exist
+            if (client.mailbox && client.mailbox.exists && client.mailbox.exists > 0) {
+              await client.messageMove('1:*', trashImapPath);
+            }
+          } finally {
+            lock.release();
+          }
+        }
+
+        // Step 2: Delete the IMAP folder itself
+        await client.mailboxDelete(folder.external_folder_id);
+      } finally {
+        await client.logout();
+      }
+    }
+
+    // ─── DB UPDATE ─────────────────────────────────────────────────
+    // Find trash folder to move messages there in DB
     const trashResult = await pool.query(
       `SELECT id FROM outlook_email_folders WHERE account_id = $1 AND folder_type = 'trash' LIMIT 1`,
       [accountId]
     );
 
     if (trashResult.rows.length > 0) {
-      // Move all messages from this folder to trash
+      // Move all messages from this folder to trash in DB
       await pool.query(
         'UPDATE outlook_email_messages SET folder_id = $1 WHERE folder_id = $2',
         [trashResult.rows[0].id, folderId]
       );
     }
 
-    // Delete the folder
+    // Delete the folder from DB
     await pool.query('DELETE FROM outlook_email_folders WHERE id = $1', [folderId]);
+
+    // Recalculate trash folder counts
+    if (trashResult.rows.length > 0) {
+      const countResult = await pool.query(
+        'SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE is_read = false) as unread FROM outlook_email_messages WHERE folder_id = $1',
+        [trashResult.rows[0].id]
+      );
+      await pool.query(
+        'UPDATE outlook_email_folders SET total_count = $1, unread_count = $2 WHERE id = $3',
+        [parseInt(countResult.rows[0].total), parseInt(countResult.rows[0].unread), trashResult.rows[0].id]
+      );
+    }
 
     return c.json({ success: true, deleted: folderId });
   } catch (err: any) {
+    console.error('[IMAP-SYNC] DELETE folder error:', err.message);
     return c.json({ error: 'Failed to delete folder', message: err.message }, 500);
   }
 });
@@ -1758,79 +1984,47 @@ app.get('/api/v1/outlook/messages/:id', async (c) => {
         const lock = await client.getMailboxLock(m.external_folder_id || 'INBOX');
 
         try {
-          // Search for message by Message-ID header
-          const msgIdHeader = m.conversation_id || m.subject;
           let targetUid: number | null = null;
 
-          // Use IMAP SEARCH to find the message by its Internet Message-ID
-          const internetMsgId = await pool.query(
-            'SELECT internet_message_id FROM outlook_email_messages WHERE id = $1', [messageId]
-          );
-          const headerMsgId = internetMsgId.rows[0]?.internet_message_id;
+          // Strategy 1: Use stored UID directly (fastest)
+          if (m.external_message_id) {
+            const storedUid = parseInt(m.external_message_id, 10);
+            if (!isNaN(storedUid) && storedUid > 0) {
+              targetUid = storedUid;
+            }
+          }
 
-          if (headerMsgId) {
-            // Strip angle brackets for IMAP search
-            const cleanMsgId = headerMsgId.replace(/^<|>$/g, '');
-            const uids = await client.search({ header: { 'message-id': cleanMsgId } });
-            if (Array.isArray(uids) && uids.length > 0) {
-              targetUid = uids[0];
+          // Strategy 2: Search by Internet Message-ID header (fallback)
+          if (!targetUid) {
+            const internetMsgId = await pool.query(
+              'SELECT internet_message_id FROM outlook_email_messages WHERE id = $1', [messageId]
+            );
+            const headerMsgId = internetMsgId.rows[0]?.internet_message_id;
+
+            if (headerMsgId) {
+              const cleanMsgId = headerMsgId.replace(/^<|>$/g, '');
+              const uids = await client.search({ header: { 'message-id': cleanMsgId } });
+              if (Array.isArray(uids) && uids.length > 0) {
+                targetUid = uids[0];
+              }
             }
           }
 
           if (targetUid) {
             for await (const msg of client.fetch(String(targetUid), { source: true, bodyStructure: true, uid: true })) {
               if (msg.source) {
-                const raw = msg.source.toString();
-                let bodyText = '';
-                let bodyHtml = '';
-
-                // Parse MIME parts from raw source
-                const parts = raw.split(/\r?\n--/);
-                for (const part of parts) {
-                  const headerEnd = part.indexOf('\r\n\r\n');
-                  const headerEndLf = part.indexOf('\n\n');
-                  const splitPos = headerEnd > -1 ? headerEnd : headerEndLf;
-                  if (splitPos === -1) continue;
-
-                  const partHeader = part.substring(0, splitPos);
-                  let partBody = part.substring(splitPos).replace(/^\r?\n\r?\n/, '').trim();
-
-                  // Remove trailing boundary markers
-                  partBody = partBody.replace(/\r?\n--[^\r\n]+--\s*$/, '').trim();
-
-                  const isBase64 = /Content-Transfer-Encoding:\s*base64/i.test(partHeader);
-                  const isQP = /Content-Transfer-Encoding:\s*quoted-printable/i.test(partHeader);
-
-                  if (isBase64 && partBody) {
-                    try { partBody = Buffer.from(partBody.replace(/\s/g, ''), 'base64').toString('utf-8'); } catch {}
-                  } else if (isQP && partBody) {
-                    partBody = partBody.replace(/=\r?\n/g, '').replace(/=([0-9A-Fa-f]{2})/g,
-                      (_: any, hex: string) => String.fromCharCode(parseInt(hex, 16)));
-                  }
-
-                  if (/Content-Type:\s*text\/plain/i.test(partHeader) && !bodyText) {
-                    bodyText = partBody;
-                  } else if (/Content-Type:\s*text\/html/i.test(partHeader) && !bodyHtml) {
-                    bodyHtml = partBody;
-                  }
-                }
-
-                // Fallback: non-multipart email
-                if (!bodyText && !bodyHtml) {
-                  const simpleBody = raw.split(/\r?\n\r?\n/).slice(1).join('\n\n').trim();
-                  if (/Content-Type:\s*text\/html/i.test(raw)) {
-                    bodyHtml = simpleBody;
-                  } else {
-                    bodyText = simpleBody;
-                  }
-                }
+                // Use mailparser for robust MIME parsing (handles nested multipart,
+                // quoted-printable, base64, charsets, reply chains, etc.)
+                const parsed = await simpleParser(msg.source);
+                const bodyText = parsed.text || '';
+                const bodyHtml = parsed.html || '';
 
                 // Cache in database for future requests
                 if (bodyText || bodyHtml) {
                   const preview = (bodyText || bodyHtml.replace(/<[^>]*>/g, '')).substring(0, 200);
                   await pool.query(
                     'UPDATE outlook_email_messages SET body_text = $1, body_html = $2, body_preview = $3 WHERE id = $4',
-                    [bodyText || '', bodyHtml || '', preview, messageId]
+                    [bodyText, bodyHtml, preview, messageId]
                   );
                   m.body_text = bodyText;
                   m.body_html = bodyHtml;
@@ -1863,7 +2057,6 @@ app.get('/api/v1/outlook/messages/:id', async (c) => {
 
                   const attachments = extractAttachments(msg.bodyStructure);
                   if (attachments.length > 0) {
-                    // Clear existing attachment metadata for this message to avoid duplicates
                     await pool.query('DELETE FROM outlook_email_attachments WHERE message_id = $1', [messageId]);
                     for (const att of attachments) {
                       await pool.query(
@@ -1872,7 +2065,6 @@ app.get('/api/v1/outlook/messages/:id', async (c) => {
                         [messageId, att.fileName, att.part, att.fileSize, att.mimeType, att.isInline]
                       );
                     }
-                    // Update has_attachments flag
                     await pool.query(
                       'UPDATE outlook_email_messages SET has_attachments = true WHERE id = $1',
                       [messageId]
@@ -1889,7 +2081,7 @@ app.get('/api/v1/outlook/messages/:id', async (c) => {
 
         await client.logout();
       } catch (imapErr: any) {
-        console.error('IMAP body fetch failed:', imapErr.message);
+        console.error('[IMAP] Body fetch failed for message', messageId, ':', imapErr.message);
       }
     }
 
@@ -2047,34 +2239,113 @@ app.patch('/api/v1/outlook/messages/:id', async (c) => {
     const body = await c.req.json();
     const pool = getContinuumPool();
 
+    const hasRead = typeof body.is_read === 'boolean';
+    const hasFlagged = typeof body.is_flagged === 'boolean';
+    const hasPinned = typeof body.is_pinned === 'boolean';
+    const hasMove = !!body.folder_id;
+
+    if (!hasRead && !hasFlagged && !hasPinned && !hasMove) {
+      return c.json({ error: 'No fields to update' }, 400);
+    }
+
+    // ─── IMAP SYNC (before DB) ─────────────────────────────────────
+    // Pattern: IMAP first → DB second. If IMAP fails → return error.
+    // If no IMAP context (null) → DB-only fallback for non-IMAP accounts.
+    const needsImap = hasRead || hasFlagged || hasMove;
+    let newUidAfterMove: string | null = null;
+
+    if (needsImap) {
+      const imapCtx = await connectImapForMessage(pool, messageId);
+
+      if (imapCtx) {
+        const { client, lock, uid } = imapCtx;
+        try {
+          // 1. Handle is_read (IMAP \Seen flag)
+          if (hasRead) {
+            if (body.is_read) {
+              await client.messageFlagsAdd(String(uid), ['\\Seen'], { uid: true });
+            } else {
+              await client.messageFlagsRemove(String(uid), ['\\Seen'], { uid: true });
+            }
+            console.log('[IMAP-SYNC] UID %d: is_read → %s', uid, body.is_read);
+          }
+
+          // 2. Handle is_flagged (IMAP \Flagged flag)
+          if (hasFlagged) {
+            if (body.is_flagged) {
+              await client.messageFlagsAdd(String(uid), ['\\Flagged'], { uid: true });
+            } else {
+              await client.messageFlagsRemove(String(uid), ['\\Flagged'], { uid: true });
+            }
+            console.log('[IMAP-SYNC] UID %d: is_flagged → %s', uid, body.is_flagged);
+          }
+
+          // 3. Handle folder_id change (IMAP MOVE) — must be after flags
+          if (hasMove) {
+            const destResult = await pool.query(
+              'SELECT external_folder_id FROM outlook_email_folders WHERE id = $1',
+              [body.folder_id]
+            );
+            if (destResult.rows.length === 0) {
+              lock.release();
+              await client.logout();
+              return c.json({ error: 'Destination folder not found' }, 404);
+            }
+            const destImapPath = destResult.rows[0].external_folder_id;
+
+            if (destImapPath && !destImapPath.startsWith('custom-')) {
+              const moveResult = await client.messageMove(String(uid), destImapPath, { uid: true });
+
+              // Extract new UID from UIDPLUS uidMap (Map<number, number>)
+              if (moveResult && typeof moveResult === 'object' && moveResult.uidMap instanceof Map) {
+                const newUid = moveResult.uidMap.get(uid);
+                if (newUid) {
+                  newUidAfterMove = String(newUid);
+                }
+              }
+              console.log('[IMAP-SYNC] UID %d: moved to %s (new UID: %s)', uid, destImapPath, newUidAfterMove || 'unknown');
+            }
+          }
+        } finally {
+          lock.release();
+        }
+        try { await client.logout(); } catch { /* ignore logout errors */ }
+        // IMAP succeeded — proceed to DB update below
+      } else {
+        console.warn('[IMAP-SYNC] No IMAP context for message %s (no UID or credentials) — DB-only update', messageId);
+      }
+    }
+
+    // ─── DB UPDATE ─────────────────────────────────────────────────
     const updates: string[] = [];
     const values: any[] = [];
     let paramIndex = 1;
 
-    if (typeof body.is_read === 'boolean') {
+    if (hasRead) {
       updates.push(`is_read = $${paramIndex++}`);
       values.push(body.is_read);
     }
-    if (typeof body.is_flagged === 'boolean') {
+    if (hasFlagged) {
       updates.push(`is_flagged = $${paramIndex++}`);
       values.push(body.is_flagged);
     }
-    if (typeof body.is_pinned === 'boolean') {
+    if (hasPinned) {
       updates.push(`is_pinned = $${paramIndex++}`);
       values.push(body.is_pinned);
     }
-    if (body.folder_id) {
+    if (hasMove) {
       updates.push(`folder_id = $${paramIndex++}`);
       values.push(body.folder_id);
     }
-
-    if (updates.length === 0) {
-      return c.json({ error: 'No fields to update' }, 400);
+    // Update external_message_id if IMAP MOVE returned a new UID
+    if (newUidAfterMove) {
+      updates.push(`external_message_id = $${paramIndex++}`);
+      values.push(newUidAfterMove);
     }
 
     values.push(messageId);
 
-    // Get the message's folder_id before updating (needed to recalculate folder counts)
+    // Get old folder_id before updating (for count recalculation)
     const msgResult = await pool.query(
       'SELECT folder_id FROM outlook_email_messages WHERE id = $1', [messageId]
     );
@@ -2103,37 +2374,106 @@ app.patch('/api/v1/outlook/messages/:id', async (c) => {
 
     return c.json({ success: true });
   } catch (err: any) {
+    console.error('[IMAP-SYNC] PATCH message error:', err.message);
     return c.json({ error: 'Failed to update message', message: err.message }, 500);
   }
 });
 
-// DELETE /api/v1/outlook/messages/:id - Delete a message permanently
+// DELETE /api/v1/outlook/messages/:id - Delete message (move to trash, or permanent if already in trash)
 app.delete('/api/v1/outlook/messages/:id', async (c) => {
   try {
     const messageId = c.req.param('id');
     const pool = getContinuumPool();
-    const result = await pool.query(
-      'DELETE FROM outlook_email_messages WHERE id = $1 RETURNING id, folder_id', [messageId]
+
+    // Get message info including folder type to determine trash vs permanent delete
+    const msgResult = await pool.query(
+      `SELECT m.id, m.folder_id, m.external_message_id,
+              f.folder_type, f.account_id, f.external_folder_id
+       FROM outlook_email_messages m
+       JOIN outlook_email_folders f ON m.folder_id = f.id
+       WHERE m.id = $1`,
+      [messageId]
     );
-    if (result.rows.length === 0) {
+
+    if (msgResult.rows.length === 0) {
       return c.json({ error: 'Message not found' }, 404);
     }
 
-    // Recalculate folder counts after deletion
-    const folderId = result.rows[0].folder_id;
-    if (folderId) {
+    const msg = msgResult.rows[0];
+    const isInTrash = msg.folder_type === 'trash';
+
+    // ─── IMAP SYNC (before DB) ─────────────────────────────────────
+    const imapCtx = await connectImapForMessage(pool, messageId);
+
+    if (imapCtx) {
+      const { client, lock, uid } = imapCtx;
+      try {
+        if (isInTrash) {
+          // Already in trash — permanently delete from IMAP
+          await client.messageDelete(String(uid), { uid: true });
+        } else {
+          // Move to Trash on IMAP
+          const trashResult = await pool.query(
+            `SELECT external_folder_id FROM outlook_email_folders
+             WHERE account_id = $1 AND folder_type = 'trash' LIMIT 1`,
+            [msg.account_id]
+          );
+          const trashImapPath = trashResult.rows[0]?.external_folder_id;
+
+          if (trashImapPath && !trashImapPath.startsWith('custom-')) {
+            await client.messageMove(String(uid), trashImapPath, { uid: true });
+          } else {
+            // No IMAP trash folder — permanent delete
+            await client.messageDelete(String(uid), { uid: true });
+          }
+        }
+      } finally {
+        lock.release();
+      }
+      await client.logout();
+    }
+
+    // ─── DB UPDATE ─────────────────────────────────────────────────
+    const affectedFolderIds = new Set<string>();
+    affectedFolderIds.add(msg.folder_id);
+
+    if (isInTrash) {
+      // Permanently delete from DB
+      await pool.query('DELETE FROM outlook_email_messages WHERE id = $1', [messageId]);
+    } else {
+      // Move to trash folder in DB
+      const trashFolderResult = await pool.query(
+        `SELECT id FROM outlook_email_folders WHERE account_id = $1 AND folder_type = 'trash' LIMIT 1`,
+        [msg.account_id]
+      );
+
+      if (trashFolderResult.rows.length > 0) {
+        await pool.query(
+          'UPDATE outlook_email_messages SET folder_id = $1 WHERE id = $2',
+          [trashFolderResult.rows[0].id, messageId]
+        );
+        affectedFolderIds.add(trashFolderResult.rows[0].id);
+      } else {
+        // No trash folder in DB — permanently delete
+        await pool.query('DELETE FROM outlook_email_messages WHERE id = $1', [messageId]);
+      }
+    }
+
+    // Recalculate folder counts for affected folders
+    for (const fid of affectedFolderIds) {
       const countResult = await pool.query(
         'SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE is_read = false) as unread FROM outlook_email_messages WHERE folder_id = $1',
-        [folderId]
+        [fid]
       );
       await pool.query(
         'UPDATE outlook_email_folders SET total_count = $1, unread_count = $2 WHERE id = $3',
-        [parseInt(countResult.rows[0].total), parseInt(countResult.rows[0].unread), folderId]
+        [parseInt(countResult.rows[0].total), parseInt(countResult.rows[0].unread), fid]
       );
     }
 
-    return c.json({ success: true, deleted: messageId });
+    return c.json({ success: true, deleted: messageId, movedToTrash: !isInTrash });
   } catch (err: any) {
+    console.error('[IMAP-SYNC] DELETE message error:', err.message);
     return c.json({ error: 'Failed to delete message', message: err.message }, 500);
   }
 });

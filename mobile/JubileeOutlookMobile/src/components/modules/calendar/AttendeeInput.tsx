@@ -54,7 +54,7 @@ export const AttendeeInput: React.FC<AttendeeInputProps> = ({
         'Remove Attendee',
         `Are you sure you want to remove "${name}"?`,
         () => onRemove(idx),
-        { confirmText: 'Remove', destructive: true },
+        { confirmText: 'Remove', destructive: true, icon: 'person-remove' },
       );
     },
     [attendees, onRemove, confirm],

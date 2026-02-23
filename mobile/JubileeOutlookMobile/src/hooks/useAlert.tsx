@@ -21,6 +21,8 @@ interface AlertState {
   title: string;
   message?: string;
   variant: AlertVariant;
+  icon?: string;
+  iconColor?: string;
   buttons: AlertButton[];
 }
 
@@ -92,6 +94,8 @@ export function useAlert() {
         cancelText?: string;
         variant?: AlertVariant;
         destructive?: boolean;
+        icon?: string;
+        iconColor?: string;
       },
     ) => {
       setAlertState({
@@ -99,6 +103,8 @@ export function useAlert() {
         title,
         message,
         variant: options?.variant ?? 'confirm',
+        icon: options?.icon,
+        iconColor: options?.iconColor,
         buttons: [
           {
             text: options?.cancelText ?? 'Cancel',
@@ -129,6 +135,8 @@ export function useAlert() {
         title={alertState.title}
         message={alertState.message}
         variant={alertState.variant}
+        icon={alertState.icon}
+        iconColor={alertState.iconColor}
         buttons={alertState.buttons}
         onDismiss={dismissAlert}
       />

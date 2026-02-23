@@ -207,7 +207,7 @@ const SettingsScreen: React.FC = () => {
           alert('Error', err?.message || 'Failed to sign out', 'error');
         }
       },
-      { confirmText: 'Sign Out', destructive: true },
+      { confirmText: 'Sign Out', destructive: true, icon: 'logout' },
     );
   }, [logout, confirm, alert]);
 

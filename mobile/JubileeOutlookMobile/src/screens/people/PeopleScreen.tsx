@@ -15,16 +15,19 @@ import {
   View,
   Text,
   SectionList,
-  FlatList,
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
   TextInput,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as DocumentPicker from 'expo-document-picker';
+import { File, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
@@ -130,6 +133,14 @@ const PeopleScreen: React.FC = () => {
   const [groupNameInput, setGroupNameInput] = useState('');
   const [groupDescInput, setGroupDescInput] = useState('');
   const [isSavingGroup, setIsSavingGroup] = useState(false);
+
+  // ── Import/Export state ────────────────────────────────
+  const [showMoreSheet, setShowMoreSheet] = useState(false);
+  const [showImportSheet, setShowImportSheet] = useState(false);
+  const [showExportSheet, setShowExportSheet] = useState(false);
+  const [importFile, setImportFile] = useState<{ name: string; uri: string; format: 'vcard' | 'csv' } | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // ── Derived data ────────────────────────────────────────
   const activeContacts = useMemo(
@@ -284,30 +295,85 @@ const PeopleScreen: React.FC = () => {
           alert('Error', err?.message || 'Failed to delete contacts', 'error');
         }
       },
-      { confirmText: 'Delete', destructive: true },
+      { confirmText: 'Delete', destructive: true, icon: 'delete-outline' },
     );
   }, [selectedIds, confirm, alert]);
 
   const handleBatchRestore = useCallback(() => {
     if (selectedIds.size === 0) return;
-    confirm(
-      'Restore Contacts',
-      `Restore ${selectedIds.size} contact${selectedIds.size > 1 ? 's' : ''}?`,
-      async () => {
-        try {
-          const ids = Array.from(selectedIds);
-          await contactService.batchRestore(ids);
-          setAllContacts((prev) =>
-            prev.map((c) => (ids.includes(c.id) ? { ...c, isDeleted: false } : c)),
-          );
-          setSelectedIds(new Set());
-          setIsSelectMode(false);
-        } catch (err: any) {
-          alert('Error', err?.message || 'Failed to restore contacts', 'error');
-        }
-      },
-    );
-  }, [selectedIds, confirm, alert]);
+
+    // Check for duplicates before restoring (matches web PeoplePage behavior)
+    const ids = Array.from(selectedIds);
+    const contactsToRestore = allContacts.filter((c) => ids.includes(c.id));
+    const withDuplicates: Contact[] = [];
+    const safe: Contact[] = [];
+
+    for (const c of contactsToRestore) {
+      const dupe = contactService.findActiveDuplicate(c, allContacts);
+      if (dupe) withDuplicates.push(c);
+      else safe.push(c);
+    }
+
+    if (withDuplicates.length > 0 && safe.length === 0) {
+      // All have duplicates
+      confirm(
+        'Duplicates Found',
+        `All ${withDuplicates.length} selected contact${withDuplicates.length > 1 ? 's have' : ' has'} active duplicates. Restore anyway?`,
+        async () => {
+          try {
+            await contactService.batchRestore(ids);
+            setAllContacts((prev) =>
+              prev.map((c) => (ids.includes(c.id) ? { ...c, isDeleted: false } : c)),
+            );
+            setSelectedIds(new Set());
+            setIsSelectMode(false);
+          } catch (err: any) {
+            alert('Error', err?.message || 'Failed to restore contacts', 'error');
+          }
+        },
+        { confirmText: 'Restore Anyway', icon: 'content-copy', iconColor: Colors.warning },
+      );
+    } else if (withDuplicates.length > 0) {
+      // Some have duplicates — offer to restore only safe ones
+      confirm(
+        'Duplicates Found',
+        `${withDuplicates.length} of ${ids.length} contact${ids.length > 1 ? 's have' : ' has'} active duplicates. Restore the ${safe.length} non-duplicate contact${safe.length !== 1 ? 's' : ''}?`,
+        async () => {
+          try {
+            const safeIds = safe.map((c) => c.id);
+            await contactService.batchRestore(safeIds);
+            setAllContacts((prev) =>
+              prev.map((c) => (safeIds.includes(c.id) ? { ...c, isDeleted: false } : c)),
+            );
+            setSelectedIds(new Set());
+            setIsSelectMode(false);
+          } catch (err: any) {
+            alert('Error', err?.message || 'Failed to restore contacts', 'error');
+          }
+        },
+        { icon: 'content-copy', iconColor: Colors.warning },
+      );
+    } else {
+      // No duplicates — proceed normally
+      confirm(
+        'Restore Contacts',
+        `Restore ${selectedIds.size} contact${selectedIds.size > 1 ? 's' : ''}?`,
+        async () => {
+          try {
+            await contactService.batchRestore(ids);
+            setAllContacts((prev) =>
+              prev.map((c) => (ids.includes(c.id) ? { ...c, isDeleted: false } : c)),
+            );
+            setSelectedIds(new Set());
+            setIsSelectMode(false);
+          } catch (err: any) {
+            alert('Error', err?.message || 'Failed to restore contacts', 'error');
+          }
+        },
+        { icon: 'restore', iconColor: Colors.success },
+      );
+    }
+  }, [selectedIds, allContacts, confirm, alert]);
 
   const handleBatchHardDelete = useCallback(() => {
     if (selectedIds.size === 0) return;
@@ -325,7 +391,7 @@ const PeopleScreen: React.FC = () => {
           alert('Error', err?.message || 'Failed to delete contacts', 'error');
         }
       },
-      { confirmText: 'Delete Forever', destructive: true },
+      { confirmText: 'Delete Forever', destructive: true, icon: 'delete-forever' },
     );
   }, [selectedIds, confirm, alert]);
 
@@ -426,11 +492,108 @@ const PeopleScreen: React.FC = () => {
             alert('Error', err?.message || 'Failed to delete group', 'error');
           }
         },
-        { confirmText: 'Delete', destructive: true },
+        { confirmText: 'Delete', destructive: true, icon: 'delete-outline' },
       );
     },
     [confirm, alert],
   );
+
+  // ── Import/Export handlers ─────────────────────────────
+  const handlePickImportFile = useCallback(async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['text/vcard', 'text/x-vcard', 'text/csv', 'text/comma-separated-values', 'application/octet-stream'],
+        copyToCacheDirectory: true,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+      const asset = result.assets[0];
+      const ext = (asset.name || '').toLowerCase();
+      let format: 'vcard' | 'csv';
+      if (ext.endsWith('.vcf') || ext.endsWith('.vcard')) {
+        format = 'vcard';
+      } else if (ext.endsWith('.csv')) {
+        format = 'csv';
+      } else {
+        alert('Unsupported Format', 'Please select a .vcf (vCard) or .csv file.', 'warning');
+        return;
+      }
+      setImportFile({ name: asset.name, uri: asset.uri, format });
+    } catch (err: any) {
+      alert('Error', err?.message || 'Failed to pick file', 'error');
+    }
+  }, [alert]);
+
+  const handleImportContacts = useCallback(async () => {
+    if (!importFile) return;
+    setIsImporting(true);
+    try {
+      const sourceFile = new File(importFile.uri);
+      const content = await sourceFile.text();
+      if (!content || content.trim().length === 0) {
+        alert('Empty File', 'The selected file is empty.', 'warning');
+        setIsImporting(false);
+        return;
+      }
+      let result: { imported: number; skipped: number };
+      if (importFile.format === 'vcard') {
+        result = await contactService.importVCard(content);
+      } else {
+        result = await contactService.importCsv(content);
+      }
+      setShowImportSheet(false);
+      setImportFile(null);
+      alert(
+        'Import Complete',
+        `Imported ${result.imported} contact${result.imported !== 1 ? 's' : ''}` +
+          (result.skipped > 0 ? `, skipped ${result.skipped} duplicate${result.skipped !== 1 ? 's' : ''}` : ''),
+        'success',
+      );
+      fetchAll(true);
+    } catch (err: any) {
+      alert('Import Failed', err?.message || 'Failed to import contacts', 'error');
+    } finally {
+      setIsImporting(false);
+    }
+  }, [importFile, alert, fetchAll]);
+
+  const handleExportVCard = useCallback(async () => {
+    setIsExporting(true);
+    try {
+      const vcardData = await contactService.exportAllVCard();
+      const exportFile = new File(Paths.cache, 'contacts.vcf');
+      exportFile.create();
+      exportFile.write(vcardData);
+      setShowExportSheet(false);
+      await Sharing.shareAsync(exportFile.uri, {
+        mimeType: 'text/vcard',
+        dialogTitle: 'Export Contacts (vCard)',
+        UTI: 'public.vcard',
+      });
+    } catch (err: any) {
+      alert('Export Failed', err?.message || 'Failed to export contacts', 'error');
+    } finally {
+      setIsExporting(false);
+    }
+  }, [alert]);
+
+  const handleExportCsv = useCallback(async () => {
+    setIsExporting(true);
+    try {
+      const csvData = await contactService.exportAllCsv();
+      const exportFile = new File(Paths.cache, 'contacts.csv');
+      exportFile.create();
+      exportFile.write(csvData);
+      setShowExportSheet(false);
+      await Sharing.shareAsync(exportFile.uri, {
+        mimeType: 'text/csv',
+        dialogTitle: 'Export Contacts (CSV)',
+      });
+    } catch (err: any) {
+      alert('Export Failed', err?.message || 'Failed to export contacts', 'error');
+    } finally {
+      setIsExporting(false);
+    }
+  }, [alert]);
 
   // ── Filter/category/tab handlers ───────────────────────
   const handleFilterChange = useCallback((tab: FilterTab) => {
@@ -545,7 +708,10 @@ const PeopleScreen: React.FC = () => {
               </Text>
             </TouchableOpacity>
             <View style={{ flex: 1 }} />
-            <TouchableOpacity onPress={toggleSelectMode} style={styles.toolbarButton}>
+            <TouchableOpacity onPress={() => setShowMoreSheet(true)} style={styles.toolbarButton}>
+              <Icon name="more-vert" size={18} color={Colors.textSecondary} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={toggleSelectMode} style={[styles.toolbarButton, { marginLeft: Spacing.sm }]}>
               <Icon name="checklist" size={18} color={Colors.textSecondary} />
               <Text style={styles.toolbarText}>Select</Text>
             </TouchableOpacity>
@@ -847,6 +1013,138 @@ const PeopleScreen: React.FC = () => {
 
       {renderSortSheet()}
       {renderGroupDialog()}
+
+      {/* More actions sheet (Import / Export) */}
+      <BottomSheet
+        visible={showMoreSheet}
+        onClose={() => setShowMoreSheet(false)}
+        title="Contact Actions"
+      >
+        <TouchableOpacity
+          style={styles.moreSheetRow}
+          onPress={() => { setShowMoreSheet(false); setImportFile(null); setShowImportSheet(true); }}
+          activeOpacity={0.7}
+        >
+          <Icon name="file-upload" size={22} color={Colors.primary} />
+          <Text style={styles.moreSheetText}>Import contacts</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.moreSheetRow}
+          onPress={() => { setShowMoreSheet(false); setShowExportSheet(true); }}
+          activeOpacity={0.7}
+        >
+          <Icon name="file-download" size={22} color={Colors.primary} />
+          <Text style={styles.moreSheetText}>Export contacts</Text>
+        </TouchableOpacity>
+      </BottomSheet>
+
+      {/* Import contacts sheet */}
+      <BottomSheet
+        visible={showImportSheet}
+        onClose={() => { setShowImportSheet(false); setImportFile(null); }}
+        title="Import Contacts"
+      >
+        <View style={styles.importExportContent}>
+          <Text style={styles.importDescription}>
+            Select a .vcf (vCard) or .csv file to import contacts. Duplicates will be automatically detected and skipped.
+          </Text>
+
+          <TouchableOpacity
+            style={styles.filePickerButton}
+            onPress={handlePickImportFile}
+            disabled={isImporting}
+            activeOpacity={0.7}
+          >
+            <Icon name="attach-file" size={20} color={Colors.primary} />
+            <Text style={styles.filePickerText}>
+              {importFile ? importFile.name : 'Choose file (.vcf or .csv)'}
+            </Text>
+          </TouchableOpacity>
+
+          {importFile && (
+            <View style={styles.importFileInfo}>
+              <Icon
+                name={importFile.format === 'vcard' ? 'contact-page' : 'table-chart'}
+                size={18}
+                color={Colors.textSecondary}
+              />
+              <Text style={styles.importFileInfoText}>
+                Format: {importFile.format === 'vcard' ? 'vCard (.vcf)' : 'CSV (.csv)'}
+              </Text>
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={[
+              styles.importExportButton,
+              (!importFile || isImporting) && styles.importExportButtonDisabled,
+            ]}
+            onPress={handleImportContacts}
+            disabled={!importFile || isImporting}
+            activeOpacity={0.8}
+          >
+            {isImporting ? (
+              <ActivityIndicator size="small" color={Colors.textInverse} />
+            ) : (
+              <Text style={styles.importExportButtonText}>Import</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </BottomSheet>
+
+      {/* Export contacts sheet */}
+      <BottomSheet
+        visible={showExportSheet}
+        onClose={() => setShowExportSheet(false)}
+        title="Export Contacts"
+      >
+        <View style={styles.importExportContent}>
+          <Text style={styles.importDescription}>
+            Choose a format to export all your contacts.
+          </Text>
+
+          <TouchableOpacity
+            style={styles.exportOptionRow}
+            onPress={handleExportVCard}
+            disabled={isExporting}
+            activeOpacity={0.7}
+          >
+            <View style={styles.exportOptionIcon}>
+              <Icon name="contact-page" size={24} color={Colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.exportOptionTitle}>vCard (.vcf)</Text>
+              <Text style={styles.exportOptionDesc}>Standard format compatible with most email clients</Text>
+            </View>
+            {isExporting ? (
+              <ActivityIndicator size="small" color={Colors.primary} />
+            ) : (
+              <Icon name="chevron-right" size={22} color={Colors.textTertiary} />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.exportOptionRow}
+            onPress={handleExportCsv}
+            disabled={isExporting}
+            activeOpacity={0.7}
+          >
+            <View style={styles.exportOptionIcon}>
+              <Icon name="table-chart" size={24} color={Colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.exportOptionTitle}>CSV (.csv)</Text>
+              <Text style={styles.exportOptionDesc}>Spreadsheet format for Excel, Google Sheets</Text>
+            </View>
+            {isExporting ? (
+              <ActivityIndicator size="small" color={Colors.primary} />
+            ) : (
+              <Icon name="chevron-right" size={22} color={Colors.textTertiary} />
+            )}
+          </TouchableOpacity>
+        </View>
+      </BottomSheet>
+
       {AlertComponent}
     </View>
   );
@@ -1095,6 +1393,101 @@ const styles = StyleSheet.create({
   sortOptionTextActive: {
     color: Colors.primary,
     fontWeight: '600',
+  },
+
+  // More sheet / Import / Export
+  moreSheetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+    gap: Spacing.md,
+  },
+  moreSheetText: {
+    ...Typography.body,
+    color: Colors.textPrimary,
+  },
+  importExportContent: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.xl,
+  },
+  importDescription: {
+    ...Typography.bodySmall,
+    color: Colors.textTertiary,
+    marginBottom: Spacing.lg,
+    lineHeight: 20,
+  },
+  filePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderStyle: 'dashed',
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    gap: Spacing.sm,
+    backgroundColor: Colors.surfaceLight,
+  },
+  filePickerText: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  importFileInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.xs,
+  },
+  importFileInfoText: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+  },
+  importExportButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Spacing.xl,
+    minHeight: 48,
+  },
+  importExportButtonDisabled: {
+    opacity: 0.5,
+  },
+  importExportButtonText: {
+    ...Typography.button,
+    color: Colors.textInverse,
+  },
+  exportOptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+    gap: Spacing.md,
+  },
+  exportOptionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.surfaceLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  exportOptionTitle: {
+    ...Typography.body,
+    color: Colors.textPrimary,
+    fontWeight: '500',
+  },
+  exportOptionDesc: {
+    ...Typography.caption,
+    color: Colors.textTertiary,
+    marginTop: 2,
   },
 
   // Group dialog

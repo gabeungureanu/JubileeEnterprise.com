@@ -62,7 +62,7 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
         'Remove Attachment',
         `Are you sure you want to remove "${fileName}"?`,
         () => onRemove(idx),
-        { confirmText: 'Remove', destructive: true },
+        { confirmText: 'Remove', destructive: true, icon: 'remove-circle-outline' },
       );
     },
     [files, onRemove, confirm],

@@ -94,7 +94,7 @@ export const ReminderPopup: React.FC<ReminderPopupProps> = ({
 
             {!!reminder.eventStart && (
               <View style={styles.eventRow}>
-                <Icon name="access-time" size={16} color={Colors.textSecondary} />
+                <Icon name="schedule" size={16} color={Colors.textSecondary} />
                 <Text style={styles.eventDetail}>
                   {formatReminderTime(reminder.eventStart, reminder.isAllDay)}
                 </Text>
@@ -112,7 +112,7 @@ export const ReminderPopup: React.FC<ReminderPopupProps> = ({
 
             {!!reminder.eventLocation && (
               <View style={styles.eventRow}>
-                <Icon name="place" size={16} color={Colors.textSecondary} />
+                <Icon name="location-on" size={16} color={Colors.textSecondary} />
                 <Text style={styles.eventDetail} numberOfLines={1}>
                   {reminder.eventLocation}
                 </Text>

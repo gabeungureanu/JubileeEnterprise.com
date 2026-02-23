@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { EmailMessage, AttachmentDto } from '../../../types/mail';
 import { mailService } from '../../../services/mail/mailService';
 import AttachmentPreview, { isPreviewable, getPreviewIcon } from '../AttachmentPreview/AttachmentPreview';
@@ -8,6 +8,129 @@ interface ReadingPaneProps {
   message: EmailMessage | null;
   onError?: (message: string) => void;
 }
+
+/**
+ * Check if a color (r, g, b values 0-255) is "dark" (close to black).
+ * Returns true if the perceived brightness is below threshold.
+ */
+const isDarkColor = (r: number, g: number, b: number): boolean => {
+  // Perceived brightness formula (ITU-R BT.709)
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness < 128;
+};
+
+/**
+ * Check if a color is "light" (close to white).
+ */
+const isLightColor = (r: number, g: number, b: number): boolean => {
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness >= 200;
+};
+
+/**
+ * Invert a dark color to its light equivalent.
+ * Maps dark colors → light colors (e.g., #000 → #FFF, #333 → #CCC).
+ */
+const invertDarkToLight = (r: number, g: number, b: number): string => {
+  return `rgb(${255 - r}, ${255 - g}, ${255 - b})`;
+};
+
+/**
+ * Parse a CSS color value and return [r, g, b, a] or null if not parseable.
+ */
+const parseColor = (color: string): [number, number, number, number] | null => {
+  const c = color.trim().toLowerCase();
+
+  // Named colors that are dark
+  if (c === 'black') return [0, 0, 0, 1];
+  if (c === 'white') return [255, 255, 255, 1];
+
+  // #RGB
+  const hex3 = c.match(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/i);
+  if (hex3) {
+    return [parseInt(hex3[1] + hex3[1], 16), parseInt(hex3[2] + hex3[2], 16), parseInt(hex3[3] + hex3[3], 16), 1];
+  }
+
+  // #RRGGBB
+  const hex6 = c.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (hex6) {
+    return [parseInt(hex6[1], 16), parseInt(hex6[2], 16), parseInt(hex6[3], 16), 1];
+  }
+
+  // rgb(r, g, b) or rgba(r, g, b, a)
+  const rgbMatch = c.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)$/);
+  if (rgbMatch) {
+    return [parseInt(rgbMatch[1]), parseInt(rgbMatch[2]), parseInt(rgbMatch[3]), parseFloat(rgbMatch[4] ?? '1')];
+  }
+
+  return null;
+};
+
+/**
+ * Adapt email HTML for dark theme by converting dark text colors to light
+ * while preserving white/light text as-is.
+ */
+const adaptEmailForDarkTheme = (html: string): string => {
+  let result = html;
+
+  // Replace inline color styles: color: <value>
+  result = result.replace(
+    /(\bcolor\s*:\s*)(#[0-9a-fA-F]{3,6}|rgba?\([^)]+\)|black|white)(\s*[;!"])/gi,
+    (match, prefix, colorVal, suffix) => {
+      const parsed = parseColor(colorVal);
+      if (!parsed) return match;
+      const [r, g, b] = parsed;
+      if (isDarkColor(r, g, b)) {
+        return prefix + invertDarkToLight(r, g, b) + suffix;
+      }
+      return match; // Leave light/white/colored text alone
+    }
+  );
+
+  // Replace background-color dark values with transparent, white/light backgrounds with dark
+  result = result.replace(
+    /(\bbackground(?:-color)?\s*:\s*)(#[0-9a-fA-F]{3,6}|rgba?\([^)]+\)|white|black)(\s*[;!"])/gi,
+    (match, prefix, colorVal, suffix) => {
+      const parsed = parseColor(colorVal);
+      if (!parsed) return match;
+      const [r, g, b] = parsed;
+      if (isLightColor(r, g, b)) {
+        return prefix + 'transparent' + suffix;
+      }
+      return match;
+    }
+  );
+
+  // Handle bgcolor attribute on elements (common in email HTML)
+  result = result.replace(
+    /(\bbgcolor\s*=\s*["'])(#[0-9a-fA-F]{3,6}|white)(["'])/gi,
+    (match, prefix, colorVal, suffix) => {
+      const parsed = parseColor(colorVal);
+      if (!parsed) return match;
+      const [r, g, b] = parsed;
+      if (isLightColor(r, g, b)) {
+        return prefix + 'transparent' + suffix;
+      }
+      return match;
+    }
+  );
+
+  // Handle <font color="..."> tags (legacy email HTML)
+  result = result.replace(
+    /(<font[^>]*\bcolor\s*=\s*["'])(#[0-9a-fA-F]{3,6}|black)(["'])/gi,
+    (match, prefix, colorVal, suffix) => {
+      const parsed = parseColor(colorVal);
+      if (!parsed) return match;
+      const [r, g, b] = parsed;
+      if (isDarkColor(r, g, b)) {
+        return prefix + invertDarkToLight(r, g, b) + suffix;
+      }
+      return match;
+    }
+  );
+
+  return result;
+};
 
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 B';
@@ -20,6 +143,11 @@ const formatFileSize = (bytes: number): string => {
 const ReadingPane: React.FC<ReadingPaneProps> = ({ message, onError }) => {
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
   const [previewAttachment, setPreviewAttachment] = useState<AttachmentDto | null>(null);
+
+  const adaptedBodyHtml = useMemo(() => {
+    if (!message?.bodyHtml) return '';
+    return adaptEmailForDarkTheme(message.bodyHtml);
+  }, [message?.bodyHtml]);
 
   const handleDownloadAttachment = useCallback(async (attachmentId: string, fileName: string) => {
     if (!message) return;
@@ -128,7 +256,13 @@ const ReadingPane: React.FC<ReadingPaneProps> = ({ message, onError }) => {
           </span>
         </div>
       </div>
-      <div className="reading-pane__body" dangerouslySetInnerHTML={{ __html: message.bodyHtml }} />
+      {message.bodyHtml ? (
+        <div className="reading-pane__body" dangerouslySetInnerHTML={{ __html: adaptedBodyHtml }} />
+      ) : (
+        <div className="reading-pane__body reading-pane__body--plain">
+          {message.bodyText || message.bodyPreview || '(No content)'}
+        </div>
+      )}
       {message.attachments.length > 0 && (
         <div className="reading-pane__attachments">
           <h4 className="reading-pane__attachments-title">

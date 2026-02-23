@@ -67,6 +67,10 @@ const ContactEditScreen: React.FC = () => {
   const [category, setCategory] = useState(existingContact?.category || '');
   const [isSaving, setIsSaving] = useState(false);
 
+  // ── Two-pass duplicate check state (matches web frontend) ──
+  const [duplicateChecked, setDuplicateChecked] = useState(false);
+  const [duplicateWarning, setDuplicateWarning] = useState<{ displayName: string; email?: string }[]>([]);
+
   // ── Date picker state ────────────────────────────────────
   const [datePickerTarget, setDatePickerTarget] = useState<'birthday' | 'anniversary' | null>(null);
   const [browseYear, setBrowseYear] = useState(new Date().getFullYear());
@@ -79,7 +83,7 @@ const ContactEditScreen: React.FC = () => {
     });
   }, [isEditing, navigation]);
 
-  // ── Save ────────────────────────────────────────────────
+  // ── Save with two-pass duplicate check (matches web frontend exactly) ──
   const handleSave = useCallback(async () => {
     const displayName = [firstName.trim(), lastName.trim()].filter(Boolean).join(' ');
 
@@ -129,12 +133,46 @@ const ContactEditScreen: React.FC = () => {
       };
 
       if (isEditing && contactId) {
+        // Editing existing — no duplicate check needed
         await contactService.updateContact(contactId, payload);
+        navigation.goBack();
       } else {
-        await contactService.createContact(payload);
-      }
+        // Creating new — two-pass duplicate check (matches web PeoplePage exactly)
+        if (!duplicateChecked) {
+          // FIRST PASS: check for duplicates before saving
+          try {
+            const phoneNumbers = phone.trim() ? [phone.trim()] : [];
+            const dupes = await contactService.checkDuplicates(
+              displayName,
+              phoneNumbers,
+              mobilePhone.trim() || undefined,
+            );
 
-      navigation.goBack();
+            if (dupes.length > 0) {
+              // Show warning and require second click
+              setDuplicateWarning(
+                dupes.map((d) => ({
+                  displayName: d.displayName,
+                  email: d.emailAddresses?.[0],
+                })),
+              );
+              setDuplicateChecked(true);
+              setIsSaving(false);
+              return;
+            }
+          } catch {
+            // If check-duplicates endpoint fails, proceed with create
+          }
+        }
+
+        // SECOND PASS (or no dupes found): proceed to create
+        // If duplicateChecked is true, user confirmed by clicking Save again
+        if (duplicateChecked) {
+          (payload as any).skip_duplicate_check = true;
+        }
+        await contactService.createContact(payload);
+        navigation.goBack();
+      }
     } catch (err: any) {
       if (err?.code === 'DELETED_DUPLICATE_FOUND' && err?.deletedContactId) {
         // Offer to restore the deleted duplicate
@@ -150,7 +188,7 @@ const ContactEditScreen: React.FC = () => {
               alert('Error', 'Failed to restore contact.', 'error');
             }
           },
-          { confirmText: 'Restore' }
+          { confirmText: 'Restore', icon: 'restore', iconColor: Colors.success }
         );
       } else {
         alert('Error', err?.message || 'Failed to save contact', 'error');
@@ -162,8 +200,17 @@ const ContactEditScreen: React.FC = () => {
     firstName, lastName, email, phone, mobilePhone, company, jobTitle,
     department, office, address, city, state, postalCode, country,
     notes, website, birthday, anniversary, spouse, category,
-    isEditing, contactId, navigation, alert, confirm,
+    isEditing, contactId, navigation, alert, confirm, duplicateChecked,
   ]);
+
+  // Reset duplicate check state when form fields change
+  useEffect(() => {
+    if (duplicateChecked) {
+      setDuplicateChecked(false);
+      setDuplicateWarning([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstName, lastName, phone, mobilePhone, email]);
 
   // ── Delete ──────────────────────────────────────────────
   const handleDelete = useCallback(() => {
@@ -179,7 +226,7 @@ const ContactEditScreen: React.FC = () => {
           alert('Error', err?.message || 'Failed to delete contact', 'error');
         }
       },
-      { confirmText: 'Delete', destructive: true },
+      { confirmText: 'Delete', destructive: true, icon: 'delete-outline' },
     );
   }, [contactId, navigation, confirm, alert]);
 
@@ -337,6 +384,24 @@ const ContactEditScreen: React.FC = () => {
           placeholder: 'Add notes',
           autoCapitalize: 'sentences',
         })}
+
+        {/* Duplicate warning (shown on first save if duplicates found) */}
+        {duplicateWarning.length > 0 && (
+          <View style={styles.duplicateWarning}>
+            <View style={styles.duplicateWarningHeader}>
+              <Icon name="warning" size={20} color="#E8A317" />
+              <Text style={styles.duplicateWarningTitle}>Possible duplicates found</Text>
+            </View>
+            {duplicateWarning.map((d, idx) => (
+              <Text key={idx} style={styles.duplicateWarningItem}>
+                {d.displayName}{d.email ? ` (${d.email})` : ''}
+              </Text>
+            ))}
+            <Text style={styles.duplicateWarningHint}>
+              Click Save again to create anyway.
+            </Text>
+          </View>
+        )}
 
         {/* Delete button */}
         {isEditing && (
@@ -522,6 +587,40 @@ const styles = StyleSheet.create({
   sheetNavTitle: {
     ...Typography.label,
     color: Colors.textPrimary,
+  },
+
+  // Duplicate warning
+  duplicateWarning: {
+    backgroundColor: 'rgba(232, 163, 23, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(232, 163, 23, 0.3)',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginTop: Spacing.xl,
+  },
+  duplicateWarningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  duplicateWarningTitle: {
+    ...Typography.body,
+    color: '#E8A317',
+    fontWeight: '600',
+  },
+  duplicateWarningItem: {
+    ...Typography.bodySmall,
+    color: Colors.textSecondary,
+    paddingLeft: Spacing.lg + Spacing.sm,
+    paddingVertical: 2,
+  },
+  duplicateWarningHint: {
+    ...Typography.caption,
+    color: Colors.textTertiary,
+    fontStyle: 'italic',
+    marginTop: Spacing.sm,
+    paddingLeft: Spacing.lg + Spacing.sm,
   },
 
   // Delete button

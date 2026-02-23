@@ -141,7 +141,7 @@ const EventDetailScreen: React.FC = () => {
     async (scope: 'series' | 'occurrence' = 'series') => {
       try {
         const baseId = getBaseEventId(eventId);
-        await reminderService.cancelReminder(baseId);
+        await reminderService.dismissReminder(baseId);
 
         if (scope === 'occurrence' && event) {
           const occDate = new Date(event.startDateTime).toISOString().split('T')[0];
@@ -171,6 +171,7 @@ const EventDetailScreen: React.FC = () => {
       confirm('Delete Event', msg, () => executeDelete(action), {
         confirmText: 'Delete',
         destructive: true,
+        icon: 'delete-forever',
       });
     },
     [executeDelete, confirm],
@@ -189,7 +190,7 @@ const EventDetailScreen: React.FC = () => {
       async () => {
         await executeDelete('series');
       },
-      { confirmText: 'Delete', destructive: true },
+      { confirmText: 'Delete', destructive: true, icon: 'delete-forever' },
     );
   }, [event, confirm, executeDelete]);
 

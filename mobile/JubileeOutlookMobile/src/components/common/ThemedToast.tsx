@@ -24,10 +24,10 @@ export interface ThemedToastProps {
 }
 
 const VARIANT_CONFIG: Record<ToastVariant, { icon: string; color: string }> = {
-  success: { icon: 'check-circle', color: Colors.success },
-  error: { icon: 'error', color: Colors.error },
+  success: { icon: 'check-circle-outline', color: Colors.success },
+  error: { icon: 'error-outline', color: Colors.error },
   warning: { icon: 'warning', color: Colors.warning },
-  info: { icon: 'info', color: Colors.accent },
+  info: { icon: 'info-outline', color: Colors.accent },
 };
 
 export function ThemedToast({

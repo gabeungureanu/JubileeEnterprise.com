@@ -37,6 +37,10 @@ export interface ThemedAlertProps {
   title: string;
   message?: string;
   variant?: AlertVariant;
+  /** Override the variant's default icon (MaterialIcons name). */
+  icon?: string;
+  /** Override the variant's default accent color. */
+  iconColor?: string;
   buttons?: AlertButton[];
   onDismiss: () => void;
 }
@@ -44,11 +48,11 @@ export interface ThemedAlertProps {
 // ---------- Variant Config ----------
 
 const VARIANT_CONFIG: Record<AlertVariant, { icon: string; color: string }> = {
-  info: { icon: 'info', color: Colors.accent },
-  success: { icon: 'check-circle', color: Colors.success },
-  error: { icon: 'error', color: Colors.error },
+  info: { icon: 'info-outline', color: Colors.accent },
+  success: { icon: 'check-circle-outline', color: Colors.success },
+  error: { icon: 'error-outline', color: Colors.error },
   warning: { icon: 'warning', color: Colors.warning },
-  confirm: { icon: 'help', color: Colors.primary },
+  confirm: { icon: 'delete-forever', color: Colors.error },
 };
 
 // ---------- Component ----------
@@ -58,10 +62,14 @@ export function ThemedAlert({
   title,
   message,
   variant = 'info',
+  icon: iconOverride,
+  iconColor: iconColorOverride,
   buttons,
   onDismiss,
 }: ThemedAlertProps) {
-  const { icon, color } = VARIANT_CONFIG[variant];
+  const variantCfg = VARIANT_CONFIG[variant];
+  const icon = iconOverride || variantCfg.icon;
+  const color = iconColorOverride || variantCfg.color;
 
   const resolvedButtons: AlertButton[] =
     buttons && buttons.length > 0

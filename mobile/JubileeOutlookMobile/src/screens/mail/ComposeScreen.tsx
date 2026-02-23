@@ -10,7 +10,7 @@
  * - Separate user text + rendered quoted HTML for reply/forward
  * - Images, links, and formatting preserved in quoted content
  */
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -29,7 +29,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 import { File as ExpoFile } from 'expo-file-system';
-import RenderHtml from 'react-native-render-html';
+import RenderHtml, { useInternalRenderer } from 'react-native-render-html';
 
 import { Colors } from '../../constants/colors';
 import { Typography } from '../../constants/typography';
@@ -39,6 +39,12 @@ import { useAlert } from '../../hooks';
 import { useAuth } from '../../context/AuthContext';
 import { mailService } from '../../services/mail/mailService';
 import { signatureService } from '../../services/mail/signatureService';
+import { tokenStore } from '../../services/apiClient';
+import {
+  processEmailHtml,
+  isOurApiUrl,
+  getImageAuthHeaders,
+} from '../../utils/emailHtmlProcessor';
 import type { MailStackParamList } from '../../types/navigation';
 
 type ComposeRecipient = { email: string; name: string; type: 'to' | 'cc' | 'bcc' };
@@ -105,6 +111,24 @@ function plainTextToHtml(text: string): string {
     .replace(/\n/g, '<br/>');
 }
 
+// ---------- Custom Image Renderer (auth headers for API images) ----------
+
+function AuthenticatedImgRenderer(props: any) {
+  const { Renderer, rendererProps } = useInternalRenderer('img', props);
+  const source = rendererProps.source;
+  if (source?.uri && isOurApiUrl(source.uri)) {
+    const token = tokenStore.getAccessToken();
+    const userId = tokenStore.getUserId();
+    return (
+      <Renderer
+        {...rendererProps}
+        source={{ ...source, headers: getImageAuthHeaders(token, userId) }}
+      />
+    );
+  }
+  return <Renderer {...rendererProps} />;
+}
+
 // ---------- Component ----------
 
 export default function ComposeScreen() {
@@ -166,7 +190,9 @@ export default function ComposeScreen() {
   useEffect(() => {
     if (!originalMessage) return;
 
-    const msgBody = originalMessage.bodyHtml || originalMessage.bodyText || originalMessage.bodyPreview || '';
+    // Process HTML to replace CID inline image refs with download URLs (matching web)
+    const rawBody = originalMessage.bodyHtml || originalMessage.bodyText || originalMessage.bodyPreview || '';
+    const msgBody = processEmailHtml(rawBody, originalMessage.id, originalMessage.attachments || []);
     const msgDate = originalMessage.receivedAt || originalMessage.sentAt || '';
     const msgSubject = originalMessage.subject || '';
     const msgFrom = originalMessage.from || { name: '', address: '' };
@@ -487,15 +513,25 @@ export default function ComposeScreen() {
 
   // ---------- HTML rendering config for quoted content ----------
 
-  const quotedHtmlTagStyles = {
-    body: { color: Colors.textSecondary, fontSize: 14, lineHeight: 22 },
-    a: { color: Colors.accent },
-    p: { marginBottom: 4 },
-    img: { maxWidth: screenWidth - Spacing.lg * 2 },
-    blockquote: { marginLeft: 0, paddingLeft: 12, borderLeftWidth: 3, borderLeftColor: '#444' },
-  };
-
   const quotedContentWidth = screenWidth - Spacing.lg * 2;
+
+  const quotedHtmlTagStyles = useMemo(
+    () => ({
+      body: { color: Colors.textSecondary, fontSize: 14, lineHeight: 22 },
+      a: { color: Colors.accent },
+      p: { marginBottom: 4 },
+      img: { maxWidth: quotedContentWidth },
+      blockquote: { marginLeft: 0, paddingLeft: 12, borderLeftWidth: 3, borderLeftColor: '#444' },
+    }),
+    [quotedContentWidth],
+  );
+
+  const imgRenderers = useMemo(() => ({ img: AuthenticatedImgRenderer }), []);
+
+  const imgRenderersProps = useMemo(
+    () => ({ img: { enableExperimentalPercentWidth: true } }),
+    [],
+  );
 
   // ---------- Loading overlay ----------
 
@@ -664,6 +700,8 @@ export default function ComposeScreen() {
               contentWidth={quotedContentWidth}
               source={{ html: quotedHtml }}
               tagsStyles={quotedHtmlTagStyles}
+              renderers={imgRenderers}
+              renderersProps={imgRenderersProps}
               defaultTextProps={{ selectable: true }}
               baseStyle={styles.quotedBase}
               ignoredDomTags={['meta', 'link', 'script', 'style']}

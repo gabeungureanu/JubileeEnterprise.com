@@ -146,7 +146,7 @@ export default function ContactGroupScreen() {
           alert('Error', err?.message || 'Failed to delete group', 'error');
         }
       },
-      { confirmText: 'Delete', destructive: true },
+      { confirmText: 'Delete', destructive: true, icon: 'delete-outline' },
     );
   }, [groupId, groupName, confirm, alert, navigation]);
 
@@ -211,7 +211,7 @@ export default function ContactGroupScreen() {
             alert('Error', err?.message || 'Failed to remove member', 'error');
           }
         },
-        { confirmText: 'Remove', destructive: true },
+        { confirmText: 'Remove', destructive: true, icon: 'person-remove' },
       );
     },
     [groupId, groupName, confirm, alert],

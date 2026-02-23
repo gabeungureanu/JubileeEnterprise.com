@@ -107,6 +107,7 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           } catch { /* continue */ }
 
           // Fetch fresh event data for the popup
+          // If the event was deleted, getEvent returns null or throws — silently ignore
           try {
             const event = await calendarService.getEvent(data.eventId as string);
             if (event) {
@@ -120,14 +121,9 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 isPrivate: event.isPrivate,
               });
             }
+            // event is null → deleted, don't show reminder
           } catch {
-            // If we can't fetch, show with notification content
-            setActiveReminder({
-              eventId: data.eventId as string,
-              eventTitle: notification.request.content.title || 'Event Reminder',
-              eventStart: '',
-              isPrivate: false,
-            });
+            // Event likely deleted — don't show reminder for non-existent events
           }
         }
       },
@@ -155,10 +151,10 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           } catch { /* continue */ }
 
           // Try to fetch the event and navigate to detail
+          // If the event was deleted, silently ignore the notification
           try {
             const event = await calendarService.getEvent(eventId);
             if (event && navigationRef) {
-              // Show popup + navigate
               activeEventRef.current = event;
               setActiveReminder({
                 eventId: event.id,
@@ -169,13 +165,9 @@ export const ReminderProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 isPrivate: event.isPrivate,
               });
             }
+            // event is null → deleted, don't show reminder
           } catch {
-            // Silent fail — at least show the popup
-            setActiveReminder({
-              eventId,
-              eventTitle: response.notification.request.content.title || 'Event Reminder',
-              eventStart: '',
-            });
+            // Event likely deleted — don't show reminder for non-existent events
           }
         }
       },

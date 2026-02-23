@@ -2,11 +2,11 @@
  * MessageDetailScreen — Full message reading pane.
  *
  * Fetches the complete message by ID, renders sender info with avatar,
- * subject, date, recipients, and HTML body via react-native-render-html.
+ * subject, date, recipients, and HTML body via WebView (browser-native).
  * Action bar at the bottom provides Reply, Reply All, Forward, and Delete.
  * Marks the message as read on open.
  */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,10 +14,8 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  useWindowDimensions,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
-import RenderHtml from 'react-native-render-html';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -29,10 +27,15 @@ import { Typography } from '../../constants/typography';
 import { Spacing, BorderRadius } from '../../constants/spacing';
 import { LoadingSpinner } from '../../components/common';
 import { Avatar } from '../../components/common/Avatar';
+import { EmailBodyViewer } from '../../components/common/EmailBodyViewer';
 import { useAlert } from '../../hooks';
 import { mailService } from '../../services/mail/mailService';
 import { tokenStore } from '../../services/apiClient';
 import { API } from '../../constants/api';
+import {
+  processEmailHtmlAsync,
+  getRegularAttachments,
+} from '../../utils/emailHtmlProcessor';
 import type { EmailMessage, AttachmentDto } from '../../types';
 import type { MailStackParamList } from '../../types/navigation';
 
@@ -65,7 +68,6 @@ function formatFileSize(bytes: number): string {
 export default function MessageDetailScreen() {
   const navigation = useNavigation<DetailNav>();
   const route = useRoute<DetailRoute>();
-  const { width: contentWidth } = useWindowDimensions();
 
   const { alert, confirm, AlertComponent } = useAlert();
   const { messageId } = route.params;
@@ -142,7 +144,7 @@ export default function MessageDetailScreen() {
           alert('Error', 'Could not delete message.', 'error');
         }
       },
-      { confirmText: 'Delete', destructive: true },
+      { confirmText: 'Delete', destructive: true, icon: 'delete-outline' },
     );
   }, [message, navigation, confirm, alert]);
 
@@ -209,6 +211,47 @@ export default function MessageDetailScreen() {
     }
   }, [message, alert]);
 
+  // ---------- Process email body HTML (must be before any conditional returns) ----------
+
+  const [processedHtml, setProcessedHtml] = useState('');
+  const lastProcessedMsgId = useRef<string>('');
+
+  useEffect(() => {
+    if (!message) {
+      setProcessedHtml('');
+      return;
+    }
+    // Skip if we already processed this message
+    if (lastProcessedMsgId.current === message.id && processedHtml) return;
+
+    let cancelled = false;
+    const rawHtml = message.bodyHtml || `<p>${message.bodyText || message.bodyPreview || ''}</p>`;
+
+    processEmailHtmlAsync(rawHtml, message.id, message.attachments || [])
+      .then((result) => {
+        if (!cancelled) {
+          lastProcessedMsgId.current = message.id;
+          setProcessedHtml(result);
+        }
+      })
+      .catch((err) => {
+        console.warn('[MessageDetail] processEmailHtmlAsync failed:', err);
+        // Fallback: use raw HTML without CID processing
+        if (!cancelled) {
+          lastProcessedMsgId.current = message.id;
+          setProcessedHtml(rawHtml);
+        }
+      });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message?.id, message?.bodyHtml]);
+
+  // Separate inline attachments (shown in body) from regular attachments (shown in list)
+  const displayAttachments = useMemo(
+    () => getRegularAttachments(message?.attachments || []),
+    [message?.attachments],
+  );
+
   // ---------- Set Header ----------
 
   useEffect(() => {
@@ -256,34 +299,27 @@ export default function MessageDetailScreen() {
   const toRecipients = message.to || [];
   const ccRecipients = message.cc || [];
 
-  const htmlSource = {
-    html: message.bodyHtml || `<p>${message.bodyText || message.bodyPreview || ''}</p>`,
-  };
-
-  const htmlTagStyles = {
-    body: { color: Colors.textPrimary, fontSize: 14, lineHeight: 22 },
-    a: { color: Colors.accent },
-    p: { marginBottom: 8 },
-  };
-
   // ---------- Render ----------
 
   return (
     <View style={styles.screen}>
+      {/* ── Fixed header area (scrollable if recipients overflow) ── */}
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        style={styles.headerScroll}
+        contentContainerStyle={styles.headerContent}
         showsVerticalScrollIndicator={false}
+        bounces={false}
+        nestedScrollEnabled
       >
         {/* Subject */}
         <Text style={styles.subject}>{message.subject || '(No Subject)'}</Text>
 
         {/* Sender Row */}
         <View style={styles.senderRow}>
-          <Avatar name={senderDisplay} size={44} />
+          <Avatar name={senderDisplay} size={40} />
           <View style={styles.senderInfo}>
             <Text style={styles.senderName}>{senderDisplay}</Text>
-            <Text style={styles.senderEmail}>{message.from.address}</Text>
+            <Text style={styles.senderEmail} numberOfLines={1}>{message.from.address}</Text>
           </View>
           <Text style={styles.date}>{formatFullDate(message.receivedAt || message.sentAt)}</Text>
         </View>
@@ -293,7 +329,7 @@ export default function MessageDetailScreen() {
           {toRecipients.length > 0 && (
             <View style={styles.recipientRow}>
               <Text style={styles.recipientLabel}>To:</Text>
-              <Text style={styles.recipientText} numberOfLines={2}>
+              <Text style={styles.recipientText} numberOfLines={1}>
                 {toRecipients.map((r) => r.name || r.address).join(', ')}
               </Text>
             </View>
@@ -301,7 +337,7 @@ export default function MessageDetailScreen() {
           {ccRecipients.length > 0 && (
             <View style={styles.recipientRow}>
               <Text style={styles.recipientLabel}>Cc:</Text>
-              <Text style={styles.recipientText} numberOfLines={2}>
+              <Text style={styles.recipientText} numberOfLines={1}>
                 {ccRecipients.map((r) => r.name || r.address).join(', ')}
               </Text>
             </View>
@@ -316,14 +352,14 @@ export default function MessageDetailScreen() {
           </View>
         )}
 
-        {/* Attachments */}
-        {message.hasAttachments && message.attachments && message.attachments.length > 0 && (
+        {/* Attachments (only non-inline — inline images render in body) */}
+        {displayAttachments.length > 0 && (
           <View style={styles.attachmentSection}>
             <Text style={styles.attachmentHeader}>
               <Icon name="attach-file" size={14} color={Colors.textSecondary} />
-              {'  '}Attachments ({message.attachments.length})
+              {'  '}Attachments ({displayAttachments.length})
             </Text>
-            {message.attachments.map((att: AttachmentDto) => (
+            {displayAttachments.map((att: AttachmentDto) => (
               <TouchableOpacity
                 key={att.id}
                 style={styles.attachmentItem}
@@ -347,21 +383,19 @@ export default function MessageDetailScreen() {
             ))}
           </View>
         )}
-
-        {/* Divider */}
-        <View style={styles.divider} />
-
-        {/* Body */}
-        <View style={styles.bodyContainer}>
-          <RenderHtml
-            contentWidth={contentWidth - Spacing.lg * 2}
-            source={htmlSource}
-            tagsStyles={htmlTagStyles}
-            defaultTextProps={{ selectable: true }}
-            baseStyle={styles.htmlBase}
-          />
-        </View>
       </ScrollView>
+
+      {/* Divider */}
+      <View style={styles.divider} />
+
+      {/* ── Email body — WebView fills remaining space with own scrolling ── */}
+      <View style={styles.bodyContainer}>
+        {processedHtml ? (
+          <EmailBodyViewer html={processedHtml} />
+        ) : (
+          <ActivityIndicator size="small" color={Colors.accent} style={{ padding: Spacing.lg }} />
+        )}
+      </View>
 
       {/* Action Bar */}
       <View style={styles.actionBar}>
@@ -398,26 +432,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  scrollView: {
-    flex: 1,
+  // Header area — compact, scrollable if content overflows
+  headerScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+    maxHeight: '40%',
   },
-  scrollContent: {
-    paddingBottom: Spacing.xxl,
+  headerContent: {
+    paddingBottom: Spacing.xs,
   },
   // Subject
   subject: {
     ...Typography.h2,
     color: Colors.textPrimary,
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
   },
   // Sender
   senderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
   },
   senderInfo: {
     flex: 1,
@@ -440,12 +477,12 @@ const styles = StyleSheet.create({
   // Recipients
   recipientSection: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.sm,
+    paddingBottom: Spacing.xs,
   },
   recipientRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: Spacing.xs,
+    marginBottom: 2,
   },
   recipientLabel: {
     ...Typography.bodySmall,
@@ -512,16 +549,10 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     backgroundColor: Colors.divider,
     marginHorizontal: Spacing.lg,
-    marginVertical: Spacing.md,
   },
-  // Body
+  // Body — fills remaining space, WebView handles scrolling
   bodyContainer: {
-    paddingHorizontal: Spacing.lg,
-  },
-  htmlBase: {
-    color: Colors.textPrimary,
-    fontSize: 14,
-    lineHeight: 22,
+    flex: 1,
   },
   // Action Bar
   actionBar: {
